@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (selected == AssetOptions.ProjectWideActions)
             {
-                assetProperty.objectReferenceValue = ProjectWideActionsAsset.GetOrCreate();
+                assetProperty.objectReferenceValue = ProjectWideActionsAsset.instance;
             }
             else
             {
@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
             if (property.objectReferenceValue != null)
             {
                 var asset = (InputActionAsset)property.objectReferenceValue;
-                isAssetProjectWideActions = asset?.name == ProjectWideActionsAsset.kAssetName;
+                isAssetProjectWideActions = asset?.name == ProjectWideActionsAsset.kProjectWideActionsAssetName;
             }
 
             return isAssetProjectWideActions;

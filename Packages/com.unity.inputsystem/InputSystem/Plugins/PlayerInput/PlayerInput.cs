@@ -1611,14 +1611,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         void Reset()
         {
             // Set default actions to project wide actions.
-            m_Actions = ProjectWideActionsAsset.GetOrCreate();
+            m_Actions = ProjectWideActionsAsset.instance;
         }
-
-        #endif
+#endif
 
         private void OnEnable()
         {

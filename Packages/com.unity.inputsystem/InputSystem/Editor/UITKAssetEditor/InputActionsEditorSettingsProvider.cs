@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             m_RootVisualElement = rootElement;
-            var asset = ProjectWideActionsAsset.GetOrCreate();
+            var asset = ProjectWideActionsAsset.instance;
             var serializedAsset = new SerializedObject(asset);
             m_State = new InputActionsEditorState(serializedAsset);
             BuildUI();

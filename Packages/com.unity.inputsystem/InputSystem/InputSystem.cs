@@ -3021,9 +3021,6 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-        private static InputActionAsset s_ProjectWideActions;
-        internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
-
         /// <summary>
         /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
         /// </summary>
@@ -3038,34 +3035,14 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (s_ProjectWideActions != null)
-                    return s_ProjectWideActions;
-
-                #if UNITY_EDITOR
-                s_ProjectWideActions = ProjectWideActionsAsset.GetOrCreate();
-                #else
-                s_ProjectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
-                #endif
-
-                if (s_ProjectWideActions == null)
-                    Debug.LogError($"Couldn't initialize project-wide input actions");
-                return s_ProjectWideActions;
+                return UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.instance;
             }
-
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                if (s_ProjectWideActions == value)
-                    return;
-
-                s_ProjectWideActions?.Disable();
-                s_ProjectWideActions = value;
-                s_ProjectWideActions.Enable();
+                UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.instance = value;
             }
         }
-#endif
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3492,6 +3469,10 @@ namespace UnityEngine.InputSystem
 #endif
             }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            ProjectWideActionsAsset.EnsureInitialized();
+#endif
+
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
@@ -3541,10 +3522,8 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
             Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
                 "InputSettings has lost its native object");
-            #endif
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
@@ -3694,46 +3673,13 @@ namespace UnityEngine.InputSystem
                 SetUpRemoting();
 #endif
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && !UNITY_INCLUDE_TESTS
-            // Touching the `actions` property here will initialise it here (if it wasn't already).
-            // This is the point where we initialise project-wide actions for the Player
-            actions?.Enable();
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Despite being an Editor class, we're using it as a Singleton for both Editor and Player
+            UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.EnsureInitialized();
 #endif
         }
 
 #endif // UNITY_EDITOR
-
-#if UNITY_INCLUDE_TESTS
-        //
-        // A (hopefully) temporary work-around to being unable to define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // within the Test-Framework assembly; called from within InputTestStateManager.Reset().
-        //
-        // This code should be removed when Actions init/reset flows are refactored, but we need it for now
-        // so ProjectWideActionstests will pass
-        //
-        internal static void DisableActionsForTests()
-        {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
-            if (s_ProjectWideActions)
-            {
-                s_ProjectWideActions.Disable();
-                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
-                s_ProjectWideActions = null;
-            }
-#endif
-        }
-
-        internal static void EnableActionsForTests()
-        {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Touching the `actions` property will initialise it here (if it wasn't already).
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            actions?.Enable();
-#endif
-
-        }
-#endif // UNITY_INCLUDE_TESTS
 
         private static void RunInitialUpdate()
         {
@@ -3806,8 +3752,6 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-
-
 
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR

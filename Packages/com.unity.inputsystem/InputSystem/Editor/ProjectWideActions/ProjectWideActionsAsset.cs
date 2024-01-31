@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
 using System.IO;
@@ -12,38 +12,100 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
         internal const string kAssetPath = "ProjectSettings/InputManager.asset";
-        internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
+        internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
 
+        private static InputActionAsset s_Instance;
+
+        /// <summary>
+        /// Reference to the current asset representing ProjectWideActions used by both the Editor and Player.
+        /// </summary>
+        /// <remarks>
+        /// Although not technically a Singleton, the InputActionAsset returned by this class is effectively used according
+        /// to the Singleton pattern, and therefore, in the interest of tighter cohesion, this property is used by both the
+        /// Player and Editor to retrieve or load the Asset.
+        /// </remarks>
+        public static InputActionAsset instance
+        {
+            get
+            {
+                if (s_Instance != null)
+                    return s_Instance;
+
+#if UNITY_EDITOR
+                s_Instance = ProjectWideActionsAsset.GetOrCreate();
+#else
+                s_Instance = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
+#endif
+
+                if (s_Instance == null)
+                    Debug.LogError($"Couldn't initialize project-wide input actions");
+                return s_Instance;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (s_Instance == value)
+                    return;
+
+                s_Instance?.Disable();
+                s_Instance = value;
+                s_Instance.Enable();
+            }
+        }
+
+        /// <summary>
+        /// If necessary, initializes and enables InputActionsAsset for both the Editor and Player.
+        /// </summary>
+        public static void EnsureInitialized()
+        {
+            // Touching the Singleton instance will create it if necessary
+            instance?.Enable();
+        }
+
+#if UNITY_INCLUDE_TESTS
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
 
-#if UNITY_INCLUDE_TESTS
-        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
+        internal static void TestHook_SetAssetPaths(string defaultAssetPath, string assetPath)
         {
             s_DefaultAssetPath = defaultAssetPath;
             s_AssetPath = assetPath;
         }
 
-        internal static void Reset()
+        internal static void TestHook_Reset()
         {
             s_DefaultAssetPath = kDefaultAssetPath;
             s_AssetPath = kAssetPath;
         }
 
-#endif
-
-        [InitializeOnLoadMethod]
-        internal static void InstallProjectWideActions()
+        internal static void TestHook_Disable()
         {
-            GetOrCreate();
+            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
+            if (s_Instance)
+            {
+                s_Instance.Disable();
+                s_Instance?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_Instance = null;
+            }
         }
 
-        internal static InputActionAsset GetOrCreate()
+        internal static void TestHook_Enable()
+        {
+            EnsureInitialized();
+            s_Instance.Enable();
+        }
+#endif // UNITY_INCLUDE_TESTS
+
+        // The remainder of the class functionality is Editor only
+#if UNITY_EDITOR
+        private static InputActionAsset GetOrCreate()
         {
             var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
             if (objects != null)
             {
-                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
+                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName) as InputActionAsset;
                 if (inputActionsAsset != null)
                     return inputActionsAsset;
             }
@@ -57,7 +119,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
             asset.LoadFromJson(json);
-            asset.name = kAssetName;
+            asset.name = kProjectWideActionsAssetName;
 
             AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
 
@@ -114,7 +176,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        #if UNITY_2023_2_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
         /// <summary>
         /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
@@ -146,8 +208,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
         }
-
-        #endif
+#endif // UNITY_2023_2_OR_NEWER
 
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
@@ -196,6 +257,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
         }
+#endif // UNITY_EDITOR
     }
 }
-#endif
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

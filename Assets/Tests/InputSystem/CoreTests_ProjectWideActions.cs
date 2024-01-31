@@ -61,7 +61,7 @@ internal partial class CoreTests
         m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/ProjectWideActionsTemplate.inputactions");
         File.WriteAllText(m_TemplateAssetPath, templateActions.ToJson());
 
-        ProjectWideActionsAsset.SetAssetPaths(m_TemplateAssetPath, TestAssetPath);
+        ProjectWideActionsAsset.TestHook_SetAssetPaths(m_TemplateAssetPath, TestAssetPath);
 #endif
 
         base.Setup();
@@ -71,7 +71,7 @@ internal partial class CoreTests
     public override void TearDown()
     {
 #if UNITY_EDITOR
-        ProjectWideActionsAsset.Reset();
+        ProjectWideActionsAsset.TestHook_Reset();
 
         if (File.Exists(m_TemplateAssetPath))
             File.Delete(m_TemplateAssetPath);
@@ -87,7 +87,7 @@ internal partial class CoreTests
     [Category(TestCategory)]
     public void ProjectWideActionsAsset_TemplateAssetIsInstalledOnFirstUse()
     {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
+        var asset = ProjectWideActionsAsset.instance;
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
@@ -99,7 +99,7 @@ internal partial class CoreTests
     [Category(TestCategory)]
     public void ProjectWideActionsAsset_CanModifySaveAndLoadAsset()
     {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
+        var asset = ProjectWideActionsAsset.instance;
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
@@ -122,7 +122,7 @@ internal partial class CoreTests
         AssetDatabase.SaveAssets();
 
         // Reload
-        asset = ProjectWideActionsAsset.GetOrCreate();
+        asset = ProjectWideActionsAsset.instance;
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount + 1));
@@ -137,7 +137,7 @@ internal partial class CoreTests
     [Category(TestCategory)]
     public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()  // This test is only relevant for the InputForUI module
     {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
+        var asset = ProjectWideActionsAsset.instance;
         var indexOf = asset.m_ActionMaps.IndexOf(x => x.name == "UI");
         var uiMap = asset.m_ActionMaps[indexOf];
 

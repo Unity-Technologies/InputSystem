@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             return CreateInputActionReferenceSearchProvider(k_ProjectWideActionsSearchProviderId,
                 "Project-Wide Input Actions",
                 (obj) => "(Project-Wide Input Actions)",
-                () => InputActionImporter.LoadInputActionReferencesFromAsset(ProjectWideActionsAsset.GetOrCreate()));
+                () => InputActionImporter.LoadInputActionReferencesFromAsset(ProjectWideActionsAsset.instance));
         }
 
         private static SearchProvider CreateInputActionReferenceSearchProvider(string id, string displayName,
