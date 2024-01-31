@@ -35,6 +35,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
 - Fixed missing name in window title for Input Action assets.
+- Fixed showing action properties view when there were no actions.
+- Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
 - Fixed Project Settings header title styling for Input Actions editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
