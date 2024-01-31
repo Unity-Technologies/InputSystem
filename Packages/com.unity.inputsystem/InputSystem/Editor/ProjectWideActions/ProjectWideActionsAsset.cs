@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset CreateNewActionAsset()
         {
-            // Always clean out old actions asset and action references first before we add new 
+            // Always clean out old actions asset and action references first before we add new
             DeleteActionAssetAndActionReferences();
 
             // Create new asset data
@@ -190,7 +190,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         internal static void UpdateInputActionReferences()
         {
-            InputActionAsset asset = GetOrCreate();
+            var asset = GetOrCreate();
             var existingReferences = InputActionImporter.LoadInputActionReferencesFromAsset(asset).ToList();
 
             // Check if referenced input action exists in the asset and remove the reference if it doesn't.
