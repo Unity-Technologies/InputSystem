@@ -241,6 +241,16 @@ namespace UnityEngine.InputSystem.Editor
             return state.SelectActionMap(index);
         }
 
+        public static Command ReorderActionMap(int oldIndex, int newIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                InputActionSerializationHelpers.MoveActionMap(state.serializedObject, oldIndex, newIndex);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectActionMap(newIndex);
+            };
+        }
+
         public static Command DeleteAction(int actionMapIndex, string actionName)
         {
             return (in InputActionsEditorState state) =>

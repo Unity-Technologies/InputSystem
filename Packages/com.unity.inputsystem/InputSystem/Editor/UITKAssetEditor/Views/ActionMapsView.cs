@@ -60,6 +60,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             var treeView = m_Root.Q<TreeView>("actions-tree-view");
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
+            m_ListView.itemIndexChanged += OnReorder;
 
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
@@ -73,6 +74,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.CutActionsOrBindings());
             Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
+        }
+
+        void OnReorder(int oldIndex, int newIndex)
+        {
+            Dispatch(Commands.ReorderActionMap(oldIndex, newIndex));
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
