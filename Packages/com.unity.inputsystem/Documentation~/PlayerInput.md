@@ -12,9 +12,9 @@ The **Player Input** component represents a single player, and that player's ass
 
 ![PlayerInput](Images/PlayerInput.png)
 
-*Above, the Player Input component as visible in the inspector, with an Actions Asset called "ExampleActions" assigned.*
+*Above, the Player Input component as visible in the inspector.*
 
-Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. You can use multiple `PlayerInput` instances at the same time (although not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
+Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. You can use multiple `PlayerInput` instances at the same time (although not on the same `GameObject`) to implement local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
 Each `PlayerInput` corresponds to one [`InputUser`](UserManagement.md). You can use [`PlayerInput.user`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_user) to query the `InputUser` from the component.
 
@@ -43,7 +43,12 @@ You can use the following properties to configure `PlayerInput`:
 
 ### Actions
 
-To receive input, each player must have an associated set of Input Actions. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
+To receive input, each player must have an associated set of Input Actions.
+
+#### Specifying the Actions to use
+The simplest workflow is to use the project-wide actions defined in the [Input Actions editor](ActionsEditor.md). However, the Player Input component also allows you to use an [Actions Asset](ActionsAssets.md) to specify the actions that should be used by any instance of the component. If you set the **Actions** field to **Actions Asset**, the inspector displays a field into which you can assign an actions asset, and a **Create Actions** button which allows you to create a new actions asset. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
+
+#### Enabling and disabling Actions
 
 The Player Input component automatically handles enabling and disabling Actions, and also handles installing [callbacks](RespondingToActions.md#responding-to-actions-using-callbacks) on the Actions. When multiple Player Input components use the same Actions, the components automatically create [private copies of the Actions](RespondingToActions.md#using-actions-with-multiple-players).
 
