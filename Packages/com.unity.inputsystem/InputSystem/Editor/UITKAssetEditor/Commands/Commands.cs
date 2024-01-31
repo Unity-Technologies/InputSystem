@@ -425,7 +425,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var asset = ProjectWideActionsAsset.CreateNewActionAsset();
+                ProjectWideActionsAsset.ResetActionAsset();
+                var asset = ProjectWideActionsAsset.GetOrCreate();
                 postResetAction?.Invoke(asset);
                 return state;
             };
