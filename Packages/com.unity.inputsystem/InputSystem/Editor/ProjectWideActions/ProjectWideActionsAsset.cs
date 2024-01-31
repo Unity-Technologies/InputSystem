@@ -63,48 +63,35 @@ namespace UnityEngine.InputSystem.Editor
             asset.LoadFromJson(json);
             asset.name = kAssetName;
 
-            try
+            AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
+
+            // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
+            var maps = asset.actionMaps;
+            foreach (var map in maps)
             {
-                //Place the Asset Database in a state where
-                //importing is suspended for most APIs
-                AssetDatabase.StartAssetEditing();
+                // Make sure action map has GUID.
+                if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
+                    map.GenerateId();
 
-                AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
-
-                // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
-                var maps = asset.actionMaps;
-                foreach (var map in maps)
+                // Make sure all actions have GUIDs.
+                foreach (var action in map.actions)
                 {
-                    // Make sure action map has GUID.
-                    if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
-                        map.GenerateId();
-
-                    // Make sure all actions have GUIDs.
-                    foreach (var action in map.actions)
-                    {
-                        var actionId = action.m_Id;
-                        if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
-                            action.GenerateId();
-                    }
-
-                    // Make sure all bindings have GUIDs.
-                    for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
-                    {
-                        var bindingId = map.m_Bindings[i].m_Id;
-                        if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
-                            map.m_Bindings[i].GenerateId();
-                    }
+                    var actionId = action.m_Id;
+                    if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
+                        action.GenerateId();
                 }
 
-                CreateInputActionReferences(asset);
+                // Make sure all bindings have GUIDs.
+                for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
+                {
+                    var bindingId = map.m_Bindings[i].m_Id;
+                    if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
+                        map.m_Bindings[i].GenerateId();
+                }
             }
-            finally
-            {
-                //By adding a call to StopAssetEditing inside
-                //a "finally" block, we ensure the AssetDatabase
-                //state will be reset when leaving this function
-                AssetDatabase.StopAssetEditing();
-            }
+
+            CreateInputActionReferences(asset);
+            AssetDatabase.SaveAssets();
 
             return asset;
         }
@@ -180,33 +167,19 @@ namespace UnityEngine.InputSystem.Editor
             var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
             if (objects != null)
             {
-                try
+                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                foreach (var obj in objects)
                 {
-                    //Place the Asset Database in a state where
-                    //importing is suspended for most APIs
-                    AssetDatabase.StartAssetEditing();
-
-                    // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
-                    foreach (var obj in objects)
+                    if (obj is InputActionReference)
                     {
-                        if (obj is InputActionReference)
-                        {
-                            var actionReference = obj as InputActionReference;
-                            actionReference.Set(null);
-                            AssetDatabase.RemoveObjectFromAsset(obj);
-                        }
-                        else if (obj is InputActionAsset)
-                        {
-                            AssetDatabase.RemoveObjectFromAsset(obj);
-                        }
+                        var actionReference = obj as InputActionReference;
+                        actionReference.Set(null);
+                        AssetDatabase.RemoveObjectFromAsset(obj);
                     }
-                }
-                finally
-                {
-                    //By adding a call to StopAssetEditing inside
-                    //a "finally" block, we ensure the AssetDatabase
-                    //state will be reset when leaving this function
-                    AssetDatabase.StopAssetEditing();
+                    else if (obj is InputActionAsset)
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
                 }
             }
         }
@@ -220,57 +193,44 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAsset asset = GetOrCreate();
             var existingReferences = InputActionImporter.LoadInputActionReferencesFromAsset(asset).ToList();
 
-            try
+            // Check if referenced input action exists in the asset and remove the reference if it doesn't.
+            foreach (var actionReference in existingReferences)
             {
-                //Place the Asset Database in a state where
-                //importing is suspended for most APIs
-                AssetDatabase.StartAssetEditing();
-
-                // Check if referenced input action exists in the asset and remove the reference if it doesn't.
-                foreach (var actionReference in existingReferences)
+                if (actionReference.action != null && asset.FindAction(actionReference.action.id) == null)
                 {
-                    if (actionReference.action != null && asset.FindAction(actionReference.action.id) == null)
+                    actionReference.Set(null);
+                    AssetDatabase.RemoveObjectFromAsset(actionReference);
+                }
+            }
+
+            // Check if all actions have a reference
+            foreach (var action in asset)
+            {
+                // Catch error that's possible to appear in previous versions of the package.
+                if (action.actionMap.m_Asset == null)
+                    action.actionMap.m_Asset = asset;
+
+                var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
+                // The input action doesn't have a reference, create a new one.
+                if (actionReference == null)
+                {
+                    var actionReferenceNew = ScriptableObject.CreateInstance<InputActionReference>();
+                    actionReferenceNew.Set(action);
+                    AssetDatabase.AddObjectToAsset(actionReferenceNew, asset);
+                }
+                else
+                {
+                    // Update the name of the reference if it doesn't match the action name.
+                    if (actionReference.name != InputActionReference.GetDisplayName(action))
                     {
-                        actionReference.Set(null);
                         AssetDatabase.RemoveObjectFromAsset(actionReference);
-                    }
-                }
-
-                // Check if all actions have a reference
-                foreach (var action in asset)
-                {
-                    // Catch error that's possible to appear in previous versions of the package.
-                    if (action.actionMap.m_Asset == null)
-                        action.actionMap.m_Asset = asset;
-
-                    var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
-                    // The input action doesn't have a reference, create a new one.
-                    if (actionReference == null)
-                    {
-                        var actionReferenceNew = ScriptableObject.CreateInstance<InputActionReference>();
-                        actionReferenceNew.Set(action);
-                        AssetDatabase.AddObjectToAsset(actionReferenceNew, asset);
-                    }
-                    else
-                    {
-                        // Update the name of the reference if it doesn't match the action name.
-                        if (actionReference.name != InputActionReference.GetDisplayName(action))
-                        {
-                            AssetDatabase.RemoveObjectFromAsset(actionReference);
-                            actionReference.name = InputActionReference.GetDisplayName(action);
-                            AssetDatabase.AddObjectToAsset(actionReference, asset);
-                        }
+                        actionReference.name = InputActionReference.GetDisplayName(action);
+                        AssetDatabase.AddObjectToAsset(actionReference, asset);
                     }
                 }
             }
-            finally
-            {
-                //By adding a call to StopAssetEditing inside
-                //a "finally" block, we ensure the AssetDatabase
-                //state will be reset when leaving this function
-                AssetDatabase.StopAssetEditing();
-            }
 
+            AssetDatabase.SaveAssets();
         }
     }
 }
