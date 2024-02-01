@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.Editor
             };
             popupWindow.contentContainer.Add(controlSchemeVisualElement);
             m_ModalWindow.Add(popupWindow);
-            rootElement.Add(m_ModalWindow);
+            root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
             m_ModalWindow.RegisterCallback<ClickEvent>(evt => Close());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());

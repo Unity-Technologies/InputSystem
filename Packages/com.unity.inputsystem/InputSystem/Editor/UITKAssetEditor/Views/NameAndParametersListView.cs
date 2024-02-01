@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly Func<InputActionsEditorState, IEnumerable<ParameterListView>> m_ParameterListViewSelector;
         private VisualElement m_ContentContainer;
+        private readonly Label m_NoParamsLabel;
 
         private SerializedProperty m_ListProperty;
 
@@ -21,6 +22,7 @@ namespace UnityEngine.InputSystem.Editor
             : base(root, stateContainer)
         {
             m_ListProperty = listProperty;
+            m_NoParamsLabel = root.Q<Label>("no-parameters-added-label");
             m_ParameterListViewSelector = parameterListViewSelector;
 
             CreateSelector(state => state);
@@ -99,11 +101,11 @@ namespace UnityEngine.InputSystem.Editor
             var parameterListViews = m_ParameterListViewSelector(state).ToList();
             if (parameterListViews.Count == 0)
             {
-                rootElement.Q<Label>("no-parameters-added-label").style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+                m_NoParamsLabel.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
                 return;
             }
 
-            rootElement.Q<Label>("no-parameters-added-label").style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+            m_NoParamsLabel.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             m_ContentContainer.Clear();
             for (int i = 0; i < parameterListViews.Count; i++)
             {
