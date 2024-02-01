@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly TreeView m_ActionsTreeView;
         private readonly Button m_AddActionButton;
+        private readonly ScrollView m_PropertiesScrollview;
 
         private bool m_RenameOnActionAdded;
         private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
@@ -29,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
             : base(root, stateContainer)
         {
             m_AddActionButton = rootElement.Q<Button>("add-new-action-button");
+            m_PropertiesScrollview = rootElement.Q<ScrollView>("properties-scrollview");
             m_ActionsTreeView = rootElement.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
             m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
@@ -203,7 +205,7 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionButton.SetEnabled(viewState.actionMapCount > 0);
 
             // Don't want to show action properties if there's no actions.
-            rootElement.Q<VisualElement>("properties-scrollview").visible = m_ActionsTreeView.GetTreeCount() > 0;
+            m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
         }
 
         private void RenameNewAction(int id)
