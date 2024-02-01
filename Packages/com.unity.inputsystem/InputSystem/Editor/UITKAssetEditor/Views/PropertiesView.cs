@@ -8,23 +8,20 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class PropertiesView : ViewBase<PropertiesView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private ActionPropertiesView m_ActionPropertyView;
         private BindingPropertiesView m_BindingPropertyView;
         private NameAndParametersListView m_InteractionsListView;
         private NameAndParametersListView m_ProcessorsListView;
 
-        private Foldout interactionsFoldout => m_Root.Q<Foldout>("interactions-foldout");
-        private Foldout processorsFoldout => m_Root.Q<Foldout>("processors-foldout");
+        private Foldout interactionsFoldout => rootElement.Q<Foldout>("interactions-foldout");
+        private Foldout processorsFoldout => rootElement.Q<Foldout>("processors-foldout");
 
         private TextElement addInteractionButton;
         private TextElement addProcessorButton;
 
         public PropertiesView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
             CreateSelector(
                 Selectors.GetSelectedAction,
                 Selectors.GetSelectedBinding,
@@ -130,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
             DestroyChildView(m_InteractionsListView);
             DestroyChildView(m_ProcessorsListView);
 
-            var propertiesContainer = m_Root.Q<VisualElement>("properties-container");
+            var propertiesContainer = rootElement.Q<VisualElement>("properties-container");
 
             var foldout = propertiesContainer.Q<Foldout>("properties-foldout");
             foldout.Clear();
@@ -145,12 +142,12 @@ namespace UnityEngine.InputSystem.Editor
             switch (viewState.selectionType)
             {
                 case SelectionType.Action:
-                    m_Root.Q<Label>("properties-header-label").text = "Action Properties";
+                    rootElement.Q<Label>("properties-header-label").text = "Action Properties";
                     m_ActionPropertyView = CreateChildView(new ActionPropertiesView(visualElement, foldout, stateContainer));
                     break;
 
                 case SelectionType.Binding:
-                    m_Root.Q<Label>("properties-header-label").text = "Binding Properties";
+                    rootElement.Q<Label>("properties-header-label").text = "Binding Properties";
                     m_BindingPropertyView = CreateChildView(new BindingPropertiesView(visualElement, foldout, stateContainer));
                     inputAction = viewState.relatedInputAction;
                     inputActionOrBinding = viewState.inputBinding?.wrappedProperty;

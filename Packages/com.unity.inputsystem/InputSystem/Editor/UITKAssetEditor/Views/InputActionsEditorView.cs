@@ -18,9 +18,8 @@ namespace UnityEngine.InputSystem.Editor
         internal Action<InputActionAsset> postResetAction;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             BuildUI();
         }
 
@@ -31,29 +30,29 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.ResourcesPath +
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
-            mainEditorAsset.CloneTree(m_Root);
-            var actionsTreeView = new ActionsTreeView(m_Root, stateContainer);
-            CreateChildView(new ActionMapsView(m_Root, stateContainer));
+            mainEditorAsset.CloneTree(rootElement);
+            var actionsTreeView = new ActionsTreeView(rootElement, stateContainer);
+            CreateChildView(new ActionMapsView(rootElement, stateContainer));
             CreateChildView(actionsTreeView);
-            CreateChildView(new PropertiesView(m_Root, stateContainer));
-            InputActionViewsControlsHolder.Initialize(m_Root, actionsTreeView);
+            CreateChildView(new PropertiesView(rootElement, stateContainer));
+            InputActionViewsControlsHolder.Initialize(rootElement, actionsTreeView);
 
-            var menuButton = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
-            menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
-            menuButton.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true), DropdownMenuAction.Status.Disabled);
-            menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(m_Root), DropdownMenuAction.Status.Disabled);
+            var menuButton = rootElement.Q<ToolbarMenu>("control-schemes-toolbar-menu");
+            menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
+            menuButton.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true), DropdownMenuAction.Status.Disabled);
+            menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(rootElement), DropdownMenuAction.Status.Disabled);
             menuButton.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
 
-            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            var saveButton = rootElement.Q<ToolbarButton>(name: saveButtonId);
             saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
             saveButton.clicked += OnSaveButton;
 
-            var autoSaveToggle = m_Root.Q<ToolbarToggle>(name: autoSaveToggleId);
+            var autoSaveToggle = rootElement.Q<ToolbarToggle>(name: autoSaveToggleId);
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
 
-            var assetMenuButton = m_Root.Q<VisualElement>(name: menuButtonId);
+            var assetMenuButton = rootElement.Q<VisualElement>(name: menuButtonId);
             var isGlobalAsset = stateContainer.GetState().serializedObject.targetObject.name == "ProjectWideInputActions";
             assetMenuButton.visible = isGlobalAsset;
             assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
@@ -88,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
             // Don't let focus linger after clicking (ISX-1482). Ideally this would be only applied on mouse click,
             // rather than if the user is using tab to navigate UI, but there doesn't seem to be a way to differentiate
             // between those interactions at the moment.
-            m_Root.Q<ToolbarButton>(name: saveButtonId).Blur();
+            rootElement.Q<ToolbarButton>(name: saveButtonId).Blur();
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
@@ -98,14 +97,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
-            // It's possible for RedrawUI to be called when m_Root is empty, throwing errors in the console.
-            // This can happen when the view is discarded immediately after being loaded, i.e. jumping to the input settings
-            // page in Preferences when the last window shown there was the main view, which the editor (briefly) loads first.
-            // Compare against the number of m_ChildViews as a cheap way to know we should skip redrawing. (ISX-1721)
-            if (m_Root.childCount != ChildViewCount())
-                return;
-
-            var toolbarMenu = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
+            var toolbarMenu = rootElement.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             toolbarMenu.menu.MenuItems().Clear();
 
             if (viewState.controlSchemes.Any())
@@ -122,15 +114,15 @@ namespace UnityEngine.InputSystem.Editor
                 toolbarMenu.menu.AppendSeparator();
             }
 
-            toolbarMenu.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
-            toolbarMenu.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true),
+            toolbarMenu.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
+            toolbarMenu.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            toolbarMenu.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(m_Root),
+            toolbarMenu.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(rootElement),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             toolbarMenu.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
-            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            var saveButton = rootElement.Q<ToolbarButton>(name: saveButtonId);
             saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
@@ -165,8 +157,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(ControlSchemeCommands.SelectControlScheme(controlSchemeIndex));
         }
-
-        private readonly VisualElement m_Root;
 
         public class ViewState
         {

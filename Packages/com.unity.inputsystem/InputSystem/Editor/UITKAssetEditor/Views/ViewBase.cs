@@ -19,8 +19,9 @@ namespace UnityEngine.InputSystem.Editor
 
     internal abstract class ViewBase<TViewState> : IView
     {
-        protected ViewBase(StateContainer stateContainer)
+        protected ViewBase(VisualElement root, StateContainer stateContainer)
         {
+            this.rootElement = root;
             this.stateContainer = stateContainer;
             m_ChildViews = new List<IView>();
         }
@@ -40,7 +41,14 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            if (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate)
+
+            // It's possible for RedrawUI to be called when rootElement is empty, throwing errors in the console.
+            // This can happen when the view is discarded immediately after being loaded, i.e. jumping to the input settings
+            // page in Preferences when the last window shown there was the main view, which the editor (briefly) loads first.
+            // Compare against the number of m_ChildViews as a cheap way to know we should skip redrawing. (ISX-1721)
+            var correctChildren = rootElement.childCount >= m_ChildViews.Count;
+
+            if (correctChildren && (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate))
                 RedrawUI(m_ViewStateSelector.GetViewState(state));
 
             m_IsFirstUpdate = false;
@@ -63,11 +71,6 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ChildViews.Remove(view);
             view.DestroyView();
-        }
-
-        public int ChildViewCount()
-        {
-            return m_ChildViews.Count;
         }
 
         public void Dispatch(Command command)
@@ -114,6 +117,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ViewStateSelector = new ViewStateSelector<T1, T2, T3, TViewState>(func1, func2, func3, selector);
         }
 
+        protected readonly VisualElement rootElement;
         protected readonly StateContainer stateContainer;
         protected IViewStateSelector<TViewState> ViewStateSelector => m_ViewStateSelector;
         private IViewStateSelector<TViewState> m_ViewStateSelector;

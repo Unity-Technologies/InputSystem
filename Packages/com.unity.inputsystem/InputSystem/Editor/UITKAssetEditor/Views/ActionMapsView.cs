@@ -13,11 +13,9 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionMapsView : ViewBase<ActionMapsView.ViewState>
     {
         public ActionMapsView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
+            m_ListView = rootElement?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
 
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
@@ -65,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
         }
 
-        private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
+        private Button addActionMapButton => rootElement?.Q<Button>("add-new-action-map-button");
 
         public override void RedrawUI(ViewState viewState)
         {
@@ -183,7 +181,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private bool m_EnterRenamingMode;
-        private readonly VisualElement m_Root;
         private ListView m_ListView;
 
         internal class ViewState
