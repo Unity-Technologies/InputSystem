@@ -4,21 +4,19 @@ using UnityEngine.SceneManagement;
 
 public class EscapeMenu : MonoBehaviour
 {
-
     public InputAction openMenu;
     private GameObject menuObject;
     private bool isMenuOpened;
-    private int sceneIDPrevious;
+    private Scene currentScene;
 
     public void Start()
     {
         menuObject = GameObject.Find("Escape Menu");
         menuObject.SetActive(false);
-        sceneIDPrevious = SceneManager.GetActiveScene().buildIndex;
-       
-        // assign a callback for the "OpenMenu" action.
-        openMenu.performed += ctx => { OnEsc(ctx); };   
-       
+        currentScene = SceneManager.GetActiveScene();
+
+        // Assign a callback for the "OpenMenu" action.
+        openMenu.performed += ctx => { OnEsc(ctx); };
     }
 
     public void OnEsc(InputAction.CallbackContext context)
@@ -27,13 +25,12 @@ public class EscapeMenu : MonoBehaviour
 
         if (isMenuOpened)
         {
-            SceneManager.UnloadSceneAsync(sceneIDPrevious);
+            DeactivateScene(currentScene);
             ActivateMenu();
-
         }
         else
         {
-            SceneManager.LoadScene(sceneIDPrevious, LoadSceneMode.Additive);
+            ActivateScene(currentScene);
             DeactivateMenu();
         }
     }
@@ -42,10 +39,30 @@ public class EscapeMenu : MonoBehaviour
     {
         menuObject.SetActive(true);
     }
+
     public void DeactivateMenu()
     {
         menuObject.SetActive(false);
     }
+
+    public void ActivateScene(Scene scene)
+    {
+        GameObject[] rootObjects = scene.GetRootGameObjects();
+        foreach (GameObject obj in rootObjects)
+        {
+            obj.SetActive(true);
+        }
+    }
+
+    public void DeactivateScene(Scene scene)
+    {
+        GameObject[] rootObjects = scene.GetRootGameObjects();
+        foreach (GameObject obj in rootObjects)
+        {
+            obj.SetActive(false);
+        }
+    }
+
     public void OnUIButtonPress()
     {
         SceneManager.LoadScene("Core Platforms Menu");
@@ -60,5 +77,4 @@ public class EscapeMenu : MonoBehaviour
     {
         openMenu.Disable();
     }
-
 }

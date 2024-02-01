@@ -23,7 +23,11 @@ public class ExampleEmbeddedActions : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        // jump code goes here.
+      
+
+        // Display the key information (you can customize this based on your UI)
+        Debug.Log($"Jump key pressed:");
+
     }
 
     // the actions must be enabled and disabled
