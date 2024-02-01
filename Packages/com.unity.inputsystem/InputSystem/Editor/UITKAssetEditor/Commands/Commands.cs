@@ -251,6 +251,33 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command MoveAction(int oldIndex, int newIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                InputActionSerializationHelpers.MoveAction(actionMap, oldIndex, newIndex);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectAction(newIndex);
+            };
+        }
+
+        public static Command MoveBindingOrComposite(int oldIndex, int actionIndex, int childIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                var bindings = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
+                var newBindingIndex = bindings[Math.Clamp(childIndex, 0, bindings.Count - 1)].GetIndexOfArrayElement();
+                var actionTo = Selectors.GetActionForIndex(state, actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+                Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
+                InputActionSerializationHelpers.MoveBindingOrComposite(actionMap, oldIndex, newBindingIndex);
+                //TODO also move composite parts
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectBinding(newBindingIndex);
+            };
+        }
+
         public static Command DeleteAction(int actionMapIndex, string actionName)
         {
             return (in InputActionsEditorState state) =>

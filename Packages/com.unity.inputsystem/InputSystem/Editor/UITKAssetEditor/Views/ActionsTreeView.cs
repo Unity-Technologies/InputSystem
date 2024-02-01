@@ -135,6 +135,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -204,6 +205,33 @@ namespace UnityEngine.InputSystem.Editor
             }
             RenameNewAction(viewState.newElementID);;
             addActionButton.SetEnabled(viewState.actionMapCount > 0);
+        }
+
+        private void OnDraggedItem(DragPerformEvent evt)
+        {
+            foreach (var index in m_ActionsTreeView.selectedIndices)
+            {
+                var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
+                var itemID = m_ActionsTreeView.GetIdForIndex(index);
+                var childIndex = m_ActionsTreeView.viewController.GetChildIndexForId(itemID);
+                var parentId = m_ActionsTreeView.viewController.GetParentId(itemID);
+                ActionOrBindingData? directParent = parentId == -1 ? null : m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.viewController.GetIndexForId(parentId));
+                if (data.isAction)
+                {
+                    if (directParent == null)
+                        Dispatch(Commands.MoveAction(data.actionIndex, childIndex));
+                    else
+                        break;
+                }
+                if (!data.isPartOfComposite)
+                {
+                    if (directParent != null && directParent.Value.isAction)
+                        Dispatch(Commands.MoveBindingOrComposite(data.bindingIndex, directParent.Value.actionIndex, childIndex));
+                    else
+                        break;
+                }
+                //TODO for part of composites
+            }
         }
 
         private void RenameNewAction(int id)
@@ -435,22 +463,26 @@ namespace UnityEngine.InputSystem.Editor
 
     internal struct ActionOrBindingData
     {
-        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, string controlLayout = "", int bindingIndex = -1)
+        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1)
         {
             this.name = name;
             this.isComposite = isComposite;
+            this.isPartOfComposite = isPartOfComposite;
             this.actionMapIndex = actionMapIndex;
             this.controlLayout = controlLayout;
             this.bindingIndex = bindingIndex;
             this.isAction = isAction;
+            this.actionIndex = actionIndex;
         }
 
         public string name { get; }
         public bool isAction { get; }
         public int actionMapIndex { get; }
         public bool isComposite { get; }
+        public bool isPartOfComposite { get; }
         public string controlLayout { get; }
         public int bindingIndex { get; }
+        public int actionIndex { get; }
     }
 
     internal static partial class Selectors
@@ -498,7 +530,7 @@ namespace UnityEngine.InputSystem.Editor
                                 var compositeBindingId = new Guid(nextBinding.id);
                                 compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
                                     new ActionOrBindingData(false, name, actionMapIndex, false,
-                                        GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                                        true, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
                             }
 
                             if (++i >= actionBindings.Count)
@@ -508,7 +540,7 @@ namespace UnityEngine.InputSystem.Editor
                         }
                         i--;
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
+                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, false, action.expectedControlType, serializedInputBinding.indexOfBinding),
                             compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
@@ -517,11 +549,11 @@ namespace UnityEngine.InputSystem.Editor
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
                                 new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
-                                    false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
+                                    false, false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(actionId, idDictionary),
-                    new ActionOrBindingData(true, action.name, actionMapIndex, false, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(true, action.name, actionMapIndex, false, false, action.expectedControlType, actionIndex: action.wrappedProperty.GetIndexOfArrayElement()), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }

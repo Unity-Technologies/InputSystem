@@ -152,6 +152,18 @@ namespace UnityEngine.InputSystem.Editor
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             mapArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        } 
+        
+        public static void MoveAction(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveBindingOrComposite(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
         }
 
         // Append a new action to the end of the set.
