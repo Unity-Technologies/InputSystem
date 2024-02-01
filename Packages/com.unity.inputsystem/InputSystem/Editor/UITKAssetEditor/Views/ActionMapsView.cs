@@ -70,13 +70,26 @@ namespace UnityEngine.InputSystem.Editor
         public override void RedrawUI(ViewState viewState)
         {
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-            if (viewState.selectedActionMap.HasValue)
+            /*if (viewState.selectedActionMap.HasValue)
             {
                 var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name);
                 m_ListView.SetSelection(indexOf);
+            }*/
+            
+            // Update view to reflect model
+            var desiredSelectedIndex = viewState.selectedActionMap.HasValue
+                ? viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name)
+                : -1;
+            if (desiredSelectedIndex != m_ListView.selectedIndex)
+            {
+                m_ListView.ScrollToItem(desiredSelectedIndex); // Note: sizing or UITK bug, also just clicking many times shrinks the panel (!!!!)
+                m_ListView.SetSelection(desiredSelectedIndex);
             }
+                
+            //var selected = viewState.selectedActionMap.HasValue ? viewState.selectedActionMap.Value.name : "none";
+            //Debug.Log($"Redraw, selection: {desiredSelectedIndex}, listSelection: {m_ListView.selectedItem}");
             m_ListView.Rebuild();
-            RenameNewActionMaps();
+            //RenameNewActionMaps();
         }
 
         public override void DestroyView()
@@ -86,14 +99,30 @@ namespace UnityEngine.InputSystem.Editor
 
         private void RenameNewActionMaps()
         {
-            if (!m_EnterRenamingMode)
+            Debug.Log("RenameNewActionMaps");
+            
+            //Debug.Log($"RenameNewActionMaps | Count: {m_ListView.itemsSource.Count}, selectedIndex: {m_ListView.selectedIndex}");
+
+            /*if (m_ListView.itemsSource == null)
+            {
+                Debug.Log("No itemsSource");
                 return;
-            m_ListView.ScrollToItem(m_ListView.selectedIndex);
+            }*/
+            
+            //Debug.Log($"selectedIndex: {m_ListView.selectedIndex}");
+            //Debug.Log($"viewStateSelected: {viewState.selectedActionMap}");
+            
+            //Debug.Assert(m_ListView.itemsSource.Count > 0);
+            //Debug.Assert(m_ListView.selectedIndex >= 0);
+            
+            //m_ListView.ScrollToItem(m_ListView.selectedIndex); // TODO This is wrong this should be when changing selection
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            if (element == null)
-                return;
+            //if (element == null)
+            //{
+            //    Debug.Log("No element selected");
+            //    return;
+            //}
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
-            m_EnterRenamingMode = false;
         }
 
         private void DeleteActionMap(int index)
@@ -129,7 +158,7 @@ namespace UnityEngine.InputSystem.Editor
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
-            m_EnterRenamingMode = true;
+            //Execute(() => RenameNewActionMaps());
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
@@ -184,7 +213,6 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
-        private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;
 

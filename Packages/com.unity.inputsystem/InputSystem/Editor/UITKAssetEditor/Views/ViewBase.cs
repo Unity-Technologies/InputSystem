@@ -65,6 +65,11 @@ namespace UnityEngine.InputSystem.Editor
             view.DestroyView();
         }
 
+        public void Execute(Action update)
+        {
+            stateContainer.TryExecute(update);
+        }
+
         public void Dispatch(Command command)
         {
             stateContainer.Dispatch(command);

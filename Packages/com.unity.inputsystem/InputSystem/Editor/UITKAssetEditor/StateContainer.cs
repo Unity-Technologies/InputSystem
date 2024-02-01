@@ -27,6 +27,22 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.Bind(initialState.serializedObject);
         }
 
+        public void TryExecute(Action update)
+        {
+            m_RootVisualElement.schedule.Execute(() =>
+            {
+                // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
+                try
+                {
+                    update.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e.Message);
+                }
+            });
+        }
+        
         public void Dispatch(Command command)
         {
             if (command == null)
