@@ -44,6 +44,10 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
+                treeViewItem.DeleteCallback = _ => DeleteItem(item);
+                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
+                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
@@ -106,6 +110,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
+                treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -230,7 +236,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.AddComposite(compositeType));
         }
 
-        internal void DeleteItem(ActionOrBindingData data)
+        private void DeleteItem(ActionOrBindingData data)
         {
             if (data.isAction)
             {
@@ -253,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.Focus();
         }
 
-        internal void DuplicateItem(ActionOrBindingData data)
+        private void DuplicateItem(ActionOrBindingData data)
         {
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
@@ -301,10 +307,10 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
-                    DeleteItem(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex));
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
                     break;
                 case CmdEvents.Duplicate:
-                    DuplicateItem(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex));
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
                     break;
                 case CmdEvents.Copy:
                     CopyItems();
