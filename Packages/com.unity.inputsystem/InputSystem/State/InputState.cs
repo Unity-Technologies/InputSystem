@@ -44,8 +44,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         public static event Action<InputDevice, InputEventPtr> onChange
         {
-            add => InputSystem.s_Manager.onDeviceStateChange += value;
-            remove => InputSystem.s_Manager.onDeviceStateChange -= value;
+            add => InputSystem.manager.onDeviceStateChange += value;
+            remove => InputSystem.manager.onDeviceStateChange -= value;
         }
 
         public static unsafe void Change(InputDevice device, InputEventPtr eventPtr, InputUpdateType updateType = default)
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem.LowLevel
             else
             {
                 #if UNITY_EDITOR
-                InputSystem.s_Manager.m_Diagnostics?.OnEventFormatMismatch(eventPtr, device);
+                InputSystem.manager.m_Diagnostics?.OnEventFormatMismatch(eventPtr, device);
                 #endif
                 return;
             }
@@ -75,8 +75,8 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"State format {stateFormat} from event does not match state format {device.stateBlock.format} of device {device}",
                     nameof(eventPtr));
 
-            InputSystem.s_Manager.UpdateState(device, eventPtr,
-                updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType);
+            InputSystem.manager.UpdateState(device, eventPtr,
+                updateType != default ? updateType : InputSystem.manager.defaultUpdateType);
         }
 
         /// <summary>
@@ -122,8 +122,8 @@ namespace UnityEngine.InputSystem.LowLevel
             var statePtr = UnsafeUtility.AddressOf(ref state);
             var stateOffset = control.stateBlock.byteOffset - device.stateBlock.byteOffset;
 
-            InputSystem.s_Manager.UpdateState(device,
-                updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType, statePtr, stateOffset,
+            InputSystem.manager.UpdateState(device,
+                updateType != default ? updateType : InputSystem.manager.defaultUpdateType, statePtr, stateOffset,
                 (uint)stateSize,
                 eventPtr.valid
                 ? eventPtr.internalTime
@@ -209,7 +209,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!control.device.added)
                 throw new ArgumentException($"Device for control '{control}' has not been added to system");
 
-            InputSystem.s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
+            InputSystem.manager.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
         }
 
         public static IInputStateChangeMonitor AddChangeMonitor(InputControl control,
@@ -234,7 +234,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
 
-            InputSystem.s_Manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+            InputSystem.manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
 
-            InputSystem.s_Manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
+            InputSystem.manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
         }
 
         public static void RemoveChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
@@ -264,7 +264,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
 
-            InputSystem.s_Manager.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
+            InputSystem.manager.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
         }
 
         private class StateChangeMonitorDelegate : IInputStateChangeMonitor

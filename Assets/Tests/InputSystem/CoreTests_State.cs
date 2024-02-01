@@ -1196,7 +1196,7 @@ partial class CoreTests
     {
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate));
         Assert.That(runtime.onShouldRunUpdate(InputUpdateType.Fixed), Is.False);
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
     }
 
     [Test]

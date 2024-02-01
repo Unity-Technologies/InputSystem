@@ -585,7 +585,7 @@ namespace UnityEngine.InputSystem.DualShock
                     || newState->buttons2 != currentState->buttons2;
 
                 if (!actuated)
-                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+                    InputSystem.manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
 
             InputState.Change(this, eventPtr);
@@ -920,7 +920,7 @@ namespace UnityEngine.InputSystem.DualShock
                     || newState->buttons3 != currentState->buttons3;
 
                 if (!actuatedOrChanged)
-                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+                    InputSystem.manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
 
             InputState.Change(this, eventPtr);

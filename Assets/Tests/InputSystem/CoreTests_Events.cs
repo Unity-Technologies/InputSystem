@@ -431,7 +431,7 @@ partial class CoreTests
 
         #if UNITY_EDITOR
         // Edit mode updates shouldn't have been disabled in editor.
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Editor, Is.Not.Zero);
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Editor, Is.Not.Zero);
         #endif
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
@@ -458,8 +458,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdate));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
@@ -475,19 +475,19 @@ partial class CoreTests
     [Category("Events")]
     public void Events_ShouldRunUpdate_AppliesUpdateMask()
     {
-        InputSystem.s_Manager.updateMask = InputUpdateType.Dynamic;
+        InputSystem.manager.updateMask = InputUpdateType.Dynamic;
 
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Manual));
 
-        InputSystem.s_Manager.updateMask = InputUpdateType.Manual;
+        InputSystem.manager.updateMask = InputUpdateType.Manual;
 
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Manual));
 
-        InputSystem.s_Manager.updateMask = InputUpdateType.Default;
+        InputSystem.manager.updateMask = InputUpdateType.Default;
 
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));

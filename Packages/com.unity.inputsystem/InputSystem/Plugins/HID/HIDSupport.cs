@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.HID
                 s_SupportedHIDUsages = value.ToArray();
 
                 // Add HIDs we now support.
-                InputSystem.s_Manager.AddAvailableDevicesThatAreNowRecognized();
+                InputSystem.manager.AddAvailableDevicesThatAreNowRecognized();
 
                 // Remove HIDs we no longer support.
                 for (var i = 0; i < InputSystem.devices.Count; ++i)

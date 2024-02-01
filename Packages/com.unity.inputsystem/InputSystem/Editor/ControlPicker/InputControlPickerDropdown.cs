@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ExpectedControlType = typeof(InputDevice);
             else
                 m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
-                    ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
+                    ? InputSystem.manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
                     : null;
 
             // If the layout is for a device, automatically switch to device
@@ -421,7 +421,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ExpectedControlType == null)
                 return true;
 
-            var layoutType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
+            var layoutType = InputSystem.manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
             return m_ExpectedControlType.IsAssignableFrom(layoutType);
         }
 

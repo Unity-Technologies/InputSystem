@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     internal class InputTestStateManager
     {
-        public InputSystem.State GetSavedState()
+        public InputSystemState GetSavedState()
         {
             return m_SavedStateStack.Peek();
         }
@@ -39,16 +39,16 @@ namespace UnityEngine.InputSystem
             ////TODO: preserve InputUser state
             ////TODO: preserve EnhancedTouchSupport state
 
-            m_SavedStateStack.Push(new InputSystem.State
+            m_SavedStateStack.Push(new InputSystemState
             {
-                manager = InputSystem.s_Manager,
-                remote = InputSystem.s_Remote,
-                remoteConnection = InputSystem.s_RemoteConnection,
-                managerState = InputSystem.s_Manager.SaveState(),
-                remotingState = InputSystem.s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
+                manager = InputSystem.manager,
+                remote = InputSystem.remoting,
+                remoteConnection = InputSystem.remoteConnection,
+                managerState = InputSystem.manager.SaveState(),
+                remotingState = InputSystem.remoting?.SaveState() ?? new InputRemoting.SerializedState(),
 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
-                systemObject = JsonUtility.ToJson(InputSystem.s_SystemObject),
+                systemObject = JsonUtility.ToJson(InputSystem.domainStateManager),
 #endif
                 inputActionState = InputActionState.SaveAndResetState(),
                 touchState = EnhancedTouch.Touch.SaveAndResetState(),
@@ -69,32 +69,19 @@ namespace UnityEngine.InputSystem
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
-            if (InputSystem.s_Manager != null)
+            if (InputSystem.manager != null)
             {
-                foreach (var device in InputSystem.s_Manager.devices)
+                foreach (var device in InputSystem.manager.devices)
                     device.NotifyRemoved();
 
-                InputSystem.s_Manager.UninstallGlobals();
+                InputSystem.manager.UninstallGlobals();
             }
 
 #if UNITY_EDITOR
-
-            InputSystem.s_Manager = InputManager.CreateAndInitialize(runtime, null);
-
-            InputSystem.s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
-            InputSystem.s_Manager.runtime.onProjectChange = InputSystem.OnProjectChange;
-
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
-
-            if (enableRemoting)
-                InputSystem.SetUpRemoting();
-
-#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-            InputSystem.PerformDefaultPluginInitialization();
-#endif
-
+            // Perform special initialization for running Editor tests
+            InputSystem.TestHook_InitializeForPlayModeTests(enableRemoting, runtime);
 #else
-            // For tests need to use default InputSettings
+            // For Player tests we can use the normal initialization
             InputSystem.InitializeInPlayer(runtime, false);
 #endif // UNITY_EDITOR
 
@@ -107,31 +94,6 @@ namespace UnityEngine.InputSystem
             UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.TestHook_Enable();
 
             Profiler.EndSample();
-        }
-
-        /// <summary>
-        /// Destroy the current setup of the input system.
-        /// </summary>
-        /// <remarks>
-        /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
-        /// </remarks>
-        private static void Destroy()
-        {
-            // NOTE: Does not destroy InputSystemObject. We want to destroy input system
-            //       state repeatedly during tests but we want to not create InputSystemObject
-            //       over and over.
-            InputSystem.s_Manager.Dispose();
-            if (InputSystem.s_RemoteConnection != null)
-                Object.DestroyImmediate(InputSystem.s_RemoteConnection);
-#if UNITY_EDITOR
-            EditorInputControlLayoutCache.Clear();
-            InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
-#endif
-
-            InputSystem.s_Manager = null;
-            InputSystem.s_RemoteConnection = null;
-            InputSystem.s_Remote = null;
         }
 
         ////FIXME: this method doesn't restore things like InputDeviceDebuggerWindow.onToolbarGUI
@@ -149,37 +111,33 @@ namespace UnityEngine.InputSystem
             state.touchState.StaticDisposeCurrentState();
             state.inputActionState.StaticDisposeCurrentState();
 
-            // Nuke what we have.
-            Destroy();
+            InputSystem.TestHook_DestroyAndReset();
 
             state.inputUserState.RestoreSavedState();
             state.touchState.RestoreSavedState();
             state.inputActionState.RestoreSavedState();
 
-            InputSystem.s_Manager = state.manager;
-            InputSystem.s_Remote = state.remote;
-            InputSystem.s_RemoteConnection = state.remoteConnection;
-
+            InputSystem.TestHook_RestoreFromSavedState(state);
             InputUpdate.Restore(state.managerState.updateState);
 
-            InputSystem.s_Manager.InstallRuntime(InputSystem.s_Manager.runtime);
-            InputSystem.s_Manager.InstallGlobals();
+            InputSystem.manager.InstallRuntime(InputSystem.manager.runtime);
+            InputSystem.manager.InstallGlobals();
 
             // IMPORTANT
             // If InputManager was using the "temporary" settings object, then it'll have been deleted during Reset()
             // and the saved Manager settings state will also be null, since it's a ScriptableObject.
             // In this case we manually create and set new temp settings object.
-            if (InputSystem.s_Manager.settings == null)
+            if (InputSystem.manager.settings == null)
             {
                 var tmpSettings = ScriptableObject.CreateInstance<InputSettings>();
                 tmpSettings.hideFlags = HideFlags.HideAndDontSave;
-                InputSystem.s_Manager.settings = tmpSettings;
+                InputSystem.manager.settings = tmpSettings;
             }
-            else InputSystem.s_Manager.ApplySettings();
+            else InputSystem.manager.ApplySettings();
 
 #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
-            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystem.s_SystemObject);
+            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystem.domainStateManager);
 #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them
@@ -191,6 +149,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private Stack<InputSystem.State> m_SavedStateStack = new Stack<InputSystem.State>();
+        private Stack<InputSystemState> m_SavedStateStack = new Stack<InputSystemState>();
     }
 }

@@ -867,7 +867,7 @@ namespace UnityEngine.InputSystem
         internal void MarkAsDirty()
         {
 #if UNITY_EDITOR
-            InputSystem.TrackDirtyInputActionAsset(this);
+            DirtyAssetTracker.TrackDirtyInputActionAsset(this);
 #endif
         }
 
