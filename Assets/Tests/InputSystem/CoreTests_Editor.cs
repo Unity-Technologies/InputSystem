@@ -50,19 +50,6 @@ partial class CoreTests
         }
     }
 
-    private void SimulateDomainReload()
-    {
-        // This quite invasively goes into InputSystem internals. Unfortunately, we
-        // have no proper way of simulating domain reloads ATM. So we directly call various
-        // internal methods here in a sequence similar to what we'd get during a domain reload.
-        // Since we're faking it, pass 'true' for calledFromCtor param.
-
-        InputSystem.s_SystemObject.OnBeforeSerialize();
-        InputSystem.s_SystemObject = null;
-        InputSystem.s_Manager = null; // Do NOT Dispose()! The native memory cannot be freed as it's reference by saved state
-        InputSystem.InitializeInEditor(true, runtime);
-    }
-
     [Test]
     [Category("Editor")]
     public void Editor_PackageVersionAndAssemblyVersionAreTheSame()
@@ -192,7 +179,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Is.Empty);
 
         var state = m_StateManager.GetSavedState();
-        var manager = InputSystem.s_Manager;
+        var manager = InputSystem.manager;
 
         manager.m_SavedAvailableDevices = state.managerState.availableDevices;
         manager.m_SavedDeviceStates = state.managerState.devices;
@@ -211,7 +198,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -231,7 +218,7 @@ partial class CoreTests
 
         Assert.That(device.enabled, Is.False);
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -244,7 +231,7 @@ partial class CoreTests
     {
         InputSystem.AddDevice<Gamepad>();
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
@@ -281,7 +268,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(kLayout);
         InputSystem.AddDevice("CustomDevice");
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Is.Empty);
 
@@ -302,7 +289,7 @@ partial class CoreTests
         });
         InputSystem.Update();
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetUnsupportedDevices()[0].interfaceName, Is.EqualTo("SomethingUnknown"));
@@ -2459,7 +2446,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
     [Test]
@@ -2871,15 +2858,15 @@ partial class CoreTests
         action.Enable();
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
+        Assert.That(InputSystem.manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
+        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
 
         // Exit play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
     [Test]

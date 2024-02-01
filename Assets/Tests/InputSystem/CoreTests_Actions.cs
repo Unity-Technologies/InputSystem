@@ -5966,12 +5966,12 @@ partial class CoreTests
         InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
         Assert.That(InputSystem.TryGetProcessor("ConstantFloat1Test"), Is.Not.EqualTo(null));
 
-        bool hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        bool hide = InputSystem.manager.processors.ShouldHideInUI("ConstantFloat1Test");
         Assert.That(hide, Is.EqualTo(false));
 
         InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
         // Check we haven't caused this to alias with itself and cause it to be hidden in the UI
-        hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        hide = InputSystem.manager.processors.ShouldHideInUI("ConstantFloat1Test");
         Assert.That(hide, Is.EqualTo(false));
     }
 
@@ -6617,7 +6617,7 @@ partial class CoreTests
     {
         InputSystem.RegisterInteraction<HoldInteraction>("TestTest");
 
-        Assert.That(InputSystem.s_Manager.interactions.aliases.Contains(new InternedString("TestTest")));
+        Assert.That(InputSystem.manager.interactions.aliases.Contains(new InternedString("TestTest")));
     }
 
     #endif // UNITY_EDITOR
@@ -8896,7 +8896,7 @@ partial class CoreTests
     {
         InputSystem.RegisterBindingComposite<Vector2Composite>("TestTest");
 
-        Assert.That(InputSystem.s_Manager.composites.aliases.Contains(new InternedString("TestTest")));
+        Assert.That(InputSystem.manager.composites.aliases.Contains(new InternedString("TestTest")));
     }
 
     #endif // UNITY_EDITOR
@@ -10976,7 +10976,7 @@ partial class CoreTests
 
         // Not the most elegant test as we reach into internals here but with the
         // current API, it's not possible to enumerate monitors from outside.
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
+        Assert.That(InputSystem.manager.m_StateChangeMonitors,
             Has.All.Matches(
                 (InputManager.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
     }

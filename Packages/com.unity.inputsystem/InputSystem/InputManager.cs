@@ -3095,10 +3095,10 @@ namespace UnityEngine.InputSystem
                     if ((currentEventType == StateEvent.Type ||
                          currentEventType == DeltaStateEvent.Type) &&
                         (updateType & InputUpdateType.Editor) == 0 &&
-                        InputSystem.s_SystemObject.exitEditModeTime > 0 &&
-                        currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
-                        (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
-                         InputSystem.s_SystemObject.enterPlayModeTime == 0))
+                        InputSystem.domainStateManager.exitEditModeTime > 0 &&
+                        currentEventTimeInternal >= InputSystem.domainStateManager.exitEditModeTime &&
+                        (currentEventTimeInternal < InputSystem.domainStateManager.enterPlayModeTime ||
+                         InputSystem.domainStateManager.enterPlayModeTime == 0))
                     {
                         m_InputEventStream.Advance(false);
                         continue;
