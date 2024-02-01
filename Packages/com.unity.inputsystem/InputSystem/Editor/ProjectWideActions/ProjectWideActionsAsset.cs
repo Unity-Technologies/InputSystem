@@ -53,6 +53,10 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset CreateNewActionAsset()
         {
+            // Always clean out old actions asset and action references first before we add new
+            DeleteActionAssetAndActionReferences();
+
+            // Create new asset data
             var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -87,7 +91,6 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             CreateInputActionReferences(asset);
-
             AssetDatabase.SaveAssets();
 
             return asset;
@@ -114,7 +117,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        #if UNITY_2023_2_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
         /// <summary>
         /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
@@ -147,13 +150,44 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        #endif
+#endif
+        /// <summary>
+        /// Reset project wide input actions asset
+        /// </summary>
+        internal static void ResetActionAsset()
+        {
+            CreateNewActionAsset();
+        }
+
+        /// <summary>
+        /// Delete project wide input actions
+        /// </summary>
+        internal static void DeleteActionAssetAndActionReferences()
+        {
+            var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
+            if (objects != null)
+            {
+                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                foreach (var obj in objects)
+                {
+                    if (obj is InputActionReference)
+                    {
+                        var actionReference = obj as InputActionReference;
+                        actionReference.Set(null);
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
+                    else if (obj is InputActionAsset)
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
         /// and adding new ones.
         /// </summary>
-        /// <param name="asset"></param>
         internal static void UpdateInputActionReferences()
         {
             var asset = GetOrCreate();
@@ -195,6 +229,8 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
             }
+
+            AssetDatabase.SaveAssets();
         }
     }
 }
