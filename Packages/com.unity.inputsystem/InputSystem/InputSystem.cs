@@ -3439,11 +3439,13 @@ namespace UnityEngine.InputSystem
         /// <value>Up-to-date metrics on input system activity.</value>
         public static InputMetrics metrics => s_Manager.metrics;
 
-        internal static InputManager s_Manager;
-        internal static InputRemoting s_Remote;
+        internal static InputManager manager => s_Manager;
+        private static InputManager s_Manager;
+        private static InputRemoting s_Remote;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        internal static RemoteInputPlayerConnection s_RemoteConnection;
+        private static RemoteInputPlayerConnection s_RemoteConnection;
+        internal static RemoteInputPlayerConnection remoteConnection => s_RemoteConnection;
 
         internal static void SetUpRemoting()
         {
@@ -3543,7 +3545,10 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        internal static InputSystemObject s_SystemObject;
+
+        // TODO: ISX-1860
+        private static InputSystemStateManager s_DomainStateManager;
+        internal static InputSystemStateManager domainStateManager => s_DomainStateManager;
 
         internal static void InitializeInEditor(bool calledFromCtor, IInputRuntime runtime = null)
         {
@@ -3574,7 +3579,7 @@ namespace UnityEngine.InputSystem
             ProjectWideActionsAsset.EnsureInitialized();
 #endif
 
-            var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
+            var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
                 if (globalReset)
@@ -3585,31 +3590,28 @@ namespace UnityEngine.InputSystem
                 // InputManager state here but we're still waiting from layout registrations
                 // that happen during domain initialization.
 
-                s_SystemObject = existingSystemObjects[0];
-                s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
-                InputDebuggerWindow.ReviveAfterDomainReload();
 
-                // Restore remoting state.
-                s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
-                SetUpRemoting();
-                s_Remote.RestoreState(s_SystemObject.systemState.remotingState, s_Manager);
+                    // Restore remoting state.
+                    s_RemoteConnection = s_DomainStateManager.systemState.remoteConnection;
+                    SetUpRemoting();
+                    s_Remote.RestoreState(s_DomainStateManager.systemState.remotingState, s_Manager);
 
-                // Get manager to restore devices on first input update. By that time we
-                // should have all (possibly updated) layout information in place.
-                s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
-                s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
+                    // Get s_Manager to restore devices on first input update. By that time we
+                    // should have all (possibly updated) layout information in place.
+                    s_Manager.m_SavedDeviceStates = s_DomainStateManager.systemState.managerState.devices;
+                    s_Manager.m_SavedAvailableDevices = s_DomainStateManager.systemState.managerState.availableDevices;
 
-                // Restore editor settings.
-                InputEditorUserSettings.s_Settings = s_SystemObject.systemState.userSettings;
+                    // Restore editor settings.
+                    InputEditorUserSettings.s_Settings = s_DomainStateManager.systemState.userSettings;
 
-                // Get rid of saved state.
-                s_SystemObject.systemState = new State();
-            }
+                    // Get rid of saved state.
+                    s_DomainStateManager.systemState = new InputSystemState();
+                }
             }
             else
             {
-                s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-                s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+                s_DomainStateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
+                s_DomainStateManager.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey, out InputSettings settingsAsset))
@@ -3636,7 +3638,7 @@ namespace UnityEngine.InputSystem
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
-            if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
+            if (!s_DomainStateManager.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !s_Manager.runtime.isInBatchMode)
             {
@@ -3650,7 +3652,7 @@ namespace UnityEngine.InputSystem
                     EditorHelpers.RestartEditorAndRecompileScripts();
                 }
             }
-            s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+            s_DomainStateManager.newInputBackendsCheckedAsEnabled = true;
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled.
@@ -3670,15 +3672,15 @@ namespace UnityEngine.InputSystem
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    s_SystemObject.settings = JsonUtility.ToJson(settings);
-                    s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
-                    s_SystemObject.enterPlayModeTime = 0;
+                    s_DomainStateManager.settings = JsonUtility.ToJson(settings);
+                    s_DomainStateManager.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_DomainStateManager.enterPlayModeTime = 0;
 
                     // InputSystem.actions is not setup yet
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
-                    s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    s_DomainStateManager.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     EnableActions();
@@ -3704,29 +3706,15 @@ namespace UnityEngine.InputSystem
                     InputActionState.DestroyAllActionMapStates();
 
                     // Restore settings.
-                    if (!string.IsNullOrEmpty(s_SystemObject.settings))
+                    if (!string.IsNullOrEmpty(s_DomainStateManager.settings))
                     {
-                        JsonUtility.FromJsonOverwrite(s_SystemObject.settings, settings);
-                        s_SystemObject.settings = null;
+                        JsonUtility.FromJsonOverwrite(s_DomainStateManager.settings, settings);
+                        s_DomainStateManager.settings = null;
                         settings.OnChange();
                     }
 
-                    // reload input action assets marked as dirty from disk
-                    if (s_TrackedDirtyAssets == null)
-                        return;
-
-                    foreach (var assetGuid in s_TrackedDirtyAssets)
-                    {
-                        var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
-
-                        if (string.IsNullOrEmpty(assetPath))
-                            continue;
-
-                        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-                    }
-
-                    s_TrackedDirtyAssets.Clear();
-
+                    // reload input assets marked as dirty from disk
+                    DirtyAssetTracker.ReloadDirtyAssets();
                     break;
             }
         }
@@ -3748,29 +3736,6 @@ namespace UnityEngine.InputSystem
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
                 settings = newSettings;
             }
-        }
-
-        private static HashSet<string> s_TrackedDirtyAssets;
-
-        /// <summary>
-        /// Keep track of InputActionAsset assets that you want to re-load on exiting Play mode. This is useful because
-        /// some user actions, such as adding a new input binding at runtime, change the in-memory representation of the
-        /// input action asset and those changes survive when exiting Play mode. If you re-open an Input
-        /// Action Asset in the Editor that has been changed this way, you see the new bindings that have been added
-        /// during Play mode which you might not typically want to happen.
-        ///
-        /// You can avoid this by force re-loading from disk any asset that has been marked as dirty.
-        /// </summary>
-        /// <param name="asset"></param>
-        internal static void TrackDirtyInputActionAsset(InputActionAsset asset)
-        {
-            if (s_TrackedDirtyAssets == null)
-                s_TrackedDirtyAssets = new HashSet<string>();
-
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string assetGuid, out long _) == false)
-                return;
-
-            s_TrackedDirtyAssets.Add(assetGuid);
         }
 
 #else
@@ -3906,31 +3871,5 @@ namespace UnityEngine.InputSystem
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        /// <summary>
-        /// Snapshot of the state used by the input system.
-        /// </summary>
-        /// <remarks>
-        /// Can be taken across domain reloads.
-        /// </remarks>
-        [Serializable]
-        internal struct State
-        {
-            [NonSerialized] public InputManager manager;
-            [NonSerialized] public InputRemoting remote;
-            [SerializeField] public RemoteInputPlayerConnection remoteConnection;
-            [SerializeField] public InputManager.SerializedState managerState;
-            [SerializeField] public InputRemoting.SerializedState remotingState;
-#if UNITY_EDITOR
-            [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
-            [SerializeField] public string systemObject;
-#endif
-            ////TODO: make these saved states capable of surviving domain reloads
-            [NonSerialized] public ISavedState inputActionState;
-            [NonSerialized] public ISavedState touchState;
-            [NonSerialized] public ISavedState inputUserState;
-        }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR
     }
 }

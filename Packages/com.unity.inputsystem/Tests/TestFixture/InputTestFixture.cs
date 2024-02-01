@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem
                 // so turn them off.
                 #if UNITY_EDITOR
                 if (Application.isPlaying && IsUnityTest())
-                    InputSystem.s_Manager.m_UpdateMask &= ~InputUpdateType.Editor;
+                    InputSystem.manager.m_UpdateMask &= ~InputUpdateType.Editor;
                 #endif
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly
@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem
                 NativeInputRuntime.instance.onUpdate =
                     (InputUpdateType updateType, ref InputEventBuffer buffer) =>
                 {
-                    if (InputSystem.s_Manager.ShouldRunUpdate(updateType))
+                    if (InputSystem.manager.ShouldRunUpdate(updateType))
                         InputSystem.Update(updateType);
                     // We ignore any input coming from native.
                     buffer.Reset();
