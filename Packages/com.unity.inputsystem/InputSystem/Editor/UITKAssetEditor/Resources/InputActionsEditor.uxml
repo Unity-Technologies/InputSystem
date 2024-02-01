@@ -42,7 +42,7 @@
                     <ui:VisualElement name="header" class="body-panel-header">
                         <ui:Label text="Action Properties" display-tooltip-when-elided="true" name="properties-header-label" />
                     </ui:VisualElement>
-                    <ui:ScrollView>
+                    <ui:ScrollView name="properties-scrollview">
                         <ui:Foldout text="Action Properties" name="properties-foldout" class="properties-foldout" />
                         <ui:Foldout text="Interactions" name="interactions-foldout" class="properties-foldout name-and-parameters-list-view">
                             <ui:Label text="No interactions have been added." name="no-parameters-added-label" display-tooltip-when-elided="true" class="name-and-parameter-empty-label" style="display: flex;" />
