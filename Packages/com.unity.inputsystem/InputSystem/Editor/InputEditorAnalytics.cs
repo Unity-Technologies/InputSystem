@@ -7,6 +7,96 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class InputEditorAnalytics
     {
+        // TODO Consider splitting into component editor engagement with string encoded component type
+        //      and instead handle possible future component specific analytics separately to avoid
+        //      code bloat.
+
+        public struct PlayerInputInspectorEditorUserEngagementData : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        {
+            /// <summary>
+            /// Identifies the number of OnValidate() calls related to the component editor.
+            /// </summary>
+            public int onValidateCount;
+
+            /// <summary>
+            /// Represents the number of OnDestroy() calls related to the component editor.
+            /// </summary>
+            public int onDestroyCount;
+        }
+
+        public struct InputActionInspectorEditorUserEngagementData : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        {
+            /// <summary>
+            /// Identifies the number of OnValidate() calls related to the component editor.
+            /// </summary>
+            public int onValidateCount;
+
+            /// <summary>
+            /// Represents the number of OnDestroy() calls related to the component editor.
+            /// </summary>
+            public int onDestroyCount;
+        }
+
+        /// <summary>
+        /// Analytics for tracking Player Input component user engagement in the editor.
+        /// </summary>
+#if UNITY_2023_2_OR_NEWER
+        [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
+            maxNumberOfElements: kMaxNumberOfElements, vendorKey: UnityEngine.InputSystem.InputAnalytics.kVendorKey)]
+#endif // UNITY_2023_2_OR_NEWER
+        public class PlayerInputEditorUserEngagementAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
+        {
+            public const string kEventName = "playerInputInspectorEditorUserEngagement";
+            public const int kMaxEventsPerHour = 100; // default: 1000
+            public const int kMaxNumberOfElements = 100; // default: 1000
+
+            private readonly PlayerInputEditor m_Editor;
+
+            public PlayerInputEditorUserEngagementAnalytic(PlayerInputEditor editor)
+            {
+                m_Editor = editor;
+            }
+
+            public InputAnalytics.InputAnalyticInfo info { get; }
+
+            public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
+            {
+                data = m_Editor.m_AnalyticsData;
+                error = null;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Analytics for tracking Player Input component user engagement in the editor.
+        /// </summary>
+#if UNITY_2023_2_OR_NEWER
+        [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
+            maxNumberOfElements: kMaxNumberOfElements, vendorKey: UnityEngine.InputSystem.InputAnalytics.kVendorKey)]
+#endif // UNITY_2023_2_OR_NEWER
+        public class InputActionInspectorEditorUserEngagementAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
+        {
+            public const string kEventName = "inputActionInspectorEditorUserEngagement";
+            public const int kMaxEventsPerHour = 100; // default: 1000
+            public const int kMaxNumberOfElements = 100; // default: 1000
+
+            private readonly InputActionDrawer m_Editor;
+
+            public InputActionInspectorEditorUserEngagementAnalytic(InputActionDrawer editor)
+            {
+                m_Editor = editor;
+            }
+
+            public InputAnalytics.InputAnalyticInfo info { get; }
+
+            public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
+            {
+                data = m_Editor.m_AnalyticsData;
+                error = null;
+                return true;
+            }
+        }
+
         [Serializable]
         public struct InputActionsEditorSessionData : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
