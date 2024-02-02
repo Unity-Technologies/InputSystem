@@ -36,6 +36,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed missing name in window title for Input Action assets.
 - Fixed showing action properties view when there were no actions.
 - Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
+- Fixed console errors that can be produced when opening input package settings from the Inspector.
 - Fixed InputManager.asset file growing in size on each Reset call.
 
 ## [1.8.0-pre.2] - 2023-11-09
