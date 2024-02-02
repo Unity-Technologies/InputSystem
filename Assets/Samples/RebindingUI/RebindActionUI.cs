@@ -260,7 +260,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             {
                 m_RebindOperation?.Dispose();
                 m_RebindOperation = null;
+                action.Enable();
             }
+            //Fixes the "InvalidOperationException: Cannot rebind action x while it is enabled" error
+            action.Disable();
 
             // Configure the rebind.
             m_RebindOperation = action.PerformInteractiveRebinding(bindingIndex)
