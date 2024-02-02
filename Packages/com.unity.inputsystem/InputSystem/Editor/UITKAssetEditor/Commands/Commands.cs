@@ -262,17 +262,18 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command MoveBindingOrComposite(int oldIndex, int actionIndex, int childIndex)
+        public static Command MoveComposite(int oldIndex, int actionIndex, int childIndex)
         {
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
-                var bindings = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
-                var newBindingIndex = bindings[Math.Clamp(childIndex, 0, bindings.Count - 1)].GetIndexOfArrayElement();
-                var actionTo = Selectors.GetActionForIndex(state, actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
-                Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
-                InputActionSerializationHelpers.MoveBindingOrComposite(actionMap, oldIndex, newBindingIndex);
-                //TODO also move composite parts
+                var compositeBindings = CopyPasteHelper.GetBindingsForComposite(actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), oldIndex);
+                var newBindingIndex = MoveBindingOrComposite(state, oldIndex, actionIndex, childIndex);
+                foreach (var compositePart in compositeBindings)
+                {
+                    Debug.Log(compositePart.FindPropertyRelative("m_Name").stringValue);
+                    InputActionSerializationHelpers.MoveBindings(actionMap, compositePart.GetIndexOfArrayElement(), ++newBindingIndex);
+                }
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectBinding(newBindingIndex);
             };
@@ -288,14 +289,30 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command MovePartOfComposite(int oldIndex, int newIndex, int compositeIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                var actionTo = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings)).GetArrayElementAtIndex(compositeIndex).FindPropertyRelative("m_Action").stringValue;
+                InputActionSerializationHelpers.MoveBindings(actionMap, oldIndex, newIndex);
+                Selectors.GetCompositeOrBindingInMap(actionMap, newIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectBinding(newIndex);
+            };
+        }
+
         private static int MoveBindingOrComposite(InputActionsEditorState state, int oldIndex, int actionIndex, int childIndex)
         {
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var bindings = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
-            var newBindingIndex = bindings[Math.Clamp(childIndex, 0, bindings.Count - 1)].GetIndexOfArrayElement();
-            var actionTo = Selectors.GetActionForIndex(state, actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+            var allBindings = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            var newBindingIndex = bindings.Count == 0 ?
+                Selectors.GetBindingIndexBeforeAction(allBindings, actionIndex, allBindings)
+                : bindings[Math.Clamp(childIndex, 0, bindings.Count == 0 ? 0 : bindings.Count - 1)].GetIndexOfArrayElement();
+            var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
             Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
-            InputActionSerializationHelpers.MoveBindingOrComposite(actionMap, oldIndex, newBindingIndex);
+            InputActionSerializationHelpers.MoveBindings(actionMap, oldIndex, newBindingIndex);
             return newBindingIndex;
         }
 
