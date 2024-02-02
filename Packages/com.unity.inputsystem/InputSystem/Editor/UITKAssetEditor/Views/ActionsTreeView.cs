@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class ActionsTreeView : ViewBase<ActionsTreeView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private readonly TreeView m_ActionsTreeView;
-        private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
+        private readonly Button m_AddActionButton;
+        private readonly ScrollView m_PropertiesScrollview;
 
         private bool m_RenameOnActionAdded;
         private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
@@ -27,11 +27,11 @@ namespace UnityEngine.InputSystem.Editor
         private Dictionary<Guid, int> m_GuidToTreeViewId;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ActionsTreeView = m_Root.Q<TreeView>("actions-tree-view");
+            m_AddActionButton = root.Q<Button>("add-new-action-button");
+            m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
+            m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
             m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Editor
                     };
                 });
 
-            addActionButton.clicked += AddAction;
+            m_AddActionButton.clicked += AddAction;
         }
 
         private int GetSelectedElementId(InputActionsEditorState state, List<TreeViewItemData<ActionOrBindingData>> treeData)
@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            addActionButton.clicked -= AddAction;
+            m_AddActionButton.clicked -= AddAction;
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -202,10 +202,10 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionsTreeView.ScrollToItemById(viewState.newElementID);
             }
             RenameNewAction(viewState.newElementID);;
-            addActionButton.SetEnabled(viewState.actionMapCount > 0);
+            m_AddActionButton.SetEnabled(viewState.actionMapCount > 0);
 
             // Don't want to show action properties if there's no actions.
-            m_Root.Q<VisualElement>("properties-scrollview").visible = m_ActionsTreeView.GetTreeCount() > 0;
+            m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
         }
 
         private void RenameNewAction(int id)
