@@ -501,7 +501,7 @@ namespace UnityEngine.InputSystem
 
             if (m_MaxPlayerCount >= 0 && playerCount >= m_MaxPlayerCount)
             {
-                Debug.LogError("Have reached maximum player count of " + maxPlayerCount, this);
+                Debug.LogWarning("Have reached maximum player count of " + maxPlayerCount, this);
                 return false;
             }
 
