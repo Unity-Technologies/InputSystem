@@ -44,9 +44,31 @@ If you’d like to delete all the default actions so that you can start from an 
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
 
+## Action type and Control type
+
 If you select an Action, you can edit its properties in the right-hand pane of the window:
 
 ![Action Properties](Images/ActionProperties.png)
+
+#### Action Type
+
+The Action Type setting allows to to select between **Button**, **Value** or **PassThrough**.
+
+These options relate to whether this action should represent a discrete on/off button-style interaction or a value that can change over time while the control is being used.
+
+For device controls such as keyboard keys, mouse clicks, or gamepad buttons, select **Button**. For device controls such as mouse movement, a joystick or gamepad stick, or device orientation that provide continuously changing input over a period of time, select **Value**.
+
+The Button and Value types of action also provides data about the action such as whether it has started and stopped, and conflict resolution in situations where multiple bindings are mapped to the same action.
+
+The third option, **PassThrough**, is also a value type, and as such is suitable for the same types of device controls as value. The difference is that actions set to PassThrough only provide basic information about the values incoming from the device controls bound to it, and does not provide the extra data relating to the phase of the action, nor does it perform conflict resolution in the case of multiple controls mapped to the same action.
+
+For more detail about how these types work, see [action types](RespondingToActions.html#action-types) and [default interactions](Interactions.html#default-interaction).
+
+#### Control Type
+
+The Control Type setting allows you to select the type of control expected by the action. This limits the controls shown when setting up bindings in the UI and also limits which contols can be bound interactively to the action.
+
+For example, if you select 2D axis, only those device controls that can supply a 2D vector as value are available as options for the binding control path (see directly below).
 
 ### Editing Bindings
 
