@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
-            var treeView = m_Root.Q<TreeView>("actions-tree-view");
+            var treeView = root.Q<TreeView>("actions-tree-view");
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
             m_ListView.itemIndexChanged += OnReorder;
 
