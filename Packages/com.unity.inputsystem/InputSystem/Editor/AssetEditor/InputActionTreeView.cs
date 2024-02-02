@@ -862,12 +862,28 @@ namespace UnityEngine.InputSystem.Editor
             data = block.Substring(indexOfStartOfTextChar + 1);
         }
 
+        public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
+        {
+            var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
+            if (index < 0)
+                index = arrayProperty.arraySize;
+
+            arrayProperty.InsertArrayElementAtIndex(index);
+            var elementProperty = arrayProperty.GetArrayElementAtIndex(index);
+            elementProperty.ResetValuesToDefault();
+
+            elementProperty.FindPropertyRelative("m_Name").stringValue = uniqueName;
+            elementProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
+
+            return elementProperty;
+        }
+
         private SerializedProperty PasteBlock(string tag, string data, SerializedProperty array, int arrayIndex,
             bool assignNewIDs, string actionForNewBindings = null)
         {
             // Add an element to the array. Then read the serialized properties stored in the copy data
             // back into the element.
-            var property = InputActionSerializationHelpers.AddElement(array, "tempName", arrayIndex);
+            var property = AddElement(array, "tempName", arrayIndex);
             property.RestoreFromJson(data);
             if (tag == k_ActionTag || tag == k_ActionMapTag)
                 InputActionSerializationHelpers.EnsureUniqueName(property);
