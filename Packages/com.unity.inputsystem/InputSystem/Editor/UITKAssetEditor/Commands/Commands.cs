@@ -306,14 +306,39 @@ namespace UnityEngine.InputSystem.Editor
         {
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var bindings = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
-            var allBindings = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var newBindingIndex = bindings.Count == 0 ?
-                Selectors.GetBindingIndexBeforeAction(allBindings, actionIndex, allBindings)
-                : bindings[Math.Clamp(childIndex, 0, bindings.Count == 0 ? 0 : bindings.Count - 1)].GetIndexOfArrayElement();
+            var allBindings = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            int newBindingIndex;
+            if (bindings.Count == 0)
+                newBindingIndex = Selectors.GetBindingIndexBeforeAction(allBindings, actionIndex, allBindings);
+            else
+            {
+                var toSkip = GetNumberOfCompositePartItemsToSkip(bindings, childIndex, oldIndex); //skip composite parts if there are
+                newBindingIndex = bindings[0].GetIndexOfArrayElement() + Math.Clamp(childIndex + toSkip, 0, bindings.Count);;
+            }
+
             var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
             Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
             InputActionSerializationHelpers.MoveBindings(actionMap, oldIndex, newBindingIndex);
             return newBindingIndex;
+        }
+
+        private static int GetNumberOfCompositePartItemsToSkip(List<SerializedProperty> bindings, int childIndex, int oldIndex)
+        {
+            var toSkip = 0;
+            var normalBindings = 0;
+            foreach (var binding in bindings)
+            {
+                if (binding.GetIndexOfArrayElement() == oldIndex)
+                    continue;
+                if (normalBindings > childIndex)
+                    break;
+                if (binding.FindPropertyRelative(nameof(InputBinding.m_Flags)).intValue ==
+                    (int)InputBinding.Flags.PartOfComposite)
+                    toSkip++;
+                else
+                    normalBindings++;
+            }
+            return toSkip;
         }
 
         public static Command DeleteAction(int actionMapIndex, string actionName)
