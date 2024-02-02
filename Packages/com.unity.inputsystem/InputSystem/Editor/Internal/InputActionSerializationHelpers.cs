@@ -147,13 +147,13 @@ namespace UnityEngine.InputSystem.Editor
                 throw new ArgumentException($"No map with id {id} in {asset}", nameof(id));
             mapArrayProperty.DeleteArrayElementAtIndex(mapIndex);
         }
-        
+
         public static void MoveActionMap(SerializedObject asset, int fromIndex, int toIndex)
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             mapArrayProperty.MoveArrayElement(fromIndex, toIndex);
-        } 
-        
+        }
+
         public static void MoveAction(SerializedProperty actionMap, int fromIndex, int toIndex)
         {
             var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));

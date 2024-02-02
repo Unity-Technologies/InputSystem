@@ -229,7 +229,16 @@ namespace UnityEngine.InputSystem.Editor
                 if (!data.isPartOfComposite)
                 {
                     if (directParent != null && directParent.Value.isAction)
-                        Dispatch(Commands.MoveBindingOrComposite(data.bindingIndex, directParent.Value.actionIndex, childIndex));
+                    {
+                        if (data.isComposite)
+                            Dispatch(Commands.MoveComposite(data.bindingIndex, directParent.Value.actionIndex,
+                                childIndex));
+                        else
+                        {
+                            Dispatch(
+                                Commands.MoveBinding(data.bindingIndex, directParent.Value.actionIndex, childIndex));
+                        }
+                    }
                     else
                         break;
                 }
