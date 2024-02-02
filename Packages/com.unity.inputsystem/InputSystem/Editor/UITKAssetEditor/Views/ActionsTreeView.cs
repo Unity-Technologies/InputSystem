@@ -212,6 +212,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDraggedItem(DragPerformEvent evt)
         {
+            bool discardDrag = false;
             foreach (var index in m_ActionsTreeView.selectedIndices)
             {
                 var draggedItemData = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
@@ -222,14 +223,33 @@ namespace UnityEngine.InputSystem.Editor
                 if (draggedItemData.isAction)
                 {
                     if (!MoveAction(directParent, draggedItemData, childIndex))
+                    {
+                        discardDrag = true;
                         break;
+                    }
                 }
                 if (!draggedItemData.isPartOfComposite)
                 {
                     if (!MoveBindingOrComposite(directParent, draggedItemData, childIndex))
+                    {
+                        discardDrag = true;
                         break;
+                    }
                 }
-                MoveCompositeParts(directParent, childIndex, draggedItemData);
+                if (!MoveCompositeParts(directParent, childIndex, draggedItemData))
+                {
+                    discardDrag = true;
+                    break;
+                }
+            }
+
+            if (discardDrag)
+            {
+                var selectedItem = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndices.First());
+                if (selectedItem.isAction)
+                    Dispatch(Commands.SelectAction(selectedItem.name));
+                else
+                    Dispatch(Commands.SelectBinding(selectedItem.bindingIndex));
             }
         }
 
@@ -252,12 +272,13 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        private void MoveCompositeParts(ActionOrBindingData? directParent, int childIndex, ActionOrBindingData draggedItemData)
+        private bool MoveCompositeParts(ActionOrBindingData? directParent, int childIndex, ActionOrBindingData draggedItemData)
         {
             if (directParent == null || !directParent.Value.isComposite)
-                return;
+                return false;
             var newBindingIndex = directParent.Value.bindingIndex + childIndex + (directParent.Value.bindingIndex > draggedItemData.bindingIndex ? 0 : 1);
             Dispatch(Commands.MovePartOfComposite(draggedItemData.bindingIndex, newBindingIndex, directParent.Value.bindingIndex));
+            return true;
         }
 
         private void RenameNewAction(int id)
