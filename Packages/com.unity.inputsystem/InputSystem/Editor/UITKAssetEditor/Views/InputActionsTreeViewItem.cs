@@ -100,7 +100,7 @@ namespace UnityEngine.InputSystem.Editor
             await Task.Delay(120);
             renameTextfield.Q<TextField>().Focus();
         }
-        
+
         public void DeleteItem()
         {
             OnDeleteItem?.Invoke(0);
