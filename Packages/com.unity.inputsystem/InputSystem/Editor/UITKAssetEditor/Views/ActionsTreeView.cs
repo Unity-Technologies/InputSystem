@@ -254,6 +254,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(selectedItem.isAction
                 ? Commands.SelectAction(selectedItem.name)
                 : Commands.SelectBinding(selectedItem.bindingIndex));
+            //TODO find a better way to reject the drag (for better visual feedback & to not run an extra command)
         }
 
         private bool MoveAction(ActionOrBindingData? directParent, ActionOrBindingData draggedItemData, int childIndex)
