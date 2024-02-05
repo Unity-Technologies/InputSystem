@@ -305,15 +305,15 @@ namespace UnityEngine.InputSystem.Editor
         private static int MoveBindingOrComposite(InputActionsEditorState state, int oldIndex, int actionIndex, int childIndex)
         {
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
-            var bindings = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
+            var bindingsForAction = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
             var allBindings = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             int newBindingIndex;
-            if (bindings.Count == 0)
+            if (bindingsForAction.Count == 0)
                 newBindingIndex = Selectors.GetBindingIndexBeforeAction(allBindings, actionIndex, allBindings);
             else
             {
-                var toSkip = GetNumberOfCompositePartItemsToSkip(bindings, childIndex, oldIndex); //skip composite parts if there are
-                newBindingIndex = bindings[0].GetIndexOfArrayElement() + Math.Clamp(childIndex + toSkip, 0, bindings.Count);;
+                var toSkip = GetNumberOfCompositePartItemsToSkip(bindingsForAction, childIndex, oldIndex); //skip composite parts if there are
+                newBindingIndex = bindingsForAction[0].GetIndexOfArrayElement() + Math.Clamp(childIndex + toSkip, 0, bindingsForAction.Count);;
             }
 
             var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;

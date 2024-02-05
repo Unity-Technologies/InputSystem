@@ -216,9 +216,9 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var index in m_ActionsTreeView.selectedIndices)
             {
                 var treeViewItem = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.parent;
-                if (treeViewItem is not InputActionsTreeViewItem)
+                if (treeViewItem is not InputActionsTreeViewItem && treeViewItem?.parent is not InputActionsTreeViewItem)
                 {
-                    discardDrag = true;
+                    discardDrag = true; //TODO also allow edge cases dragging between - TreeViewItem not hit
                     break;
                 }
                 var draggedItemData = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
