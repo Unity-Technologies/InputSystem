@@ -215,6 +215,12 @@ namespace UnityEngine.InputSystem.Editor
             bool discardDrag = false;
             foreach (var index in m_ActionsTreeView.selectedIndices)
             {
+                var treeViewItem = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.parent;
+                if (treeViewItem is not InputActionsTreeViewItem)
+                {
+                    discardDrag = true;
+                    break;
+                }
                 var draggedItemData = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
                 var itemID = m_ActionsTreeView.GetIdForIndex(index);
                 var childIndex = m_ActionsTreeView.viewController.GetChildIndexForId(itemID);
@@ -228,7 +234,7 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     }
                 }
-                if (!draggedItemData.isPartOfComposite)
+                else if (!draggedItemData.isPartOfComposite)
                 {
                     if (!MoveBindingOrComposite(directParent, draggedItemData, childIndex))
                     {
@@ -236,21 +242,18 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     }
                 }
-                if (!MoveCompositeParts(directParent, childIndex, draggedItemData))
+                else if (!MoveCompositeParts(directParent, childIndex, draggedItemData))
                 {
                     discardDrag = true;
                     break;
                 }
             }
 
-            if (discardDrag)
-            {
-                var selectedItem = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndices.First());
-                if (selectedItem.isAction)
-                    Dispatch(Commands.SelectAction(selectedItem.name));
-                else
-                    Dispatch(Commands.SelectBinding(selectedItem.bindingIndex));
-            }
+            if (!discardDrag) return;
+            var selectedItem = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndices.First());
+            Dispatch(selectedItem.isAction
+                ? Commands.SelectAction(selectedItem.name)
+                : Commands.SelectBinding(selectedItem.bindingIndex));
         }
 
         private bool MoveAction(ActionOrBindingData? directParent, ActionOrBindingData draggedItemData, int childIndex)
