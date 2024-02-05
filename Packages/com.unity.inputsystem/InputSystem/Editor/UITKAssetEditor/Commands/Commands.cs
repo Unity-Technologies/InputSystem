@@ -311,6 +311,8 @@ namespace UnityEngine.InputSystem.Editor
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var bindingsForAction = Selectors.GetBindingsForAction(state, actionMap, actionIndex);
             var allBindings = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+            var actionFrom = Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action");
             int newBindingIndex;
             if (bindingsForAction.Count == 0)
                 newBindingIndex = Selectors.GetBindingIndexBeforeAction(allBindings, actionIndex, allBindings);
@@ -318,10 +320,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var toSkip = GetNumberOfCompositePartItemsToSkip(bindingsForAction, childIndex, oldIndex); //skip composite parts if there are
                 newBindingIndex = bindingsForAction[0].GetIndexOfArrayElement() + Math.Clamp(childIndex + toSkip, 0, bindingsForAction.Count);;
+                newBindingIndex -= newBindingIndex > oldIndex && !actionTo.Equals(actionFrom.stringValue) ? 1 : 0; // reduce index by one in case the moved binding will be shifted underneath to another action
             }
 
-            var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
-            Selectors.GetCompositeOrBindingInMap(actionMap, oldIndex).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
+            actionFrom.stringValue = actionTo;
             InputActionSerializationHelpers.MoveBindings(actionMap, oldIndex, newBindingIndex);
             return newBindingIndex;
         }
