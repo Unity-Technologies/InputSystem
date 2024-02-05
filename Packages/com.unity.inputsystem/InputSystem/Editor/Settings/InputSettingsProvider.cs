@@ -487,24 +487,20 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
-            GUILayout.Space(10);
+            EditorGUILayout.Space();
+
             if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
                 InputSettingsProvider.Open();
-            GUILayout.Space(10);
 
-            if (InputSystem.settings == target)
-                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
-            else
-            {
-                string currentlyActiveAssetsPath = null;
-                if (InputSystem.settings != null)
-                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
-                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
-                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
-                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
-                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
-                    InputSystem.settings = (InputSettings)target;
-            }
+            EditorGUILayout.Space();
+
+            ActiveAssetEditorHelper.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value);
+        }
+
+        protected override bool ShouldHideOpenButton()
+        {
+            return true;
         }
     }
 }

@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (obj is InputActionReference)
                     {
                         var actionReference = obj as InputActionReference;
-                        actionReference.Set(null);
+                        actionReference.Set(null); // TODO This is wrong it should be destroyed?!
                         AssetDatabase.RemoveObjectFromAsset(obj);
                     }
                     else if (obj is InputActionAsset)

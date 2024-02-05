@@ -106,6 +106,26 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public InputActionAsset actions
+        {
+            get
+            {
+                return m_Actions;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (m_Actions == value)
+                    return;
+
+                m_Actions = value;
+                // ApplyActions();
+            }
+        }
+
         public InputUpdateType updateMask
         {
             get => m_UpdateMask;
@@ -2056,6 +2076,7 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
+        internal InputActionAsset m_Actions;
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -3714,6 +3735,7 @@ namespace UnityEngine.InputSystem
             public InputUpdateType updateMask;
             public InputMetrics metrics;
             public InputSettings settings;
+            public InputActionAsset actions;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             public bool haveSentStartupAnalytics;
@@ -3757,6 +3779,7 @@ namespace UnityEngine.InputSystem
                 updateMask = m_UpdateMask,
                 metrics = m_Metrics,
                 settings = m_Settings,
+                actions = m_Actions,
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -3775,6 +3798,10 @@ namespace UnityEngine.InputSystem
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
             m_Settings = state.settings;
+
+            if (m_Actions != null)
+                Object.DestroyImmediate(m_Actions);
+            m_Actions = state.actions;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;

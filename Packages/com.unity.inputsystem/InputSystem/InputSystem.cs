@@ -3011,7 +3011,6 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-        private static InputActionAsset s_ProjectWideActions;
         internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
 
         /// <summary>
@@ -3026,36 +3025,33 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputAction"/>
         public static InputActionAsset actions
         {
-            get
-            {
-                if (s_ProjectWideActions != null)
-                    return s_ProjectWideActions;
-
-                #if UNITY_EDITOR
-                s_ProjectWideActions = ProjectWideActionsAsset.GetOrCreate();
-                #else
-                s_ProjectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
-                #endif
-
-                if (s_ProjectWideActions == null)
-                    Debug.LogError($"Couldn't initialize project-wide input actions");
-                return s_ProjectWideActions;
-            }
-
+            get => s_Manager.actions;
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (s_ProjectWideActions == value)
+                if (s_Manager.m_Actions == value)
                     return;
 
-                s_ProjectWideActions?.Disable();
-                s_ProjectWideActions = value;
-                s_ProjectWideActions.Enable();
+                // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
+#if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        value, true);
+                }
+#endif // UNITY_EDITOR
+
+                var current = s_Manager.actions;
+                if (current != null)
+                    current.Disable();
+                s_Manager.actions = value;
+                if (value != null)
+                    value.Enable();
             }
         }
-#endif
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3494,6 +3490,17 @@ namespace UnityEngine.InputSystem
                     s_Manager.ApplySettings();
                 }
 
+                // See if we have a saved actions object
+                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                    out InputActionAsset inputActionAsset))
+                {
+                    if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
+                        ScriptableObject.DestroyImmediate(s_Manager.m_Actions);
+                    s_Manager.m_Actions = inputActionAsset;
+
+                    // TODO Let listeners know about the change similar to settings
+                }
+
                 InputEditorUserSettings.Load();
 
                 SetUpRemoting();
@@ -3746,13 +3753,14 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
-            if (s_ProjectWideActions)
+            var projectWideActions = s_Manager?.actions;
+            if (projectWideActions != null)
             {
-                s_ProjectWideActions.Disable();
-                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
-                s_ProjectWideActions = null;
+                projectWideActions.Disable();
+                projectWideActions.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_Manager.actions = null;
             }
-#endif
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.

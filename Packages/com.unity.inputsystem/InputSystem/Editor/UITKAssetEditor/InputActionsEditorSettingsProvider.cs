@@ -5,6 +5,8 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    // TODO This editor should react to InputSystem.actions being reassigned from outside
+
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
         public const string kSettingsPath = InputSettingsPath.kSettingsRootPath;
@@ -22,9 +24,10 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             m_RootVisualElement = rootElement;
-            var asset = ProjectWideActionsAsset.GetOrCreate();
-            var serializedAsset = new SerializedObject(asset);
-            m_State = new InputActionsEditorState(serializedAsset);
+            var asset = InputSystem.actions;
+            if (asset != null)
+                m_State = new InputActionsEditorState(new SerializedObject(asset));
+
             BuildUI();
 
             // Monitor focus state of root element
@@ -76,7 +79,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_HasEditFocus = false;
 
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                if (hasAsset)
+                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
                 #endif
             }
         }
@@ -93,12 +97,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void BuildUI()
         {
-            m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
-            m_StateContainer.StateChanged += OnStateChanged;
-            m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
-            view.postResetAction += OnResetAsset;
-            m_StateContainer.Initialize();
+            if (hasAsset)
+            {
+                m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
+                m_StateContainer.StateChanged += OnStateChanged;
+                m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
+                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
+                view.postResetAction += OnResetAsset;
+                m_StateContainer.Initialize();
+            }
 
             // Hide the save / auto save buttons in the project wide input actions
             // Project wide input actions always auto save
@@ -115,6 +122,8 @@ namespace UnityEngine.InputSystem.Editor
             var serializedAsset = new SerializedObject(newAsset);
             m_State = new InputActionsEditorState(serializedAsset);
         }
+
+        private bool hasAsset => m_State.serializedObject != null;
 
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
