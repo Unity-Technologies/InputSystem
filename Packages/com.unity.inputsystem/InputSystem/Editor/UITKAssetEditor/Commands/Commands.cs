@@ -269,12 +269,14 @@ namespace UnityEngine.InputSystem.Editor
                 var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 var compositeBindings = CopyPasteHelper.GetBindingsForComposite(actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), oldIndex);
                 var newBindingIndex = MoveBindingOrComposite(state, oldIndex, actionIndex, childIndex);
+                var actionTo = Selectors.GetActionForIndex(actionMap, actionIndex).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
                 var toIndex = newBindingIndex;
                 foreach (var compositePart in compositeBindings)
                 {
                     var from = oldIndex < newBindingIndex ? oldIndex : compositePart.GetIndexOfArrayElement();
                     var to = oldIndex < newBindingIndex ? newBindingIndex : ++toIndex;
                     InputActionSerializationHelpers.MoveBindings(actionMap, from, to);
+                    Selectors.GetCompositeOrBindingInMap(actionMap, to).wrappedProperty.FindPropertyRelative("m_Action").stringValue = actionTo;
                 }
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectBinding(newBindingIndex);
