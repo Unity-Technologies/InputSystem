@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             return state.selectedBindingIndex + toSkip;
         }
-        
+
         public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
         {
             var offset = 1; //previous action offset
