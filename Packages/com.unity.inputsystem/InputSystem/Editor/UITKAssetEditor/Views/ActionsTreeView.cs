@@ -352,7 +352,7 @@ namespace UnityEngine.InputSystem.Editor
             if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
             {
                 // Look upwards to the immediate child of the scroll view, so we know what Index to use
-                var element = (evt.target as VisualElement);
+                var element = evt.target as VisualElement;
                 while (element.name != "unity-tree-view__item")
                     element = element.parent;
 
