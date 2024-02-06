@@ -75,6 +75,14 @@ namespace UnityEngine.InputSystem.Editor
             view.DestroyView();
         }
 
+        /// <summary>
+        /// Dispatches a command to be executed to generate a new <c>InputActionsEditorState</c> from the
+        /// current state on the UI scheduler queue.
+        /// </summary>
+        /// <param name="command">The command to be executed.</param>
+        /// <param name="continueWith">An optional action to be executed directly after the command in
+        /// case the command is successful. If the command is not successful, e.g. throws an exception,
+        /// the provided action will not be executed.</param>
         protected void Dispatch(Command command, Action continueWith = null)
         {
             stateContainer.Dispatch(command, continueWith);

@@ -76,6 +76,7 @@ namespace UnityEngine.InputSystem.Editor
         protected override void RedrawUI(ViewState viewState)
         {
             m_ListView.itemsSource = viewState.actionMapNames;
+            m_ListView.Rebuild();
 
             // Update view to reflect model selection
             var desiredSelectedIndex = viewState.selectedActionMapIndex;
@@ -84,8 +85,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_ListView.SetSelection(desiredSelectedIndex);
                 m_ListView.ScrollToItem(desiredSelectedIndex);
             }
-
-            m_ListView.Rebuild();
         }
 
         public override void DestroyView()
@@ -96,6 +95,7 @@ namespace UnityEngine.InputSystem.Editor
         private void RenameNewActionMap()
         {
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            m_ListView.ScrollToItem(m_ListView.selectedIndex);
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
         }
 

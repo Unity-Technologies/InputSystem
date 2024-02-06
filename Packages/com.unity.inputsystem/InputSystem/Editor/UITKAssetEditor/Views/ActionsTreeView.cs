@@ -120,6 +120,9 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
+                if (isRedrawInProgress)
+                    return;
+
                 if (m_ActionsTreeView.selectedIndex >= 0)
                 {
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);

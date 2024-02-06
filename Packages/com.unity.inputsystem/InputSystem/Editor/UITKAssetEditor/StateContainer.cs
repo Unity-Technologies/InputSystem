@@ -3,6 +3,7 @@ using System;
 using System.Linq.Expressions;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -31,9 +32,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
-            
+
             m_State = command(m_State);
-            
+
             // why not just invoke the state changed event immediately you ask? The Dispatch method might have
             // been called from inside a UI element event handler and if we raised the event immediately, a view
             // might try to redraw itself *during* execution of the event handler.
