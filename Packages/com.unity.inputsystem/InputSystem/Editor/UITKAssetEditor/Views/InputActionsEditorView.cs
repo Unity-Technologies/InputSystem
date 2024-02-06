@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ToggleAutoSave(evt.newValue, postSaveAction));
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             var toolbarMenu = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             toolbarMenu.menu.MenuItems().Clear();

@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
-        public override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
+        protected override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
         {
             if (!viewState.Item1.HasValue)
                 return;

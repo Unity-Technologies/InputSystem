@@ -41,7 +41,17 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             if (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate)
-                RedrawUI(m_ViewStateSelector.GetViewState(state));
+            {
+                isRedrawInProgress = true;
+                try
+                {
+                    RedrawUI(m_ViewStateSelector.GetViewState(state));
+                }
+                finally
+                {
+                    isRedrawInProgress = false;
+                }
+            }
 
             m_IsFirstUpdate = false;
             foreach (var view in m_ChildViews)
@@ -50,13 +60,13 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public TView CreateChildView<TView>(TView view) where TView : IView
+        protected TView CreateChildView<TView>(TView view) where TView : IView
         {
             m_ChildViews.Add(view);
             return view;
         }
 
-        public void DestroyChildView<TView>(TView view) where TView : IView
+        protected void DestroyChildView<TView>(TView view) where TView : IView
         {
             if (view == null)
                 return;
@@ -65,17 +75,17 @@ namespace UnityEngine.InputSystem.Editor
             view.DestroyView();
         }
 
-        public void Execute(Action update)
+        protected void Dispatch(Command command, Action continueWith = null)
         {
-            stateContainer.TryExecute(update);
+            stateContainer.Dispatch(command, continueWith);
         }
 
-        public void Dispatch(Command command)
-        {
-            stateContainer.Dispatch(command);
-        }
+        protected abstract void RedrawUI(TViewState viewState);
 
-        public abstract void RedrawUI(TViewState viewState);
+        /// <summary>
+        /// Returns whether a redraw is in progress, i.e. only true if called from within Redraw callback scope.
+        /// </summary>
+        protected bool isRedrawInProgress { get; private set; }
 
         /// <summary>
         /// Called when a parent view is destroying this view to give it an opportunity to clean up any

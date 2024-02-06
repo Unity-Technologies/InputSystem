@@ -27,29 +27,13 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.Bind(initialState.serializedObject);
         }
 
-        public void TryExecute(Action update)
-        {
-            m_RootVisualElement.schedule.Execute(() =>
-            {
-                // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
-                try
-                {
-                    update.Invoke();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e.Message);
-                }
-            });
-        }
-        
-        public void Dispatch(Command command)
+        public void Dispatch(Command command, Action continueWith = null)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
-
+            
             m_State = command(m_State);
-
+            
             // why not just invoke the state changed event immediately you ask? The Dispatch method might have
             // been called from inside a UI element event handler and if we raised the event immediately, a view
             // might try to redraw itself *during* execution of the event handler.
@@ -58,7 +42,13 @@ namespace UnityEngine.InputSystem.Editor
                 // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
                 try
                 {
+                    // Note that continueWith is only executed if provided and only if StateChanged does not
+                    // throw and command didn't throw.
+                    // This provides increased exception safety since if continueWith was just scheduled
+                    // to be executed after command, any exception in command might fail continueWith since
+                    // state may be undefined by partial execution of command.
                     StateChanged?.Invoke(m_State);
+                    continueWith?.Invoke();
                 }
                 catch (Exception e)
                 {

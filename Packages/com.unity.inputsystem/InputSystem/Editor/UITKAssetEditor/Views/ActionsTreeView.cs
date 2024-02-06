@@ -191,7 +191,7 @@ namespace UnityEngine.InputSystem.Editor
             addActionButton.clicked -= AddAction;
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);

@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                 (binding, state) => binding == null ? null : Selectors.GetCompositeBindingViewState(state, binding.Value));
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             m_CompositeTypeField.choices.Clear();
             m_CompositeTypeField.choices.AddRange(viewState.compositeNames);

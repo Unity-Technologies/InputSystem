@@ -20,10 +20,15 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
 
+            // Setup a selection change filter that prevents the user from deselecting items.
+            // This is desirable since deselecting an Action Map (ESC) would make the Action panel empty with
+            // the current UI layout. Note that we also avoid dispatching select commands if callback
+            // is indirectly triggered by a redraw (instead of constantly hooking and unhooking listener).
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
-                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+                if (!isRedrawInProgress)
+                    Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
             };
 
             m_ListView.bindItem = (element, i) =>
@@ -59,7 +64,8 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
-                (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
+                (actionMapNames, state) => new ViewState(
+                    Selectors.GetSelectedActionMap(state), actionMapNames?.ToList() ?? new List<string>()));
 
             addActionMapButton.clicked += AddActionMap;
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
@@ -67,29 +73,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
-            m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-            /*if (viewState.selectedActionMap.HasValue)
+            m_ListView.itemsSource = viewState.actionMapNames;
+
+            // Update view to reflect model selection
+            var desiredSelectedIndex = viewState.selectedActionMapIndex;
+            if (desiredSelectedIndex >= 0 && desiredSelectedIndex != m_ListView.selectedIndex)
             {
-                var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name);
-                m_ListView.SetSelection(indexOf);
-            }*/
-            
-            // Update view to reflect model
-            var desiredSelectedIndex = viewState.selectedActionMap.HasValue
-                ? viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name)
-                : -1;
-            if (desiredSelectedIndex != m_ListView.selectedIndex)
-            {
-                m_ListView.ScrollToItem(desiredSelectedIndex); // Note: sizing or UITK bug, also just clicking many times shrinks the panel (!!!!)
                 m_ListView.SetSelection(desiredSelectedIndex);
+                m_ListView.ScrollToItem(desiredSelectedIndex);
             }
-                
-            //var selected = viewState.selectedActionMap.HasValue ? viewState.selectedActionMap.Value.name : "none";
-            //Debug.Log($"Redraw, selection: {desiredSelectedIndex}, listSelection: {m_ListView.selectedItem}");
+
             m_ListView.Rebuild();
-            //RenameNewActionMaps();
         }
 
         public override void DestroyView()
@@ -97,37 +93,21 @@ namespace UnityEngine.InputSystem.Editor
             addActionMapButton.clicked -= AddActionMap;
         }
 
-        private void RenameNewActionMaps()
+        private void RenameNewActionMap()
         {
-            Debug.Log("RenameNewActionMaps");
-            
-            //Debug.Log($"RenameNewActionMaps | Count: {m_ListView.itemsSource.Count}, selectedIndex: {m_ListView.selectedIndex}");
-
-            /*if (m_ListView.itemsSource == null)
-            {
-                Debug.Log("No itemsSource");
-                return;
-            }*/
-            
-            //Debug.Log($"selectedIndex: {m_ListView.selectedIndex}");
-            //Debug.Log($"viewStateSelected: {viewState.selectedActionMap}");
-            
-            //Debug.Assert(m_ListView.itemsSource.Count > 0);
-            //Debug.Assert(m_ListView.selectedIndex >= 0);
-            
-            //m_ListView.ScrollToItem(m_ListView.selectedIndex); // TODO This is wrong this should be when changing selection
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            //if (element == null)
-            //{
-            //    Debug.Log("No element selected");
-            //    return;
-            //}
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
         }
 
         private void DeleteActionMap(int index)
         {
-            Dispatch(Commands.DeleteActionMap(index));
+            Dispatch(Commands.DeleteActionMap(index), () =>
+            {
+                // WORKAROUND: For some reason after delete (haven' identified a pattern), m_ListView would
+                // lose focus preventing further navigation or commands associated with the view.
+                // Hence we explicitly reclaim focus here post the delete command as a workaround.
+                m_ListView.Focus();
+            });
         }
 
         private void DuplicateActionMap(int index)
@@ -157,8 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void AddActionMap()
         {
-            Dispatch(Commands.AddActionMap());
-            //Execute(() => RenameNewActionMaps());
+            Dispatch(Commands.AddActionMap(), continueWith: RenameNewActionMap);
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
@@ -214,17 +193,21 @@ namespace UnityEngine.InputSystem.Editor
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private readonly VisualElement m_Root;
-        private ListView m_ListView;
+        private readonly ListView m_ListView;
 
         internal class ViewState
         {
-            public SerializedInputActionMap? selectedActionMap;
-            public IEnumerable<string> actionMapNames;
+            public readonly SerializedInputActionMap? selectedActionMap;
+            public readonly System.Collections.IList actionMapNames;
+            public readonly int selectedActionMapIndex;
 
-            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames)
+            public ViewState(SerializedInputActionMap? selectedActionMap, System.Collections.IList actionMapNames)
             {
                 this.selectedActionMap = selectedActionMap;
                 this.actionMapNames = actionMapNames;
+                this.selectedActionMapIndex = selectedActionMap.HasValue
+                    ? actionMapNames.IndexOf(selectedActionMap.Value.name)
+                    : -1;
             }
         }
     }

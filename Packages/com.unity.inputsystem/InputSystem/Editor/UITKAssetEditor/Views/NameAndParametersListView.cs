@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Editor
                 parametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
-        public override void RedrawUI(InputActionsEditorState state)
+        protected override void RedrawUI(InputActionsEditorState state)
         {
             if (m_ContentContainer != null)
                 m_Root.Remove(m_ContentContainer);

@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
                 (b, s) => b.HasValue && b.Value.isPartOfComposite ? Selectors.GetCompositePartBindingViewState(b.Value, s) : null);
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             if (viewState == null)
                 return;

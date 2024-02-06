@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             DestroyChildView(m_ActionPropertyView);
             DestroyChildView(m_BindingPropertyView);

@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     /// e.g. when the user is pressing the ESC key while the view has focus.
     /// </summary>
     /// <remarks>
-    ///The workaround is based on reassigning the selected index based on last selection, constrained
+    /// The workaround is based on reassigning the selected index based on last selection, constrained
     /// to the available range items. The motivation behind this workaround is that there is no built-in support
     /// in UI-Toolkit list or tree-view to prevent deselection via ESC key.
     ///
@@ -26,7 +26,9 @@ namespace UnityEngine.InputSystem.Editor
     internal class CollectionViewSelectionChangeFilter
     {
         private readonly BaseVerticalCollectionView m_View;
+#if !UNITY_INPUT_SYSTEM_INPUT_ASSET_EDITOR_ALLOWS_DESELECTION
         private List<int> m_SelectedIndices;
+#endif
 
         /// <summary>
         /// Event triggered as an output to filtering the selected indices reported by the view.
@@ -35,12 +37,11 @@ namespace UnityEngine.InputSystem.Editor
 
         public CollectionViewSelectionChangeFilter(BaseVerticalCollectionView view)
         {
-            m_SelectedIndices = new List<int>();
-
             m_View = view;
             #if UNITY_INPUT_SYSTEM_INPUT_ASSET_EDITOR_ALLOWS_DESELECTION
-            m_View_.selectedIndicesChanged += OnSelectedIndicesChanged;
+            m_View.selectedIndicesChanged += OnSelectedIndicesChanged;
             #else
+            m_SelectedIndices = new List<int>();
             m_View.selectedIndicesChanged += FilterSelectedIndicesChanged;
             #endif
         }

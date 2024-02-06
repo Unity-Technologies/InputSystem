@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
-        public override void RedrawUI(ViewState viewState)
+        protected override void RedrawUI(ViewState viewState)
         {
             var selectedBindingIndex = viewState.selectedBindingIndex;
             if (selectedBindingIndex == -1)

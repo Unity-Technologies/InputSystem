@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(ControlSchemeCommands.RemoveDeviceRequirement(m_ListView.selectedIndex));
         }
 
-        public override void RedrawUI(InputControlScheme viewState)
+        protected override void RedrawUI(InputControlScheme viewState)
         {
             m_Root.Q<TextField>(kControlSchemeNameTextField).value = viewState.name;
 
