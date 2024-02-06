@@ -10,13 +10,11 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
-        private readonly VisualElement m_Root;
         private readonly Foldout m_ParentFoldout;
 
         public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             m_ParentFoldout = foldout;
 
             // TODO: Consider IEquatable<T> and how to compare selector data
@@ -37,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ParentFoldout.text = "Action";
             var inputAction = viewState.Item1.Value;
 
-            m_Root.Clear();
+            rootElement.Clear();
 
             var actionType = new EnumField("Action Type", inputAction.type)
             {
@@ -47,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
             });
-            m_Root.Add(actionType);
+            rootElement.Add(actionType);
 
             if (inputAction.type != InputActionType.Button)
             {
@@ -65,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
                 });
-                m_Root.Add(controlType);
+                rootElement.Add(controlType);
             }
 
             if (inputAction.type != InputActionType.Value)
@@ -79,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
                 });
-                m_Root.Add(initialStateCheck);
+                rootElement.Add(initialStateCheck);
             }
         }
     }

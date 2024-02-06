@@ -15,9 +15,8 @@ namespace UnityEngine.InputSystem.Editor
         public event Action<ViewBase<InputControlScheme>> OnClosing;
 
         public ControlSchemesView(VisualElement root, StateContainer stateContainer, bool updateExisting = false)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             m_UpdateExisting = updateExisting;
 
             var controlSchemeEditor = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -49,7 +48,7 @@ namespace UnityEngine.InputSystem.Editor
             };
             popupWindow.contentContainer.Add(controlSchemeVisualElement);
             m_ModalWindow.Add(popupWindow);
-            m_Root.Add(m_ModalWindow);
+            root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
             m_ModalWindow.RegisterCallback<ClickEvent>(evt => Close());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
@@ -96,7 +95,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void RedrawUI(InputControlScheme viewState)
         {
-            m_Root.Q<TextField>(kControlSchemeNameTextField).value = viewState.name;
+            rootElement.Q<TextField>(kControlSchemeNameTextField).value = viewState.name;
 
             m_ListView.itemsSource?.Clear();
             m_ListView.itemsSource = viewState.deviceRequirements.Count > 0 ?
@@ -161,7 +160,6 @@ namespace UnityEngine.InputSystem.Editor
             ((Label)visualElement).text = (((string, bool))m_ListView.itemsSource[rowIndex]).Item1;
         }
 
-        private readonly VisualElement m_Root;
         private readonly bool m_UpdateExisting;
         private MultiColumnListView m_ListView;
         private VisualElement m_ModalWindow;

@@ -13,11 +13,9 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionMapsView : ViewBase<ActionMapsView.ViewState>
     {
         public ActionMapsView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
+            m_ListView = root.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
 
             // Setup a selection change filter that prevents the user from deselecting items.
@@ -67,11 +65,10 @@ namespace UnityEngine.InputSystem.Editor
                 (actionMapNames, state) => new ViewState(
                     Selectors.GetSelectedActionMap(state), actionMapNames?.ToList() ?? new List<string>()));
 
-            addActionMapButton.clicked += AddActionMap;
+            m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
+            m_AddActionMapButton.clicked += AddActionMap;
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
         }
-
-        private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
 
         protected override void RedrawUI(ViewState viewState)
         {
@@ -89,7 +86,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            addActionMapButton.clicked -= AddActionMap;
+            m_AddActionMapButton.clicked -= AddActionMap;
         }
 
         private void RenameNewActionMap()
@@ -192,8 +189,8 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
-        private readonly VisualElement m_Root;
         private readonly ListView m_ListView;
+        private readonly Button m_AddActionMapButton;
 
         internal class ViewState
         {

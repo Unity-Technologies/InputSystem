@@ -14,46 +14,43 @@ namespace UnityEngine.InputSystem.Editor
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
         private const string menuButtonId = "asset-menu";
 
+        private readonly ToolbarMenu m_MenuButtonToolbar;
+        private readonly ToolbarButton m_SaveButton;
+
         internal Action postSaveAction;
         internal Action<InputActionAsset> postResetAction;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
-        {
-            m_Root = root;
-            BuildUI();
-        }
-
-        public void BuildUI()
+            : base(root, stateContainer)
         {
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
                 InputActionsEditorConstants.ResourcesPath +
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
-            mainEditorAsset.CloneTree(m_Root);
-            var actionsTreeView = new ActionsTreeView(m_Root, stateContainer);
-            CreateChildView(new ActionMapsView(m_Root, stateContainer));
+            mainEditorAsset.CloneTree(root);
+            var actionsTreeView = new ActionsTreeView(root, stateContainer);
+            CreateChildView(new ActionMapsView(root, stateContainer));
             CreateChildView(actionsTreeView);
-            CreateChildView(new PropertiesView(m_Root, stateContainer));
-            InputActionViewsControlsHolder.Initialize(m_Root, actionsTreeView);
+            CreateChildView(new PropertiesView(root, stateContainer));
+            InputActionViewsControlsHolder.Initialize(root, actionsTreeView);
 
-            var menuButton = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
-            menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
-            menuButton.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true), DropdownMenuAction.Status.Disabled);
-            menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(m_Root), DropdownMenuAction.Status.Disabled);
-            menuButton.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
+            m_MenuButtonToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
+            m_MenuButtonToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));
+            m_MenuButtonToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(root, true), DropdownMenuAction.Status.Disabled);
+            m_MenuButtonToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(root), DropdownMenuAction.Status.Disabled);
+            m_MenuButtonToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
 
-            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
-            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
-            saveButton.clicked += OnSaveButton;
+            m_SaveButton = root.Q<ToolbarButton>(name: saveButtonId);
+            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            m_SaveButton.clicked += OnSaveButton;
 
-            var autoSaveToggle = m_Root.Q<ToolbarToggle>(name: autoSaveToggleId);
+            var autoSaveToggle = root.Q<ToolbarToggle>(name: autoSaveToggleId);
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
 
-            var assetMenuButton = m_Root.Q<VisualElement>(name: menuButtonId);
+            var assetMenuButton = root.Q<VisualElement>(name: menuButtonId);
             var isGlobalAsset = stateContainer.GetState().serializedObject.targetObject.name == "ProjectWideInputActions";
             assetMenuButton.visible = isGlobalAsset;
             assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
@@ -88,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
             // Don't let focus linger after clicking (ISX-1482). Ideally this would be only applied on mouse click,
             // rather than if the user is using tab to navigate UI, but there doesn't seem to be a way to differentiate
             // between those interactions at the moment.
-            m_Root.Q<ToolbarButton>(name: saveButtonId).Blur();
+            m_SaveButton.Blur();
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
@@ -98,33 +95,31 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void RedrawUI(ViewState viewState)
         {
-            var toolbarMenu = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
-            toolbarMenu.menu.MenuItems().Clear();
+            m_MenuButtonToolbar.menu.MenuItems().Clear();
 
             if (viewState.controlSchemes.Any())
             {
-                toolbarMenu.text = viewState.selectedControlSchemeIndex == -1
+                m_MenuButtonToolbar.text = viewState.selectedControlSchemeIndex == -1
                     ? "All Control Schemes"
                     : viewState.controlSchemes.ElementAt(viewState.selectedControlSchemeIndex).name;
 
-                toolbarMenu.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
+                m_MenuButtonToolbar.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
                     viewState.selectedControlSchemeIndex == -1 ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
                 viewState.controlSchemes.ForEach((scheme, i) =>
-                    toolbarMenu.menu.AppendAction(scheme.name, _ => SelectControlScheme(i),
+                    m_MenuButtonToolbar.menu.AppendAction(scheme.name, _ => SelectControlScheme(i),
                         viewState.selectedControlSchemeIndex == i ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal));
-                toolbarMenu.menu.AppendSeparator();
+                m_MenuButtonToolbar.menu.AppendSeparator();
             }
 
-            toolbarMenu.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
-            toolbarMenu.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true),
+            m_MenuButtonToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
+            m_MenuButtonToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            toolbarMenu.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(m_Root),
+            m_MenuButtonToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(rootElement),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            toolbarMenu.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
+            m_MenuButtonToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
-            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
-            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
         private void AddOrUpdateControlScheme(VisualElement parent, bool updateExisting = false)
@@ -158,8 +153,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(ControlSchemeCommands.SelectControlScheme(controlSchemeIndex));
         }
-
-        private readonly VisualElement m_Root;
 
         public class ViewState
         {
