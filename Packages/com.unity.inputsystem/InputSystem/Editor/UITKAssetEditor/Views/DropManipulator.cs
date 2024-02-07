@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
                     m_InitialIndex = listView.selectedIndex;
                 //select map item to visualize the drop
                 listView?.SetSelectionWithoutNotify(new[] { (int)mapItem.userData }); //the user data contains the index of the map item
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                DragAndDrop.visualMode = DragAndDropVisualMode.Move;
                 evt.StopImmediatePropagation();
             }
             else
