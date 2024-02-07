@@ -76,37 +76,43 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawMatchingControlPaths(ViewState viewState)
         {
-            var checkbox = new Toggle("Show Matching Paths")
-            {
-                value = viewState.showPaths
-            };
-            rootElement.Add(checkbox);
-
             List<MatchingControlPath> matchingControlPaths = CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, viewState);
             m_MatchingControlPaths = BuildMatchingControlPaths(matchingControlPaths);
 
-            var treeView = new TreeView();
-            rootElement.Add(treeView);
-            treeView.visible = viewState.showPaths;
-            treeView.style.flexGrow = viewState.showPaths ? 1 : 0;
-
-            checkbox.RegisterValueChangedCallback(changeEvent =>
+            if (m_MatchingControlPaths.Count > 0)
             {
-                viewState.showPaths = changeEvent.newValue;
-                treeView.visible = viewState.showPaths;
-                treeView.style.flexGrow = viewState.showPaths ? 1 : 0;
+                var treeView = new TreeView();
+                rootElement.Add(treeView);
+                treeView.fixedItemHeight = 20;
+                treeView.SetRootItems(m_MatchingControlPaths);
 
-                Dispatch(Commands.ShowMatchingPaths(viewState.showPaths));
-            });
+                // Set TreeView.makeItem to initialize each node in the tree.
+                treeView.makeItem = () =>
+                {
+                    var label = new Label();
+                    label.RegisterCallback<ClickEvent>((evt) => OnItemClicked(evt, viewState));
+                    label.AddToClassList("matching-paths");
+                    return label;
+                };
 
-            treeView.SetRootItems(m_MatchingControlPaths);
+                // Set TreeView.bindItem to bind an initialized node to a data item.
+                treeView.bindItem = (VisualElement element, int index) =>
+                {
+                    var label = (element as Label);
+                    label.text = treeView.GetItemDataForIndex<MatchingControlPath>(index).path;
+                };
 
-            // Set TreeView.makeItem to initialize each node in the tree.
-            treeView.makeItem = () => new Label();
+                //if (viewState.showPaths)
+                   treeView.ExpandRootItems();
+            }
+        }
 
-            // Set TreeView.bindItem to bind an initialized node to a data item.
-            treeView.bindItem = (VisualElement element, int index) =>
-                (element as Label).text = treeView.GetItemDataForIndex<MatchingControlPath>(index).path;
+        private void OnItemClicked(ClickEvent evt, ViewState viewState)
+        {
+            var element = evt.target as VisualElement;
+               
+            // TODO: Move this to the expend/collapse state of the first node - rather than the label click state
+            // Dispatch(Commands.ShowMatchingPaths(viewState.showPaths));
         }
 
         protected class MatchingControlPath
@@ -306,7 +312,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!viewState.controlSchemes.Any()) return;
 
-            var useInControlSchemeLabel = new Label("Use in control scheme");
+            var useInControlSchemeLabel = new Label("Use in control scheme")
+            {
+                name = "control-scheme-usage-title"
+            };
+            
             rootElement.Add(useInControlSchemeLabel);
 
             foreach (var controlScheme in viewState.controlSchemes)
