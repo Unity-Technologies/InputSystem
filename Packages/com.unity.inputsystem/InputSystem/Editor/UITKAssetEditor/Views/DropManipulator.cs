@@ -1,3 +1,4 @@
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -73,3 +74,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+#endif

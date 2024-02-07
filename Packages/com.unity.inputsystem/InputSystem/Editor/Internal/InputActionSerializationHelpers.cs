@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem.Editor
             actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
         }
 
-        public static void MoveBindings(SerializedProperty actionMap, int fromIndex, int toIndex)
+        public static void MoveBinding(SerializedProperty actionMap, int fromIndex, int toIndex)
         {
             var arrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             arrayProperty.MoveArrayElement(fromIndex, toIndex);
