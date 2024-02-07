@@ -215,6 +215,7 @@ namespace UnityEngine.InputSystem.Editor
             bool discardDrag = false;
             foreach (var index in m_ActionsTreeView.selectedIndices)
             {
+                // currentTarget & target are always in TreeView as the event is registered on the TreeView - we need to discard drags into other parts of the editor (e.g. the maps list view)
                 var treeViewItem = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<TreeView>();
                 if (treeViewItem is null)
                 {
@@ -578,10 +579,9 @@ namespace UnityEngine.InputSystem.Editor
                             if (isVisible)
                             {
                                 var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
-                                var compositeBindingId = new Guid(nextBinding.id);
                                 compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
-                                    new ActionOrBindingData(false, name, actionMapIndex, false,
-                                        true, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                                    new ActionOrBindingData(isAction: false, name, actionMapIndex, isComposite: false,
+                                        isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding)));
                             }
 
                             if (++i >= actionBindings.Count)
@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem.Editor
                         }
                         i--;
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, false, action.expectedControlType, serializedInputBinding.indexOfBinding),
+                            new ActionOrBindingData(isAction: false, serializedInputBinding.name, actionMapIndex, isComposite: true, isPartOfComposite: false, action.expectedControlType, bindingIndex: serializedInputBinding.indexOfBinding),
                             compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
@@ -599,12 +599,12 @@ namespace UnityEngine.InputSystem.Editor
                         var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme);
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                                new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
-                                    false, false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
+                                new ActionOrBindingData(isAction: false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
+                                    isComposite: false, isPartOfComposite: false, GetControlLayout(serializedInputBinding.path), bindingIndex: serializedInputBinding.indexOfBinding)));
                     }
                 }
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(actionId, idDictionary),
-                    new ActionOrBindingData(true, action.name, actionMapIndex, false, false, action.expectedControlType, actionIndex: action.wrappedProperty.GetIndexOfArrayElement()), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false, isPartOfComposite: false, action.expectedControlType, actionIndex: action.wrappedProperty.GetIndexOfArrayElement()), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }
