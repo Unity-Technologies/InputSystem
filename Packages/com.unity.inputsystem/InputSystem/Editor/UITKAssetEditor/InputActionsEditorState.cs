@@ -15,6 +15,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; }
+        public bool showMatchingPaths { get { return m_showMatchingPaths; } }
 
         // Control schemes
         public int selectedControlSchemeIndex { get {return m_selectedControlSchemeIndex; } }
@@ -27,6 +28,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] SelectionType m_selectionType;
         [SerializeField] int m_selectedControlSchemeIndex;
         [SerializeField] int m_selectedDeviceRequirementIndex;
+        [SerializeField] bool m_showMatchingPaths;
 
         public InputActionsEditorState(
             SerializedObject inputActionAsset,
@@ -37,7 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
             InputControlScheme selectedControlScheme = default,
             int selectedControlSchemeIndex = -1,
-            int selectedDeviceRequirementIndex = -1)
+            int selectedDeviceRequirementIndex = -1,
+            bool showMatchingPaths = false)
         {
             serializedObject = inputActionAsset;
 
@@ -48,6 +51,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlScheme = selectedControlScheme;
             this.m_selectedControlSchemeIndex = selectedControlSchemeIndex;
             this.m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
+            this.m_showMatchingPaths = showMatchingPaths;
 
             m_ExpandedCompositeBindings = expandedBindingIndices == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
@@ -65,6 +69,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlScheme = other.m_ControlScheme;
             m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
+            m_showMatchingPaths = other.m_showMatchingPaths;
 
             // Editor may leave these as null after domain reloads, so recreate them
             m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
@@ -80,7 +85,8 @@ namespace UnityEngine.InputSystem.Editor
             InputControlScheme? selectedControlScheme = null,
             int? selectedControlSchemeIndex = null,
             int? selectedDeviceRequirementIndex = null,
-            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
+            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
+            bool? showMatchingPaths = null)
         {
             return new InputActionsEditorState(
                 serializedObject,
@@ -93,7 +99,9 @@ namespace UnityEngine.InputSystem.Editor
                 // Control schemes
                 selectedControlScheme ?? this.selectedControlScheme,
                 selectedControlSchemeIndex ?? this.selectedControlSchemeIndex,
-                selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex);
+                selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex,
+
+                showMatchingPaths ?? this.showMatchingPaths);
         }
 
         public SerializedProperty GetActionMapByName(string actionMapName)
@@ -196,6 +204,11 @@ namespace UnityEngine.InputSystem.Editor
             return With(selectedBindingIndex: 0,
                 selectedActionMapIndex: index,
                 selectedActionIndex: 0, selectionType: SelectionType.Action);
+        }
+
+        public InputActionsEditorState ShowMatchingPaths(bool show)
+        {
+            return With(showMatchingPaths: show); 
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
