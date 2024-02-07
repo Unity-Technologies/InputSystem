@@ -57,7 +57,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
-                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    Action action = ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    addBindingButton.clicked += action;
+                    addBindingButton.userData = action; // Store to use in unbindItem
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
@@ -109,6 +111,12 @@ namespace UnityEngine.InputSystem.Editor
                 //reset the editing variable before reassigning visual elements
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
+
+                if (item.isAction)
+                {
+                    var button = element.Q<Button>("add-new-binding-button");
+                    button.clicked -= button.userData as Action;
+                }
 
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
