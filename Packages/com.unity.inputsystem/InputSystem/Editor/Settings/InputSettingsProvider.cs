@@ -191,41 +191,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CreateNewSettingsAsset(string relativePath)
         {
-            // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            AssetDatabase.CreateAsset(settings, relativePath);
-            EditorGUIUtility.PingObject(settings);
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // Create and install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            InputSystem.settings = InputAssetEditorUtils.CreateAsset(ScriptableObject.CreateInstance<InputSettings>(), relativePath);
         }
 
         private static void CreateNewSettingsAsset()
         {
-            // Query for file name.
-            var projectName = PlayerSettings.productName;
-            var path = EditorUtility.SaveFilePanel("Create Input Settings File", "Assets",
-                projectName + ".inputsettings", "asset");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            // Make sure the path is in the Assets/ folder.
-            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
-            var dataPath = Application.dataPath + "/";
-            if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
-            {
-                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
-                return;
-            }
-
-            // Make sure it ends with .asset.
-            var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
-                path += ".asset";
-
-            // Create settings file.
-            var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            CreateNewSettingsAsset(relativePath);
+            var result = InputAssetEditorUtils.PromptUserForAsset(
+                friendlyName: "Input Settings",
+                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("inputsettings"),
+                assetFileExtension: "asset");
+            if (result.result == InputAssetEditorUtils.DialogResult.Valid)
+                CreateNewSettingsAsset(result.relativePath);
         }
 
         private void InitializeWithCurrentSettingsIfNecessary()
@@ -494,7 +472,7 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUILayout.Space();
 
-            ActiveAssetEditorHelper.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
                 target.name, "settings", (value) => InputSystem.settings = value);
         }
 

@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUILayout.Space();
 
-            if (inputActionAsset == null) // TODO Why would this ever happen?
+            if (inputActionAsset == null)
                 EditorGUILayout.HelpBox("The currently selected object is not an editable input action asset.",
                     MessageType.Info);
 
@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.Space();
 
             // Project-wide Input Actions Asset UI.
-            ActiveAssetEditorHelper.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
                 inputActionAsset.name, "Project-wide Input Actions", (value) => InputSystem.actions = value);
 
             EditorGUILayout.Space();

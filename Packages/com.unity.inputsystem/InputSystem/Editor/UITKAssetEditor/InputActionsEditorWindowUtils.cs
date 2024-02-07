@@ -15,16 +15,11 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
-            // For project-wide actions asset save works differently. The asset is in YAML format, not JSON.
-            if (asset.name == ProjectWideActionsAsset.kAssetName)
-            {
-#if UNITY_2023_2_OR_NEWER
-                ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
-#endif
-                ProjectWideActionsAsset.UpdateInputActionReferences();
-                AssetDatabase.SaveAssets();
-                return;
-            }
+            SaveAsset(asset);
+        }
+
+        public static void SaveAsset(InputActionAsset asset)
+        {
             var assetPath = AssetDatabase.GetAssetPath(asset);
             var assetJson = asset.ToJson();
             var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";

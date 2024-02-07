@@ -115,14 +115,11 @@ namespace UnityEngine.InputSystem
 
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-
                 if (m_Actions == value)
                     return;
 
                 m_Actions = value;
-                // ApplyActions();
+                ApplyActions();
             }
         }
 
@@ -250,6 +247,12 @@ namespace UnityEngine.InputSystem
         {
             add => m_SettingsChangedListeners.AddCallback(value);
             remove => m_SettingsChangedListeners.RemoveCallback(value);
+        }
+
+        public event Action onActionsChange
+        {
+            add => m_ActionsChangedListeners.AddCallback(value);
+            remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
@@ -1775,6 +1778,7 @@ namespace UnityEngine.InputSystem
             InstallGlobals();
 
             ApplySettings();
+            ApplyActions();
         }
 
         internal void Destroy()
@@ -2048,6 +2052,7 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
+        private CallbackArray<Action> m_ActionsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2630,6 +2635,12 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
+        }
+
+        internal void ApplyActions()
+        {
+            // Let listeners know.
+            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
         }
 
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)

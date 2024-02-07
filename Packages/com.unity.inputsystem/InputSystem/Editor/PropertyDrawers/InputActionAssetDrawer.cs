@@ -22,36 +22,51 @@ namespace UnityEngine.InputSystem.Editor
     [CustomPropertyDrawer(typeof(InputActionAsset))]
     internal class InputActionAssetDrawer : PropertyDrawer
     {
-        static readonly string[] k_ActionsTypeOptions = new[] { "Project-Wide Actions", "Actions Asset" };
+        //static readonly string[] k_ActionsTypeOptions = new[] { "Project-Wide Actions", "Actions Asset" };
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var isAssetProjectWideActions = IsAssetProjectWideActions(property);
-            var selectedAssetOptionIndex = isAssetProjectWideActions ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
+            var actions = InputSystem.actions;
+            var hasProjectWideActions = !ReferenceEquals(actions, null);
+            var current = property.objectReferenceValue as InputActionAsset;
+            var currentIsProjectWideActions = (hasProjectWideActions) && current == InputSystem.actions;
+            var currentSelectedAssetOptionIndex = (currentIsProjectWideActions) ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
 
-            EditorGUILayout.BeginHorizontal();
-            // Draw dropdown menu to select between using project-wide actions or an action asset
-            var selected = (AssetOptions)EditorGUILayout.EnumPopup(label, selectedAssetOptionIndex);
-            // Draw button to edit the asset
-            DoOpenAssetButtonUI(property, selected);
-            EditorGUILayout.EndHorizontal();
+            var selected = AssetOptions.ActionsAsset;
+            if (hasProjectWideActions)
+            {
+                EditorGUILayout.BeginHorizontal();
+
+                // Draw dropdown menu to select between using project-wide actions or an action asset
+                selected = (AssetOptions)EditorGUILayout.EnumPopup(label, currentSelectedAssetOptionIndex);
+
+                // Draw button to edit the asset
+                DoOpenAssetButtonUI(property, selected);
+
+                EditorGUILayout.EndHorizontal();
+            }
 
             // Update property in case there's a change in the dropdown popup
-            if (selectedAssetOptionIndex != selected)
+            if (currentSelectedAssetOptionIndex != selected)
             {
-                UpdatePropertyWithSelectedOption(property, selected);
-                selectedAssetOptionIndex = selected;
+                if (selected == AssetOptions.ProjectWideActions)
+                    property.objectReferenceValue = actions;
+                else
+                    property.objectReferenceValue = null;
+                property.serializedObject.ApplyModifiedProperties();
             }
 
             // Show relevant UI elements depending on the option selected
             // In case project-wide actions are selected, the object picker is not shown.
-            if (selectedAssetOptionIndex == AssetOptions.ActionsAsset)
+            if (selected == AssetOptions.ActionsAsset)
             {
-                ++EditorGUI.indentLevel;
+                if (hasProjectWideActions)
+                    ++EditorGUI.indentLevel;
                 EditorGUILayout.PropertyField(property, new GUIContent("Actions Asset") , true);
-                --EditorGUI.indentLevel;
+                if (hasProjectWideActions)
+                    --EditorGUI.indentLevel;
             }
 
             EditorGUI.EndProperty();
@@ -68,36 +83,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (GUILayout.Button(buttonText, GUILayout.Width(buttonSize.x)))
                     SettingsService.OpenProjectSettings(InputActionsEditorSettingsProvider.kSettingsPath);
             }
-        }
-
-        static void UpdatePropertyWithSelectedOption(SerializedProperty assetProperty, AssetOptions selected)
-        {
-            if (selected == AssetOptions.ProjectWideActions)
-            {
-                assetProperty.objectReferenceValue = ProjectWideActionsAsset.GetOrCreate();
-            }
-            else
-            {
-                // Reset the actions asset to null if the first time user selects the "Actions Asset" option
-                assetProperty.objectReferenceValue = null;
-            }
-
-            assetProperty.serializedObject.ApplyModifiedProperties();
-        }
-
-        static bool IsAssetProjectWideActions(SerializedProperty property)
-        {
-            var isAssetProjectWideActions = false;
-
-            // Check if the property InputActionAsset name is the same as project-wide actions to determine if
-            // project-wide actions are set
-            if (property.objectReferenceValue != null)
-            {
-                var asset = (InputActionAsset)property.objectReferenceValue;
-                isAssetProjectWideActions = asset?.name == ProjectWideActionsAsset.kAssetName;
-            }
-
-            return isAssetProjectWideActions;
         }
     }
 }

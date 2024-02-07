@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.AssetImporters;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -9,6 +10,10 @@ namespace UnityEngine.InputSystem.Editor
 
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
+        private class ImportDetector : AssetPostprocessor
+        {
+        }
+
         public const string kSettingsPath = InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
@@ -105,6 +110,40 @@ namespace UnityEngine.InputSystem.Editor
                 var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
                 view.postResetAction += OnResetAsset;
                 m_StateContainer.Initialize();
+            }
+            else
+            {
+                // TODO This is a very temporary solution, it will be reworked before this lands in any shape or form
+                Button button = new Button();
+                button.name = "createProjectWideInputActionsAssetButton";
+                button.text = "Create a new Project-wide Input Actions Asset";
+                button.RegisterCallback<ClickEvent>(evt =>
+                {
+                    var result = InputAssetEditorUtils.PromptUserForAsset(
+                        friendlyName: "Input Actions",
+                        suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
+                        assetFileExtension: "inputactions");
+                    if (result.result != InputAssetEditorUtils.DialogResult.Valid)
+                        return; // Either invalid path selected or cancelled by user
+
+                    // Create a new asset
+                    ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
+
+                    // Refresh asset database to allow for importer to recognize the asset
+                    AssetDatabase.Refresh();
+
+                    // Load the asset we just created and assign it as the Project-wide actions
+                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(result.relativePath);
+                    if (asset != null)
+                        InputSystem.actions = asset;
+
+                    // TODO This is not how this should be done, it should instead be triggered by InputSystem.actions being assigned since this might also happen from user code
+                    //m_RootVisualElement.Remove(button); // TODO Why a problem?!
+                    m_State = new InputActionsEditorState(new SerializedObject(asset));
+                    BuildUI();
+                });
+
+                m_RootVisualElement.Add(button);
             }
 
             // Hide the save / auto save buttons in the project wide input actions

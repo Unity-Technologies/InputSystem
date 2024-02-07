@@ -3013,6 +3013,8 @@ namespace UnityEngine.InputSystem
 
         internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
 
+        internal static bool hasActions => s_Manager.actions != null;
+
         /// <summary>
         /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
         /// </summary>
@@ -3028,21 +3030,27 @@ namespace UnityEngine.InputSystem
             get => s_Manager.actions;
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
+                //if (value == null)
+                //    throw new ArgumentNullException(nameof(value));
 
                 if (s_Manager.m_Actions == value)
                     return;
 
-                // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
 #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
+                // Note that if set to null we need to remove the config object to not act as a broken reference.
+                if (value != null && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
                     EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
                         value, true);
                 }
+                else
+                {
+                    EditorBuildSettings.RemoveConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey);
+                }
 #endif // UNITY_EDITOR
 
+                // Update underlying value
                 var current = s_Manager.actions;
                 if (current != null)
                     current.Disable();
@@ -3051,6 +3059,19 @@ namespace UnityEngine.InputSystem
                     value.Enable();
             }
         }
+
+        /// <summary>
+        /// Event that is triggered if any of the maps, actions or bindings in <see cref="actions"/> changes or if
+        /// <see cref="actions"/> is replaced entirely with a new <see cref="InputActionAsset"/> object.
+        /// </summary>
+        /// <seealso cref="actions"/>
+        /// <seealso cref="InputActionAsset"/>
+        public static event Action onActionsChange
+        {
+            add => s_Manager.onActionsChange += value;
+            remove => s_Manager.onActionsChange -= value;
+        }
+
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
