@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Editor
         private void Reset()
         {
             if (m_InitialIndex >= 0)
-                listView?.SetSelectionWithoutNotify(new[] {m_InitialIndex});
+                listView?.SetSelectionWithoutNotify(new[] {m_InitialIndex}); //select the initial action map again
             m_InitialIndex = -1;
         }
     }

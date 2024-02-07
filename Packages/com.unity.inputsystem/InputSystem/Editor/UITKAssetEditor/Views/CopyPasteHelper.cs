@@ -372,7 +372,7 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
-        public static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, int indexOfComposite)
+        internal static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, int indexOfComposite)
         {
             var compositeBindings = new List<SerializedProperty>();
             var compositeStartIndex = InputActionSerializationHelpers.GetCompositeStartIndex(bindingsArray, indexOfComposite);
