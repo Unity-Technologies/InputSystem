@@ -11923,4 +11923,36 @@ partial class CoreTests
     {
         Assert.Fail();
     }
+
+    // Validate OnAfterDeserialize() completely disables ActionMap
+    // https://jira.unity3d.com/browse/ISXB-737
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapDisabledDuringOnAfterSerialization()
+    {
+        var map = new InputActionMap("MyMap");
+        var action = map.AddAction("MyAction");
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        map.Enable();
+
+        Assert.That(map.enabled, Is.True);
+        Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
+        Assert.Throws<System.InvalidOperationException>(() => map.AddAction("Something"));
+
+        // Calling this directly is contrived (and not supported usage) but it should
+        // effectively cover this regression scenario.
+        map.OnAfterDeserialize();
+
+        Assert.That(map.enabled, Is.False);
+
+        map.Enable();
+
+        Assert.That(map.enabled, Is.True);
+        Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
+    }
 }
