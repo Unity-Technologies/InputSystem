@@ -216,8 +216,8 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var index in m_ActionsTreeView.selectedIndices)
             {
                 // currentTarget & target are always in TreeView as the event is registered on the TreeView - we need to discard drags into other parts of the editor (e.g. the maps list view)
-                var treeViewItem = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<TreeView>();
-                if (treeViewItem is null)
+                var treeView = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<TreeView>();
+                if (treeView is null || treeView != m_ActionsTreeView)
                 {
                     discardDrag = true;
                     break;
