@@ -74,10 +74,6 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void ShowDerivedBindings(ViewState viewState)
-        {
-        }
-
         private void DrawMatchingControlPaths(ViewState viewState)
         {
             bool controlPathUsagePresent = false;
