@@ -76,7 +76,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowDerivedBindings(ViewState viewState)
         {
-
         }
 
         private void DrawMatchingControlPaths(ViewState viewState)
@@ -115,7 +114,7 @@ namespace UnityEngine.InputSystem.Editor
                 helpBox.EnableInClassList("matching-controls-shown", viewState.showPaths);
                 rootElement.Add(helpBox);
             }
-            else if (matchingControlPaths.Count>0)
+            else if (matchingControlPaths.Count > 0)
             {
                 m_MatchingControlPaths = BuildMatchingControlPathsTreeData(matchingControlPaths);
 
@@ -339,7 +338,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 name = "control-scheme-usage-title"
             };
-            
+
             rootElement.Add(useInControlSchemeLabel);
 
             foreach (var controlScheme in viewState.controlSchemes)

@@ -208,7 +208,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState ShowMatchingPaths(bool show)
         {
-            return With(showMatchingPaths: show); 
+            return With(showMatchingPaths: show);
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
