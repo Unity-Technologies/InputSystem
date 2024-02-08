@@ -74,15 +74,55 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void ShowDerivedBindings(ViewState viewState)
+        {
+
+        }
+
         private void DrawMatchingControlPaths(ViewState viewState)
         {
-            List<MatchingControlPath> matchingControlPaths = CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, viewState);
-            m_MatchingControlPaths = BuildMatchingControlPaths(matchingControlPaths);
+            bool controlPathUsagePresent = false;
+            List<MatchingControlPath> matchingControlPaths = CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, viewState, ref controlPathUsagePresent);
 
-            if (m_MatchingControlPaths.Count > 0)
+            if (matchingControlPaths == null || matchingControlPaths.Count != 0)
             {
+                var checkbox = new Toggle($"Show Derived Bindings")
+                {
+                    value = viewState.showPaths
+                };
+                rootElement.Add(checkbox);
+
+                checkbox.RegisterValueChangedCallback(changeEvent =>
+                {
+                    Dispatch(Commands.ShowMatchingPaths(changeEvent.newValue));
+
+                    rootElement.Q(className: "matching-controls").EnableInClassList("matching-controls-shown", changeEvent.newValue);
+                    /*
+                    element.visible = changeEvent.newValue;
+                    element.style.flexGrow = changeEvent.newValue ? 1 : 0;
+                    element.style.maxHeight = viewState.showPaths ? StyleKeyword.None : 0;
+                    */
+                });
+            }
+
+            if (matchingControlPaths == null)
+            {
+                var messageString = controlPathUsagePresent ? "No registered controls match this current binding. Some controls are only registered at runtime." :
+                    "No other registered controls match this current binding. Some controls are only registered at runtime.";
+
+                var helpBox = new HelpBox(messageString, HelpBoxMessageType.Warning);
+                helpBox.AddToClassList("matching-controls");
+                helpBox.EnableInClassList("matching-controls-shown", viewState.showPaths);
+                rootElement.Add(helpBox);
+            }
+            else if (matchingControlPaths.Count>0)
+            {
+                m_MatchingControlPaths = BuildMatchingControlPathsTreeData(matchingControlPaths);
+
                 var treeView = new TreeView();
                 rootElement.Add(treeView);
+                treeView.AddToClassList("matching-controls");
+                treeView.EnableInClassList("matching-controls-shown", viewState.showPaths);
                 treeView.fixedItemHeight = 20;
                 treeView.SetRootItems(m_MatchingControlPaths);
 
@@ -90,8 +130,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeView.makeItem = () =>
                 {
                     var label = new Label();
-                    label.RegisterCallback<ClickEvent>((evt) => OnItemClicked(evt, viewState));
-                    label.AddToClassList("matching-paths");
+                    label.AddToClassList("matching-controls-labels");
                     return label;
                 };
 
@@ -102,17 +141,8 @@ namespace UnityEngine.InputSystem.Editor
                     label.text = treeView.GetItemDataForIndex<MatchingControlPath>(index).path;
                 };
 
-                //if (viewState.showPaths)
-                   treeView.ExpandRootItems();
+                treeView.ExpandRootItems();
             }
-        }
-
-        private void OnItemClicked(ClickEvent evt, ViewState viewState)
-        {
-            var element = evt.target as VisualElement;
-               
-            // TODO: Move this to the expend/collapse state of the first node - rather than the label click state
-            // Dispatch(Commands.ShowMatchingPaths(viewState.showPaths));
         }
 
         protected class MatchingControlPath
@@ -131,18 +161,18 @@ namespace UnityEngine.InputSystem.Editor
             public List<MatchingControlPath> children;
         }
 
-        private List<TreeViewItemData<MatchingControlPath>> BuildMatchingControlPaths(List<MatchingControlPath> matchingControlPaths)
+        private List<TreeViewItemData<MatchingControlPath>> BuildMatchingControlPathsTreeData(List<MatchingControlPath> matchingControlPaths)
         {
             int id = 0;
-            return BuildMatchingControlPathsRecursive(ref id, matchingControlPaths);
+            return BuildMatchingControlPathsTreeDataRecursive(ref id, matchingControlPaths);
         }
 
-        private List<TreeViewItemData<MatchingControlPath>> BuildMatchingControlPathsRecursive(ref int id, List<MatchingControlPath> matchingControlPaths)
+        private List<TreeViewItemData<MatchingControlPath>> BuildMatchingControlPathsTreeDataRecursive(ref int id, List<MatchingControlPath> matchingControlPaths)
         {
             var treeViewList = new List<TreeViewItemData<MatchingControlPath>>(matchingControlPaths.Count);
             foreach (var matchingControlPath in matchingControlPaths)
             {
-                var childTreeViewList = BuildMatchingControlPathsRecursive(ref id, matchingControlPath.children);
+                var childTreeViewList = BuildMatchingControlPathsTreeDataRecursive(ref id, matchingControlPath.children);
 
                 var treeViewItem = new TreeViewItemData<MatchingControlPath>(id++, matchingControlPath, childTreeViewList);
                 treeViewList.Add(treeViewItem);
@@ -153,7 +183,7 @@ namespace UnityEngine.InputSystem.Editor
 
         List<TreeViewItemData<MatchingControlPath>> m_MatchingControlPaths = new List<TreeViewItemData<MatchingControlPath>>();
 
-        private List<MatchingControlPath> CollectMatchingControlPaths(string path, ViewState viewState)
+        private List<MatchingControlPath> CollectMatchingControlPaths(string path, ViewState viewState, ref bool controlPathUsagePresent)
         {
             var matchingControlPaths = new List<MatchingControlPath>();
 
@@ -174,7 +204,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!isValidDeviceLayout)
                     return matchingControlPaths;
 
-                bool controlPathUsagePresent = parsedPath[1].usages.Count() > 0;
+                controlPathUsagePresent = parsedPath[1].usages.Count() > 0;
                 bool hasChildDeviceLayouts = deviceLayoutPath == InputControlPath.Wildcard || EditorInputControlLayoutCache.HasChildLayouts(rootDeviceLayout.name);
 
                 // If the path provided matches exactly one control path (i.e. has no ui-facing child device layouts or uses control usages), then exit early
@@ -184,13 +214,10 @@ namespace UnityEngine.InputSystem.Editor
                 // Otherwise, we will show either all controls that match the current binding (if control usages are used)
                 // or all controls in derived device layouts (if a no control usages are used).
 
-                var newMatchingControlPath = new MatchingControlPath($"Derived Bindings");
-                matchingControlPaths.Add(newMatchingControlPath);
-
                 // If our control path contains a usage, make sure we render the binding that belongs to the root device layout first
                 if (deviceLayoutPath != InputControlPath.Wildcard && controlPathUsagePresent)
                 {
-                    matchExists |= CollectMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true, newMatchingControlPath.children);
+                    matchExists |= CollectMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true, matchingControlPaths);
                 }
                 // Otherwise, just render the bindings that belong to child device layouts. The binding that matches the root layout is
                 // already represented by the user generated control path itself.
@@ -209,18 +236,14 @@ namespace UnityEngine.InputSystem.Editor
 
                     foreach (var childLayout in matchedChildLayouts)
                     {
-                        matchExists |= CollectMatchingControlPathsForLayout(childLayout, in parsedPath, false, newMatchingControlPath.children);
+                        matchExists |= CollectMatchingControlPathsForLayout(childLayout, in parsedPath, false, matchingControlPaths);
                     }
                 }
 
                 // Otherwise, indicate that no layouts match the current path.
                 if (!matchExists)
                 {
-                    var messageString = controlPathUsagePresent ? "No registered controls match this current binding. Some controls are only registered at runtime." :
-                        "No other registered controls match this current binding. Some controls are only registered at runtime.";
-
-                    newMatchingControlPath = new MatchingControlPath(messageString);
-                    matchingControlPaths.Add(newMatchingControlPath);
+                    return null;
                 }
             }
 

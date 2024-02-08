@@ -205,6 +205,15 @@
     -unity-font-style: bold;
 }
 
-.matching-paths {
+.matching-controls {
+    display: none;
+}
+
+.matching-controls-shown {
+    display: flex;
+    flex-grow: 1;
+}
+
+.matching-controls-labels {
     margin: 1px;
 }
