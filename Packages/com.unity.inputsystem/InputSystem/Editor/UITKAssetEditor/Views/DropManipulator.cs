@@ -35,8 +35,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDragPerformEvent(DragPerformEvent evt)
         {
-            var treeViewItem = target.panel.Pick(evt.mousePosition)?.parent;
-            if (treeViewItem is not InputActionMapsTreeViewItem mapItem)
+            var mapsViewItem = target.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
+            if (mapsViewItem == null)
                 return;
             var index = treeView.selectedIndices.First();
             var draggedItem = treeView.GetItemDataForIndex<ActionOrBindingData>(index);
@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             evt.StopImmediatePropagation();
             DragAndDrop.AcceptDrag();
-            DroppedPerformedCallback.Invoke((int)mapItem.userData);
+            DroppedPerformedCallback.Invoke((int)mapsViewItem.userData);
             Reset();
             treeView.ReleaseMouse();
         }
@@ -52,13 +52,13 @@ namespace UnityEngine.InputSystem.Editor
         private int m_InitialIndex = -1;
         private void OnDragUpdatedEvent(DragUpdatedEvent evt)
         {
-            var treeViewItem = target.panel.Pick(evt.mousePosition)?.parent;
-            if (treeViewItem is InputActionMapsTreeViewItem mapItem)
+            var mapsViewItem = target.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
+            if (mapsViewItem != null)
             {
                 if (m_InitialIndex < 0 && listView != null)
                     m_InitialIndex = listView.selectedIndex;
                 //select map item to visualize the drop
-                listView?.SetSelectionWithoutNotify(new[] { (int)mapItem.userData }); //the user data contains the index of the map item
+                listView?.SetSelectionWithoutNotify(new[] { (int)mapsViewItem.userData }); //the user data contains the index of the map item
                 DragAndDrop.visualMode = DragAndDropVisualMode.Move;
                 evt.StopImmediatePropagation();
             }
