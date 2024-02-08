@@ -366,7 +366,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (element == null)
                     return;
-                
+
                 m_ActionsTreeView.SetSelection(element.parent.IndexOf(element));
             }
         }
