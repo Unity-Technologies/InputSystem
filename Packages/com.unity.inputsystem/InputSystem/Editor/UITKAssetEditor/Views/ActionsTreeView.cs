@@ -361,9 +361,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Look upwards to the immediate child of the scroll view, so we know what Index to use
                 var element = evt.target as VisualElement;
-                while (element.name != "unity-tree-view__item")
+                while (element != null && element.name != "unity-tree-view__item")
                     element = element.parent;
 
+                if (element == null)
+                    return;
+                
                 m_ActionsTreeView.SetSelection(element.parent.IndexOf(element));
             }
         }
