@@ -33,6 +33,7 @@ namespace UnityEngine.InputSystem.Editor
             if (asset != null)
                 m_State = new InputActionsEditorState(new SerializedObject(asset));
 
+            CreateUI();
             BuildUI();
 
             // Monitor focus state of root element
@@ -99,24 +100,32 @@ namespace UnityEngine.InputSystem.Editor
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
             #endif
         }
+        private void CreateUI()
+        {
+            var projectSettingsAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                            InputActionsEditorConstants.PackagePath +
+                            InputActionsEditorConstants.ResourcesPath +
+                            InputActionsEditorConstants.ProjectSettingsUxml);
+
+            projectSettingsAsset.CloneTree(m_RootVisualElement);
+
+            m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
+        }
 
         private void BuildUI()
         {
-            if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
-                m_StateContainer.StateChanged += OnStateChanged;
-                m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
-                view.postResetAction += OnResetAsset;
-                m_StateContainer.Initialize();
+                var element = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
+                if (element != null)
+                {
+                    element.style.visibility = hasAsset ? Visibility.Hidden : Visibility.Visible;
+                    element.style.display = hasAsset ? DisplayStyle.None : DisplayStyle.Flex;
+                }
             }
-            else
+
+            var button = m_RootVisualElement.Q<Button>("create-asset");
+            if (button != null)
             {
-                // TODO This is a very temporary solution, it will be reworked before this lands in any shape or form
-                Button button = new Button();
-                button.name = "createProjectWideInputActionsAssetButton";
-                button.text = "Create a new Project-wide Input Actions Asset";
                 button.RegisterCallback<ClickEvent>(evt =>
                 {
                     var result = InputAssetEditorUtils.PromptUserForAsset(
@@ -138,21 +147,29 @@ namespace UnityEngine.InputSystem.Editor
                         InputSystem.actions = asset;
 
                     // TODO This is not how this should be done, it should instead be triggered by InputSystem.actions being assigned since this might also happen from user code
-                    //m_RootVisualElement.Remove(button); // TODO Why a problem?!
                     m_State = new InputActionsEditorState(new SerializedObject(asset));
                     BuildUI();
                 });
+            }
 
-                m_RootVisualElement.Add(button);
+            if (hasAsset)
+            {
+                m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
+                m_StateContainer.StateChanged += OnStateChanged;
+                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
+                view.postResetAction += OnResetAsset;
+                m_StateContainer.Initialize();
             }
 
             // Hide the save / auto save buttons in the project wide input actions
             // Project wide input actions always auto save
-            var element = m_RootVisualElement.Q("save-asset-toolbar-container");
-            if (element != null)
             {
-                element.style.visibility = Visibility.Hidden;
-                element.style.display = DisplayStyle.None;
+                var element = m_RootVisualElement.Q("save-asset-toolbar-container");
+                if (element != null)
+                {
+                    element.style.visibility = Visibility.Hidden;
+                    element.style.display = DisplayStyle.None;
+                }
             }
         }
 
