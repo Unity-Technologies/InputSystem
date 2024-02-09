@@ -52,7 +52,12 @@ namespace UnityEngine.InputSystem.Editor
             string content;
             try
             {
+#if UNITY_2021_2_OR_NEWER
                 content = File.ReadAllText(FileUtil.GetPhysicalPath(context.sourcePath));
+#else
+                content = File.ReadAllText(context.assetPath);
+#endif
+
             }
             catch (Exception exception)
             {

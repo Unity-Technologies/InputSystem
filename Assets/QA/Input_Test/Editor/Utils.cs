@@ -8,6 +8,7 @@ namespace QA.Input_Test.Editor
 {
     public static class Utils
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Sets Input System project-wide actions to null which is equivalent to user assigning null
         [MenuItem("QA Tools/Show Active Input System Project-wide Actions")]
         static void ShowInputSystemProjectWideActions()
@@ -28,6 +29,7 @@ namespace QA.Input_Test.Editor
             InputSystem.actions = null;
             Debug.Log("InputSystem.actions successfully reset to null");
         }
+#endif
     }
 }
 

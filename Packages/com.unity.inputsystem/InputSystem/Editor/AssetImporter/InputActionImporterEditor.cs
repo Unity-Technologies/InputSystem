@@ -42,11 +42,13 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUILayout.Space();
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Project-wide Input Actions Asset UI.
             InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
                 inputActionAsset.name, "Project-wide Input Actions", (value) => InputSystem.actions = value);
 
             EditorGUILayout.Space();
+#endif
 
             // Importer settings UI.
             var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
@@ -109,6 +111,7 @@ namespace UnityEngine.InputSystem.Editor
             return assetTarget as InputActionAsset;
         }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         protected override bool ShouldHideOpenButton()
         {
             return IsProjectWideActionsAsset();
@@ -123,6 +126,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return !ReferenceEquals(asset, null) && InputSystem.actions == asset;
         }
+#endif
 
         private string GetOpenEditorButtonText(InputActionAsset asset)
         {
