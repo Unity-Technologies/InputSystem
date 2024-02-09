@@ -213,6 +213,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var serializedAsset = new SerializedObject(newAsset);
             m_State = new InputActionsEditorState(serializedAsset);
+            BuildUI();
         }
 
         private bool hasAsset => m_State.serializedObject != null;

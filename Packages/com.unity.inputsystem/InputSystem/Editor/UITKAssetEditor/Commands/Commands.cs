@@ -426,10 +426,8 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 // TODO Here we would instead modify the asset based on an instance loaded from defaults. Note that we cannot use importer here since we modify an in-memory asset as serialized object.... needs some thought to not break Undo.
-                /*ProjectWideActionsAsset.ResetActionAsset();
-                ProjectWideActionsAsset.ResetActionAsset();
-                var asset = ProjectWideActionsAsset.GetOrCreate();
-                postResetAction?.Invoke(asset);*/
+                ProjectWideActionsAsset.ResetActionAsset(InputSystem.actions);
+                postResetAction?.Invoke(InputSystem.actions);
                 return state;
             };
         }

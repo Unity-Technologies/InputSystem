@@ -47,10 +47,21 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
+        internal static void UpdateFromTemplate(string relativePath, string sourcePath)
+        {
+            // Note the name would be the template name at this time (ProjectWideActionsTemplate)
+            var json = File.ReadAllText(FileUtil.GetPhysicalPath(sourcePath));
+            var inputActionAsset = InputActionAsset.FromJson(json);
+            inputActionAsset.name = Path.GetFileNameWithoutExtension(relativePath);
+            json = inputActionAsset.ToJson();
+            File.WriteAllText(FileUtil.GetPhysicalPath(relativePath), json);
+        }
+
         internal static void CreateNewAsset(string relativePath, string sourcePath)
         {
             // Note that we only copy file here and let the InputActionImporter handle the asset management
-            File.Copy(FileUtil.GetPhysicalPath(sourcePath), FileUtil.GetPhysicalPath(relativePath), overwrite: true);
+
+            UpdateFromTemplate(relativePath, sourcePath);
 
             // Refresh asset database to allow for importer to recognize the asset
             AssetDatabase.Refresh();
@@ -111,7 +122,17 @@ namespace UnityEngine.InputSystem.Editor
         internal static void ResetActionAsset(InputActionAsset asset)
         {
             var path = AssetDatabase.GetAssetPath(asset);
-            // TODO Overwrite and let importer handle it?
+            // Overwrite and let importer handle it?
+
+            var relativePath = path;
+
+            UpdateFromTemplate(relativePath, kDefaultAssetPath);
+
+            // Refresh asset database to allow for importer to recognize the asset
+            AssetDatabase.Refresh();
+
+            // Load the asset we just created and assign it as the Project-wide actions
+            InputSystem.actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
         }
     }
 }
