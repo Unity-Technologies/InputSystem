@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.Editor
         public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 
         /// Template names
+        public const string ProjectSettingsUxml = "/InputActionsProjectSettings.uxml";
         public const string MainEditorViewNameUxml = "/InputActionsEditor.uxml";
         public const string BindingsPanelRowTemplateUxml = "/BindingPanelRowTemplate.uxml";
         public const string NameAndParametersListViewItemUxml = "/NameAndParameterListViewItemTemplate.uxml";

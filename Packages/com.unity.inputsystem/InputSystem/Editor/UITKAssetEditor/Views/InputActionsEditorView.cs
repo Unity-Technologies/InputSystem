@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
         internal Action postSaveAction;
         internal Action<InputActionAsset> postResetAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings)
             : base(root, stateContainer)
         {
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -50,14 +50,24 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
 
-            var assetMenuButton = root.Q<VisualElement>(name: menuButtonId);
-            var isGlobalAsset = stateContainer.GetState().serializedObject.targetObject.name == "ProjectWideInputActions";
-            assetMenuButton.visible = isGlobalAsset;
-            assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            VisualElement assetMenuButton = null;
+            try
             {
-                menuEvent.menu.AppendAction("Reset", _ => OnReset());
-            }) { target = assetMenuButton, activators = { new ManipulatorActivationFilter() {button = MouseButton.LeftMouse} }};
+                // This only exists in the project settings version
+                assetMenuButton = root.Q<VisualElement>(name: menuButtonId);
+            }
+            catch { }
+
+            if (assetMenuButton != null)
+            {
+                assetMenuButton.visible = isProjectSettings;
+                assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
+                var _ = new ContextualMenuManipulator(menuEvent =>
+                {
+                    menuEvent.menu.AppendAction("Reset", _ => OnReset());
+                })
+                { target = assetMenuButton, activators = { new ManipulatorActivationFilter() { button = MouseButton.LeftMouse } } };
+            }
 
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.

@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
             view.postSaveAction += PostSaveAction;
             stateContainer.Initialize();
         }
