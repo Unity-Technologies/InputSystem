@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.Editor
                 // This only exists in the project settings version
                 assetMenuButton = root.Q<VisualElement>(name: menuButtonId);
             }
-            catch { }
+            catch {}
 
             if (assetMenuButton != null)
             {

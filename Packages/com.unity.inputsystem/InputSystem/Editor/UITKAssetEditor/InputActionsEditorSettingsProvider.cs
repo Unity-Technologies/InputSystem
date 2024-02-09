@@ -1,4 +1,3 @@
-
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
@@ -116,9 +115,9 @@ namespace UnityEngine.InputSystem.Editor
         private void CreateUI()
         {
             var projectSettingsAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                            InputActionsEditorConstants.PackagePath +
-                            InputActionsEditorConstants.ResourcesPath +
-                            InputActionsEditorConstants.ProjectSettingsUxml);
+                InputActionsEditorConstants.PackagePath +
+                InputActionsEditorConstants.ResourcesPath +
+                InputActionsEditorConstants.ProjectSettingsUxml);
 
             projectSettingsAsset.CloneTree(m_RootVisualElement);
 
@@ -133,7 +132,8 @@ namespace UnityEngine.InputSystem.Editor
                 element = m_RootVisualElement.Q("action-editor");
                 if (element != null)
                     m_RootVisualElement.Remove(element);
-            } while (element != null);
+            }
+            while (element != null);
         }
 
         private void BuildUI()
@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem.Editor
                     // Create a new asset
                     ProjectWideActionsAsset.CreateNewAsset("Assets/InputSystem_Actions.inputactions");
 
-                    // Why doesn't OnActionsChange pick this change up? For some reason we need BuildUI call here : 
+                    // Why doesn't OnActionsChange pick this change up? For some reason we need BuildUI call here :
                     m_State = InputSystem.actions != null ? new InputActionsEditorState(new SerializedObject(InputSystem.actions)) : default;
                     BuildUI();
                 });
@@ -199,9 +199,9 @@ namespace UnityEngine.InputSystem.Editor
         private static void CreateNewActionAsset()
         {
             var result = InputAssetEditorUtils.PromptUserForAsset(
-                        friendlyName: "Input Actions",
-                        suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
-                        assetFileExtension: "inputactions");
+                friendlyName: "Input Actions",
+                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
+                assetFileExtension: "inputactions");
             if (result.result != InputAssetEditorUtils.DialogResult.Valid)
                 return; // Either invalid path selected or cancelled by user
 

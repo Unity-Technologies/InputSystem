@@ -126,6 +126,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return !ReferenceEquals(asset, null) && InputSystem.actions == asset;
         }
+
 #endif
 
         private string GetOpenEditorButtonText(InputActionAsset asset)
