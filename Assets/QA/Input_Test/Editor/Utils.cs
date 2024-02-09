@@ -29,6 +29,7 @@ namespace QA.Input_Test.Editor
             InputSystem.actions = null;
             Debug.Log("InputSystem.actions successfully reset to null");
         }
+
 #endif
     }
 }
