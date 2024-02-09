@@ -111,6 +111,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var treeView = new TreeView();
                 rootElement.Add(treeView);
+                treeView.selectionType = UIElements.SelectionType.None;
                 treeView.AddToClassList("matching-controls");
                 treeView.EnableInClassList("matching-controls-shown", viewState.showPaths);
                 treeView.fixedItemHeight = 20;
