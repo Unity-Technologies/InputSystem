@@ -1,8 +1,9 @@
+
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.AssetImporters;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -46,6 +47,8 @@ namespace UnityEngine.InputSystem.Editor
             // this doesn't recreate the editor.
             if (m_RootVisualElement?.focusController?.focusedElement != null)
                 OnEditFocus(null);
+
+            InputSystem.onActionsChange += OnActionsChange;
         }
 
         public override void OnDeactivate()
@@ -63,6 +66,15 @@ namespace UnityEngine.InputSystem.Editor
                 OnEditFocusLost(null);
                 m_HasEditFocus = false;
             }
+
+            InputSystem.onActionsChange -= OnActionsChange;
+        }
+
+        private void OnActionsChange()
+        {
+            m_State = InputSystem.actions != null ? new InputActionsEditorState(new SerializedObject(InputSystem.actions)) : default;
+            // Editor will already be present so we need to update it or remove the old one
+            BuildUI();
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -100,6 +112,7 @@ namespace UnityEngine.InputSystem.Editor
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
             #endif
         }
+
         private void CreateUI()
         {
             var projectSettingsAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -112,48 +125,58 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
         }
 
+        private void RemoveOldEditors()
+        {
+            VisualElement element;
+            do
+            {
+                element = m_RootVisualElement.Q("action-editor");
+                if (element != null)
+                    m_RootVisualElement.Remove(element);
+            } while (element != null);
+        }
+
         private void BuildUI()
         {
+            var missingAssetSection = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
+            if (missingAssetSection != null)
             {
-                var element = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
-                if (element != null)
-                {
-                    element.style.visibility = hasAsset ? Visibility.Hidden : Visibility.Visible;
-                    element.style.display = hasAsset ? DisplayStyle.None : DisplayStyle.Flex;
-                }
+                missingAssetSection.style.visibility = hasAsset ? Visibility.Hidden : Visibility.Visible;
+                missingAssetSection.style.display = hasAsset ? DisplayStyle.None : DisplayStyle.Flex;
             }
 
-            var button = m_RootVisualElement.Q<Button>("create-asset");
-            if (button != null)
+            var objectField = m_RootVisualElement.Q<ObjectField>("current-asset");
+            if (objectField != null)
             {
-                button.RegisterCallback<ClickEvent>(evt =>
+                objectField.value = InputSystem.actions;
+                objectField.RegisterCallback<ChangeEvent<Object>>((evt) =>
                 {
-                    var result = InputAssetEditorUtils.PromptUserForAsset(
-                        friendlyName: "Input Actions",
-                        suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
-                        assetFileExtension: "inputactions");
-                    if (result.result != InputAssetEditorUtils.DialogResult.Valid)
-                        return; // Either invalid path selected or cancelled by user
+                    InputSystem.actions = evt.newValue as InputActionAsset;
 
+                    // UI updated via OnActionsChange
+                });
+            }
+
+            var createAssetButton = m_RootVisualElement.Q<Button>("create-asset");
+            if (createAssetButton != null)
+            {
+                createAssetButton.RegisterCallback<ClickEvent>(evt =>
+                {
                     // Create a new asset
-                    ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
+                    ProjectWideActionsAsset.CreateNewAsset("Assets/InputSystem_Actions.inputactions");
 
-                    // Refresh asset database to allow for importer to recognize the asset
-                    AssetDatabase.Refresh();
-
-                    // Load the asset we just created and assign it as the Project-wide actions
-                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(result.relativePath);
-                    if (asset != null)
-                        InputSystem.actions = asset;
-
-                    // TODO This is not how this should be done, it should instead be triggered by InputSystem.actions being assigned since this might also happen from user code
-                    m_State = new InputActionsEditorState(new SerializedObject(asset));
+                    // Why doesn't OnActionsChange pick this change up? For some reason we need BuildUI call here : 
+                    m_State = InputSystem.actions != null ? new InputActionsEditorState(new SerializedObject(InputSystem.actions)) : default;
                     BuildUI();
                 });
             }
 
+            // Remove input action editor if already present
+            RemoveOldEditors();
+
             if (hasAsset)
             {
+                // Show input action editor
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
                 var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
@@ -171,6 +194,19 @@ namespace UnityEngine.InputSystem.Editor
                     element.style.display = DisplayStyle.None;
                 }
             }
+        }
+
+        private static void CreateNewActionAsset()
+        {
+            var result = InputAssetEditorUtils.PromptUserForAsset(
+                        friendlyName: "Input Actions",
+                        suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
+                        assetFileExtension: "inputactions");
+            if (result.result != InputAssetEditorUtils.DialogResult.Valid)
+                return; // Either invalid path selected or cancelled by user
+
+            // Create a new asset
+            ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
         }
 
         private void OnResetAsset(InputActionAsset newAsset)

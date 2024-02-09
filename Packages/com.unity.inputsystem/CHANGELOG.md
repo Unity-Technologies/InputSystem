@@ -13,6 +13,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
 - Changed the 'Max player count reached' error to a warning instead.
+- Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
+- Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single proeject settings file.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -39,6 +41,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
 - Fixed console errors that can be produced when opening input package settings from the Inspector.
 - Fixed InputManager.asset file growing in size on each Reset call.
+- Fixed Project Settings header title styling for Input Actions editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

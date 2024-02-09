@@ -51,6 +51,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Note that we only copy file here and let the InputActionImporter handle the asset management
             File.Copy(FileUtil.GetPhysicalPath(sourcePath), FileUtil.GetPhysicalPath(relativePath), overwrite: true);
+
+            // Refresh asset database to allow for importer to recognize the asset
+            AssetDatabase.Refresh();
+
+            // Load the asset we just created and assign it as the Project-wide actions
+            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
+            InputSystem.actions = asset;
         }
 
         internal static void CreateNewAsset(string relativePath)

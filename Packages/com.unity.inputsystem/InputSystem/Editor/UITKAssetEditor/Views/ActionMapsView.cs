@@ -87,6 +87,8 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            if (element == null)
+                return;
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
             m_EnterRenamingMode = false;
         }
