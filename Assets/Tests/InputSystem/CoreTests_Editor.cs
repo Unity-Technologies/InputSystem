@@ -743,6 +743,73 @@ partial class CoreTests
         Assert.That(map.bindings[0].groups, Is.EqualTo(""));
     }
 
+    struct AssetFileTestConstants
+    {
+        public const string kOriginalAssetName = "zzMyInputActions";
+        public const string kOriginalDirectory = "zzStartingDirectory";
+
+        public const string kNewAssetName = "NEWactions";
+        public const string kNewDirectory = "NewDirectory";
+
+        public const string kOriginalAssetPath = "Assets/" + kOriginalDirectory + "/" + kOriginalAssetName + "." + InputActionAsset.Extension;
+        public const string kOriginalAssetContents = "{\"name\": \"" + kOriginalAssetName + "\",\"maps\": [],\"controlSchemes\": []}";
+    }
+
+    [Test]
+    [TestCase("Assets/" + AssetFileTestConstants.kOriginalDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, false)]      // Move - Same directory but new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, false)]           // Move - New directory and new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kOriginalAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kOriginalAssetName, false)] // Move - New directory but same filename - expect original name
+    [TestCase("Assets/" + AssetFileTestConstants.kOriginalDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, true)]       // Copy - Same directory but new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, true)]            // Copy - New directory and new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kOriginalAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kOriginalAssetName, true)]  // Copy - New directory but same filename - expect original name
+    [Category("Editor")]
+    public void Editor_InputActions_AssetFileUpdatedAfterMoveOrCopy(string newAssetPath, string expectedAssetName, bool executeCopy)
+    {
+        try
+        {
+            AssetDatabase.CreateFolder("Assets", AssetFileTestConstants.kOriginalDirectory);
+            AssetDatabase.CreateFolder("Assets", AssetFileTestConstants.kNewDirectory);
+
+            File.WriteAllText(AssetFileTestConstants.kOriginalAssetPath, AssetFileTestConstants.kOriginalAssetContents);
+            AssetDatabase.ImportAsset(AssetFileTestConstants.kOriginalAssetPath);
+
+            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(AssetFileTestConstants.kOriginalAssetPath);
+            Assert.NotNull(asset, "Could not load asset: " + AssetFileTestConstants.kOriginalAssetPath);
+
+            try
+            {
+                if (executeCopy)
+                {
+                    AssetDatabase.CopyAsset(AssetFileTestConstants.kOriginalAssetPath, newAssetPath);
+                    AssetDatabase.Refresh();
+                }
+                else AssetDatabase.MoveAsset(AssetFileTestConstants.kOriginalAssetPath, newAssetPath);
+
+                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+                var fileContents = File.ReadAllText(newAssetPath);
+                newAsset.LoadFromJson(fileContents);
+
+                Assert.That(newAsset.name, Is.EqualTo(expectedAssetName));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(AssetFileTestConstants.kOriginalAssetPath);
+                AssetDatabase.DeleteAsset(newAssetPath);
+            }
+        }
+        finally
+        {
+            const string kOriginalPath = "Assets/" + AssetFileTestConstants.kOriginalDirectory;
+            const string kNewPath = "Assets/" + AssetFileTestConstants.kNewDirectory;
+
+            FileUtil.DeleteFileOrDirectory(kOriginalPath);
+            FileUtil.DeleteFileOrDirectory(kOriginalPath + ".meta");
+            FileUtil.DeleteFileOrDirectory(kNewPath);
+            FileUtil.DeleteFileOrDirectory(kNewPath + ".meta");
+            AssetDatabase.Refresh();
+        }
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
