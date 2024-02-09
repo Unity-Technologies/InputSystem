@@ -14,7 +14,8 @@ namespace UnityEngine.InputSystem.Editor
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
         private const string menuButtonId = "asset-menu";
 
-        private readonly ToolbarMenu m_MenuButtonToolbar;
+        private readonly ToolbarMenu m_ControlSchemesToolbar;
+        private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
 
         internal Action postSaveAction;
@@ -35,11 +36,14 @@ namespace UnityEngine.InputSystem.Editor
             CreateChildView(new PropertiesView(root, stateContainer));
             InputActionViewsControlsHolder.Initialize(root, actionsTreeView);
 
-            m_MenuButtonToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
-            m_MenuButtonToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));
-            m_MenuButtonToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(root, true), DropdownMenuAction.Status.Disabled);
-            m_MenuButtonToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(root), DropdownMenuAction.Status.Disabled);
-            m_MenuButtonToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
+            m_ControlSchemesToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
+            m_ControlSchemesToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));
+            m_ControlSchemesToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(root, true), DropdownMenuAction.Status.Disabled);
+            m_ControlSchemesToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(root), DropdownMenuAction.Status.Disabled);
+            m_ControlSchemesToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
+
+            m_DevicesToolbar = root.Q<ToolbarMenu>("control-schemes-filter-toolbar-menu");
+            m_DevicesToolbar.SetEnabled(false);
 
             m_SaveButton = root.Q<ToolbarButton>(name: saveButtonId);
             m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
@@ -95,31 +99,49 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
-            m_MenuButtonToolbar.menu.MenuItems().Clear();
+            SetUpControlSchemesMenu(viewState);
+            SetUpDevicesMenu(viewState);
+            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+        }
+
+        private void SetUpControlSchemesMenu(ViewState viewState)
+        {
+            m_ControlSchemesToolbar.menu.MenuItems().Clear();
 
             if (viewState.controlSchemes.Any())
             {
-                m_MenuButtonToolbar.text = viewState.selectedControlSchemeIndex == -1
+                m_ControlSchemesToolbar.text = viewState.selectedControlSchemeIndex == -1
                     ? "All Control Schemes"
                     : viewState.controlSchemes.ElementAt(viewState.selectedControlSchemeIndex).name;
 
-                m_MenuButtonToolbar.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
+                m_ControlSchemesToolbar.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
                     viewState.selectedControlSchemeIndex == -1 ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
                 viewState.controlSchemes.ForEach((scheme, i) =>
-                    m_MenuButtonToolbar.menu.AppendAction(scheme.name, _ => SelectControlScheme(i),
+                    m_ControlSchemesToolbar.menu.AppendAction(scheme.name, _ => SelectControlScheme(i),
                         viewState.selectedControlSchemeIndex == i ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal));
-                m_MenuButtonToolbar.menu.AppendSeparator();
+                m_ControlSchemesToolbar.menu.AppendSeparator();
             }
 
-            m_MenuButtonToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
-            m_MenuButtonToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true),
+            m_ControlSchemesToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
+            m_ControlSchemesToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            m_MenuButtonToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(rootElement),
+            m_ControlSchemesToolbar.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(rootElement),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            m_MenuButtonToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
+            m_ControlSchemesToolbar.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+        }
 
-            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+        private void SetUpDevicesMenu(ViewState viewState)
+        {
+            if (!viewState.controlSchemes.Any())//TODO only if control scheme selected
+            {
+                m_DevicesToolbar.SetEnabled(false);
+                return;
+            }
+            m_DevicesToolbar.SetEnabled(true);
+            m_DevicesToolbar.menu.MenuItems().Clear();
+            m_DevicesToolbar.menu.AppendAction("All Devices", _ => {});
+            //TODO add control scheme devices
         }
 
         private void AddOrUpdateControlScheme(VisualElement parent, bool updateExisting = false)
