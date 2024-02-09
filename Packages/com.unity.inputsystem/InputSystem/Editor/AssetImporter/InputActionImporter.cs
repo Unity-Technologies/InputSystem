@@ -57,7 +57,6 @@ namespace UnityEngine.InputSystem.Editor
 #else
                 content = File.ReadAllText(context.assetPath);
 #endif
-
             }
             catch (Exception exception)
             {
@@ -125,7 +124,7 @@ namespace UnityEngine.InputSystem.Editor
                 return null;
             }
 
-            return null;
+            return asset;
         }
 
         public override void OnImportAsset(AssetImportContext ctx)
