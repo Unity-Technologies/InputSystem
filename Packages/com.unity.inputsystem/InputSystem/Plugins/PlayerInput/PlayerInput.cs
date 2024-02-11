@@ -904,10 +904,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="currentControlScheme"/>
         /// <seealso cref="InputActionAsset.controlSchemes"/>
-        public bool SwitchCurrentControlScheme(params InputDevice[] devices)
+        public bool SwitchCurrentControlScheme(InputDevice[] devices)
         {
-            if (devices == null)
-                throw new ArgumentNullException(nameof(devices));
             if (actions == null)
                 throw new InvalidOperationException(
                     "Must set actions on PlayerInput in order to be able to switch control schemes");
@@ -949,12 +947,10 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputActionAsset.controlSchemes"/>
         /// <seealso cref="currentControlScheme"/>
-        public void SwitchCurrentControlScheme(string controlScheme, params InputDevice[] devices)
+        public void SwitchCurrentControlScheme(string controlScheme, InputDevice[] devices)
         {
             if (string.IsNullOrEmpty(controlScheme))
                 throw new ArgumentNullException(nameof(controlScheme));
-            if (devices == null)
-                throw new ArgumentNullException(nameof(devices));
 
             user.FindControlScheme(controlScheme, out InputControlScheme scheme); // throws if not found
             SwitchControlSchemeInternal(ref scheme, devices);
@@ -1938,10 +1934,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)
+        private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, InputDevice[] devices)
         {
-            Debug.Assert(devices != null);
-
             // Note that we are doing two somwhat uncorrelated actions here:
             // - Switching control scheme
             // - Explicitly pairing with given devices regardless if making sense with respect to control scheme
