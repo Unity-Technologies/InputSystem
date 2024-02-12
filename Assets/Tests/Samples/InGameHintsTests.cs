@@ -75,5 +75,6 @@ public class InGameHintsTests : CoreTestsFixture
 
         Assert.That(text.text, Does.StartWith("Press B "));
 #endif
+        playerInput.actions.Disable();
     }
 }
