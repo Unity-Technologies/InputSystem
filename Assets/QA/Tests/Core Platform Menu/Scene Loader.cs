@@ -5,10 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
 {
-    // Start is called before the first frame update
     private string sceneName;
     public TMP_Text buttonText;
-
     public void Start()
     {  
         sceneName = buttonText.name.ToString();
