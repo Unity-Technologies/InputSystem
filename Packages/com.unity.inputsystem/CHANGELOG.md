@@ -40,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
 - Fixed console errors that can be produced when opening input package settings from the Inspector.
 - Fixed InputManager.asset file growing in size on each Reset call.
+- Fixed Opening InputDebugger throws 'Action map must have state at this point' error.
 - Fixed Project Settings header title styling for Input Actions editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
