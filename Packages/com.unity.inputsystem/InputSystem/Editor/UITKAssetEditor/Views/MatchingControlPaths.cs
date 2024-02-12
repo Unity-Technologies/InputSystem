@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class MatchingControlPath
+    internal class MatchingControlPath
     {
         public string path
         {

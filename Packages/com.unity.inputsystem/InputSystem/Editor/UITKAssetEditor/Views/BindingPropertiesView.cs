@@ -72,6 +72,7 @@ namespace UnityEngine.InputSystem.Editor
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
         }
+
         static bool s_showMatchingLayouts = false;
         internal void DrawMatchingControlPaths(ViewState viewState)
         {
@@ -92,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
                 foldout.RegisterValueChangedCallback(changeEvent =>
                 {
                     s_showMatchingLayouts = changeEvent.newValue;
-                    
+
                     rootElement.Q(className: "matching-controls").EnableInClassList("matching-controls-shown", changeEvent.newValue);
                 });
 
