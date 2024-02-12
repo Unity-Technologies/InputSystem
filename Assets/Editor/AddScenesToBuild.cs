@@ -6,10 +6,6 @@ using UnityEngine;
 [InitializeOnLoad]
 public class AddScenesToBuild : EditorWindow
 {
-    static AddScenesToBuild()
-    {
-        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-    }
     
     [MenuItem("QA Tools/Open Core Scene Menu")]
     static void OpenScene()
@@ -71,20 +67,6 @@ public class AddScenesToBuild : EditorWindow
         }
 
         return false;
-    }
-
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.ExitingPlayMode)
-        {
-            // Save the build settings before entering play mode
-            SaveBuildSettings();
-        }
-        else if (state == PlayModeStateChange.EnteredEditMode)
-        {
-            // Restore the build settings after exiting play mode
-            RestoreBuildSettings();
-        }
     }
 
     private static void SaveBuildSettings()
