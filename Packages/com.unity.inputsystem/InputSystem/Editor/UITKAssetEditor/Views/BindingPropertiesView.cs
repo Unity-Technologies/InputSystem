@@ -28,8 +28,7 @@ namespace UnityEngine.InputSystem.Editor
                     selectedBinding = Selectors.GetSelectedBinding(s),
                     selectedBindingIndex = s.selectedBindingIndex,
                     selectedBindingPath = Selectors.GetSelectedBindingPath(s),
-                    selectedInputAction = Selectors.GetSelectedAction(s),
-                    showPaths = stateContainer.GetState().showMatchingPaths
+                    selectedInputAction = Selectors.GetSelectedAction(s)
                 });
         }
 
@@ -73,24 +72,25 @@ namespace UnityEngine.InputSystem.Editor
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
         }
-
+        static bool s_showMatchingLayouts = false;
         internal void DrawMatchingControlPaths(ViewState viewState)
         {
             bool controlPathUsagePresent = false;
-            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, viewState.showPaths, ref controlPathUsagePresent);
+            bool showPaths = s_showMatchingLayouts;
+            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, showPaths, ref controlPathUsagePresent);
 
             if (matchingControlPaths == null || matchingControlPaths.Count != 0)
             {
                 var checkbox = new Toggle($"Show Derived Bindings")
                 {
-                    value = viewState.showPaths
+                    value = showPaths
                 };
                 rootElement.Add(checkbox);
 
                 checkbox.RegisterValueChangedCallback(changeEvent =>
                 {
-                    Dispatch(Commands.ShowMatchingPaths(changeEvent.newValue));
-
+                    s_showMatchingLayouts = changeEvent.newValue;
+                    
                     rootElement.Q(className: "matching-controls").EnableInClassList("matching-controls-shown", changeEvent.newValue);
                 });
             }
@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var helpBox = new HelpBox(messageString, HelpBoxMessageType.Warning);
                 helpBox.AddToClassList("matching-controls");
-                helpBox.EnableInClassList("matching-controls-shown", viewState.showPaths);
+                helpBox.EnableInClassList("matching-controls-shown", showPaths);
                 rootElement.Add(helpBox);
             }
             else if (matchingControlPaths.Count > 0)
@@ -113,7 +113,7 @@ namespace UnityEngine.InputSystem.Editor
                 rootElement.Add(treeView);
                 treeView.selectionType = UIElements.SelectionType.None;
                 treeView.AddToClassList("matching-controls");
-                treeView.EnableInClassList("matching-controls-shown", viewState.showPaths);
+                treeView.EnableInClassList("matching-controls-shown", showPaths);
                 treeView.fixedItemHeight = 20;
                 treeView.SetRootItems(treeViewMatchingControlPaths);
 
@@ -175,7 +175,6 @@ namespace UnityEngine.InputSystem.Editor
             public InputControlScheme currentControlScheme;
             public SerializedProperty selectedBindingPath;
             public SerializedInputAction? selectedInputAction;
-            public bool showPaths;
         }
     }
 }

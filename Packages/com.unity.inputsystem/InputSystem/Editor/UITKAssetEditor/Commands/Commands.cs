@@ -431,11 +431,6 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
-
-        public static Command ShowMatchingPaths(bool showMatchingPaths)
-        {
-            return (in InputActionsEditorState state) => state.ShowMatchingPaths(showMatchingPaths);
-        }
     }
 }
 
