@@ -493,7 +493,7 @@ namespace UnityEngine.InputSystem.Editor
                         var nextBinding = actionBindings[++i];
                         while (nextBinding.isPartOfComposite)
                         {
-                            var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme);
+                            var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme, state.selectedDeviceRequirementIndex);
                             if (isVisible)
                             {
                                 var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
@@ -515,7 +515,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
                     else
                     {
-                        var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme);
+                        var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme, state.selectedDeviceRequirementIndex);
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
                                 new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
@@ -557,14 +557,21 @@ namespace UnityEngine.InputSystem.Editor
             return false;
         }
 
-        private static bool ShouldBindingBeVisible(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme)
+        private static bool ShouldBindingBeVisible(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme, int deviceIndex)
         {
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
                 //if binding is global (not assigned to any control scheme) show always
                 if (serializedInputBinding.controlSchemes.Length <= 0)
                     return true;
-                return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
+                var isMatchingDevice = true;
+                if (deviceIndex >= 0)
+                {
+                    var devicePathToMatch = InputControlPath.TryGetDeviceLayout(currentControlScheme.Value.deviceRequirements.ElementAt(deviceIndex).controlPath);
+                    var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);
+                    isMatchingDevice = string.Equals(devicePathToMatch, devicePath, StringComparison.InvariantCultureIgnoreCase);
+                }
+                return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name) && isMatchingDevice;
             }
             //if no control scheme selected then show all bindings
             return true;
