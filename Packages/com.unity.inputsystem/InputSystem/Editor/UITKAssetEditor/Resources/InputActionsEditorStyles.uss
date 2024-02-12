@@ -206,10 +206,6 @@
 }
 
 .matching-controls {
-    display: none;
-}
-
-.matching-controls-shown {
     display: flex;
     flex-grow: 1;
 }

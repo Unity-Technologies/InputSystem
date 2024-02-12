@@ -83,21 +83,20 @@ namespace UnityEngine.InputSystem.Editor
             var parentElement = rootElement;
             if (matchingControlPaths == null || matchingControlPaths.Count != 0)
             {
-                var foldout = new Foldout()
+                var controllingElement = new Foldout()
                 {
                     text = $"Show Derived Bindings",
                     value = showPaths
                 };
-                rootElement.Add(foldout);
+                rootElement.Add(controllingElement);
 
-                foldout.RegisterValueChangedCallback(changeEvent =>
+                controllingElement.RegisterValueChangedCallback(changeEvent =>
                 {
-                    s_showMatchingLayouts = changeEvent.newValue;
-
-                    rootElement.Q(className: "matching-controls").EnableInClassList("matching-controls-shown", changeEvent.newValue);
+                    if (changeEvent.target == controllingElement)   // only react to foldout and not tree elements
+                        s_showMatchingLayouts = changeEvent.newValue;
                 });
 
-                parentElement = foldout;
+                parentElement = controllingElement;
             }
 
             if (matchingControlPaths == null)
@@ -107,7 +106,6 @@ namespace UnityEngine.InputSystem.Editor
 
                 var helpBox = new HelpBox(messageString, HelpBoxMessageType.Warning);
                 helpBox.AddToClassList("matching-controls");
-                helpBox.EnableInClassList("matching-controls-shown", showPaths);
                 parentElement.Add(helpBox);
             }
             else if (matchingControlPaths.Count > 0)
@@ -118,7 +116,6 @@ namespace UnityEngine.InputSystem.Editor
                 parentElement.Add(treeView);
                 treeView.selectionType = UIElements.SelectionType.None;
                 treeView.AddToClassList("matching-controls");
-                treeView.EnableInClassList("matching-controls-shown", showPaths);
                 treeView.fixedItemHeight = 20;
                 treeView.SetRootItems(treeViewMatchingControlPaths);
 
@@ -134,7 +131,8 @@ namespace UnityEngine.InputSystem.Editor
                 treeView.bindItem = (VisualElement element, int index) =>
                 {
                     var label = (element as Label);
-                    label.text = treeView.GetItemDataForIndex<MatchingControlPath>(index).path;
+                    var matchingControlPath = treeView.GetItemDataForIndex<MatchingControlPath>(index);
+                    label.text = $"{matchingControlPath.deviceName} > {matchingControlPath.controlName}";
                 };
 
                 treeView.ExpandRootItems();

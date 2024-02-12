@@ -10,7 +10,16 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class MatchingControlPath
     {
-        public string path
+        public string deviceName
+        {
+            get;
+        }
+        public string controlName
+        {
+            get;
+        }
+
+        public bool isRoot
         {
             get;
         }
@@ -19,9 +28,12 @@ namespace UnityEngine.InputSystem.Editor
             get;
         }
 
-        public MatchingControlPath(string path)
+
+        public MatchingControlPath(string deviceName, string controlName, bool isRoot)
         {
-            this.path = path;
+            this.deviceName = deviceName;
+            this.controlName = controlName;
+            this.isRoot = isRoot;
             this.children = new List<MatchingControlPath>();
         }
 
@@ -175,7 +187,7 @@ namespace UnityEngine.InputSystem.Editor
             // Otherwise, draw the items for it, and then only process the child layouts if the foldout is expanded.
             else
             {
-                var newMatchingControlPath = new MatchingControlPath($"{deviceName} > {controlName}");
+                var newMatchingControlPath = new MatchingControlPath(deviceName, controlName, isRoot);
                 matchingControlPaths.Add(newMatchingControlPath);
 
                 foreach (var childLayout in matchedChildLayouts)
