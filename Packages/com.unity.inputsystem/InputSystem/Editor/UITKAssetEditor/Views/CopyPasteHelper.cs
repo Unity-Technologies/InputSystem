@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Don't want to be able to paste repeatedly after a cut - ISX-1821
             if (s_lastAddedElement != null && s_lastClipboardActionWasCut)
-                EditorGUIUtility.systemCopyBuffer = "";
+                EditorGUIUtility.systemCopyBuffer = string.Empty;
 
             return s_lastAddedElement;
         }
@@ -190,7 +190,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Don't want to be able to paste repeatedly after a cut - ISX-1821
             if (s_lastAddedElement != null && s_lastClipboardActionWasCut)
-                EditorGUIUtility.systemCopyBuffer = "";
+                EditorGUIUtility.systemCopyBuffer = string.Empty;
 
             return s_lastAddedElement;
         }
