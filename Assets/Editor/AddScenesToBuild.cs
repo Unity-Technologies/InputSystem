@@ -13,7 +13,6 @@ public class AddScenesToBuild : EditorWindow
         EditorSceneManager.OpenScene("Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
     }
 
-
     [MenuItem("QA Tools/Add All Core Samples to Build")]
     private static void AddAllScenesToBuildExcludingXboxAndXR()
     {
@@ -25,7 +24,6 @@ public class AddScenesToBuild : EditorWindow
         {
             scenePaths[i] = AssetDatabase.GUIDToAssetPath(sceneGuids[i]);
         }
-
         // Filter out scenes in folders containing "xbox" or "xr"
         List<string> filteredScenePaths = new List<string>();
         foreach (string path in scenePaths)
@@ -38,17 +36,13 @@ public class AddScenesToBuild : EditorWindow
 
         // Ensure "Core Platforms Menu" is at the beginning of the list
         filteredScenePaths.Insert(0, "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
-
         // Update the build settings
         EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[filteredScenePaths.Count];
-
         for (int i = 0; i < filteredScenePaths.Count; i++)
         {
             buildScenes[i] = new EditorBuildSettingsScene(filteredScenePaths[i], true);
         }
-
         EditorBuildSettings.scenes = buildScenes;
-
         Debug.Log("All scenes (excluding Xbox and XR) added to build settings.");
     }
 
@@ -65,7 +59,6 @@ public class AddScenesToBuild : EditorWindow
                 return true;
             }
         }
-
         return false;
     }
 
@@ -74,7 +67,6 @@ public class AddScenesToBuild : EditorWindow
         // Save the current build settings to EditorPrefs
         int sceneCount = EditorBuildSettings.scenes.Length;
         EditorPrefs.SetInt("BuildSettingsSceneCount", sceneCount);
-
         for (int i = 0; i < sceneCount; i++)
         {
             EditorPrefs.SetString($"BuildSettingsScenePath_{i}", EditorBuildSettings.scenes[i].path);
@@ -87,7 +79,6 @@ public class AddScenesToBuild : EditorWindow
         // Restore the build settings from EditorPrefs
         int sceneCount = EditorPrefs.GetInt("BuildSettingsSceneCount", 0);
         EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[sceneCount];
-
         for (int i = 0; i < sceneCount; i++)
         {
             string scenePath = EditorPrefs.GetString($"BuildSettingsScenePath_{i}", "");
@@ -95,7 +86,6 @@ public class AddScenesToBuild : EditorWindow
 
             buildScenes[i] = new EditorBuildSettingsScene(scenePath, sceneEnabled);
         }
-
         EditorBuildSettings.scenes = buildScenes;
     }
 }
