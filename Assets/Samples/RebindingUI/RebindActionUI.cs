@@ -262,6 +262,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_RebindOperation = null;
                 action.Enable();
             }
+
             //Fixes the "InvalidOperationException: Cannot rebind action x while it is enabled" error
             action.Disable();
 

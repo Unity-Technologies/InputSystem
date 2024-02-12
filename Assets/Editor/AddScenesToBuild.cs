@@ -6,7 +6,6 @@ using UnityEngine;
 [InitializeOnLoad]
 public class AddScenesToBuild : EditorWindow
 {
-    
     [MenuItem("QA Tools/Open Core Scene Menu")]
     static void OpenScene()
     {
