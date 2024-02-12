@@ -79,20 +79,24 @@ namespace UnityEngine.InputSystem.Editor
             bool showPaths = s_showMatchingLayouts;
             List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, showPaths, ref controlPathUsagePresent);
 
+            var parentElement = rootElement;
             if (matchingControlPaths == null || matchingControlPaths.Count != 0)
             {
-                var checkbox = new Toggle($"Show Derived Bindings")
+                var foldout = new Foldout()
                 {
+                    text = $"Show Derived Bindings",
                     value = showPaths
                 };
-                rootElement.Add(checkbox);
+                rootElement.Add(foldout);
 
-                checkbox.RegisterValueChangedCallback(changeEvent =>
+                foldout.RegisterValueChangedCallback(changeEvent =>
                 {
                     s_showMatchingLayouts = changeEvent.newValue;
                     
                     rootElement.Q(className: "matching-controls").EnableInClassList("matching-controls-shown", changeEvent.newValue);
                 });
+
+                parentElement = foldout;
             }
 
             if (matchingControlPaths == null)
@@ -103,14 +107,14 @@ namespace UnityEngine.InputSystem.Editor
                 var helpBox = new HelpBox(messageString, HelpBoxMessageType.Warning);
                 helpBox.AddToClassList("matching-controls");
                 helpBox.EnableInClassList("matching-controls-shown", showPaths);
-                rootElement.Add(helpBox);
+                parentElement.Add(helpBox);
             }
             else if (matchingControlPaths.Count > 0)
             {
                 List<TreeViewItemData<MatchingControlPath>> treeViewMatchingControlPaths = MatchingControlPath.BuildMatchingControlPathsTreeData(matchingControlPaths);
 
                 var treeView = new TreeView();
-                rootElement.Add(treeView);
+                parentElement.Add(treeView);
                 treeView.selectionType = UIElements.SelectionType.None;
                 treeView.AddToClassList("matching-controls");
                 treeView.EnableInClassList("matching-controls-shown", showPaths);
