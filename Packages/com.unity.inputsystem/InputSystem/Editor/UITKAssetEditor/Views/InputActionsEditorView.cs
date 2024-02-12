@@ -73,7 +73,8 @@ namespace UnityEngine.InputSystem.Editor
                 (_, controlSchemes, state) => new ViewState
                 {
                     controlSchemes = controlSchemes,
-                    selectedControlSchemeIndex = state.selectedControlSchemeIndex
+                    selectedControlSchemeIndex = state.selectedControlSchemeIndex,
+                    selectedDeviceIndex = state.selectedDeviceRequirementIndex
                 });
         }
 
@@ -133,15 +134,32 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetUpDevicesMenu(ViewState viewState)
         {
-            if (!viewState.controlSchemes.Any())//TODO only if control scheme selected
+            if (!viewState.controlSchemes.Any() || viewState.selectedControlSchemeIndex == -1)
             {
+                m_DevicesToolbar.text = "All Devices";
                 m_DevicesToolbar.SetEnabled(false);
                 return;
             }
             m_DevicesToolbar.SetEnabled(true);
+            var currentControlScheme = viewState.controlSchemes.ElementAt(viewState.selectedControlSchemeIndex);
+            if (viewState.selectedDeviceIndex == -1)
+                m_DevicesToolbar.text = "All Devices";
+
             m_DevicesToolbar.menu.MenuItems().Clear();
-            m_DevicesToolbar.menu.AppendAction("All Devices", _ => {});
-            //TODO add control scheme devices
+            m_DevicesToolbar.menu.AppendAction("All Devices", _ => SelectDevice(-1), viewState.selectedDeviceIndex == -1
+                ? DropdownMenuAction.Status.Checked
+                : DropdownMenuAction.Status.Normal);
+            currentControlScheme.deviceRequirements.ForEach(
+                (device, i) =>
+                {
+                    InputControlPath.ToHumanReadableString(device.controlPath, out var name, out _);
+                    m_DevicesToolbar.menu.AppendAction(name, _ => SelectDevice(i),
+                        viewState.selectedDeviceIndex == i
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal);
+                    if (viewState.selectedDeviceIndex == i)
+                        m_DevicesToolbar.text = name;
+                });
         }
 
         private void AddOrUpdateControlScheme(VisualElement parent, bool updateExisting = false)
@@ -174,12 +192,19 @@ namespace UnityEngine.InputSystem.Editor
         private void SelectControlScheme(int controlSchemeIndex)
         {
             Dispatch(ControlSchemeCommands.SelectControlScheme(controlSchemeIndex));
+            SelectDevice(-1);
+        }
+
+        private void SelectDevice(int deviceIndex)
+        {
+            Dispatch(ControlSchemeCommands.SelectDeviceRequirement(deviceIndex));
         }
 
         public class ViewState
         {
             public IEnumerable<InputControlScheme> controlSchemes;
             public int selectedControlSchemeIndex;
+            public int selectedDeviceIndex;
         }
     }
 

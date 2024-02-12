@@ -126,6 +126,11 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command SelectDeviceRequirement(int deviceRequirementIndex)
+        {
+            return (in InputActionsEditorState state) => state.With(selectedDeviceRequirementIndex: deviceRequirementIndex);
+        }
+
         /// <summary>
         /// Duplicate creates a new instance of the selected control scheme and places it in the selected
         /// control scheme property of the state but doesn't persist anything.
