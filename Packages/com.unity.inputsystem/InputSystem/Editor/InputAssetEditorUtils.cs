@@ -8,10 +8,24 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class InputAssetEditorUtils
     {
+        /// <summary>
+        /// Represents a dialog result.
+        /// </summary>
         internal enum DialogResult
         {
+            /// <summary>
+            /// The dialog was closed with an invalid path.
+            /// </summary>
             InvalidPath,
+
+            /// <summary>
+            /// The dialog was cancelled by the user and the path is invalid.
+            /// </summary>
             Cancelled,
+
+            /// <summary>
+            /// The dialog was accepted by the user and the associated path is valid.
+            /// </summary>
             Valid
         }
 

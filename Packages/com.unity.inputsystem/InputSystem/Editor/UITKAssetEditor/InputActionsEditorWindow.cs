@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
-            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
             PostSaveAction();
         }
 
@@ -259,16 +259,18 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_IsDirty)
                 return;
 
-            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified", $"Do you want to save the changes you made in:\n{m_AssetPath}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+            var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_AssetPath);
             switch (result)
             {
-                case 0:     // Save
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
                     Save();
                     break;
-                case 1:    // Cancel editor quit. (open new editor window with the edited asset)
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
+                    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case 2:     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                    // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
                     AssetDatabase.ImportAsset(m_AssetPath);
                     break;
             }

@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
                 if (hasAsset)
-                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                    InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
                 #endif
             }
         }

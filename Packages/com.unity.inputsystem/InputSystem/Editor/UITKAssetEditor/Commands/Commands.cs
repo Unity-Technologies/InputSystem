@@ -360,7 +360,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
                 return state;
             };
@@ -375,7 +375,7 @@ namespace UnityEngine.InputSystem.Editor
                     // If it changed from disabled to enabled, perform an initial save.
                     if (newValue)
                     {
-                        InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                        InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                         postSaveAction?.Invoke();
                     }
 

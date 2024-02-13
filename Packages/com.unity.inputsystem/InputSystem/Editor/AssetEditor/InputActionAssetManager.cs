@@ -159,17 +159,26 @@ namespace UnityEngine.InputSystem.Editor
             m_ImportedAssetJson = asset.ToJson();
 
             // Write out, if changed.
-            var assetPath = path;
-            var existingJson = File.ReadAllText(assetPath);
-            if (m_ImportedAssetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, m_ImportedAssetJson);
-                AssetDatabase.ImportAsset(assetPath);
-            }
+            SaveAsset(path, m_ImportedAssetJson);
 
             m_IsDirty = false;
             onDirtyChanged(false);
+        }
+
+        internal static void SaveAsset(string assetPath, string assetJson)
+        {
+            var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : string.Empty;
+            if (assetJson != existingJson)
+            {
+                EditorHelpers.CheckOut(assetPath);
+                File.WriteAllText(assetPath, assetJson);
+                AssetDatabase.ImportAsset(assetPath);
+            }
+        }
+
+        internal static void SaveAsset(InputActionAsset asset)
+        {
+            SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         public void SetAssetDirty()
