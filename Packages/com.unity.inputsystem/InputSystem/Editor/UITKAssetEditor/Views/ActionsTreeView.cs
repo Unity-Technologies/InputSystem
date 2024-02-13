@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -576,7 +578,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var devicePathToMatch = InputControlPath.TryGetDeviceLayout(currentControlScheme.Value.deviceRequirements.ElementAt(deviceIndex).controlPath);
                     var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);
-                    isMatchingDevice = string.Equals(devicePathToMatch, devicePath, StringComparison.InvariantCultureIgnoreCase);
+                    isMatchingDevice = string.Equals(devicePathToMatch, devicePath, StringComparison.InvariantCultureIgnoreCase) || InputControlLayout.s_Layouts.IsBasedOn(new InternedString(devicePath), new InternedString(devicePathToMatch));
                 }
                 return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name) && isMatchingDevice;
             }
