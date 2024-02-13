@@ -28,6 +28,8 @@ docerrors.log
 
 Assets/**/*.api
 Assets/**/*.api.meta
+Assets/__TestInputAsset.inputactions
+Assets/__TestInputAsset.inputactions.meta
 
 Packages/packages-lock.json
 Packages/com.unity.inputsystem/artifacts/**

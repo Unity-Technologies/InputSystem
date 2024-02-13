@@ -7,15 +7,13 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class BindingPropertiesView : ViewBase<BindingPropertiesView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private readonly Foldout m_ParentFoldout;
         private CompositeBindingPropertiesView m_CompositeBindingPropertiesView;
         private CompositePartBindingPropertiesView m_CompositePartBindingPropertiesView;
 
         public BindingPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             m_ParentFoldout = foldout;
 
             CreateSelector(state => state.selectedBindingIndex,
@@ -37,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             if (selectedBindingIndex == -1)
                 return;
 
-            m_Root.Clear();
+            rootElement.Clear();
 
             var binding = viewState.selectedBinding;
             if (!binding.HasValue)
@@ -47,11 +45,11 @@ namespace UnityEngine.InputSystem.Editor
             if (binding.Value.isComposite)
             {
                 m_ParentFoldout.text = "Composite";
-                m_CompositeBindingPropertiesView = CreateChildView(new CompositeBindingPropertiesView(m_Root, stateContainer));
+                m_CompositeBindingPropertiesView = CreateChildView(new CompositeBindingPropertiesView(rootElement, stateContainer));
             }
             else if (binding.Value.isPartOfComposite)
             {
-                m_CompositePartBindingPropertiesView = CreateChildView(new CompositePartBindingPropertiesView(m_Root, stateContainer));
+                m_CompositePartBindingPropertiesView = CreateChildView(new CompositePartBindingPropertiesView(rootElement, stateContainer));
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
             else
@@ -64,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
                 controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
 
                 var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
-                m_Root.Add(controlPathContainer);
+                rootElement.Add(controlPathContainer);
 
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
@@ -81,7 +79,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!viewState.controlSchemes.Any()) return;
 
             var useInControlSchemeLabel = new Label("Use in control scheme");
-            m_Root.Add(useInControlSchemeLabel);
+            rootElement.Add(useInControlSchemeLabel);
 
             foreach (var controlScheme in viewState.controlSchemes)
             {
@@ -89,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     value = binding.controlSchemes.Any(scheme => controlScheme.name == scheme)
                 };
-                m_Root.Add(checkbox);
+                rootElement.Add(checkbox);
                 checkbox.RegisterValueChangedCallback(changeEvent =>
                 {
                     Dispatch(ControlSchemeCommands.ChangeSelectedBindingsControlSchemes(controlScheme.name, changeEvent.newValue));

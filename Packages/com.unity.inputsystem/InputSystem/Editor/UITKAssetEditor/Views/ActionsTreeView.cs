@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class ActionsTreeView : ViewBase<ActionsTreeView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private readonly TreeView m_ActionsTreeView;
-        private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
+        private readonly Button m_AddActionButton;
+        private readonly ScrollView m_PropertiesScrollview;
 
         private bool m_RenameOnActionAdded;
         private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
@@ -27,11 +27,11 @@ namespace UnityEngine.InputSystem.Editor
         private Dictionary<Guid, int> m_GuidToTreeViewId;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ActionsTreeView = m_Root.Q<TreeView>("actions-tree-view");
+            m_AddActionButton = root.Q<Button>("add-new-action-button");
+            m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
+            m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
             m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
@@ -115,6 +115,8 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
+            ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
+
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
@@ -145,7 +147,7 @@ namespace UnityEngine.InputSystem.Editor
                     };
                 });
 
-            addActionButton.clicked += AddAction;
+            m_AddActionButton.clicked += AddAction;
         }
 
         private int GetSelectedElementId(InputActionsEditorState state, List<TreeViewItemData<ActionOrBindingData>> treeData)
@@ -186,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            addActionButton.clicked -= AddAction;
+            m_AddActionButton.clicked -= AddAction;
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -200,7 +202,10 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionsTreeView.ScrollToItemById(viewState.newElementID);
             }
             RenameNewAction(viewState.newElementID);;
-            addActionButton.SetEnabled(viewState.actionMapCount > 0);
+            m_AddActionButton.SetEnabled(viewState.actionMapCount > 0);
+
+            // Don't want to show action properties if there's no actions.
+            m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
         }
 
         private void RenameNewAction(int id)
@@ -233,14 +238,44 @@ namespace UnityEngine.InputSystem.Editor
         private void DeleteItem(ActionOrBindingData data)
         {
             if (data.isAction)
+            {
+                string actionToSelect = GetPreviousActionNameFromViewTree(data);
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
+                Dispatch(Commands.SelectAction(actionToSelect));
+            }
             else
+            {
+                int bindingIndexToSelect = GetPreviousBindingIndexFromViewTree(data, out string parentActionName);
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
+
+                if (bindingIndexToSelect >= 0)
+                    Dispatch(Commands.SelectBinding(bindingIndexToSelect));
+                else
+                    Dispatch(Commands.SelectAction(parentActionName));
+            }
+
+            // Deleting an item sometimes causes the UI Panel to lose focus; make sure we keep it
+            m_ActionsTreeView.Focus();
         }
 
         private void DuplicateItem(ActionOrBindingData data)
         {
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
+        }
+
+        internal void CopyItems()
+        {
+            Dispatch(Commands.CopyActionBindingSelection());
+        }
+
+        internal void CutItems()
+        {
+            Dispatch(Commands.CutActionsOrBindings());
+        }
+
+        internal void PasteItems()
+        {
+            Dispatch(Commands.PasteActionsOrBindings());
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
@@ -257,10 +292,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
+            if (m_ActionsTreeView.selectedItem == null)
+                return;
+
+            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
             switch (evt.commandName)
             {
                 case CmdEvents.Rename:
-                    var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
                     if (data.isAction || data.isComposite)
                         m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
                     else
@@ -272,6 +310,17 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Duplicate:
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    break;
+                case CmdEvents.Copy:
+                    CopyItems();
+                    break;
+                case CmdEvents.Cut:
+                    CutItems();
+                    break;
+                case CmdEvents.Paste:
+                    var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
+                    if (hasPastableData)
+                        PasteItems();
                     break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
@@ -288,9 +337,94 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
                 case CmdEvents.Duplicate:
+                case CmdEvents.Copy:
+                case CmdEvents.Cut:
+                case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
             }
+        }
+
+        private string GetPreviousActionNameFromViewTree(in ActionOrBindingData data)
+        {
+            Debug.Assert(data.isAction);
+
+            // If TreeView currently (before delete) has more than one Action, select the one immediately
+            // above or immediately below depending if data is first in the list
+            var treeView = ViewStateSelector.GetViewState(stateContainer.GetState()).treeViewData;
+            if (treeView.Count > 1)
+            {
+                string actionName = data.name;
+                int index = treeView.FindIndex(item => item.data.name == actionName);
+                if (index > 0)
+                    index--;
+                else
+                    index++; // Also handles case if actionName wasn't found; FindIndex() returns -1 that's incremented to 0
+
+                return treeView[index].data.name;
+            }
+
+            return string.Empty;
+        }
+
+        private int GetPreviousBindingIndexFromViewTree(in ActionOrBindingData data, out string parentActionName)
+        {
+            Debug.Assert(!data.isAction);
+
+            int retVal = -1;
+            parentActionName = string.Empty;
+
+            // The bindindIndex is global and doesn't correspond to the binding's "child index" within the TreeView.
+            // To find the "previous" Binding to select, after deleting the current one, we must:
+            // 1. Traverse the ViewTree to find the parent of the binding and its index under that parent
+            // 2. Identify the Binding to select after deletion and retrieve its bindingIndex
+            // 3. Return the bindingIndex and the parent Action name (select the Action if bindingIndex is invalid)
+
+            var treeView = ViewStateSelector.GetViewState(stateContainer.GetState()).treeViewData;
+            foreach (var action in treeView)
+            {
+                if (!action.hasChildren)
+                    continue;
+
+                if (FindBindingOrComponentTreeViewParent(action, data.bindingIndex, out var parentNode, out int childIndex))
+                {
+                    parentActionName = action.data.name;
+                    if (parentNode.children.Count() > 1)
+                    {
+                        int prevIndex = Math.Max(childIndex - 1, 0);
+                        var node = parentNode.children.ElementAt(prevIndex);
+                        retVal = node.data.bindingIndex;
+                        break;
+                    }
+                }
+            }
+
+            return retVal;
+        }
+
+        private static bool FindBindingOrComponentTreeViewParent(TreeViewItemData<ActionOrBindingData> root, int bindingIndex, out TreeViewItemData<ActionOrBindingData> parent, out int childIndex)
+        {
+            Debug.Assert(root.hasChildren);
+
+            int index = 0;
+            foreach (var item in root.children)
+            {
+                if (item.data.bindingIndex == bindingIndex)
+                {
+                    parent = root;
+                    childIndex = index;
+                    return true;
+                }
+
+                if (item.hasChildren && FindBindingOrComponentTreeViewParent(item, bindingIndex, out parent, out childIndex))
+                    return true;
+
+                index++;
+            }
+
+            parent = default;
+            childIndex = -1;
+            return false;
         }
 
         internal class ViewState
@@ -362,7 +496,8 @@ namespace UnityEngine.InputSystem.Editor
                             var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme);
                             if (isVisible)
                             {
-                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);                        var compositeBindingId = new Guid(nextBinding.id);
+                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
+                                var compositeBindingId = new Guid(nextBinding.id);
                                 compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
                                     new ActionOrBindingData(false, name, actionMapIndex, false,
                                         GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));

@@ -53,6 +53,10 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset CreateNewActionAsset()
         {
+            // Always clean out old actions asset and action references first before we add new
+            DeleteActionAssetAndActionReferences();
+
+            // Create new asset data
             var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -87,10 +91,16 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             CreateInputActionReferences(asset);
-
             AssetDatabase.SaveAssets();
 
             return asset;
+        }
+
+        internal static InputActionMap GetDefaultUIActionMap()
+        {
+            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
+            var actionMaps = InputActionMap.FromJson(json);
+            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
         }
 
         private static void CreateInputActionReferences(InputActionAsset asset)
@@ -107,11 +117,77 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+#if UNITY_2023_2_OR_NEWER
+        /// <summary>
+        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
+        /// break the UI input at runtime, when using the UI Toolkit.
+        /// </summary>
+        internal static void CheckForDefaultUIActionMapChanges()
+        {
+            var asset = GetOrCreate();
+            if (asset != null)
+            {
+                var defaultUIActionMap = GetDefaultUIActionMap();
+                var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
+
+                // "UI" action map has been removed or renamed.
+                if (uiMapIndex == -1)
+                {
+                    Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
+                        "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
+                    return;
+                }
+                var uiMap = asset.m_ActionMaps[uiMapIndex];
+                foreach (var action in defaultUIActionMap.actions)
+                {
+                    // "UI" actions have been modified.
+                    if (uiMap.FindAction(action.name) == null)
+                    {
+                        Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
+                            $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
+                    }
+                }
+            }
+        }
+
+#endif
+        /// <summary>
+        /// Reset project wide input actions asset
+        /// </summary>
+        internal static void ResetActionAsset()
+        {
+            CreateNewActionAsset();
+        }
+
+        /// <summary>
+        /// Delete project wide input actions
+        /// </summary>
+        internal static void DeleteActionAssetAndActionReferences()
+        {
+            var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
+            if (objects != null)
+            {
+                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                foreach (var obj in objects)
+                {
+                    if (obj is InputActionReference)
+                    {
+                        var actionReference = obj as InputActionReference;
+                        actionReference.Set(null);
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
+                    else if (obj is InputActionAsset)
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
         /// and adding new ones.
         /// </summary>
-        /// <param name="asset"></param>
         internal static void UpdateInputActionReferences()
         {
             var asset = GetOrCreate();
@@ -153,6 +229,8 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
             }
+
+            AssetDatabase.SaveAssets();
         }
     }
 }
