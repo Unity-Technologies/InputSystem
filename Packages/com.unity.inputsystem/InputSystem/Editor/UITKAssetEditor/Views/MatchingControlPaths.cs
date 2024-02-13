@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem.Editor
 
             return treeViewList;
         }
+
 #endif
 
         public static List<MatchingControlPath> CollectMatchingControlPaths(string path, bool showPaths, ref bool controlPathUsagePresent)
