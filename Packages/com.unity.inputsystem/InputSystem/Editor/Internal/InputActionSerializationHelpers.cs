@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -111,6 +112,25 @@ namespace UnityEngine.InputSystem.Editor
             return indexInArray;
         }
 
+        public static void AddActionMaps(SerializedObject asset, SerializedObject sourceAsset)
+        {
+            Debug.Assert(asset.targetObject is InputActionAsset);
+            Debug.Assert(sourceAsset.targetObject is InputActionAsset);
+
+            var mapArrayPropertySrc = sourceAsset.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            var mapArrayPropertyDst = asset.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+
+            // Copy each action map from source and paste at the end of destination
+            var buffer = new StringBuilder();
+            for (var i = 0; i < mapArrayPropertySrc.arraySize; ++i)
+            {
+                buffer.Clear();
+                var mapProperty = mapArrayPropertySrc.GetArrayElementAtIndex(i);
+                CopyPasteHelper.CopyItems(new List<SerializedProperty> {mapProperty}, buffer, typeof(InputActionMap), mapProperty);
+                CopyPasteHelper.PasteItems(buffer.ToString(), new[] { mapArrayPropertyDst.arraySize - 1 }, mapArrayPropertyDst);
+            }
+        }
+
         public static SerializedProperty AddActionMap(SerializedObject asset, int index = -1)
         {
             if (!(asset.targetObject is InputActionAsset))
@@ -146,6 +166,16 @@ namespace UnityEngine.InputSystem.Editor
             if (mapIndex == -1)
                 throw new ArgumentException($"No map with id {id} in {asset}", nameof(id));
             mapArrayProperty.DeleteArrayElementAtIndex(mapIndex);
+        }
+
+        // Delete all action maps in the given
+        public static void DeleteAllActionMaps(SerializedObject asset)
+        {
+            Debug.Assert(asset.targetObject is InputActionAsset);
+
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            while (mapArrayProperty.arraySize > 0)
+                mapArrayProperty.DeleteArrayElementAtIndex(0);
         }
 
         // Append a new action to the end of the set.

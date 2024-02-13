@@ -18,7 +18,6 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarButton m_SaveButton;
 
         internal Action postSaveAction;
-        internal Action<InputActionAsset> postResetAction;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings)
             : base(root, stateContainer)
@@ -64,7 +63,8 @@ namespace UnityEngine.InputSystem.Editor
                 assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
                 var _ = new ContextualMenuManipulator(menuEvent =>
                 {
-                    menuEvent.menu.AppendAction("Reset", _ => OnReset());
+                    menuEvent.menu.AppendAction("Reset to Defaults", _ => OnReset());
+                    menuEvent.menu.AppendAction("Remove All Action Maps", _ => OnClearActionMaps());
                 })
                 { target = assetMenuButton, activators = { new ManipulatorActivationFilter() { button = MouseButton.LeftMouse } } };
             }
@@ -85,7 +85,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnReset()
         {
-            Dispatch(Commands.ResetGlobalInputAsset(postResetAction));
+            Dispatch(Commands.ReplaceActionMaps(ProjectWideActionsAsset.GetDefaultAssetJson()));
+        }
+
+        private void OnClearActionMaps()
+        {
+            Dispatch(Commands.ClearActionMaps());
         }
 
         private void OnSaveButton()

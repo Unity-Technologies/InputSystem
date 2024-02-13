@@ -41,7 +41,8 @@ namespace UnityEngine.InputSystem.Editor
                 throw new MissingMethodException(editorApplicationType.FullName, "RestartEditorAndRecompileScripts");
         }
 
-        public static void CheckOut(string path)
+        // Attempts to make an asset editable in the underlying version control system and returns true if successful.
+        public static bool CheckOut(string path)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
@@ -52,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                 (path[projectPath.Length] == '/' || path[projectPath.Length] == '\\'))
                 path = path.Substring(0, projectPath.Length + 1);
 
-            AssetDatabase.MakeEditable(path);
+            return AssetDatabase.MakeEditable(path);
         }
 
         public static void CheckOut(Object asset)

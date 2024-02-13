@@ -45,35 +45,17 @@ namespace UnityEngine.InputSystem.Editor
 
     internal static class ProjectWideActionsAsset
     {
-        internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
+        private const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
-        internal static void UpdateFromTemplate(string relativePath, string sourcePath)
+        internal static string GetDefaultAssetJson()
         {
-            // Note the name would be the template name at this time (ProjectWideActionsTemplate)
-            var json = File.ReadAllText(FileUtil.GetPhysicalPath(sourcePath));
-            var inputActionAsset = InputActionAsset.FromJson(json);
-            inputActionAsset.name = Path.GetFileNameWithoutExtension(relativePath);
-            json = inputActionAsset.ToJson();
-            File.WriteAllText(FileUtil.GetPhysicalPath(relativePath), json);
+            return File.ReadAllText(FileUtil.GetPhysicalPath(ProjectWideActionsAsset.kDefaultAssetPath));
         }
 
-        internal static void CreateNewAsset(string relativePath, string sourcePath)
+        internal static InputActionAsset CreateNewAsset(string assetPath)
         {
-            // Note that we only copy file here and let the InputActionImporter handle the asset management
-
-            UpdateFromTemplate(relativePath, sourcePath);
-
-            // Refresh asset database to allow for importer to recognize the asset
-            AssetDatabase.Refresh();
-
-            // Load the asset we just created and assign it as the Project-wide actions
-            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
-            InputSystem.actions = asset;
-        }
-
-        internal static void CreateNewAsset(string relativePath)
-        {
-            CreateNewAsset(relativePath, kDefaultAssetPath);
+            InputActionAssetManager.SaveAsset(assetPath, GetDefaultAssetJson());
+            return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
 
         internal static InputActionMap GetDefaultUIActionMap()
@@ -116,24 +98,6 @@ namespace UnityEngine.InputSystem.Editor
         }
 
 #endif
-        /// <summary>
-        /// Reset the given asset to Project-wide Input Action asset defaults
-        /// </summary>
-        internal static void ResetActionAsset(InputActionAsset asset)
-        {
-            var path = AssetDatabase.GetAssetPath(asset);
-            // Overwrite and let importer handle it?
-
-            var relativePath = path;
-
-            UpdateFromTemplate(relativePath, kDefaultAssetPath);
-
-            // Refresh asset database to allow for importer to recognize the asset
-            AssetDatabase.Refresh();
-
-            // Load the asset we just created and assign it as the Project-wide actions
-            InputSystem.actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
-        }
     }
 }
 #endif

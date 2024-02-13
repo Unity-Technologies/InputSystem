@@ -162,12 +162,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 createAssetButton.RegisterCallback<ClickEvent>(evt =>
                 {
-                    // Create a new asset
-                    ProjectWideActionsAsset.CreateNewAsset("Assets/InputSystem_Actions.inputactions");
-
-                    // Why doesn't OnActionsChange pick this change up? For some reason we need BuildUI call here :
-                    m_State = InputSystem.actions != null ? new InputActionsEditorState(new SerializedObject(InputSystem.actions)) : default;
-                    BuildUI();
+                    // Create a new asset and assign it as the project-wide asset
+                    InputSystem.actions = ProjectWideActionsAsset.CreateNewAsset("Assets/InputSystem_Actions.inputactions");
                 });
             }
 
@@ -180,7 +176,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
                 var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
-                view.postResetAction += OnResetAsset;
                 m_StateContainer.Initialize();
             }
 
@@ -207,13 +202,6 @@ namespace UnityEngine.InputSystem.Editor
 
             // Create a new asset
             ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
-        }
-
-        private void OnResetAsset(InputActionAsset newAsset)
-        {
-            var serializedAsset = new SerializedObject(newAsset);
-            m_State = new InputActionsEditorState(serializedAsset);
-            BuildUI();
         }
 
         private bool hasAsset => m_State.serializedObject != null;

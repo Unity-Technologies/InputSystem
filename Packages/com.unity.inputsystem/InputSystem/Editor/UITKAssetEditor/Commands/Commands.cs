@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
@@ -421,13 +422,30 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command ResetGlobalInputAsset(Action<InputActionAsset> postResetAction)
+        // Removes all action maps and their content from the associated serialized InputActionAsset.
+        public static Command ClearActionMaps()
         {
             return (in InputActionsEditorState state) =>
             {
-                // TODO Here we would instead modify the asset based on an instance loaded from defaults. Note that we cannot use importer here since we modify an in-memory asset as serialized object.... needs some thought to not break Undo.
-                ProjectWideActionsAsset.ResetActionAsset(InputSystem.actions);
-                postResetAction?.Invoke(InputSystem.actions);
+                InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
+        // Replaces all action maps of the associated serialized InputActionAsset with the action maps contained in
+        // the given source asset.
+        public static Command ReplaceActionMaps(string inputActionAssetJsonContent)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
+                var temp = InputActionAsset.FromJson(inputActionAssetJsonContent);
+                using (var tmp = new SerializedObject(temp))
+                {
+                    InputActionSerializationHelpers.AddActionMaps(state.serializedObject, tmp);
+                }
+                state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
         }
