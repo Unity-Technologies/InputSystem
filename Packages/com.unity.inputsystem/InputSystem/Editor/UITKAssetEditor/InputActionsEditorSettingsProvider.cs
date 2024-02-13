@@ -163,7 +163,7 @@ namespace UnityEngine.InputSystem.Editor
                 createAssetButton.RegisterCallback<ClickEvent>(evt =>
                 {
                     // Create a new asset and assign it as the project-wide asset
-                    InputSystem.actions = ProjectWideActionsAsset.CreateNewAsset("Assets/InputSystem_Actions.inputactions");
+                    InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
                 });
             }
 
@@ -191,7 +191,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private static void CreateNewActionAsset()
+        /*private static void CreateNewActionAsset()
         {
             var result = InputAssetEditorUtils.PromptUserForAsset(
                 friendlyName: "Input Actions",
@@ -202,7 +202,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Create a new asset
             ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
-        }
+        }*/
 
         private bool hasAsset => m_State.serializedObject != null;
 

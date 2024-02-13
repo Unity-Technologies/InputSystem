@@ -45,14 +45,15 @@ namespace UnityEngine.InputSystem.Editor
 
     internal static class ProjectWideActionsAsset
     {
-        private const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
+        private const string kDefaultAssetPath = "Assets/InputSystem_Actions.inputactions";
+        private const string kDefaultTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
         internal static string GetDefaultAssetJson()
         {
-            return File.ReadAllText(FileUtil.GetPhysicalPath(ProjectWideActionsAsset.kDefaultAssetPath));
+            return File.ReadAllText(FileUtil.GetPhysicalPath(kDefaultTemplateAssetPath));
         }
 
-        internal static InputActionAsset CreateNewAsset(string assetPath)
+        internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
         {
             InputActionAssetManager.SaveAsset(assetPath, GetDefaultAssetJson());
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
@@ -60,8 +61,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionMap GetDefaultUIActionMap()
         {
-            var json = File.ReadAllText(FileUtil.GetPhysicalPath(kDefaultAssetPath));
-            var actionMaps = InputActionMap.FromJson(json);
+            var actionMaps = InputActionMap.FromJson(GetDefaultAssetJson());
             return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
         }
 
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-#endif
+#endif // UNITY_2023_2_OR_NEWER
     }
 }
-#endif
+#endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
