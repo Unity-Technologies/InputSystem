@@ -491,17 +491,22 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var compositeItems = new List<TreeViewItemData<ActionOrBindingData>>();
                         var nextBinding = actionBindings[++i];
+                        var hiddenCompositeParts = false;
                         while (nextBinding.isPartOfComposite)
                         {
                             var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme, state.selectedDeviceRequirementIndex);
                             if (isVisible)
                             {
-                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
+                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme,
+                                    controlSchemes);
                                 var compositeBindingId = new Guid(nextBinding.id);
-                                compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
+                                compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(
+                                    GetIdForGuid(new Guid(nextBinding.id), idDictionary),
                                     new ActionOrBindingData(false, name, actionMapIndex, false,
                                         GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
                             }
+                            else
+                                hiddenCompositeParts = true;
 
                             if (++i >= actionBindings.Count)
                                 break;
@@ -509,9 +514,11 @@ namespace UnityEngine.InputSystem.Editor
                             nextBinding = actionBindings[i];
                         }
                         i--;
-                        bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
-                            compositeItems.Count > 0 ? compositeItems : null));
+                        var shouldCompositeBeVisible = !(compositeItems.Count == 0 && hiddenCompositeParts); //hide composite if all parts are hidden
+                        if (shouldCompositeBeVisible)
+                            bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
+                                new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
+                                compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
                     {
