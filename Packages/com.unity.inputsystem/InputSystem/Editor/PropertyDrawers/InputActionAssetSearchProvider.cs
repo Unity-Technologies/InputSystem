@@ -114,7 +114,6 @@ namespace UnityEngine.InputSystem.Editor
             return obj.name;
         }
 
-
         private static string FetchLabel(SearchItem item, SearchContext context)
         {
             return FetchLabel((item.data as Object) !);

@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
-       
+
         /// <summary>
         /// Attempts to load the icon associated with an <see cref="InputActionAsset"/>.
         /// </summary>
