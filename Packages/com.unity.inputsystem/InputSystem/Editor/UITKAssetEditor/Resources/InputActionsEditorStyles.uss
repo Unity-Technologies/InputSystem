@@ -199,3 +199,17 @@
 .unity-two-pane-split-view__dragline-anchor {
     background-color: rgb(25, 25, 25);
 }
+
+#control-scheme-usage-title {
+    margin: 3px;
+    -unity-font-style: bold;
+}
+
+.matching-controls {
+    display: flex;
+    flex-grow: 1;
+}
+
+.matching-controls-labels {
+    margin: 1px;
+}
