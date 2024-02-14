@@ -213,18 +213,18 @@ public class ControlSchemesEditorTests
         var asset = TestData.inputActionAsset
             .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test")))
             .Generate();
-			
+
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
         state.serializedObject.Update();
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
-		
+
         //If ControlScheme name ends on a string a "1" will get added to the duplicate
         Assert.That(newState.selectedControlScheme.name, Is.EqualTo(state.selectedControlScheme.name + "1"));
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
     }
-	
-	[Test]
+
+    [Test]
     [Category("AssetEditor")]
     public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnInt()
     {   //If ControlScheme name ends on int it will get incremented by 1
@@ -234,11 +234,11 @@ public class ControlSchemesEditorTests
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
         state.serializedObject.Update();
-        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);		
-		
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
         string pattern = @"\d+$"; //number at the end of a string
         string oldControlSchemeNamePlusOne = "";
-			
+
         int intAtEndOfOldControlSchemeName = Convert.ToInt16(Regex.Match(state.selectedControlScheme.name, pattern).Value);
         intAtEndOfOldControlSchemeName += 1;
 
