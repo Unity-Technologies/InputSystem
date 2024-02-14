@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
             return CreateInputActionAssetSearchProvider(k_AssetFolderSearchProviderId,
                 "Asset Input Action Assets",
                 (obj) => { return obj != null ? AssetDatabase.GetAssetPath(obj) : "Null"; },
-                () => LoadInputActionAssetsFromAssetDatabase(skipProjectWide : true));
+                () => LoadInputActionAssetsFromAssetDatabase(skipProjectWide: true));
         }
 
         internal static SearchProvider CreateInputActionAssetSearchProviderForProjectWideActions()
@@ -38,7 +38,6 @@ namespace UnityEngine.InputSystem.Editor
 
             return new List<InputActionAsset>() { asset };
         }
-
 
         private static IEnumerable<Object> LoadInputActionAssetsFromAssetDatabase(bool skipProjectWide)
         {
@@ -72,7 +71,7 @@ namespace UnityEngine.InputSystem.Editor
             // Also, fetchLabel/fetchDescription and what is provided to CreateItem is playing different
             // roles at different zoom levels.
             var inputActionAssetIcon = InputActionAssetIconLoader.LoadAssetIcon();
-            var inputActionAssetProjectWideIcon = InputActionAssetIconLoader.LoadAssetIcon(projectWide : true);
+            var inputActionAssetProjectWideIcon = InputActionAssetIconLoader.LoadAssetIcon(projectWide: true);
 
             return new SearchProvider(id, displayName)
             {
@@ -138,7 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static string FetchLabel(SearchItem item, SearchContext context)
         {
-            return FetchLabel((item.data as Object)!);
+            return FetchLabel((item.data as Object) !);
         }
     }
 }

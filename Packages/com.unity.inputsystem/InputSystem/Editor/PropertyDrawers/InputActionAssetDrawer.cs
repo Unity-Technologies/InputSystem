@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     internal sealed class InputActionAssetDrawer : PropertyDrawer
     {
         private readonly SearchContext m_Context = UnityEditor.Search.SearchService.CreateContext(new[]
- {
+        {
             InputActionAssetSearchProviders.CreateInputActionAssetSearchProvider(),
             InputActionAssetSearchProviders.CreateInputActionAssetSearchProviderForProjectWideActions(),
         }, string.Empty, SearchConstants.PickerSearchFlags);
