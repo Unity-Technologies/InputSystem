@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 - Added drag and drop support in the Input Action Asset Editor for Action Maps, Actions and Bindings.
+- UI Toolkit input action editor now supports showing the derived bindings.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
@@ -40,6 +41,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
 - Fixed console errors that can be produced when opening input package settings from the Inspector.
 - Fixed InputManager.asset file growing in size on each Reset call.
+- Fixed Opening InputDebugger throws 'Action map must have state at this point' error
+- Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

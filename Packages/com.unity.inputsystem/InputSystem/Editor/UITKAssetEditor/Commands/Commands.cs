@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                CopyPasteHelper.CopyActionMap(state);
+                CopyPasteHelper.CutActionMap(state);
                 return DeleteActionMap(state.selectedActionMapIndex).Invoke(state);
             };
         }
@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                CopyPasteHelper.Copy(state);
+                CopyPasteHelper.Cut(state);
                 return state.selectionType == SelectionType.Action ?
                     DeleteAction(state.selectedActionMapIndex, Selectors.GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state)
                     : DeleteBinding(state.selectedActionMapIndex, state.selectedBindingIndex).Invoke(state);
