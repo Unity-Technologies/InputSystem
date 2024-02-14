@@ -236,15 +236,15 @@ public class ControlSchemesEditorTests
         state.serializedObject.Update();
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);		
 		
-		string pattern = @"\d+$"; //number at the end of a string
+        string pattern = @"\d+$"; //number at the end of a string
         string oldControlSchemeNamePlusOne = "";
 			
-		int intAtEndOfOldControlSchemeName = Convert.ToInt16(Regex.Match(state.selectedControlScheme.name, pattern).Value);
+        int intAtEndOfOldControlSchemeName = Convert.ToInt16(Regex.Match(state.selectedControlScheme.name, pattern).Value);
         intAtEndOfOldControlSchemeName += 1;
 
         oldControlSchemeNamePlusOne = Regex.Replace(state.selectedControlScheme.name, pattern, intAtEndOfOldControlSchemeName.ToString());
 
-		Assert.That(newState.selectedControlScheme.name, Is.EqualTo(oldControlSchemeNamePlusOne));
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo(oldControlSchemeNamePlusOne));
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
     }
 
