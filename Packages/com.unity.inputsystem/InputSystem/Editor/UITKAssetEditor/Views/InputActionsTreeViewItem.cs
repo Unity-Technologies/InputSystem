@@ -38,6 +38,7 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
+
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }

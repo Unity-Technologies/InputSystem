@@ -21,6 +21,8 @@ however, it has to be formatted properly to pass verification tests.
   - [`InputAction.WasCompletedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasCompletedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
+- Added drag and drop support in the Input Action Asset Editor for Action Maps, Actions and Bindings.
+- UI Toolkit input action editor now supports showing the derived bindings.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
@@ -39,6 +41,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
 - Fixed console errors that can be produced when opening input package settings from the Inspector.
 - Fixed InputManager.asset file growing in size on each Reset call.
+- Fixed Opening InputDebugger throws 'Action map must have state at this point' error
+- Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
