@@ -13,15 +13,14 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
-        private const string kAssetProjectWideIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAssetProjectWide.png";
-
+       
         /// <summary>
         /// Attempts to load the icon associated with an <see cref="InputActionAsset"/>.
         /// </summary>
         /// <returns>Icon resource reference or <code>null</code> if the resource could not be loaded.</returns>
-        internal static Texture2D LoadAssetIcon(bool projectWide = false)
+        internal static Texture2D LoadAssetIcon()
         {
-            return (Texture2D)EditorGUIUtility.Load(projectWide ? kAssetProjectWideIcon : kAssetIcon);
+            return (Texture2D)EditorGUIUtility.Load(kAssetIcon);
         }
 
         /// <summary>

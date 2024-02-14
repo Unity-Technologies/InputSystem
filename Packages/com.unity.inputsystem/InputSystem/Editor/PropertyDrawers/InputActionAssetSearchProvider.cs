@@ -71,31 +71,18 @@ namespace UnityEngine.InputSystem.Editor
             // Also, fetchLabel/fetchDescription and what is provided to CreateItem is playing different
             // roles at different zoom levels.
             var inputActionAssetIcon = InputActionAssetIconLoader.LoadAssetIcon();
-            var inputActionAssetProjectWideIcon = InputActionAssetIconLoader.LoadAssetIcon(projectWide: true);
 
             return new SearchProvider(id, displayName)
             {
                 priority = 25,
                 fetchDescription = FetchLabel,
                 fetchItems = (context, items, provider) => FilteredSearch(context, provider, FetchLabel, createItemFetchDescription,
-                    fetchAssets, inputActionAssetIcon, inputActionAssetProjectWideIcon),
+                    fetchAssets),
                 fetchLabel = FetchLabel,
-                fetchPreview = FetchPreview,
-                fetchThumbnail = FetchThumbnail,
+                fetchPreview = (item, context, size, options) => inputActionAssetIcon,
+                fetchThumbnail = (item, context) => inputActionAssetIcon,
                 toObject = ToObject,
             };
-        }
-
-        private static Texture2D FetchThumbnail(SearchItem item, SearchContext context)
-        {
-            // thumnail is lost on scaling so have to reassign it
-            return item.thumbnail ? item.thumbnail : FetchObjectThumbnail(item.data as Object, InputActionAssetIconLoader.LoadAssetIcon(), InputActionAssetIconLoader.LoadAssetIcon(projectWide: true));
-        }
-
-        private static Texture2D FetchPreview(SearchItem item, SearchContext context, Vector2 size, FetchPreviewOptions options)
-        {
-            // thumnail is lost on scaling so have to reassign it
-            return item.thumbnail ? item.thumbnail : FetchObjectThumbnail(item.data as Object, InputActionAssetIconLoader.LoadAssetIcon(), InputActionAssetIconLoader.LoadAssetIcon(projectWide: true));
         }
 
         private static Object ToObject(SearchItem item, Type type)
@@ -105,12 +92,12 @@ namespace UnityEngine.InputSystem.Editor
 
         // Custom search function with label matching filtering.
         private static IEnumerable<SearchItem> FilteredSearch(SearchContext context, SearchProvider provider,
-            Func<Object, string> fetchObjectLabel, Func<Object, string> createItemFetchDescription, Func<IEnumerable<Object>> fetchAssets, Texture2D inputActionAssetIcon, Texture2D inputActionAssetProjectWideIcon)
+            Func<Object, string> fetchObjectLabel, Func<Object, string> createItemFetchDescription, Func<IEnumerable<Object>> fetchAssets)
         {
             foreach (var asset in fetchAssets())
             {
                 var label = fetchObjectLabel(asset);
-                var thumbnail = FetchObjectThumbnail(asset, inputActionAssetIcon, inputActionAssetProjectWideIcon);
+                Texture2D thumbnail = null;   // filled in later
 
                 if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
                     continue; // Ignore due to filtering
@@ -123,17 +110,10 @@ namespace UnityEngine.InputSystem.Editor
         // consistent between CreateItem and additional fetchLabel calls.
         private static string FetchLabel(Object obj)
         {
-            if (obj == InputSystem.actions)
-                return $"{obj.name}{k_ProjectWideAssetIdentificationString}";
+            // if (obj == InputSystem.actions) return $"{obj.name}{k_ProjectWideAssetIdentificationString}";
             return obj.name;
         }
 
-        private static Texture2D FetchObjectThumbnail(Object obj, Texture2D inputActionAssetIcon, Texture2D inputActionAssetProjectWideIcon)
-        {
-            if (obj == InputSystem.actions)
-                return inputActionAssetProjectWideIcon;
-            return inputActionAssetIcon;
-        }
 
         private static string FetchLabel(SearchItem item, SearchContext context)
         {
