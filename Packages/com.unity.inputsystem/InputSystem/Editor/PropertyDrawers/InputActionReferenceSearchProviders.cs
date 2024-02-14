@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                 "Asset Input Actions",
                 // Show the asset path in the description.
                 (obj) => AssetDatabase.GetAssetPath((obj as InputActionReference).asset),
-                () => InputActionImporter.LoadInputActionReferencesFromAssetDatabase());
+                () => InputActionImporter.LoadInputActionReferencesFromAssetDatabase(skipProjectWide : true));
         }
 
         // Search provider for InputActionReferences for project-wide actions

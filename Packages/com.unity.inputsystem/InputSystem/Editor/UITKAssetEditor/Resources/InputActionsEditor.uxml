@@ -37,7 +37,7 @@
                             <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="properties-container" class="body-panel-cointainer body-panel-container">
+                    <ui:VisualElement name="properties-container" class="body-panel-container body-panel-container">
                         <ui:VisualElement name="header" class="body-panel-header">
                             <ui:Label text="Action Properties" display-tooltip-when-elided="true" name="properties-header-label" />
                         </ui:VisualElement>

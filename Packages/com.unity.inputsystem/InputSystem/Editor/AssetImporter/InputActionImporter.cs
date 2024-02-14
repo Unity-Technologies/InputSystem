@@ -276,7 +276,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null)
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null, bool skipProjectWide = false)
         {
             string[] searchFolders = null;
             // If folderPath is null, search in "Assets" folder.
@@ -301,6 +301,12 @@ namespace UnityEngine.InputSystem.Editor
                     o => o is InputActionReference &&
                     !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
                     .Cast<InputActionReference>().ToList();
+
+                if (skipProjectWide && assetInputActionReferenceList.Count() > 0)
+                {
+                    if (assetInputActionReferenceList[0].m_Asset == InputSystem.actions)
+                        continue;
+                }
 
                 inputActionReferencesList.AddRange(assetInputActionReferenceList);
             }

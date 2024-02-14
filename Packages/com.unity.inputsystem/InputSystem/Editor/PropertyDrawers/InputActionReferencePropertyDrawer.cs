@@ -32,9 +32,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (property?.objectReferenceValue is InputActionReference reference)
             {
-/*
                 // Check only if the reference is a project-wide action.
-                if (reference?.asset?.name == ProjectWideActionsAsset.kAssetName)
+                if (reference?.asset == InputSystem.actions)
                 {
                     var action = reference?.asset?.FindAction(reference.action.id);
                     if (action is null)
@@ -43,7 +42,6 @@ namespace UnityEngine.InputSystem.Editor
                         property.serializedObject.ApplyModifiedProperties();
                     }
                 }
-*/
             }
         }
     }
