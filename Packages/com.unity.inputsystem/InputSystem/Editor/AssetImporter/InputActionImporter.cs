@@ -42,25 +42,23 @@ namespace UnityEngine.InputSystem.Editor
             add => s_OnImportCallbacks.Append(value);
             remove => s_OnImportCallbacks.Remove(value);
         }
-
-        internal static InputActionAsset CreateFromJson(IAssetContext context, string assetName = null, bool addRoot = true)
+        
+        private static InputActionAsset CreateFromJson(AssetImportContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-
             ////REVIEW: need to check with version control here?
             // Read JSON file.
             string content;
             try
             {
 #if UNITY_2021_2_OR_NEWER
-                content = File.ReadAllText(FileUtil.GetPhysicalPath(context.sourcePath));
+                content = File.ReadAllText(FileUtil.GetPhysicalPath(context.assetPath));
 #else
                 content = File.ReadAllText(context.assetPath);
 #endif
             }
             catch (Exception exception)
             {
-                context.LogError($"Could not read file '{context.sourcePath}' ({exception})");
+                context.LogImportError($"Could not read file '{context.assetPath}' ({exception})");
                 return null;
             }
 
@@ -102,15 +100,11 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Force name of asset to be that on the file on disk instead of what may be serialized
                 // as the 'name' property in JSON. (Unless explicitly given)
-                if (string.IsNullOrEmpty(assetName))
-                    asset.name = Path.GetFileNameWithoutExtension(context.assetPath);
-                else
-                    asset.name = assetName;
+                asset.name = Path.GetFileNameWithoutExtension(context.assetPath);
 
                 // Add asset.
                 ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-                if (addRoot)
-                    context.AddObjectToAsset("<root>", asset, InputActionAssetIconLoader.LoadAssetIcon());
+                context.AddObjectToAsset("<root>", asset, InputActionAssetIconLoader.LoadAssetIcon());
                 context.SetMainObject(asset);
 
                 // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
@@ -119,9 +113,9 @@ namespace UnityEngine.InputSystem.Editor
             }
             catch (Exception exception)
             {
-                context.LogError($"Could not parse input actions in JSON format from '{context.sourcePath}' ({exception})");
+                context.LogImportError($"Could not parse input actions in JSON format from '{context.assetPath}' ({exception})");
                 DestroyImmediate(asset);
-                return null;
+                asset = null;
             }
 
             return asset;
@@ -135,7 +129,9 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
-            var asset = CreateFromJson(new AssetImporterAssetContext(ctx));
+            var asset = CreateFromJson(ctx);
+            if (asset == null)
+                return;
 
             if (m_GenerateWrapperCode)
                 GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
