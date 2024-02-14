@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 
@@ -62,6 +63,26 @@ namespace UnityEngine.InputSystem.Editor
                 throw new ArgumentNullException(nameof(asset));
             var path = AssetDatabase.GetAssetPath(asset);
             CheckOut(path);
+        }
+
+        public static string ReadAllText(string path)
+        {
+            // Note that FileUtil.GetPhysicalPath(string) is only available in 2021.2 or newer
+#if UNITY_2021_2_OR_NEWER
+            return File.ReadAllText(FileUtil.GetPhysicalPath(path));
+#else
+            return File.ReadAllText(path);
+#endif
+        }
+
+        public static void WriteAllText(string path, string contents)
+        {
+            // Note that FileUtil.GetPhysicalPath(string) is only available in 2021.2 or newer
+#if UNITY_2021_2_OR_NEWER
+            File.WriteAllText(path: FileUtil.GetPhysicalPath(path), contents: contents);
+#else
+            File.WriteAllText(path: path, contents: contents);
+#endif
         }
 
         // It seems we're getting instabilities on the farm from using EditorGUIUtility.systemCopyBuffer directly in tests.

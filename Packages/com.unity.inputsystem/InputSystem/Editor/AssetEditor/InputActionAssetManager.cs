@@ -184,7 +184,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // (Over)write JSON content to file given by path.
-            File.WriteAllText(assetPath, assetJson);
+            EditorHelpers.WriteAllText(assetPath, assetJson);
 
             // Reimport the asset (indirectly triggers ADB notification callbacks)
             AssetDatabase.ImportAsset(assetPath);

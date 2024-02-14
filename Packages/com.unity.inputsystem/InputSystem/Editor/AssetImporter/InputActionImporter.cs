@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             add => s_OnImportCallbacks.Append(value);
             remove => s_OnImportCallbacks.Remove(value);
         }
-        
+
         private static InputActionAsset CreateFromJson(AssetImportContext context)
         {
             ////REVIEW: need to check with version control here?
@@ -50,11 +50,7 @@ namespace UnityEngine.InputSystem.Editor
             string content;
             try
             {
-#if UNITY_2021_2_OR_NEWER
-                content = File.ReadAllText(FileUtil.GetPhysicalPath(context.assetPath));
-#else
-                content = File.ReadAllText(context.assetPath);
-#endif
+                content = EditorHelpers.ReadAllText(context.assetPath);
             }
             catch (Exception exception)
             {

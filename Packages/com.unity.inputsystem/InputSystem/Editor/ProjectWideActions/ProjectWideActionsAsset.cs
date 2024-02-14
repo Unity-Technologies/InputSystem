@@ -48,17 +48,32 @@ namespace UnityEngine.InputSystem.Editor
         private const string kDefaultAssetPath = "Assets/InputSystem_Actions.inputactions";
         private const string kDefaultTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
+        // Returns the default asset path for where to create project-wide actions asset.
+        internal static string defaultAssetPath => kDefaultAssetPath;
+
+        // Returns the default template JSON content.
         internal static string GetDefaultAssetJson()
         {
-            return File.ReadAllText(FileUtil.GetPhysicalPath(kDefaultTemplateAssetPath));
+            return EditorHelpers.ReadAllText(kDefaultTemplateAssetPath);
         }
 
-        internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
+        // Creates an asset at the given path containing the given JSON content.
+        private static InputActionAsset CreateAssetAtPathFromJson(string assetPath, string json)
         {
-            InputActionAssetManager.SaveAsset(assetPath, GetDefaultAssetJson());
+            // Note that the extra work here is to override the JSON name from the source asset
+            var inputActionAsset = InputActionAsset.FromJson(json);
+            inputActionAsset.name = Path.GetFileNameWithoutExtension(assetPath);
+            InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
 
+        // Creates an asset at the given path containing the default template JSON.
+        internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
+        {
+            return CreateAssetAtPathFromJson(assetPath, EditorHelpers.ReadAllText(kDefaultTemplateAssetPath));
+        }
+
+        // Returns the default UI action map as represented by the default template JSON.
         internal static InputActionMap GetDefaultUIActionMap()
         {
             var actionMaps = InputActionMap.FromJson(GetDefaultAssetJson());
