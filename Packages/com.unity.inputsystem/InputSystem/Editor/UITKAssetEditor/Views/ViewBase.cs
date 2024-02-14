@@ -46,9 +46,7 @@ namespace UnityEngine.InputSystem.Editor
             // This can happen when the view is discarded immediately after being loaded, i.e. jumping to the input settings
             // page in Preferences when the last window shown there was the main view, which the editor (briefly) loads first.
             // Compare against the number of m_ChildViews as a cheap way to know we should skip redrawing. (ISX-1721)
-            var correctChildren = rootElement.childCount >= m_ChildViews.Count;
-
-            if (correctChildren && (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate))
+            if (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate)
                 RedrawUI(m_ViewStateSelector.GetViewState(state));
 
             m_IsFirstUpdate = false;
