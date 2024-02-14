@@ -87,6 +87,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CopyItemData(SerializedProperty item, StringBuilder buffer, Type type, SerializedProperty actionMap)
         {
+            if (item == null)
+                return;
+
             buffer.Append(k_StartOfText);
             buffer.Append(item.CopyToJson(true));
             if (type == typeof(InputAction))
