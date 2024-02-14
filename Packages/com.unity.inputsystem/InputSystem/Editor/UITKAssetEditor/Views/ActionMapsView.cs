@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ListView = root.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-
+            m_ListView.reorderable = true;
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
+                treeViewItem.userData = i;
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
@@ -55,6 +56,10 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            var treeView = root.Q<TreeView>("actions-tree-view");
+            m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
+            m_ListView.itemIndexChanged += OnReorder;
+
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
@@ -62,6 +67,17 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
             m_AddActionMapButton.clicked += AddActionMap;
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
+        }
+
+        void OnDroppedHandler(int mapIndex)
+        {
+            Dispatch(Commands.CutActionsOrBindings());
+            Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
+        }
+
+        void OnReorder(int oldIndex, int newIndex)
+        {
+            Dispatch(Commands.ReorderActionMap(oldIndex, newIndex));
         }
 
         public override void RedrawUI(ViewState viewState)
