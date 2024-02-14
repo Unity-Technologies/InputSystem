@@ -253,6 +253,48 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions.actionMaps[1].actions.Count, Is.EqualTo(1));
         Assert.That(InputSystem.actions.actionMaps[1].actions[0].name, Is.EqualTo("replacedAction4"));
     }
-}
 
+#if UNITY_EDITOR
+    [Test]
+    [Category(TestCategory)]
+    public void ProjectWideActions_ThrowsWhenAddingOrRemovingWhileEnabled()
+    {
+        var asset = ProjectWideActionsAsset.GetOrCreate();
+
+        // Verify adding ActionMap while enabled throws an exception
+        Assert.Throws<InvalidOperationException>(() => asset.AddActionMap("AnotherMap").AddAction("AnotherAction"));
+
+        asset.Disable();
+        asset.AddActionMap("AnotherMap").AddAction("AnotherAction");
+
+        // Verify enabled state reported correctly
+        Assert.That(asset.enabled, Is.False);
+        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.False);
+        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.False);
+
+        asset.Enable();
+
+        Assert.That(asset.enabled, Is.True);
+        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.True);
+        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.True);
+
+        // Verify adding/removing actions throws when ActionMap is enabled
+        Assert.Throws<System.InvalidOperationException>(() => asset.FindActionMap("AnotherMap", true).AddAction("YetAnotherAction"));
+        Assert.Throws<System.InvalidOperationException>(() => asset.RemoveAction("AnotherAction"));
+        Assert.Throws<InvalidOperationException>(() => asset.RemoveActionMap("AnotherMap"));
+
+        // Verify enabled state when enabling Action directly
+        asset.Disable();
+        asset.FindAction("AnotherAction", true).Enable();
+
+        Assert.That(asset.FindActionMap("InitialActionMapOne", true).enabled, Is.False);
+        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.True);
+        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.True);
+
+        // Verify removing any ActionMap throws if another one is enabled
+        Assert.Throws<System.InvalidOperationException>(() => asset.RemoveActionMap("InitialActionMapOne"));
+    }
+
+#endif // UNITY_EDITOR
+}
 #endif
