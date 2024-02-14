@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Editor
     /// <summary>
     /// Class to handle drop from the actions tree view to the action maps list view.
     /// </summary>
-    public class DropManipulator : Manipulator
+    internal class DropManipulator : Manipulator
     {
         private EventCallback<int> DroppedPerformedCallback;
         private VisualElement m_OtherVerticalList;
