@@ -73,13 +73,6 @@ namespace UnityEngine.InputSystem.Editor
             return GetBindingsForAction(action.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue, state);
         }
 
-        public static int GetLastBindingIndexForSelectedAction(InputActionsEditorState state)
-        {
-            var actionName = GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue;
-            var bindingsOfAction = GetBindingsForAction(actionName, state);
-            return bindingsOfAction.Select(b => b.GetIndexOfArrayElement()).Max();
-        }
-
         public static int GetSelectedBindingIndexAfterCompositeBindings(InputActionsEditorState state)
         {
             var bindings = GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
@@ -96,6 +89,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
         {
+            Debug.Assert(indexToInsert >= 0 && indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
             var offset = 1; //previous action offset
             while (indexToInsert - offset >= 0)
             {
