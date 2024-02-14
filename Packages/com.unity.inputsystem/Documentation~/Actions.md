@@ -19,7 +19,7 @@ You can then get a reference to this action in your code, and check its value, o
 Actions also make it simpler to create a system that lets your players [customize their bindings at runtime](ActionBindings.md#interactive-rebinding), which is a common requirement for games.
 
 >**Notes:**
-> - Actions are a runtime only feature. You can't use them in [Editor window code]([xref:EditorWindow](https://docs.unity3d.com/ScriptReference/EditorWindow.html)).
+> - Actions are a runtime only feature. You can't use them in [Editor window code](https://docs.unity3d.com/ScriptReference/EditorWindow.html).
 >
 > - You can read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
 >
