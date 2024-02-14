@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 - UI Toolkit input action editor now supports showing the derived bindings.
+- Device filtering support for control schemes in the UI-Toolkit Input Asset Editor.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
