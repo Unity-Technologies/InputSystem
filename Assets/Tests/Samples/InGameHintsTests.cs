@@ -15,6 +15,7 @@ public class InGameHintsTests : CoreTestsFixture
 {
     [UnityTest]
     [Category("Samples")]
+    [Ignore("Disabled: Unstable and running into Debug.Assert in ~@InGameHintsActions() on rare occasions.")]
     public IEnumerator Samples_InGameHints_ShowControlsAccordingToCurrentlyUsedDevice()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
