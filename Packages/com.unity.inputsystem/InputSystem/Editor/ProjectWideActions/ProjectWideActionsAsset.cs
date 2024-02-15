@@ -88,7 +88,15 @@ namespace UnityEngine.InputSystem.Editor
             // Note that the extra work here is to override the JSON name from the source asset
             var inputActionAsset = InputActionAsset.FromJson(json);
             inputActionAsset.name = Path.GetFileNameWithoutExtension(assetPath);
-            InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
+
+            bool doSave = true;
+            if (AssetDatabase.AssetPathExists(assetPath))
+            {
+                doSave = EditorUtility.DisplayDialog("Create Input Action Asset", "This will overwrite an existing asset. Continue and overwrite?", "Ok", "Cancel");
+            }
+            if (doSave)
+                InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
+
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
 
