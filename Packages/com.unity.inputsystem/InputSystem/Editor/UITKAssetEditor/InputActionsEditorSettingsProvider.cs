@@ -8,17 +8,18 @@ namespace UnityEngine.InputSystem.Editor
 {
     // TODO This editor should react to InputSystem.actions being reassigned from outside
 
+    // TODO Editing project wide actions (dirty), then InputSystem.actions is assigned from elsewhere, what to do?
+    // TODO
+
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
-        private class ImportDetector : AssetPostprocessor
-        {
-        }
-
-        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath;
+        public static string SettingsPath => InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
         private bool m_HasEditFocus;
+        private bool m_IgnoreActionChangedCallback;
+        private bool m_IsActivated;
         StateContainer m_StateContainer;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
@@ -28,30 +29,40 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
+            // There is an editor bug UUM-55238 that may cause OnActivate and OnDeactivate to be called in unexpected order.
+            // This flag avoids making assumptions and executing logic twice.
+            if (m_IsActivated)
+                return;
+
+            // Setup root element with focus monitoring
             m_RootVisualElement = rootElement;
-            var asset = InputSystem.actions;
-            if (asset != null)
-                m_State = new InputActionsEditorState(new SerializedObject(asset));
-
-            CreateUI();
-            BuildUI();
-
-            // Monitor focus state of root element
             m_RootVisualElement.focusable = true;
             m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnEditFocusLost);
             m_RootVisualElement.RegisterCallback<FocusInEvent>(OnEditFocus);
 
-            // Note that focused element will be set if we are navigating back to
-            // an existing instance when switching setting in the left project settings panel since
-            // this doesn't recreate the editor.
+            CreateUI();
+
+            // Monitor any changes to InputSystem.actions for as long as this editor is active
+            InputSystem.onActionsChange += BuildUI;
+
+            // Set the asset assigned with the editor which indirectly builds the UI based on setting
+            BuildUI();
+
+            // Note that focused element will be set if we are navigating back to an existing instance when switching
+            // setting in the left project settings panel since this doesn't recreate the editor.
             if (m_RootVisualElement?.focusController?.focusedElement != null)
                 OnEditFocus(null);
 
-            InputSystem.onActionsChange += OnActionsChange;
+            m_IsActivated = true;
         }
 
         public override void OnDeactivate()
         {
+            // There is an editor bug UUM-55238 that may cause OnActivate and OnDeactivate to be called in unexpected order.
+            // This flag avoids making assumptions and executing logic twice.
+            if (!m_IsActivated)
+                return;
+
             if (m_RootVisualElement != null)
             {
                 m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnEditFocusLost);
@@ -66,14 +77,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_HasEditFocus = false;
             }
 
-            InputSystem.onActionsChange -= OnActionsChange;
-        }
+            InputSystem.onActionsChange -= BuildUI;
 
-        private void OnActionsChange()
-        {
-            m_State = InputSystem.actions != null ? new InputActionsEditorState(new SerializedObject(InputSystem.actions)) : default;
-            // Editor will already be present so we need to update it or remove the old one
-            BuildUI();
+            m_IsActivated = false;
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -96,8 +102,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_HasEditFocus = false;
 
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-                if (hasAsset)
-                    InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
+                var asset = GetAsset();
+                if (asset != null)
+                    InputActionAssetManager.SaveAsset(asset);
                 #endif
             }
         }
@@ -124,20 +131,14 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
         }
 
-        private void RemoveOldEditors()
-        {
-            VisualElement element;
-            do
-            {
-                element = m_RootVisualElement.Q("action-editor");
-                if (element != null)
-                    m_RootVisualElement.Remove(element);
-            }
-            while (element != null);
-        }
-
         private void BuildUI()
         {
+            // Construct from InputSystem.actions asset
+            var asset = InputSystem.actions;
+            var hasAsset = asset != null;
+            m_State = (asset != null) ? new InputActionsEditorState(new SerializedObject(asset)) : default;
+
+            // Dynamically show a section indicating that an asset is missing if not currently having an associated asset
             var missingAssetSection = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
             if (missingAssetSection != null)
             {
@@ -145,34 +146,41 @@ namespace UnityEngine.InputSystem.Editor
                 missingAssetSection.style.display = hasAsset ? DisplayStyle.None : DisplayStyle.Flex;
             }
 
+            // Allow the user to select an asset out of the assets available in the project via picker.
+            // Note that we show "None" (null) even if InputSystem.actions is currently a broken/missing reference.
             var objectField = m_RootVisualElement.Q<ObjectField>("current-asset");
             if (objectField != null)
             {
-                objectField.value = InputSystem.actions;
+                objectField.value = (asset == null) ? null : asset;
                 objectField.RegisterCallback<ChangeEvent<Object>>((evt) =>
                 {
-                    InputSystem.actions = evt.newValue as InputActionAsset;
-
-                    // UI updated via OnActionsChange
+                    if (evt.newValue != asset)
+                        InputSystem.actions = evt.newValue as InputActionAsset;
                 });
             }
 
+            // Configure a button to allow the user to create and assign a new project-wide asset based on default template
             var createAssetButton = m_RootVisualElement.Q<Button>("create-asset");
-            if (createAssetButton != null)
+            createAssetButton?.RegisterCallback<ClickEvent>(evt =>
             {
-                createAssetButton.RegisterCallback<ClickEvent>(evt =>
-                {
-                    // Create a new asset and assign it as the project-wide asset
-                    InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
-                });
-            }
+                InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+            });
 
             // Remove input action editor if already present
-            RemoveOldEditors();
+            {
+                VisualElement element;
+                do
+                {
+                    element = m_RootVisualElement.Q("action-editor");
+                    if (element != null)
+                        m_RootVisualElement.Remove(element);
+                }
+                while (element != null);
+            }
 
+            // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                // Show input action editor
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
                 var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
@@ -191,25 +199,15 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        /*private static void CreateNewActionAsset()
+        private InputActionAsset GetAsset()
         {
-            var result = InputAssetEditorUtils.PromptUserForAsset(
-                friendlyName: "Input Actions",
-                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("Actions"),
-                assetFileExtension: "inputactions");
-            if (result.result != InputAssetEditorUtils.DialogResult.Valid)
-                return; // Either invalid path selected or cancelled by user
-
-            // Create a new asset
-            ProjectWideActionsAsset.CreateNewAsset(result.relativePath);
-        }*/
-
-        private bool hasAsset => m_State.serializedObject != null;
+            return m_State.serializedObject?.targetObject as InputActionAsset;
+        }
 
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            return new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project);
+            return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
         }
     }
 }

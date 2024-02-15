@@ -112,28 +112,30 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         internal static void CheckForDefaultUIActionMapChanges(InputActionAsset asset)
         {
-            if (asset != null)
-            {
-                var defaultUIActionMap = GetDefaultUIActionMap();
-                var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
+            if (asset == null)
+                return;
 
-                // "UI" action map has been removed or renamed.
-                if (uiMapIndex == -1)
+            var defaultUIActionMap = GetDefaultUIActionMap();
+            var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
+
+            // "UI" action map has been removed or renamed.
+            if (uiMapIndex == -1)
+            {
+                Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
+                    "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
+                return;
+            }
+            var uiMap = asset.m_ActionMaps[uiMapIndex];
+            foreach (var action in defaultUIActionMap.actions)
+            {
+                // "UI" actions have been modified.
+                if (uiMap.FindAction(action.name) == null)
                 {
-                    Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
-                        "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
-                    return;
+                    Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
+                        $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
                 }
-                var uiMap = asset.m_ActionMaps[uiMapIndex];
-                foreach (var action in defaultUIActionMap.actions)
-                {
-                    // "UI" actions have been modified.
-                    if (uiMap.FindAction(action.name) == null)
-                    {
-                        Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
-                            $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
-                    }
-                }
+
+                // TODO Check expected action type etc. this is currently missing
             }
         }
 

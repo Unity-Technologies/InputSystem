@@ -115,8 +115,8 @@ namespace UnityEngine.InputSystem
 
             set
             {
-                if (m_Actions == value)
-                    return;
+                /*if (m_Actions == value)
+                    return;*/
 
                 m_Actions = value;
                 ApplyActions();
@@ -1767,11 +1767,12 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings)
+        internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
+            m_Actions = actions;
 
             InitializeData();
             InstallRuntime(runtime);

@@ -100,6 +100,11 @@ namespace UnityEngine.InputSystem.Editor
             if (GUILayout.Button($"Make active", EditorStyles.miniButton))
                 apply(target);
         }
+
+        public static bool IsValidFileExtension(string path)
+        {
+            return path != null && path.EndsWith("." + InputActionAsset.Extension, StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 }
 

@@ -3030,16 +3030,17 @@ namespace UnityEngine.InputSystem
             get => s_Manager.actions;
             set
             {
-                //if (value == null)
-                //    throw new ArgumentNullException(nameof(value));
-
-                if (s_Manager.m_Actions == value)
+                // Note that we use reference equality to determine if object changed or not.
+                // This allows us to change the associated value even if changed or destroyed.
+                var current = s_Manager.actions;
+                if (ReferenceEquals(current, value))
                     return;
 
 #if UNITY_EDITOR
                 // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
                 // Note that if set to null we need to remove the config object to not act as a broken reference.
-                if (value != null && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                // We also need to avoid assigning a config object o any asset that is not persisted with the ADB.
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
                     EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
                         value, true);
@@ -3050,11 +3051,14 @@ namespace UnityEngine.InputSystem
                 }
 #endif // UNITY_EDITOR
 
-                // Update underlying value
-                var current = s_Manager.actions;
+                // Disable previous project-wide actions
                 if (current != null)
                     current.Disable();
+
+                // Update underlying value
                 s_Manager.actions = value;
+
+                // Enable new project-wide actions
                 if (value != null)
                     value.Enable();
             }
@@ -3518,8 +3522,7 @@ namespace UnityEngine.InputSystem
                     if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
                         ScriptableObject.DestroyImmediate(s_Manager.m_Actions);
                     s_Manager.m_Actions = inputActionAsset;
-
-                    // TODO Let listeners know about the change similar to settings
+                    s_Manager.ApplyActions();
                 }
 
                 InputEditorUserSettings.Load();
@@ -3660,15 +3663,18 @@ namespace UnityEngine.InputSystem
         }
 
 #else
-        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
+        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null, InputActionAsset actions = null)
         {
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
+            if (actions == null)
+                actions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault();
+
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings, actions);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3800,7 +3806,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings, actions: null);
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
