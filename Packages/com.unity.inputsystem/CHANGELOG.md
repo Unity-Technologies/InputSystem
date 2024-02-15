@@ -43,6 +43,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputManager.asset file growing in size on each Reset call.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
+- Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
