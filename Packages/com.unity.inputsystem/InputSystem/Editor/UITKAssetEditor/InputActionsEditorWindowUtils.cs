@@ -1,7 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-using System;
-using System.IO;
-using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.UIElements;
 

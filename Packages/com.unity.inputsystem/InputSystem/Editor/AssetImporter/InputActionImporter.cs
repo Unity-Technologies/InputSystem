@@ -268,6 +268,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(string assetPath)
         {
             // Get all InputActionReferences are stored at the same asset path as InputActionAsset
@@ -311,6 +312,8 @@ namespace UnityEngine.InputSystem.Editor
             }
             return inputActionReferencesList;
         }
+
+#endif
 
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
