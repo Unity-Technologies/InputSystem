@@ -104,8 +104,9 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 20;
-            editButtonRect.x += bindingTextRect.width;
+            bindingTextRect.width += 60;
+            bindingTextRect.x -= 80;
+            editButtonRect.x = bindingTextRect.x + bindingTextRect.width;
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
