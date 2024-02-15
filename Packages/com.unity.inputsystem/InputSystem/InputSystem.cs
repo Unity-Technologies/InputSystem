@@ -3573,6 +3573,8 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
+
+                    // InputSystem.actions is not setup yet
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -3588,6 +3590,8 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
+
+                    InputSystem.actions?.Disable();
 
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
@@ -3836,6 +3840,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Touching the `actions` property will initialise it here (if it wasn't already).
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
+            // Note this is to eary for editor ! actions is not setup yet
             actions?.Enable();
 #endif
 
