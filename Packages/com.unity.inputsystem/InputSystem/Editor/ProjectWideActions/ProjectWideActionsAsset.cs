@@ -28,9 +28,14 @@ namespace UnityEngine.InputSystem.Editor
 
             class ProjectSettingsPostprocessor : AssetPostprocessor
             {
+                private static bool migratedInputActionAssets = false;
                 static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
                 {
-                    MoveInputManagerAssetActionsToProjectWideInputActionAsset();
+                    if (!migratedInputActionAssets)
+                    {
+                        MoveInputManagerAssetActionsToProjectWideInputActionAsset();
+                        migratedInputActionAssets = true;
+                    }
                 }
             }
 
@@ -45,29 +50,20 @@ namespace UnityEngine.InputSystem.Editor
                         var json = JsonUtility.ToJson(inputActionsAsset, prettyPrint: true);
                         File.WriteAllText(ProjectWideActionsAsset.kDefaultAssetPath, json);
                     }
-                }
 
-                DeleteActionAssetAndActionReferences();
-            }
-
-            internal static void DeleteActionAssetAndActionReferences()
-            {
-                var objects = AssetDatabase.LoadAllAssetsAtPath(kAssetPath);
-                if (objects == null)
-                    return;
-
-                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
-                foreach (var obj in objects)
-                {
-                    if (obj is InputActionReference)
+                    // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                    foreach (var obj in objects)
                     {
-                        var actionReference = obj as InputActionReference;
-                        AssetDatabase.RemoveObjectFromAsset(obj);
-                        Object.DestroyImmediate(actionReference);
-                    }
-                    else if (obj is InputActionAsset)
-                    {
-                        AssetDatabase.RemoveObjectFromAsset(obj);
+                        if (obj is InputActionReference)
+                        {
+                            var actionReference = obj as InputActionReference;
+                            AssetDatabase.RemoveObjectFromAsset(obj);
+                            Object.DestroyImmediate(actionReference);
+                        }
+                        else if (obj is InputActionAsset)
+                        {
+                            AssetDatabase.RemoveObjectFromAsset(obj);
+                        }
                     }
                 }
             }
