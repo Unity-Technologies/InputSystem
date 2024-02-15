@@ -1,10 +1,13 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;

@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.Editor
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
                 var asset = GetAsset();
                 if (asset != null)
-                    InputActionAssetManager.SaveAsset(asset);
+                    ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
                 #endif
             }
         }
@@ -115,7 +115,9 @@ namespace UnityEngine.InputSystem.Editor
             // No action, auto-saved on edit-focus lost
             #else
             // Project wide input actions always auto save - don't check the asset auto save status
-            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            var asset = GetAsset();
+            if (asset != null)
+                ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
             #endif
         }
 

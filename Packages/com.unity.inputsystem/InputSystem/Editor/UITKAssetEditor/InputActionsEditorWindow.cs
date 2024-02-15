@@ -197,6 +197,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
+            // TODO Should really detect if editing project wide asset here and run validation on it if editing in free-floating editor
             InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
             PostSaveAction();
         }

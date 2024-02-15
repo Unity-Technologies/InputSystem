@@ -105,15 +105,50 @@ namespace UnityEngine.InputSystem.Editor
             return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
         }
 
+        // These may be moved out to internal types if decided to extend validation at a later point
+
+        internal interface IReportInputActionAssetValidationErrors
+        {
+            bool OnValidationError(InputAction action, string message);
+        }
+
+        internal class DefaultInputActionAssetValidationReporter : IReportInputActionAssetValidationErrors
+        {
+            public bool OnValidationError(InputAction action, string message)
+            {
+                Debug.LogWarning(message);
+                return true;
+            }
+        }
+
+        internal static bool Validate(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
+        {
+#if UNITY_2023_2_OR_NEWER
+            reporter ??= new DefaultInputActionAssetValidationReporter();
+            CheckForDefaultUIActionMapChanges(asset, reporter);
+#endif // UNITY_2023_2_OR_NEWER
+            return true;
+        }
+
+        internal static bool ValidateAndSaveAsset(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
+        {
+            Validate(asset, reporter); // Currently ignoring validation result
+            return InputActionAssetManager.SaveAsset(asset);
+        }
+
+        private static bool ReportError(IReportInputActionAssetValidationErrors reporter, InputAction action, string message)
+        {
+            return reporter.OnValidationError(action, message);
+        }
+
 #if UNITY_2023_2_OR_NEWER
         /// <summary>
         /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
         /// </summary>
-        internal static void CheckForDefaultUIActionMapChanges(InputActionAsset asset)
+        internal static bool CheckForDefaultUIActionMapChanges(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
         {
-            if (asset == null)
-                return;
+            reporter ??= new DefaultInputActionAssetValidationReporter();
 
             var defaultUIActionMap = GetDefaultUIActionMap();
             var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
@@ -121,9 +156,10 @@ namespace UnityEngine.InputSystem.Editor
             // "UI" action map has been removed or renamed.
             if (uiMapIndex == -1)
             {
-                Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
+                ReportError(reporter, null,
+                    "The action map named 'UI' does not exist.\r\n " +
                     "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
-                return;
+                return false;
             }
             var uiMap = asset.m_ActionMaps[uiMapIndex];
             foreach (var action in defaultUIActionMap.actions)
@@ -131,12 +167,17 @@ namespace UnityEngine.InputSystem.Editor
                 // "UI" actions have been modified.
                 if (uiMap.FindAction(action.name) == null)
                 {
-                    Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
+                    var abort = !ReportError(reporter, action,
+                        $"The UI action '{action.name}' name has been modified.\r\n" +
                         $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
+                    if (abort)
+                        return false;
                 }
 
-                // TODO Check expected action type etc. this is currently missing
+                // TODO Add additional validation here, e.g. check expected action type etc. this is currently missing.
             }
+
+            return true;
         }
 
 #endif // UNITY_2023_2_OR_NEWER
