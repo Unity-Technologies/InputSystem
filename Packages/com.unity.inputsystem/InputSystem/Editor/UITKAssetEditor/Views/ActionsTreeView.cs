@@ -58,7 +58,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
-                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    Action action = ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    addBindingButton.clicked += action;
+                    addBindingButton.userData = action; // Store to use in unbindItem
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
@@ -111,6 +113,12 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
+                if (item.isAction)
+                {
+                    var button = element.Q<Button>("add-new-binding-button");
+                    button.clicked -= button.userData as Action;
+                }
+
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
@@ -135,6 +143,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
@@ -420,6 +429,23 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
+            }
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            // Allow right clicks to select an item before we bring up the matching context menu.
+            if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
+            {
+                // Look upwards to the immediate child of the scroll view, so we know what Index to use
+                var element = evt.target as VisualElement;
+                while (element != null && element.name != "unity-tree-view__item")
+                    element = element.parent;
+
+                if (element == null)
+                    return;
+
+                m_ActionsTreeView.SetSelection(element.parent.IndexOf(element));
             }
         }
 

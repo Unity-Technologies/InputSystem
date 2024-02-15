@@ -56,6 +56,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ListView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             var treeView = root.Q<TreeView>("actions-tree-view");
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
             m_ListView.itemIndexChanged += OnReorder;
@@ -191,6 +192,16 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
+            }
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            // Allow right clicks to select an item before we bring up the matching context menu.
+            if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
+            {
+                var actionMap = (evt.target as VisualElement).GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
+                m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
             }
         }
 
