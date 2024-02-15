@@ -2,6 +2,9 @@
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -50,6 +53,7 @@ namespace UnityEngine.InputSystem.Editor
             else if (binding.Value.isPartOfComposite)
             {
                 m_CompositePartBindingPropertiesView = CreateChildView(new CompositePartBindingPropertiesView(rootElement, stateContainer));
+                DrawMatchingControlPaths(viewState);
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
             else
@@ -64,7 +68,74 @@ namespace UnityEngine.InputSystem.Editor
                 var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
                 rootElement.Add(controlPathContainer);
 
+                DrawMatchingControlPaths(viewState);
                 DrawControlSchemeToggles(viewState, binding.Value);
+            }
+        }
+
+        static bool s_showMatchingLayouts = false;
+        internal void DrawMatchingControlPaths(ViewState viewState)
+        {
+            bool controlPathUsagePresent = false;
+            bool showPaths = s_showMatchingLayouts;
+            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(viewState.selectedBindingPath.stringValue, showPaths, ref controlPathUsagePresent);
+
+            var parentElement = rootElement;
+            if (matchingControlPaths == null || matchingControlPaths.Count != 0)
+            {
+                var controllingElement = new Foldout()
+                {
+                    text = $"Show Derived Bindings",
+                    value = showPaths
+                };
+                rootElement.Add(controllingElement);
+
+                controllingElement.RegisterValueChangedCallback(changeEvent =>
+                {
+                    if (changeEvent.target == controllingElement)   // only react to foldout and not tree elements
+                        s_showMatchingLayouts = changeEvent.newValue;
+                });
+
+                parentElement = controllingElement;
+            }
+
+            if (matchingControlPaths == null)
+            {
+                var messageString = controlPathUsagePresent ? "No registered controls match this current binding. Some controls are only registered at runtime." :
+                    "No other registered controls match this current binding. Some controls are only registered at runtime.";
+
+                var helpBox = new HelpBox(messageString, HelpBoxMessageType.Warning);
+                helpBox.AddToClassList("matching-controls");
+                parentElement.Add(helpBox);
+            }
+            else if (matchingControlPaths.Count > 0)
+            {
+                List<TreeViewItemData<MatchingControlPath>> treeViewMatchingControlPaths = MatchingControlPath.BuildMatchingControlPathsTreeData(matchingControlPaths);
+
+                var treeView = new TreeView();
+                parentElement.Add(treeView);
+                treeView.selectionType = UIElements.SelectionType.None;
+                treeView.AddToClassList("matching-controls");
+                treeView.fixedItemHeight = 20;
+                treeView.SetRootItems(treeViewMatchingControlPaths);
+
+                // Set TreeView.makeItem to initialize each node in the tree.
+                treeView.makeItem = () =>
+                {
+                    var label = new Label();
+                    label.AddToClassList("matching-controls-labels");
+                    return label;
+                };
+
+                // Set TreeView.bindItem to bind an initialized node to a data item.
+                treeView.bindItem = (VisualElement element, int index) =>
+                {
+                    var label = (element as Label);
+                    var matchingControlPath = treeView.GetItemDataForIndex<MatchingControlPath>(index);
+                    label.text = $"{matchingControlPath.deviceName} > {matchingControlPath.controlName}";
+                };
+
+                treeView.ExpandRootItems();
             }
         }
 
@@ -78,7 +149,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!viewState.controlSchemes.Any()) return;
 
-            var useInControlSchemeLabel = new Label("Use in control scheme");
+            var useInControlSchemeLabel = new Label("Use in control scheme")
+            {
+                name = "control-scheme-usage-title"
+            };
+
             rootElement.Add(useInControlSchemeLabel);
 
             foreach (var controlScheme in viewState.controlSchemes)
