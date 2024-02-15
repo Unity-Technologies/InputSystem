@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace UnityEngine.InputSystem.Editor
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
         private const string menuButtonId = "asset-menu";
 
+        private readonly TreeView m_ActionsTreeView;
+        private readonly ListView m_ActionMapsListView;
         private readonly ToolbarMenu m_MenuButtonToolbar;
         private readonly ToolbarButton m_SaveButton;
 
@@ -71,6 +74,13 @@ namespace UnityEngine.InputSystem.Editor
                     controlSchemes = controlSchemes,
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex
                 });
+
+            m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
+            m_ActionMapsListView = root.Q<ListView>("action-maps-list-view");
+
+            root.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            root.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            root.focusable = true; // Required for CommandEvents to work
         }
 
         private void OnReset()
@@ -158,6 +168,49 @@ namespace UnityEngine.InputSystem.Editor
         {
             public IEnumerable<InputControlScheme> controlSchemes;
             public int selectedControlSchemeIndex;
+        }
+
+        void OnExecuteCommand(ExecuteCommandEvent evt)
+        {
+            if (evt.commandName != CmdEvents.Paste)
+                return;
+
+            var copiedType = CopyPasteHelper.GetCopiedClipboardType();
+
+            if (copiedType == typeof(InputActionMap))
+            {
+                Dispatch(Commands.PasteActionMaps());
+            }
+            else if (copiedType == typeof(InputAction))
+            {
+                // Can't paste an Action without any Action Maps for it to go to
+                if (m_ActionMapsListView.itemsSource.Count > 0)
+                    Dispatch(Commands.PasteActionsOrBindings());
+            }
+            else if (copiedType == typeof(InputBinding))
+            {
+                // Can't paste a Binding without any Actions for it to go to
+                if (m_ActionsTreeView.itemsSource.Count > 0)
+                {
+                    var oldSelectedBinding = stateContainer.GetState().selectedBindingIndex;
+                    Dispatch(Commands.PasteActionsOrBindings());
+
+                    // If paste succeeded, expand the relevant Action to show the new binding.
+                    if (stateContainer.GetState().selectedBindingIndex != oldSelectedBinding)
+                        m_ActionsTreeView.ExpandItem(m_ActionsTreeView.GetIdForIndex(stateContainer.GetState().selectedActionIndex));
+                }
+            }
+        }
+
+        void OnValidateCommand(ValidateCommandEvent evt)
+        {
+            // Mark commands as supported for Execute by stopping propagation of the event
+            switch (evt.commandName)
+            {
+                case CmdEvents.Paste:
+                    evt.StopPropagation();
+                    break;
+            }
         }
     }
 

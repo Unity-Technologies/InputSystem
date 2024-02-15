@@ -204,6 +204,10 @@ namespace UnityEngine.InputSystem.Editor
             var index = state.selectedActionIndex;
             if (addLast)
                 index = actionArray.arraySize - 1;
+
+            if (index < 0)
+                index = 0;
+
             PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, actionArray);
         }
 
@@ -288,13 +292,14 @@ namespace UnityEngine.InputSystem.Editor
         private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
             var pastePartOfComposite = IsPartOfComposite(json);
-            if (index > 0)
+            if (index > 0 && arrayProperty.arraySize > 0 && index - 1 < arrayProperty.arraySize)
             {
                 var currentProperty = arrayProperty.GetArrayElementAtIndex(index - 1);
                 var currentIsComposite = IsComposite(currentProperty) || IsPartOfComposite(currentProperty);
                 if (pastePartOfComposite && !currentIsComposite) //prevent pasting part of composite into non-composite
                     return index;
             }
+
             index = pastePartOfComposite || s_State.selectionType == SelectionType.Action ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
             if (json.Contains(k_BindingData)) //copied data is composite with bindings - only true for directly copied composites, not for composites from copied actions
                 return PasteCompositeFromJson(arrayProperty, json, index, actionName);
@@ -351,7 +356,7 @@ namespace UnityEngine.InputSystem.Editor
         private static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
         {
             var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
-            if (index < 0)
+            if (index < 0 || index > arrayProperty.arraySize)
                 index = arrayProperty.arraySize;
 
             arrayProperty.InsertArrayElementAtIndex(index);
