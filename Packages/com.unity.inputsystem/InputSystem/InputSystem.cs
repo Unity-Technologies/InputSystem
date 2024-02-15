@@ -3555,6 +3555,9 @@ namespace UnityEngine.InputSystem
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
+            // Make sure project wide input actions are enabled
+            actions?.Enable();
+
             RunInitialUpdate();
 
             Profiler.EndSample();
