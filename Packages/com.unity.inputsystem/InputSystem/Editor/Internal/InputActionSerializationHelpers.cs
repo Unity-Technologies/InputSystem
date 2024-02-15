@@ -148,6 +148,24 @@ namespace UnityEngine.InputSystem.Editor
             mapArrayProperty.DeleteArrayElementAtIndex(mapIndex);
         }
 
+        public static void MoveActionMap(SerializedObject asset, int fromIndex, int toIndex)
+        {
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            mapArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveAction(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveBinding(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var arrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            arrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
         // Append a new action to the end of the set.
         public static SerializedProperty AddAction(SerializedProperty actionMap, int index = -1)
         {
