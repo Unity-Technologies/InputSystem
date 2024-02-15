@@ -47,7 +47,8 @@ namespace UnityEngine.InputSystem.Editor
                     var asset = InputSystem.actions;
                     if (asset == null)
                         return Array.Empty<Object>();
-                    return InputActionImporter.LoadInputActionReferencesFromAsset(asset);
+                    var assetPath = AssetDatabase.GetAssetPath(asset);
+                    return InputActionImporter.LoadInputActionReferencesFromAsset(assetPath);
                 });
         }
 

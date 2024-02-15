@@ -268,11 +268,13 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(InputActionAsset asset)
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(string assetPath)
         {
-            //Get all InputActionReferences are stored at the same asset path as InputActionAsset
-            return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset)).Where(
-                o => o is InputActionReference && o.name != "InputManager").Cast<InputActionReference>();
+            // Get all InputActionReferences are stored at the same asset path as InputActionAsset
+            // Note we exclude 'hidden' action references (which are present to support one of the pre releases)
+            return AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
+                o => o is InputActionReference && !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                .Cast<InputActionReference>();
         }
 
         // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
@@ -297,10 +299,7 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var guid in inputActionReferenceGUIDs)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
-                    o => o is InputActionReference &&
-                    !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
-                    .Cast<InputActionReference>().ToList();
+                var assetInputActionReferenceList = LoadInputActionReferencesFromAsset(assetPath).ToList();
 
                 if (skipProjectWide && assetInputActionReferenceList.Count() > 0)
                 {
