@@ -80,6 +80,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_Cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(m_Cfg);
+
+            InputSystem.onActionsChange += OnActionsChange;
         }
 
         public void Shutdown()
@@ -88,6 +90,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
+
+            InputSystem.onActionsChange -= OnActionsChange;
+        }
+
+        public void OnActionsChange()
+        {
+            UnregisterActions(m_Cfg);
+
+            m_Cfg = Configuration.GetDefaultConfiguration();
+            RegisterActions(m_Cfg);
         }
 
         public void Update()
