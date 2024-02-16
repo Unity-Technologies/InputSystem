@@ -33,6 +33,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
+- Fixed selection not changing when right-clicking an Action Map or Action in the Project Settings Input Action Editor.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
@@ -43,6 +44,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputManager.asset file growing in size on each Reset call.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
+- Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749)
+- Fixed Error logged when InputActionEditor window opened without a valid asset
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
