@@ -3555,9 +3555,11 @@ namespace UnityEngine.InputSystem
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled
             if (actions != null)
                 actions.Enable();
+#endif
 
             RunInitialUpdate();
 
@@ -3591,10 +3593,11 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     // Make sure project wide input actions are disabled
                     if (actions != null)
                         actions.Disable();
-
+#endif
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
 
