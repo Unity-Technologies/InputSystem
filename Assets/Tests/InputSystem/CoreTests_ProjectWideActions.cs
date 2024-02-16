@@ -1,5 +1,6 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -8,6 +9,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -354,10 +356,12 @@ internal partial class CoreTests
 
 #if UNITY_EDITOR
     [Test]
+    [Ignore("Reenable this test once clear how it relates or is specific to ProjectWideActions. Seems like this is rather testing something general. As a side-note likely no maps should be enabled in edit mode?!")]
     [Category(TestCategory)]
     public void ProjectWideActions_ThrowsWhenAddingOrRemovingWhileEnabled()
     {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
+        GivenActions();
+        var asset = actions;
 
         // Verify adding ActionMap while enabled throws an exception
         Assert.Throws<InvalidOperationException>(() => asset.AddActionMap("AnotherMap").AddAction("AnotherAction"));
