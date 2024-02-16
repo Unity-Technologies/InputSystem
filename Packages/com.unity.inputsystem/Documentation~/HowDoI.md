@@ -5,8 +5,8 @@ uid: input-system-how-do-i
 
 A collection of frequently asked questions, and where to find their answers in the documentation.
 
-> **Note:** 
-> 
+> **Note:**
+>
 > If you're new to the Input System and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](QuickStartGuide.md), and the [Concepts](Concepts.md) and [Workflows](Workflows.md) pages, so that you can make sure you're choosing the best workflow for your project's input requirements.
 >
 > This is because there are a number of different ways to read input using the Input System, and many of the answers on this page give you the quickest but least flexible solution, and may not be suitable for a project with more complex requirements.
