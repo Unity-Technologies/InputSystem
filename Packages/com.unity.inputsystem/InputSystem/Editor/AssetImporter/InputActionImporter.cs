@@ -322,6 +322,74 @@ namespace UnityEngine.InputSystem.Editor
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
+
+        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
+        // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
+        // must flush the updated JSON to the file whenever this operation occurs.
+        // https://jira.unity3d.com/browse/ISXB-749
+        private class InputActionAssetPostprocessor : AssetPostprocessor
+        {
+            private static List<string> assetFilesNeedingRefresh;
+
+            private void OnPreprocessAsset()
+            {
+                var importer = assetImporter as InputActionImporter;
+                if (importer == null)
+                    return;
+
+                var newName = Path.GetFileNameWithoutExtension(assetPath);
+                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+                var newFileContents = File.ReadAllText(assetPath);
+
+                if (!string.IsNullOrEmpty(newFileContents))
+                {
+                    newAsset.LoadFromJson(newFileContents);
+
+                    // If the serialized Name doesn't match the actual filename this asset file for refresh.
+                    // NOTE: We can't change the file while Asset Importing is in progress.
+                    if (newAsset.name != newName)
+                    {
+                        if (assetFilesNeedingRefresh == null)
+                            assetFilesNeedingRefresh = new List<string>();
+
+                        assetFilesNeedingRefresh.Add(assetPath);
+                    }
+                }
+            }
+
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+            {
+                if (assetFilesNeedingRefresh == null)
+                    return;
+
+                try
+                {
+                    foreach (var assetPath in assetFilesNeedingRefresh)
+                    {
+                        var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+                        try
+                        {
+                            var fileContents = File.ReadAllText(assetPath);
+
+                            newAsset.LoadFromJson(fileContents);
+                            newAsset.name = Path.GetFileNameWithoutExtension(assetPath);
+                            File.WriteAllText(assetPath, newAsset.ToJson());
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogException(ex);
+                        }
+
+                        ScriptableObject.DestroyImmediate(newAsset);
+                    }
+                }
+                finally
+                {
+                    assetFilesNeedingRefresh = null;
+                }
+            }
+        }
     }
 }
 #endif // UNITY_EDITOR

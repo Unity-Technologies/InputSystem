@@ -171,7 +171,6 @@ namespace UnityEngine.InputSystem.Editor
             mapArrayProperty.DeleteArrayElementAtIndex(mapIndex);
         }
 
-        // Delete all action maps in the given
         public static void DeleteAllActionMaps(SerializedObject asset)
         {
             Debug.Assert(asset.targetObject is InputActionAsset);
@@ -179,6 +178,24 @@ namespace UnityEngine.InputSystem.Editor
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             while (mapArrayProperty.arraySize > 0)
                 mapArrayProperty.DeleteArrayElementAtIndex(0);
+        }
+  
+        public static void MoveActionMap(SerializedObject asset, int fromIndex, int toIndex)
+        {
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            mapArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveAction(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveBinding(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var arrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            arrayProperty.MoveArrayElement(fromIndex, toIndex);
         }
 
         // Append a new action to the end of the set.
