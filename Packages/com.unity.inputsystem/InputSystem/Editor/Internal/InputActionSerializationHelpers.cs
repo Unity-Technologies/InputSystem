@@ -179,7 +179,7 @@ namespace UnityEngine.InputSystem.Editor
             while (mapArrayProperty.arraySize > 0)
                 mapArrayProperty.DeleteArrayElementAtIndex(0);
         }
-  
+
         public static void MoveActionMap(SerializedObject asset, int fromIndex, int toIndex)
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
