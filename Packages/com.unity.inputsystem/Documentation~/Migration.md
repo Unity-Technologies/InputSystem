@@ -1,9 +1,9 @@
 ---
 uid: input-system-migration
 ---
-# Migrating from the old input system
+# Migrating from the old Input Manager
 
-This page is provided to help you match input-related API from Unity's old, built-in input system (known as the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html)) to the corresponding API in the new Input System package.
+This page is provided to help you match input-related API from Unity's old, built-in input (known as the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html)) to the corresponding API in the new Input System package.
 
 ## Read the introductory documentation first
 
