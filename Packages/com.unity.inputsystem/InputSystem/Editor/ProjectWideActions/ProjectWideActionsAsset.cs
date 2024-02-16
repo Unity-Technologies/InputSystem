@@ -85,8 +85,8 @@ namespace UnityEngine.InputSystem.Editor
             var inputActionAsset = InputActionAsset.FromJson(json);
             inputActionAsset.name = Path.GetFileNameWithoutExtension(assetPath);
 
-            bool doSave = true;
-            if (AssetDatabase.AssetPathExists(assetPath))
+            var doSave = true;
+            if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
             {
                 doSave = EditorUtility.DisplayDialog("Create Input Action Asset", "This will overwrite an existing asset. Continue and overwrite?", "Ok", "Cancel");
             }
