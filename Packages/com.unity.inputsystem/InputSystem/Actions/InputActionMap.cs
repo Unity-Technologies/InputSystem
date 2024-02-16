@@ -1984,6 +1984,7 @@ namespace UnityEngine.InputSystem
         {
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
+            m_EnabledActionsCount = 0;
 
             // Restore references of actions linking back to us.
             if (m_Actions != null)
