@@ -116,7 +116,7 @@ internal partial class CoreTests
 #if UNITY_EDITOR
         Object.DestroyImmediate(obj);
 #else
-        Object.Destroy(actions);
+        Object.DestroyImmediate(actions);
 #endif
     }
 
