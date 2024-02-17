@@ -115,9 +115,6 @@ namespace UnityEngine.InputSystem
 
             set
             {
-                /*if (m_Actions == value)
-                    return;*/
-
                 m_Actions = value;
                 ApplyActions();
             }
