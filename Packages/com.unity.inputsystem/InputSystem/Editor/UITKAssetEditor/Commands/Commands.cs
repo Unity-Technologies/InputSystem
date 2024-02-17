@@ -561,10 +561,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                // First delete all existing data
                 InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
+                InputActionSerializationHelpers.DeleteAllControlSchemes(state.serializedObject);
+
+                // Create new data based on source
                 var temp = InputActionAsset.FromJson(inputActionAssetJsonContent);
                 using (var tmp = new SerializedObject(temp))
                 {
+                    InputActionSerializationHelpers.AddControlSchemes(state.serializedObject, tmp);
                     InputActionSerializationHelpers.AddActionMaps(state.serializedObject, tmp);
                 }
                 state.serializedObject.ApplyModifiedProperties();

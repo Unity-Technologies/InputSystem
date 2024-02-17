@@ -132,6 +132,19 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public static void AddControlSchemes(SerializedObject asset, SerializedObject sourceAsset)
+        {
+            Debug.Assert((asset.targetObject is InputActionAsset));
+            Debug.Assert((sourceAsset.targetObject is InputActionAsset));
+
+            var src = sourceAsset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+            var dst = asset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+
+            var buffer = new StringBuilder();
+            src.CopyToJson(buffer, ignoreObjectReferences: true);
+            dst.RestoreFromJson(buffer.ToString());
+        }
+
 #endif
 
         public static SerializedProperty AddActionMap(SerializedObject asset, int index = -1)
@@ -688,6 +701,29 @@ namespace UnityEngine.InputSystem.Editor
                     .Split(InputBinding.Separator)
                     .Where(g => controlSchemes.Any(c => c.bindingGroup.Equals(g, StringComparison.InvariantCultureIgnoreCase))));
         }
+
+        #region Control Schemes
+
+        public static void DeleteAllControlSchemes(SerializedObject asset)
+        {
+            var schemes = GetControlSchemesArray(asset);
+            while (schemes.arraySize > 0)
+                schemes.DeleteArrayElementAtIndex(0);
+        }
+
+        public static int IndexOfControlScheme(SerializedProperty controlSchemeArray, string controlSchemeName)
+        {
+            var serializedControlScheme = controlSchemeArray.FirstOrDefault(sp =>
+                sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == controlSchemeName);
+            return serializedControlScheme?.GetIndexOfArrayElement() ?? -1;
+        }
+
+        public static SerializedProperty GetControlSchemesArray(SerializedObject asset)
+        {
+            return asset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+        }
+
+        #endregion // Control Schemes
     }
 }
 #endif // UNITY_EDITOR
