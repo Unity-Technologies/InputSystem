@@ -204,6 +204,7 @@ internal partial class CoreTests
     {
         Assert.That(InputSystem.actions, Is.Null);
     }
+
 #endif
 
     [Test]
