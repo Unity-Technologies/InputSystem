@@ -3680,6 +3680,9 @@ namespace UnityEngine.InputSystem
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
+            if (actions == null)
+                actions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputActionAsset>();
+
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
