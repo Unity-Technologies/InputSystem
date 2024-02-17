@@ -196,12 +196,16 @@ internal partial class CoreTests
 
 #endif // UNITY_EDITOR
 
+#if UNITY_EDITOR
+    // In player the tests freshly created input assets assetis assigned
     [Test]
     [Category(TestCategory)]
     public void ProjectWideActions_AreNotSetByDefault()
     {
         Assert.That(InputSystem.actions, Is.Null);
     }
+
+#endif
 
     [Test]
     [Category(TestCategory)]
@@ -211,25 +215,34 @@ internal partial class CoreTests
         GivenOtherActions();
         GivenActionsCallback();
 
+#if UNITY_EDITOR
+        var expected = 0;
+#else
+        var expected = 1;
+#endif
+
         // Can assign from null to null (no change)
         InputSystem.actions = null;
-        Assert.That(callbackCount, Is.EqualTo(0));
+        Assert.That(callbackCount, Is.EqualTo(expected));
 
         // Can assign asset from null to instance (change)
         InputSystem.actions = actions;
-        Assert.That(callbackCount, Is.EqualTo(1));
+        expected++;
+        Assert.That(callbackCount, Is.EqualTo(expected));
 
         // Can assign from instance to same instance (no change)
         InputSystem.actions = actions;
-        Assert.That(callbackCount, Is.EqualTo(1));
+        Assert.That(callbackCount, Is.EqualTo(expected));
 
         // Can assign another instance (change
         InputSystem.actions = otherActions;
-        Assert.That(callbackCount, Is.EqualTo(2));
+        expected++;
+        Assert.That(callbackCount, Is.EqualTo(expected));
 
         // Can assign asset from instance to null (change)
         InputSystem.actions = null;
-        Assert.That(callbackCount, Is.EqualTo(3));
+        expected++;
+        Assert.That(callbackCount, Is.EqualTo(expected));
     }
 
     [Test]
