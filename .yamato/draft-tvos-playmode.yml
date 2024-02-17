@@ -1,0 +1,26 @@
+{% metadata_file .yamato/draft-config.metadata %}
+---
+
+{% for editor in editors %}
+
+draft_build_tvos_{{ editor.version }}:
+  name: "[Draft] Build Playmode Tests [tvos, {{ editor.version }}]"
+  agent:
+    type: Unity::VM::osx
+    image: package-ci/macos-12-mobile:stable
+    flavor: b1.large
+  commands:
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+    - chmod +x ./utr
+    - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    players:
+        paths:
+          - "build/players/**"
+    logs:
+        paths:
+          - "build/logs/**"
+
+{% endfor %} # editors

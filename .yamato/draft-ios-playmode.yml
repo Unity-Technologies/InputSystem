@@ -1,0 +1,48 @@
+{% metadata_file .yamato/draft-config.metadata %}
+---
+
+{% for editor in editors %}
+
+draft_build_ios_{{ editor.version }}:
+  name: "[Draft] Build Playmode Tests [ios, {{ editor.version }}]"
+  agent:
+    type: Unity::VM::osx
+    image: package-ci/macos-12-mobile:stable
+    flavor: b1.large
+  commands:
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+    - chmod +x ./utr
+    - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    players:
+        paths:
+          - "build/players/**"
+    logs:
+        paths:
+          - "build/logs/**"
+
+draft_run_ios_{{ editor.version }}:
+  name: "[Draft] Run Playmode Tests [ios, {{ editor.version }}]"
+  agent:
+      type: Unity::mobile::iPhone
+      image: package-ci/macos-12-mobile:stable
+      model: SE
+      flavor: b1.medium
+  skip_checkout: true
+  dependencies:
+    - .yamato/draft-ios-playmode.yml#draft_build_ios_{{ editor.version }}  
+  commands:
+    # Download standalone UnityTestRunner
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+    # Give UTR execution permissions
+    - chmod +x ./utr
+    # Run the test build on the device
+    - ./utr --suite=playmode --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    logs:
+        paths:
+          - "build/test-results/**"
+
+{% endfor %} # editors

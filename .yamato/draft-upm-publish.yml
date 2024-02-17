@@ -1,0 +1,52 @@
+{% metadata_file .yamato/draft-config.metadata %}
+
+publish_agent:
+  type: Unity::VM
+  image: package-ci/win10:stable
+  flavor: b1.large
+
+---
+
+{% for run in (1..2) %}
+publish_andisolation{% cycle "", "_dryrun" %}:
+  name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
+  agent:
+    type: {{ publish_agent.type }}
+    image: {{ publish_agent.image }}
+    flavor: {{ publish_agent.flavor }}
+  variables:
+    UPMCI_ENABLE_PACKAGE_SIGNING: 1
+  commands:
+    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
+    - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
+    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
+  artifacts:
+    artifacts:
+      paths:
+        - "upm-ci~/packages/*.tgz"
+{% endfor %}
+
+{% for run in (1..2) %}
+publish{% cycle "", "_dryrun" %}:
+  name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
+  agent:
+    type: {{ publish_agent.type }}
+    image: {{ publish_agent.image }}
+    flavor: {{ publish_agent.flavor }}
+  variables:
+    UPMCI_ENABLE_PACKAGE_SIGNING: 1
+  commands:
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
+    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
+  dependencies:
+    - .yamato/draft-upm-pack.yml#draft_pack_with_samples
+  artifacts:
+    artifacts:
+      paths:
+        - "upm-ci~/packages/*.tgz"
+{% endfor %}
+
