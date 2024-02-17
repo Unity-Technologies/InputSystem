@@ -8,8 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    // Placeholder for converting InputManager.asset actions into regular asset to support conversion from 1.8.0-pre1 and 1.8.0-pre2 to asset based Project-wide actions
-
     internal static class ProjectWideActionsAsset
     {
         private const string kDefaultAssetPath = "Assets/InputSystem_Actions.inputactions";

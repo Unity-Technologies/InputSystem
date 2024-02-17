@@ -6,11 +6,6 @@ using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    // TODO This editor should react to InputSystem.actions being reassigned from outside
-
-    // TODO Editing project wide actions (dirty), then InputSystem.actions is assigned from elsewhere, what to do?
-    // TODO
-
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
         public static string SettingsPath => InputSettingsPath.kSettingsRootPath;
