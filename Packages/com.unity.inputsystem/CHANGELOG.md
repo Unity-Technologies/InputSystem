@@ -19,7 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
   - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
-  - [`InputAction.GetMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetMagnitude) returns the current amount of actuation of the control that is driving the action.
+  - [`InputAction.GetControlMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetControlMagnitude) returns the current amount of actuation of the control that is driving the action.
   - [`InputAction.WasCompletedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasCompletedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
