@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var copyBuffer = new StringBuilder();
             CopyItems(items, copyBuffer, type, actionMap);
-            EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
+            EditorHelpers.SetSystemCopyBufferContents(copyBuffer.ToString());
             s_lastClipboardActionWasCut = false;
         }
 
@@ -131,7 +131,7 @@ namespace UnityEngine.InputSystem.Editor
         #region PasteChecks
         public static bool HasPastableClipboardData(Type selectedType)
         {
-            var clipboard = EditorGUIUtility.systemCopyBuffer;
+            var clipboard = EditorHelpers.GetSystemCopyBufferContents();
             if (clipboard.Length < k_CopyPasteMarker.Length)
                 return false;
             var isInputAssetData = clipboard.StartsWith(k_CopyPasteMarker);
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static Type GetCopiedClipboardType()
         {
-            return GetCopiedType(EditorGUIUtility.systemCopyBuffer);
+            return GetCopiedType(EditorHelpers.GetSystemCopyBufferContents());
         }
 
         #endregion
@@ -176,11 +176,11 @@ namespace UnityEngine.InputSystem.Editor
             if (typeOfCopiedData != typeof(InputActionMap)) return null;
             s_State = state;
             var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {state.selectedActionMapIndex}, actionMapArray);
+            PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] {state.selectedActionMapIndex}, actionMapArray);
 
             // Don't want to be able to paste repeatedly after a cut - ISX-1821
             if (s_lastAddedElement != null && s_lastClipboardActionWasCut)
-                EditorGUIUtility.systemCopyBuffer = string.Empty;
+                EditorHelpers.SetSystemCopyBufferContents(string.Empty);
 
             return s_lastAddedElement;
         }
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Don't want to be able to paste repeatedly after a cut - ISX-1821
             if (s_lastAddedElement != null && s_lastClipboardActionWasCut)
-                EditorGUIUtility.systemCopyBuffer = string.Empty;
+                EditorHelpers.SetSystemCopyBufferContents(string.Empty);
 
             return s_lastAddedElement;
         }
@@ -211,7 +211,7 @@ namespace UnityEngine.InputSystem.Editor
             var index = state.selectedActionIndex;
             if (addLast)
                 index = actionArray.arraySize - 1;
-            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, actionArray);
+            PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] {index}, actionArray);
         }
 
         private static void PasteBindingsFromClipboard(InputActionsEditorState state)
@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
             var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             var actions = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             var index = state.selectionType == SelectionType.Action ? Selectors.GetBindingIndexBeforeAction(actions, state.selectedActionIndex, bindingsArray) : state.selectedBindingIndex;
-            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, bindingsArray);
+            PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] {index}, bindingsArray);
         }
 
         private static void PasteData(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
