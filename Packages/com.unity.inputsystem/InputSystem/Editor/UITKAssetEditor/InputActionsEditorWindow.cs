@@ -155,10 +155,20 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_State.serializedObject == null)
                 {
                     var asset = GetAssetFromDatabase();
-                    m_AssetPath = AssetDatabase.GetAssetPath(asset);
-                    m_AssetJson = File.ReadAllText(m_AssetPath);
-                    var serializedAsset = new SerializedObject(asset);
-                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    if (asset != null)
+                    {
+                        m_AssetPath = AssetDatabase.GetAssetPath(asset);
+                        m_AssetJson = File.ReadAllText(m_AssetPath);
+                        var serializedAsset = new SerializedObject(asset);
+                        m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    }
+                    else
+                    {
+                        // Asset cannot be retrieved or doesn't exist anymore; abort opening the Window.
+                        Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                        this.Close();
+                        return;
+                    }
                 }
 
                 BuildUI();
