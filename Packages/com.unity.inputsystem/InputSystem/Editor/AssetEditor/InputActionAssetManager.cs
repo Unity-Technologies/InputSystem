@@ -154,22 +154,52 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(importedAsset != null);
 
-            // Update JSON.
-            var asset = m_AssetObjectForEditing;
-            m_ImportedAssetJson = asset.ToJson();
-
-            // Write out, if changed.
-            var assetPath = path;
-            var existingJson = File.ReadAllText(assetPath);
-            if (m_ImportedAssetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, m_ImportedAssetJson);
-                AssetDatabase.ImportAsset(assetPath);
-            }
+            m_ImportedAssetJson = m_AssetObjectForEditing.ToJson();
+            SaveAsset(path, m_ImportedAssetJson);
 
             m_IsDirty = false;
             onDirtyChanged(false);
+        }
+
+        /// <summary>
+        /// Saves an asset to the given <c>assetPath</c> with file content corresponding to <c>assetJson</c>
+        /// if the current content of the asset given by <c>assetPath</c> is different or the asset do not exist.
+        /// </summary>
+        /// <param name="assetPath">Destination asset path.</param>
+        /// <param name="assetJson">The JSON file content to be written to the asset.</param>
+        /// <returns><c>true</c> if the asset was successfully modified or created, else <c>false</c>.</returns>
+        internal static bool SaveAsset(string assetPath, string assetJson)
+        {
+            var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : string.Empty;
+
+            // Return immediately if file content has not changed, i.e. touching the file would not yield a difference.
+            if (assetJson == existingJson)
+                return false;
+
+            // Attempt to checkout the file path for editing and inform the user if this fails.
+            if (!EditorHelpers.CheckOut(assetPath))
+            {
+                Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                return false;
+            }
+
+            // (Over)write JSON content to file given by path.
+            EditorHelpers.WriteAllText(assetPath, assetJson);
+
+            // Reimport the asset (indirectly triggers ADB notification callbacks)
+            AssetDatabase.ImportAsset(assetPath);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Saves the given asset to its associated asset path.
+        /// </summary>
+        /// <param name="asset">The asset to be saved.</param>
+        /// <returns><c>true</c> if the asset was modified or created, else <c>false</c>.</returns>
+        internal static bool SaveAsset(InputActionAsset asset)
+        {
+            return SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         public void SetAssetDirty()

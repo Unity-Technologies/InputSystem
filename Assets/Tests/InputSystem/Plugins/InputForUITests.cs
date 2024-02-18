@@ -18,6 +18,8 @@ public class InputForUITests : InputTestFixture
     readonly List<Event> m_InputForUIEvents = new List<Event>();
     InputSystemProvider m_InputSystemProvider;
 
+    InputActionAsset m_OriginalGlobalActions;
+
     [SetUp]
     public override void Setup()
     {
@@ -25,6 +27,9 @@ public class InputForUITests : InputTestFixture
 
         var defaultActions = new DefaultInputActions();
         defaultActions.Enable();
+
+        m_OriginalGlobalActions = InputSystem.actions;
+        InputSystem.actions = defaultActions.asset;
 
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);
@@ -38,6 +43,8 @@ public class InputForUITests : InputTestFixture
         EventProvider.Unsubscribe(InputForUIOnEvent);
         EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
+
+        InputSystem.actions = m_OriginalGlobalActions;
 
         base.TearDown();
     }
