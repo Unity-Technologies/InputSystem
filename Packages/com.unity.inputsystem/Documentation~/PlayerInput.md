@@ -6,7 +6,7 @@ uid: input-system-player-input
 The Player Input component provides two related but separate features which can be useful in common game scenarios. These are:
 
 - Configuring how [Actions](Actions.md) map to methods or callbacks in the script that controls your player.
-  
+
 - Handling local multiplayer scenarios such as player lobbies, device filtering, and screen-splitting.
 
 ## The Player Input component
@@ -158,6 +158,6 @@ If you use [`MultiplayerEventSystem`](UISupport.md#multiplayer-uis) components t
 
 >**Notes**:
 > - As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions), not `InputSystem.actions`. This is because the PlayerInput component performs device filtering to automatically assign devices to multiple players, so each instance has its own copy of the actions filtered for each player. If you bypass this by reading `InputSystem.actions` directly, the automatic device assignment won't work.
-> 
+>
 > - This component is built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
 > <br/>&nbsp;
