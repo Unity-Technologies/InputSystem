@@ -155,10 +155,20 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_State.serializedObject == null)
                 {
                     var asset = GetAssetFromDatabase();
-                    m_AssetPath = AssetDatabase.GetAssetPath(asset);
-                    m_AssetJson = File.ReadAllText(m_AssetPath);
-                    var serializedAsset = new SerializedObject(asset);
-                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    if (asset != null)
+                    {
+                        m_AssetPath = AssetDatabase.GetAssetPath(asset);
+                        m_AssetJson = File.ReadAllText(m_AssetPath);
+                        var serializedAsset = new SerializedObject(asset);
+                        m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    }
+                    else
+                    {
+                        // Asset cannot be retrieved or doesn't exist anymore; abort opening the Window.
+                        Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                        this.Close();
+                        return;
+                    }
                 }
 
                 BuildUI();
@@ -171,7 +181,7 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
             view.postSaveAction += PostSaveAction;
             stateContainer.Initialize();
         }
@@ -197,7 +207,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
-            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            // TODO Should really detect if editing project wide asset here and run validation on it if editing in free-floating editor
+            InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
             PostSaveAction();
         }
 
@@ -259,16 +270,18 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_IsDirty)
                 return;
 
-            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified", $"Do you want to save the changes you made in:\n{m_AssetPath}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+            var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_AssetPath);
             switch (result)
             {
-                case 0:     // Save
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
                     Save();
                     break;
-                case 1:    // Cancel editor quit. (open new editor window with the edited asset)
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
+                    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case 2:     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                    // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
                     AssetDatabase.ImportAsset(m_AssetPath);
                     break;
             }

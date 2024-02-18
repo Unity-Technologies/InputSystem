@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 
@@ -41,7 +42,8 @@ namespace UnityEngine.InputSystem.Editor
                 throw new MissingMethodException(editorApplicationType.FullName, "RestartEditorAndRecompileScripts");
         }
 
-        public static void CheckOut(string path)
+        // Attempts to make an asset editable in the underlying version control system and returns true if successful.
+        public static bool CheckOut(string path)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
@@ -52,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                 (path[projectPath.Length] == '/' || path[projectPath.Length] == '\\'))
                 path = path.Substring(0, projectPath.Length + 1);
 
-            AssetDatabase.MakeEditable(path);
+            return AssetDatabase.MakeEditable(path);
         }
 
         public static void CheckOut(Object asset)
@@ -61,6 +63,26 @@ namespace UnityEngine.InputSystem.Editor
                 throw new ArgumentNullException(nameof(asset));
             var path = AssetDatabase.GetAssetPath(asset);
             CheckOut(path);
+        }
+
+        public static string ReadAllText(string path)
+        {
+            // Note that FileUtil.GetPhysicalPath(string) is only available in 2021.2 or newer
+#if UNITY_2021_2_OR_NEWER
+            return File.ReadAllText(FileUtil.GetPhysicalPath(path));
+#else
+            return File.ReadAllText(path);
+#endif
+        }
+
+        public static void WriteAllText(string path, string contents)
+        {
+            // Note that FileUtil.GetPhysicalPath(string) is only available in 2021.2 or newer
+#if UNITY_2021_2_OR_NEWER
+            File.WriteAllText(path: FileUtil.GetPhysicalPath(path), contents: contents);
+#else
+            File.WriteAllText(path: path, contents: contents);
+#endif
         }
 
         // It seems we're getting instabilities on the farm from using EditorGUIUtility.systemCopyBuffer directly in tests.

@@ -3,6 +3,9 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    // Note that non-existing caching here is intentional since icon selected might be theme dependent.
+    // There is no reason to cache icons unless there is a significant performance impact on the editor.
+
     /// <summary>
     /// Provides access to icons associated with <see cref="InputActionAsset"/> and <see cref="InputActionReference"/>.
     /// </summary>

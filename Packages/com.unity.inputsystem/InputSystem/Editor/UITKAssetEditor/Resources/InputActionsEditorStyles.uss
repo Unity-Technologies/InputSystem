@@ -53,13 +53,21 @@
     margin-right: 5px;
 }
 
+.header {
+    height: 22px;
+    flex-direction: row;
+    margin-left: 10px;
+    margin-right: 7px;
+    margin-top: 1px;
+    margin-bottom: 7px;
+}
+
 .header-label {
     font-size: 19px;
-    margin-left: 7px;
-    margin-right: 7px;
-    margin-top: 7px;
-    margin-bottom: 7px;
-    width: 189px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    width: auto;
     flex-grow: 1;
 }
 
@@ -90,15 +98,6 @@
     background-image: url("/Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png");
     width: 16px;
     height: 16px;
-}
-
-.header {
-    height: 22px;
-    flex-direction: row;
-    margin-left: 13px;
-    margin-right: 13px;
-    margin-top: 7px;
-    margin-bottom: 7px;
 }
 
 .body-panel-header {
@@ -198,4 +197,18 @@
 
 .unity-two-pane-split-view__dragline-anchor {
     background-color: rgb(25, 25, 25);
+}
+
+#control-scheme-usage-title {
+    margin: 3px;
+    -unity-font-style: bold;
+}
+
+.matching-controls {
+    display: flex;
+    flex-grow: 1;
+}
+
+.matching-controls-labels {
+    margin: 1px;
 }

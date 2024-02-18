@@ -43,6 +43,80 @@ namespace UnityEngine.InputSystem.Editor
             remove => s_OnImportCallbacks.Remove(value);
         }
 
+        private static InputActionAsset CreateFromJson(AssetImportContext context)
+        {
+            ////REVIEW: need to check with version control here?
+            // Read JSON file.
+            string content;
+            try
+            {
+                content = EditorHelpers.ReadAllText(context.assetPath);
+            }
+            catch (Exception exception)
+            {
+                context.LogImportError($"Could not read file '{context.assetPath}' ({exception})");
+                return null;
+            }
+
+            // Create asset.
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+            // Parse JSON and configure asset.
+            try
+            {
+                // Attempt to parse JSON
+                asset.LoadFromJson(content);
+
+                // Make sure action map names are unique within JSON file
+                var names = new HashSet<string>();
+                foreach (var map in asset.actionMaps)
+                {
+                    if (!names.Add(map.name))
+                    {
+                        throw new Exception(
+                            "Unable to parse {context.assetPath} due to duplicate Action Map name: '{map.name}'. Make sure Action Map names are unique within the asset and reattempt import.");
+                    }
+                }
+
+                // Make sure action names are unique within each action map in JSON file
+                names.Clear();
+                foreach (var map in asset.actionMaps)
+                {
+                    foreach (var action in map.actions)
+                    {
+                        if (!names.Add(action.name))
+                        {
+                            throw new Exception(
+                                $"Unable to parse {{context.assetPath}} due to duplicate Action name: '{action.name}' within Action Map '{map.name}'. Make sure Action Map names are unique within the asset and reattempt import.");
+                        }
+                    }
+
+                    names.Clear();
+                }
+
+                // Force name of asset to be that on the file on disk instead of what may be serialized
+                // as the 'name' property in JSON. (Unless explicitly given)
+                asset.name = Path.GetFileNameWithoutExtension(context.assetPath);
+
+                // Add asset.
+                ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
+                context.AddObjectToAsset("<root>", asset, InputActionAssetIconLoader.LoadAssetIcon());
+                context.SetMainObject(asset);
+
+                // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
+                // Create sub-assets for each action to allow search and editor referencing/picking.
+                SetupAsset(asset, context.AddObjectToAsset);
+            }
+            catch (Exception exception)
+            {
+                context.LogImportError($"Could not parse input actions in JSON format from '{context.assetPath}' ({exception})");
+                DestroyImmediate(asset);
+                asset = null;
+            }
+
+            return asset;
+        }
+
         public override void OnImportAsset(AssetImportContext ctx)
         {
             if (ctx == null)
@@ -51,51 +125,36 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
-            ////REVIEW: need to check with version control here?
-            // Read file.
-            string text;
-            try
-            {
-                text = File.ReadAllText(ctx.assetPath);
-            }
-            catch (Exception exception)
-            {
-                ctx.LogImportError($"Could not read file '{ctx.assetPath}' ({exception})");
+            var asset = CreateFromJson(ctx);
+            if (asset == null)
                 return;
-            }
 
-            // Create asset.
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+            if (m_GenerateWrapperCode)
+                GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
 
-            // Parse JSON.
-            try
-            {
-                ////TODO: make sure action names are unique
-                asset.LoadFromJson(text);
-            }
-            catch (Exception exception)
-            {
-                ctx.LogImportError($"Could not parse input actions in JSON format from '{ctx.assetPath}' ({exception})");
-                DestroyImmediate(asset);
-                return;
-            }
+            // Refresh editors.
+            InputActionEditorWindow.RefreshAllOnAssetReimport();
+            // TODO UITK editor window is missing
+        }
 
-            // Force name of asset to be that on the file on disk instead of what may be serialized
-            // as the 'name' property in JSON.
-            asset.name = Path.GetFileNameWithoutExtension(assetPath);
+        internal static void SetupAsset(InputActionAsset asset)
+        {
+            SetupAsset(asset, (identifier, subAsset, icon) =>
+                AssetDatabase.AddObjectToAsset(subAsset, asset));
+        }
 
-            // Load icons.
-            ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var assetIcon = InputActionAssetIconLoader.LoadAssetIcon();
-            var actionIcon = InputActionAssetIconLoader.LoadActionIcon();
+        private delegate void AddObjectToAsset(string identifier, Object subAsset, Texture2D icon);
 
-            // Add asset.
-            ctx.AddObjectToAsset("<root>", asset, assetIcon);
-            ctx.SetMainObject(asset);
+        private static void SetupAsset(InputActionAsset asset, AddObjectToAsset addObjectToAsset)
+        {
+            FixMissingGuids(asset);
+            CreateInputActionReferences(asset, addObjectToAsset);
+        }
 
+        private static void FixMissingGuids(InputActionAsset asset)
+        {
             // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
-            var maps = asset.actionMaps;
-            foreach (var map in maps)
+            foreach (var map in asset.actionMaps)
             {
                 // Make sure action map has GUID.
                 if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
@@ -117,15 +176,18 @@ namespace UnityEngine.InputSystem.Editor
                         map.m_Bindings[i].GenerateId();
                 }
             }
+        }
 
-            // Create subasset for each action.
-            foreach (var map in maps)
+        private static void CreateInputActionReferences(InputActionAsset asset, AddObjectToAsset addObjectToAsset)
+        {
+            var actionIcon = InputActionAssetIconLoader.LoadActionIcon();
+            foreach (var map in asset.actionMaps)
             {
                 foreach (var action in map.actions)
                 {
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
                     actionReference.Set(action);
-                    ctx.AddObjectToAsset(action.m_Id, actionReference, actionIcon);
+                    addObjectToAsset(action.m_Id, actionReference, actionIcon);
 
                     // Backwards-compatibility (added for 1.0.0-preview.7).
                     // We used to call AddObjectToAsset using objectName instead of action.m_Id as the object name. This fed
@@ -141,84 +203,83 @@ namespace UnityEngine.InputSystem.Editor
                     var backcompatActionReference = Instantiate(actionReference);
                     backcompatActionReference.name = actionReference.name; // Get rid of the (Clone) suffix.
                     backcompatActionReference.hideFlags = HideFlags.HideInHierarchy;
-                    ctx.AddObjectToAsset(actionReference.name, backcompatActionReference, actionIcon);
+                    addObjectToAsset(actionReference.name, backcompatActionReference, actionIcon);
                 }
             }
-
-            // Generate wrapper code, if enabled.
-            if (m_GenerateWrapperCode)
-            {
-                // When using code generation, it is an error for any action map to be named the same as the asset itself.
-                // https://fogbugz.unity3d.com/f/cases/1212052/
-                var className = !string.IsNullOrEmpty(m_WrapperClassName) ? m_WrapperClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
-                if (maps.Any(x =>
-                    CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
-                {
-                    ctx.LogImportError(
-                        $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
-                        + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
-                }
-                else
-                {
-                    var wrapperFilePath = m_WrapperCodePath;
-                    if (string.IsNullOrEmpty(wrapperFilePath))
-                    {
-                        // Placed next to .inputactions file.
-                        var assetPath = ctx.assetPath;
-                        var directory = Path.GetDirectoryName(assetPath);
-                        var fileName = Path.GetFileNameWithoutExtension(assetPath);
-                        wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
-                    }
-                    else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
-                             wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
-                    {
-                        // User-specified file relative to location of .inputactions file.
-                        var assetPath = ctx.assetPath;
-                        var directory = Path.GetDirectoryName(assetPath);
-                        wrapperFilePath = Path.Combine(directory, wrapperFilePath);
-                    }
-                    else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
-                             !wrapperFilePath.ToLower().StartsWith("assets\\"))
-                    {
-                        // User-specified file in Assets/ folder.
-                        wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
-                    }
-
-                    var dir = Path.GetDirectoryName(wrapperFilePath);
-                    if (!Directory.Exists(dir))
-                        Directory.CreateDirectory(dir);
-
-                    var options = new InputActionCodeGenerator.Options
-                    {
-                        sourceAssetPath = ctx.assetPath,
-                        namespaceName = m_WrapperCodeNamespace,
-                        className = m_WrapperClassName,
-                    };
-
-                    if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
-                    {
-                        // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
-                        // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
-                        // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
-                        // changed/added script, and trigger a new import.
-                        EditorApplication.delayCall += AssetDatabase.Refresh;
-                    }
-                }
-            }
-
-            // Refresh editors.
-            InputActionEditorWindow.RefreshAllOnAssetReimport();
         }
 
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(InputActionAsset asset)
+        private static void GenerateWrapperCode(AssetImportContext ctx, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
         {
-            //Get all InputActionReferences are stored at the same asset path as InputActionAsset
-            return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset)).Where(
-                o => o is InputActionReference && o.name != "InputManager").Cast<InputActionReference>();
+            var maps = asset.actionMaps;
+            // When using code generation, it is an error for any action map to be named the same as the asset itself.
+            // https://fogbugz.unity3d.com/f/cases/1212052/
+            var className = !string.IsNullOrEmpty(codeClassName) ? codeClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
+            if (maps.Any(x =>
+                CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
+            {
+                ctx.LogImportError(
+                    $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
+                    + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
+                return;
+            }
+
+            var wrapperFilePath = codePath;
+            if (string.IsNullOrEmpty(wrapperFilePath))
+            {
+                // Placed next to .inputactions file.
+                var assetPath = ctx.assetPath;
+                var directory = Path.GetDirectoryName(assetPath);
+                var fileName = Path.GetFileNameWithoutExtension(assetPath);
+                wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+            }
+            else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                     wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+            {
+                // User-specified file relative to location of .inputactions file.
+                var assetPath = ctx.assetPath;
+                var directory = Path.GetDirectoryName(assetPath);
+                wrapperFilePath = Path.Combine(directory, wrapperFilePath);
+            }
+            else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
+                     !wrapperFilePath.ToLower().StartsWith("assets\\"))
+            {
+                // User-specified file in Assets/ folder.
+                wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+            }
+
+            var dir = Path.GetDirectoryName(wrapperFilePath);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            var options = new InputActionCodeGenerator.Options
+            {
+                sourceAssetPath = ctx.assetPath,
+                namespaceName = codeNamespace,
+                className = codeClassName,
+            };
+
+            if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+            {
+                // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
+                // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
+                // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
+                // changed/added script, and trigger a new import.
+                EditorApplication.delayCall += AssetDatabase.Refresh;
+            }
+        }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(string assetPath)
+        {
+            // Get all InputActionReferences are stored at the same asset path as InputActionAsset
+            // Note we exclude 'hidden' action references (which are present to support one of the pre releases)
+            return AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
+                o => o is InputActionReference && !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                .Cast<InputActionReference>();
         }
 
         // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null)
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null, bool skipProjectWide = false)
         {
             string[] searchFolders = null;
             // If folderPath is null, search in "Assets" folder.
@@ -239,15 +300,20 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var guid in inputActionReferenceGUIDs)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
-                    o => o is InputActionReference &&
-                    !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
-                    .Cast<InputActionReference>().ToList();
+                var assetInputActionReferenceList = LoadInputActionReferencesFromAsset(assetPath).ToList();
+
+                if (skipProjectWide && assetInputActionReferenceList.Count() > 0)
+                {
+                    if (assetInputActionReferenceList[0].m_Asset == InputSystem.actions)
+                        continue;
+                }
 
                 inputActionReferencesList.AddRange(assetInputActionReferenceList);
             }
             return inputActionReferencesList;
         }
+
+#endif
 
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
@@ -255,6 +321,74 @@ namespace UnityEngine.InputSystem.Editor
         {
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
+        }
+
+        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
+        // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
+        // must flush the updated JSON to the file whenever this operation occurs.
+        // https://jira.unity3d.com/browse/ISXB-749
+        private class InputActionAssetPostprocessor : AssetPostprocessor
+        {
+            private static List<string> assetFilesNeedingRefresh;
+
+            private void OnPreprocessAsset()
+            {
+                var importer = assetImporter as InputActionImporter;
+                if (importer == null)
+                    return;
+
+                var newName = Path.GetFileNameWithoutExtension(assetPath);
+                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+                var newFileContents = File.ReadAllText(assetPath);
+
+                if (!string.IsNullOrEmpty(newFileContents))
+                {
+                    newAsset.LoadFromJson(newFileContents);
+
+                    // If the serialized Name doesn't match the actual filename this asset file for refresh.
+                    // NOTE: We can't change the file while Asset Importing is in progress.
+                    if (newAsset.name != newName)
+                    {
+                        if (assetFilesNeedingRefresh == null)
+                            assetFilesNeedingRefresh = new List<string>();
+
+                        assetFilesNeedingRefresh.Add(assetPath);
+                    }
+                }
+            }
+
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+            {
+                if (assetFilesNeedingRefresh == null)
+                    return;
+
+                try
+                {
+                    foreach (var assetPath in assetFilesNeedingRefresh)
+                    {
+                        var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+                        try
+                        {
+                            var fileContents = File.ReadAllText(assetPath);
+
+                            newAsset.LoadFromJson(fileContents);
+                            newAsset.name = Path.GetFileNameWithoutExtension(assetPath);
+                            File.WriteAllText(assetPath, newAsset.ToJson());
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogException(ex);
+                        }
+
+                        ScriptableObject.DestroyImmediate(newAsset);
+                    }
+                }
+                finally
+                {
+                    assetFilesNeedingRefresh = null;
+                }
+            }
         }
     }
 }

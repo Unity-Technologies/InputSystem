@@ -11,18 +11,18 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class NameAndParametersListView : ViewBase<InputActionsEditorState>
     {
-        private readonly VisualElement m_Root;
         private readonly Func<InputActionsEditorState, IEnumerable<ParameterListView>> m_ParameterListViewSelector;
         private VisualElement m_ContentContainer;
+        private readonly Label m_NoParamsLabel;
 
         private SerializedProperty m_ListProperty;
 
         public NameAndParametersListView(VisualElement root, StateContainer stateContainer, SerializedProperty listProperty,
                                          Func<InputActionsEditorState, IEnumerable<ParameterListView>> parameterListViewSelector)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             m_ListProperty = listProperty;
+            m_NoParamsLabel = root.Q<Label>("no-parameters-added-label");
             m_ParameterListViewSelector = parameterListViewSelector;
 
             CreateSelector(state => state);
@@ -93,19 +93,19 @@ namespace UnityEngine.InputSystem.Editor
         public override void RedrawUI(InputActionsEditorState state)
         {
             if (m_ContentContainer != null)
-                m_Root.Remove(m_ContentContainer);
+                rootElement.Remove(m_ContentContainer);
 
             m_ContentContainer = new VisualElement();
-            m_Root.Add(m_ContentContainer);
+            rootElement.Add(m_ContentContainer);
 
             var parameterListViews = m_ParameterListViewSelector(state).ToList();
             if (parameterListViews.Count == 0)
             {
-                m_Root.Q<Label>("no-parameters-added-label").style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+                m_NoParamsLabel.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
                 return;
             }
 
-            m_Root.Q<Label>("no-parameters-added-label").style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+            m_NoParamsLabel.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             m_ContentContainer.Clear();
             for (int i = 0; i < parameterListViews.Count; i++)
             {
@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ContentContainer != null)
             {
-                m_Root.Remove(m_ContentContainer);
+                rootElement.Remove(m_ContentContainer);
                 m_ContentContainer = null;
             }
         }

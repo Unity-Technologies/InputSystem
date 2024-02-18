@@ -13,13 +13,11 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionMapsView : ViewBase<ActionMapsView.ViewState>
     {
         public ActionMapsView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
+            m_ListView = root.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-
+            m_ListView.reorderable = true;
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
@@ -36,6 +34,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
+                treeViewItem.userData = i;
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
@@ -57,15 +56,30 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ListView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+            var treeView = root.Q<TreeView>("actions-tree-view");
+            m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
+            m_ListView.itemIndexChanged += OnReorder;
+
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
 
-            addActionMapButton.clicked += AddActionMap;
+            m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
+            m_AddActionMapButton.clicked += AddActionMap;
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
         }
 
-        private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
+        void OnDroppedHandler(int mapIndex)
+        {
+            Dispatch(Commands.CutActionsOrBindings());
+            Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
+        }
+
+        void OnReorder(int oldIndex, int newIndex)
+        {
+            Dispatch(Commands.ReorderActionMap(oldIndex, newIndex));
+        }
 
         public override void RedrawUI(ViewState viewState)
         {
@@ -81,7 +95,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            addActionMapButton.clicked -= AddActionMap;
+            m_AddActionMapButton.clicked -= AddActionMap;
         }
 
         private void RenameNewActionMaps()
@@ -90,6 +104,8 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            if (element == null)
+                return;
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
             m_EnterRenamingMode = false;
         }
@@ -181,10 +197,20 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            // Allow right clicks to select an item before we bring up the matching context menu.
+            if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
+            {
+                var actionMap = (evt.target as VisualElement).GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
+                m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
+            }
+        }
+
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private bool m_EnterRenamingMode;
-        private readonly VisualElement m_Root;
-        private ListView m_ListView;
+        private readonly ListView m_ListView;
+        private readonly Button m_AddActionMapButton;
 
         internal class ViewState
         {

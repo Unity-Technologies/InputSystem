@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class ActionsTreeView : ViewBase<ActionsTreeView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private readonly TreeView m_ActionsTreeView;
-        private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
+        private readonly Button m_AddActionButton;
+        private readonly ScrollView m_PropertiesScrollview;
 
         private bool m_RenameOnActionAdded;
         private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
@@ -27,16 +27,17 @@ namespace UnityEngine.InputSystem.Editor
         private Dictionary<Guid, int> m_GuidToTreeViewId;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
-
-            m_ActionsTreeView = m_Root.Q<TreeView>("actions-tree-view");
+            m_AddActionButton = root.Q<Button>("add-new-action-button");
+            m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
+            m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
             m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
             m_ActionsTreeView.selectionType = UIElements.SelectionType.Single;
             m_ActionsTreeView.makeItem = () => new InputActionsTreeViewItem();
+            m_ActionsTreeView.reorderable = true;
             m_ActionsTreeView.bindItem = (e, i) =>
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
@@ -57,7 +58,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
-                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    Action action = ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    addBindingButton.clicked += action;
+                    addBindingButton.userData = action; // Store to use in unbindItem
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
@@ -110,6 +113,12 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
+                if (item.isAction)
+                {
+                    var button = element.Q<Button>("add-new-binding-button");
+                    button.clicked -= button.userData as Action;
+                }
+
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
@@ -134,6 +143,8 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+            m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -147,7 +158,7 @@ namespace UnityEngine.InputSystem.Editor
                     };
                 });
 
-            addActionButton.clicked += AddAction;
+            m_AddActionButton.clicked += AddAction;
         }
 
         private int GetSelectedElementId(InputActionsEditorState state, List<TreeViewItemData<ActionOrBindingData>> treeData)
@@ -188,7 +199,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            addActionButton.clicked -= AddAction;
+            m_AddActionButton.clicked -= AddAction;
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -202,10 +213,86 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionsTreeView.ScrollToItemById(viewState.newElementID);
             }
             RenameNewAction(viewState.newElementID);;
-            addActionButton.SetEnabled(viewState.actionMapCount > 0);
+            m_AddActionButton.SetEnabled(viewState.actionMapCount > 0);
 
             // Don't want to show action properties if there's no actions.
-            m_Root.Q<VisualElement>("properties-scrollview").visible = m_ActionsTreeView.GetTreeCount() > 0;
+            m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
+        }
+
+        private void OnDraggedItem(DragPerformEvent evt)
+        {
+            bool discardDrag = false;
+            foreach (var index in m_ActionsTreeView.selectedIndices)
+            {
+                // currentTarget & target are always in TreeView as the event is registered on the TreeView - we need to discard drags into other parts of the editor (e.g. the maps list view)
+                var treeView = m_ActionsTreeView.panel.Pick(evt.mousePosition)?.GetFirstAncestorOfType<TreeView>();
+                if (treeView is null || treeView != m_ActionsTreeView)
+                {
+                    discardDrag = true;
+                    break;
+                }
+                var draggedItemData = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
+                var itemID = m_ActionsTreeView.GetIdForIndex(index);
+                var childIndex = m_ActionsTreeView.viewController.GetChildIndexForId(itemID);
+                var parentId = m_ActionsTreeView.viewController.GetParentId(itemID);
+                ActionOrBindingData? directParent = parentId == -1 ? null : m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.viewController.GetIndexForId(parentId));
+                if (draggedItemData.isAction)
+                {
+                    if (!MoveAction(directParent, draggedItemData, childIndex))
+                    {
+                        discardDrag = true;
+                        break;
+                    }
+                }
+                else if (!draggedItemData.isPartOfComposite)
+                {
+                    if (!MoveBindingOrComposite(directParent, draggedItemData, childIndex))
+                    {
+                        discardDrag = true;
+                        break;
+                    }
+                }
+                else if (!MoveCompositeParts(directParent, childIndex, draggedItemData))
+                {
+                    discardDrag = true;
+                    break;
+                }
+            }
+
+            if (!discardDrag) return;
+            var selectedItem = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndices.First());
+            Dispatch(selectedItem.isAction
+                ? Commands.SelectAction(selectedItem.name)
+                : Commands.SelectBinding(selectedItem.bindingIndex));
+            //TODO find a better way to reject the drag (for better visual feedback & to not run an extra command)
+        }
+
+        private bool MoveAction(ActionOrBindingData? directParent, ActionOrBindingData draggedItemData, int childIndex)
+        {
+            if (directParent != null)
+                return false;
+            Dispatch(Commands.MoveAction(draggedItemData.actionIndex, childIndex));
+            return true;
+        }
+
+        private bool MoveBindingOrComposite(ActionOrBindingData? directParent, ActionOrBindingData draggedItemData, int childIndex)
+        {
+            if (directParent == null || !directParent.Value.isAction)
+                return false;
+            if (draggedItemData.isComposite)
+                Dispatch(Commands.MoveComposite(draggedItemData.bindingIndex, directParent.Value.actionIndex, childIndex));
+            else
+                Dispatch(Commands.MoveBinding(draggedItemData.bindingIndex, directParent.Value.actionIndex, childIndex));
+            return true;
+        }
+
+        private bool MoveCompositeParts(ActionOrBindingData? directParent, int childIndex, ActionOrBindingData draggedItemData)
+        {
+            if (directParent == null || !directParent.Value.isComposite)
+                return false;
+            var newBindingIndex = directParent.Value.bindingIndex + childIndex + (directParent.Value.bindingIndex > draggedItemData.bindingIndex ? 0 : 1);
+            Dispatch(Commands.MovePartOfComposite(draggedItemData.bindingIndex, newBindingIndex, directParent.Value.bindingIndex));
+            return true;
         }
 
         private void RenameNewAction(int id)
@@ -345,6 +432,23 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            // Allow right clicks to select an item before we bring up the matching context menu.
+            if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
+            {
+                // Look upwards to the immediate child of the scroll view, so we know what Index to use
+                var element = evt.target as VisualElement;
+                while (element != null && element.name != "unity-tree-view__item")
+                    element = element.parent;
+
+                if (element == null)
+                    return;
+
+                m_ActionsTreeView.SetSelection(element.parent.IndexOf(element));
+            }
+        }
+
         private string GetPreviousActionNameFromViewTree(in ActionOrBindingData data)
         {
             Debug.Assert(data.isAction);
@@ -437,22 +541,26 @@ namespace UnityEngine.InputSystem.Editor
 
     internal struct ActionOrBindingData
     {
-        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, string controlLayout = "", int bindingIndex = -1)
+        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1)
         {
             this.name = name;
             this.isComposite = isComposite;
+            this.isPartOfComposite = isPartOfComposite;
             this.actionMapIndex = actionMapIndex;
             this.controlLayout = controlLayout;
             this.bindingIndex = bindingIndex;
             this.isAction = isAction;
+            this.actionIndex = actionIndex;
         }
 
         public string name { get; }
         public bool isAction { get; }
         public int actionMapIndex { get; }
         public bool isComposite { get; }
+        public bool isPartOfComposite { get; }
         public string controlLayout { get; }
         public int bindingIndex { get; }
+        public int actionIndex { get; }
     }
 
     internal static partial class Selectors
@@ -497,10 +605,9 @@ namespace UnityEngine.InputSystem.Editor
                             if (isVisible)
                             {
                                 var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
-                                var compositeBindingId = new Guid(nextBinding.id);
                                 compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
-                                    new ActionOrBindingData(false, name, actionMapIndex, false,
-                                        GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                                    new ActionOrBindingData(isAction: false, name, actionMapIndex, isComposite: false,
+                                        isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding)));
                             }
 
                             if (++i >= actionBindings.Count)
@@ -510,7 +617,7 @@ namespace UnityEngine.InputSystem.Editor
                         }
                         i--;
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
+                            new ActionOrBindingData(isAction: false, serializedInputBinding.name, actionMapIndex, isComposite: true, isPartOfComposite: false, action.expectedControlType, bindingIndex: serializedInputBinding.indexOfBinding),
                             compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
@@ -518,12 +625,12 @@ namespace UnityEngine.InputSystem.Editor
                         var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme);
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                                new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
-                                    false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
+                                new ActionOrBindingData(isAction: false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
+                                    isComposite: false, isPartOfComposite: false, GetControlLayout(serializedInputBinding.path), bindingIndex: serializedInputBinding.indexOfBinding)));
                     }
                 }
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(actionId, idDictionary),
-                    new ActionOrBindingData(true, action.name, actionMapIndex, false, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false, isPartOfComposite: false, action.expectedControlType, actionIndex: action.wrappedProperty.GetIndexOfArrayElement()), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }
