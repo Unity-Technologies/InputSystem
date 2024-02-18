@@ -3,7 +3,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Threading.Tasks;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
