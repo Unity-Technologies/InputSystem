@@ -67,11 +67,10 @@ namespace UnityEngine.InputSystem.Editor
             return bindingsOfAction;
         }
 
-        public static int GetLastBindingIndexForSelectedAction(InputActionsEditorState state)
+        public static List<SerializedProperty> GetBindingsForAction(InputActionsEditorState state, SerializedProperty actionMap, int actionIndex)
         {
-            var actionName = GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue;
-            var bindingsOfAction = GetBindingsForAction(actionName, state);
-            return bindingsOfAction.Select(b => b.GetIndexOfArrayElement()).Max();
+            var action = GetActionForIndex(actionMap, actionIndex);
+            return GetBindingsForAction(action.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue, state);
         }
 
         public static int GetSelectedBindingIndexAfterCompositeBindings(InputActionsEditorState state)
@@ -88,6 +87,21 @@ namespace UnityEngine.InputSystem.Editor
             return state.selectedBindingIndex + toSkip;
         }
 
+        public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
+        {
+            Debug.Assert(indexToInsert >= 0 && indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
+            var offset = 1; //previous action offset
+            while (indexToInsert - offset >= 0)
+            {
+                var prevActionName = arrayProperty.GetArrayElementAtIndex(indexToInsert - offset).FindPropertyRelative("m_Name").stringValue;
+                var lastBindingOfAction = bindingArrayToInsertTo.FindLast(b => b.FindPropertyRelative("m_Action").stringValue.Equals(prevActionName));
+                if (lastBindingOfAction != null) //if action has no bindings lastBindingOfAction will be null
+                    return lastBindingOfAction.GetIndexOfArrayElement() + 1;
+                offset++;
+            }
+            return 0; //no actions with bindings before paste index
+        }
+
         public static int? GetActionCount(SerializedProperty actionMap)
         {
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.arraySize;
@@ -96,6 +110,11 @@ namespace UnityEngine.InputSystem.Editor
         public static int? GetActionMapCount(InputActionsEditorState state)
         {
             return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.arraySize;
+        }
+
+        public static SerializedProperty GetActionForIndex(SerializedProperty actionMap, int actionIndex)
+        {
+            return actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions)).GetArrayElementAtIndex(actionIndex);
         }
 
         public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)

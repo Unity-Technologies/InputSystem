@@ -3164,14 +3164,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(gamepad.leftTrigger, 0.123f);
 
@@ -3181,14 +3181,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0.123f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0.123f).Within(0.00001));
 
         Set(gamepad.leftTrigger, 0f);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3202,14 +3202,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
 
@@ -3218,14 +3218,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftStick));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(expectedValue.magnitude));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(expectedValue.magnitude));
 
         Set(gamepad.leftStick, Vector2.zero);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3247,14 +3247,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Press(keyboard.dKey);
 
@@ -3264,7 +3264,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Release(keyboard.dKey);
         Press(keyboard.aKey);
@@ -3272,14 +3272,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.aKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(-expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Release(keyboard.aKey);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3303,14 +3303,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Press(keyboard.sKey);
 
@@ -3320,7 +3320,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.sKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Press(keyboard.dKey);
 
@@ -3329,7 +3329,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(new Vector2(1f, -1f).magnitude).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(new Vector2(1f, -1f).magnitude).Within(0.00001));
 
         Release(keyboard.dKey);
         Release(keyboard.sKey);
@@ -3337,7 +3337,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3356,35 +3356,35 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(sensor.attitude, Quaternion.Euler(30f, 60f, 45f));
 
         Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.Euler(30f, 60f, 45f)).Using(QuaternionEqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(-1f));
 
         Set(sensor.attitude, Quaternion.identity);
 
         Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.identity));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(-1f));
 
         Set(sensor.attitude, default(Quaternion));
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
