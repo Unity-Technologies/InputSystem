@@ -35,7 +35,8 @@ public class InGameHintsTests : CoreTestsFixture
         var player = new GameObject();
         player.SetActive(false); // Avoid PlayerInput grabbing devices before we have its configuration in place.
         var playerInput = player.AddComponent<PlayerInput>();
-        playerInput.actions = new InGameHintsActions().asset;
+        var inGameHintsActions = new InGameHintsActions();
+        playerInput.actions = inGameHintsActions.asset;
         playerInput.defaultActionMap = "Gameplay";
         playerInput.defaultControlScheme = "Keyboard&Mouse";
 
@@ -75,5 +76,8 @@ public class InGameHintsTests : CoreTestsFixture
 
         Assert.That(text.text, Does.StartWith("Press B "));
 #endif
+
+        // Disable before destruction to avoid asset
+        inGameHintsActions.Disable();
     }
 }

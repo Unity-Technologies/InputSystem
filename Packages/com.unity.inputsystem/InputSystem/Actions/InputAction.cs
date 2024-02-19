@@ -1088,7 +1088,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
-        public unsafe float GetMagnitude()
+        public unsafe float GetControlMagnitude()
         {
             var state = GetOrCreateActionMap().m_State;
             if (state != null)
