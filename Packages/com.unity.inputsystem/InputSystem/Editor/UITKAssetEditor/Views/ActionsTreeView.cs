@@ -682,9 +682,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
-                //if binding is global (not assigned to any control scheme) show always
-                if (serializedInputBinding.controlSchemes.Length <= 0)
-                    return true;
                 var isMatchingDevice = true;
                 if (deviceIndex >= 0)
                 {
@@ -692,7 +689,9 @@ namespace UnityEngine.InputSystem.Editor
                     var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);
                     isMatchingDevice = string.Equals(devicePathToMatch, devicePath, StringComparison.InvariantCultureIgnoreCase) || InputControlLayout.s_Layouts.IsBasedOn(new InternedString(devicePath), new InternedString(devicePathToMatch));
                 }
-                return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name) && isMatchingDevice;
+                var hasNoControlScheme = serializedInputBinding.controlSchemes.Length <= 0; //also show GLOBAL bindings
+                var isAssignedToCurrentControlScheme = serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
+                return (isAssignedToCurrentControlScheme || hasNoControlScheme) && isMatchingDevice;
             }
             //if no control scheme selected then show all bindings
             return true;
