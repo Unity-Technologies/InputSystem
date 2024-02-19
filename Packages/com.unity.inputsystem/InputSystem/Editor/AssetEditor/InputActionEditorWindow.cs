@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ShortcutManagement;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
 
 ////TODO: Add "Revert" button
 
@@ -35,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceId, int line)
+        public static bool OnOpenAsset(InstanceID instanceId, int line)
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))

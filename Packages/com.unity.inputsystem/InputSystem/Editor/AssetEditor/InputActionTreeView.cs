@@ -9,6 +9,9 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 
 // The action tree view illustrates one of the weaknesses of Unity's editing model. While operating directly
 // on serialized data does have a number of advantages (the built-in undo system being one of them), making the

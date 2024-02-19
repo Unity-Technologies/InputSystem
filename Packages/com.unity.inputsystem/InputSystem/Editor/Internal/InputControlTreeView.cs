@@ -5,6 +5,9 @@ using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Profiling;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 

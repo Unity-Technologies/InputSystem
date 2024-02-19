@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
 
 ////TODO: allow selecting events and saving out only the selected ones
 

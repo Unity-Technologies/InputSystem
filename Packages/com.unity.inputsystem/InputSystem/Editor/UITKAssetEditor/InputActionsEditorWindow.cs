@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
-        public static bool OpenAsset(int instanceId, int line)
+        public static bool OpenAsset(InstanceID instanceId, int line)
         {
             if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;

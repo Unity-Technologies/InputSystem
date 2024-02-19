@@ -11,6 +11,9 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 
 ////FIXME: Generate proper IDs for the individual tree view items; the current sequential numbering scheme just causes lots of
 ////       weird expansion/collapsing to happen.

@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor.IMGUI.Controls;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 
 namespace UnityEngine.InputSystem.Editor
 {

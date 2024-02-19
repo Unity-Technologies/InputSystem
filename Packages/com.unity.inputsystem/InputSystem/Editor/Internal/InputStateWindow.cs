@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
 
 ////TODO: add ability to single-step through events
 
