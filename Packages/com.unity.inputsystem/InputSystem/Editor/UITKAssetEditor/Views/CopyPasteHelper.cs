@@ -6,6 +6,8 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    // TODO Make buffers an optional argument and only allocate if not already passed, reuse a common buffer
+
     internal static class CopyPasteHelper
     {
         private const string k_CopyPasteMarker = "INPUTASSET ";
@@ -74,7 +76,7 @@ namespace UnityEngine.InputSystem.Editor
             s_lastClipboardActionWasCut = false;
         }
 
-        private static void CopyItems(List<SerializedProperty> items, StringBuilder buffer, Type type, SerializedProperty actionMap)
+        internal static void CopyItems(List<SerializedProperty> items, StringBuilder buffer, Type type, SerializedProperty actionMap)
         {
             buffer.Append(k_CopyPasteMarker);
             buffer.Append(k_TypeMarker[type]);
@@ -146,16 +148,21 @@ namespace UnityEngine.InputSystem.Editor
             return copiedType == typeof(InputBinding);
         }
 
-        public static Type GetCopiedClipboardType()
+        public static Type GetCopiedType(string buffer)
         {
-            if (!EditorGUIUtility.systemCopyBuffer.StartsWith(k_CopyPasteMarker))
+            if (!buffer.StartsWith(k_CopyPasteMarker))
                 return null;
             foreach (var typePair in k_TypeMarker)
             {
-                if (EditorGUIUtility.systemCopyBuffer.Substring(k_CopyPasteMarker.Length).StartsWith(typePair.Value))
+                if (buffer.Substring(k_CopyPasteMarker.Length).StartsWith(typePair.Value))
                     return typePair.Key;
             }
             return null;
+        }
+
+        public static Type GetCopiedClipboardType()
+        {
+            return GetCopiedType(EditorGUIUtility.systemCopyBuffer);
         }
 
         #endregion
@@ -223,23 +230,23 @@ namespace UnityEngine.InputSystem.Editor
             PasteItems(copyBufferString, indicesToInsert, arrayToInsertInto);
         }
 
-        private static void PasteItems(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
+        internal static void PasteItems(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
         {
             // Split buffer into transmissions and then into transmission blocks
+            var copiedType = GetCopiedType(copyBufferString);
             int indexOffset = 0;
-            foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length + k_TypeMarker[GetCopiedClipboardType()].Length)
+            foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length + k_TypeMarker[copiedType].Length)
                      .Split(new[] {k_EndOfTransmission}, StringSplitOptions.RemoveEmptyEntries))
             {
                 indexOffset += 1;
                 foreach (var index in indicesToInsert)
-                    PasteBlocks(transmission, index + indexOffset, arrayToInsertInto);
+                    PasteBlocks(transmission, index + indexOffset, arrayToInsertInto, copiedType);
             }
         }
 
-        private static void PasteBlocks(string transmission, int indexToInsert, SerializedProperty arrayToInsertInto)
+        private static void PasteBlocks(string transmission, int indexToInsert, SerializedProperty arrayToInsertInto, Type copiedType)
         {
             var block = transmission.Substring(transmission.IndexOf(k_StartOfText, StringComparison.Ordinal) + 1);
-            var copiedType = GetCopiedClipboardType();
             if (copiedType == typeof(InputActionMap))
                 PasteElement(arrayToInsertInto, block, indexToInsert, out _);
             else if (copiedType == typeof(InputAction))
