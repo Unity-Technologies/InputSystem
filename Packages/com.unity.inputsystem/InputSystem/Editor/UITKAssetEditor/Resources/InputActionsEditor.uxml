@@ -27,7 +27,7 @@
                 <ui:VisualElement name="body">
                     <ui:ListView focusable="true" name="action-maps-list-view" />
                 </ui:VisualElement>
-                <ui:VisualElement name="action-maps-spacer-element" style="flex-direction: column; flex-grow: 1;" />
+                <ui:VisualElement name="rclick-area-to-add-new-action-map" style="flex-direction: column; flex-grow: 1;" />
             </ui:VisualElement>
             <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="400" style="height: auto;">
                 <ui:VisualElement name="actions-container" class="body-panel-container">
@@ -38,7 +38,7 @@
                     <ui:VisualElement name="body">
                         <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20" />
                     </ui:VisualElement>
-                    <ui:VisualElement name="actions-spacer-element" style="flex-direction: column; flex-grow: 1;" />
+                    <ui:VisualElement name="rclick-area-to-add-new-action" style="flex-direction: column; flex-grow: 1;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="properties-container" class="body-panel-cointainer body-panel-container">
                     <ui:VisualElement name="header" class="body-panel-header">

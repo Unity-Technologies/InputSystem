@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
             m_AddActionMapButton.clicked += AddActionMap;
 
-            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("action-maps-spacer-element"));
+            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
         }
 
         void OnDroppedHandler(int mapIndex)

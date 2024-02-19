@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
-            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("actions-spacer-element"));
+            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
