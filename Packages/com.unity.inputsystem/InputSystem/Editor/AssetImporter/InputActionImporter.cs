@@ -323,6 +323,8 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
 
+//#if false // TEMP  
+        
         // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
         // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
         // must flush the updated JSON to the file whenever this operation occurs.
@@ -336,7 +338,7 @@ namespace UnityEngine.InputSystem.Editor
                 var importer = assetImporter as InputActionImporter;
                 if (importer == null)
                     return;
-
+                
                 var newName = Path.GetFileNameWithoutExtension(assetPath);
                 var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
                 var newFileContents = File.ReadAllText(assetPath);
@@ -352,6 +354,7 @@ namespace UnityEngine.InputSystem.Editor
                         if (assetFilesNeedingRefresh == null)
                             assetFilesNeedingRefresh = new List<string>();
 
+                        Debug.Log("Needing refresh: " + assetPath);
                         assetFilesNeedingRefresh.Add(assetPath);
                     }
                 }
@@ -367,7 +370,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (assetFilesNeedingRefresh == null)
                     return;
 
-                try
+                /*try
                 {
                     foreach (var assetPath in assetFilesNeedingRefresh)
                     {
@@ -392,9 +395,12 @@ namespace UnityEngine.InputSystem.Editor
                 finally
                 {
                     assetFilesNeedingRefresh = null;
-                }
+                }*/
             }
         }
+//#endif // TEMP
+
     }
 }
+
 #endif // UNITY_EDITOR
