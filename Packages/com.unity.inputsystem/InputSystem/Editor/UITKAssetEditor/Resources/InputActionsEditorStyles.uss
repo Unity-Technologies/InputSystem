@@ -1,9 +1,14 @@
-/*****************************************************************************/
-/* Global                                                                      */
-/*****************************************************************************/
-
 .unity-input-actions-editor-hidden {
     display: none;
+}
+
+.asset-menu-button-dark-theme {
+    background-image: resource('d__Menu.png');
+}
+
+.asset-menu-button {
+    background-image: resource('_Menu.png');
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .body-panel-container {
@@ -29,7 +34,7 @@
     border-width: 0;
 }
 
-#add-new-action-button  {
+#add-new-action-button {
     background-color: transparent;
     border-width: 0;
 }
@@ -48,13 +53,21 @@
     margin-right: 5px;
 }
 
+.header {
+    height: 22px;
+    flex-direction: row;
+    margin-left: 10px;
+    margin-right: 7px;
+    margin-top: 1px;
+    margin-bottom: 7px;
+}
+
 .header-label {
     font-size: 19px;
-    margin-left: 7px;
-    margin-right: 7px;
-    margin-top: 7px;
-    margin-bottom: 7px;
-    width: 189px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    width: auto;
     flex-grow: 1;
 }
 
@@ -80,13 +93,11 @@
     padding-bottom: 7px;
 }
 
-.header {
-    height: 22px;
-    flex-direction: row;
-    margin-left: 13px;
-    margin-right: 13px;
-    margin-top: 7px;
-    margin-bottom: 7px;
+.tree-view-item-icon{
+    justify-content: center;
+    background-image: url("/Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png");
+    width: 16px;
+    height: 16px;
 }
 
 .body-panel-header {
@@ -164,16 +175,40 @@
 .name-and-parameters-list-view .delete {
     background-image: resource('Toolbar Minus.png');
 }
+
 .name-and-parameters-list-view .deleteDarkTheme {
     background-image: resource('d_Toolbar Minus.png');
 }
 
+.add-binging-button-dark-theme {
+    background-image: resource('d_Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-binging-button {
+    background-image: resource('Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .search-field {
-    /* hide while not implemented */
     display: none;
     width: 190px;
 }
 
 .unity-two-pane-split-view__dragline-anchor {
     background-color: rgb(25, 25, 25);
+}
+
+#control-scheme-usage-title {
+    margin: 3px;
+    -unity-font-style: bold;
+}
+
+.matching-controls {
+    display: flex;
+    flex-grow: 1;
+}
+
+.matching-controls-labels {
+    margin: 1px;
 }

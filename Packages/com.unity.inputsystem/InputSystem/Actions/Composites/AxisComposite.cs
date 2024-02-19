@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Composites
     /// <example>
     /// <code>
     /// var action = new InputAction();
-    /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+    /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
     ///     .With("Negative", "&lt;Keyboard&gt;/a")
     ///     .With("Positive", "&lt;Keyboard&gt;/d");
     /// </code>
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <example>
         /// <code>
         /// var action = new InputAction();
-        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
         ///     .With("Negative", "&lt;Keyboard&gt;/a")
         ///     .With("Positive", "&lt;Keyboard&gt;/d");
         /// </code>
@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <example>
         /// <code>
         /// var action = new InputAction();
-        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
         ///     .With("Negative", "&lt;Keyboard&gt;/a")
         ///     .With("Positive", "&lt;Keyboard&gt;/d");
         /// </code>

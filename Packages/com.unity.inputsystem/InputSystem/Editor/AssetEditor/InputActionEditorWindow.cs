@@ -185,19 +185,19 @@ namespace UnityEngine.InputSystem.Editor
             // Ask for confirmation if we have unsaved changes.
             if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
-                var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
-                    $"Do you want to save the changes you made in:\n{m_ActionAssetManager.path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+                var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_ActionAssetManager.path);
                 switch (result)
                 {
-                    case 0: // Save
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
                         m_ActionAssetManager.SaveChangesToAsset();
                         m_ActionAssetManager.Cleanup();
                         break;
-                    case 1: // Cancel
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
                         Instantiate(this).Show();
                         // Cancel editor quit.
                         return false;
-                    case 2: // Don't save, don't ask again.
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                        // Don't save, don't ask again.
                         m_ForceQuit = true;
                         break;
                 }
@@ -598,6 +598,14 @@ namespace UnityEngine.InputSystem.Editor
             LoadPropertiesForSelection();
         }
 
+        #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+        private void OnLostFocus()
+        {
+            m_ActionAssetManager.SaveChangesToAsset();
+        }
+
+        #endif
+
         private void Apply()
         {
             m_ActionAssetManager.ApplyChanges();
@@ -606,6 +614,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionMapsTree.UpdateSerializedObjectDirtyCount();
             m_ActionsTree.UpdateSerializedObjectDirtyCount();
 
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // If auto-save should be triggered on focus lost, only mark asset as dirty
+            m_ActionAssetManager.SetAssetDirty();
+            titleContent = m_DirtyTitle;
+            #else
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
             // put us into dirty state.
             if (InputEditorUserSettings.autoSaveInputActionAssets)
@@ -617,6 +630,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionAssetManager.SetAssetDirty();
                 titleContent = m_DirtyTitle;
             }
+            #endif
         }
 
         private void OnGUI()

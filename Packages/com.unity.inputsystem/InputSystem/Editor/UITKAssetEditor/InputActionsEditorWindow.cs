@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem.Editor
         private int m_AssetId;
         private string m_AssetPath;
         private string m_AssetJson;
+        private string m_AssetTitleName;
         private bool m_IsDirty;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
@@ -85,9 +86,11 @@ namespace UnityEngine.InputSystem.Editor
                 window.Focus();
                 return window;
             }
+
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
-            window.titleContent = new GUIContent("Input Actions Editor");
+            window.m_AssetTitleName = asset.name + " (Input Actions Editor)";
+            window.titleContent = new GUIContent(window.m_AssetTitleName);
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
@@ -152,10 +155,20 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_State.serializedObject == null)
                 {
                     var asset = GetAssetFromDatabase();
-                    m_AssetPath = AssetDatabase.GetAssetPath(asset);
-                    m_AssetJson = File.ReadAllText(m_AssetPath);
-                    var serializedAsset = new SerializedObject(asset);
-                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    if (asset != null)
+                    {
+                        m_AssetPath = AssetDatabase.GetAssetPath(asset);
+                        m_AssetJson = File.ReadAllText(m_AssetPath);
+                        var serializedAsset = new SerializedObject(asset);
+                        m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    }
+                    else
+                    {
+                        // Asset cannot be retrieved or doesn't exist anymore; abort opening the Window.
+                        Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                        this.Close();
+                        return;
+                    }
                 }
 
                 BuildUI();
@@ -168,26 +181,34 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
+            view.postSaveAction += PostSaveAction;
             stateContainer.Initialize();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
             DirtyInputActionsEditorWindow(newState);
+            m_State = newState;
 
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // No action taken apart from setting dirty flag, auto-save triggered as part of having a dirty asset
+            // and editor loosing focus instead.
+            #else
             if (InputEditorUserSettings.autoSaveInputActionAssets)
                 Save();
+            #endif
         }
 
         private void UpdateWindowTitle()
         {
-            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+            titleContent = m_IsDirty ? new GUIContent("(*) " + m_AssetTitleName) : new GUIContent(m_AssetTitleName);
         }
 
         private void Save()
         {
-            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            // TODO Should really detect if editing project wide asset here and run validation on it if editing in free-floating editor
+            InputActionAssetManager.SaveAsset(m_State.serializedObject.targetObject as InputActionAsset);
             PostSaveAction();
         }
 
@@ -200,7 +221,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
         {
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // Window is dirty is equivalent to if asset has changed
+            var isWindowDirty = HasAssetChanged(newState.serializedObject);
+            #else
+            // Window is dirty is never true since every change is auto-saved
             var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
+            #endif
+
             if (m_IsDirty == isWindowDirty)
                 return;
             m_IsDirty = isWindowDirty;
@@ -210,8 +238,25 @@ namespace UnityEngine.InputSystem.Editor
         private bool HasAssetChanged(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+
+            // Checks if the asset being edited is a new asset that was never saved before.
+            // If it is, there's nothing to save.
+            // At the moment, an asset only has the default asset layout content on disk when it is first created.
+            // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
+            if (m_AssetJson == InputActionAsset.kDefaultAssetLayoutJson && asset.IsEmpty())
+                return false;
+
             var newAssetJson = asset.ToJson();
             return newAssetJson != m_AssetJson;
+        }
+
+        private void OnLostFocus()
+        {
+            // Auto-save triggers on focus-lost instead of on every change
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
+                Save();
+            #endif
         }
 
         private void OnDestroy()
@@ -225,16 +270,18 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_IsDirty)
                 return;
 
-            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified", $"Do you want to save the changes you made in:\n{m_AssetPath}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+            var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_AssetPath);
             switch (result)
             {
-                case 0:     // Save
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
                     Save();
                     break;
-                case 1:    // Cancel editor quit. (open new editor window with the edited asset)
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
+                    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case 2:     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                    // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
                     AssetDatabase.ImportAsset(m_AssetPath);
                     break;
             }
@@ -254,6 +301,7 @@ namespace UnityEngine.InputSystem.Editor
             window.m_State = m_State;
             window.m_AssetPath = m_AssetPath;
             window.m_AssetJson = m_AssetJson;
+            window.m_AssetTitleName = m_AssetTitleName;
             window.m_IsDirty = true;
         }
 

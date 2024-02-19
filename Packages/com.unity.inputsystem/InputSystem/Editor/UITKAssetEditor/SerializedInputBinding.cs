@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             wrappedProperty = serializedProperty ?? throw new ArgumentNullException(nameof(serializedProperty));
 
+            id = serializedProperty.FindPropertyRelative("m_Id").stringValue;
             name = serializedProperty.FindPropertyRelative("m_Name").stringValue;
             path = serializedProperty.FindPropertyRelative("m_Path").stringValue;
             interactions = serializedProperty.FindPropertyRelative("m_Interactions").stringValue;
@@ -38,6 +39,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         public string name { get; }
+        public string id { get; }
         public string path { get; }
         public string interactions { get; }
         public string processors { get; }

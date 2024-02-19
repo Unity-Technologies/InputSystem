@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
@@ -13,11 +12,23 @@ using UnityEngine.UIElements;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
+    internal static class InputSettingsPath
+    {
+        public const string kSettingsRootPath = "Project/Input System Package";
+    }
+
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
         public const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
+
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // When Project Wide Actions are enabled we place this as a child node to main settings node.
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
+        #else
+        // When Project Wide Actions are not enabled we let this be the main settings node.
         public const string kSettingsPath = "Project/Input System Package";
+        #endif
 
         public static void Open()
         {
@@ -27,7 +38,14 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
+            {
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                // We put this in a child node called "Settings" when Project-wide Actions is enabled.
+                // When not enabled it sits on the main package Settings node.
+                label = "Settings"
+                #endif
+            };
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)
@@ -172,41 +190,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CreateNewSettingsAsset(string relativePath)
         {
-            // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            AssetDatabase.CreateAsset(settings, relativePath);
-            EditorGUIUtility.PingObject(settings);
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // Create and install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            InputSystem.settings = InputAssetEditorUtils.CreateAsset(ScriptableObject.CreateInstance<InputSettings>(), relativePath);
         }
 
         private static void CreateNewSettingsAsset()
         {
-            // Query for file name.
-            var projectName = PlayerSettings.productName;
-            var path = EditorUtility.SaveFilePanel("Create Input Settings File", "Assets",
-                projectName + ".inputsettings", "asset");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            // Make sure the path is in the Assets/ folder.
-            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
-            var dataPath = Application.dataPath + "/";
-            if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
-            {
-                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
-                return;
-            }
-
-            // Make sure it ends with .asset.
-            var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
-                path += ".asset";
-
-            // Create settings file.
-            var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            CreateNewSettingsAsset(relativePath);
+            var result = InputAssetEditorUtils.PromptUserForAsset(
+                friendlyName: "Input Settings",
+                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("inputsettings"),
+                assetFileExtension: "asset");
+            if (result.result == InputAssetEditorUtils.DialogResult.Valid)
+                CreateNewSettingsAsset(result.relativePath);
         }
 
         private void InitializeWithCurrentSettingsIfNecessary()
@@ -468,24 +464,20 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
-            GUILayout.Space(10);
+            EditorGUILayout.Space();
+
             if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
                 InputSettingsProvider.Open();
-            GUILayout.Space(10);
 
-            if (InputSystem.settings == target)
-                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
-            else
-            {
-                string currentlyActiveAssetsPath = null;
-                if (InputSystem.settings != null)
-                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
-                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
-                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
-                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
-                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
-                    InputSystem.settings = (InputSettings)target;
-            }
+            EditorGUILayout.Space();
+
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value);
+        }
+
+        protected override bool ShouldHideOpenButton()
+        {
+            return true;
         }
     }
 }

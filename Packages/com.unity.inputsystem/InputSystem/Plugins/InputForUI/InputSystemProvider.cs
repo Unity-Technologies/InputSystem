@@ -78,9 +78,10 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_TouchState.Reset();
             m_SeenTouchEvents = false;
 
-            // TODO should UITK somehow override this?
             m_Cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(m_Cfg);
+
+            InputSystem.onActionsChange += OnActionsChange;
         }
 
         public void Shutdown()
@@ -89,6 +90,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
+
+            InputSystem.onActionsChange -= OnActionsChange;
+        }
+
+        public void OnActionsChange()
+        {
+            UnregisterActions(m_Cfg);
+
+            m_Cfg = Configuration.GetDefaultConfiguration();
+            RegisterActions(m_Cfg);
         }
 
         public void Update()
@@ -564,41 +575,45 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void RegisterActions(Configuration cfg)
         {
-            m_InputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
+            m_InputActionAsset = cfg.ActionAsset;
 
-            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
-            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
-            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
-            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
-            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
-            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
-            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
-            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
+            if (m_InputActionAsset != null)
+            {
+                m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
+                m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
+                m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
+                m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
+                m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
+                m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
+                m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
+                m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
+            }
 
-            if (m_PointAction.action != null)
+            if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed += OnPointerPerformed;
 
-            if (m_SubmitAction.action != null)
+            if (m_SubmitAction != null && m_SubmitAction.action != null)
                 m_SubmitAction.action.performed += OnSubmitPerformed;
 
-            if (m_CancelAction.action != null)
+            if (m_CancelAction != null && m_CancelAction.action != null)
                 m_CancelAction.action.performed += OnCancelPerformed;
 
-            if (m_LeftClickAction.action != null)
+            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
                 m_LeftClickAction.action.performed += OnLeftClickPerformed;
 
-            if (m_MiddleClickAction.action != null)
+            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
                 m_MiddleClickAction.action.performed += OnMiddleClickPerformed;
 
-            if (m_RightClickAction.action != null)
+            if (m_RightClickAction != null && m_RightClickAction.action != null)
                 m_RightClickAction.action.performed += OnRightClickPerformed;
 
-            if (m_ScrollWheelAction.action != null)
+            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
 
             // When adding new one's don't forget to add them to UnregisterActions
 
-            m_InputActionAsset.Enable();
+            if (m_InputActionAsset != null)
+                m_InputActionAsset.Enable();
 
             // TODO make it configurable as it is not part of default config
             // The Next/Previous action is not part of the input actions asset
@@ -607,25 +622,25 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void UnregisterActions(Configuration cfg)
         {
-            if (m_PointAction.action != null)
+            if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed -= OnPointerPerformed;
 
-            if (m_SubmitAction.action != null)
+            if (m_SubmitAction != null && m_SubmitAction.action != null)
                 m_SubmitAction.action.performed -= OnSubmitPerformed;
 
-            if (m_CancelAction.action != null)
+            if (m_CancelAction != null && m_CancelAction.action != null)
                 m_CancelAction.action.performed -= OnCancelPerformed;
 
-            if (m_LeftClickAction.action != null)
+            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
                 m_LeftClickAction.action.performed -= OnLeftClickPerformed;
 
-            if (m_MiddleClickAction.action != null)
+            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
                 m_MiddleClickAction.action.performed -= OnMiddleClickPerformed;
 
-            if (m_RightClickAction.action != null)
+            if (m_RightClickAction != null && m_RightClickAction.action != null)
                 m_RightClickAction.action.performed -= OnRightClickPerformed;
 
-            if (m_ScrollWheelAction.action != null)
+            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
 
             m_PointAction = null;
@@ -637,17 +652,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_RightClickAction = null;
             m_ScrollWheelAction = null;
 
-            m_InputActionAsset.Disable();
+            if (m_InputActionAsset != null)
+                m_InputActionAsset.Disable();
 
             // The Next/Previous action is not part of the input actions asset
             UnregisterNextPreviousAction();
-
-            UnityEngine.Object.Destroy(m_InputActionAsset); // TODO check if this is ok
         }
 
         public struct Configuration
         {
-            public string InputActionAssetAsJson;
+            public InputActionAsset ActionAsset;
             public string PointAction;
             public string MoveAction;
             public string SubmitAction;
@@ -659,14 +673,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
-                // TODO this is a weird way of doing that, is there an easier way?
-                var asset = new DefaultInputActions();
-                var json = asset.asset.ToJson();
-                UnityEngine.Object.DestroyImmediate(asset.asset); // TODO just Dispose doesn't work in edit mode
-
                 return new Configuration
                 {
-                    InputActionAssetAsJson = json,
+                    ActionAsset = InputSystem.actions,
                     PointAction = "UI/Point",
                     MoveAction = "UI/Navigate",
                     SubmitAction = "UI/Submit",

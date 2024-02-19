@@ -20,6 +20,14 @@ namespace UnityEngine.InputSystem.Editor
                 ?? Enumerable.Empty<string>();
         }
 
+        public static SerializedProperty GetActionMapForAction(InputActionsEditorState state, string id)
+        {
+            return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps)) ?
+                .FirstOrDefault(map => map.FindPropertyRelative("m_Actions")
+                .Select(a => a.FindPropertyRelative("m_Id").stringValue)
+                .Contains(id));
+        }
+
         public static IEnumerable<SerializedInputAction> GetActionsForSelectedActionMap(InputActionsEditorState state)
         {
             var actionMap = GetActionMapAtIndex(state, state.selectedActionMapIndex);
@@ -43,12 +51,55 @@ namespace UnityEngine.InputSystem.Editor
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
             if (actionMaps == null || index < 0 || index > actionMaps.arraySize - 1)
                 return null;
-            return new SerializedInputActionMap(actionMaps?.GetArrayElementAtIndex(index));
+            return new SerializedInputActionMap(actionMaps.GetArrayElementAtIndex(index));
         }
 
         public static int? GetBindingCount(SerializedProperty actionMap)
         {
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.arraySize;
+        }
+
+        private static List<SerializedProperty> GetBindingsForAction(string actionName, InputActionsEditorState state)
+        {
+            var actionMap = GetSelectedActionMap(state);
+            var bindingsOfAction = actionMap?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
+                .Where(b => b.FindPropertyRelative("m_Action").stringValue == actionName).ToList();
+            return bindingsOfAction;
+        }
+
+        public static List<SerializedProperty> GetBindingsForAction(InputActionsEditorState state, SerializedProperty actionMap, int actionIndex)
+        {
+            var action = GetActionForIndex(actionMap, actionIndex);
+            return GetBindingsForAction(action.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue, state);
+        }
+
+        public static int GetSelectedBindingIndexAfterCompositeBindings(InputActionsEditorState state)
+        {
+            var bindings = GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            var item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(state.selectedBindingIndex));
+            var index = state.selectedBindingIndex + (item.isComposite || item.isPartOfComposite ? 1 : 0);
+            var toSkip = 0;
+            while (new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index)).isPartOfComposite)
+            {
+                toSkip++;
+                index++;
+            }
+            return state.selectedBindingIndex + toSkip;
+        }
+
+        public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
+        {
+            Debug.Assert(indexToInsert >= 0 && indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
+            var offset = 1; //previous action offset
+            while (indexToInsert - offset >= 0)
+            {
+                var prevActionName = arrayProperty.GetArrayElementAtIndex(indexToInsert - offset).FindPropertyRelative("m_Name").stringValue;
+                var lastBindingOfAction = bindingArrayToInsertTo.FindLast(b => b.FindPropertyRelative("m_Action").stringValue.Equals(prevActionName));
+                if (lastBindingOfAction != null) //if action has no bindings lastBindingOfAction will be null
+                    return lastBindingOfAction.GetIndexOfArrayElement() + 1;
+                offset++;
+            }
+            return 0; //no actions with bindings before paste index
         }
 
         public static int? GetActionCount(SerializedProperty actionMap)
@@ -59,6 +110,11 @@ namespace UnityEngine.InputSystem.Editor
         public static int? GetActionMapCount(InputActionsEditorState state)
         {
             return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.arraySize;
+        }
+
+        public static SerializedProperty GetActionForIndex(SerializedProperty actionMap, int actionIndex)
+        {
+            return actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions)).GetArrayElementAtIndex(actionIndex);
         }
 
         public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
@@ -74,6 +130,24 @@ namespace UnityEngine.InputSystem.Editor
             return new SerializedInputBinding(actionMap
                 ?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
                 ?.GetArrayElementAtIndex(bindingIndex));
+        }
+
+        public static SerializedProperty GetBindingForId(InputActionsEditorState state, string id, out SerializedProperty bindingArray)
+        {
+            var actionMaps = state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            for (int i = 0; i < actionMaps?.arraySize; i++)
+            {
+                var bindings = actionMaps.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+                for (int j = 0; j < bindings.arraySize; j++)
+                {
+                    if (bindings.GetArrayElementAtIndex(j).FindPropertyRelative("m_Id").stringValue != id)
+                        continue;
+                    bindingArray = bindings;
+                    return bindings.GetArrayElementAtIndex(j);
+                }
+            }
+            bindingArray = null;
+            return null;
         }
 
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
@@ -158,20 +232,21 @@ namespace UnityEngine.InputSystem.Editor
                 ?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actions == null || actions.arraySize - 1 < state.selectedActionIndex || state.selectedActionIndex < 0)
                 return null;
-            return new SerializedInputAction(actions.GetArrayElementAtIndex(state.selectedActionIndex));
-        }
 
-        public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
-        {
-            return BuildControlTypeList(selectedActionType)
-                .OrderBy(typeName => typeName, StringComparer.OrdinalIgnoreCase);
+            // If we've currently selected a binding, get the parent input action for it.
+            if (state.selectionType == SelectionType.Binding)
+                return GetRelatedInputAction(state);
+
+            return new SerializedInputAction(actions.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
         public static IEnumerable<string> BuildControlTypeList(InputActionType selectedActionType)
         {
             var allLayouts = InputSystem.s_Manager.m_Layouts;
 
+            // "Any" is always in first position (index 0)
             yield return "Any";
+
             foreach (var layoutName in allLayouts.layoutTypes.Keys)
             {
                 if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
