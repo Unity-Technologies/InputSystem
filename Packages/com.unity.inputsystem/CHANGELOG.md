@@ -13,11 +13,13 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
 - Changed the 'Max player count reached' error to a warning instead.
+- Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
+- Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single proeject settings file.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
   - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
-  - [`InputAction.GetMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetMagnitude) returns the current amount of actuation of the control that is driving the action.
+  - [`InputAction.GetControlMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetControlMagnitude) returns the current amount of actuation of the control that is driving the action.
   - [`InputAction.WasCompletedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasCompletedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
@@ -45,8 +47,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 - Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
-- Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749)
-- Fixed Error logged when InputActionEditor window opened without a valid asset
+- Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
+- Fixed Error logged when InputActionEditor window opened without a valid asset.
+- Fixed Project Settings header title styling for Input Actions editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
