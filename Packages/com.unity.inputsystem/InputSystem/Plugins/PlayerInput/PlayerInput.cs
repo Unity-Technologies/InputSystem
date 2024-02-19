@@ -1615,7 +1615,8 @@ namespace UnityEngine.InputSystem
         void Reset()
         {
             // Set default actions to project wide actions.
-            m_Actions = ProjectWideActionsAsset.GetOrCreate();
+            m_Actions = InputSystem.actions;
+            // TODO Need to monitor changes?
         }
 
         #endif

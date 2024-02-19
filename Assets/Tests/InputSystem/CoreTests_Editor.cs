@@ -2907,9 +2907,12 @@ partial class CoreTests
         // Exclude project-wide actions from this test
         // With Project-wide Actions `InputSystem.actions`, we begin with some initial ActionState
         // Disabling Project-wide actions so that we begin from zero.
-        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
-        InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates();
+        if (InputSystem.actions)
+        {
+            Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
+            InputSystem.actions?.Disable();
+            InputActionState.DestroyAllActionMapStates();
+        }
 #endif
 
         // Initial state

@@ -106,6 +106,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public InputActionAsset actions
+        {
+            get
+            {
+                return m_Actions;
+            }
+
+            set
+            {
+                m_Actions = value;
+                ApplyActions();
+            }
+        }
+
         public InputUpdateType updateMask
         {
             get => m_UpdateMask;
@@ -230,6 +244,12 @@ namespace UnityEngine.InputSystem
         {
             add => m_SettingsChangedListeners.AddCallback(value);
             remove => m_SettingsChangedListeners.RemoveCallback(value);
+        }
+
+        public event Action onActionsChange
+        {
+            add => m_ActionsChangedListeners.AddCallback(value);
+            remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
@@ -1744,17 +1764,19 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings)
+        internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
+            m_Actions = actions;
 
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
 
             ApplySettings();
+            ApplyActions();
         }
 
         internal void Destroy()
@@ -2028,6 +2050,7 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
+        private CallbackArray<Action> m_ActionsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2056,6 +2079,7 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
+        internal InputActionAsset m_Actions;
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2609,6 +2633,12 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
+        }
+
+        internal void ApplyActions()
+        {
+            // Let listeners know.
+            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
         }
 
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
@@ -3714,6 +3744,7 @@ namespace UnityEngine.InputSystem
             public InputUpdateType updateMask;
             public InputMetrics metrics;
             public InputSettings settings;
+            public InputActionAsset actions;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             public bool haveSentStartupAnalytics;
@@ -3757,6 +3788,7 @@ namespace UnityEngine.InputSystem
                 updateMask = m_UpdateMask,
                 metrics = m_Metrics,
                 settings = m_Settings,
+                actions = m_Actions,
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -3775,6 +3807,10 @@ namespace UnityEngine.InputSystem
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
             m_Settings = state.settings;
+
+            if (m_Actions != null)
+                Object.DestroyImmediate(m_Actions);
+            m_Actions = state.actions;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;

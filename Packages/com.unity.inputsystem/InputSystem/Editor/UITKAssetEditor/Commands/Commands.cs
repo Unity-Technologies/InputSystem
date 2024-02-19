@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
@@ -482,7 +483,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
                 return state;
             };
@@ -497,7 +498,7 @@ namespace UnityEngine.InputSystem.Editor
                     // If it changed from disabled to enabled, perform an initial save.
                     if (newValue)
                     {
-                        InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                        InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                         postSaveAction?.Invoke();
                     }
 
@@ -543,13 +544,35 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command ResetGlobalInputAsset(Action<InputActionAsset> postResetAction)
+        // Removes all action maps and their content from the associated serialized InputActionAsset.
+        public static Command ClearActionMaps()
         {
             return (in InputActionsEditorState state) =>
             {
-                ProjectWideActionsAsset.ResetActionAsset();
-                var asset = ProjectWideActionsAsset.GetOrCreate();
-                postResetAction?.Invoke(asset);
+                InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
+        // Replaces all action maps of the associated serialized InputActionAsset with the action maps contained in
+        // the given source asset.
+        public static Command ReplaceActionMaps(string inputActionAssetJsonContent)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                // First delete all existing data
+                InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
+                InputActionSerializationHelpers.DeleteAllControlSchemes(state.serializedObject);
+
+                // Create new data based on source
+                var temp = InputActionAsset.FromJson(inputActionAssetJsonContent);
+                using (var tmp = new SerializedObject(temp))
+                {
+                    InputActionSerializationHelpers.AddControlSchemes(state.serializedObject, tmp);
+                    InputActionSerializationHelpers.AddActionMaps(state.serializedObject, tmp);
+                }
+                state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
         }
