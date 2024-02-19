@@ -28,8 +28,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                var newDeviceIndex = state.selectedDeviceRequirementIndex == selectedDeviceIndex ? -1 : state.selectedDeviceRequirementIndex;
                 return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
-                    state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)));
+                    state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)), selectedDeviceRequirementIndex: newDeviceIndex);
             };
         }
 
@@ -164,16 +165,17 @@ namespace UnityEngine.InputSystem.Editor
                 if (serializedArray.arraySize == 0)
                     return state.With(
                         selectedControlSchemeIndex: -1,
-                        selectedControlScheme: new InputControlScheme());
+                        selectedControlScheme: new InputControlScheme(),
+                        selectedDeviceRequirementIndex: -1);
 
                 if (indexOfArrayElement > serializedArray.arraySize - 1)
                     return state.With(
                         selectedControlSchemeIndex: serializedArray.arraySize - 1,
-                        selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)));
+                        selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)), selectedDeviceRequirementIndex: -1);
 
                 return state.With(
                     selectedControlSchemeIndex: indexOfArrayElement,
-                    selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)));
+                    selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)), selectedDeviceRequirementIndex: -1);
             };
         }
 
