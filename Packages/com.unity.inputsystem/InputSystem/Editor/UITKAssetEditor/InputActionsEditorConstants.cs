@@ -1,12 +1,15 @@
+using UnityEngine.UIElements;
+
 #if UNITY_EDITOR
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputActionsEditorConstants
+    internal static class InputActionsEditorConstants
     {
         public const string PackagePath = "Packages/com.unity.inputsystem";
         public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 
         /// Template names
+        public const string ProjectSettingsUxml = "/InputActionsProjectSettings.uxml";
         public const string MainEditorViewNameUxml = "/InputActionsEditor.uxml";
         public const string BindingsPanelRowTemplateUxml = "/BindingPanelRowTemplate.uxml";
         public const string NameAndParametersListViewItemUxml = "/NameAndParameterListViewItemTemplate.uxml";

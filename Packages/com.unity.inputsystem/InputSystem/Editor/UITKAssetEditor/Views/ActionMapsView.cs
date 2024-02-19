@@ -104,6 +104,8 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            if (element == null)
+                return;
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
             m_EnterRenamingMode = false;
         }
@@ -149,31 +151,38 @@ namespace UnityEngine.InputSystem.Editor
             var selectedItem = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             if (selectedItem == null)
                 return;
-            switch (evt.commandName)
+
+            if (allowUICommandExecution)
             {
-                case CmdEvents.Rename:
-                    ((InputActionMapsTreeViewItem)selectedItem).FocusOnRenameTextField();
-                    break;
-                case CmdEvents.Delete:
-                case CmdEvents.SoftDelete:
-                    ((InputActionMapsTreeViewItem)selectedItem).DeleteItem();
-                    break;
-                case CmdEvents.Duplicate:
-                    ((InputActionMapsTreeViewItem)selectedItem).DuplicateItem();
-                    break;
-                case CmdEvents.Copy:
-                    CopyItems();
-                    break;
-                case CmdEvents.Cut:
-                    CutItems();
-                    break;
-                case CmdEvents.Paste:
-                    var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                        PasteItems(isActionCopied);
-                    break;
-                default:
-                    return; // Skip StopPropagation if we didn't execute anything
+                switch (evt.commandName)
+                {
+                    case CmdEvents.Rename:
+                        ((InputActionMapsTreeViewItem)selectedItem).FocusOnRenameTextField();
+                        break;
+                    case CmdEvents.Delete:
+                    case CmdEvents.SoftDelete:
+                        ((InputActionMapsTreeViewItem)selectedItem).DeleteItem();
+                        break;
+                    case CmdEvents.Duplicate:
+                        ((InputActionMapsTreeViewItem)selectedItem).DuplicateItem();
+                        break;
+                    case CmdEvents.Copy:
+                        CopyItems();
+                        break;
+                    case CmdEvents.Cut:
+                        CutItems();
+                        break;
+                    case CmdEvents.Paste:
+                        var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                        if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                            PasteItems(isActionCopied);
+                        break;
+                    default:
+                        return; // Skip StopPropagation if we didn't execute anything
+                }
+
+                // Prevent any UI commands from executing until after UI has been updated
+                allowUICommandExecution = false;
             }
             evt.StopPropagation();
         }

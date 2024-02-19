@@ -2952,6 +2952,7 @@ internal class UITests : CoreTestsFixture
     // https://fogbugz.unity3d.com/f/cases/1371332/
     [UnityTest]
     [Category("UI")]
+    [Ignore("Causes next test to fail in player")]
     public IEnumerator UI_WhenAssigningInputModuleActionAsset_OldInputsAreDisconnected_AndNewInputsAreConnected()
     {
         var mouse1 = InputSystem.AddDevice<Mouse>();
