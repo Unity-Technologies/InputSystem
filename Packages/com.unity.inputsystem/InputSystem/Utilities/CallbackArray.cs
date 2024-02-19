@@ -1,11 +1,16 @@
+using System;
+using UnityEngine.Profiling;
+
 namespace UnityEngine.InputSystem.Utilities
 {
-    // Keeps a copy of the callback list while executing so that the callback list can safely
-    // be mutated from within callbacks.
+    // Similar to EventHandler<TDelegate> class but instead of using atomics to implement a copy-on-write semantic
+    // to allow concurrent modification this keeps a copy of the callback list while executing so that the callback
+    // list can safely be mutated from within callbacks after callbacks have finished.
+    // Note that this implementation is not thread-safe compared to EventHandler<TDelegate>.
     internal struct CallbackArray<TDelegate>
         where TDelegate : System.Delegate
     {
-        private bool m_CannotMutateCallbacksArray;
+        private bool m_Locked;
         private InlinedArray<TDelegate> m_Callbacks;
         private InlinedArray<TDelegate> m_CallbacksToAdd;
         private InlinedArray<TDelegate> m_CallbacksToRemove;
@@ -23,47 +28,38 @@ namespace UnityEngine.InputSystem.Utilities
 
         public void AddCallback(TDelegate dlg)
         {
-            if (m_CannotMutateCallbacksArray)
+            if (m_Locked)
             {
-                if (m_CallbacksToAdd.Contains(dlg))
-                    return;
-                var removeIndex = m_CallbacksToRemove.IndexOf(dlg);
-                if (removeIndex != -1)
-                    m_CallbacksToRemove.RemoveAtByMovingTailWithCapacity(removeIndex);
-                m_CallbacksToAdd.AppendWithCapacity(dlg);
-                return;
+                Modify(ref m_CallbacksToAdd, ref m_CallbacksToRemove, dlg);
             }
-
-            if (!m_Callbacks.Contains(dlg))
+            else if (!m_Callbacks.Contains(dlg))
+            {
                 m_Callbacks.AppendWithCapacity(dlg, capacityIncrement: 4);
+            }
         }
 
         public void RemoveCallback(TDelegate dlg)
         {
-            if (m_CannotMutateCallbacksArray)
+            if (m_Locked)
             {
-                if (m_CallbacksToRemove.Contains(dlg))
-                    return;
-                var addIndex = m_CallbacksToAdd.IndexOf(dlg);
-                if (addIndex != -1)
-                    m_CallbacksToAdd.RemoveAtByMovingTailWithCapacity(addIndex);
-                m_CallbacksToRemove.AppendWithCapacity(dlg);
-                return;
+                Modify(ref m_CallbacksToRemove, ref m_CallbacksToAdd, dlg);
             }
-
-            var index = m_Callbacks.IndexOf(dlg);
-            if (index >= 0)
-                m_Callbacks.RemoveAtWithCapacity(index);
+            else
+            {
+                var index = m_Callbacks.IndexOf(dlg);
+                if (index >= 0)
+                    m_Callbacks.RemoveAtWithCapacity(index);
+            }
         }
 
         public void LockForChanges()
         {
-            m_CannotMutateCallbacksArray = true;
+            m_Locked = true;
         }
 
         public void UnlockForChanges()
         {
-            m_CannotMutateCallbacksArray = false;
+            m_Locked = false;
 
             // Process mutations that have happened while we were executing callbacks.
             for (var i = 0; i < m_CallbacksToRemove.length; ++i)
@@ -73,6 +69,17 @@ namespace UnityEngine.InputSystem.Utilities
 
             m_CallbacksToAdd.Clear();
             m_CallbacksToRemove.Clear();
+        }
+
+        private static void Modify(ref InlinedArray<TDelegate> deferred, ref InlinedArray<TDelegate> inverseDeferred, TDelegate dlg)
+        {
+            // If the list of deferred
+            if (deferred.Contains(dlg))
+                return;
+            var index = inverseDeferred.IndexOf(dlg);
+            if (index != -1)
+                inverseDeferred.RemoveAtByMovingTailWithCapacity(index);
+            deferred.AppendWithCapacity(dlg);
         }
     }
 }
