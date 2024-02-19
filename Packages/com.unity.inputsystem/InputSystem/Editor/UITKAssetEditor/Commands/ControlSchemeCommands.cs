@@ -148,14 +148,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var selectedControlSchemeName = state.selectedControlScheme.name;
 
-                var serializedArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
-                var serializedControlScheme = serializedArray
-                    .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == selectedControlSchemeName);
-
-                if (serializedControlScheme == null)
+                var serializedArray = InputActionSerializationHelpers.GetControlSchemesArray(state.serializedObject);
+                var indexOfArrayElement = InputActionSerializationHelpers.IndexOfControlScheme(serializedArray, selectedControlSchemeName);
+                if (indexOfArrayElement < 0)
                     throw new InvalidOperationException("Control scheme doesn't exist in collection.");
-
-                var indexOfArrayElement = serializedControlScheme.GetIndexOfArrayElement();
 
                 // Ask for confirmation.
                 if (!EditorUtility.DisplayDialog("Delete scheme?",
