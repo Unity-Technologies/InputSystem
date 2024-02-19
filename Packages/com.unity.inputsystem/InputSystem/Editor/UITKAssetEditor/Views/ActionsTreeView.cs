@@ -382,35 +382,41 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ActionsTreeView.selectedItem == null)
                 return;
 
-            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
-            switch (evt.commandName)
+            if (allowUICommandExecution)
             {
-                case CmdEvents.Rename:
-                    if (data.isAction || data.isComposite)
-                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
-                    else
-                        return;
-                    break;
-                case CmdEvents.Delete:
-                case CmdEvents.SoftDelete:
-                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
-                    break;
-                case CmdEvents.Duplicate:
-                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
-                    break;
-                case CmdEvents.Copy:
-                    CopyItems();
-                    break;
-                case CmdEvents.Cut:
-                    CutItems();
-                    break;
-                case CmdEvents.Paste:
-                    var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
-                    if (hasPastableData)
-                        PasteItems();
-                    break;
-                default:
-                    return; // Skip StopPropagation if we didn't execute anything
+                var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
+                switch (evt.commandName)
+                {
+                    case CmdEvents.Rename:
+                        if (data.isAction || data.isComposite)
+                            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+                        else
+                            return;
+                        break;
+                    case CmdEvents.Delete:
+                    case CmdEvents.SoftDelete:
+                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                        break;
+                    case CmdEvents.Duplicate:
+                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                        break;
+                    case CmdEvents.Copy:
+                        CopyItems();
+                        break;
+                    case CmdEvents.Cut:
+                        CutItems();
+                        break;
+                    case CmdEvents.Paste:
+                        var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
+                        if (hasPastableData)
+                            PasteItems();
+                        break;
+                    default:
+                        return; // Skip StopPropagation if we didn't execute anything
+                }
+
+                // Prevent any UI commands from executing until after UI has been updated
+                allowUICommandExecution = false;
             }
             evt.StopPropagation();
         }
