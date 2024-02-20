@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Editor
             var item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(state.selectedBindingIndex));
             var index = state.selectedBindingIndex + (item.isComposite || item.isPartOfComposite ? 1 : 0);
             var toSkip = 0;
-            while (new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index)).isPartOfComposite)
+            while (index < bindings.arraySize && new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index)).isPartOfComposite)
             {
                 toSkip++;
                 index++;
