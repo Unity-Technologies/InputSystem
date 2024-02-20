@@ -46,7 +46,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 - Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749)
 - Fixed Error logged when InputActionEditor window opened without a valid asset
-- Fixed Pasting items between windows not working until an item in the Action Map/Action lists was selected.
+- Fixed Pasting items between Input Action Editor windows having no effect until an item in the Action Map/Action lists was selected.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

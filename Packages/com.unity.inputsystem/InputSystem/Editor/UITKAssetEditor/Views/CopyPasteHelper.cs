@@ -205,8 +205,7 @@ namespace UnityEngine.InputSystem.Editor
             if (addLast)
                 index = actionArray.arraySize - 1;
 
-            if (index < 0)
-                index = 0;
+            index = Math.Clamp(index, 0, actionArray.arraySize - 1);
 
             PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, actionArray);
         }
@@ -292,9 +291,11 @@ namespace UnityEngine.InputSystem.Editor
         private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
             var pastePartOfComposite = IsPartOfComposite(json);
-            if (index > 0 && arrayProperty.arraySize > 0 && index - 1 < arrayProperty.arraySize)
+            var currentPropertyIndex = index - 1;
+            // We don't care about these checks if the array index is invalid
+            if (currentPropertyIndex >= 0 && currentPropertyIndex < arrayProperty.arraySize)
             {
-                var currentProperty = arrayProperty.GetArrayElementAtIndex(index - 1);
+                var currentProperty = arrayProperty.GetArrayElementAtIndex(currentPropertyIndex);
                 var currentIsComposite = IsComposite(currentProperty) || IsPartOfComposite(currentProperty);
                 if (pastePartOfComposite && !currentIsComposite) //prevent pasting part of composite into non-composite
                     return index;

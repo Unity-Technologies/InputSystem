@@ -249,6 +249,12 @@ namespace UnityEngine.InputSystem.Editor
             return newAssetJson != m_AssetJson;
         }
 
+        private void OnFocus()
+        {
+            // Apply focus here so that Paste works when users tab into the window (handled in InputActionsEditorView)
+            rootVisualElement.Focus();
+        }
+
         private void OnLostFocus()
         {
             // Auto-save triggers on focus-lost instead of on every change
