@@ -28,7 +28,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var newDeviceIndex = state.selectedDeviceRequirementIndex == selectedDeviceIndex ? -1 : state.selectedDeviceRequirementIndex;
+                var newDeviceIndex =
+                    Mathf.Clamp(
+                        selectedDeviceIndex <= state.selectedDeviceRequirementIndex
+                        ? state.selectedDeviceRequirementIndex - 1
+                        : state.selectedDeviceRequirementIndex, -1, state.selectedDeviceRequirementIndex);
                 return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
                     state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)), selectedDeviceRequirementIndex: newDeviceIndex);
             };
