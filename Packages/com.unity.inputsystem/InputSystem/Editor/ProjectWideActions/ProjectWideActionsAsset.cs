@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                             //
                             string[] files = Directory.GetFiles("Assets", "*.inputactions");
                             List<string> names = new List<string>();
-                            for (int i = 0; i < files.Length; i++) 
+                            for (int i = 0; i < files.Length; i++)
                             {
                                 names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
                             }
