@@ -25,6 +25,8 @@ however, it has to be formatted properly to pass verification tests.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 - Added drag and drop support in the Input Action Asset Editor for Action Maps, Actions and Bindings.
 - UI Toolkit input action editor now supports showing the derived bindings.
+- Device filtering support for control schemes in the UI-Toolkit Input Asset Editor.
+- Added right-click (context) menu support for empty areas below the Action Maps/Actions lists in the Project Settings Input Action Editor and Asset Input Action Editor.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
