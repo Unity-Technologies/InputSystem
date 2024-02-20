@@ -6,10 +6,12 @@ using UnityEngine;
 [InitializeOnLoad]
 public class AddScenesToBuild : EditorWindow
 {
+    private const string corePlatformsMenu = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
+
     [MenuItem("QA Tools/Open Core Scene Menu")]
     static void OpenScene()
     {
-        EditorSceneManager.OpenScene("Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
+        EditorSceneManager.OpenScene(corePlatformsMenu);
     }
 
     [MenuItem("QA Tools/Add All Core Samples to Build")]
@@ -25,16 +27,27 @@ public class AddScenesToBuild : EditorWindow
         }
         // Filter out scenes in folders containing "xbox" or "xr"
         List<string> filteredScenePaths = new List<string>();
-        foreach (string path in scenePaths)
+        string coreScene = null;
+
+        // Find the corePlatformsMenu scene and remove it from the general scene list
+        for (int i = 0; i < scenePaths.Length; i++)
         {
-            if (!IsPathInExcludedFolder(path))
+            if (scenePaths[i] == corePlatformsMenu)
             {
-                filteredScenePaths.Add(path);
+                coreScene = scenePaths[i];
+            }
+            else if (!IsPathInExcludedFolder(scenePaths[i]))
+            {
+                filteredScenePaths.Add(scenePaths[i]);
             }
         }
 
-        // Ensure "Core Platforms Menu" is at the beginning of the list
-        filteredScenePaths.Insert(0, "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
+        // Add and ensure "Core Platforms Menu" is at the beginning of the list
+        if (!string.IsNullOrEmpty(coreScene))
+        {
+            filteredScenePaths.Insert(0, coreScene);
+        }
+
         // Update the build settings
         EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[filteredScenePaths.Count];
         for (int i = 0; i < filteredScenePaths.Count; i++)
