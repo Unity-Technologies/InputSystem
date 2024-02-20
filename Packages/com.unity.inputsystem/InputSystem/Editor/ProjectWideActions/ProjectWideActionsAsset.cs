@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -15,14 +16,8 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static class ProjectSettingsProjectWideActionsAssetConverter
         {
-            internal const string kAssetPath = "ProjectSettings/InputManager.asset";
+            internal const string kAssetPathInputManager = "ProjectSettings/InputManager.asset";
             internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
-
-            // DONE 1. Implement reading the kAssetPath into InputActionAsset.
-            // DONE 2. Serialize as JSON and write as an .inputactions file into Asset directory.
-            // TODO Consider preserving GUIDs to potentially enable references to stay intact.
-            // TODO 3. Let InputActionImporter do its job on importing and configuring the asset.
-            // TODO 4. Assign to InputSystem.actions
 
             class ProjectSettingsPostprocessor : AssetPostprocessor
             {
@@ -39,14 +34,39 @@ namespace UnityEngine.InputSystem.Editor
 
             internal static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
             {
-                var objects = AssetDatabase.LoadAllAssetsAtPath(kAssetPath);
+                var objects = AssetDatabase.LoadAllAssetsAtPath(kAssetPathInputManager);
                 if (objects != null)
                 {
                     var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
-                    if (inputActionsAsset != null)
+                    if (inputActionsAsset != default)
                     {
-                        var json = JsonUtility.ToJson(inputActionsAsset, prettyPrint: true);
-                        File.WriteAllText(ProjectWideActionsAsset.kDefaultAssetPath, json);
+                        // Found some actions in the InputManager.asset file
+                        //
+                        string path = ProjectWideActionsAsset.kDefaultAssetPath;
+
+                        if (File.Exists(path))
+                        {
+                            // We already have a path containing inputactions, find a new unique filename
+                            //
+                            //  eg  Assets/InputSystem_Actions.inputactions ->
+                            //      Assets/InputSystem_Actions (1).inputactions ->
+                            //      Assets/InputSystem_Actions (2).inputactions ...
+                            //
+                            string[] files = Directory.GetFiles("Assets", "*.inputactions");
+                            List<string> names = new List<string>();
+                            for (int i = 0; i < files.Length; i++) 
+                            {
+                                names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
+                            }
+                            string unique = ObjectNames.GetUniqueName(names.ToArray(), "InputSystem_Actions");
+                            path = "Assets/" + unique + ".inputactions";
+                        }
+
+                        var json = inputActionsAsset.ToJson();
+                        File.WriteAllText(path, json);
+
+                        AssetDatabase.Refresh();
+                        InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
                     }
 
                     // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
@@ -63,6 +83,8 @@ namespace UnityEngine.InputSystem.Editor
                             AssetDatabase.RemoveObjectFromAsset(obj);
                         }
                     }
+
+                    AssetDatabase.SaveAssets();
                 }
             }
         }
