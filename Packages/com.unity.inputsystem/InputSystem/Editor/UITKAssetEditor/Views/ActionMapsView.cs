@@ -201,7 +201,8 @@ namespace UnityEngine.InputSystem.Editor
             if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
             {
                 var actionMap = (evt.target as VisualElement).GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
-                m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
+                if (actionMap != null)
+                    m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
             }
         }
 

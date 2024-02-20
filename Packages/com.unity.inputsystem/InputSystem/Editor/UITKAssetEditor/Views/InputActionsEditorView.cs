@@ -183,22 +183,16 @@ namespace UnityEngine.InputSystem.Editor
             }
             else if (copiedType == typeof(InputAction))
             {
-                // Can't paste an Action without any Action Maps for it to go to
-                if (m_ActionMapsListView.itemsSource.Count > 0)
-                    Dispatch(Commands.PasteActionsOrBindings());
+                Dispatch(Commands.PasteActionsOrBindings());
             }
             else if (copiedType == typeof(InputBinding))
             {
-                // Can't paste a Binding without any Actions for it to go to
-                if (m_ActionsTreeView.itemsSource.Count > 0)
-                {
-                    var oldSelectedBinding = stateContainer.GetState().selectedBindingIndex;
-                    Dispatch(Commands.PasteActionsOrBindings());
+                var oldSelectedBinding = stateContainer.GetState().selectedBindingIndex;
+                Dispatch(Commands.PasteActionsOrBindings());
 
-                    // If paste succeeded, expand the relevant Action to show the new binding.
-                    if (stateContainer.GetState().selectedBindingIndex != oldSelectedBinding)
-                        m_ActionsTreeView.ExpandItem(m_ActionsTreeView.GetIdForIndex(stateContainer.GetState().selectedActionIndex));
-                }
+                // If paste succeeded, expand the relevant Action to show the new binding.
+                if (stateContainer.GetState().selectedBindingIndex != oldSelectedBinding)
+                    m_ActionsTreeView.ExpandItem(m_ActionsTreeView.GetIdForIndex(stateContainer.GetState().selectedActionIndex));
             }
         }
 
