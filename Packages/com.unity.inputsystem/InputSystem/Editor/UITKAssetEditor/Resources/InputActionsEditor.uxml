@@ -27,7 +27,7 @@
                         <ui:ListView focusable="true" name="action-maps-list-view" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="230" style="height: auto;">
+                <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="230" style="height: auto; min-width: 450px">
                     <ui:VisualElement name="actions-container" class="body-panel-container">
                         <ui:VisualElement name="header" class="body-panel-header" style="justify-content: space-between;">
                             <ui:Label text="Actions" display-tooltip-when-elided="true" name="actions-label" />
