@@ -52,11 +52,11 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
-                    ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
+                    ContextMenu.GetContextMenuForCompositeItem(this, treeViewItem, i);
                 else if (item.isAction)
-                    ContextMenu.GetContextMenuForActionItem(treeViewItem, item.controlLayout, i);
+                    ContextMenu.GetContextMenuForActionItem(this, treeViewItem, item.controlLayout, i);
                 else
-                    ContextMenu.GetContextMenuForBindingItem(treeViewItem);
+                    ContextMenu.GetContextMenuForBindingItem(this, treeViewItem);
 
                 if (item.isAction)
                 {
@@ -127,6 +127,7 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
+            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
