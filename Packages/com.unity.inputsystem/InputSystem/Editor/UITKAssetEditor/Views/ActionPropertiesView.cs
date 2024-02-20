@@ -42,12 +42,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 tooltip = inputAction.actionTypeTooltip
             };
-            
+
             // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
-            var actionLabel = actionType.Q<Label>(); 
+            var actionLabel = actionType.Q<Label>();
             actionLabel.style.minWidth = m_DropdownLabelWidth;
             actionLabel.style.width = m_DropdownLabelWidth;
-            
+
             actionType.RegisterValueChangedCallback(evt =>
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
@@ -58,12 +58,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var controlTypes = viewState.Item2;
                 var controlType = new DropdownField("Control Type");
-                
+
                 // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
                 var controlLabel = controlType.Q<Label>();
                 controlLabel.style.minWidth = m_DropdownLabelWidth;
                 controlLabel.style.width = m_DropdownLabelWidth;
-                
+
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
