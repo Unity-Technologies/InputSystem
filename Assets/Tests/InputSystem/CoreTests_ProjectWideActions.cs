@@ -149,12 +149,13 @@ internal partial class CoreTests
     public void ProjectWideActionsAsset_HasFilenameName()
     {
         // Expect asset name to be set to the file name
-        var expectedName = Path.GetFileNameWithoutExtension(ProjectWideActionsAsset.defaultAssetPath);
+        var assetPath = ProjectWideActionsAsset.defaultAssetPath;
+        var expectedName = Path.GetFileNameWithoutExtension(assetPath);
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
         Assert.That(asset.name, Is.EqualTo(expectedName));
 
         // Expect JSON name to be set to the file name
-        var json = EditorHelpers.ReadAllText(ProjectWideActionsAsset.defaultAssetPath);
+        var json = File.ReadAllText(assetPath);
         var parsedAsset = InputActionAsset.FromJson(json);
         Assert.That(parsedAsset.name, Is.EqualTo(expectedName));
         Object.Destroy(parsedAsset);

@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Editor
         // Returns the default template JSON content.
         internal static string GetDefaultAssetJson()
         {
-            return EditorHelpers.ReadAllText(kDefaultTemplateAssetPath);
+            return File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath));
         }
 
         // Creates an asset at the given path containing the given JSON content.
@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Note that the extra work here is to override the JSON name from the source asset
             var inputActionAsset = InputActionAsset.FromJson(json);
-            inputActionAsset.name = Path.GetFileNameWithoutExtension(assetPath);
+            inputActionAsset.name = InputActionImporter.NameFromAssetPath(assetPath);
 
             var doSave = true;
             if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Editor
         // Creates an asset at the given path containing the default template JSON.
         internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
         {
-            return CreateAssetAtPathFromJson(assetPath, EditorHelpers.ReadAllText(kDefaultTemplateAssetPath));
+            return CreateAssetAtPathFromJson(assetPath, File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath)));
         }
 
         // Returns the default UI action map as represented by the default template JSON.

@@ -215,7 +215,7 @@ namespace UnityEngine.InputSystem.Editor
             return expandedStates;
         }
 
-        private (string, string) GetSelectedActionMapAndActionKey()
+        internal (string, string) GetSelectedActionMapAndActionKey()
         {
             var selectedActionMap = GetSelectedActionMap();
 

@@ -50,6 +50,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Error logged when InputActionEditor window opened without a valid asset.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
+- Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
 
 ## [1.8.0-pre.2] - 2023-11-09
 

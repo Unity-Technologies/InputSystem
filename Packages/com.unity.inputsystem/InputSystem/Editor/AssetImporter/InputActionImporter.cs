@@ -18,6 +18,15 @@ using UnityEngine.InputSystem.Utilities;
 #pragma warning disable 0649
 namespace UnityEngine.InputSystem.Editor
 {
+    internal interface IInputActionsEditor
+    {
+        string assetGUID { get; }
+        bool isDirty { get; }
+        void OnMove(); // TODO Irrelevant when we have refresh?!
+        void Refresh();
+        void Dismiss(bool forceQuit = false);
+    }
+
     /// <summary>
     /// Imports an <see cref="InputActionAsset"/> from JSON.
     /// </summary>
@@ -50,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
             string content;
             try
             {
-                content = EditorHelpers.ReadAllText(context.assetPath);
+                content = File.ReadAllText(EditorHelpers.GetPhysicalPath(context.assetPath));
             }
             catch (Exception exception)
             {
@@ -96,7 +105,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Force name of asset to be that on the file on disk instead of what may be serialized
                 // as the 'name' property in JSON. (Unless explicitly given)
-                asset.name = Path.GetFileNameWithoutExtension(context.assetPath);
+                asset.name = NameFromAssetPath(context.assetPath);
 
                 // Add asset.
                 ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
@@ -323,83 +332,263 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
 
-//#if false // TEMP  
-        
-        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
-        // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
-        // must flush the updated JSON to the file whenever this operation occurs.
-        // https://jira.unity3d.com/browse/ISXB-749
-        private class InputActionAssetPostprocessor : AssetPostprocessor
+        // File extension of the associated asset
+        public const string FileExtension = "." + InputActionAsset.Extension;
+
+        // Evaluates whether the given path is a path to an asset of the associated type based on extension.
+        public static bool IsInputActionAssetPath(string path)
         {
-            private static List<string> assetFilesNeedingRefresh;
+            return path.EndsWith(FileExtension, StringComparison.InvariantCultureIgnoreCase);
+        }
 
-            private void OnPreprocessAsset()
+        public static string NameFromAssetPath(string assetPath)
+        {
+            Debug.Assert(IsInputActionAssetPath(assetPath));
+            return Path.GetFileNameWithoutExtension(assetPath);
+        }
+
+        private static IInputActionsEditor FindEditorForAssetWithGuid<T>(string guid) where T : EditorWindow
+        {
+            // Currently assumes there is only one instance per type
+            var result = new List<IInputActionsEditor>();
+            var editors = FindAllEditors<T>();
+            return editors.FirstOrDefault(w => w.assetGUID == guid);
+        }
+
+        private static IInputActionsEditor FindEditorForAssetPath<T>(string path) where T : EditorWindow
+        {
+            return FindEditorForAssetWithGuid<T>(AssetDatabase.AssetPathToGUID(path));
+        }
+
+        private static List<IInputActionsEditor> FindAllEditors<T>(List<IInputActionsEditor> result = null) where T : EditorWindow
+        {
+            result ??= new List<IInputActionsEditor>();
+            var editors = Resources.FindObjectsOfTypeAll<T>();
+            foreach (var editor in editors)
             {
-                var importer = assetImporter as InputActionImporter;
-                if (importer == null)
-                    return;
-                
-                var newName = Path.GetFileNameWithoutExtension(assetPath);
-                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-                var newFileContents = File.ReadAllText(assetPath);
+                if (editor is IInputActionsEditor)
+                    result.Add(editor as IInputActionsEditor);
+            }
+            return result;
+        }
 
-                if (!string.IsNullOrEmpty(newFileContents))
+        // Scenarios:
+        // - Input Action Editor is open with an unmodified asset and ...
+        //   ... user deletes an asset. Prompt user whether to delete asset or not. If deleted, close asset in editor.
+        //   ... user moves an asset. Moving the file should not affect content of the file.
+
+        // Asset modification processor designed to handle the following scenarios:
+        // - When an asset is about to get deleted, evaluate if there is a pending unsaved edited copy of the asset
+        //   and in this case, prompt the user that there are unsaved changes and allow the user to cancel the operation
+        //   and allow to save the pending changes or confirm to delete the asset and discard the pending unsaved changes.
+        // - If the asset being deleted is unmodified, no dialog prompt is displayed and the asset is deleted.
+        private class InputActionAssetModificationProcessor : AssetModificationProcessor
+        {
+            // TODO This will yield +2 dialogs which may be seen as disruptive UX. It also adds complexity. Check how other assets handle this situation.
+            [System.Diagnostics.CodeAnalysis.SuppressMessage(category: "Microsoft.Usage",
+                checkId: "CA1801:ReviewUnusedParameters",
+                MessageId = "options",
+                Justification = "options parameter required by Unity API")]
+            public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
+            {
+                if (InputActionImporter.IsInputActionAssetPath(path))
                 {
-                    newAsset.LoadFromJson(newFileContents);
-
-                    // If the serialized Name doesn't match the actual filename this asset file for refresh.
-                    // NOTE: We can't change the file while Asset Importing is in progress.
-                    if (newAsset.name != newName)
+                    // Find GUID uniquely identifying asset at path
+                    var window = FindEditorForAssetPath<InputActionsEditorWindow>(path);
+                    if (window != null)
                     {
-                        if (assetFilesNeedingRefresh == null)
-                            assetFilesNeedingRefresh = new List<string>();
+                        // If there's unsaved changes, ask for confirmation to either abort or delete.
+                        var forceQuit = false;
+                        if (window.isDirty)
+                        {
+                            var result = InputActionsEditorWindowUtils.ConfirmDeleteAssetWithUnsavedChanges(path);
+                            if (result == InputActionsEditorWindowUtils.DialogResult.Cancel)
+                            {
+                                // User canceled. Stop the deletion.
+                                return AssetDeleteResult.FailedDelete;
+                            }
 
-                        Debug.Log("Needing refresh: " + assetPath);
-                        assetFilesNeedingRefresh.Add(assetPath);
+                            forceQuit = true;
+                        }
+
+                        window.Dismiss(forceQuit);
+                        //window.Refresh();
                     }
                 }
+
+                return default;
             }
 
-// Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
-#if UNITY_2021_2_OR_NEWER
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-#else
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
-#endif
+            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
-                if (assetFilesNeedingRefresh == null)
+                if (InputActionImporter.IsInputActionAssetPath(sourcePath))
+                {
+                    Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
+
+                    var window = FindEditorForAssetPath<InputActionsEditorWindow>(sourcePath);
+                    if (window != null)
+                    {
+                        //window.OnMove();
+                    }
+                }
+
+                return default;
+            }
+        }
+
+        // Regarding https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
+        //
+        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
+        // hold the old name and won't match the asset objects name in memory which is set based on the filename
+        // by the scripted imported. To avoid this, this asset post-processor detects any imported or moved assets
+        // with a JSON name property not matching the importer assigned name and updates the JSON name based on this.
+        // This basically solves any problem related to unmodified assets.
+        //
+        // In addition to the above, if the asset is also open in an editor, the following applies:
+        // a) If the asset is unmodified in the editor, and the associated asset is renamed, copied or moved in the
+        //    Editor, the editor in-memory version of the asset is also updated to reflect content from disc.
+        // b) If the asset is modified in the editor, and the associated asset is renamed, copied or moved in the
+        //    Editor, the editor in-memory version of the asset is not updated from from disc. The user may then...
+        //    a.1) ...discard any modifications, the asset is already valid and names are in sync.
+        //    a.2) ...save modifications, the asset is saved with a JSON name derived from the asset path leaving
+        //         the names in sync. To avoid running into a situation where the editor believes it sees additional
+        //         changes coming from disk, it is recommended that editor implementations do not compare JSON names
+        //         when determining if an asset has been modified or not.
+        //
+        // For clarity, the tables below indicate the callback sequences of the asset modification processor and
+        // asset post-processor for various user operations done on assets.
+        //
+        // User operation:                Callback sequence:
+        // ----------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         OnWillDelete(s), Deleted(s)
+        // Copy                           Imported(s)
+        // Rename                         OnWillMove(s,d), Imported(d), Moved(s,d)
+        // Move (drag) / Cut+Paste        OnWillMove(s,d), Moved(s,d)
+        // ------------------------------------------------------------------------------------------------------------
+        //
+        // User operation:                Callback/call sequence:
+        // ------------------------------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         OnWillDelete(s), Deleted(s)
+        // Copy                           Imported(s), Adjust(s), Imported(s)
+        // Rename                         OnWillMove(s,d), Imported(d), Adjust(d), Moved(s,d), Imported(d)
+        // Move(drag) / Cut+Paste         OnWillMove(s,d), Moved(s,d)
+        // ------------------------------------------------------------------------------------------------------------
+        private class InputActionAssetPostprocessor : AssetPostprocessor
+        {
+            private static bool s_RefreshPending;
+
+            private static void Refresh(IInputActionsEditor editor)
+            {
+                Debug.Log("Refresh editor");
+
+                // We cannot update editor content if dirty
+                if (editor.isDirty)
                     return;
 
-                /*try
+                // If our asset has disappeared from disk, just close the window.
+                if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(editor.assetGUID)))
                 {
-                    foreach (var assetPath in assetFilesNeedingRefresh)
-                    {
-                        var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+                    editor.Dismiss();
+                    return;
+                }
 
-                        try
-                        {
-                            var fileContents = File.ReadAllText(assetPath);
+                // Refresh editor
+                editor.Refresh();
+            }
 
-                            newAsset.LoadFromJson(fileContents);
-                            newAsset.name = Path.GetFileNameWithoutExtension(assetPath);
-                            File.WriteAllText(assetPath, newAsset.ToJson());
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                        }
+            private static void RefreshAllOnAssetReimport()
+            {
+                try
+                {
+                    // When the asset is modified outside of the editor
+                    // and the importer settings are visible in the inspector
+                    // the asset references in the importer inspector need to be force rebuild
+                    // (otherwise we gets lots of exceptions)
+                    ActiveEditorTracker.sharedTracker.ForceRebuild();
 
-                        ScriptableObject.DestroyImmediate(newAsset);
-                    }
+                    // Refresh all editors
+                    var editors = FindAllEditors<InputActionsEditorWindow>();
+                    foreach (var editor in editors)
+                        Refresh(editor);
                 }
                 finally
                 {
-                    assetFilesNeedingRefresh = null;
-                }*/
+                    s_RefreshPending = false;
+                }
+            }
+
+            private static void RequestRefreshAllOnAssetReimport()
+            {
+                if (s_RefreshPending)
+                    return;
+
+                // We don't want to refresh right away but rather wait for the next editor update
+                // to then do one pass of refreshing action editor windows.
+                // We use a invalidation-pattern to avoid excessive execution.
+                EditorApplication.delayCall += RefreshAllOnAssetReimport;
+                s_RefreshPending = true;
+            }
+
+            private static void Process(string[] assets, string label)
+            {
+                foreach (var asset in assets)
+                {
+                    if (!IsInputActionAssetPath(asset))
+                        continue;
+                    if (label != null)
+                        Debug.Log(label  + ": " + asset); // TODO Remove this and debugging arg
+                    CheckAndRenameIfInconsistentlyNamed(asset);
+                    s_RefreshPending = true;
+                }
+            }
+
+            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
+#if UNITY_2021_2_OR_NEWER
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths)
+#endif
+            {
+                Process(importedAssets, "Imported");
+                Process(movedAssets, "Moved");
+
+                // For any deleted asset we want to refresh the content of any associated open editor.
+                for (var i = 0; /*!s_RefreshPending &&*/ i < deletedAssets.Length; ++i)
+                {
+                    Debug.Log("Deleted: " + deletedAssets[i]);
+                    //if (IsInputActionAssetPath(deletedAssets[i]))
+                    //    RequestRefreshAllOnAssetReimport();
+                }
+            }
+
+            private static void CheckAndRenameIfInconsistentlyNamed(string assetPath)
+            {
+                InputActionAsset asset = null;
+                try
+                {
+                    asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                    var desiredName = Path.GetFileNameWithoutExtension(assetPath);
+                    if (asset.name == desiredName)
+                        return;
+                    Debug.Log("Rename: " + assetPath);
+                    asset.name = desiredName;
+                    InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()); // TODO Consider failing only with warning if unable checkout
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+                finally
+                {
+                    if (asset != null)
+                        DestroyImmediate(asset);
+                }
             }
         }
-//#endif // TEMP
-
     }
 }
 

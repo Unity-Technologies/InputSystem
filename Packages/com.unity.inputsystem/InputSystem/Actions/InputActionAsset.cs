@@ -297,13 +297,24 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var fileJson = new WriteFileJson
+            object fileJson;
+            /*if (string.IsNullOrEmpty(name))
             {
-                name = name,
-                maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
-                controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            };
-
+                fileJson = new WriteFileJsonNoName
+                {
+                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+                };
+            }
+            else*/
+            {
+                fileJson = new WriteFileJson
+                {
+                    name = name,
+                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+                };
+            }
             return JsonUtility.ToJson(fileJson, true);
         }
 
@@ -383,6 +394,15 @@ namespace UnityEngine.InputSystem
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
             parsedJson.ToAsset(this);
+        }
+
+        public static string ReadNameFromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                throw new ArgumentNullException(nameof(json));
+
+            var parsedJson = JsonUtility.FromJson<ReadFileJsonName>(json);
+            return parsedJson.name;
         }
 
         /// <summary>
@@ -946,6 +966,24 @@ namespace UnityEngine.InputSystem
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct WriteFileJsonNoName
+        {
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct ReadFileJsonName
+        {
+            public string name;
+
+            public void ToAsset(InputActionAsset asset)
+            {
+                asset.name = name;
+            }
         }
 
         [Serializable]

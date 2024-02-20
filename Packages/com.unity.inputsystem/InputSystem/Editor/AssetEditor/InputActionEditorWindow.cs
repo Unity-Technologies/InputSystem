@@ -188,15 +188,15 @@ namespace UnityEngine.InputSystem.Editor
                 var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_ActionAssetManager.path);
                 switch (result)
                 {
-                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
+                    case InputActionsEditorWindowUtils.DialogResult.Save:
                         m_ActionAssetManager.SaveChangesToAsset();
                         m_ActionAssetManager.Cleanup();
                         break;
-                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
+                    case InputActionsEditorWindowUtils.DialogResult.Cancel:
                         Instantiate(this).Show();
                         // Cancel editor quit.
                         return false;
-                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                    case InputActionsEditorWindowUtils.DialogResult.DontSave:
                         // Don't save, don't ask again.
                         m_ForceQuit = true;
                         break;
@@ -860,8 +860,10 @@ namespace UnityEngine.InputSystem.Editor
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
-                if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(path))
                     return default;
+
+                //Debug.Log("OnWillDeleteAsset: " + path);
 
                 // See if we have an open window.
                 var guid = AssetDatabase.AssetPathToGUID(path);
@@ -871,10 +873,8 @@ namespace UnityEngine.InputSystem.Editor
                     // If there's unsaved changes, ask for confirmation.
                     if (window.m_ActionAssetManager.dirty)
                     {
-                        var result = EditorUtility.DisplayDialog("Unsaved changes",
-                            $"You have unsaved changes for '{path}'. Do you want to discard the changes and delete the asset?",
-                            "Yes, Delete", "No, Cancel");
-                        if (!result)
+                        var result = InputActionsEditorWindowUtils.ConfirmDeleteAssetWithUnsavedChanges(path);
+                        if (result == InputActionsEditorWindowUtils.DialogResult.Cancel)
                         {
                             // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;
@@ -897,6 +897,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                     return default;
+
+                //Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
 
                 var guid = AssetDatabase.AssetPathToGUID(sourcePath);
                 var window = FindEditorForAssetWithGUID(guid);

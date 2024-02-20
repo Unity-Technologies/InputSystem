@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool ReInitializeIfAssetHasChanged()
         {
-            var asset = importedAsset;
+            var asset = importedAsset; // TODO This is a common operation
             var json = asset.ToJson();
             if (m_ImportedAssetJson == json)
                 return false;
@@ -161,6 +161,24 @@ namespace UnityEngine.InputSystem.Editor
             onDirtyChanged(false);
         }
 
+        internal static bool WriteAsset(string assetPath, string assetJson)
+        {
+            // Attempt to checkout the file path for editing and inform the user if this fails.
+            if (!EditorHelpers.CheckOut(assetPath))
+            {
+                Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                return false;
+            }
+
+            // (Over)write JSON content to file given by path.
+            File.WriteAllText(EditorHelpers.GetPhysicalPath(assetPath), assetJson);
+
+            // Reimport the asset (indirectly triggers ADB notification callbacks)
+            AssetDatabase.ImportAsset(assetPath);
+
+            return true;
+        }
+
         /// <summary>
         /// Saves an asset to the given <c>assetPath</c> with file content corresponding to <c>assetJson</c>
         /// if the current content of the asset given by <c>assetPath</c> is different or the asset do not exist.
@@ -176,20 +194,7 @@ namespace UnityEngine.InputSystem.Editor
             if (assetJson == existingJson)
                 return false;
 
-            // Attempt to checkout the file path for editing and inform the user if this fails.
-            if (!EditorHelpers.CheckOut(assetPath))
-            {
-                Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
-                return false;
-            }
-
-            // (Over)write JSON content to file given by path.
-            EditorHelpers.WriteAllText(assetPath, assetJson);
-
-            // Reimport the asset (indirectly triggers ADB notification callbacks)
-            AssetDatabase.ImportAsset(assetPath);
-
-            return true;
+            return WriteAsset(assetPath, assetJson);
         }
 
         /// <summary>
