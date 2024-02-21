@@ -5039,32 +5039,20 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_NameInJsonIsNotSet_IfCreatedFromObjectWithNullName()
+    public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithNullName()
     {
-        // When serializing JSON from object without a given name, name property should not be present.
+        // When serializing JSON from object without a given name, Unity forces the name to empty string.
+        // Basically Unity prevents us from doing serialization an omit optional members in a convenient way.
+        // Hence this test just verifies this behavior since its expected.
+        // Hence its not possible in an easy way to provide bidirectional transformation to/from JSON.
+        // Also note that any additional user augmentation in JSON is currently not supported.
         var asset = InputActionAsset.FromJson(MinimalJson());
         asset.name = null;
         var content = asset.ToJson();
-        var expected = MinimalJson();
+        var expected = MinimalJson(string.Empty);
         ScriptableObject.Destroy(asset);
         Assert.That(content, Is.EqualTo(expected));
     }
-
-    // TODO Remove if we really can't provide bidirectional transformation with transitive guarantees.
-    /*[Test]
-    [Category("Actions")]
-    [TestCase(null)]
-    public void Actions_NameInJsonReflectsObjectName(string name)
-    {
-        // When serializing JSON from object without a given name, name property should not be present.
-        // When serializing JSON from object with a string, name property should be present and equal to object name.
-        var json = MinimalJson(name);
-        var asset = InputActionAsset.FromJson(json);
-        asset.name = name;
-        var content = asset.ToJson();
-        ScriptableObject.Destroy(asset);
-        Assert.That(content, Is.EqualTo(json));
-    }*/
 
     [Test]
     [Category("Actions")]

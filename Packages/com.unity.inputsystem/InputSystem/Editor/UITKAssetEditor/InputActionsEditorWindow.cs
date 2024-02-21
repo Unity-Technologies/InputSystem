@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.VersionControl;
 using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
@@ -20,8 +21,16 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
-    internal class InputActionsEditorWindow : EditorWindow, IInputActionsEditor
+    /*internal static class RegisterInputActionsAssetEditorWindow
     {
+        static Register
+    }*/
+
+    internal class InputActionsAssetEditorWindow : EditorWindow, IInputActionsAssetEditor
+    {
+        // Register for notifications for open editor windows
+        static InputActionsAssetEditorWindow() { InputActionImporter.RegisterType<InputActionsAssetEditorWindow>(); }
+        
         // TODO Consider moving state into its own struct so it can just be assigned or reset
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
@@ -73,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        private static InputActionsEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
+        private static InputActionsAssetEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
         {
             int instanceId = asset.GetInstanceID();
 
@@ -111,22 +120,22 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         /// <param name="asset">The InputActionAsset to open.</param>
         /// <returns>The editor window.</returns>
-        public static InputActionsEditorWindow OpenEditor(InputActionAsset asset)
+        public static InputActionsAssetEditorWindow OpenEditor(InputActionAsset asset)
         {
             return OpenWindow(asset, null, null);
         }
 
-        private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
+        private static InputActionsAssetEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
         {
             isAlreadyOpened = false;
-            if (HasOpenInstances<InputActionsEditorWindow>())
+            if (HasOpenInstances<InputActionsAssetEditorWindow>())
             {
-                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsEditorWindow)) as InputActionsEditorWindow[];
+                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsAssetEditorWindow)) as InputActionsAssetEditorWindow[];
                 var alreadyOpenWindow = openWindows?.ToList().FirstOrDefault(window => window.m_AssetId.Equals(id));
                 isAlreadyOpened = alreadyOpenWindow != null;
-                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsEditorWindow>();
+                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsAssetEditorWindow>();
             }
-            return GetWindow<InputActionsEditorWindow>();
+            return GetWindow<InputActionsAssetEditorWindow>();
         }
 
         /*private void SetAsset(string assetPath, string actionToSelect = null, string actionMapToSelect = null)
@@ -153,13 +162,17 @@ namespace UnityEngine.InputSystem.Editor
                 m_State = m_State.SelectAction(actionToSelect);
             }
 
+            // Obtain and persist GUID for the associated asset
+            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _),
+                $"Failed to get asset {asset.name} GUID");
+
+            UpdateFromAsset();
+
             // Read and cache the asset content into m_AssetJson
-            m_AssetJson = File.ReadAllText(assetPath);
-            bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
-            Debug.Assert(isGUIDObtained, $"Failed to get asset {asset.name} GUID");
+            /*m_AssetJson = InputActionAsset.ReadJsonContent(assetPath);
 
             // Update window title based on associated asset
-            titleContent = GetEditorTitle(asset, m_IsDirty);
+            titleContent = GetEditorTitle(asset, m_IsDirty);*/
 
             BuildUI();
         }
@@ -206,7 +219,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
-            view.postSaveAction += PostSaveAction;
+            view.postSaveAction += UpdateFromAsset;
             stateContainer.Initialize();
         }
 
@@ -226,28 +239,27 @@ namespace UnityEngine.InputSystem.Editor
 
         private void UpdateWindowTitle()
         {
-            titleContent = GetEditorTitle(m_State.serializedObject.targetObject as InputActionAsset, m_IsDirty);
+            titleContent = GetEditorTitle(GetEditedAsset(), m_IsDirty);
+        }
+
+        private InputActionAsset GetEditedAsset()
+        {
+            return m_State.serializedObject.targetObject as InputActionAsset;
         }
 
         private void Save()
         {
-            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-
-
             // TODO Check if valid to save asset
             // TODO Should really detect if editing project wide asset here and run validation on it if editing in free-floating editor
-            var asset = m_State.serializedObject.targetObject as InputActionAsset;
-            InputActionAssetManager.SaveAsset(asset);
-            PostSaveAction();
+            InputActionAssetManager.SaveAsset(GetEditedAsset());
+            UpdateFromAsset();
         }
 
-        private void PostSaveAction()
+        private void UpdateFromAsset()
         {
-            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-
-            //Debug.Assert(File.Exists(path));
+            var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            m_AssetJson = InputActionAsset.ReadJsonContent(assetPath);
             m_IsDirty = false;
-            m_AssetJson = File.ReadAllText(path);
             UpdateWindowTitle();
         }
 
@@ -255,7 +267,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // Window is dirty is equivalent to if asset has changed
-            var isWindowDirty = HasAssetChanged(newState.serializedObject);
+            var isWindowDirty = GetEditedAsset().ToJsonContent() != m_AssetJson; //GetEditedAsset().HasChanged(m_AssetJson);
             #else
             // Window is dirty is never true since every change is auto-saved
             var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
@@ -265,12 +277,6 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_IsDirty = isWindowDirty;
             UpdateWindowTitle();
-        }
-
-        private bool HasAssetChanged(SerializedObject serializedAsset)
-        {
-            var editedAsset = serializedAsset.targetObject as InputActionAsset;
-            return editedAsset.HasChanged(m_AssetJson);
         }
 
         private void OnLostFocus()
@@ -284,19 +290,16 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDestroy()
         {
-            ConfirmSaveChangesIfNeeded();
-        }
-
-        private void ConfirmSaveChangesIfNeeded()
-        {
-            // Do we have unsaved changes?
+            // Do we have unsaved changes that we need to ask the user to save or discard?
             if (!m_IsDirty)
                 return;
 
+            // Get target asset path from GUID, if this fails file no longer exists and we need to abort.
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(assetPath))
-                return; // TODO
+                return;
 
+            // Prompt user with a dialog
             var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(assetPath);
             switch (result)
             {
@@ -311,18 +314,20 @@ namespace UnityEngine.InputSystem.Editor
                     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
                     AssetDatabase.ImportAsset(assetPath);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(result));
             }
         }
 
         private void ReshowEditorWindowWithUnsavedChanges()
         {
-            var window = CreateWindow<InputActionsEditorWindow>();
+            var window = CreateWindow<InputActionsAssetEditorWindow>();
             CopyOldStatsToNewWindow(window);
             window.BuildUI();
             window.Show();
         }
 
-        private void CopyOldStatsToNewWindow(InputActionsEditorWindow window)
+        private void CopyOldStatsToNewWindow(InputActionsAssetEditorWindow window)
         {
             window.m_AssetId = m_AssetId;
             window.m_State = m_State;
@@ -343,9 +348,9 @@ namespace UnityEngine.InputSystem.Editor
             return windows.FirstOrDefault(w => w.ImportedAssetObjectEquals(asset));
         }*/
 
-        public static InputActionsEditorWindow FindEditorForAssetWithGUID(string guid)
+        public static InputActionsAssetEditorWindow FindEditorForAssetWithGUID(string guid)
         {
-            var windows = Resources.FindObjectsOfTypeAll<InputActionsEditorWindow>();
+            var windows = Resources.FindObjectsOfTypeAll<InputActionsAssetEditorWindow>();
             return windows.FirstOrDefault(w => w.m_AssetGUID == guid);
         }
 
@@ -353,31 +358,50 @@ namespace UnityEngine.InputSystem.Editor
 
         public string assetGUID => m_AssetGUID;
         public bool isDirty => m_IsDirty;
-        public void Dismiss(bool forceQuit = false)
-        {
-            if (forceQuit)
-                m_ForceQuit = true;
-            Close();
-        }
 
-        public void OnMove()
+        public void OnAssetMoved()
         {
-            // Remap GUID to asset path
-            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            // Remap GUID to asset path (during move GUID will be stable but path will not be)
+            /*var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(path))
             {
                 // Associated asset do not exist
-                Close(); // TODO Better to revert to empty window
+                Close(); // TODO Better to revert to empty window? It would make sense to leave it if docked at least
+            }*/
+
+            if (!m_IsDirty)
+            {
+                //var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+                //m_AssetJson = File.ReadAllText(path);
             }
 
             UpdateWindowTitle();
         }
 
-        public void Refresh()
+        public void OnAssetDeleted()
         {
-            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            if (string.IsNullOrEmpty(path))
-                Close();
+            // When associated asset is deleted on disk, just close the editor, but also mark the editor
+            // as not being dirty to avoid prompting the user to save changes.
+            m_IsDirty = false;
+            Close();
+        }
+
+        public void OnAssetImported()
+        {
+            // If the editor has pending changes done by the user and the contents changes on disc, there
+            // is not much we can do about it but to ignore loading the changes. If the editors asset is
+            // unmodified, we can refresh the editor with the latest content from disc.
+            if (m_IsDirty)
+                return;
+
+            //SetAsset(m_);
+            // If the asset is unmodified in the editor we may just update the content based on the asset on disc
+
+
+            //var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            //var asset = GetAssetFromDatabase();
+            //if (asset == null)
+            //    Close(); // The asset we are referencing do not exist so just close the window
 
             // Don't touch the UI state if the serialized data is still the same.
             //if (!m_ActionAssetManager.ReInitializeIfAssetHasChanged())
@@ -395,8 +419,6 @@ namespace UnityEngine.InputSystem.Editor
 
             //OnStateChanged(m_State);
         }
-
-        private bool m_ForceQuit = false;
 
         #endregion
     }

@@ -18,13 +18,35 @@ using UnityEngine.InputSystem.Utilities;
 #pragma warning disable 0649
 namespace UnityEngine.InputSystem.Editor
 {
-    internal interface IInputActionsEditor
+    /// <summary>
+    /// Interface representing an Input Action Asset editor.
+    /// </summary>
+    internal interface IInputActionsAssetEditor
     {
+        /// <summary>
+        /// A read-only string representation of the asset GUID associated with the asset being edited.
+        /// </summary>
         string assetGUID { get; }
+
+        /// <summary>
+        /// Returns whether the editor has unsaved changes compared to the associated source asset.
+        /// </summary>
         bool isDirty { get; }
-        void OnMove(); // TODO Irrelevant when we have refresh?!
-        void Refresh();
-        void Dismiss(bool forceQuit = false);
+
+        /// <summary>
+        /// Callback triggered when the associated asset is imported.
+        /// </summary>
+        void OnAssetImported();
+
+        /// <summary>
+        /// Callback triggered when the associated asset is moved.
+        /// </summary>
+        void OnAssetMoved();
+
+        /// <summary>
+        /// Callback triggered when the associated asset is deleted.
+        /// </summary>
+        void OnAssetDeleted();
     }
 
     /// <summary>
@@ -347,29 +369,40 @@ namespace UnityEngine.InputSystem.Editor
             return Path.GetFileNameWithoutExtension(assetPath);
         }
 
-        private static IInputActionsEditor FindEditorForAssetWithGuid<T>(string guid) where T : EditorWindow
+        private static IInputActionsAssetEditor FindEditorForAssetWithGuid<T>(string guid) where T : EditorWindow
         {
             // Currently assumes there is only one instance per type
-            var result = new List<IInputActionsEditor>();
+            var result = new List<IInputActionsAssetEditor>();
             var editors = FindAllEditors<T>();
             return editors.FirstOrDefault(w => w.assetGUID == guid);
         }
 
-        private static IInputActionsEditor FindEditorForAssetPath<T>(string path) where T : EditorWindow
+        private static IInputActionsAssetEditor FindEditorForAssetPath<T>(string path) where T : EditorWindow
         {
             return FindEditorForAssetWithGuid<T>(AssetDatabase.AssetPathToGUID(path));
         }
 
-        private static List<IInputActionsEditor> FindAllEditors<T>(List<IInputActionsEditor> result = null) where T : EditorWindow
+        private static List<IInputActionsAssetEditor> FindAllEditors<T>(Predicate<IInputActionsAssetEditor> predicate = null, List<IInputActionsAssetEditor> result = null) where T : EditorWindow
         {
-            result ??= new List<IInputActionsEditor>();
-            var editors = Resources.FindObjectsOfTypeAll<T>();
+            return FindAllEditors(typeof(T), predicate, result);
+        }
+        
+        private static List<IInputActionsAssetEditor> FindAllEditors(Type type, Predicate<IInputActionsAssetEditor> predicate = null, List<IInputActionsAssetEditor> result = null)
+        {
+            result ??= new List<IInputActionsAssetEditor>();
+            var editors = Resources.FindObjectsOfTypeAll(type);
             foreach (var editor in editors)
             {
-                if (editor is IInputActionsEditor)
-                    result.Add(editor as IInputActionsEditor);
+                if (editor is IInputActionsAssetEditor actionsAssetEditor && (predicate == null || predicate(actionsAssetEditor)))
+                    result.Add(actionsAssetEditor);
             }
             return result;
+        }
+
+        private static List<IInputActionsAssetEditor> FindAllEditorsForAssetPath<T>(string assetPath, List<IInputActionsAssetEditor> result = null) where T : EditorWindow
+        {
+            var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+            return FindAllEditors<T>((editor) => editor.assetGUID == assetGuid, result);
         }
 
         // Scenarios:
@@ -394,7 +427,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (InputActionImporter.IsInputActionAssetPath(path))
                 {
                     // Find GUID uniquely identifying asset at path
-                    var window = FindEditorForAssetPath<InputActionsEditorWindow>(path);
+                    var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(path);
                     if (window != null)
                     {
                         // If there's unsaved changes, ask for confirmation to either abort or delete.
@@ -411,7 +444,8 @@ namespace UnityEngine.InputSystem.Editor
                             forceQuit = true;
                         }
 
-                        window.Dismiss(forceQuit);
+                        // Note only valid for internal editor operations
+                        //window.Dismiss(forceQuit);
                         //window.Refresh();
                     }
                 }
@@ -425,9 +459,10 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
 
-                    var window = FindEditorForAssetPath<InputActionsEditorWindow>(sourcePath);
+                    var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(sourcePath);
                     if (window != null)
                     {
+                        // TODO Note that its only valid for internal editor operations
                         //window.OnMove();
                     }
                 }
@@ -471,76 +506,159 @@ namespace UnityEngine.InputSystem.Editor
         // ------------------------------------------------------------------------------------------------------------
         // Save                           Imported(s)
         // Delete                         OnWillDelete(s), Deleted(s)
-        // Copy                           Imported(s), Adjust(s), Imported(s)
-        // Rename                         OnWillMove(s,d), Imported(d), Adjust(d), Moved(s,d), Imported(d)
+        // Copy                           Imported(s), Fix(s), Imported(s)
+        // Rename                         OnWillMove(s,d), Imported(d), Fix(d), Moved(s,d), Imported(d)
         // Move(drag) / Cut+Paste         OnWillMove(s,d), Moved(s,d)
         // ------------------------------------------------------------------------------------------------------------
+        // Note that as stated in table above, JSON name changes (called "Fix" above) will only be executed when either
+        // Copying, Renaming within the editor. For all other operations the name and file name would not differ.
+        //
+        // External user operation:       Callback/call sequence:
+        // ------------------------------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         Deleted(s)
+        // Copy                           Imported(s)
+        // Rename                         Imported(d), Deleted(s)
+        // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
+        // ------------------------------------------------------------------------------------------------------------
+
+        private class DelayedCallback
+        {
+            private static bool s_NotificationPending;
+            private static List<Type> s_EditorTypes = new List<Type>();
+
+            public static void RegisterType(Type type)
+            {
+                // Return immediately if type has already been registered
+                if (s_EditorTypes.Contains(type))
+                    return;
+
+                // Run-time type constraint checks
+                if (!(type.IsSubclassOf(typeof(EditorWindow)) || type == typeof(EditorWindow)))
+                {
+                    throw new Exception(
+                        $"Failed to register type: {type}. Type must derived from {nameof(EditorWindow)}");
+                }
+                if (!typeof(IInputActionsAssetEditor).IsAssignableFrom(type))
+                {
+                    throw new Exception(
+                        $"Failed to register type: {type}. Type must implement {nameof(IInputActionsAssetEditor)}");
+                }
+
+                // Register type
+                s_EditorTypes.Add(type);
+            }
+
+            public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+            {
+                RegisterType(typeof(T));
+            }
+
+            private static void Notify()
+            {
+            }
+
+            private void RequestNotification()
+            {
+                if (s_NotificationPending)
+                    return;
+
+                EditorApplication.delayCall += Notify;
+
+                s_NotificationPending = true;
+            }
+        }
+
+        public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+        {
+            InputActionAssetPostprocessor.RegisterType<T>();
+        }
+        
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
-            private static bool s_RefreshPending;
+            private static bool s_DoNotifyEditorsScheduled;
+            private static readonly List<Type> s_EditorTypes = new List<Type>();
+            private static List<string> s_Imported = new List<string>();
+            private static List<string> s_Deleted = new List<string>();
+            private static List<string> s_Moved = new List<string>();
 
-            private static void Refresh(IInputActionsEditor editor)
+            public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
             {
-                Debug.Log("Refresh editor");
-
-                // We cannot update editor content if dirty
-                if (editor.isDirty)
-                    return;
-
-                // If our asset has disappeared from disk, just close the window.
-                if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(editor.assetGUID)))
-                {
-                    editor.Dismiss();
-                    return;
-                }
-
-                // Refresh editor
-                editor.Refresh();
+                if (!s_EditorTypes.Contains(typeof(T)))
+                    s_EditorTypes.Add(typeof(T));
             }
 
-            private static void RefreshAllOnAssetReimport()
+            private static void Notify(IReadOnlyCollection<string> assets, 
+                IReadOnlyCollection<IInputActionsAssetEditor> editors, Action<IInputActionsAssetEditor> callback)
             {
-                try
+                foreach (var asset in assets)
                 {
-                    // When the asset is modified outside of the editor
-                    // and the importer settings are visible in the inspector
-                    // the asset references in the importer inspector need to be force rebuild
-                    // (otherwise we gets lots of exceptions)
-                    ActiveEditorTracker.sharedTracker.ForceRebuild();
-
-                    // Refresh all editors
-                    var editors = FindAllEditors<InputActionsEditorWindow>();
+                    var assetGuid = AssetDatabase.AssetPathToGUID(asset);
                     foreach (var editor in editors)
-                        Refresh(editor);
-                }
-                finally
-                {
-                    s_RefreshPending = false;
+                    {
+                        if (editor.assetGUID != assetGuid) 
+                            continue;
+                        
+                        try
+                        {
+                            callback(editor);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogException(e);
+                        }
+                    }
                 }
             }
 
-            private static void RequestRefreshAllOnAssetReimport()
+            private static void DoNotifyEditors()
             {
-                if (s_RefreshPending)
+                // When the asset is modified outside of the editor and the importer settings are visible in the
+                // Inspector the asset references in the importer inspector need to be force rebuild
+                // (otherwise we gets lots of exceptions).
+                ActiveEditorTracker.sharedTracker.ForceRebuild();
+
+                // Unconditionally find all editors from registered types regardless of associated asset
+                List<IInputActionsAssetEditor> editors = null;
+                foreach (var type in s_EditorTypes)
+                    editors = FindAllEditors(type, null, editors);
+                
+                // Abort if there are no available candidate editors 
+                if (editors == null)
                     return;
 
-                // We don't want to refresh right away but rather wait for the next editor update
-                // to then do one pass of refreshing action editor windows.
-                // We use a invalidation-pattern to avoid excessive execution.
-                EditorApplication.delayCall += RefreshAllOnAssetReimport;
-                s_RefreshPending = true;
+                // Notify editors
+                Notify(s_Imported, editors, (editor) => editor.OnAssetImported());
+                Notify(s_Deleted, editors, (editor) => editor.OnAssetDeleted());
+                Notify(s_Moved, editors, (editor) => editor.OnAssetMoved());
             }
 
-            private static void Process(string[] assets, string label)
+            private static void Process(string[] assets, ICollection<string> target)
             {
                 foreach (var asset in assets)
                 {
                     if (!IsInputActionAssetPath(asset))
                         continue;
-                    if (label != null)
-                        Debug.Log(label  + ": " + asset); // TODO Remove this and debugging arg
-                    CheckAndRenameIfInconsistentlyNamed(asset);
-                    s_RefreshPending = true;
+                    target.Add(asset);
+                    
+                    // If a notification execution has already been scheduled do nothing.
+                    // We do this with delayed execution to avoid excessive updates interfering with ADB.
+                    if (!s_DoNotifyEditorsScheduled)
+                    {
+                        EditorApplication.delayCall += () =>
+                        {
+                            try
+                            {
+                                DoNotifyEditors();
+                            }
+                            finally
+                            {
+                                target.Clear();
+                                s_DoNotifyEditorsScheduled = false;
+                            }
+                        };
+                        s_DoNotifyEditorsScheduled = true;
+                    }
                 }
             }
 
@@ -553,19 +671,86 @@ namespace UnityEngine.InputSystem.Editor
                 string[] movedAssets, string[] movedFromAssetPaths)
 #endif
             {
-                Process(importedAssets, "Imported");
-                Process(movedAssets, "Moved");
-
-                // For any deleted asset we want to refresh the content of any associated open editor.
-                for (var i = 0; /*!s_RefreshPending &&*/ i < deletedAssets.Length; ++i)
+                Process(importedAssets, s_Imported);
+                Process(deletedAssets, s_Deleted);
+                Process(movedAssets, s_Moved);
+            }
+        }
+        
+        // This processor was added to adress this issue:
+        // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
+        //
+        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
+        // hold the old name and won't match the asset objects name in memory which is set based on the filename
+        // by the scripted imported. To avoid this, this asset post-processor detects any imported or moved assets
+        // with a JSON name property not matching the importer assigned name and updates the JSON name based on this.
+        // This basically solves any problem related to unmodified assets.
+        //
+        // Note that JSON names have no relevance for editor workflows and are basically ignored by the importer.
+        // Note that JSON names may be the only way to identify assets loaded from non-file sources or via 
+        // UnityEngine.Resources in run-time.
+        //
+        // In addition to the above, if the asset is also open in an editor, the following applies:
+        // a) If the asset is unmodified in the editor, and the associated asset is renamed, copied or moved in the
+        //    Editor, the editor in-memory version of the asset is also updated to reflect content from disc.
+        // b) If the asset is modified in the editor, and the associated asset is renamed, copied or moved in the
+        //    Editor, the editor in-memory version of the asset is not updated from from disc. The user may then...
+        //    a.1) ...discard any modifications, the asset is already valid and names are in sync.
+        //    a.2) ...save modifications, the asset is saved with a JSON name derived from the asset path leaving
+        //         the names in sync. To avoid running into a situation where the editor believes it sees additional
+        //         changes coming from disk, it is recommended that editor implementations do not compare JSON names
+        //         when determining if an asset has been modified or not.
+        //
+        // For clarity, the tables below indicate the callback sequences of the asset modification processor and
+        // asset post-processor for various user operations done on assets.
+        //
+        // User operation:                Callback sequence:
+        // ----------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         OnWillDelete(s), Deleted(s)
+        // Copy                           Imported(s)
+        // Rename                         OnWillMove(s,d), Imported(d), Moved(s,d)
+        // Move (drag) / Cut+Paste        OnWillMove(s,d), Moved(s,d)
+        // ------------------------------------------------------------------------------------------------------------
+        //
+        // User operation:                Callback/call sequence:
+        // ------------------------------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         OnWillDelete(s), Deleted(s)
+        // Copy                           Imported(s), Fix(s), Imported(s)
+        // Rename                         OnWillMove(s,d), Imported(d), Fix(d), Moved(s,d), Imported(d)
+        // Move(drag) / Cut+Paste         OnWillMove(s,d), Moved(s,d)
+        // ------------------------------------------------------------------------------------------------------------
+        // Note that as stated in table above, JSON name changes (called "Fix" above) will only be executed when either
+        // Copying, Renaming within the editor. For all other operations the name and file name would not differ.
+        //
+        // External user operation:       Callback/call sequence:
+        // ------------------------------------------------------------------------------------------------------------
+        // Save                           Imported(s)
+        // Delete                         Deleted(s)
+        // Copy                           Imported(s)
+        // Rename                         Imported(d), Deleted(s)
+        // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
+        // ------------------------------------------------------------------------------------------------------------
+        private class InputActionJsonNameModifierAssetProcessor : AssetPostprocessor
+        {
+            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
+#if UNITY_2021_2_OR_NEWER
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths)
+#endif
+            {
+                foreach (var assetPath in importedAssets)
                 {
-                    Debug.Log("Deleted: " + deletedAssets[i]);
-                    //if (IsInputActionAssetPath(deletedAssets[i]))
-                    //    RequestRefreshAllOnAssetReimport();
+                    if (IsInputActionAssetPath(assetPath))
+                        CheckAndRenameJsonNameIfDifferent(assetPath);
                 }
             }
 
-            private static void CheckAndRenameIfInconsistentlyNamed(string assetPath)
+            private static void CheckAndRenameJsonNameIfDifferent(string assetPath)
             {
                 InputActionAsset asset = null;
                 try
@@ -574,9 +759,11 @@ namespace UnityEngine.InputSystem.Editor
                     var desiredName = Path.GetFileNameWithoutExtension(assetPath);
                     if (asset.name == desiredName)
                         return;
-                    Debug.Log("Rename: " + assetPath);
                     asset.name = desiredName;
-                    InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()); // TODO Consider failing only with warning if unable checkout
+                    if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                    {
+                        Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -65,6 +65,7 @@ namespace UnityEngine.InputSystem.Editor
             CheckOut(path);
         }
 
+        // Maps path into a physical path.
         public static string GetPhysicalPath(string path)
         {
             // Note that we can only get physical path for 2021.2 or newer

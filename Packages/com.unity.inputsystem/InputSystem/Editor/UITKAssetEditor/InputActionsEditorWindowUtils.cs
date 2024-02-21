@@ -44,8 +44,15 @@ namespace UnityEngine.InputSystem.Editor
     }
 
     // TODO Ideally instead sits on InputActionAssetManager
-    public static class InputActionAssetEditorExtensions
+    internal static class InputActionAssetEditorExtensions
     {
+        public static bool IsEqualJsonContent(this InputActionAsset asset, string otherJson)
+        {
+            var first = asset.ToJsonContent();
+            var second = otherJson; // TODO This should really be sanitized up-front when synchronizing with asset
+            return first == second;
+        }
+
         public static bool HasChanged(this InputActionAsset asset, string editTargetAssetJson)
         {
             // Checks if the asset being edited is a new asset that was never saved before.

@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Redirect to UI-Toolkit window editor if not configured to use IMGUI explicitly
             if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
-                InputActionsEditorWindow.OpenEditor(asset);
+                InputActionsAssetEditorWindow.OpenEditor(asset);
             else
                 InputActionEditorWindow.OpenEditor(asset);
 #else

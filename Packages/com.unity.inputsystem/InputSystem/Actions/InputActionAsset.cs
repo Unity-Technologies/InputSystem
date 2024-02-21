@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -316,6 +318,28 @@ namespace UnityEngine.InputSystem
                 };
             }
             return JsonUtility.ToJson(fileJson, true);
+        }
+
+        // Similar to ToJson() but converts to JSON excluding the name property and any additional JSON
+        // content that may be part of the file not recognized by this parser.
+        internal string ToJsonContent()
+        {
+            return JsonUtility.ToJson(new WriteFileJsonNoName
+            {
+                maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+            }, prettyPrint: true);
+        }
+
+        internal static string ReadJsonContent(string path)
+        {
+            var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(path));
+            var obj = JsonUtility.FromJson<ReadFileJson>(json);
+            return JsonUtility.ToJson(new WriteFileJsonNoName
+            {
+                maps = InputActionMap.WriteFileJson.FromMaps(new InputActionMap.ReadFileJson {maps = obj.maps}.ToMaps()).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(InputControlScheme.SchemeJson.ToSchemes(obj.controlSchemes)),
+            }, prettyPrint: true);
         }
 
         /// <summary>
@@ -1005,5 +1029,23 @@ namespace UnityEngine.InputSystem
                         map.m_Asset = asset;
             }
         }
+
+        /*[Serializable]
+        internal struct ReadFileJsonNoName
+        {
+            public InputActionMap.ReadMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+
+            public void ToAsset(InputActionAsset asset)
+            {
+                asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
+                asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
+
+                // Link maps to their asset.
+                if (asset.m_ActionMaps != null)
+                    foreach (var map in asset.m_ActionMaps)
+                        map.m_Asset = asset;
+            }
+        }*/
     }
 }
