@@ -521,57 +521,15 @@ namespace UnityEngine.InputSystem.Editor
         // Rename                         Imported(d), Deleted(s)
         // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
         // ------------------------------------------------------------------------------------------------------------
-
-        private class DelayedCallback
-        {
-            private static bool s_NotificationPending;
-            private static List<Type> s_EditorTypes = new List<Type>();
-
-            public static void RegisterType(Type type)
-            {
-                // Return immediately if type has already been registered
-                if (s_EditorTypes.Contains(type))
-                    return;
-
-                // Run-time type constraint checks
-                if (!(type.IsSubclassOf(typeof(EditorWindow)) || type == typeof(EditorWindow)))
-                {
-                    throw new Exception(
-                        $"Failed to register type: {type}. Type must derived from {nameof(EditorWindow)}");
-                }
-                if (!typeof(IInputActionsAssetEditor).IsAssignableFrom(type))
-                {
-                    throw new Exception(
-                        $"Failed to register type: {type}. Type must implement {nameof(IInputActionsAssetEditor)}");
-                }
-
-                // Register type
-                s_EditorTypes.Add(type);
-            }
-
-            public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
-            {
-                RegisterType(typeof(T));
-            }
-
-            private static void Notify()
-            {
-            }
-
-            private void RequestNotification()
-            {
-                if (s_NotificationPending)
-                    return;
-
-                EditorApplication.delayCall += Notify;
-
-                s_NotificationPending = true;
-            }
-        }
-
-        public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+        
+        public static void RegisterTypeForAssetNotifications<T>() where T : EditorWindow, IInputActionsAssetEditor
         {
             InputActionAssetPostprocessor.RegisterType<T>();
+        }
+
+        public static void UnregisterTypeForAssetNotifications<T>() where T : EditorWindow, IInputActionsAssetEditor
+        {
+            InputActionAssetPostprocessor.UnregisterType<T>();
         }
         
         private class InputActionAssetPostprocessor : AssetPostprocessor
@@ -582,10 +540,18 @@ namespace UnityEngine.InputSystem.Editor
             private static List<string> s_Deleted = new List<string>();
             private static List<string> s_Moved = new List<string>();
 
-            public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+            // Registers an editor type for receiving notifications of asset modifications if the editor is open.
+            internal static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
             {
                 if (!s_EditorTypes.Contains(typeof(T)))
                     s_EditorTypes.Add(typeof(T));
+            }
+            
+            // Unregisters a previously registered type from receiving notifications of asset modifications if the
+            // editor is open.
+            internal static void UnregisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+            {
+                s_EditorTypes.Remove(typeof(T));
             }
 
             private static void Notify(IReadOnlyCollection<string> assets, 
