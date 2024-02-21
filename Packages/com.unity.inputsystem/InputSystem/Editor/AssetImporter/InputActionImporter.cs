@@ -355,12 +355,12 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // File extension of the associated asset
-        public const string FileExtension = "." + InputActionAsset.Extension;
+        private const string kFileExtension = "." + InputActionAsset.Extension;
 
         // Evaluates whether the given path is a path to an asset of the associated type based on extension.
         public static bool IsInputActionAssetPath(string path)
         {
-            return path.EndsWith(FileExtension, StringComparison.InvariantCultureIgnoreCase);
+            return path.EndsWith(kFileExtension, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static string NameFromAssetPath(string assetPath)
@@ -728,7 +728,7 @@ namespace UnityEngine.InputSystem.Editor
                     asset.name = desiredName;
                     if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
                     {
-                        Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                        Debug.LogError($"Unable to change JSON name for asset at \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }
                 }
                 catch (Exception ex)
