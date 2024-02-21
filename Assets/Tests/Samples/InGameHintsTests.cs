@@ -15,7 +15,6 @@ public class InGameHintsTests : CoreTestsFixture
 {
     [UnityTest]
     [Category("Samples")]
-    [Ignore("Disabled: Unstable and running into Debug.Assert in ~@InGameHintsActions() on rare occasions.")]
     public IEnumerator Samples_InGameHints_ShowControlsAccordingToCurrentlyUsedDevice()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
@@ -36,7 +35,8 @@ public class InGameHintsTests : CoreTestsFixture
         var player = new GameObject();
         player.SetActive(false); // Avoid PlayerInput grabbing devices before we have its configuration in place.
         var playerInput = player.AddComponent<PlayerInput>();
-        playerInput.actions = new InGameHintsActions().asset;
+        var inGameHintsActions = new InGameHintsActions();
+        playerInput.actions = inGameHintsActions.asset;
         playerInput.defaultActionMap = "Gameplay";
         playerInput.defaultControlScheme = "Keyboard&Mouse";
 
@@ -76,6 +76,8 @@ public class InGameHintsTests : CoreTestsFixture
 
         Assert.That(text.text, Does.StartWith("Press B "));
 #endif
-        playerInput.actions.Disable();
+
+        // Disable before destruction to avoid asset
+        inGameHintsActions.Disable();
     }
 }

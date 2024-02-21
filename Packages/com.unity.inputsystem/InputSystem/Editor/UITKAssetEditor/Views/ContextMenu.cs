@@ -20,40 +20,53 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string duplicate_String = "Duplicate";
         private static readonly string delete_String = "Delete";
 
+        private static readonly string add_Action_Map_String = "Add Action Map";
         private static readonly string add_Action_String = "Add Action";
         private static readonly string add_Binding_String = "Add Binding";
-        public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
+
+        #region ActionMaps
+        public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateActionMap.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(treeViewItem));
-                AppendDuplicateActionMap(menuEvent, treeViewItem);
-                AppendDeleteActionMap(menuEvent, treeViewItem);
-            }) { target = treeViewItem };
-        }
-
-        public static void GetContextMenuForActionMapListView(ActionMapsView mapView, VisualElement listView)
-        {
-            _ = new ContextualMenuManipulator(menuEvent =>
-            {
+                menuEvent.menu.AppendAction(duplicate_String, _ => { InputActionViewsControlsHolder.DuplicateActionMap.Invoke(treeViewItem); });
+                menuEvent.menu.AppendAction(delete_String, _ => { InputActionViewsControlsHolder.DeleteActionMap.Invoke(treeViewItem); });
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
                 menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
+
                 var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
                 if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
                     menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+            }) { target = treeViewItem };
+        }
+
+        // Add "Add Action" option to empty space under the ListView. Matches with old IMGUI style (ISX-1519).
+        // Include Paste here as well, since it makes sense for adding ActionMaps.
+        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement listView)
+        {
+            _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
             }) { target = listView };
         }
 
+        #endregion
+
+        #region Actions
+        // Add the "Paste" option to all elements in the Action area.
         public static void GetContextMenuForActionListView(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems());
-                menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems());
                 var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
                 var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
                 if (hasPastableData)
@@ -61,7 +74,23 @@ namespace UnityEngine.InputSystem.Editor
             }) { target = target };
         }
 
-        public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
+        // Add "Add Action" option to empty space under the TreeView. Matches with old IMGUI style (ISX-1519).
+        // Include Paste here as well, since it makes sense for Actions; thus users would expect it for Bindings too.
+        public static void GetContextMenuForActionsEmptySpace(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
+        {
+            _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
+                var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
+                if (hasPastableData)
+                    menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
+
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(add_Action_String, _ => actionsTreeView.AddAction());
+            }) { target = target };
+        }
+
+        public static void GetContextMenuForActionItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
@@ -69,8 +98,7 @@ namespace UnityEngine.InputSystem.Editor
                 AppendCompositeMenuItems(treeViewItem, controlLayout, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, index, treeViewItem);
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeViewItem, treeView);
             }) { target = treeViewItem };
         }
 
@@ -112,49 +140,39 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static void GetContextMenuForCompositeItem(InputActionsTreeViewItem treeViewItem, int index)
+        public static void GetContextMenuForCompositeItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem, int index)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendRenameAction(menuEvent, index, treeViewItem);
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeViewItem, treeView);
             }) { target = treeViewItem };
         }
 
-        public static void GetContextMenuForBindingItem(InputActionsTreeViewItem treeViewItem)
+        public static void GetContextMenuForBindingItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeViewItem, treeView);
             }) { target = treeViewItem };
-        }
-
-        private static void AppendDeleteActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
-        {
-            menuEvent.menu.AppendAction(delete_String, _ => { InputActionViewsControlsHolder.DeleteActionMap.Invoke(treeViewItem); });
-        }
-
-        private static void AppendDuplicateActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
-        {
-            menuEvent.menu.AppendAction(duplicate_String, _ => { InputActionViewsControlsHolder.DuplicateActionMap.Invoke(treeViewItem); });
-        }
-
-        private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)
-        {
-            menuEvent.menu.AppendAction(delete_String, _ => {InputActionViewsControlsHolder.DeleteAction.Invoke(treeViewItem);});
-        }
-
-        private static void AppendDuplicateAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)
-        {
-            menuEvent.menu.AppendAction(duplicate_String, _ => {InputActionViewsControlsHolder.DuplicateAction.Invoke(treeViewItem);});
         }
 
         private static void AppendRenameAction(ContextualMenuPopulateEvent menuEvent, int index, InputActionsTreeViewItem treeViewItem)
         {
             menuEvent.menu.AppendAction(rename_String, _ => {InputActionViewsControlsHolder.RenameAction.Invoke(index, treeViewItem);});
         }
+
+        // These actions are always either all present, or all missing, so we can group their Append calls here.
+        private static void AppendDuplicateDeleteCutAndCopyActionsSection(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem, ActionsTreeView actionsTreeView)
+        {
+            menuEvent.menu.AppendAction(duplicate_String, _ => {InputActionViewsControlsHolder.DuplicateAction.Invoke(treeViewItem);});
+            menuEvent.menu.AppendAction(delete_String, _ => {InputActionViewsControlsHolder.DeleteAction.Invoke(treeViewItem);});
+            menuEvent.menu.AppendSeparator();
+            menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems());
+            menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems());
+        }
+
+        #endregion
     }
 }
 #endif
