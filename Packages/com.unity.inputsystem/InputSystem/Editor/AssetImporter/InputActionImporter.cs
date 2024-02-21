@@ -346,31 +346,34 @@ namespace UnityEngine.InputSystem.Editor
             {
                 foreach (var assetPath in importedAssets)
                 {
-                    if (!IsInputActionAssetPath(assetPath))
-                        continue;
+                    if (IsInputActionAssetPath(assetPath))
+                        CheckAndModifyJsonNameIfNeeded(assetPath);
+                }
+            }
 
-                    InputActionAsset asset = null;
-                    try
+            private static void CheckAndModifyJsonNameIfNeeded(string assetPath)
+            {
+                InputActionAsset asset = null;
+                try
+                {
+                    asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                    var desiredName = Path.GetFileNameWithoutExtension(assetPath);
+                    if (asset.name == desiredName)
+                        return;
+                    asset.name = desiredName;
+                    if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
                     {
-                        asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
-                        var desiredName = Path.GetFileNameWithoutExtension(assetPath);
-                        if (asset.name == desiredName)
-                            return;
-                        asset.name = desiredName;
-                        if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
-                        {
-                            Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
-                        }
+                        Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                    }
-                    finally
-                    {
-                        if (asset != null)
-                            DestroyImmediate(asset);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+                finally
+                {
+                    if (asset != null)
+                        DestroyImmediate(asset);
                 }
             }
         }
