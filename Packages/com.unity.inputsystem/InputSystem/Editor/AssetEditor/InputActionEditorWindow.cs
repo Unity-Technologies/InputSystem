@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 return false;
 #endif
             var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+            if (!InputActionImporter.IsInputActionAssetPath(path))
                 return false;
 
             string mapToSelect = null;
@@ -847,7 +847,6 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
@@ -860,7 +859,7 @@ namespace UnityEngine.InputSystem.Editor
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
-                if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(path))
                     return default;
 
                 // See if we have an open window.
@@ -895,7 +894,7 @@ namespace UnityEngine.InputSystem.Editor
             // ReSharper disable once UnusedMember.Local
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
-                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(sourcePath))
                     return default;
 
                 var guid = AssetDatabase.AssetPathToGUID(sourcePath);
