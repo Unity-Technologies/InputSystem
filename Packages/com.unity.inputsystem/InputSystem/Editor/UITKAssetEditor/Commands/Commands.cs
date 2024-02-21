@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 CopyPasteHelper.CutActionMap(state);
-                return DeleteActionMap(state.selectedActionMapIndex).Invoke(state);
+                return state.CutActionMaps();
             };
         }
 
@@ -138,7 +138,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state);
+                var newIndex = DeleteCutElements(state);
+                var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state.With(selectedActionMapIndex: newIndex >= 0 ? newIndex : state.selectedActionMapIndex));
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
@@ -178,7 +179,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
-                var newIndex = DeleteCutElementsAfterPaste(state);
+                var newIndex = DeleteCutElements(state);
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: state.selectionType == SelectionType.Action && newIndex >= 0 ? newIndex : state.selectedActionIndex, selectedBindingIndex: state.selectionType == SelectionType.Binding && newIndex >= 0 ? newIndex : state.selectedBindingIndex));
                 if (lastPastedElement != null)
                 {
@@ -192,7 +193,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        private static int DeleteCutElementsAfterPaste(InputActionsEditorState state)
+        private static int DeleteCutElements(InputActionsEditorState state)
         {
             var cutElements = state.GetCutElements();
             if (cutElements is null || cutElements.Count <= 0)

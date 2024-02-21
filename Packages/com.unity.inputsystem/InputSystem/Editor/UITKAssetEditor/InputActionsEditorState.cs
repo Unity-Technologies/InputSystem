@@ -241,6 +241,20 @@ namespace UnityEngine.InputSystem.Editor
             return With(cutElements: cutElements);
         }
 
+        public InputActionsEditorState CutActionMaps()
+        {
+            cutElements = new List<CutElement>();
+            cutElements.Add(new CutElement(selectedActionMapIndex));
+            return With(cutElements: cutElements);
+        }
+
+        public bool IsActionMapCut(int index)
+        {
+            if (cutElements == null)
+                return false;
+            return cutElements.Any(cut => cut.actionMapIndex == index && cut.type == typeof(InputActionMap));
+        }
+
         public bool IsBindingCut(int actionMapIndex, int bindingIndex)
         {
             if (cutElements == null)
