@@ -15,6 +15,32 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; }
+        private List<CutElement> cutElements
+        {
+            get { return m_CutElements; }
+            set => m_CutElements = value;
+        }
+
+        internal struct CutElement
+        {
+            internal int actionMapIndex;
+            internal int actionOrBindingIndex;
+            internal Type type;
+
+            public CutElement(int actionMapIndex)
+            {
+                this.actionMapIndex = actionMapIndex;
+                actionOrBindingIndex = -1;
+                type = typeof(InputActionMap);
+            }
+
+            public CutElement(int actionMapIndex, int actionOrBindingIndex, Type type)
+            {
+                this.actionMapIndex = actionMapIndex;
+                this.actionOrBindingIndex = actionOrBindingIndex;
+                this.type = type;
+            }
+        }
 
         // Control schemes
         public int selectedControlSchemeIndex { get {return m_selectedControlSchemeIndex; } }
@@ -27,6 +53,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] SelectionType m_selectionType;
         [SerializeField] int m_selectedControlSchemeIndex;
         [SerializeField] int m_selectedDeviceRequirementIndex;
+        private List<CutElement> m_CutElements;
 
         public InputActionsEditorState(
             SerializedObject inputActionAsset,
@@ -37,7 +64,8 @@ namespace UnityEngine.InputSystem.Editor
             Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
             InputControlScheme selectedControlScheme = default,
             int selectedControlSchemeIndex = -1,
-            int selectedDeviceRequirementIndex = -1)
+            int selectedDeviceRequirementIndex = -1,
+            List<CutElement> cutElementses = null)
         {
             serializedObject = inputActionAsset;
 
@@ -52,6 +80,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ExpandedCompositeBindings = expandedBindingIndices == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
+            m_CutElements = cutElementses;
         }
 
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
@@ -70,6 +99,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
                 ? new Dictionary<(string, string), HashSet<int>>()
                 : other.m_ExpandedCompositeBindings;
+            m_CutElements = other.cutElements;
         }
 
         public InputActionsEditorState With(
@@ -80,7 +110,8 @@ namespace UnityEngine.InputSystem.Editor
             InputControlScheme? selectedControlScheme = null,
             int? selectedControlSchemeIndex = null,
             int? selectedDeviceRequirementIndex = null,
-            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
+            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
+            List<CutElement> cutElements = null)
         {
             return new InputActionsEditorState(
                 serializedObject,
@@ -93,7 +124,10 @@ namespace UnityEngine.InputSystem.Editor
                 // Control schemes
                 selectedControlScheme ?? this.selectedControlScheme,
                 selectedControlSchemeIndex ?? this.selectedControlSchemeIndex,
-                selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex);
+                selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex,
+
+                cutElements ?? m_CutElements
+            );
         }
 
         public SerializedProperty GetActionMapByName(string actionMapName)
@@ -196,6 +230,34 @@ namespace UnityEngine.InputSystem.Editor
             return With(selectedBindingIndex: 0,
                 selectedActionMapIndex: index,
                 selectedActionIndex: 0, selectionType: SelectionType.Action);
+        }
+
+        public InputActionsEditorState CutActionOrBinding()
+        {
+            cutElements = new List<CutElement>();
+            var actionOrBindingIndex = selectionType == SelectionType.Action ? selectedActionIndex : selectedBindingIndex;
+            var type = selectionType == SelectionType.Action ? typeof(InputAction) : typeof(InputBinding);
+            cutElements.Add(new CutElement(selectedActionMapIndex, actionOrBindingIndex, type));
+            return With(cutElements: cutElements);
+        }
+
+        public bool IsBindingCut(int actionMapIndex, int bindingIndex)
+        {
+            if (cutElements == null)
+                return false;
+            return cutElements.Any(cutElement => cutElement.actionMapIndex == actionMapIndex && cutElement.actionOrBindingIndex == bindingIndex && cutElement.type == typeof(InputBinding));
+        }
+
+        public bool IsActionCut(int actionMapIndex, int actionIndex)
+        {
+            if (cutElements == null)
+                return false;
+            return cutElements.Any(cutElement => cutElement.actionMapIndex == actionMapIndex && cutElement.actionOrBindingIndex == actionIndex && cutElement.type == typeof(InputAction));
+        }
+
+        public List<CutElement> GetCutElements()
+        {
+            return m_CutElements;
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
