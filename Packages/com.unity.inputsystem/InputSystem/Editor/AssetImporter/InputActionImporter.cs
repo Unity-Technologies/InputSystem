@@ -347,23 +347,22 @@ namespace UnityEngine.InputSystem.Editor
                 foreach (var assetPath in importedAssets)
                 {
                     if (IsInputActionAssetPath(assetPath))
-                        CheckAndModifyJsonNameIfNeeded(assetPath);
+                        CheckAndModifyJsonNameIfDifferent(assetPath);
                 }
             }
 
-            private static void CheckAndModifyJsonNameIfNeeded(string assetPath)
+            private static void CheckAndModifyJsonNameIfDifferent(string assetPath)
             {
                 InputActionAsset asset = null;
                 try
                 {
                     asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
                     var desiredName = Path.GetFileNameWithoutExtension(assetPath);
-                    if (asset.name == desiredName)
-                        return;
-                    asset.name = desiredName;
-                    if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                    if (asset.name != desiredName)
                     {
-                        Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                        asset.name = desiredName;
+                        if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                            Debug.LogError($"Unable update JSON name in asset \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }
                 }
                 catch (Exception ex)
