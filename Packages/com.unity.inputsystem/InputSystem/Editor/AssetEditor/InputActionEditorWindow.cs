@@ -601,7 +601,8 @@ namespace UnityEngine.InputSystem.Editor
         #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
         private void OnLostFocus()
         {
-            m_ActionAssetManager.SaveChangesToAsset();
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                m_ActionAssetManager.SaveChangesToAsset();
         }
 
         #endif
