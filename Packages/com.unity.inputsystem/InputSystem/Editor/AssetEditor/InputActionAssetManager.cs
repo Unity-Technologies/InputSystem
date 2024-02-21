@@ -160,19 +160,12 @@ namespace UnityEngine.InputSystem.Editor
             m_IsDirty = false;
             onDirtyChanged(false);
         }
-
-        internal static bool WriteAsset(string assetPath, string assetJson, Action<string> errorLogger = null)
+        
+        internal static bool WriteAsset(string assetPath, string assetJson)
         {
             // Attempt to checkout the file path for editing and inform the user if this fails.
             if (!EditorHelpers.CheckOut(assetPath))
-            {
-                var errorMessage = $"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.";
-                if (errorLogger != null)
-                    errorLogger(errorMessage);
-                else
-                    Debug.LogError(errorMessage);
                 return false;
-            }
 
             // (Over)write JSON content to file given by path.
             File.WriteAllText(EditorHelpers.GetPhysicalPath(assetPath), assetJson);
@@ -197,13 +190,14 @@ namespace UnityEngine.InputSystem.Editor
             // Return immediately if file content has not changed, i.e. touching the file would not yield a difference.
             if (assetJson == existingJson)
                 return false;
-
-            // Attempt to write asset to disc
+            
+            // Attempt to write asset to disc (including checkout the file) and inform the user if this fails.
             if (!WriteAsset(assetPath, assetJson))
             {
                 Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                 return false;
             }
+
             return true;
         }
 

@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 return false;
 #endif
             var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+            if (!InputActionImporter.IsInputActionAssetPath(path))
                 return false;
 
             string mapToSelect = null;
@@ -847,7 +847,6 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
@@ -895,7 +894,7 @@ namespace UnityEngine.InputSystem.Editor
             // ReSharper disable once UnusedMember.Local
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
-                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(sourcePath))
                     return default;
 
                 //Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
