@@ -11,18 +11,24 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ProjectWideActionsAsset
     {
-        private const string kDefaultAssetPath = "Assets/InputSystem_Actions.inputactions";
+        private const string kDefaultAssetName = "InputSystem_Actions";
+        private const string kDefaultAssetPath = "Assets/" + kDefaultAssetName + ".inputactions";
         private const string kDefaultTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
         internal static class ProjectSettingsProjectWideActionsAssetConverter
         {
             internal const string kAssetPathInputManager = "ProjectSettings/InputManager.asset";
-            internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
+            internal const string kAssetNameProjectWideInputActions = "ProjectWideInputActions";
 
             class ProjectSettingsPostprocessor : AssetPostprocessor
             {
                 private static bool migratedInputActionAssets = false;
-                static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+
+#if UNITY_2021_2_OR_NEWER
+                private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+                private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+#endif
                 {
                     if (!migratedInputActionAssets)
                     {
@@ -32,60 +38,76 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
+            private static string FixPath(string path)
+            {
+#if UNITY_2021_2_OR_NEWER
+                return FileUtil.GetPhysicalPath(path);
+#else
+                return path;
+#endif
+            }
+
             internal static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
             {
-                var objects = AssetDatabase.LoadAllAssetsAtPath(kAssetPathInputManager);
-                if (objects != null)
+                var objects = AssetDatabase.LoadAllAssetsAtPath(FixPath(kAssetPathInputManager));
+                if (objects == null)
+                    return;
+
+                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetNameProjectWideInputActions) as InputActionAsset;
+                if (inputActionsAsset != default)
                 {
-                    var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
-                    if (inputActionsAsset != default)
+                    // Found some actions in the InputManager.asset file
+                    //
+                    string path = ProjectWideActionsAsset.kDefaultAssetPath;
+
+                    if (File.Exists(FixPath(path)))
                     {
-                        // Found some actions in the InputManager.asset file
+                        // We already have a path containing inputactions, find a new unique filename
                         //
-                        string path = ProjectWideActionsAsset.kDefaultAssetPath;
-
-                        if (File.Exists(path))
+                        //  eg  Assets/InputSystem_Actions.inputactions ->
+                        //      Assets/InputSystem_Actions (1).inputactions ->
+                        //      Assets/InputSystem_Actions (2).inputactions ...
+                        //
+                        string[] files = Directory.GetFiles("Assets", "*.inputactions");
+                        List<string> names = new List<string>();
+                        for (int i = 0; i < files.Length; i++)
                         {
-                            // We already have a path containing inputactions, find a new unique filename
-                            //
-                            //  eg  Assets/InputSystem_Actions.inputactions ->
-                            //      Assets/InputSystem_Actions (1).inputactions ->
-                            //      Assets/InputSystem_Actions (2).inputactions ...
-                            //
-                            string[] files = Directory.GetFiles("Assets", "*.inputactions");
-                            List<string> names = new List<string>();
-                            for (int i = 0; i < files.Length; i++)
-                            {
-                                names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
-                            }
-                            string unique = ObjectNames.GetUniqueName(names.ToArray(), "InputSystem_Actions");
-                            path = "Assets/" + unique + ".inputactions";
+                            names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
                         }
-
-                        var json = inputActionsAsset.ToJson();
-                        File.WriteAllText(path, json);
-
-                        AssetDatabase.Refresh();
-                        InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
+                        string unique = ObjectNames.GetUniqueName(names.ToArray(), kDefaultAssetName);
+                        path = "Assets/" + unique + ".inputactions";
                     }
 
-                    // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
-                    foreach (var obj in objects)
+                    var json = inputActionsAsset.ToJson();
+                    InputActionAssetManager.SaveAsset(FixPath(path), json);
+
+                    Debug.Log($"Migrated Project-wide Input Actions from '{kAssetPathInputManager}' to '{path}' asset");
+
+                    // Update current project-wide settings if needed (don't replace if already set to something else)
+                    //
+                    if (InputSystem.actions == null || InputSystem.actions.name == kAssetNameProjectWideInputActions)
                     {
-                        if (obj is InputActionReference)
-                        {
-                            var actionReference = obj as InputActionReference;
-                            AssetDatabase.RemoveObjectFromAsset(obj);
-                            Object.DestroyImmediate(actionReference);
-                        }
-                        else if (obj is InputActionAsset)
-                        {
-                            AssetDatabase.RemoveObjectFromAsset(obj);
-                        }
+                        InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
+                        Debug.Log($"Loaded Project-wide Input Actions from '{path}' asset");
                     }
-
-                    AssetDatabase.SaveAssets();
                 }
+
+                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                foreach (var obj in objects)
+                {
+                    if (obj is InputActionReference)
+                    {
+                        var actionReference = obj as InputActionReference;
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                        Object.DestroyImmediate(actionReference);
+                    }
+                    else if (obj is InputActionAsset)
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                    }
+                }
+
+                AssetDatabase.SaveAssets();
             }
         }
 
