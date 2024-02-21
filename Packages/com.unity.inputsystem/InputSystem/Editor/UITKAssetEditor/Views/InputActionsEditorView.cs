@@ -15,8 +15,6 @@ namespace UnityEngine.InputSystem.Editor
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
         private const string menuButtonId = "asset-menu";
 
-        private readonly TreeView m_ActionsTreeView;
-        private readonly ListView m_ActionMapsListView;
         private readonly ToolbarMenu m_ControlSchemesToolbar;
         private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
@@ -89,9 +87,6 @@ namespace UnityEngine.InputSystem.Editor
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex,
                     selectedDeviceIndex = state.selectedDeviceRequirementIndex
                 });
-
-            m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
-            m_ActionMapsListView = root.Q<ListView>("action-maps-list-view");
 
             root.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             root.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
@@ -243,18 +238,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Dispatch(Commands.PasteActionMaps());
             }
-            else if (copiedType == typeof(InputAction))
+            else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
             {
                 Dispatch(Commands.PasteActionsOrBindings());
-            }
-            else if (copiedType == typeof(InputBinding))
-            {
-                var oldSelectedBinding = stateContainer.GetState().selectedBindingIndex;
-                Dispatch(Commands.PasteActionsOrBindings());
-
-                // If paste succeeded, expand the relevant Action to show the new binding.
-                if (stateContainer.GetState().selectedBindingIndex != oldSelectedBinding)
-                    m_ActionsTreeView.ExpandItem(m_ActionsTreeView.GetIdForIndex(stateContainer.GetState().selectedActionIndex));
             }
         }
 
