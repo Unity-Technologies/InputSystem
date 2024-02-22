@@ -54,6 +54,11 @@ If you select an Action, you can edit its properties in the right-hand pane of t
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Binding, either right-click it and select __Duplicate__ from the context menu.
 
+You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
+
+![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
+_The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
+
 If you select a Binding, you can edit its properties in the right-hand pane of the window:
 
 ![Binding Properties](Images/BindingProperties.png)
