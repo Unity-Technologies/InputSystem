@@ -85,7 +85,7 @@ build_ios_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -122,7 +122,7 @@ build_tvos_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -159,7 +159,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
