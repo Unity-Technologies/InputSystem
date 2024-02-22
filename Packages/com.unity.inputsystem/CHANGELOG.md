@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed the 'Max player count reached' error to a warning instead.
 - Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 - Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
+- Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
