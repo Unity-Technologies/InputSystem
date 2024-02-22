@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 
@@ -221,9 +222,17 @@ namespace UnityEngine.InputSystem.Editor
         {
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var actions = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-            var index = state.selectionType == SelectionType.Action ? Selectors.GetBindingIndexBeforeAction(actions, state.selectedActionIndex, bindingsArray) : state.selectedBindingIndex;
-            PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] {index}, bindingsArray);
+
+            int newBindingIndex;
+            if (state.selectionType == SelectionType.Action)
+            {
+                var bindingsForAction = Selectors.GetBindingsForAction(state, actionMap, state.selectedActionIndex);
+                newBindingIndex = bindingsForAction.Count > 0 ? bindingsForAction.Select(b => b.GetIndexOfArrayElement()).Max() : 0;
+            }
+            else
+                newBindingIndex = state.selectedBindingIndex;
+
+            PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] { newBindingIndex }, bindingsArray);
         }
 
         private static void PasteData(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
@@ -241,7 +250,7 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length + k_TypeMarker[copiedType].Length)
                      .Split(new[] {k_EndOfTransmission}, StringSplitOptions.RemoveEmptyEntries))
             {
-                indexOffset += 1;
+                indexOffset++;
                 foreach (var index in indicesToInsert)
                     PasteBlocks(transmission, index + indexOffset, arrayToInsertInto, copiedType);
             }
@@ -298,14 +307,30 @@ namespace UnityEngine.InputSystem.Editor
         private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
             var pastePartOfComposite = IsPartOfComposite(json);
+            bool currentPartOfComposite = false;
+            bool currentIsComposite = false;
+
             if (index > 0)
             {
                 var currentProperty = arrayProperty.GetArrayElementAtIndex(index - 1);
-                var currentIsComposite = IsComposite(currentProperty) || IsPartOfComposite(currentProperty);
+                currentPartOfComposite = IsPartOfComposite(currentProperty);
+                currentIsComposite = IsComposite(currentProperty) || currentPartOfComposite;
                 if (pastePartOfComposite && !currentIsComposite) //prevent pasting part of composite into non-composite
                     return index;
             }
-            index = pastePartOfComposite || s_State.selectionType == SelectionType.Action ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+
+            // Update the target index for special cases
+            if (pastePartOfComposite && !currentPartOfComposite)
+            {
+                // Pasting into a Composite and CompositePart isn't the target, i.e. Composite "root" selected, paste at the end of the composite
+                index = Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+            }
+            else if (!pastePartOfComposite && s_State.selectionType != SelectionType.Action)
+            {
+                // Pasting with a Binding selected needs to skip all the CompositeParts (if any)
+                index = Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+            }
+
             if (json.Contains(k_BindingData)) //copied data is composite with bindings - only true for directly copied composites, not for composites from copied actions
                 return PasteCompositeFromJson(arrayProperty, json, index, actionName);
             var property = PasteElement(arrayProperty, json, index, out var oldId, "", false);
