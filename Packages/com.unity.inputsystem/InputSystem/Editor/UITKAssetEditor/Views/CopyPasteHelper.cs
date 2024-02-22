@@ -228,7 +228,7 @@ namespace UnityEngine.InputSystem.Editor
             var actions = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
 
             // Don't do anything if there's no valid array to paste into.
-            if (state.selectedActionIndex == -1 || actions == null || bindingsArray == null)
+            if (state.selectedActionIndex == -1 || actions == null || actions.arraySize == 0 || bindingsArray == null)
                 return;
 
             var index = state.selectionType == SelectionType.Action ? Selectors.GetBindingIndexBeforeAction(actions, state.selectedActionIndex, bindingsArray) : state.selectedBindingIndex;
