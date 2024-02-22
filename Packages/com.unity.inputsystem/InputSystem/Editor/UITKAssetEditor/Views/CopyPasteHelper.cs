@@ -211,7 +211,7 @@ namespace UnityEngine.InputSystem.Editor
                 : Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actionArray == null) return;
-            
+
             var index = state.selectedActionIndex;
             if (addLast || index >= actionArray.arraySize)
                 index = actionArray.arraySize - 1;
