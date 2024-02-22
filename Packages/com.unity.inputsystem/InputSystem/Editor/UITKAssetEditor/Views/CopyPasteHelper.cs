@@ -280,7 +280,9 @@ namespace UnityEngine.InputSystem.Editor
         private static void PasteAction(SerializedProperty arrayProperty, string jsonToInsert, int indexToInsert)
         {
             var json = jsonToInsert.Split(k_BindingData, StringSplitOptions.RemoveEmptyEntries);
-            var bindingJsons = json[1].Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
+            var bindingJsons = new string[] {};
+            if (json.Length > 1)
+                bindingJsons = json[1].Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
             var property = PasteElement(arrayProperty, json[0], indexToInsert, out _, "");
             var newName = PropertyName(property);
             var newId = property.FindPropertyRelative("m_Id").stringValue;

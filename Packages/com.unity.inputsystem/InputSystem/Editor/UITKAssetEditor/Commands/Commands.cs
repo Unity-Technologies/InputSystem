@@ -217,6 +217,8 @@ namespace UnityEngine.InputSystem.Editor
                     else
                     {
                         var binding = Selectors.GetCompositeOrBindingInMap(actionMap, cutElement.actionOrBindingIndex).wrappedProperty;
+                        if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite)
+                            index -= InputActionSerializationHelpers.GetCompositePartCount(Selectors.GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), cutElement.actionOrBindingIndex);
                         InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                     }
 
