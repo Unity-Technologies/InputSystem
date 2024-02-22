@@ -3011,8 +3011,6 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-        internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
-
         internal static bool hasActions => s_Manager.actions != null;
 
         /// <summary>
