@@ -17,7 +17,7 @@
             </uie:Toolbar>
         </ui:VisualElement>
         <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">
-            <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="300">
+            <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="200">
                 <ui:VisualElement name="action-maps-container" class="body-panel-container actions-container">
                     <ui:VisualElement name="header" class="body-panel-header">
                         <ui:Label text="Action Maps" display-tooltip-when-elided="true" style="flex-grow: 1;" />
@@ -28,7 +28,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="rclick-area-to-add-new-action-map" style="flex-direction: column; flex-grow: 1;" />
                 </ui:VisualElement>
-                <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="400" style="height: auto;">
+                <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="230" style="height: auto; min-width: 450px">
                     <ui:VisualElement name="actions-container" class="body-panel-container">
                         <ui:VisualElement name="header" class="body-panel-header" style="justify-content: space-between;">
                             <ui:Label text="Actions" display-tooltip-when-elided="true" name="actions-label" />
@@ -39,7 +39,7 @@
                         </ui:VisualElement>
                         <ui:VisualElement name="rclick-area-to-add-new-action" style="flex-direction: column; flex-grow: 1;" />
                     </ui:VisualElement>
-                    <ui:VisualElement name="properties-container" class="body-panel-container body-panel-container">
+                    <ui:VisualElement name="properties-container" class="body-panel-container body-panel-container" style="min-width: 220;">
                         <ui:VisualElement name="header" class="body-panel-header">
                             <ui:Label text="Action Properties" display-tooltip-when-elided="true" name="properties-header-label" />
                         </ui:VisualElement>
