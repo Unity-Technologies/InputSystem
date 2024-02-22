@@ -211,11 +211,12 @@ namespace UnityEngine.InputSystem.Editor
                 : Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actionArray == null) return;
+            
             var index = state.selectedActionIndex;
-            if (addLast)
+            if (addLast || index >= actionArray.arraySize)
                 index = actionArray.arraySize - 1;
-
-            index = Math.Clamp(index, 0, actionArray.arraySize - 1);
+            if (index < 0)
+                index = 0;
 
             PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, actionArray);
         }
