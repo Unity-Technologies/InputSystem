@@ -41,14 +41,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-
-            // It's possible for RedrawUI to be called when rootElement is empty, throwing errors in the console.
-            // This can happen when the view is discarded immediately after being loaded, i.e. jumping to the input settings
-            // page in Preferences when the last window shown there was the main view, which the editor (briefly) loads first.
-            // Compare against the number of m_ChildViews as a cheap way to know we should skip redrawing. (ISX-1721)
-            var correctChildren = rootElement.childCount >= m_ChildViews.Count;
-
-            if (correctChildren && (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate))
+            if (m_ViewStateSelector.HasStateChanged(state) || m_IsFirstUpdate)
                 RedrawUI(m_ViewStateSelector.GetViewState(state));
 
             m_IsFirstUpdate = false;
@@ -56,6 +49,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 view.UpdateView(state);
             }
+
+            // We can execute UI Commands now that the UI is fully updated
+            // NOTE: This isn't used with Input Commands
+            allowUICommandExecution = true;
         }
 
         public TView CreateChildView<TView>(TView view) where TView : IView
@@ -119,6 +116,8 @@ namespace UnityEngine.InputSystem.Editor
 
         protected readonly VisualElement rootElement;
         protected readonly StateContainer stateContainer;
+        protected bool allowUICommandExecution { get; set; } = true;
+
         protected IViewStateSelector<TViewState> ViewStateSelector => m_ViewStateSelector;
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;

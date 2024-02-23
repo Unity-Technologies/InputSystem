@@ -17,8 +17,8 @@ namespace UnityEngine.InputSystem.Editor
         public SerializedObject serializedObject { get; }
 
         // Control schemes
-        public int selectedControlSchemeIndex { get {return m_selectedControlSchemeIndex; } }
-        public int selectedDeviceRequirementIndex { get {return m_selectedDeviceRequirementIndex; } }
+        public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }
+        public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme;
 
         [SerializeField] int m_selectedActionMapIndex;
@@ -41,13 +41,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             serializedObject = inputActionAsset;
 
-            this.m_selectedActionMapIndex = selectedActionMapIndex;
-            this.m_selectedActionIndex = selectedActionIndex;
-            this.m_selectedBindingIndex = selectedBindingIndex;
-            this.m_selectionType = selectionType;
+            m_selectedActionMapIndex = selectedActionMapIndex;
+            m_selectedActionIndex = selectedActionIndex;
+            m_selectedBindingIndex = selectedBindingIndex;
+            m_selectionType = selectionType;
             m_ControlScheme = selectedControlScheme;
-            this.m_selectedControlSchemeIndex = selectedControlSchemeIndex;
-            this.m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
+            m_selectedControlSchemeIndex = selectedControlSchemeIndex;
+            m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
 
             m_ExpandedCompositeBindings = expandedBindingIndices == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
@@ -65,6 +65,18 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlScheme = other.m_ControlScheme;
             m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
+
+            // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload
+            if (m_selectedControlSchemeIndex != -1)
+            {
+                var controlSchemeSerializedProperty = serializedObject
+                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
+                    .GetArrayElementAtIndex(m_selectedControlSchemeIndex);
+
+                m_ControlScheme = new InputControlScheme(controlSchemeSerializedProperty);
+            }
+            else
+                m_ControlScheme = new InputControlScheme();
 
             // Editor may leave these as null after domain reloads, so recreate them
             m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)

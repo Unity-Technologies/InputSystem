@@ -320,7 +320,7 @@ namespace UnityEngine.InputSystem.Editor
                 // have a first pass at device descriptions supplied by users.
                 try
                 {
-                    var copyBuffer = EditorGUIUtility.systemCopyBuffer;
+                    var copyBuffer = EditorHelpers.GetSystemCopyBufferContents();
                     if (!string.IsNullOrEmpty(copyBuffer) &&
                         copyBuffer.StartsWith("{") && !InputDeviceDescription.FromJson(copyBuffer).empty)
                     {
@@ -418,7 +418,7 @@ namespace UnityEngine.InputSystem.Editor
                     var menu = new GenericMenu();
                     menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
                     menu.AddItem(Contents.copyDeviceDescription, false,
-                        () => EditorGUIUtility.systemCopyBuffer = deviceItem.device.description.ToJson());
+                        () => EditorHelpers.SetSystemCopyBufferContents(deviceItem.device.description.ToJson()));
                     menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
                     if (deviceItem.device.enabled)
                         menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
@@ -434,7 +434,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var menu = new GenericMenu();
                     menu.AddItem(Contents.copyDeviceDescription, false,
-                        () => EditorGUIUtility.systemCopyBuffer = unsupportedDeviceItem.description.ToJson());
+                        () => EditorHelpers.SetSystemCopyBufferContents(unsupportedDeviceItem.description.ToJson()));
                     menu.ShowAsContext();
                 }
 
@@ -445,7 +445,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var menu = new GenericMenu();
                         menu.AddItem(Contents.copyLayoutAsJSON, false,
-                            () => EditorGUIUtility.systemCopyBuffer = layout.ToJson());
+                            () => EditorHelpers.SetSystemCopyBufferContents(layout.ToJson()));
                         if (layout.isDeviceLayout)
                         {
                             menu.AddItem(Contents.createDeviceFromLayout, false,

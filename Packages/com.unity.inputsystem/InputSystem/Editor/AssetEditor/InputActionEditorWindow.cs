@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 return false;
 #endif
             var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+            if (!InputActionImporter.IsInputActionAssetPath(path))
                 return false;
 
             string mapToSelect = null;
@@ -185,19 +185,19 @@ namespace UnityEngine.InputSystem.Editor
             // Ask for confirmation if we have unsaved changes.
             if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
-                var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
-                    $"Do you want to save the changes you made in:\n{m_ActionAssetManager.path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+                var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_ActionAssetManager.path);
                 switch (result)
                 {
-                    case 0: // Save
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Save:
                         m_ActionAssetManager.SaveChangesToAsset();
                         m_ActionAssetManager.Cleanup();
                         break;
-                    case 1: // Cancel
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.Cancel:
                         Instantiate(this).Show();
                         // Cancel editor quit.
                         return false;
-                    case 2: // Don't save, don't ask again.
+                    case InputActionsEditorWindowUtils.ConfirmSaveChangesDialogResult.DontSave:
+                        // Don't save, don't ask again.
                         m_ForceQuit = true;
                         break;
                 }
@@ -847,7 +847,6 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
@@ -860,7 +859,7 @@ namespace UnityEngine.InputSystem.Editor
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
-                if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(path))
                     return default;
 
                 // See if we have an open window.
@@ -895,7 +894,7 @@ namespace UnityEngine.InputSystem.Editor
             // ReSharper disable once UnusedMember.Local
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
-                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!InputActionImporter.IsInputActionAssetPath(sourcePath))
                     return default;
 
                 var guid = AssetDatabase.AssetPathToGUID(sourcePath);
