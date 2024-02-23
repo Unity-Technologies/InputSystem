@@ -54,6 +54,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
 - Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
+- Fixed a regression in IMGUI Input Action Editor where editor would auto-save on focus lost even when the auto-save toggle was disabled.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

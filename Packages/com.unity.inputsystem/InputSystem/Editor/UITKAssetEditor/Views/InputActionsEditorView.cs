@@ -18,11 +18,14 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
 
-        internal Action postSaveAction;
+        private readonly Action m_SaveAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
+                                      Action saveAction)
             : base(root, stateContainer)
         {
+            m_SaveAction = saveAction;
+
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
                 InputActionsEditorConstants.ResourcesPath +
@@ -52,6 +55,16 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
+            // Hide save toolbar if there is no save action provided since we cannot support it
+            if (saveAction == null)
+            {
+                var element = root.Q("save-asset-toolbar-container");
+                if (element != null)
+                {
+                    element.style.visibility = Visibility.Hidden;
+                    element.style.display = DisplayStyle.None;
+                }
+            }
 
             VisualElement assetMenuButton = null;
             try
@@ -100,7 +113,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnSaveButton()
         {
-            Dispatch(Commands.SaveAsset(postSaveAction));
+            Dispatch(Commands.SaveAsset(m_SaveAction));
 
             // Don't let focus linger after clicking (ISX-1482). Ideally this would be only applied on mouse click,
             // rather than if the user is using tab to navigate UI, but there doesn't seem to be a way to differentiate
@@ -110,7 +123,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
         {
-            Dispatch(Commands.ToggleAutoSave(evt.newValue, postSaveAction));
+            Dispatch(Commands.ToggleAutoSave(evt.newValue, m_SaveAction));
         }
 
         public override void RedrawUI(ViewState viewState)

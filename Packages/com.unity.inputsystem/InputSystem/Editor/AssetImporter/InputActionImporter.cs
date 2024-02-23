@@ -360,7 +360,7 @@ namespace UnityEngine.InputSystem.Editor
         // Evaluates whether the given path is a path to an asset of the associated type based on extension.
         public static bool IsInputActionAssetPath(string path)
         {
-            return path.EndsWith(kFileExtension, StringComparison.InvariantCultureIgnoreCase);
+            return path != null && path.EndsWith(kFileExtension, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static string NameFromAssetPath(string assetPath)
@@ -386,10 +386,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             return FindAllEditors(typeof(T), predicate, result);
         }
-        
+
         private static List<IInputActionsAssetEditor> FindAllEditors(Type type, Predicate<IInputActionsAssetEditor> predicate = null, List<IInputActionsAssetEditor> result = null)
         {
-            result ??= new List<IInputActionsAssetEditor>();
+            if (result == null)
+                result = new List<IInputActionsAssetEditor>();
             var editors = Resources.FindObjectsOfTypeAll(type);
             foreach (var editor in editors)
             {
@@ -415,7 +416,7 @@ namespace UnityEngine.InputSystem.Editor
         //   and in this case, prompt the user that there are unsaved changes and allow the user to cancel the operation
         //   and allow to save the pending changes or confirm to delete the asset and discard the pending unsaved changes.
         // - If the asset being deleted is unmodified, no dialog prompt is displayed and the asset is deleted.
-        private class InputActionAssetModificationProcessor : AssetModificationProcessor
+        /*private class InputActionAssetModificationProcessor : AssetModificationProcessor
         {
             // TODO This will yield +2 dialogs which may be seen as disruptive UX. It also adds complexity. Check how other assets handle this situation.
             [System.Diagnostics.CodeAnalysis.SuppressMessage(category: "Microsoft.Usage",
@@ -469,7 +470,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 return default;
             }
-        }
+        }*/
 
         // Regarding https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         //
@@ -521,7 +522,7 @@ namespace UnityEngine.InputSystem.Editor
         // Rename                         Imported(d), Deleted(s)
         // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
         // ------------------------------------------------------------------------------------------------------------
-        
+
         public static void RegisterTypeForAssetNotifications<T>() where T : EditorWindow, IInputActionsAssetEditor
         {
             InputActionAssetPostprocessor.RegisterType<T>();
@@ -531,7 +532,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             InputActionAssetPostprocessor.UnregisterType<T>();
         }
-        
+
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
             private static bool s_DoNotifyEditorsScheduled;
@@ -546,7 +547,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!s_EditorTypes.Contains(typeof(T)))
                     s_EditorTypes.Add(typeof(T));
             }
-            
+
             // Unregisters a previously registered type from receiving notifications of asset modifications if the
             // editor is open.
             internal static void UnregisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
@@ -554,7 +555,7 @@ namespace UnityEngine.InputSystem.Editor
                 s_EditorTypes.Remove(typeof(T));
             }
 
-            private static void Notify(IReadOnlyCollection<string> assets, 
+            private static void Notify(IReadOnlyCollection<string> assets,
                 IReadOnlyCollection<IInputActionsAssetEditor> editors, Action<IInputActionsAssetEditor> callback)
             {
                 foreach (var asset in assets)
@@ -562,9 +563,9 @@ namespace UnityEngine.InputSystem.Editor
                     var assetGuid = AssetDatabase.AssetPathToGUID(asset);
                     foreach (var editor in editors)
                     {
-                        if (editor.assetGUID != assetGuid) 
+                        if (editor.assetGUID != assetGuid)
                             continue;
-                        
+
                         try
                         {
                             callback(editor);
@@ -588,8 +589,8 @@ namespace UnityEngine.InputSystem.Editor
                 List<IInputActionsAssetEditor> editors = null;
                 foreach (var type in s_EditorTypes)
                     editors = FindAllEditors(type, null, editors);
-                
-                // Abort if there are no available candidate editors 
+
+                // Abort if there are no available candidate editors
                 if (editors == null)
                     return;
 
@@ -606,7 +607,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (!IsInputActionAssetPath(asset))
                         continue;
                     target.Add(asset);
-                    
+
                     // If a notification execution has already been scheduled do nothing.
                     // We do this with delayed execution to avoid excessive updates interfering with ADB.
                     if (!s_DoNotifyEditorsScheduled)
@@ -642,7 +643,7 @@ namespace UnityEngine.InputSystem.Editor
                 Process(movedAssets, s_Moved);
             }
         }
-        
+
         // This processor was added to adress this issue:
         // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         //
@@ -653,7 +654,7 @@ namespace UnityEngine.InputSystem.Editor
         // This basically solves any problem related to unmodified assets.
         //
         // Note that JSON names have no relevance for editor workflows and are basically ignored by the importer.
-        // Note that JSON names may be the only way to identify assets loaded from non-file sources or via 
+        // Note that JSON names may be the only way to identify assets loaded from non-file sources or via
         // UnityEngine.Resources in run-time.
         //
         // In addition to the above, if the asset is also open in an editor, the following applies:
@@ -726,7 +727,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (asset.name == desiredName)
                         return;
                     asset.name = desiredName;
-                    if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                    if (!EditorHelpers.WriteAsset(assetPath, asset.ToJson()))
                     {
                         Debug.LogError($"Unable to change JSON name for asset at \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }

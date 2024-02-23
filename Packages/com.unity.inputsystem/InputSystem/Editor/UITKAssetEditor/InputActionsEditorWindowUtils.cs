@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -13,57 +15,35 @@ namespace UnityEngine.InputSystem.Editor
         ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
         : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
 
-        public enum DialogResult
+        // Similar to InputActionAsset.WriteFileJson but excludes the name
+        [Serializable]
+        private struct WriteFileJsonNoName
         {
-            // Unsaved changes should be saved to asset.
-            Save = 0,
-
-            // Operation was cancelled.
-            Cancel = 1,
-
-            // Unsaved changes should not be saved to asset.
-            DontSave = 2
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
         }
 
-        public static DialogResult ConfirmSaveChanges(string path)
+        // Similar to InputActionAsset.ToJson() but converts to JSON excluding the name property and any additional JSON
+        // content that may be part of the file not recognized as required data.
+        public static string ToJsonWithoutName(InputActionAsset asset)
         {
-            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
-                $"Do you want to save the changes you made in:\n{path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
-            return (DialogResult)result;
+            return JsonUtility.ToJson(new WriteFileJsonNoName
+            {
+                maps = InputActionMap.WriteFileJson.FromMaps(asset.m_ActionMaps).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(asset.m_ControlSchemes),
+            }, prettyPrint: true);
         }
 
-        public static DialogResult ConfirmDeleteAssetWithUnsavedChanges(string path)
+        // Reads the JSON content of an .inputactions asset but discard name property and any unsupported data.
+        public static string ReadJsonWithoutName(string inputActionAssetPath)
         {
-            var result = EditorUtility.DisplayDialog("Unsaved changes",
-                $"You have unsaved changes for '{path}'. Do you want to discard the changes and delete the asset?",
-                "Yes, Delete", "No, Cancel");
-            if (result)
-                return DialogResult.DontSave;
-            return DialogResult.Cancel;
-        }
-    }
-
-    // TODO Ideally instead sits on InputActionAssetManager
-    internal static class InputActionAssetEditorExtensions
-    {
-        public static bool IsEqualJsonContent(this InputActionAsset asset, string otherJson)
-        {
-            var first = asset.ToJsonContent();
-            var second = otherJson; // TODO This should really be sanitized up-front when synchronizing with asset
-            return first == second;
-        }
-
-        public static bool HasChanged(this InputActionAsset asset, string editTargetAssetJson)
-        {
-            // Checks if the asset being edited is a new asset that was never saved before.
-            // If it is, there's nothing to save.
-            // At the moment, an asset only has the default asset layout content on disk when it is first created.
-            // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
-            if (editTargetAssetJson == InputActionAsset.kDefaultAssetLayoutJson && asset.IsEmpty())
-                return false;
-
-            var newAssetJson = asset.ToJson();
-            return newAssetJson != editTargetAssetJson;
+            var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(inputActionAssetPath));
+            var obj = JsonUtility.FromJson<InputActionAsset.ReadFileJson>(json);
+            return JsonUtility.ToJson(new WriteFileJsonNoName
+            {
+                maps = InputActionMap.WriteFileJson.FromMaps(new InputActionMap.ReadFileJson {maps = obj.maps}.ToMaps()).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(InputControlScheme.SchemeJson.ToSchemes(obj.controlSchemes)),
+            }, prettyPrint: true);
         }
     }
 }

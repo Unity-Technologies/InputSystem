@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static bool ValidateAndSaveAsset(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
         {
             Validate(asset, reporter); // Currently ignoring validation result
-            return InputActionAssetManager.SaveAsset(asset);
+            return EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         private static bool ReportError(IReportInputActionAssetValidationErrors reporter, InputAction action, string message)

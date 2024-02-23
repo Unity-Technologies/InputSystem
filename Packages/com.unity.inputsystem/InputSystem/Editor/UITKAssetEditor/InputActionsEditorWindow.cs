@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.VersionControl;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -26,11 +27,12 @@ namespace UnityEngine.InputSystem.Editor
             // TODO Provide a factory to allow fetching available instances
             InputActionImporter.RegisterTypeForAssetNotifications<InputActionsAssetEditorWindow>();
         }
-        
+
         // TODO Consider moving state into its own struct so it can just be assigned or reset
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
+        [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
@@ -43,9 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;
-
-            var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!InputActionImporter.IsInputActionAssetPath(path))
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
                 return false;
 
             // Grab InputActionAsset.
@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             return GetWindow<InputActionsAssetEditorWindow>();
         }
-        
+
         private static GUIContent GetEditorTitle(InputActionAsset asset, bool isDirty)
         {
             var text = asset.name + " (Input Actions Editor)";
@@ -135,9 +135,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
-            var assetPath = AssetDatabase.GetAssetPath(asset);
-            var serializedAsset = new SerializedObject(asset);
-            m_State = new InputActionsEditorState(serializedAsset);
+            InputActionAssetManager.CreateWorkingCopyAsset(ref m_AssetObjectForEditing, asset);
+
+            m_State = new InputActionsEditorState(new SerializedObject(m_AssetObjectForEditing));
 
             // Select the action that was selected on the Asset window.
             if (actionMapToSelect != null && actionToSelect != null)
@@ -149,7 +149,7 @@ namespace UnityEngine.InputSystem.Editor
             // Obtain and persist GUID for the associated asset
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _),
                 $"Failed to get asset {asset.name} GUID");
-            
+
             UpdateFromAsset();
             BuildUI();
         }
@@ -159,32 +159,32 @@ namespace UnityEngine.InputSystem.Editor
             // When opening the window for the first time there will be no state or asset yet.
             // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
             // Here we only recreate the UI e.g. after a domain reload.
-            if (!string.IsNullOrEmpty(m_AssetGUID))
-            {
-                // After domain reloads the state will be in a invalid state as some of the fields
-                // cannot be serialized and will become null.
-                // Therefore we recreate the state here using the fields which were saved.
-                if (m_State.serializedObject == null)
-                {
-                    var asset = GetAssetFromDatabase();
-                    if (asset != null)
-                    {
-                        var assetPath = AssetDatabase.GetAssetPath(asset);
-                        m_AssetJson = File.ReadAllText(assetPath);
-                        var serializedAsset = new SerializedObject(asset);
-                        m_State = new InputActionsEditorState(m_State, serializedAsset);
-                    }
-                    else
-                    {
-                        // Asset cannot be retrieved or doesn't exist anymore; abort opening the Window.
-                        Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
-                        this.Close();
-                        return;
-                    }
-                }
+            if (string.IsNullOrEmpty(m_AssetGUID))
+                return;
 
-                BuildUI();
+            // After domain reloads the state will be in a invalid state as some of the fields
+            // cannot be serialized and will become null.
+            // Therefore we recreate the state here using the fields which were saved.
+            if (m_State.serializedObject == null)
+            {
+                var asset = GetAssetFromDatabase();
+                if (asset != null)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(asset);
+                    m_AssetJson = File.ReadAllText(assetPath);
+                    var serializedAsset = new SerializedObject(asset);
+                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                }
+                else
+                {
+                    // Asset cannot be retrieved or doesn't exist anymore; abort opening the Window.
+                    Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                    this.Close();
+                    return;
+                }
             }
+
+            BuildUI();
         }
 
         private void BuildUI()
@@ -195,8 +195,7 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.Clear();
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
-            view.postSaveAction += UpdateFromAsset;
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false, Save);
             stateContainer.Initialize();
         }
 
@@ -226,14 +225,16 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
-            if (InputActionAssetManager.SaveAsset(GetEditedAsset()))
+            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 UpdateFromAsset();
         }
 
         private void UpdateFromAsset()
         {
+            // TODO Need to recreate working copy
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            m_AssetJson = InputActionAsset.ReadJsonContent(assetPath);
+            m_AssetJson = InputActionsEditorWindowUtils.ReadJsonWithoutName(assetPath);
             m_IsDirty = false;
             UpdateWindowTitle();
         }
@@ -242,7 +243,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // Window is dirty is equivalent to if asset has changed
-            var editedAssetJson = GetEditedAsset().ToJsonContent();
+            var editedAssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(GetEditedAsset());
             var isWindowDirty = (editedAssetJson != m_AssetJson);
             #else
             // Window is dirty is never true since every change is auto-saved
@@ -251,7 +252,7 @@ namespace UnityEngine.InputSystem.Editor
 
             if (m_IsDirty == isWindowDirty)
                 return;
-            
+
             m_IsDirty = isWindowDirty;
             UpdateWindowTitle();
         }
@@ -277,23 +278,28 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             // Prompt user with a dialog
-            var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(assetPath);
+            var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
             switch (result)
             {
-                case InputActionsEditorWindowUtils.DialogResult.Save:
+                case Dialog.Result.Save:
                     Save();
                     break;
-                case InputActionsEditorWindowUtils.DialogResult.Cancel:
+                case Dialog.Result.Cancel:
                     // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case InputActionsEditorWindowUtils.DialogResult.DontSave:
+                case Dialog.Result.Discard:
                     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
-                    AssetDatabase.ImportAsset(assetPath);
+                    // TODO I doubt this is needed since we were operating on a copy?!
+                    //AssetDatabase.ImportAsset(assetPath);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result));
             }
+
+            // Clean-up
+            if (m_AssetObjectForEditing != null)
+                DestroyImmediate(m_AssetObjectForEditing);
         }
 
         private void ReshowEditorWindowWithUnsavedChanges()
@@ -331,7 +337,7 @@ namespace UnityEngine.InputSystem.Editor
             return windows.FirstOrDefault(w => w.m_AssetGUID == guid);
         }
 
-#region IInputActionEditorWindow
+        #region IInputActionEditorWindow
 
         public string assetGUID => m_AssetGUID;
         public bool isDirty => m_IsDirty;
@@ -353,8 +359,8 @@ namespace UnityEngine.InputSystem.Editor
         public void OnAssetImported()
         {
             // TODO Its problematic that binding to serialized object causes a regular update happening
-            //      before this call making the asset look dirty. Should we 
-            
+            //      before this call making the asset look dirty. Should we
+
             // If the editor has pending changes done by the user and the contents changes on disc, there
             // is not much we can do about it but to ignore loading the changes. If the editors asset is
             // unmodified, we can refresh the editor with the latest content from disc.

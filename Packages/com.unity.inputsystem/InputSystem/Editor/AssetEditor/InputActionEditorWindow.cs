@@ -104,10 +104,10 @@ namespace UnityEngine.InputSystem.Editor
             return window;
         }
 
-        public static InputActionEditorWindow FindEditorForAsset(InputActionAsset asset)
+        private static InputActionEditorWindow FindEditorForAsset(InputActionAsset asset)
         {
-            var windows = Resources.FindObjectsOfTypeAll<InputActionEditorWindow>();
-            return windows.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(asset));
+            var guid = EditorHelpers.GetAssetGUID(asset);
+            return guid == null ? null : FindEditorForAssetWithGUID(guid);
         }
 
         public static InputActionEditorWindow FindEditorForAssetWithGUID(string guid)
@@ -185,21 +185,23 @@ namespace UnityEngine.InputSystem.Editor
             // Ask for confirmation if we have unsaved changes.
             if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
-                var result = InputActionsEditorWindowUtils.ConfirmSaveChanges(m_ActionAssetManager.path);
+                var result = Dialog.InputActionAsset.ShowSaveChanges(m_ActionAssetManager.path);
                 switch (result)
                 {
-                    case InputActionsEditorWindowUtils.DialogResult.Save:
+                    case Dialog.Result.Save:
                         m_ActionAssetManager.SaveChangesToAsset();
                         m_ActionAssetManager.Cleanup();
                         break;
-                    case InputActionsEditorWindowUtils.DialogResult.Cancel:
+                    case Dialog.Result.Cancel:
                         Instantiate(this).Show();
                         // Cancel editor quit.
                         return false;
-                    case InputActionsEditorWindowUtils.DialogResult.DontSave:
+                    case Dialog.Result.Discard:
                         // Don't save, don't ask again.
                         m_ForceQuit = true;
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(result));
                 }
             }
             return true;
@@ -263,7 +265,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
-            m_ActionAssetManager.Initialize();
+            //m_ActionAssetManager.Initialize(); // TODO No longer needed when using constructor
 
             InitializeTrees();
             LoadControlSchemes();
@@ -343,7 +345,7 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(!string.IsNullOrEmpty(name), "Control scheme name should not be empty");
             Debug.Assert(!string.IsNullOrEmpty(bindingGroup), "Binding group should not be empty");
 
-            var asset = m_ActionAssetManager.m_AssetObjectForEditing;
+            var asset = m_ActionAssetManager.editedAsset;
 
             var bindingMask = InputBinding.MaskByGroup(bindingGroup);
             var schemeHasBindings = asset.actionMaps.Any(m => m.bindings.Any(b => bindingMask.Matches(ref b)));
@@ -873,8 +875,8 @@ namespace UnityEngine.InputSystem.Editor
                     // If there's unsaved changes, ask for confirmation.
                     if (window.m_ActionAssetManager.dirty)
                     {
-                        var result = InputActionsEditorWindowUtils.ConfirmDeleteAssetWithUnsavedChanges(path);
-                        if (result == InputActionsEditorWindowUtils.DialogResult.Cancel)
+                        var result = Dialog.InputActionAsset.ShowDiscardUnsavedChanges(path);
+                        if (result == Dialog.Result.Cancel)
                         {
                             // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;

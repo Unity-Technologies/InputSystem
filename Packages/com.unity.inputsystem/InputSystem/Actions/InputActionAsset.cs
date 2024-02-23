@@ -299,47 +299,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            object fileJson;
-            /*if (string.IsNullOrEmpty(name))
+            return JsonUtility.ToJson(new WriteFileJson
             {
-                fileJson = new WriteFileJsonNoName
-                {
-                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
-                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-                };
-            }
-            else*/
-            {
-                fileJson = new WriteFileJson
-                {
-                    name = name,
-                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
-                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-                };
-            }
-            return JsonUtility.ToJson(fileJson, true);
-        }
-
-        // Similar to ToJson() but converts to JSON excluding the name property and any additional JSON
-        // content that may be part of the file not recognized by this parser.
-        internal string ToJsonContent()
-        {
-            return JsonUtility.ToJson(new WriteFileJsonNoName
-            {
+                name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            }, prettyPrint: true);
-        }
-
-        internal static string ReadJsonContent(string path)
-        {
-            var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(path));
-            var obj = JsonUtility.FromJson<ReadFileJson>(json);
-            return JsonUtility.ToJson(new WriteFileJsonNoName
-            {
-                maps = InputActionMap.WriteFileJson.FromMaps(new InputActionMap.ReadFileJson {maps = obj.maps}.ToMaps()).maps,
-                controlSchemes = InputControlScheme.SchemeJson.ToJson(InputControlScheme.SchemeJson.ToSchemes(obj.controlSchemes)),
-            }, prettyPrint: true);
+            }, true);
         }
 
         /// <summary>
@@ -418,15 +383,6 @@ namespace UnityEngine.InputSystem
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
             parsedJson.ToAsset(this);
-        }
-
-        public static string ReadNameFromJson(string json)
-        {
-            if (string.IsNullOrEmpty(json))
-                throw new ArgumentNullException(nameof(json));
-
-            var parsedJson = JsonUtility.FromJson<ReadFileJsonName>(json);
-            return parsedJson.name;
         }
 
         /// <summary>
@@ -1000,17 +956,6 @@ namespace UnityEngine.InputSystem
         }
 
         [Serializable]
-        internal struct ReadFileJsonName
-        {
-            public string name;
-
-            public void ToAsset(InputActionAsset asset)
-            {
-                asset.name = name;
-            }
-        }
-
-        [Serializable]
         internal struct ReadFileJson
         {
             public string name;
@@ -1029,23 +974,5 @@ namespace UnityEngine.InputSystem
                         map.m_Asset = asset;
             }
         }
-
-        /*[Serializable]
-        internal struct ReadFileJsonNoName
-        {
-            public InputActionMap.ReadMapJson[] maps;
-            public InputControlScheme.SchemeJson[] controlSchemes;
-
-            public void ToAsset(InputActionAsset asset)
-            {
-                asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
-                asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
-
-                // Link maps to their asset.
-                if (asset.m_ActionMaps != null)
-                    foreach (var map in asset.m_ActionMaps)
-                        map.m_Asset = asset;
-            }
-        }*/
     }
 }

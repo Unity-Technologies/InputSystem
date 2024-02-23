@@ -29,8 +29,8 @@ internal partial class CoreTests
     // Note that any existing default created asset is preserved during test run by moving it via ADB.
 
     const string TestCategory = "ProjectWideActions";
-    const string m_AssetBackupDirectory = "Assets/~TestBackupFiles";
-    const string s_DefaultProjectWideAssetBackupPath = "Assets/~TestBackupFilesDefaultProjectWideAssetBackup.json";
+    const string kAssetBackupDirectory = "Assets/~TestBackupFiles";
+    const string kDefaultProjectWideAssetBackupPath = kAssetBackupDirectory + "/DefaultProjectWideAssetBackup.json";
 
     private InputActionAsset actions;
     private InputActionAsset otherActions;
@@ -44,10 +44,10 @@ internal partial class CoreTests
         // This is for verifying the default output of templated actions from editor tools.
         if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
         {
-            if (!Directory.Exists(m_AssetBackupDirectory))
-                Directory.CreateDirectory(m_AssetBackupDirectory);
+            if (!Directory.Exists(kAssetBackupDirectory))
+                AssetDatabase.CreateFolder("Assets", "~TestBackupFiles");
             AssetDatabase.MoveAsset(oldPath: ProjectWideActionsAsset.defaultAssetPath,
-                newPath: s_DefaultProjectWideAssetBackupPath);
+                newPath: kDefaultProjectWideAssetBackupPath);
         }
 #endif // UNITY_EDITOR
     }
@@ -57,14 +57,13 @@ internal partial class CoreTests
     {
 #if UNITY_EDITOR
         // Restore default asset if we made a backup copy of it during setup
-        if (File.Exists(s_DefaultProjectWideAssetBackupPath))
+        if (File.Exists(kDefaultProjectWideAssetBackupPath))
         {
             if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
                 AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-            AssetDatabase.MoveAsset(oldPath: s_DefaultProjectWideAssetBackupPath,
+            AssetDatabase.MoveAsset(oldPath: kDefaultProjectWideAssetBackupPath,
                 newPath: ProjectWideActionsAsset.defaultAssetPath);
-            Directory.Delete("Assets/~TestBackupFiles");
-            File.Delete("Assets/~TestBackupFiles.meta");
+            AssetDatabase.DeleteAsset(kAssetBackupDirectory);
         }
 #endif // UNITY_EDITOR
     }
@@ -84,7 +83,8 @@ internal partial class CoreTests
 
 #if UNITY_EDITOR
         // Delete any default asset we may have created (backup is safe until test class is destroyed)
-        AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
+        if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
+            AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
 #endif
 
         // Clean-up objects created during test
