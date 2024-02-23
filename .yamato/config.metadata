@@ -28,7 +28,7 @@ platforms_win:
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u 
 platforms_nix:
   - name: mac
     type: Unity::VM::osx
@@ -45,7 +45,7 @@ platforms_nix:
     flavor: m1.mac
     runtime: StandaloneOSX
     scripting-backend: Il2Cpp
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
 scripting_backends:
   - name: mono
   - name: il2cpp

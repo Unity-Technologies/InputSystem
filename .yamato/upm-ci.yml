@@ -32,7 +32,7 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -67,7 +67,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -85,7 +85,7 @@ build_ios_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -122,7 +122,7 @@ build_tvos_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -159,7 +159,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
