@@ -158,8 +158,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (indexOfArrayElement < 0)
                     throw new InvalidOperationException("Control scheme doesn't exist in collection.");
 
-                // Ask for confirmation.
-                if (!EditorUtility.DisplayDialog("Delete scheme?",
+                // If Editor is in batchmode proceed, otherwise ask for confirmation.
+                if (Application.isBatchMode || !EditorUtility.DisplayDialog("Delete scheme?",
                     $"Do you want to delete control scheme '{selectedControlSchemeName}'?", "Delete", "Cancel"))
                     return state;
 
