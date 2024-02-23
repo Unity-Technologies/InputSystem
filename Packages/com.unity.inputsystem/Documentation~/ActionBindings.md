@@ -29,7 +29,15 @@ uid: input-system-action-bindings
   * [Conflicting inputs](#conflicting-inputs)
   * [Initial state check](#initial-state-check)
 
-An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). An Action can have an arbitrary number of Bindings pointed at it. Multiple Bindings can reference the same Control.
+An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). For example, the **right trigger** of a gamepad (a control) might be bound to an an action named "accelerate", so that pulling the right trigger causes a car to accelerate in your game.
+
+You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
+
+You can also bind multiple controls from the same device to an action. For example, both the left and right trigger of a gamepad could be mapped to the same action, so that pulling either trigger has the same result in your game.
+
+![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
+_The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
+
 
 Each Binding has the following properties:
 

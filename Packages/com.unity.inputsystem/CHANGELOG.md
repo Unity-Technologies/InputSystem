@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed the 'Max player count reached' error to a warning instead.
 - Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 - Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
+- Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -53,6 +54,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Error logged when InputActionEditor window opened without a valid asset.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
+- Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
+- Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
 - Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
 - Fixed a regression in IMGUI Input Action Editor where editor would auto-save on focus lost even when the auto-save toggle was disabled.
 
