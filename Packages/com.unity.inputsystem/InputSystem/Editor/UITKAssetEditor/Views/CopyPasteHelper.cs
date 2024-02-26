@@ -1,7 +1,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using UnityEditor;
 
@@ -225,10 +224,7 @@ namespace UnityEngine.InputSystem.Editor
 
             int newBindingIndex;
             if (state.selectionType == SelectionType.Action)
-            {
-                var bindingsForAction = Selectors.GetBindingsForAction(state, actionMap, state.selectedActionIndex);
-                newBindingIndex = bindingsForAction.Count > 0 ? bindingsForAction.Select(b => b.GetIndexOfArrayElement()).Max() : 0;
-            }
+                newBindingIndex = Selectors.GetLastBindingIndexForSelectedAction(state);
             else
                 newBindingIndex = state.selectedBindingIndex;
 
@@ -319,16 +315,13 @@ namespace UnityEngine.InputSystem.Editor
                     return index;
             }
 
-            // Update the target index for special cases
-            if (pastePartOfComposite && !currentPartOfComposite)
+            // Update the target index for special cases when pasting a Binding
+            if (s_State.selectionType != SelectionType.Action && createCompositeParts)
             {
-                // Pasting into a Composite and CompositePart isn't the target, i.e. Composite "root" selected, paste at the end of the composite
-                index = Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
-            }
-            else if (!pastePartOfComposite && s_State.selectionType != SelectionType.Action)
-            {
-                // Pasting with a Binding selected needs to skip all the CompositeParts (if any)
-                index = Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+                // - Pasting into a Composite with CompositePart not the target, i.e. Composite "root" selected, paste at the end of the composite
+                // - Pasting a non-CompositePart, i.e. regular Binding, needs to skip all the CompositeParts (if any)
+                if ((pastePartOfComposite && !currentPartOfComposite) || !pastePartOfComposite)
+                    index = Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
             }
 
             if (json.Contains(k_BindingData)) //copied data is composite with bindings - only true for directly copied composites, not for composites from copied actions
