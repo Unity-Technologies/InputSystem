@@ -283,6 +283,13 @@ namespace UnityEngine.InputSystem.Editor
                 return false;
             return cutElements.Any(cutElement => cutElement.actionMapIndex == actionMapIndex && cutElement.actionOrBindingIndex == actionIndex && cutElement.type == typeof(InputAction));
         }
+        
+        public bool IsActionMapCut(int actionMapIndex)
+        {
+            if (cutElements == null)
+                return false;
+            return cutElements.Any(cutElement => cutElement.actionMapIndex == actionMapIndex && cutElement.type == typeof(InputActionMap));
+        }
 
         public List<CutElement> GetCutElements()
         {

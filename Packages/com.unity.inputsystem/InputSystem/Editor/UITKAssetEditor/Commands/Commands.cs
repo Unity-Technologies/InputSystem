@@ -92,9 +92,10 @@ namespace UnityEngine.InputSystem.Editor
                 var actionMapID = InputActionSerializationHelpers.GetId(actionMap);
                 InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
                 state.serializedObject.ApplyModifiedProperties();
+                var newCutElements = state.IsActionMapCut(actionMapIndex) ? new List<InputActionsEditorState.CutElement>() : state.GetCutElements();
                 if (state.selectedActionMapIndex == actionMapIndex)
-                    return SelectPrevActionMap(state);
-                return state.SelectActionMap(state.selectedActionMapIndex > actionMapIndex ? state.selectedActionMapIndex - 1 : state.selectedActionMapIndex);
+                    return SelectPrevActionMap(state.With(cutElements: newCutElements));
+                return state.SelectActionMap(state.selectedActionMapIndex > actionMapIndex ? state.selectedActionMapIndex - 1 : state.selectedActionMapIndex).With(cutElements: newCutElements);
             };
         }
 
@@ -364,12 +365,14 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
+                var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
 
-                // ActionsTreeView will dispatch a separate command to select the previous Action
-                return state;
+                if (state.IsActionCut(actionMapIndex, actionIndex))
+                    return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state; // ActionsTreeView will dispatch a separate command to select the previous Action
             };
         }
 
@@ -382,8 +385,9 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
 
-                // ActionsTreeView will dispatch a separate command to select the previous Binding
-                return state;
+                if (state.IsBindingCut(actionMapIndex, bindingIndex))
+                    return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state; // ActionsTreeView will dispatch a separate command to select the previous Binding
             };
         }
 
