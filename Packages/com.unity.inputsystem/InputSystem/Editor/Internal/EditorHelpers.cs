@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <returns>true if the file was successfully checkout for editing and the file was written.
         /// This function may return false if unable to checkout the file for editing in the underlying
         /// version control system.</returns>
-        internal static bool WriteAsset([NotNull] string assetPath, [NotNull] string text)
+        internal static bool WriteAsset(string assetPath, string text)
         {
             // Attempt to checkout the file path for editing and inform the user if this fails.
             if (!CheckOut(assetPath))

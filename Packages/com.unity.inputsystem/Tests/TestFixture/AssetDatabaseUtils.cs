@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem
         public static T CreateAsset<T>(string directoryPath, string filename = null, string content = null) where T : UnityEngine.Object
         {
             Debug.Assert(directoryPath == null || directoryPath.Contains(RootPath()));
-            Debug.Assert(filename == null || !filename.Contains('/'));
+            Debug.Assert(filename == null || !filename.Contains("/"));
 
             string path = null;
             if (directoryPath == null)

@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public Action<bool> onDirtyChanged { get; set; }
 
-        public InputActionAssetManager([NotNull] InputActionAsset inputActionAsset)
+        public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
             if (inputActionAsset == null)
                 throw new NullReferenceException(nameof(inputActionAsset));
