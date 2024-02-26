@@ -11,11 +11,27 @@ namespace UnityEngine.InputSystem
     /// Provides convenience functions for creating and managing assets for test purposes.
     public class AssetDatabaseUtils
     {
-        private static List<string> s_FilePaths = new List<string>();
-        private static List<string> s_DirectoryPaths = new List<string>();
         private const string kAssetPath = "Assets";
         private const string kTestPath = "TestFiles";
+        private const string kMetaExtension = ".meta";
 
+        // Perform an operation equivalent to a file delete operation outside of Unity Editor.
+        // Note that meta file is also removed to avoid generating warnings about non-clean delete.
+        public static void ExternalDeleteFileOrDirectory(string path)
+        {
+            FileUtil.DeleteFileOrDirectory(path);
+            FileUtil.DeleteFileOrDirectory(path + kMetaExtension);
+        }
+
+        // Perform an operation equivalent to a file move operation outside of Unity Editor.
+        // Note that meta file is also moved to avoid generating warnings about non-clean move.
+        public static void ExternalMoveFileOrDirectory(string source, string dest)
+        {
+            FileUtil.MoveFileOrDirectory(source, dest);
+            FileUtil.MoveFileOrDirectory(source + kMetaExtension, dest + kMetaExtension);
+        }
+
+        // Create an asset at the given path containing the given text content.
         private static T CreateAssetAtPath<T>(string path, string content) where T : UnityEngine.Object
         {
             Debug.Assert(!File.Exists(path));
@@ -30,7 +46,6 @@ namespace UnityEngine.InputSystem
                 obj = AssetDatabase.LoadAssetAtPath<T>(path);
                 if (obj == null)
                     throw new Exception($"Failed to create asset at \"{path}\"");
-                s_FilePaths.Add(path);
             }
             catch (Exception)
             {
@@ -41,6 +56,7 @@ namespace UnityEngine.InputSystem
             return obj;
         }
 
+        // Creates all directories (including intermediate) defined in path.
         private static string CreateDirectories(string path)
         {
             if (Directory.Exists(path))
@@ -57,18 +73,20 @@ namespace UnityEngine.InputSystem
                     throw new Exception("Failed to create path \"" + path + "\"");
                 parentFolder = Path.Combine(parentFolder, directories[i]);
             }
-            s_DirectoryPaths.Add(path);
 
             AssetDatabase.Refresh();
 
             return path;
         }
 
+        // Creates a random test directory within asset folder that is automatically removed after test run.
         public static string CreateDirectory()
         {
             return CreateDirectories(RandomDirectoryPath());
         }
 
+        // Creates an asset in the given directory path with an explicit or random file name containing the
+        // given content or the default content based on type.
         public static T CreateAsset<T>(string directoryPath, string filename = null, string content = null) where T : UnityEngine.Object
         {
             Debug.Assert(directoryPath == null || directoryPath.Contains(RootPath()));
@@ -87,6 +105,9 @@ namespace UnityEngine.InputSystem
             return CreateAsset<T>(path: path, content: content);
         }
 
+        // Creates an asset at the given path containing the specified content.
+        // If path is null, a unique random file name is assigned, if content is null the default content based
+        // on type (extension) is used.
         public static T CreateAsset<T>(string path = null, string content = null) where T : UnityEngine.Object
         {
             if (path == null)
@@ -94,15 +115,6 @@ namespace UnityEngine.InputSystem
             if (content == null)
                 content = DefaultContentFromType(typeof(T));
             return CreateAssetAtPath<T>(path, content);
-        }
-
-        public static void MoveFileOrDirectory(string source, string destination)
-        {
-            Debug.Assert(source.Contains(RootPath()));
-            Debug.Assert(destination.Contains(RootPath()));
-
-            FileUtil.MoveFileOrDirectory(source, destination);
-            AssetDatabase.Refresh();
         }
 
         public static void Restore()
@@ -120,30 +132,6 @@ namespace UnityEngine.InputSystem
             }
 
             AssetDatabase.DeleteAsset(root);
-
-            //AssetDatabase.DeleteAsset(root);
-
-            /*var stack = new Stack<string>();
-            stack.Push(root);
-
-            while (stack.Count != 0)
-            {
-                var dir = stack.Pop();
-                File.Dele
-            }
-
-            AssetDatabase.GetSubFolders(path);
-
-            // Delete all files created
-            if (s_FilePaths.Count > 0)
-            {
-                foreach (var path in s_FilePaths)
-                {
-                    AssetDatabase.DeleteAsset(path);
-                }
-
-                s_FilePaths.Clear();
-            }*/
         }
 
         private static string RandomName()

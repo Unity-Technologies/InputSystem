@@ -619,7 +619,7 @@ namespace UnityEngine.InputSystem.Editor
 
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // If auto-save should be triggered on focus lost, only mark asset as dirty
-            m_ActionAssetManager.SetAssetDirty();
+            m_ActionAssetManager.MarkDirty();
             titleContent = m_DirtyTitle;
             #else
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
@@ -630,7 +630,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                m_ActionAssetManager.SetAssetDirty();
+                m_ActionAssetManager.MarkDirty();
                 titleContent = m_DirtyTitle;
             }
             #endif

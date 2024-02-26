@@ -97,8 +97,10 @@ namespace UnityEngine.InputSystem.Editor
             if (m_AssetObjectForEditing == null)
             {
                 if (importedAsset == null)
+                {
                     // The asset we want to edit no longer exists.
                     return false;
+                }
 
                 CreateWorkingCopyAsset();
             }
@@ -189,7 +191,10 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void SaveChangesToAsset()
         {
-            Debug.Assert(importedAsset != null);
+            // If this is invoked after a domain reload, importAsset will resolve itself.
+            // However, if the asset do not exist importedAsset will be null and we cannot complete the operation.
+            if (importedAsset == null)
+                throw new Exception("Unable to save changes. Associated asset do not exist.");
 
             SaveAsset(path, m_AssetObjectForEditing.ToJson());
             SetDirty(false);
@@ -218,7 +223,7 @@ namespace UnityEngine.InputSystem.Editor
             return false;
         }
 
-        public void SetAssetDirty()
+        public void MarkDirty()
         {
             SetDirty(true);
         }
@@ -229,7 +234,7 @@ namespace UnityEngine.InputSystem.Editor
             SetDirty(m_AssetObjectForEditing.ToJson() != importedAsset.ToJson()); // TODO Why not using cached version?
         }
 
-        private void SetDirty(bool newValue = true)
+        private void SetDirty(bool newValue)
         {
             m_IsDirty = newValue;
             if (onDirtyChanged != null)

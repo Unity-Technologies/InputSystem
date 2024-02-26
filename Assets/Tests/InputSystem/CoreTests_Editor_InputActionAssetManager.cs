@@ -96,17 +96,16 @@ partial class CoreTests
 
         const string kDefaultContents = "{}";
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>(directoryPath: directoryBeforeMove, filename: filename, content: kDefaultContents);
-
+        
         using (var inputActionAssetManager = new InputActionAssetManager(asset))
         {
             inputActionAssetManager.Initialize();
-            inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
 
             FileUtil.MoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // TODO Wouldn't move .meta files
             FileUtil.MoveFileOrDirectory(directoryBeforeMove + ".meta", directoryAfterMove + ".meta");
             AssetDatabase.Refresh();
-
-            Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+            
+            inputActionAssetManager.SaveChangesToAsset();
 
             var fileContents = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
             Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
@@ -118,16 +117,16 @@ partial class CoreTests
     public void Editor_InputActionAssetManager_CanDeleteAssetOnDisk()
     {
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
-
+        
         using (var inputActionAssetManager = new InputActionAssetManager(asset))
         {
             inputActionAssetManager.Initialize();
-            inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
 
-            FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(asset));
+            AssetDatabaseUtils.ExternalDeleteFileOrDirectory(AssetDatabase.GetAssetPath(asset));
             AssetDatabase.Refresh();
 
-            Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+            // Expecting SaveChangesToAsset to throw when asset no longer exist
+            Assert.Throws<Exception>(() => inputActionAssetManager.SaveChangesToAsset());
         }
     }
 }

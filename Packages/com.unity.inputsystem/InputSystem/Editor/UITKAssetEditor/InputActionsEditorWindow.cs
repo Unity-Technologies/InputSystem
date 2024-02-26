@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
-        [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
+        [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
@@ -364,8 +364,22 @@ namespace UnityEngine.InputSystem.Editor
             // If the editor has pending changes done by the user and the contents changes on disc, there
             // is not much we can do about it but to ignore loading the changes. If the editors asset is
             // unmodified, we can refresh the editor with the latest content from disc.
-            //if (m_IsDirty)
-            //    return;
+            if (m_IsDirty)
+                return;
+
+            // If our asset has disappeared from disk, just close the window.
+            var assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                Close();
+                return;
+            }
+
+            // TODO Store and attempt to preserve select map and action by GUID
+
+            SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
+            //UpdateFromAsset();
+            //BuildUI();
 
             // Update content from asset on disc
             //UpdateFromAsset();

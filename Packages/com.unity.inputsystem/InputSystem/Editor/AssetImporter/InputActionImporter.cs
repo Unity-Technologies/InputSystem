@@ -406,6 +406,10 @@ namespace UnityEngine.InputSystem.Editor
             return FindAllEditors<T>((editor) => editor.assetGUID == assetGuid, result);
         }
 
+        // Consider this insteead....
+        // Make InputActionAssetModificationProcessor take a class T and then let editor implement a derived type
+        // internally based on its own type.
+
         // Scenarios:
         // - Input Action Editor is open with an unmodified asset and ...
         //   ... user deletes an asset. Prompt user whether to delete asset or not. If deleted, close asset in editor.
@@ -416,7 +420,7 @@ namespace UnityEngine.InputSystem.Editor
         //   and in this case, prompt the user that there are unsaved changes and allow the user to cancel the operation
         //   and allow to save the pending changes or confirm to delete the asset and discard the pending unsaved changes.
         // - If the asset being deleted is unmodified, no dialog prompt is displayed and the asset is deleted.
-        /*private class InputActionAssetModificationProcessor : AssetModificationProcessor
+        private class InputActionAssetModificationProcessor : AssetModificationProcessor
         {
             // TODO This will yield +2 dialogs which may be seen as disruptive UX. It also adds complexity. Check how other assets handle this situation.
             [System.Diagnostics.CodeAnalysis.SuppressMessage(category: "Microsoft.Usage",
@@ -425,29 +429,25 @@ namespace UnityEngine.InputSystem.Editor
                 Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
-                if (InputActionImporter.IsInputActionAssetPath(path))
+                if (IsInputActionAssetPath(path))
                 {
                     // Find GUID uniquely identifying asset at path
                     var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(path);
                     if (window != null)
                     {
                         // If there's unsaved changes, ask for confirmation to either abort or delete.
-                        var forceQuit = false;
                         if (window.isDirty)
                         {
-                            var result = InputActionsEditorWindowUtils.ConfirmDeleteAssetWithUnsavedChanges(path);
-                            if (result == InputActionsEditorWindowUtils.DialogResult.Cancel)
+                            var result = Dialog.InputActionAsset.ShowDiscardUnsavedChanges(path);
+                            if (result == Dialog.Result.Cancel)
                             {
                                 // User canceled. Stop the deletion.
                                 return AssetDeleteResult.FailedDelete;
                             }
-
-                            forceQuit = true;
                         }
 
                         // Note only valid for internal editor operations
-                        //window.Dismiss(forceQuit);
-                        //window.Refresh();
+                        window.OnAssetDeleted();
                     }
                 }
 
@@ -456,10 +456,8 @@ namespace UnityEngine.InputSystem.Editor
 
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
-                if (InputActionImporter.IsInputActionAssetPath(sourcePath))
+                if (IsInputActionAssetPath(sourcePath))
                 {
-                    Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
-
                     var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(sourcePath);
                     if (window != null)
                     {
@@ -470,7 +468,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 return default;
             }
-        }*/
+        }
 
         // Regarding https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         //
