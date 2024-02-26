@@ -375,7 +375,7 @@ namespace UnityEngine.InputSystem.Editor
 
             return elementProperty;
         }
-        
+
         public static int DeleteCutElements(InputActionsEditorState state)
         {
             var cutElements = state.GetCutElements();
