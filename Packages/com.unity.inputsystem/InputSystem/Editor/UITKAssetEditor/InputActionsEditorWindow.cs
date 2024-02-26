@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEngine.UIElements;
+using UnityEditor.ShortcutManagement;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -30,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetJson;
         private string m_AssetTitleName;
         private bool m_IsDirty;
+        private StateContainer m_StateContainer;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
@@ -177,13 +178,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void BuildUI()
         {
-            var stateContainer = new StateContainer(rootVisualElement, m_State);
-            stateContainer.StateChanged += OnStateChanged;
+            m_StateContainer = new StateContainer(rootVisualElement, m_State);
+            m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer, false);
+            var view = new InputActionsEditorView(rootVisualElement, m_StateContainer, false);
             view.postSaveAction += PostSaveAction;
-            stateContainer.Initialize();
+            m_StateContainer.Initialize();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
@@ -311,6 +312,37 @@ namespace UnityEngine.InputSystem.Editor
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
+
+        #region Shortcuts
+        [Shortcut("Input Action Editor/Save", typeof(InputActionsEditorWindow), KeyCode.S, ShortcutModifiers.Action)]
+        private static void SaveShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.Save();
+        }
+
+        [Shortcut("Input Action Editor/Add Action Map", typeof(InputActionsEditorWindow), KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddActionMap());
+        }
+
+        [Shortcut("Input Action Editor/Add Action", typeof(InputActionsEditorWindow), KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddAction());
+        }
+
+        [Shortcut("Input Action Editor/Add Binding", typeof(InputActionsEditorWindow), KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddBinding());
+        }
+
+        #endregion
     }
 }
 
