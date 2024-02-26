@@ -97,8 +97,7 @@ namespace UnityEngine.InputSystem.Editor
                         new StyleBackground(
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
 
-                if (item.isCut)
-                    e.SetEnabled(false);
+                e.SetEnabled(!item.isCut);
             };
 
             m_ActionsTreeView.itemsChosen += objects =>
