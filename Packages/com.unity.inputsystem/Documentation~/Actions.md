@@ -30,7 +30,7 @@ When scripting with Actions in the Input System, there are number of important c
 
 |Class|Description|
 |-----|-----------|
-|`InputSystem.actions`|A reference to the set of actions configured in the [Input Actions editor](ActionsEditor.md). |
+|[`InputSystem.actions`](../api/UnityEngine.InputSystem.InputSystem.html)|A reference to the set of actions configured in the [Input Actions editor](ActionsEditor.md). |
 |[`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html)|A named collection of Actions. The API equivalent to an entry in the "Action Maps" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputAction`](../api/UnityEngine.InputSystem.InputAction.html)|A named Action that can return the current value of the controls that it is bound to, or can trigger callbacks in response to input. The API equivalent to an entry in the "Actions" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html)|The relationship between an Action and the specific device controls for which it receives input. For more information about Bindings and how to use them, see [Action Bindings](ActionBindings.md).|
@@ -45,7 +45,7 @@ The simplest way to create actions is to use the [Input Actions editor](ActionsE
 
 However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example:
 
-- You can create [Input Actions assets](ActionAssets.md) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
+- You can create [Input Action assets](ActionAssets.md) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
 - You can manually load Actions from JSON data.
 - You can create Actions entirely in code, including setting up the bindings.
 
@@ -85,7 +85,7 @@ public class ExampleScript : MonoBehaviour
 
 The result is similar to using an Actions defined in the Input Actions editor, except the Actions are defined in the GameObject's properties and saved as Scene or Prefab data, instead of in a dedicated Asset.
 
-When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface similar to the Actions Asset window, which allows you to set up the bindings for those actions. For example:
+When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface similar to the Action Asset window, which allows you to set up the bindings for those actions. For example:
 
 ![MyBehavior Inspector](Images/Workflow-EmbeddedActionsInspector.png)
 

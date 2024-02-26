@@ -12,7 +12,7 @@ The **Player Input** component represents a single player, and that player's ass
 
 ![PlayerInput](Images/PlayerInput.png)
 
-*Above, the Player Input component as visible in the inspector, with an Actions Asset called "ExampleActions" assigned.*
+*Above, the Player Input component as visible in the inspector, with an Action Asset called "ExampleActions" assigned.*
 
 Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. You can use multiple `PlayerInput` instances at the same time (although not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
