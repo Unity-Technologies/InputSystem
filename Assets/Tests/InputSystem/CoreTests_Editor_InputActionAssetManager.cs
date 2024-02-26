@@ -16,7 +16,9 @@ partial class CoreTests
     {
         Assert.Throws<NullReferenceException>(() =>
         {
-            using var x = new InputActionAssetManager(null);
+            using (var x = new InputActionAssetManager(null))
+            {
+            }
         });
     }
 
@@ -30,7 +32,9 @@ partial class CoreTests
             asset = ScriptableObject.CreateInstance<InputActionAsset>();
             Assert.Throws<Exception>(() =>
             {
-                using var x = new InputActionAssetManager(asset);
+                using (var x = new InputActionAssetManager(asset))
+                {
+                }
             });
         }
         finally
@@ -44,9 +48,11 @@ partial class CoreTests
     public void Editor_InputActionAssetManager_SerializedObjectIsAWorkingCopyOfImportedAsset()
     {
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
-        using var sut = new InputActionAssetManager(asset);
-        Assert.That(sut.serializedObject.targetObject == null, Is.False);
-        Assert.That(sut.serializedObject.targetObject == asset, Is.False);
+        using (var sut = new InputActionAssetManager(asset))
+        {
+            Assert.That(sut.serializedObject.targetObject == null, Is.False);
+            Assert.That(sut.serializedObject.targetObject == asset, Is.False);
+        }
     }
 
     [Test]
@@ -55,27 +61,29 @@ partial class CoreTests
     {
         // Start from an asset, since we haven't done modifications expect it to not be marked dirty
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
-        using var sut = new InputActionAssetManager(asset);
-        Assert.That(sut.dirty, Is.False);
+        using (var sut = new InputActionAssetManager(asset))
+        {
+            Assert.That(sut.dirty, Is.False);
 
-        // Add a map to editable object and apply changes, expect it to not be dirty since we haven't explicitly updated dirty state
-        var mapProperty = InputActionSerializationHelpers.AddActionMap(sut.serializedObject);
-        sut.ApplyChanges();
-        Assert.That(sut.dirty, Is.False); // TODO Note: dirty flag is not updated only by applying changes
+            // Add a map to editable object and apply changes, expect it to not be dirty since we haven't explicitly updated dirty state
+            var mapProperty = InputActionSerializationHelpers.AddActionMap(sut.serializedObject);
+            sut.ApplyChanges();
+            Assert.That(sut.dirty, Is.False); // TODO Note: dirty flag is not updated only by applying changes
 
-        // Update the dirty state, finally expect it to indicate that it has changed
-        sut.UpdateAssetDirtyState();
-        Assert.That(sut.dirty, Is.True);
+            // Update the dirty state, finally expect it to indicate that it has changed
+            sut.UpdateAssetDirtyState();
+            Assert.That(sut.dirty, Is.True);
 
-        // Remove the map we previously added and apply changes, expect it to still be dirty since we haven't explicitly updated dirty state
-        var editedAsset = sut.serializedObject.targetObject as InputActionAsset;
-        InputActionSerializationHelpers.DeleteActionMap(sut.serializedObject, editedAsset.actionMaps[0].id);
-        sut.ApplyChanges();
-        Assert.That(sut.dirty, Is.True);
+            // Remove the map we previously added and apply changes, expect it to still be dirty since we haven't explicitly updated dirty state
+            var editedAsset = sut.serializedObject.targetObject as InputActionAsset;
+            InputActionSerializationHelpers.DeleteActionMap(sut.serializedObject, editedAsset.actionMaps[0].id);
+            sut.ApplyChanges();
+            Assert.That(sut.dirty, Is.True);
 
-        // Update the dirty state, expect it to be false since even though we carried out changes we are now back on square one
-        sut.UpdateAssetDirtyState();
-        Assert.That(sut.dirty, Is.False);
+            // Update the dirty state, expect it to be false since even though we carried out changes we are now back on square one
+            sut.UpdateAssetDirtyState();
+            Assert.That(sut.dirty, Is.False);
+        }
     }
 
     [Test]
@@ -89,18 +97,20 @@ partial class CoreTests
         const string kDefaultContents = "{}";
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>(directoryPath: directoryBeforeMove, filename: filename, content: kDefaultContents);
 
-        using var inputActionAssetManager = new InputActionAssetManager(asset);
-        inputActionAssetManager.Initialize();
-        inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
+        using (var inputActionAssetManager = new InputActionAssetManager(asset))
+        {
+            inputActionAssetManager.Initialize();
+            inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
 
-        FileUtil.MoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // TODO Wouldn't move .meta files
-        FileUtil.MoveFileOrDirectory(directoryBeforeMove + ".meta", directoryAfterMove + ".meta");
-        AssetDatabase.Refresh();
+            FileUtil.MoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // TODO Wouldn't move .meta files
+            FileUtil.MoveFileOrDirectory(directoryBeforeMove + ".meta", directoryAfterMove + ".meta");
+            AssetDatabase.Refresh();
 
-        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+            Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
 
-        var fileContents = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
-        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+            var fileContents = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
+            Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+        }
     }
 
     [Test]
@@ -109,16 +119,16 @@ partial class CoreTests
     {
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
 
-        using var inputActionAssetManager = new InputActionAssetManager(asset);
-        inputActionAssetManager.Initialize();
-        inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
+        using (var inputActionAssetManager = new InputActionAssetManager(asset))
+        {
+            inputActionAssetManager.Initialize();
+            inputActionAssetManager.onDirtyChanged = (bool dirty) => {}; // TODO Why would this be required, review
 
-        FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(asset));
-        AssetDatabase.Refresh();
+            FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(asset));
+            AssetDatabase.Refresh();
 
-        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
-
-        // TODO More to test?
+            Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+        }
     }
 }
 
