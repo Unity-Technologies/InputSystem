@@ -255,16 +255,19 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState CutActionMaps()
         {
-            cutElements = new List<CutElement>();
-            cutElements.Add(new CutElement(selectedActionMapIndex));
+            cutElements = new List<CutElement> { new(selectedActionMapIndex) };
             return With(cutElements: cutElements);
         }
 
-        public bool IsActionMapCut(int index)
+        public IEnumerable<string> GetDisabledActionMaps(List<string> allActionMaps)
         {
-            if (cutElements == null)
-                return false;
-            return cutElements.Any(cut => cut.actionMapIndex == index && cut.type == typeof(InputActionMap));
+            if (cutElements == null || cutElements == null)
+                return Enumerable.Empty<string>();
+            var cutActionMaps = cutElements.Where(cut => cut.type == typeof(InputActionMap));
+            return allActionMaps.Where(actionMapName =>
+            {
+                return cutActionMaps.Any(am => am.actionMapIndex == allActionMaps.IndexOf(actionMapName));
+            });
         }
 
         public bool IsBindingCut(int actionMapIndex, int bindingIndex)

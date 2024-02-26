@@ -143,9 +143,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.SelectActionMap(lastPastedElement.GetIndexOfArrayElement());
+                    return state.With(selectedActionMapIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<InputActionsEditorState.CutElement>());
                 }
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
 
