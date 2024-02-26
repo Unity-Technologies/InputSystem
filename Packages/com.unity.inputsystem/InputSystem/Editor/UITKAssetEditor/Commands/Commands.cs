@@ -156,7 +156,7 @@ namespace UnityEngine.InputSystem.Editor
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
                 if (lastPastedElement != null)
                     state.serializedObject.ApplyModifiedProperties();
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());;
+                return state;
             };
         }
 
