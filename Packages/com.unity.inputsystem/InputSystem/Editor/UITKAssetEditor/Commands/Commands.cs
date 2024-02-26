@@ -556,7 +556,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
                 state.serializedObject.ApplyModifiedProperties();
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
 
@@ -578,7 +578,7 @@ namespace UnityEngine.InputSystem.Editor
                     InputActionSerializationHelpers.AddActionMaps(state.serializedObject, tmp);
                 }
                 state.serializedObject.ApplyModifiedProperties();
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
     }
