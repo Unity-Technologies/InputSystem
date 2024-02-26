@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 CopyPasteHelper.CopyActionMap(state);
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
 
@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 CopyPasteHelper.Copy(state);
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
 
@@ -138,7 +138,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var newIndex = DeleteCutElements(state);
+                var newIndex = CopyPasteHelper.DeleteCutElements(state);
                 var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state.With(selectedActionMapIndex: newIndex >= 0 ? newIndex : state.selectedActionMapIndex));
                 if (lastPastedElement != null)
                 {
@@ -156,7 +156,7 @@ namespace UnityEngine.InputSystem.Editor
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
                 if (lastPastedElement != null)
                     state.serializedObject.ApplyModifiedProperties();
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());;
             };
         }
 
@@ -164,13 +164,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true);
+                var newIndex = CopyPasteHelper.DeleteCutElements(state);
+                var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), true);
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.SelectAction(lastPastedElement.GetIndexOfArrayElement());
+                    return state.With(selectedActionIndex: lastPastedElement.GetIndexOfArrayElement(), selectionType: SelectionType.Action, cutElements: new List<InputActionsEditorState.CutElement>());
                 }
-                return state;
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
 
@@ -179,7 +180,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
-                var newIndex = DeleteCutElements(state);
+                var newIndex = CopyPasteHelper.DeleteCutElements(state);
                 SerializedProperty lastPastedElement = null;
                 if (state.selectionType == SelectionType.Action)
                     lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), typeOfCopiedData == typeof(InputBinding));
@@ -195,51 +196,6 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
-        }
-
-        private static int DeleteCutElements(InputActionsEditorState state)
-        {
-            var cutElements = state.GetCutElements();
-            if (cutElements is null || cutElements.Count <= 0)
-                return -1;
-
-            var index = state.selectedActionMapIndex;
-            if (cutElements[0].type == typeof(InputAction))
-                index = state.selectedActionIndex;
-            else if (cutElements[0].type == typeof(InputBinding))
-                index = state.selectionType == SelectionType.Binding ? state.selectedBindingIndex : state.selectedActionIndex;
-
-            foreach (var cutElement in cutElements)
-            {
-                var actionMap = Selectors.GetActionMapAtIndex(state, cutElement.actionMapIndex)?.wrappedProperty;
-                var isInsertBindingIntoAction = cutElement.type == typeof(InputBinding) && state.selectionType == SelectionType.Action;
-                if (cutElement.type == typeof(InputBinding) || cutElement.type == typeof(InputAction))
-                {
-                    if (cutElement.type == typeof(InputAction))
-                    {
-                        var action = Selectors.GetActionForIndex(actionMap, cutElement.actionOrBindingIndex);
-                        var id = InputActionSerializationHelpers.GetId(action);
-                        InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, id);
-                    }
-                    else
-                    {
-                        var binding = Selectors.GetCompositeOrBindingInMap(actionMap, cutElement.actionOrBindingIndex).wrappedProperty;
-                        if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite && !isInsertBindingIntoAction)
-                            index -= InputActionSerializationHelpers.GetCompositePartCount(Selectors.GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), cutElement.actionOrBindingIndex);
-                        InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
-                    }
-
-                    if (cutElement.actionOrBindingIndex <= index && cutElement.actionMapIndex == state.selectedActionMapIndex && !isInsertBindingIntoAction)
-                        index--;
-                }
-                else if (cutElement.type == typeof(InputActionMap))
-                {
-                    InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, InputActionSerializationHelpers.GetId(actionMap));
-                    if (cutElement.actionMapIndex <= index)
-                        index--;
-                }
-            }
-            return index;
         }
 
         public static Command DuplicateActionMap(int actionMapIndex)

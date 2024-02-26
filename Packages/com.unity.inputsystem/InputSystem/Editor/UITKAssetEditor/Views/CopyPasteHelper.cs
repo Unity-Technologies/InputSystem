@@ -375,6 +375,51 @@ namespace UnityEngine.InputSystem.Editor
 
             return elementProperty;
         }
+        
+        public static int DeleteCutElements(InputActionsEditorState state)
+        {
+            var cutElements = state.GetCutElements();
+            if (cutElements is null || cutElements.Count <= 0)
+                return -1;
+
+            var index = state.selectedActionMapIndex;
+            if (cutElements[0].type == typeof(InputAction))
+                index = state.selectedActionIndex;
+            else if (cutElements[0].type == typeof(InputBinding))
+                index = state.selectionType == SelectionType.Binding ? state.selectedBindingIndex : state.selectedActionIndex;
+
+            foreach (var cutElement in cutElements)
+            {
+                var actionMap = Selectors.GetActionMapAtIndex(state, cutElement.actionMapIndex)?.wrappedProperty;
+                var isInsertBindingIntoAction = cutElement.type == typeof(InputBinding) && state.selectionType == SelectionType.Action;
+                if (cutElement.type == typeof(InputBinding) || cutElement.type == typeof(InputAction))
+                {
+                    if (cutElement.type == typeof(InputAction))
+                    {
+                        var action = Selectors.GetActionForIndex(actionMap, cutElement.actionOrBindingIndex);
+                        var id = InputActionSerializationHelpers.GetId(action);
+                        InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, id);
+                    }
+                    else
+                    {
+                        var binding = Selectors.GetCompositeOrBindingInMap(actionMap, cutElement.actionOrBindingIndex).wrappedProperty;
+                        if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite && !isInsertBindingIntoAction)
+                            index -= InputActionSerializationHelpers.GetCompositePartCount(Selectors.GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), cutElement.actionOrBindingIndex);
+                        InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
+                    }
+
+                    if (cutElement.actionOrBindingIndex <= index && cutElement.actionMapIndex == state.selectedActionMapIndex && !isInsertBindingIntoAction)
+                        index--;
+                }
+                else if (cutElement.type == typeof(InputActionMap))
+                {
+                    InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, InputActionSerializationHelpers.GetId(actionMap));
+                    if (cutElement.actionMapIndex <= index)
+                        index--;
+                }
+            }
+            return index;
+        }
 
         #endregion
 
