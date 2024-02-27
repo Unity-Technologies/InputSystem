@@ -236,10 +236,12 @@ namespace UnityEngine.InputSystem.Editor
 
             if (copiedType == typeof(InputActionMap))
             {
+                evt.StopPropagation();
                 Dispatch(Commands.PasteActionMaps());
             }
             else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
             {
+                evt.StopPropagation();
                 Dispatch(Commands.PasteActionsOrBindings());
             }
         }
