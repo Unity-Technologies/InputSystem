@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Editor
 
         // TODO Consider adding a level of abstraction if needed to support non EditorWindow types.
         //      There is really no point in limiting it to EditorWindow type.
-        
+
         public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
         {
             if (!s_EditorTypes.Contains(typeof(T)))
@@ -66,13 +66,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             s_EditorTypes.Remove(typeof(T));
         }
-        
+
         public static IInputActionsAssetEditor[] FindAllEditorsForPath(string path, Predicate<IInputActionsAssetEditor> predicate = null)
         {
             var guid = AssetDatabase.AssetPathToGUID(path);
-            return guid != null ? FindAllEditors(predicate == null 
-                    ? (editor) => editor.assetGUID == guid 
-                    : (editor) => editor.assetGUID == guid && predicate(editor)) : 
+            return guid != null ? FindAllEditors(predicate == null
+                ? (editor) => editor.assetGUID == guid
+                : (editor) => editor.assetGUID == guid && predicate(editor)) :
                 Array.Empty<IInputActionsAssetEditor>();
         }
 
@@ -84,9 +84,9 @@ namespace UnityEngine.InputSystem.Editor
                 editors = FindAllEditors(type, predicate, editors);
             return editors != null ? editors.ToArray() : Array.Empty<IInputActionsAssetEditor>();
         }
-        
-        private static List<IInputActionsAssetEditor> FindAllEditors(Type type, 
-            Predicate<IInputActionsAssetEditor> predicate = null, 
+
+        private static List<IInputActionsAssetEditor> FindAllEditors(Type type,
+            Predicate<IInputActionsAssetEditor> predicate = null,
             List<IInputActionsAssetEditor> result = null)
         {
             if (result == null)
@@ -446,8 +446,8 @@ namespace UnityEngine.InputSystem.Editor
             var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
             return FindAllEditors<T>((editor) => editor.assetGUID == assetGuid, result);
         }*/
-        
-        
+
+
         // Consider this insteead....
         // Make InputActionAssetModificationProcessor take a class T and then let editor implement a derived type
         // internally based on its own type.
@@ -481,7 +481,7 @@ namespace UnityEngine.InputSystem.Editor
                             break;
                         }
                     }
-                    
+
                     // Notify all associated editors that asset will be deleted
                     foreach (var editor in editorWithAssetOpen)
                         editor.OnAssetDeleted();
@@ -553,7 +553,7 @@ namespace UnityEngine.InputSystem.Editor
         // Rename                         Imported(d), Deleted(s)
         // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
         // ------------------------------------------------------------------------------------------------------------
-        
+
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
             private static bool s_DoNotifyEditorsScheduled;

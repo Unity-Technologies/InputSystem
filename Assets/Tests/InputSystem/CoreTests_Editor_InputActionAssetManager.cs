@@ -96,7 +96,7 @@ partial class CoreTests
 
         const string kDefaultContents = "{}";
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>(directoryPath: directoryBeforeMove, filename: filename, content: kDefaultContents);
-        
+
         using (var inputActionAssetManager = new InputActionAssetManager(asset))
         {
             inputActionAssetManager.Initialize();
@@ -104,7 +104,7 @@ partial class CoreTests
             FileUtil.MoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // TODO Wouldn't move .meta files
             FileUtil.MoveFileOrDirectory(directoryBeforeMove + ".meta", directoryAfterMove + ".meta");
             AssetDatabase.Refresh();
-            
+
             inputActionAssetManager.SaveChangesToAsset();
 
             var fileContents = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
@@ -117,7 +117,7 @@ partial class CoreTests
     public void Editor_InputActionAssetManager_CanDeleteAssetOnDisk()
     {
         var asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
-        
+
         using (var inputActionAssetManager = new InputActionAssetManager(asset))
         {
             inputActionAssetManager.Initialize();
