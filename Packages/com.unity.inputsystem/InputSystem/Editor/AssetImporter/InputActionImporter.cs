@@ -49,6 +49,58 @@ namespace UnityEngine.InputSystem.Editor
         void OnAssetDeleted();
     }
 
+    internal static class InputActionsAssetEditor
+    {
+        private static readonly List<Type> s_EditorTypes = new List<Type>();
+
+        // TODO Consider adding a level of abstraction if needed to support non EditorWindow types.
+        //      There is really no point in limiting it to EditorWindow type.
+        
+        public static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+        {
+            if (!s_EditorTypes.Contains(typeof(T)))
+                s_EditorTypes.Add(typeof(T));
+        }
+
+        public static void UnregisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
+        {
+            s_EditorTypes.Remove(typeof(T));
+        }
+        
+        public static IInputActionsAssetEditor[] FindAllEditorsForPath(string path, Predicate<IInputActionsAssetEditor> predicate = null)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(path);
+            return guid != null ? FindAllEditors(predicate == null 
+                    ? (editor) => editor.assetGUID == guid 
+                    : (editor) => editor.assetGUID == guid && predicate(editor)) : 
+                Array.Empty<IInputActionsAssetEditor>();
+        }
+
+        public static IInputActionsAssetEditor[] FindAllEditors(
+            Predicate<IInputActionsAssetEditor> predicate = null)
+        {
+            List<IInputActionsAssetEditor> editors = null;
+            foreach (var type in s_EditorTypes)
+                editors = FindAllEditors(type, predicate, editors);
+            return editors != null ? editors.ToArray() : Array.Empty<IInputActionsAssetEditor>();
+        }
+        
+        private static List<IInputActionsAssetEditor> FindAllEditors(Type type, 
+            Predicate<IInputActionsAssetEditor> predicate = null, 
+            List<IInputActionsAssetEditor> result = null)
+        {
+            if (result == null)
+                result = new List<IInputActionsAssetEditor>();
+            var editors = Resources.FindObjectsOfTypeAll(type);
+            foreach (var editor in editors)
+            {
+                if (editor is IInputActionsAssetEditor actionsAssetEditor && (predicate == null || predicate(actionsAssetEditor)))
+                    result.Add(actionsAssetEditor);
+            }
+            return result;
+        }
+    }
+
     /// <summary>
     /// Imports an <see cref="InputActionAsset"/> from JSON.
     /// </summary>
@@ -369,43 +421,33 @@ namespace UnityEngine.InputSystem.Editor
             return Path.GetFileNameWithoutExtension(assetPath);
         }
 
-        private static IInputActionsAssetEditor FindEditorForAssetWithGuid<T>(string guid) where T : EditorWindow
+        /*private static IInputActionsAssetEditor FindEditorForAssetWithGuid<T>(string guid) where T : EditorWindow
         {
             // Currently assumes there is only one instance per type
             var result = new List<IInputActionsAssetEditor>();
             var editors = FindAllEditors<T>();
             return editors.FirstOrDefault(w => w.assetGUID == guid);
-        }
+        }*/
 
-        private static IInputActionsAssetEditor FindEditorForAssetPath<T>(string path) where T : EditorWindow
+        /*private static IInputActionsAssetEditor FindEditorForAssetPath<T>(string path) where T : EditorWindow
         {
             return FindEditorForAssetWithGuid<T>(AssetDatabase.AssetPathToGUID(path));
-        }
+        }*/
 
+        /*
         private static List<IInputActionsAssetEditor> FindAllEditors<T>(Predicate<IInputActionsAssetEditor> predicate = null, List<IInputActionsAssetEditor> result = null) where T : EditorWindow
         {
             return FindAllEditors(typeof(T), predicate, result);
-        }
+        }*/
 
-        private static List<IInputActionsAssetEditor> FindAllEditors(Type type, Predicate<IInputActionsAssetEditor> predicate = null, List<IInputActionsAssetEditor> result = null)
-        {
-            if (result == null)
-                result = new List<IInputActionsAssetEditor>();
-            var editors = Resources.FindObjectsOfTypeAll(type);
-            foreach (var editor in editors)
-            {
-                if (editor is IInputActionsAssetEditor actionsAssetEditor && (predicate == null || predicate(actionsAssetEditor)))
-                    result.Add(actionsAssetEditor);
-            }
-            return result;
-        }
-
+        /*
         private static List<IInputActionsAssetEditor> FindAllEditorsForAssetPath<T>(string assetPath, List<IInputActionsAssetEditor> result = null) where T : EditorWindow
         {
             var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
             return FindAllEditors<T>((editor) => editor.assetGUID == assetGuid, result);
-        }
-
+        }*/
+        
+        
         // Consider this insteead....
         // Make InputActionAssetModificationProcessor take a class T and then let editor implement a derived type
         // internally based on its own type.
@@ -422,33 +464,27 @@ namespace UnityEngine.InputSystem.Editor
         // - If the asset being deleted is unmodified, no dialog prompt is displayed and the asset is deleted.
         private class InputActionAssetModificationProcessor : AssetModificationProcessor
         {
-            // TODO This will yield +2 dialogs which may be seen as disruptive UX. It also adds complexity. Check how other assets handle this situation.
-            [System.Diagnostics.CodeAnalysis.SuppressMessage(category: "Microsoft.Usage",
-                checkId: "CA1801:ReviewUnusedParameters",
-                MessageId = "options",
-                Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (IsInputActionAssetPath(path))
                 {
-                    // Find GUID uniquely identifying asset at path
-                    var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(path);
-                    if (window != null)
+                    // Find any open editors associated to the asset and if any of them holds unsaved changes
+                    // allow the user to discard unsaved changes or cancel deletion.
+                    var editorWithAssetOpen = InputActionsAssetEditor.FindAllEditorsForPath(path);
+                    foreach (var editor in editorWithAssetOpen)
                     {
-                        // If there's unsaved changes, ask for confirmation to either abort or delete.
-                        if (window.isDirty)
+                        if (editor.isDirty)
                         {
                             var result = Dialog.InputActionAsset.ShowDiscardUnsavedChanges(path);
                             if (result == Dialog.Result.Cancel)
-                            {
-                                // User canceled. Stop the deletion.
                                 return AssetDeleteResult.FailedDelete;
-                            }
+                            break;
                         }
-
-                        // Note only valid for internal editor operations
-                        window.OnAssetDeleted();
                     }
+                    
+                    // Notify all associated editors that asset will be deleted
+                    foreach (var editor in editorWithAssetOpen)
+                        editor.OnAssetDeleted();
                 }
 
                 return default;
@@ -458,12 +494,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (IsInputActionAssetPath(sourcePath))
                 {
-                    var window = FindEditorForAssetPath<InputActionsAssetEditorWindow>(sourcePath);
-                    if (window != null)
-                    {
-                        // TODO Note that its only valid for internal editor operations
-                        //window.OnMove();
-                    }
+                    var editorWithAssetOpen = InputActionsAssetEditor.FindAllEditorsForPath(sourcePath);
+                    foreach (var editor in editorWithAssetOpen)
+                        editor.OnAssetMoved();
                 }
 
                 return default;
@@ -520,38 +553,13 @@ namespace UnityEngine.InputSystem.Editor
         // Rename                         Imported(d), Deleted(s)
         // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
         // ------------------------------------------------------------------------------------------------------------
-
-        public static void RegisterTypeForAssetNotifications<T>() where T : EditorWindow, IInputActionsAssetEditor
-        {
-            InputActionAssetPostprocessor.RegisterType<T>();
-        }
-
-        public static void UnregisterTypeForAssetNotifications<T>() where T : EditorWindow, IInputActionsAssetEditor
-        {
-            InputActionAssetPostprocessor.UnregisterType<T>();
-        }
-
+        
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
             private static bool s_DoNotifyEditorsScheduled;
-            private static readonly List<Type> s_EditorTypes = new List<Type>();
             private static List<string> s_Imported = new List<string>();
             private static List<string> s_Deleted = new List<string>();
             private static List<string> s_Moved = new List<string>();
-
-            // Registers an editor type for receiving notifications of asset modifications if the editor is open.
-            internal static void RegisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
-            {
-                if (!s_EditorTypes.Contains(typeof(T)))
-                    s_EditorTypes.Add(typeof(T));
-            }
-
-            // Unregisters a previously registered type from receiving notifications of asset modifications if the
-            // editor is open.
-            internal static void UnregisterType<T>() where T : EditorWindow, IInputActionsAssetEditor
-            {
-                s_EditorTypes.Remove(typeof(T));
-            }
 
             private static void Notify(IReadOnlyCollection<string> assets,
                 IReadOnlyCollection<IInputActionsAssetEditor> editors, Action<IInputActionsAssetEditor> callback)
@@ -583,13 +591,11 @@ namespace UnityEngine.InputSystem.Editor
                 // (otherwise we gets lots of exceptions).
                 ActiveEditorTracker.sharedTracker.ForceRebuild();
 
-                // Unconditionally find all editors from registered types regardless of associated asset
-                List<IInputActionsAssetEditor> editors = null;
-                foreach (var type in s_EditorTypes)
-                    editors = FindAllEditors(type, null, editors);
+                // Unconditionally find all existing editors regardless of associated asset
+                var editors = InputActionsAssetEditor.FindAllEditors();
 
                 // Abort if there are no available candidate editors
-                if (editors == null)
+                if (editors == null || editors.Length == 0)
                     return;
 
                 // Notify editors

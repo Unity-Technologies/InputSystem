@@ -21,11 +21,10 @@ namespace UnityEngine.InputSystem.Editor
 
     internal class InputActionsAssetEditorWindow : EditorWindow, IInputActionsAssetEditor
     {
-        // Register for notifications for open editor windows
+        // Register editor type
         static InputActionsAssetEditorWindow()
         {
-            // TODO Provide a factory to allow fetching available instances
-            InputActionImporter.RegisterTypeForAssetNotifications<InputActionsAssetEditorWindow>();
+            InputActionsAssetEditor.RegisterType<InputActionsAssetEditorWindow>();
         }
 
         // TODO Consider moving state into its own struct so it can just be assigned or reset
