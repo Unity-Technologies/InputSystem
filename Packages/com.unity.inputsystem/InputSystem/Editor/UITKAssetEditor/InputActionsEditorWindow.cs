@@ -134,6 +134,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
+            var selectedActionMapIndex = m_State.selectedActionMapIndex;
+            var selectedActionIndex = m_State.selectedActionIndex;
+
+            // Create a working copy of the referenced asset
             InputActionAssetManager.CreateWorkingCopyAsset(ref m_AssetObjectForEditing, asset);
 
             m_State = new InputActionsEditorState(new SerializedObject(m_AssetObjectForEditing));
@@ -143,6 +147,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_State = m_State.SelectActionMap(actionMapToSelect);
                 m_State = m_State.SelectAction(actionToSelect);
+            }
+            else if (selectedActionMapIndex >= 0 && selectedActionIndex >= 0)
+            {
+                m_State = m_State.SelectActionMap(selectedActionMapIndex);
+                m_State = m_State.SelectAction(selectedActionIndex);
             }
 
             // Obtain and persist GUID for the associated asset
@@ -169,10 +178,8 @@ namespace UnityEngine.InputSystem.Editor
                 var asset = GetAssetFromDatabase();
                 if (asset != null)
                 {
-                    var assetPath = AssetDatabase.GetAssetPath(asset);
-                    m_AssetJson = File.ReadAllText(assetPath);
-                    var serializedAsset = new SerializedObject(asset);
-                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                    m_AssetJson = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
+                    m_State = new InputActionsEditorState(m_State, new SerializedObject(asset));
                 }
                 else
                 {
@@ -324,18 +331,6 @@ namespace UnityEngine.InputSystem.Editor
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
 
-        /*public static InputActionsEditorWindow FindEditorForAsset(InputActionAsset asset)
-        {
-            var windows = Resources.FindObjectsOfTypeAll<InputActionsEditorWindow>();
-            return windows.FirstOrDefault(w => w.ImportedAssetObjectEquals(asset));
-        }*/
-
-        public static InputActionsAssetEditorWindow FindEditorForAssetWithGUID(string guid)
-        {
-            var windows = Resources.FindObjectsOfTypeAll<InputActionsAssetEditorWindow>();
-            return windows.FirstOrDefault(w => w.m_AssetGUID == guid);
-        }
-
         #region IInputActionEditorWindow
 
         public string assetGUID => m_AssetGUID;
@@ -357,6 +352,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnAssetImported()
         {
+            if (true)
+                return;
+
             // TODO Its problematic that binding to serialized object causes a regular update happening
             //      before this call making the asset look dirty. Should we
 
