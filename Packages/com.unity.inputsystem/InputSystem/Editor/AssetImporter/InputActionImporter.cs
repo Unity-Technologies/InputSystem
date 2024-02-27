@@ -37,6 +37,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private static InlinedArray<Action> s_OnImportCallbacks;
 
+        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
+
+        // Evaluates whether the given path is a path to an asset of the associated type based on extension.
+        public static bool IsInputActionAssetPath(string path)
+        {
+            return path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase);
+        }
+
         public static event Action onImport
         {
             add => s_OnImportCallbacks.Append(value);
@@ -326,67 +334,45 @@ namespace UnityEngine.InputSystem.Editor
         // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
         // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
         // must flush the updated JSON to the file whenever this operation occurs.
-        // https://jira.unity3d.com/browse/ISXB-749
+        // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
-            private static List<string> assetFilesNeedingRefresh;
-
-            private void OnPreprocessAsset()
+// Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
+#if UNITY_2021_2_OR_NEWER
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+#endif
             {
-                var importer = assetImporter as InputActionImporter;
-                if (importer == null)
-                    return;
-
-                var newName = Path.GetFileNameWithoutExtension(assetPath);
-                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-                var newFileContents = File.ReadAllText(assetPath);
-
-                if (!string.IsNullOrEmpty(newFileContents))
+                foreach (var assetPath in importedAssets)
                 {
-                    newAsset.LoadFromJson(newFileContents);
-
-                    // If the serialized Name doesn't match the actual filename this asset file for refresh.
-                    // NOTE: We can't change the file while Asset Importing is in progress.
-                    if (newAsset.name != newName)
-                    {
-                        if (assetFilesNeedingRefresh == null)
-                            assetFilesNeedingRefresh = new List<string>();
-
-                        assetFilesNeedingRefresh.Add(assetPath);
-                    }
+                    if (IsInputActionAssetPath(assetPath))
+                        CheckAndModifyJsonNameIfDifferent(assetPath);
                 }
             }
 
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+            private static void CheckAndModifyJsonNameIfDifferent(string assetPath)
             {
-                if (assetFilesNeedingRefresh == null)
-                    return;
-
+                InputActionAsset asset = null;
                 try
                 {
-                    foreach (var assetPath in assetFilesNeedingRefresh)
+                    asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                    var desiredName = Path.GetFileNameWithoutExtension(assetPath);
+                    if (asset.name != desiredName)
                     {
-                        var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-
-                        try
-                        {
-                            var fileContents = File.ReadAllText(assetPath);
-
-                            newAsset.LoadFromJson(fileContents);
-                            newAsset.name = Path.GetFileNameWithoutExtension(assetPath);
-                            File.WriteAllText(assetPath, newAsset.ToJson());
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                        }
-
-                        ScriptableObject.DestroyImmediate(newAsset);
+                        asset.name = desiredName;
+                        if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                            Debug.LogError($"Unable update JSON name in asset \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
                 }
                 finally
                 {
-                    assetFilesNeedingRefresh = null;
+                    if (asset != null)
+                        DestroyImmediate(asset);
                 }
             }
         }

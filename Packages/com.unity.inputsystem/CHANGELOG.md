@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed the 'Max player count reached' error to a warning instead.
 - Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 - Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
+- Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -25,6 +26,8 @@ however, it has to be formatted properly to pass verification tests.
 - Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 - Added drag and drop support in the Input Action Asset Editor for Action Maps, Actions and Bindings.
 - UI Toolkit input action editor now supports showing the derived bindings.
+- Device filtering support for control schemes in the UI-Toolkit Input Asset Editor.
+- Added right-click (context) menu support for empty areas below the Action Maps/Actions lists in the Project Settings Input Action Editor and Asset Input Action Editor.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
@@ -46,10 +49,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputManager.asset file growing in size on each Reset call.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error.
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
+- Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
 - Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
 - Fixed Error logged when InputActionEditor window opened without a valid asset.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
+- Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
+- Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

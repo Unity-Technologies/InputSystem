@@ -3,6 +3,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
+using System;
+using System.Text.RegularExpressions;
 
 public class ControlSchemesEditorTests
 {
@@ -206,20 +208,49 @@ public class ControlSchemesEditorTests
 
     [Test]
     [Category("AssetEditor")]
-    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueName()
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnString()
     {
-        var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme).Generate();
+        var asset = TestData.inputActionAsset
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test")))
+            .Generate();
+
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
         state.serializedObject.Update();
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
 
+        //If ControlScheme name ends on a string a "1" will get added to the duplicate
         Assert.That(newState.selectedControlScheme.name, Is.EqualTo(state.selectedControlScheme.name + "1"));
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
     }
 
     [Test]
     [Category("AssetEditor")]
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnInt()
+    {   //If ControlScheme name ends on int it will get incremented by 1
+        var asset = TestData.inputActionAsset
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test" + new System.Random().Next(100).ToString())))
+            .Generate();
+        var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
+
+        state.serializedObject.Update();
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
+        string pattern = @"\d+$"; //number at the end of a string
+        string oldControlSchemeNamePlusOne = "";
+
+        int intAtEndOfOldControlSchemeName = Convert.ToInt16(Regex.Match(state.selectedControlScheme.name, pattern).Value);
+        intAtEndOfOldControlSchemeName += 1;
+
+        oldControlSchemeNamePlusOne = Regex.Replace(state.selectedControlScheme.name, pattern, intAtEndOfOldControlSchemeName.ToString());
+
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo(oldControlSchemeNamePlusOne));
+        Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
+    }
+
+    [Test]
+    [Category("AssetEditor")]
+    [Ignore("Disabled: This should not be called in batch mode.")]
     public void DeleteControlSchemeCommand_DeletesSelectedControlScheme()
     {
         var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme.WithOptionalDevice()).Generate();
@@ -241,6 +272,7 @@ public class ControlSchemesEditorTests
     [TestCase(3, 2, 1, "Test1")]
     [TestCase(1, 0, -1, null)]
     [Category("AssetEditor")]
+    [Ignore("Disabled: This should not be called in batch mode.")]
     public void DeleteControlSchemeCommand_SelectsAnotherControlSchemeAfterDelete(
         int controlSchemeCount,
         int selectedControlSchemeIndex,
