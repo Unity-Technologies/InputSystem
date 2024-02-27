@@ -79,6 +79,7 @@ namespace UnityEngine.InputSystem.Editor
         // - When an asset is about to get moved, notify any editors having the asset open about the move.
         //
         // See comments further down in this class for expected callback sequences.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class InputActionAssetModificationProcessor : AssetModificationProcessor
         {
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
@@ -152,6 +153,7 @@ namespace UnityEngine.InputSystem.Editor
         // Rename                         Imported(d), Deleted(s)
         // Move(drag) / Cut+Paste         Imported(d), Deleted(s)
         // ------------------------------------------------------------------------------------------------------------
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class InputActionAssetPostprocessor : AssetPostprocessor
         {
             private static bool s_DoNotifyEditorsScheduled;
