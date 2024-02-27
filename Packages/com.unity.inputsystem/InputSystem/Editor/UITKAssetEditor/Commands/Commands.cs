@@ -198,6 +198,8 @@ namespace UnityEngine.InputSystem.Editor
                             lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: relatedAction.Value.wrappedProperty.GetIndexOfArrayElement(), selectionType: SelectionType.Action));
                         else
                             lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedBindingIndex: newIndex >= 0 ? newIndex : state.selectedBindingIndex));
+
+                        lastPastedElement.FindPropertyRelative("m_Action").stringValue = relatedAction.Value.name;
                     }
                 }
 
