@@ -15,11 +15,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; }
-        private List<CutElement> cutElements
-        {
-            get { return m_CutElements; }
-            set => m_CutElements = value;
-        }
+        private List<CutElement> cutElements => m_CutElements;
 
         internal struct CutElement
         {
@@ -246,7 +242,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState CutActionOrBinding()
         {
-            cutElements = new List<CutElement>();
+            m_CutElements = new List<CutElement>();
             var actionOrBindingIndex = selectionType == SelectionType.Action ? selectedActionIndex : selectedBindingIndex;
             var type = selectionType == SelectionType.Action ? typeof(InputAction) : typeof(InputBinding);
             cutElements.Add(new CutElement(selectedActionMapIndex, actionOrBindingIndex, type));
@@ -255,7 +251,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState CutActionMaps()
         {
-            cutElements = new List<CutElement> { new(selectedActionMapIndex) };
+            m_CutElements = new List<CutElement> { new(selectedActionMapIndex) };
             return With(cutElements: cutElements);
         }
 
@@ -283,7 +279,7 @@ namespace UnityEngine.InputSystem.Editor
                 return false;
             return cutElements.Any(cutElement => cutElement.actionMapIndex == actionMapIndex && cutElement.actionOrBindingIndex == actionIndex && cutElement.type == typeof(InputAction));
         }
-        
+
         public bool IsActionMapCut(int actionMapIndex)
         {
             if (cutElements == null)
