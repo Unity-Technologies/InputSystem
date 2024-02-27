@@ -181,12 +181,26 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
+                SerializedInputAction? relatedAction = null;
+                if (state.selectionType == SelectionType.Binding)
+                    relatedAction = Selectors.GetRelatedInputAction(state);
+
                 var newIndex = CopyPasteHelper.DeleteCutElements(state);
                 SerializedProperty lastPastedElement = null;
                 if (state.selectionType == SelectionType.Action)
                     lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), typeOfCopiedData == typeof(InputBinding));
                 else if (state.selectionType == SelectionType.Binding)
-                    lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedBindingIndex: newIndex >= 0 ? newIndex : state.selectedBindingIndex));
+                {
+                    if (relatedAction != null)
+                    {
+                        var bindings = Selectors.GetBindingsForAction(relatedAction.Value.name, state);
+                        if (bindings.Count == 0) //add cutted binding into action instead if there are no bindings left for the action
+                            lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: relatedAction.Value.wrappedProperty.GetIndexOfArrayElement(), selectionType: SelectionType.Action));
+                        else
+                            lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedBindingIndex: newIndex >= 0 ? newIndex : state.selectedBindingIndex));
+                    }
+                }
+
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();

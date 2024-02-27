@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.arraySize;
         }
 
-        private static List<SerializedProperty> GetBindingsForAction(string actionName, InputActionsEditorState state)
+        public static List<SerializedProperty> GetBindingsForAction(string actionName, InputActionsEditorState state)
         {
             var actionMap = GetSelectedActionMap(state);
             var bindingsOfAction = actionMap?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
