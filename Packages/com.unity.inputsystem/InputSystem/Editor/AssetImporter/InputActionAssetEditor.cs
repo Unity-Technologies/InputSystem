@@ -22,14 +22,14 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly List<Type> s_EditorTypes = new List<Type>();
 
         // Registers an asset editor type for receiving asset modification callbacks.
-        public static void RegisterType<T>() where T : EditorWindow, IInputActionAssetEditor
+        public static void RegisterType<T>() where T : IInputActionAssetEditor
         {
             if (!s_EditorTypes.Contains(typeof(T)))
                 s_EditorTypes.Add(typeof(T));
         }
 
         // Unregisters an asset editor type from receiving asset modification callbacks.
-        public static void UnregisterType<T>() where T : EditorWindow, IInputActionAssetEditor
+        public static void UnregisterType<T>() where T : IInputActionAssetEditor
         {
             s_EditorTypes.Remove(typeof(T));
         }
