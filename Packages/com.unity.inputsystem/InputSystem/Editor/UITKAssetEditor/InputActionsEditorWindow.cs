@@ -19,12 +19,12 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
-    internal class InputActionsAssetEditorWindow : EditorWindow, IInputActionsAssetEditor
+    internal class InputActionsAssetEditorWindow : EditorWindow, IInputActionAssetEditor
     {
-        // Register editor type
+        // Register editor type via static constructor to enable asset monitoring
         static InputActionsAssetEditorWindow()
         {
-            InputActionsAssetEditor.RegisterType<InputActionsAssetEditorWindow>();
+            InputActionAssetEditor.RegisterType<InputActionsAssetEditorWindow>();
         }
 
         // TODO Consider moving state into its own struct so it can just be assigned or reset
