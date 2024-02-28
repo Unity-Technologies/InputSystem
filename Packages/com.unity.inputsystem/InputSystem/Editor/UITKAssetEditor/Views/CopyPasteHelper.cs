@@ -306,6 +306,9 @@ namespace UnityEngine.InputSystem.Editor
             bool currentPartOfComposite = false;
             bool currentIsComposite = false;
 
+            if (arrayProperty.arraySize == 0)
+                index = 0;
+
             if (index > 0)
             {
                 var currentProperty = arrayProperty.GetArrayElementAtIndex(index - 1);
