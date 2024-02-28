@@ -46,8 +46,27 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             // Handle input by responding to callbacks
             if (attack != null)
             {
-                attack.performed += ctx => cube.GetComponent<Renderer>().material.color = Color.red;
-                attack.canceled += ctx => cube.GetComponent<Renderer>().material.color = Color.green;
+                attack.performed += OnAttack;
+                attack.canceled += OnCancel;
+            }
+        }
+
+        private void OnAttack(InputAction.CallbackContext ctx)
+        {
+            cube.GetComponent<Renderer>().material.color = Color.red;
+        }
+
+        private void OnCancel(InputAction.CallbackContext ctx)
+        {
+            cube.GetComponent<Renderer>().material.color = Color.green;
+        }
+
+        void OnDestroy()
+        {
+            if (attack != null)
+            {
+                attack.performed -= OnAttack;
+                attack.canceled -= OnCancel;
             }
         }
 
