@@ -130,14 +130,20 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
+        public static InputActionAsset CreateWorkingCopy(InputActionAsset source)
+        {
+            var copy = Object.Instantiate(source);
+            copy.hideFlags = HideFlags.HideAndDontSave;
+            copy.name = source.name;
+            return copy;
+        }
+
         public static void CreateWorkingCopyAsset(ref InputActionAsset copy, InputActionAsset source)
         {
             if (copy != null)
                 Cleanup(ref copy);
 
-            copy = Object.Instantiate(source);
-            copy.hideFlags = HideFlags.HideAndDontSave;
-            copy.name = source.name;
+            copy = CreateWorkingCopy(source);
         }
 
         private void CreateWorkingCopyAsset() // TODO Can likely be removed if combined with Initialize
@@ -147,9 +153,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve GUIDs.
             var asset = importedAsset;
-            m_AssetObjectForEditing = Object.Instantiate(asset);
-            m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
-            m_AssetObjectForEditing.name = importedAsset.name;
+            m_AssetObjectForEditing = CreateWorkingCopy(asset);
             m_ImportedAssetJson = asset.ToJson();
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }

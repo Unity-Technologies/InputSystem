@@ -54,20 +54,73 @@ namespace UnityEngine.InputSystem.Editor
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
         }
 
+        private static int AdjustSelection(SerializedObject serializedObject, string propertyName, int index)
+        {
+            if (index < 0)
+                return index;
+            var controlSchemesArrayProperty = serializedObject.FindProperty(propertyName);
+            if (index >= controlSchemesArrayProperty.arraySize)
+                return 0;
+            return index;
+        }
+
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
+            // Assign serialized object, not that this might be equal to other.serializedObject,
+            // a slight variation of it with any kind of changes or a completely different one.
+            // Hence, we do our best here to keep any selections consistent by remapping objects
+            // based on GUIDs (IDs) and when it fails, attempt to select first object and if that
+            // fails revert to not having a selection. This would even be true for domain reloads
+            // if the asset would be modified during domain reload.
             serializedObject = asset;
 
-            m_selectedActionMapIndex = other.m_selectedActionMapIndex;
-            m_selectedActionIndex = other.m_selectedActionIndex;
-            m_selectedBindingIndex = other.m_selectedBindingIndex;
-            m_selectionType = other.m_selectionType;
+            // Attempt to preserve action map selection by GUID, otherwise select first or last resort none
+            var otherSelectedActionMap = other.GetSelectedActionMap();
+            var actionMapCount = Selectors.GetActionMapCount(asset);
+            m_selectedActionMapIndex = otherSelectedActionMap != null
+                ? Selectors.GetActionMapIndexFromId(asset,
+                InputActionSerializationHelpers.GetId(otherSelectedActionMap))
+                : actionMapCount > 0 ? 0 : -1;
+            var selectedActionMap = m_selectedActionMapIndex >= 0
+                ? GetActionMap(asset, m_selectedActionMapIndex) : null;
+
+            // Attempt to preserve action selection by GUID, otherwise select first or last resort none
+            var otherSelectedAction = m_selectedActionMapIndex >= 0 ?
+                Selectors.GetSelectedAction(other) : null;
+            m_selectedActionIndex = selectedActionMap != null && otherSelectedAction.HasValue
+                ? Selectors.GetActionIndexFromId(selectedActionMap,
+                InputActionSerializationHelpers.GetId(otherSelectedAction.Value.wrappedProperty))
+                : Selectors.GetActionCount(selectedActionMap) > 0 ? 0 : -1;
+
+            // Attempt to preserve binding selection by GUID, otherwise select first or none
+            m_selectedBindingIndex = -1;
+            if (m_selectedActionMapIndex >= 0)
+            {
+                var otherSelectedBinding = Selectors.GetSelectedBinding(other);
+                if (otherSelectedBinding != null)
+                {
+                    var otherSelectedBindingId =
+                        InputActionSerializationHelpers.GetId(otherSelectedBinding.Value.wrappedProperty);
+                    var binding = Selectors.GetBindingForId(asset, otherSelectedBindingId.ToString(), out _);
+                    if (binding != null)
+                        m_selectedBindingIndex = binding.GetIndexOfArrayElement();
+                }
+            }
+
+            // Sanity check selection type and override any previous selection if not valid given indices
+            // since we have remapped GUIDs to selection indices for another asset (SerializedObject)
+            if (other.m_selectionType == SelectionType.Binding && m_selectedBindingIndex < 0)
+                m_selectionType = SelectionType.Action;
+            else
+                m_selectionType = other.m_selectionType;
+
             m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
 
             // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload.
             // In case asset is different from from others asset the index might not even be valid range so we need
             // to reattempt to preserve selection but range adapt.
+            // Note that control schemes and device requirements currently lack any GUID/ID to be uniquely identified.
             var controlSchemesArrayProperty = serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
             if (m_selectedControlSchemeIndex >= 0 && controlSchemesArrayProperty.arraySize > 0)
             {
@@ -75,17 +128,25 @@ namespace UnityEngine.InputSystem.Editor
                     m_selectedControlSchemeIndex = 0;
                 m_ControlScheme = new InputControlScheme(
                     controlSchemesArrayProperty.GetArrayElementAtIndex(other.m_selectedControlSchemeIndex));
+                // TODO Preserve device requirement index
             }
             else
             {
                 m_selectedControlSchemeIndex = -1;
+                m_selectedDeviceRequirementIndex = -1;
                 m_ControlScheme = new InputControlScheme();
             }
 
-            // Editor may leave these as null after domain reloads, so recreate them
-            m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
-                ? new Dictionary<(string, string), HashSet<int>>()
-                : other.m_ExpandedCompositeBindings;
+            // Editor may leave these as null after domain reloads, so recreate them in that case.
+            // If they exist, we attempt to just preserve the same expanded items based on name for now for simplicity.
+            if (other.m_ExpandedCompositeBindings == null)
+            {
+                m_ExpandedCompositeBindings = new Dictionary<(string, string), HashSet<int>>();
+            }
+            else
+            {
+                m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings;
+            }
         }
 
         public InputActionsEditorState With(
@@ -246,11 +307,25 @@ namespace UnityEngine.InputSystem.Editor
             return key;
         }
 
+        private static SerializedProperty GetActionMap(SerializedObject serializedObject, int index)
+        {
+            if (serializedObject == null)
+                return null;
+            var property = serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            if (index >= 0 && index < property.arraySize)
+                return property.GetArrayElementAtIndex(index);
+            return null;
+        }
+
         private SerializedProperty GetSelectedActionMap()
         {
-            return serializedObject
-                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                .GetArrayElementAtIndex(selectedActionMapIndex);
+            return GetActionMap(serializedObject, selectedActionMapIndex);
+        }
+
+        private static SerializedProperty GetSelectedAction(SerializedProperty map, int actionIndex)
+        {
+            return map?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                .GetArrayElementAtIndex(actionIndex);
         }
 
         /// <summary>

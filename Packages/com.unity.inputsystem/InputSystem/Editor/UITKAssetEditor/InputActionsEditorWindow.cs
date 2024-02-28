@@ -134,25 +134,34 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
-            // Create a  new working copy of the referenced asset
-            InputActionAssetManager.CreateWorkingCopyAsset(ref m_AssetObjectForEditing, asset); // TODO This is bad we woudl like to create a new working object, assign it and then destroy the old one
-
-            // Update state
-            m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
-
-            // Select the action that was selected on the Asset window.
-            if (actionMapToSelect != null && actionToSelect != null)
+            // Create a new working copy of the referenced asset
+            var existingWorkingCopy = m_AssetObjectForEditing;
+            try
             {
-                m_State = m_State.SelectActionMap(actionMapToSelect);
-                m_State = m_State.SelectAction(actionToSelect);
+                m_AssetObjectForEditing = InputActionAssetManager.CreateWorkingCopy(asset);
+
+                // Update state
+                m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
+
+                // Select the action that was selected on the Asset window.
+                if (actionMapToSelect != null && actionToSelect != null)
+                {
+                    m_State = m_State.SelectActionMap(actionMapToSelect);
+                    m_State = m_State.SelectAction(actionToSelect);
+                }
+
+                // Obtain and persist GUID for the associated asset
+                Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _),
+                    $"Failed to get asset {asset.name} GUID");
+
+                UpdateFromAsset();
+                BuildUI();
             }
-
-            // Obtain and persist GUID for the associated asset
-            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _),
-                $"Failed to get asset {asset.name} GUID");
-
-            UpdateFromAsset();
-            BuildUI();
+            finally
+            {
+                if (existingWorkingCopy != null)
+                    DestroyImmediate(existingWorkingCopy);
+            }
         }
 
         private void CreateGUI()
