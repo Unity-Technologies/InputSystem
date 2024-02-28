@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
         //
         // See comments further down in this class for expected callback sequences.
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
-        private class InputActionAssetModificationProcessor : AssetModificationProcessor
+        private class InputActionAssetModificationProcessor : UnityEditor.AssetModificationProcessor
         {
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {

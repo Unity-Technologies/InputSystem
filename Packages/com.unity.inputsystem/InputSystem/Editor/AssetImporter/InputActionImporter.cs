@@ -131,10 +131,6 @@ namespace UnityEngine.InputSystem.Editor
 
             if (m_GenerateWrapperCode)
                 GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
-
-            // Refresh editors.
-            InputActionEditorWindow.RefreshAllOnAssetReimport();
-            // TODO UITK editor window is missing
         }
 
         internal static void SetupAsset(InputActionAsset asset)

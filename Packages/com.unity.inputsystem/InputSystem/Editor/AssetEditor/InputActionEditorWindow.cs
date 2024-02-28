@@ -6,6 +6,7 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 
 ////TODO: Add "Revert" button
@@ -28,8 +29,14 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow, IDisposable
+    internal class InputActionEditorWindow : EditorWindow, IDisposable, IInputActionAssetEditor
     {
+        // Register editor type via static constructor to enable asset monitoring
+        static InputActionEditorWindow()
+        {
+            InputActionAssetEditor.RegisterType<InputActionEditorWindow>();
+        }
+
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
@@ -116,17 +123,6 @@ namespace UnityEngine.InputSystem.Editor
             return windows.FirstOrDefault(w => w.m_ActionAssetManager.guid == guid);
         }
 
-        public static void RefreshAllOnAssetReimport()
-        {
-            if (s_RefreshPending)
-                return;
-
-            // We don't want to refresh right away but rather wait for the next editor update
-            // to then do one pass of refreshing action editor windows.
-            EditorApplication.delayCall += RefreshAllOnAssetReimportCallback;
-            s_RefreshPending = true;
-        }
-
         public void SaveChangesToAsset()
         {
             m_ActionAssetManager.SaveChangesToAsset();
@@ -163,21 +159,6 @@ namespace UnityEngine.InputSystem.Editor
 
             foreach (var item in actionItems)
                 m_ActionsTree.AddNewBinding(item.property, item.actionMapProperty);
-        }
-
-        private static void RefreshAllOnAssetReimportCallback()
-        {
-            s_RefreshPending = false;
-
-            // When the asset is modified outside of the editor
-            // and the importer settings are visible in the inspector
-            // the asset references in the importer inspector need to be force rebuild
-            // (otherwise we gets lots of exceptions)
-            ActiveEditorTracker.sharedTracker.ForceRebuild();
-
-            var windows = Resources.FindObjectsOfTypeAll<InputActionEditorWindow>();
-            foreach (var window in windows)
-                window.ReloadAssetFromFileIfNotDirty();
         }
 
         private bool ConfirmSaveChangesIfNeeded()
@@ -854,66 +835,22 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
-        private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
+        #region IInputActionAssetEditor
+
+        public void OnAssetImported() => ReloadAssetFromFileIfNotDirty();
+
+        public void OnAssetMoved() => UpdateWindowTitle();
+
+        public void OnAssetDeleted()
         {
-            // Handle .inputactions asset being deleted.
-            // ReSharper disable once UnusedMember.Local
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
-            public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
-            {
-                if (!InputActionImporter.IsInputActionAssetPath(path))
-                    return default;
-
-                //Debug.Log("OnWillDeleteAsset: " + path);
-
-                // See if we have an open window.
-                var guid = AssetDatabase.AssetPathToGUID(path);
-                var window = FindEditorForAssetWithGUID(guid);
-                if (window != null)
-                {
-                    // If there's unsaved changes, ask for confirmation.
-                    if (window.m_ActionAssetManager.dirty)
-                    {
-                        var result = Dialog.InputActionAsset.ShowDiscardUnsavedChanges(path);
-                        if (result == Dialog.Result.Cancel)
-                        {
-                            // User canceled. Stop the deletion.
-                            return AssetDeleteResult.FailedDelete;
-                        }
-
-                        window.m_ForceQuit = true;
-                    }
-
-                    window.Close();
-                }
-
-                return default;
-            }
-
-#pragma warning disable CA1801 // unused parameters
-
-            // Handle .inputactions asset being moved.
-            // ReSharper disable once UnusedMember.Local
-            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
-            {
-                if (!InputActionImporter.IsInputActionAssetPath(sourcePath))
-                    return default;
-
-                //Debug.Log("OnWillMoveAsset: " + sourcePath + " to " + destinationPath);
-
-                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
-                var window = FindEditorForAssetWithGUID(guid);
-                if (window != null)
-                {
-                    window.UpdateWindowTitle();
-                }
-
-                return default;
-            }
-
-#pragma warning restore CA1801
+            m_ForceQuit = true;
+            Close();
         }
+
+        public string assetGUID => m_ActionAssetManager.guid;
+        public bool isDirty => m_ActionAssetManager.dirty;
+
+        #endregion
     }
 }
 #endif // UNITY_EDITOR
