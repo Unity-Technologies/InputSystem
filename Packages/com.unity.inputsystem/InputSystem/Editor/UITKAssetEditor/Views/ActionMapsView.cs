@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void PasteItems(bool copiedAction)
         {
-            Dispatch(copiedAction ? Commands.PasteActionFromActionMap() : Commands.PasteActionMaps());
+            Dispatch(copiedAction ? Commands.PasteActionFromActionMap(InputActionsEditorView.s_OnPasteCutElements) : Commands.PasteActionMaps(InputActionsEditorView.s_OnPasteCutElements));
         }
 
         private void ChangeActionMapName(int index, string newName)

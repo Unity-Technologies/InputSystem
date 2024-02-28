@@ -367,7 +367,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void PasteItems()
         {
-            Dispatch(Commands.PasteActionsOrBindings());
+            Dispatch(Commands.PasteActionsOrBindings(InputActionsEditorView.s_OnPasteCutElements));
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)

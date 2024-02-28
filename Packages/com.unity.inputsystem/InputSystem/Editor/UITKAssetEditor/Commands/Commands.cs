@@ -135,17 +135,34 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command PasteActionMaps()
+        public static Command PasteActionMaps(IReadOnlyList<IPasteListener> pasteListeners)
         {
             return (in InputActionsEditorState state) =>
             {
-                var newIndex = CopyPasteHelper.DeleteCutElements(state);
+                var newIndex = -1;
+                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                    newIndex = CopyPasteHelper.DeleteCutElements(state);
+                else
+                {
+                    foreach (var pasteListener in pasteListeners)
+                        pasteListener.OnPaste(state);
+                }
                 var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state.With(selectedActionMapIndex: newIndex >= 0 ? newIndex : state.selectedActionMapIndex));
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
                     return state.With(selectedActionMapIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<InputActionsEditorState.CutElement>());
                 }
+                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+            };
+        }
+
+        public static Command DeleteCutElements()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                CopyPasteHelper.DeleteCutElements(state);
+                state.serializedObject.ApplyModifiedProperties();
                 return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
             };
         }
@@ -161,11 +178,18 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command PasteActionFromActionMap()
+        public static Command PasteActionFromActionMap(List<IPasteListener> pasteListeners)
         {
             return (in InputActionsEditorState state) =>
             {
-                var newIndex = CopyPasteHelper.DeleteCutElements(state);
+                var newIndex = -1;
+                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                    newIndex = CopyPasteHelper.DeleteCutElements(state);
+                else
+                {
+                    foreach (var pasteListener in pasteListeners)
+                        pasteListener.OnPaste(state);
+                }
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), true);
                 if (lastPastedElement != null)
                 {
@@ -176,7 +200,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command PasteActionsOrBindings()
+        public static Command PasteActionsOrBindings(List<IPasteListener> pasteListeners)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -185,7 +209,14 @@ namespace UnityEngine.InputSystem.Editor
                 if (state.selectionType == SelectionType.Binding)
                     relatedAction = Selectors.GetRelatedInputAction(state);
 
-                var newIndex = CopyPasteHelper.DeleteCutElements(state);
+                var newIndex = -1;
+                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                    newIndex = CopyPasteHelper.DeleteCutElements(state);
+                else
+                {
+                    foreach (var pasteListener in pasteListeners)
+                        pasteListener.OnPaste(state);
+                }
                 SerializedProperty lastPastedElement = null;
                 if (state.selectionType == SelectionType.Action)
                     lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), typeOfCopiedData == typeof(InputBinding));
