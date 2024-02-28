@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         // Control schemes
         public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }
         public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
-        public InputControlScheme selectedControlScheme => m_ControlScheme;
+        public InputControlScheme selectedControlScheme => m_ControlScheme; // TODO Bad this either po
 
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
@@ -62,21 +62,25 @@ namespace UnityEngine.InputSystem.Editor
             m_selectedActionIndex = other.m_selectedActionIndex;
             m_selectedBindingIndex = other.m_selectedBindingIndex;
             m_selectionType = other.m_selectionType;
-            m_ControlScheme = other.m_ControlScheme;
             m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
 
-            // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload
-            if (m_selectedControlSchemeIndex != -1)
+            // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload.
+            // In case asset is different from from others asset the index might not even be valid range so we need
+            // to reattempt to preserve selection but range adapt.
+            var controlSchemesArrayProperty = serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+            if (m_selectedControlSchemeIndex >= 0 && controlSchemesArrayProperty.arraySize > 0)
             {
-                var controlSchemeSerializedProperty = serializedObject
-                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
-                    .GetArrayElementAtIndex(m_selectedControlSchemeIndex);
-
-                m_ControlScheme = new InputControlScheme(controlSchemeSerializedProperty);
+                if (m_selectedControlSchemeIndex >= controlSchemesArrayProperty.arraySize)
+                    m_selectedControlSchemeIndex = 0;
+                m_ControlScheme = new InputControlScheme(
+                    controlSchemesArrayProperty.GetArrayElementAtIndex(other.m_selectedControlSchemeIndex));
             }
             else
+            {
+                m_selectedControlSchemeIndex = -1;
                 m_ControlScheme = new InputControlScheme();
+            }
 
             // Editor may leave these as null after domain reloads, so recreate them
             m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
@@ -249,11 +253,11 @@ namespace UnityEngine.InputSystem.Editor
                 .GetArrayElementAtIndex(selectedActionMapIndex);
         }
 
-        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
-
         /// <summary>
         /// Expanded states for the actions tree view. These are stored per InputActionMap
         /// </summary>
+        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
+
         private readonly InputControlScheme m_ControlScheme;
     }
 

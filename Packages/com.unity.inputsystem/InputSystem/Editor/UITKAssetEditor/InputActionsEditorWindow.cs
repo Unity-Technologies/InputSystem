@@ -134,24 +134,17 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
-            var selectedActionMapIndex = m_State.selectedActionMapIndex;
-            var selectedActionIndex = m_State.selectedActionIndex;
+            // Create a  new working copy of the referenced asset
+            InputActionAssetManager.CreateWorkingCopyAsset(ref m_AssetObjectForEditing, asset); // TODO This is bad we woudl like to create a new working object, assign it and then destroy the old one
 
-            // Create a working copy of the referenced asset
-            InputActionAssetManager.CreateWorkingCopyAsset(ref m_AssetObjectForEditing, asset);
-
-            m_State = new InputActionsEditorState(new SerializedObject(m_AssetObjectForEditing));
+            // Update state
+            m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
 
             // Select the action that was selected on the Asset window.
             if (actionMapToSelect != null && actionToSelect != null)
             {
                 m_State = m_State.SelectActionMap(actionMapToSelect);
                 m_State = m_State.SelectAction(actionToSelect);
-            }
-            else if (selectedActionMapIndex >= 0 && selectedActionIndex >= 0)
-            {
-                m_State = m_State.SelectActionMap(selectedActionMapIndex);
-                m_State = m_State.SelectAction(selectedActionIndex);
             }
 
             // Obtain and persist GUID for the associated asset
@@ -352,12 +345,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnAssetImported()
         {
-            if (true)
-                return;
-
-            // TODO Its problematic that binding to serialized object causes a regular update happening
-            //      before this call making the asset look dirty. Should we
-
             // If the editor has pending changes done by the user and the contents changes on disc, there
             // is not much we can do about it but to ignore loading the changes. If the editors asset is
             // unmodified, we can refresh the editor with the latest content from disc.
@@ -372,14 +359,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            // TODO Store and attempt to preserve select map and action by GUID
-
             SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
-            //UpdateFromAsset();
-            //BuildUI();
-
-            // Update content from asset on disc
-            //UpdateFromAsset();
         }
 
         #endregion
