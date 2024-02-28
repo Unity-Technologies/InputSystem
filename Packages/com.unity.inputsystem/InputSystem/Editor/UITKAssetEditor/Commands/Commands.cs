@@ -219,7 +219,20 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 SerializedProperty lastPastedElement = null;
                 if (state.selectionType == SelectionType.Action)
-                    lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), typeOfCopiedData == typeof(InputBinding));
+                {
+                    var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                    var actions = Selectors.GetActionCount(actionMap);
+                    if (actions.HasValue && actions.Value > 0)
+                        lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(
+                            state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex),
+                            typeOfCopiedData == typeof(InputBinding));
+                    else
+                    {
+                        lastPastedElement =
+                            CopyPasteHelper.PasteActionsOrBindingsFromClipboard(
+                                state.With(selectedActionMapIndex: actionMap.GetIndexOfArrayElement()), addLast: true);
+                    }
+                }
                 else if (state.selectionType == SelectionType.Binding)
                 {
                     if (relatedAction != null)
