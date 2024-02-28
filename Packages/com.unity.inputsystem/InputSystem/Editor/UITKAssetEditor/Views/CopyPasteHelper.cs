@@ -288,7 +288,7 @@ namespace UnityEngine.InputSystem.Editor
             var newId = property.FindPropertyRelative("m_Id").stringValue;
             var actionMapTo = Selectors.GetActionMapForAction(s_State, newId);
             var bindingArrayToInsertTo = actionMapTo.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var index = Selectors.GetBindingIndexBeforeAction(arrayProperty, indexToInsert, bindingArrayToInsertTo);
+            var index = Mathf.Clamp(Selectors.GetBindingIndexBeforeAction(arrayProperty, indexToInsert, bindingArrayToInsertTo), 0, bindingArrayToInsertTo.arraySize);
             foreach (var bindingJson in bindingJsons)
             {
                 var newIndex = PasteBindingOrComposite(bindingArrayToInsertTo, bindingJson, index, newName, false);
