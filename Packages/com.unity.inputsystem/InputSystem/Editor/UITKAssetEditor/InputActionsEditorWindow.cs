@@ -26,8 +26,6 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetEditor.RegisterType<InputActionsEditorWindow>();
         }
 
-        // TODO Consider moving state into its own struct so it can just be assigned or reset
-
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
@@ -295,8 +293,6 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case Dialog.Result.Discard:
                     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
-                    // TODO I doubt this is needed since we were operating on a copy?!
-                    //AssetDatabase.ImportAsset(assetPath);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result));

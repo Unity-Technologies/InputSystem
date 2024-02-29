@@ -33,18 +33,6 @@ namespace UnityEngine.InputSystem.Editor
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(asset.m_ControlSchemes),
             }, prettyPrint: true);
         }
-
-        // Reads the JSON content of an .inputactions asset but discard name property and any unsupported data.
-        public static string ReadJsonWithoutName(string inputActionAssetPath)
-        {
-            var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(inputActionAssetPath));
-            var obj = JsonUtility.FromJson<InputActionAsset.ReadFileJson>(json);
-            return JsonUtility.ToJson(new WriteFileJsonNoName
-            {
-                maps = InputActionMap.WriteFileJson.FromMaps(new InputActionMap.ReadFileJson {maps = obj.maps}.ToMaps()).maps,
-                controlSchemes = InputControlScheme.SchemeJson.ToJson(InputControlScheme.SchemeJson.ToSchemes(obj.controlSchemes)),
-            }, prettyPrint: true);
-        }
     }
 }
 #endif
