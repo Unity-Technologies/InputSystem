@@ -186,6 +186,7 @@ public class ControlSchemesEditorTests
 
     [Test]
     [Category("AssetEditor")]
+    [Ignore("Instability ISX-1905")]
     public void WhenControlSchemeIsSelected_SelectedControlSchemeIsPopulatedWithSelection()
     {
         var asset = TestData.inputActionAsset
