@@ -772,6 +772,7 @@ namespace UnityEngine.InputSystem.Editor
             Repaint();
         }
 
+#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         ////TODO: add shortcut to focus search box
 
         ////TODO: show shortcuts in tooltips
@@ -803,6 +804,8 @@ namespace UnityEngine.InputSystem.Editor
             var window = (InputActionEditorWindow)arguments.context;
             window.AddNewBinding();
         }
+
+#endif
 
         private void OnDirtyChanged(bool dirty)
         {

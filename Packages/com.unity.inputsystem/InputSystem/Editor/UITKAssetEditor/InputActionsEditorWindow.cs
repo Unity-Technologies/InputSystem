@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.ShortcutManagement;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -37,6 +38,8 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetJson;
         private bool m_IsDirty;
         private StateContainer m_StateContainer;
+
+        static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -202,6 +205,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             var view = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, Save);
+
             m_StateContainer.Initialize();
         }
 
@@ -402,6 +406,36 @@ namespace UnityEngine.InputSystem.Editor
             SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
         }
 
+        #endregion
+
+        #region Shortcuts
+        [Shortcut("Input Action Editor/Save", typeof(InputActionsEditorWindow), KeyCode.S, ShortcutModifiers.Action)]
+        private static void SaveShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.Save();
+        }
+
+        [Shortcut("Input Action Editor/Add Action Map", typeof(InputActionsEditorWindow), KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddActionMap());
+        }
+
+        [Shortcut("Input Action Editor/Add Action", typeof(InputActionsEditorWindow), KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddAction());
+        }
+
+        [Shortcut("Input Action Editor/Add Binding", typeof(InputActionsEditorWindow), KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            var window = (InputActionsEditorWindow)arguments.context;
+            window.m_StateContainer.Dispatch(Commands.AddBinding());
+        }
         #endregion
     }
 }
