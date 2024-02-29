@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionMapID = InputActionSerializationHelpers.GetId(actionMap);
                 InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
                 state.serializedObject.ApplyModifiedProperties();
-                var newCutElements = state.IsActionMapCut(actionMapIndex) ? new List<InputActionsEditorState.CutElement>() : state.GetCutElements();
+                var newCutElements = state.IsActionMapCut(actionMapIndex) ? new List<CutElement>() : state.GetCutElements();
                 if (state.selectedActionMapIndex == actionMapIndex)
                     return SelectPrevActionMap(state.With(cutElements: newCutElements));
                 return state.SelectActionMap(state.selectedActionMapIndex > actionMapIndex ? state.selectedActionMapIndex - 1 : state.selectedActionMapIndex).With(cutElements: newCutElements);
@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 CopyPasteHelper.CopyActionMap(state);
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 CopyPasteHelper.Copy(state);
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -151,9 +151,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.With(selectedActionMapIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<InputActionsEditorState.CutElement>());
+                    return state.With(selectedActionMapIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<CutElement>());
                 }
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -163,7 +163,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 CopyPasteHelper.DeleteCutElements(state);
                 state.serializedObject.ApplyModifiedProperties();
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -194,9 +194,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.With(selectedActionIndex: lastPastedElement.GetIndexOfArrayElement(), selectionType: SelectionType.Action, cutElements: new List<InputActionsEditorState.CutElement>());
+                    return state.With(selectedActionIndex: lastPastedElement.GetIndexOfArrayElement(), selectionType: SelectionType.Action, cutElements: new List<CutElement>());
                 }
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -251,11 +251,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     state.serializedObject.ApplyModifiedProperties();
                     if (typeOfCopiedData == typeof(InputAction))
-                        return state.With(selectedActionIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<InputActionsEditorState.CutElement>());
+                        return state.With(selectedActionIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<CutElement>());
                     if (typeOfCopiedData == typeof(InputBinding))
-                        return state.With(selectedBindingIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<InputActionsEditorState.CutElement>());
+                        return state.With(selectedBindingIndex: lastPastedElement.GetIndexOfArrayElement(), cutElements: new List<CutElement>());
                 }
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -431,7 +431,7 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 if (state.IsActionCut(actionMapIndex, actionIndex))
-                    return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                    return state.With(cutElements: new List<CutElement>());
                 return state; // ActionsTreeView will dispatch a separate command to select the previous Action
             };
         }
@@ -446,7 +446,7 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 if (state.IsBindingCut(actionMapIndex, bindingIndex))
-                    return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                    return state.With(cutElements: new List<CutElement>());
                 return state; // ActionsTreeView will dispatch a separate command to select the previous Binding
             };
         }
@@ -620,7 +620,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 InputActionSerializationHelpers.DeleteAllActionMaps(state.serializedObject);
                 state.serializedObject.ApplyModifiedProperties();
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
 
@@ -642,7 +642,7 @@ namespace UnityEngine.InputSystem.Editor
                     InputActionSerializationHelpers.AddActionMaps(state.serializedObject, tmp);
                 }
                 state.serializedObject.ApplyModifiedProperties();
-                return state.With(cutElements: new List<InputActionsEditorState.CutElement>());
+                return state.With(cutElements: new List<CutElement>());
             };
         }
     }
