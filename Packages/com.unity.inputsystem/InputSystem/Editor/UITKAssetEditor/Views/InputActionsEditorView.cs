@@ -234,6 +234,13 @@ namespace UnityEngine.InputSystem.Editor
             public int selectedControlSchemeIndex;
             public int selectedDeviceIndex;
         }
+
+        public override void DestroyView()
+        {
+            base.DestroyView();
+
+            Debug.Log("Destroy View");
+        }
     }
 
     internal static partial class Selectors
@@ -241,6 +248,9 @@ namespace UnityEngine.InputSystem.Editor
         public static IEnumerable<InputControlScheme> GetControlSchemes(InputActionsEditorState state)
         {
             var controlSchemesArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+            if (controlSchemesArray == null)
+                yield break;
+
             foreach (SerializedProperty controlScheme in controlSchemesArray)
             {
                 yield return new InputControlScheme(controlScheme);

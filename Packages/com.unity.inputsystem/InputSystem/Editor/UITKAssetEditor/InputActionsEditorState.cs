@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedActionIndex { get {return m_selectedActionIndex; } }
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
-        public SerializedObject serializedObject { get; }
+        public SerializedObject serializedObject { get; } // Note that state doesn't own this disposable object
 
         // Control schemes
         public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }
@@ -39,6 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             int selectedControlSchemeIndex = -1,
             int selectedDeviceRequirementIndex = -1)
         {
+            Debug.Assert(inputActionAsset != null);
+
             serializedObject = inputActionAsset;
 
             m_selectedActionMapIndex = selectedActionMapIndex;
@@ -139,14 +141,9 @@ namespace UnityEngine.InputSystem.Editor
 
             // Editor may leave these as null after domain reloads, so recreate them in that case.
             // If they exist, we attempt to just preserve the same expanded items based on name for now for simplicity.
-            if (other.m_ExpandedCompositeBindings == null)
-            {
-                m_ExpandedCompositeBindings = new Dictionary<(string, string), HashSet<int>>();
-            }
-            else
-            {
-                m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings;
-            }
+            m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings == null ?
+                new Dictionary<(string, string), HashSet<int>>() :
+                new Dictionary<(string, string), HashSet<int>>(other.m_ExpandedCompositeBindings);
         }
 
         public InputActionsEditorState With(
