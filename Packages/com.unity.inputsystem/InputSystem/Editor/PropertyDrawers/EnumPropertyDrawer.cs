@@ -15,15 +15,9 @@ namespace UnityEngine.InputSystem.Editor
     {
         private string[] m_EnumDisplayNames;
 
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            ProcessDisplayNamesForAliasedEnums();
-            return base.CreatePropertyGUI(property);
-        }
-
         protected abstract string GetNonAliasedNames(string enumValue);
 
-        private void ProcessDisplayNamesForAliasedEnums()
+        private void Initialize()
         {
             var enumNamesAndValues = new Dictionary<string, int>();
             var enumDisplayNames = Enum.GetNames(typeof(T));
@@ -53,6 +47,9 @@ namespace UnityEngine.InputSystem.Editor
 
             if (property.propertyType == SerializedPropertyType.Enum)
             {
+                if (m_EnumDisplayNames == null)
+                    Initialize();
+
                 property.enumValueIndex = EditorGUI.Popup(position, label.text, property.enumValueIndex, m_EnumDisplayNames);
             }
 
