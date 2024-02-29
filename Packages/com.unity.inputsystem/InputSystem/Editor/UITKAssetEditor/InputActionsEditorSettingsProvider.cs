@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
@@ -16,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
         StateContainer m_StateContainer;
+        private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -82,6 +84,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_HasEditFocus)
             {
                 m_HasEditFocus = true;
+                m_ActiveSettingsProvider = this;
             }
         }
 
@@ -206,6 +209,30 @@ namespace UnityEngine.InputSystem.Editor
         {
             return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
         }
+
+        #region Shortcuts
+        [Shortcut("Input Action Editor/Project Settings/Add Action Map", null, KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddActionMap());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Action", null, KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddAction());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Binding", null, KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddBinding());
+        }
+
+        #endregion
     }
 }
 
