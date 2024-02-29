@@ -1,24 +1,36 @@
 ---
 uid: input-system-player-input
 ---
-# The PlayerInput component
+# The Player Input component
 
-The Input System provides two related components that simplify how you set up and work with input: the **Player Input** component and the [**Player Input Manager**](PlayerInputManager.md) component.
+The Player Input component provides two related but separate features which can be useful in common game scenarios. These are:
 
-The **Player Input** component represents a single player, and that player's associated [Input Actions](Actions.md), whereas the [**Player Input Manager**](PlayerInputManager.md) component handles setups that allow for several concurrent users (for example, player lobbies and split-screen gameplay in a game).
+- Configuring how [Actions](Actions.md) map to methods or callbacks in the script that controls your player.
 
+- Handling local multiplayer scenarios such as player lobbies, device filtering, and screen-splitting.
 
 ## The Player Input component
 
-![PlayerInput](Images/PlayerInput.png)
+![PlayerInput](Images/PlayerInput.png)<br/>
+*Above, the Player Input component as visible in the inspector.*
 
-*Above, the Player Input component as visible in the inspector, with an Actions Asset called "ExampleActions" assigned.*
+### Connecting actions to methods or callbacks
 
-Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. You can use multiple `PlayerInput` instances at the same time (although not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
+The **Player Input** component represents a single player, and the connection between that player's associated device, Actions, and methods or callbacks.
+
+You can use a single instance of a Player Input component in a single-player game to set up a mapping between your Input Actions and methods or callbacks in the script that controls your player.
+
+For example, by using the Player Input component, you can set up a mapping between actions such as "Jump" to C# methods in your script such as `public void OnJump()`.
+
+There are a few options for doing exactly how the Player Input component does this, such as using SendMessage, or Unity Events, which is described in more detail below.
+
+### Handling local multiplayer scenarios
+
+You can also use multiple **Player Input** components (each on a separate instance of a prefab) along with the [**Player Input Manager**](PlayerInputManager.md) component to implement local multiplayer features, such as player lobbies, device filtering, and screen-splitting.
+
+In these local multiplayer scenarios, the Player Input component should be on a prefab which the [**Player Input Manager**](PlayerInputManager.md) has a reference to. The **Player Input Manager** then instantiates players as they join the game and pairs each player instance to a unique device that the player uses exclusively (for example, one gamepad for each player). You can also manually pair devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
 Each `PlayerInput` corresponds to one [`InputUser`](UserManagement.md). You can use [`PlayerInput.user`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_user) to query the `InputUser` from the component.
-
->__Note__: These components are built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
 
 ## Getting started
 
@@ -43,7 +55,12 @@ You can use the following properties to configure `PlayerInput`:
 
 ### Actions
 
-To receive input, each player must have an associated set of Input Actions. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
+To receive input, each player must have an associated set of Input Actions.
+
+#### Specifying the Actions to use
+The simplest workflow is to use the project-wide actions defined in the [Input Actions editor](ActionsEditor.md). However, the Player Input component also allows you to use an [Actions Asset](ActionAssets.md) to specify the actions that should be used by any instance of the component. If you set the **Actions** field to **Actions Asset**, the inspector displays a field into which you can assign an actions asset, and a **Create Actions** button which allows you to create a new actions asset. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
+
+#### Enabling and disabling Actions
 
 The Player Input component automatically handles enabling and disabling Actions, and also handles installing [callbacks](RespondingToActions.md#responding-to-actions-using-callbacks) on the Actions. When multiple Player Input components use the same Actions, the components automatically create [private copies of the Actions](RespondingToActions.md#using-actions-with-multiple-players).
 
@@ -146,3 +163,9 @@ To set this up, assign a reference to a `InputSystemUIInputModule` component in 
 Once you've completed this setup, when the `PlayerInput` component configures the Actions for a specific player, it assigns the same Action configuration to the `InputSystemUIInputModule`. In other words, the same Action and Device configuration that controls the player now also controls the UI.
 
 If you use [`MultiplayerEventSystem`](UISupport.md#multiplayer-uis) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, each controlled by a separate player.
+
+>**Notes**:
+> - As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions), not `InputSystem.actions`. This is because the PlayerInput component performs device filtering to automatically assign devices to multiple players, so each instance has its own copy of the actions filtered for each player. If you bypass this by reading `InputSystem.actions` directly, the automatic device assignment won't work.
+>
+> - This component is built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
+> <br/>&nbsp;
