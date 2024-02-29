@@ -391,7 +391,8 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var cutElement in cutElements)
             {
                 var cutIndex = cutElement.GetIndexOfProperty(state);
-                var actionMap = Selectors.GetActionMapAtIndex(state, cutElement.actionMapIndex(state))?.wrappedProperty;
+                var actionMapIndex = cutElement.actionMapIndex(state);
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var isInsertBindingIntoAction = cutElement.type == typeof(InputBinding) && state.selectionType == SelectionType.Action;
                 if (cutElement.type == typeof(InputBinding) || cutElement.type == typeof(InputAction))
                 {
@@ -408,8 +409,7 @@ namespace UnityEngine.InputSystem.Editor
                             index -= InputActionSerializationHelpers.GetCompositePartCount(Selectors.GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), cutIndex);
                         InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                     }
-
-                    if (cutIndex <= index && cutElement.actionMapIndex(state) == state.selectedActionMapIndex && !isInsertBindingIntoAction)
+                    if (cutIndex <= index && actionMapIndex == state.selectedActionMapIndex && !isInsertBindingIntoAction)
                         index--;
                 }
                 else if (cutElement.type == typeof(InputActionMap))
