@@ -174,11 +174,15 @@ namespace UnityEngine.InputSystem.Editor
                 CopyPasteHelper.Copy(state);
                 var action = Selectors.GetSelectedAction(state);
                 var actionMap = Selectors.GetActionMapForAction(state, action?.id);
+                var isCut = action.HasValue && state.IsActionCut(actionMap.GetIndexOfArrayElement(),
+                    action.Value.wrappedProperty.GetIndexOfArrayElement());
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, InputActionSerializationHelpers.GetId(action?.wrappedProperty));
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
                 if (lastPastedElement != null)
                     state.serializedObject.ApplyModifiedProperties();
                 EditorHelpers.SetSystemCopyBufferContents(string.Empty);
+                if (isCut)
+                    return state.With(cutElements: new List<CutElement>());
                 return state;
             };
         }
