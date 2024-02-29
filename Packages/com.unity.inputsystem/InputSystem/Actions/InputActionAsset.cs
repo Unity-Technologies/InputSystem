@@ -928,7 +928,10 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
-
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        [SerializeField] internal bool m_IsProjectWide;
+        #endif
+        
         ////TODO: make this persistent across domain reloads
         /// <summary>
         /// Shared state for all action maps in the asset.
