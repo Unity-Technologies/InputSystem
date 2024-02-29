@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var newIndex = -1;
+                var newIndex = -99;
                 if (state.GetCutElements() != null && state.GetCutElements().Any())
                     newIndex = CopyPasteHelper.DeleteCutElements(state);
                 else
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Editor
                     foreach (var pasteListener in pasteListeners)
                         pasteListener.OnPaste(state);
                 }
-                var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state.With(selectedActionMapIndex: newIndex >= 0 ? newIndex : state.selectedActionMapIndex));
+                var lastPastedElement = CopyPasteHelper.PasteActionMapsFromClipboard(state.With(selectedActionMapIndex: newIndex >= -1 ? newIndex : state.selectedActionMapIndex));
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
