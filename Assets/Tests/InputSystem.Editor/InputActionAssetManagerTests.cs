@@ -107,14 +107,15 @@ class InputActionAssetManagerEditorTests
         {
             inputActionAssetManager.Initialize();
 
-            FileUtil.MoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // TODO Wouldn't move .meta files
-            FileUtil.MoveFileOrDirectory(directoryBeforeMove + ".meta", directoryAfterMove + ".meta");
+            AssetDatabaseUtils.ExternalMoveFileOrDirectory(directoryBeforeMove, directoryAfterMove); // EDIT
             AssetDatabase.Refresh();
 
             inputActionAssetManager.SaveChangesToAsset();
 
-            var fileContents = File.ReadAllText(AssetDatabase.GetAssetPath(asset));
+            var path = AssetDatabase.GetAssetPath(asset);
+            var fileContents = File.ReadAllText(path);
             Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+            Assert.That(path, Is.EqualTo(directoryAfterMove + $"/{filename}"));
         }
     }
 

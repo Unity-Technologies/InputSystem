@@ -5041,7 +5041,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithNullName()
     {
-        // When serializing JSON from object without a given name, Unity forces the name to empty string.
+        // When serializing JSON from object without a given name, Unity forces the name to be an empty string.
         // Basically Unity prevents us from doing serialization an omit optional members in a convenient way.
         // Hence this test just verifies this behavior since its expected.
         // Hence its not possible in an easy way to provide bidirectional transformation to/from JSON.

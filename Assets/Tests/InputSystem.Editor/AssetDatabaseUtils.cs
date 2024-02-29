@@ -9,6 +9,8 @@ using UnityEngine.UIElements;
 namespace UnityEngine.InputSystem
 {
     /// Provides convenience functions for creating and managing assets for test purposes.
+    /// Note that all returned paths are converted to Unix paths when running on Windows
+    /// for consistency and to avoid mixed path names.
     public class AssetDatabaseUtils
     {
         private const string kAssetPath = "Assets";
@@ -56,11 +58,16 @@ namespace UnityEngine.InputSystem
             return obj;
         }
 
+        private static string SanitizePath(string path)
+        {
+            return path?.Replace("\\", "/");
+        }
+
         // Creates all directories (including intermediate) defined in path.
         private static string CreateDirectories(string path)
         {
             if (Directory.Exists(path))
-                return path;
+                return SanitizePath(path);
 
             var parentFolder = kAssetPath;
             path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
@@ -72,12 +79,12 @@ namespace UnityEngine.InputSystem
                 var guid = AssetDatabase.CreateFolder(parentFolder, directories[i]);
                 if (guid == string.Empty)
                     throw new Exception("Failed to create path \"" + path + "\"");
-                parentFolder = Path.Combine(parentFolder, directories[i]);
+                parentFolder = SanitizePath(Path.Combine(parentFolder, directories[i]));
             }
 
             AssetDatabase.Refresh();
 
-            return path;
+            return SanitizePath(path);
         }
 
         // Creates a random test directory within asset folder that is automatically removed after test run.
@@ -93,14 +100,18 @@ namespace UnityEngine.InputSystem
             Debug.Assert(directoryPath == null || directoryPath.Contains(RootPath()));
             Debug.Assert(filename == null || !filename.Contains("/"));
 
-            string path = null;
             if (directoryPath == null)
                 directoryPath = RootPath();
+            string path;
             if (filename != null)
             {
-                path = RandomAssetFilePath(directoryPath, AssetFileExtensionFromType(typeof(T)));
+                path = SanitizePath(Path.Combine(directoryPath, filename));
                 if (File.Exists(path))
                     throw new Exception($"File already exists: {path}");
+            }
+            else
+            {
+                path = RandomAssetFilePath(directoryPath, AssetFileExtensionFromType(typeof(T)));
             }
 
             return CreateAsset<T>(path: path, content: content);
@@ -147,7 +158,7 @@ namespace UnityEngine.InputSystem
             string path;
             do
             {
-                path = Path.Combine(directoryPath, RandomName() + "." + extension);
+                path = SanitizePath(Path.Combine(directoryPath, RandomName() + "." + extension)); // EDIT
             }
             while (File.Exists(path));
             return path;
@@ -155,7 +166,7 @@ namespace UnityEngine.InputSystem
 
         private static string RootPath()
         {
-            return Path.Combine(kAssetPath, kTestPath);
+            return SanitizePath(Path.Combine(kAssetPath, kTestPath));
         }
 
         public static string RandomDirectoryPath()
@@ -166,7 +177,7 @@ namespace UnityEngine.InputSystem
                 path = Path.Combine(RootPath(), RandomName());
             }
             while (File.Exists(path));
-            return path;
+            return SanitizePath(path);
         }
 
         private static string AssetFileExtensionFromType(Type type)
