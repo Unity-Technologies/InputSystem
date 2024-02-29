@@ -21,7 +21,7 @@ If you don't yet have an Action Asset assigned as project-wide in your project, 
 
 > **Note:** If you already have an Action Asset assigned, this button is not displayed, and instead the Actions Editor is displayed, allowing you to edit the project-wide actions.
 
-To create an Action Asset with default actions pre-configured, click  **"Create a new Project-wide Input Action Asset"**. The asset is created in your project, and automatically assigned as the **Active Input Action Asset**.
+To create an Action Asset with default actions pre-configured, click  **"Create a new project-wide Action Asset"**. The asset is created in your project, and automatically assigned as the **project-wide actions**.
 
 ## Edit project-wide actions
 

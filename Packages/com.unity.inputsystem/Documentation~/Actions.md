@@ -43,11 +43,7 @@ Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSyst
 
 The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) in the Project Settings window. This is the primary recommended workflow and suitable for most scenarios.
 
-However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example:
-
-- You can create [Input Action assets](ActionAssets.md) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
-- You can manually load Actions from JSON data.
-- You can create Actions entirely in code, including setting up the bindings.
+However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example, by loading actions from JSON data, or creating actions entirely in code.
 
 ### Creating Actions using the Action editor
 
@@ -59,14 +55,7 @@ For information on how to create and edit Input Actions in the editor, see the [
 
 # Other ways to create Actions
 
-The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you developing something unusual or want to customize your project beyond the standard workflow.
-
-### Creating Actions in Input Action Assets
-
-You can create actions that are stored in an Asset instead of in your Project Settings, by creating an [Action Asset](ActionAssets.md). This workflow used to be the main workflow in previous versions of the Input System package, but has been superseded by the [Input Actions editor](ActionsEditor.md) in the Project Settings window, which provides a simpler workflow.
-
-However it is still possible to create [Action Assets](ActionAssets.md) which contain a complete set of Action Maps, Actions and Bindings, and use those instead of the project-wide Actions that are defined in the Project Settings window.
-
+The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) to configure a set of actions in an asset, as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you developing something unusual or want to customize your project beyond the standard workflow.
 
 ### Creating Actions by declaring them in MonoBehaviours
 
