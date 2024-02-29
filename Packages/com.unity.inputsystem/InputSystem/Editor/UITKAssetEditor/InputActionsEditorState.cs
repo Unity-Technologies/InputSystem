@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; }
-        private List<CutElement> cutElements => m_CutElements;
+        private readonly List<CutElement> cutElements => m_CutElements;
 
         // Control schemes
         public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }

@@ -73,7 +73,6 @@ namespace UnityEngine.InputSystem.Editor
 
         void OnDroppedHandler(int mapIndex)
         {
-            Dispatch(Commands.CutActionsOrBindings());
             Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
         }
 
