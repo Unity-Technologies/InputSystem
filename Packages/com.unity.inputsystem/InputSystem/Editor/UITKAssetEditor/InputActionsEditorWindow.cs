@@ -18,12 +18,12 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
-    internal class InputActionsAssetEditorWindow : EditorWindow, IInputActionAssetEditor
+    internal class InputActionsEditorWindow : EditorWindow, IInputActionAssetEditor
     {
         // Register editor type via static constructor to enable asset monitoring
-        static InputActionsAssetEditorWindow()
+        static InputActionsEditorWindow()
         {
-            InputActionAssetEditor.RegisterType<InputActionsAssetEditorWindow>();
+            InputActionAssetEditor.RegisterType<InputActionsEditorWindow>();
         }
 
         // TODO Consider moving state into its own struct so it can just be assigned or reset
@@ -38,8 +38,6 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetJson;
         private bool m_IsDirty;
         private StateContainer m_StateContainer;
-
-        static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -79,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        private static InputActionsAssetEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
+        private static InputActionsEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
         {
             ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
             ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
@@ -108,22 +106,22 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         /// <param name="asset">The InputActionAsset to open.</param>
         /// <returns>The editor window.</returns>
-        public static InputActionsAssetEditorWindow OpenEditor(InputActionAsset asset)
+        public static InputActionsEditorWindow OpenEditor(InputActionAsset asset)
         {
             return OpenWindow(asset, null, null);
         }
 
-        private static InputActionsAssetEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
+        private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
         {
             isAlreadyOpened = false;
-            if (HasOpenInstances<InputActionsAssetEditorWindow>())
+            if (HasOpenInstances<InputActionsEditorWindow>())
             {
-                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsAssetEditorWindow)) as InputActionsAssetEditorWindow[];
+                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsEditorWindow)) as InputActionsEditorWindow[];
                 var alreadyOpenWindow = openWindows?.ToList().FirstOrDefault(window => window.m_AssetId.Equals(id));
                 isAlreadyOpened = alreadyOpenWindow != null;
-                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsAssetEditorWindow>();
+                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsEditorWindow>();
             }
-            return GetWindow<InputActionsAssetEditorWindow>();
+            return GetWindow<InputActionsEditorWindow>();
         }
 
         private static GUIContent GetEditorTitle(InputActionAsset asset, bool isDirty)
@@ -317,15 +315,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ReshowEditorWindowWithUnsavedChanges()
         {
-            var window = CreateWindow<InputActionsAssetEditorWindow>();
+            var window = CreateWindow<InputActionsEditorWindow>();
             CopyOldStatsToNewWindow(window);
             window.BuildUI();
             window.Show();
         }
 
-        private void CopyOldStatsToNewWindow(InputActionsAssetEditorWindow window)
+        private void CopyOldStatsToNewWindow(InputActionsEditorWindow window)
         {
-            // TODO This cannot be fully correct?
             window.m_AssetId = m_AssetId;
             window.m_State = m_State;
             window.m_AssetJson = m_AssetJson;
@@ -436,6 +433,7 @@ namespace UnityEngine.InputSystem.Editor
             var window = (InputActionsEditorWindow)arguments.context;
             window.m_StateContainer.Dispatch(Commands.AddBinding());
         }
+
         #endregion
     }
 }
