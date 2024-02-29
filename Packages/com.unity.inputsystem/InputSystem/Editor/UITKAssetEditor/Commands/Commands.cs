@@ -171,12 +171,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                CopyPasteHelper.Copy(state);
                 var action = Selectors.GetSelectedAction(state);
                 var actionMap = Selectors.GetActionMapForAction(state, action?.id);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, InputActionSerializationHelpers.GetId(action?.wrappedProperty));
                 var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
                 if (lastPastedElement != null)
                     state.serializedObject.ApplyModifiedProperties();
+                EditorHelpers.SetSystemCopyBufferContents(string.Empty);
                 return state;
             };
         }
