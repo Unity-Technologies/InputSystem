@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Assertions;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -297,12 +298,32 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var fileJson = new WriteFileJson
+            object fileJson;
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // We only serialize isProjectWide property if true, and absence is false
+            // Note that this is not supported by JSON utilities and hence we have two classes.
+            if (m_IsProjectWide)
             {
-                name = name,
-                maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
-                controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            };
+                fileJson = new WriteFileJsonVersion2()
+                {
+                    name = name,
+                    isProjectWide = m_IsProjectWide,
+                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+                };
+            }
+            else
+            {
+#endif                
+                fileJson = new WriteFileJsonVersion1()
+                {
+                    name = name,
+                    maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                    controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+                };
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS                
+            }
+#endif
 
             return JsonUtility.ToJson(fileJson, true);
         }
@@ -926,8 +947,11 @@ namespace UnityEngine.InputSystem
 
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
+        public bool isProjectWide => m_IsProjectWide;
+        
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
+        [SerializeField] internal bool m_IsProjectWide;
 
         ////TODO: make this persistent across domain reloads
         /// <summary>
@@ -941,9 +965,18 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 
         [Serializable]
-        internal struct WriteFileJson
+        internal struct WriteFileJsonVersion1
         {
             public string name;
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+        
+        [Serializable]
+        internal struct WriteFileJsonVersion2
+        {
+            public string name;
+            public bool isProjectWide;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
         }
@@ -952,6 +985,7 @@ namespace UnityEngine.InputSystem
         internal struct ReadFileJson
         {
             public string name;
+            public bool isProjectWide;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
 
@@ -960,7 +994,8 @@ namespace UnityEngine.InputSystem
                 asset.name = name;
                 asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
                 asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
-
+                asset.m_IsProjectWide = isProjectWide;
+                
                 // Link maps to their asset.
                 if (asset.m_ActionMaps != null)
                     foreach (var map in asset.m_ActionMaps)

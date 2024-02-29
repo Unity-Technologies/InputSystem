@@ -8,6 +8,8 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
+        public const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
+        
         public static string SettingsPath => InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;

@@ -3040,12 +3040,14 @@ namespace UnityEngine.InputSystem
                 // We also need to avoid assigning a config object o any asset that is not persisted with the ADB.
                 if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                    EditorBuildSettings.AddConfigObject(
+                        InputActionsEditorSettingsProvider.kEditorBuildSettingsActionsConfigKey,
                         value, true);
                 }
                 else
                 {
-                    EditorBuildSettings.RemoveConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey);
+                    EditorBuildSettings.RemoveConfigObject(
+                        InputActionsEditorSettingsProvider.kEditorBuildSettingsActionsConfigKey);
                 }
 #endif // UNITY_EDITOR
 
@@ -3514,7 +3516,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 // See if we have a saved actions object
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                if (EditorBuildSettings.TryGetConfigObject(InputActionsEditorSettingsProvider.kEditorBuildSettingsActionsConfigKey,
                     out InputActionAsset inputActionAsset))
                 {
                     if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
@@ -3647,6 +3649,9 @@ namespace UnityEngine.InputSystem
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
                 settings = newSettings;
             }
+            
+            // NOTE: We currently do not explicitly change actions instance even if deleted since
+            // a missing reference will still evaluate to null.
         }
 
         private static HashSet<string> s_TrackedDirtyAssets;
@@ -3679,7 +3684,18 @@ namespace UnityEngine.InputSystem
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
             if (actions == null)
-                actions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputActionAsset>();
+            {
+                // Select the first resource that has isProjectWide property set
+                var assets = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+                foreach (var asset in assets)
+                {
+                    if (asset.m_IsProjectWide)
+                    {
+                        actions = asset;
+                        break;
+                    }
+                }
+            }
 
             // No domain reloads in the player so we don't need to look for existing
             // instances.

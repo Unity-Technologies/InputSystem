@@ -26,6 +26,7 @@ namespace UnityEngine.InputSystem.Editor
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Determine if we need to preload project-wide InputActionsAsset.
             var actions = InputSystem.actions;
+            actions.m_IsProjectWide = true;
             var actionsMissing = NeedsToBeAdded(preloadedAssets, actions, ref newSize);
 #endif
 

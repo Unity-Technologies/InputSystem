@@ -344,35 +344,51 @@ namespace UnityEngine.InputSystem.Editor
             private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
 #endif
             {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                var projectWideActions = InputSystem.actions;
+                var hasProjectWideActions = projectWideActions != null;
+#endif
+                
                 foreach (var assetPath in importedAssets)
                 {
-                    if (IsInputActionAssetPath(assetPath))
-                        CheckAndModifyJsonNameIfDifferent(assetPath);
-                }
-            }
-
-            private static void CheckAndModifyJsonNameIfDifferent(string assetPath)
-            {
-                InputActionAsset asset = null;
-                try
-                {
-                    asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
-                    var desiredName = Path.GetFileNameWithoutExtension(assetPath);
-                    if (asset.name != desiredName)
+                    if (!IsInputActionAssetPath(assetPath))
+                        continue;
+                    
+                    try
                     {
-                        asset.name = desiredName;
-                        if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
-                            Debug.LogError($"Unable update JSON name in asset \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+                        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+                        var desiredName = Path.GetFileNameWithoutExtension(assetPath);
+                    
+                        var needsUpdate = false;
+                    
+                        // Check whether there is a mismatch between JSON file name and file name 
+                        if (asset.name != desiredName)
+                        {
+                            asset.name = desiredName;
+                            needsUpdate = true;
+                        }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                        // Check whether asset is project-wide and otherwise unset if currently set
+                        /*var desiredIsProjectWide = hasProjectWideActions && asset == projectWideActions;
+                        if (desiredIsProjectWide != asset.m_IsProjectWide)
+                        {
+                            asset.m_IsProjectWide = desiredIsProjectWide;
+                            needsUpdate = true;
+                        }*/
+#endif
+                    
+                        // Only update file if out of sync
+                        if (needsUpdate)
+                        {
+                            if (!InputActionAssetManager.WriteAsset(assetPath, asset.ToJson()))
+                                Debug.LogError($"Unable update JSON for asset \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");                        
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                }
-                finally
-                {
-                    if (asset != null)
-                        DestroyImmediate(asset);
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
                 }
             }
         }

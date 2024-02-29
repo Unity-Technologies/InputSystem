@@ -12,6 +12,7 @@ using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
+using UnityEditor.VersionControl;
 using UnityEngine.InputSystem.Editor;
 #endif
 
@@ -144,6 +145,47 @@ internal partial class CoreTests
     }
 
 #if UNITY_EDITOR
+    [Test]
+    [Category("Actions")]
+    public void ProjectWideActions_CanBeIdentifiedFromJsonContainingProperty()
+    {
+        // Check isProjectWide is false by default
+        var asset = InputActionAsset.FromJson("{}");
+        var json = asset.ToJson();
+        Object.DestroyImmediate(asset);
+        Assert.That(json.Contains("isProjectWide"), Is.False);
+        
+        asset = InputActionAsset.FromJson(json);
+        var isProjectWide = asset.m_IsProjectWide;
+        Object.DestroyImmediate(asset);
+        Assert.That(isProjectWide, Is.False);
+        
+        // Check isProjectWide is written if set and retrieved when parsed
+        asset = InputActionAsset.FromJson(json);
+        asset.m_IsProjectWide = true;
+        json = asset.ToJson();
+        Object.DestroyImmediate(asset);
+        Assert.That(json.Contains("isProjectWide"), Is.True);
+        
+        asset = InputActionAsset.FromJson(json);
+        isProjectWide = asset.m_IsProjectWide;
+        Object.DestroyImmediate(asset);
+        Assert.That(isProjectWide, Is.True);
+
+        // Check setting it to false again and writing eliminates it from json and is parsed as false
+        asset = InputActionAsset.FromJson(json);
+        asset.m_IsProjectWide = false;
+        json = asset.ToJson();
+        Object.DestroyImmediate(asset);
+        Assert.That(json.Contains("isProjectWide"), Is.False);
+        
+        asset = InputActionAsset.FromJson(json);
+        isProjectWide = asset.m_IsProjectWide;
+        Object.DestroyImmediate(asset);
+        
+        Assert.That(isProjectWide, Is.False);
+    }
+    
     [Test]
     [Category(TestCategory)]
     public void ProjectWideActionsAsset_HasFilenameName()
