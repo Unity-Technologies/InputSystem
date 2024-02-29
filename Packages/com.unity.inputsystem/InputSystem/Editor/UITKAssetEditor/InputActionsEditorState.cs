@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem.Editor
             });
         }
 
-        public bool IsBindingCut(int actionMapIndex, int bindingIndex)
+        public readonly bool IsBindingCut(int actionMapIndex, int bindingIndex)
         {
             if (cutElements == null)
                 return false;
@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.Editor
                 cutElement.type == typeof(InputBinding));
         }
 
-        public bool IsActionCut(int actionMapIndex, int actionIndex)
+        public readonly bool IsActionCut(int actionMapIndex, int actionIndex)
         {
             if (cutElements == null)
                 return false;
@@ -320,7 +320,7 @@ namespace UnityEngine.InputSystem.Editor
                 cutElement.type == typeof(InputAction));
         }
 
-        public bool IsActionMapCut(int actionMapIndex)
+        public readonly bool IsActionMapCut(int actionMapIndex)
         {
             if (cutElements == null)
                 return false;

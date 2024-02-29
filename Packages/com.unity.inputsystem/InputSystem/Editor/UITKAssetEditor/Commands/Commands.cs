@@ -90,9 +90,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var actionMapID = InputActionSerializationHelpers.GetId(actionMap);
+                var newCutElements = state.IsActionMapCut(actionMapIndex) ? new List<CutElement>() : state.GetCutElements();
                 InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
                 state.serializedObject.ApplyModifiedProperties();
-                var newCutElements = state.IsActionMapCut(actionMapIndex) ? new List<CutElement>() : state.GetCutElements();
                 if (state.selectedActionMapIndex == actionMapIndex)
                     return SelectPrevActionMap(state.With(cutElements: newCutElements));
                 return state.SelectActionMap(state.selectedActionMapIndex > actionMapIndex ? state.selectedActionMapIndex - 1 : state.selectedActionMapIndex).With(cutElements: newCutElements);
@@ -427,10 +427,11 @@ namespace UnityEngine.InputSystem.Editor
                 var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
                 var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
+                var isCut = state.IsActionCut(actionMapIndex, actionIndex);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
 
-                if (state.IsActionCut(actionMapIndex, actionIndex))
+                if (isCut)
                     return state.With(cutElements: new List<CutElement>());
                 return state; // ActionsTreeView will dispatch a separate command to select the previous Action
             };
@@ -442,10 +443,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
+                var isCut = state.IsBindingCut(actionMapIndex, bindingIndex);
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
 
-                if (state.IsBindingCut(actionMapIndex, bindingIndex))
+                if (isCut)
                     return state.With(cutElements: new List<CutElement>());
                 return state; // ActionsTreeView will dispatch a separate command to select the previous Binding
             };
