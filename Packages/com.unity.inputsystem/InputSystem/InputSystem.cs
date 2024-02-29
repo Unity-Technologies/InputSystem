@@ -3011,6 +3011,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+#if UNITY_EDITOR
         [InitializeOnLoad]
         public static class PlayStateNotifier
         {
@@ -3021,10 +3022,10 @@ namespace UnityEngine.InputSystem
 
             static void ModeChanged(PlayModeStateChange playModeState)
             {
-                // EnteredEditMode	Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
-                // ExitingEditMode	Occurs when exiting edit mode, before the Editor is in play mode.
-                // EnteredPlayMode	Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
-                // ExitingPlayMode	Occurs when exiting play mode, before the Editor is in edit mode.
+                // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
+                // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
+                // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
+                // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
                 switch (playModeState)
                 {
                     case PlayModeStateChange.EnteredEditMode:
@@ -3043,6 +3044,7 @@ namespace UnityEngine.InputSystem
                 }
             }
         }
+#endif // UNITY_EDITOR
 
         internal static bool hasActions => s_Manager.actions != null;
 
