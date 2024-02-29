@@ -50,11 +50,12 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error.
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 - Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
-- Fixed InputAction asset appearing dirty after rename [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
+- Fixed InputAction asset appearing dirty after rename [ISXB-749](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
 - Fixed Error logged when InputActionEditor window opened without a valid asset.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
 - Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
+- Fixed Save shortcut (ctrl/cmd + S by default) not saving changes in Input Actions Editor windows. [ISXB-659](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-659).
 - Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
 - Fixed an issue where aliased enum values for ´GamepadButton´ would be seemingly randomly picked from an Inspector value picker. This is resolved with a custom property drawer that maps to a designated aliased type. [ISXB-543](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-543).
 
