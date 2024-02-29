@@ -3011,6 +3011,39 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+        [InitializeOnLoad]
+        public static class PlayStateNotifier
+        {
+            static PlayStateNotifier()
+            {
+                EditorApplication.playModeStateChanged += ModeChanged;
+            }
+
+            static void ModeChanged(PlayModeStateChange playModeState)
+            {
+                // EnteredEditMode	Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
+                // ExitingEditMode	Occurs when exiting edit mode, before the Editor is in play mode.
+                // EnteredPlayMode	Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
+                // ExitingPlayMode	Occurs when exiting play mode, before the Editor is in edit mode.
+                switch (playModeState)
+                {
+                    case PlayModeStateChange.EnteredEditMode:
+                        actions?.Disable();
+                        break;
+
+                    case PlayModeStateChange.ExitingEditMode:
+                        break;
+
+                    case PlayModeStateChange.EnteredPlayMode:
+                        actions?.Enable();
+                        break;
+
+                    case PlayModeStateChange.ExitingPlayMode:
+                        break;
+                }
+            }
+        }
+
         internal static bool hasActions => s_Manager.actions != null;
 
         /// <summary>
@@ -3057,7 +3090,7 @@ namespace UnityEngine.InputSystem
                 s_Manager.actions = value;
 
                 // Enable new project-wide actions
-                if (value != null)
+                if (value != null && EditorApplication.isPlaying)
                     value.Enable();
             }
         }
@@ -3555,7 +3588,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled
-            if (actions != null)
+            if (actions != null && EditorApplication.isPlaying)
                 actions.Enable();
 #endif
 
@@ -3844,7 +3877,10 @@ namespace UnityEngine.InputSystem
             // Touching the `actions` property will initialise it here (if it wasn't already).
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             // Note this is to eary for editor ! actions is not setup yet
-            actions?.Enable();
+            if (EditorApplication.isPlaying)
+            {
+                actions?.Enable();
+            }
 #endif
 
             Profiler.EndSample();

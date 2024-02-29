@@ -1362,9 +1362,15 @@ namespace UnityEngine.InputSystem.UI
         /// </remarks>
         /// <seealso cref="actionsAsset"/>
         /// <seealso cref="DefaultInputActions"/>
+
+        private static DefaultInputActions defaultActions;
+
         public void AssignDefaultActions()
         {
-            var defaultActions = new DefaultInputActions();
+            if (defaultActions == null)
+            {
+                defaultActions = new DefaultInputActions();
+            }
             actionsAsset = defaultActions.asset;
             cancel = InputActionReference.Create(defaultActions.UI.Cancel);
             submit = InputActionReference.Create(defaultActions.UI.Submit);
@@ -1388,6 +1394,7 @@ namespace UnityEngine.InputSystem.UI
         /// <seealso cref="AssignDefaultActions"/>
         public void UnassignActions()
         {
+            defaultActions = default;
             actionsAsset = default;
             cancel = default;
             submit = default;
