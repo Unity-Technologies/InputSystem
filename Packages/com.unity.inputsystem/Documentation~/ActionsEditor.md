@@ -68,9 +68,11 @@ For more detail about how these types work, see [action types](RespondingToActio
 
 The Control Type setting allows you to select the type of control expected by the action. This limits the controls shown when setting up bindings in the UI and also limits which contols can be bound interactively to the action.
 
-For example, if you select 2D axis, only those device controls that can supply a 2D vector as value are available as options for the binding control path (see directly below).
+For example, if you select **2D axis**, only those controls that can supply a 2D vector as value are available as options for the binding control path.
 
-### Editing Bindings
+There are more specific control types available which futher filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
+
+### Bindings
 
 * To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
