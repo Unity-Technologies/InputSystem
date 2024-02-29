@@ -63,6 +63,7 @@ namespace UnityEngine.InputSystem
                 return path;
 
             var parentFolder = kAssetPath;
+            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
             var directories = path.Split('/');
             if (directories[0] != kAssetPath)
                 throw new ArgumentException(path);
