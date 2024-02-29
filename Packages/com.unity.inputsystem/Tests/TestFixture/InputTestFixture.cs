@@ -173,10 +173,6 @@ namespace UnityEngine.InputSystem
 
             try
             {
-#if UNITY_EDITOR
-                AssetDatabaseUtils.Restore();
-#endif
-
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.Restore();
 #endif

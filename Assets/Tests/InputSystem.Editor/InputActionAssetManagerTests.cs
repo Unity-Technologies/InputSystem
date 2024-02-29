@@ -8,8 +8,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 
-partial class CoreTests
+class InputActionAssetManagerEditorTests
 {
+    [TearDown]
+    public void TearDown()
+    {
+        AssetDatabaseUtils.Restore();
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_InputActionAssetManager_ThrowsIfCreatedFromNullReference()
@@ -131,4 +137,4 @@ partial class CoreTests
     }
 }
 
-#endif
+#endif // UNITY_EDITOR
