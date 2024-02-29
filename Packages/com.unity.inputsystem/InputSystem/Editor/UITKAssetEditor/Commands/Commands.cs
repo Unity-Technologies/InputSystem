@@ -171,7 +171,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
+                var newIndex = CopyPasteHelper.DeleteCutElements(state);
+                var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedActionIndex: newIndex >= 0 ? newIndex : state.selectedActionIndex), true, actionMapIndex);
                 if (lastPastedElement != null)
                     state.serializedObject.ApplyModifiedProperties();
                 return state;
