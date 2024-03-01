@@ -59,7 +59,8 @@ namespace UnityEngine.InputSystem.Editor
                 && processors == other.processors
                 && initialStateCheck == other.initialStateCheck
                 && actionTypeTooltip == other.actionTypeTooltip
-                && expectedControlTypeTooltip == other.expectedControlTypeTooltip;
+                && expectedControlTypeTooltip == other.expectedControlTypeTooltip
+                && wrappedProperty.propertyPath == other.wrappedProperty.propertyPath;
         }
 
         public override bool Equals(object obj)
@@ -69,15 +70,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(
-                name,
-                expectedControlType,
-                (int)type,
-                interactions,
-                processors,
-                initialStateCheck,
-                actionTypeTooltip,
-                expectedControlTypeTooltip);
+            var hashCode = new HashCode();
+            hashCode.Add(name);
+            hashCode.Add(expectedControlType);
+            hashCode.Add((int)type);
+            hashCode.Add(interactions);
+            hashCode.Add(processors);
+            hashCode.Add(initialStateCheck);
+            hashCode.Add(actionTypeTooltip);
+            hashCode.Add(expectedControlTypeTooltip);
+            hashCode.Add(wrappedProperty.propertyPath);
+            return hashCode.ToHashCode();
         }
     }
 }
