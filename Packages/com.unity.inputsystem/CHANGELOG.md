@@ -58,7 +58,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
 - Fixed Save shortcut (ctrl/cmd + S by default) not saving changes in Input Actions Editor windows. [ISXB-659](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-659).
 - Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
-- Fixed duplication of project wide input actions when loading/unloading scenes [ISX-1902]
+- Fixed duplication of project wide input actions when loading/unloading scenes
 
 ## [1.8.0-pre.2] - 2023-11-09
 
