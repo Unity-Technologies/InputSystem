@@ -19,6 +19,8 @@ namespace UnityEngine.InputSystem.Editor
         StateContainer m_StateContainer;
         private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
 
+        private InputActionsEditorView m_View;
+
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
         {
@@ -77,6 +79,8 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onActionsChange -= BuildUI;
 
             m_IsActivated = false;
+
+            m_View.DestroyView();
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -183,7 +187,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
-                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
                 m_StateContainer.Initialize();
             }
 

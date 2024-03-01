@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsDirty;
         private StateContainer m_StateContainer;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
+        private InputActionsEditorView m_View;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -182,8 +183,8 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, m_StateContainer, false);
-            view.postSaveAction += PostSaveAction;
+            m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false);
+            m_View.postSaveAction += PostSaveAction;
             m_StateContainer.Initialize();
         }
 
@@ -263,6 +264,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnDestroy()
         {
             ConfirmSaveChangesIfNeeded();
+            m_View.DestroyView();
         }
 
         private void ConfirmSaveChangesIfNeeded()
