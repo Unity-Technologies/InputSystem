@@ -87,7 +87,8 @@ namespace UnityEngine.InputSystem.Editor
                 && isComposite == other.isComposite
                 && isPartOfComposite == other.isPartOfComposite
                 && compositePath == other.compositePath
-                && controlSchemes.SequenceEqual(other.controlSchemes);
+                && controlSchemes.SequenceEqual(other.controlSchemes)
+                && wrappedProperty.propertyPath == other.wrappedProperty.propertyPath;
         }
 
         public override bool Equals(object obj)
@@ -109,6 +110,7 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(isPartOfComposite);
             hashCode.Add(compositePath);
             hashCode.Add(controlSchemes);
+            hashCode.Add(wrappedProperty.propertyPath);
             return hashCode.ToHashCode();
         }
     }
