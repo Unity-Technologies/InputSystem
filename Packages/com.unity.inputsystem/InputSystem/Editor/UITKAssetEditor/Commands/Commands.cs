@@ -161,6 +161,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                if (!state.hasCutElements)
+                    return state;
                 CopyPasteHelper.DeleteCutElements(state);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.With(cutElements: new List<CutElement>());

@@ -11,10 +11,10 @@ namespace UnityEngine.InputSystem.Editor
 
     internal class CutElement
     {
-        private string id;
+        private Guid id;
         internal Type type;
 
-        public CutElement(string id, Type type)
+        public CutElement(Guid id, Type type)
         {
             this.id = id;
             this.type = type;
@@ -26,19 +26,19 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = state.serializedObject
                     ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                    ?.FirstOrDefault(s => s.FindPropertyRelative("m_Id").stringValue.Equals(id));
+                    ?.FirstOrDefault(s => InputActionSerializationHelpers.GetId(s).Equals(id));
                 return actionMap.GetIndexOfArrayElement();
             }
 
             if (type == typeof(InputAction))
             {
-                var action = Selectors.GetActionMapAtIndex(state, actionMapIndex(state))?.wrappedProperty.FindPropertyRelative("m_Actions").FirstOrDefault(a => a.FindPropertyRelative("m_Id").stringValue.Equals(id));
+                var action = Selectors.GetActionMapAtIndex(state, actionMapIndex(state))?.wrappedProperty.FindPropertyRelative("m_Actions").FirstOrDefault(a => InputActionSerializationHelpers.GetId(a).Equals(id));
                 return action.GetIndexOfArrayElement();
             }
 
             if (type == typeof(InputBinding))
             {
-                var binding = Selectors.GetBindingForId(state, id,
+                var binding = Selectors.GetBindingForId(state, id.ToString(),
                     out _);
                 return binding.GetIndexOfArrayElement();
             }
@@ -54,9 +54,9 @@ namespace UnityEngine.InputSystem.Editor
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
                 ?.FirstOrDefault(s => s.FindPropertyRelative("m_Id").stringValue.Equals(id)).GetIndexOfArrayElement();
             if (type == typeof(InputBinding))
-                cutActionMapIndex =  actionMaps.FirstOrDefault(map => map.FindPropertyRelative("m_Bindings").Select(a => a.FindPropertyRelative("m_Id").stringValue).Contains(id)).GetIndexOfArrayElement();
+                cutActionMapIndex =  actionMaps.FirstOrDefault(map => map.FindPropertyRelative("m_Bindings").Select(InputActionSerializationHelpers.GetId).Contains(id)).GetIndexOfArrayElement();
             else if (type == typeof(InputAction))
-                cutActionMapIndex =  actionMaps.FirstOrDefault(map => map.FindPropertyRelative("m_Actions").Select(a => a.FindPropertyRelative("m_Id").stringValue).Contains(id)).GetIndexOfArrayElement();
+                cutActionMapIndex =  actionMaps.FirstOrDefault(map => map.FindPropertyRelative("m_Actions").Select(InputActionSerializationHelpers.GetId).Contains(id)).GetIndexOfArrayElement();
             return cutActionMapIndex ?? -1;
         }
     }
@@ -277,13 +277,13 @@ namespace UnityEngine.InputSystem.Editor
             m_CutElements = new List<CutElement>();
             var type = selectionType == SelectionType.Action ? typeof(InputAction) : typeof(InputBinding);
             var property = selectionType == SelectionType.Action ? Selectors.GetSelectedAction(this)?.wrappedProperty : Selectors.GetSelectedBinding(this)?.wrappedProperty;
-            cutElements.Add(new CutElement(property?.FindPropertyRelative("m_Id").stringValue, type));
+            cutElements.Add(new CutElement(InputActionSerializationHelpers.GetId(property), type));
             return With(cutElements: cutElements);
         }
 
         public InputActionsEditorState CutActionMaps()
         {
-            m_CutElements = new List<CutElement> { new(Selectors.GetSelectedActionMap(this)?.wrappedProperty?.FindPropertyRelative("m_Id").stringValue, typeof(InputActionMap)) };
+            m_CutElements = new List<CutElement> { new(InputActionSerializationHelpers.GetId(Selectors.GetSelectedActionMap(this)?.wrappedProperty), typeof(InputActionMap)) };
             return With(cutElements: cutElements);
         }
 
