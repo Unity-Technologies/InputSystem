@@ -60,6 +60,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
 - Fixed duplication of project wide input actions when loading/unloading scenes
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
