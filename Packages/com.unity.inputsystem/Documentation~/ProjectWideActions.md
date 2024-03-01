@@ -16,12 +16,17 @@ Therefore, unless you have specific project requirements that require more than 
 To create and assign the current project-wide actions, go to **Edit** > **Project Settings** > **Input System Package**.
 
 If you don't yet have an Action Asset assigned as project-wide in your project, the Input System Package settings window displays an empty field for you to assign your action asset, and a button allowing you to create and assign one. 
-![image alt text](./Images/InputSettingsNoProjectWideAsset.png)
+![image alt text](./Images/InputSettingsNoProjectWideAsset.png)</br>
 *The Input System Package Project Settings with no project-wide actions assigned*
 
 > **Note:** If you already have an Action Asset assigned, this button is not displayed, and instead the Actions Editor is displayed, allowing you to edit the project-wide actions.
 
 To create an Action Asset with default actions pre-configured, click  **"Create a new project-wide Action Asset"**. The asset is created in your project, and automatically assigned as the **project-wide actions**.
+
+The Action Asset appears in your Project view, and is named "InputSystem_Actions". This is where your new configuration of actions is saved, including any changes you make to it.
+
+![](images/InputSystemActionsAsset.png)<br/>
+*The new Actions Asset in your Project window*
 
 ## Edit project-wide actions
 
