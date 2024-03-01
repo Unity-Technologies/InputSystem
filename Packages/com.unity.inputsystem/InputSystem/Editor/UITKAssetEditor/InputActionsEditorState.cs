@@ -170,6 +170,21 @@ namespace UnityEngine.InputSystem.Editor
             );
         }
 
+        public readonly InputActionsEditorState ClearCutElements()
+        {
+            return new InputActionsEditorState(
+                serializedObject,
+                selectedActionMapIndex,
+                selectedActionIndex,
+                selectedBindingIndex,
+                selectionType,
+                m_ExpandedCompositeBindings,
+                selectedControlScheme,
+                selectedControlSchemeIndex,
+                selectedDeviceRequirementIndex,
+                cutElements: null);
+        }
+
         public SerializedProperty GetActionMapByName(string actionMapName)
         {
             return serializedObject
