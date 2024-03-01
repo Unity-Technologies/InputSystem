@@ -3101,7 +3101,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                 if (EditorApplication.isPlaying)
 #endif // UNITY_EDITOR
-                    value?.Enable();
+                value?.Enable();
             }
         }
 
@@ -3601,7 +3601,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying)
 #endif // UNITY_EDITOR
-                actions?.Enable();
+            actions?.Enable();
 #endif
 
             RunInitialUpdate();
@@ -3892,7 +3892,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying)
 #endif
-                actions?.Enable();
+            actions?.Enable();
 #endif
 
             Profiler.EndSample();
