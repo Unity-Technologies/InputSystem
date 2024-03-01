@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem.Editor
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
 
             // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload
-            if (m_selectedControlSchemeIndex != -1)
+            if (m_selectedControlSchemeIndex >= 0 && m_selectedControlSchemeIndex < serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes)).arraySize)
             {
                 var controlSchemeSerializedProperty = serializedObject
                     .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
