@@ -6555,10 +6555,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // TODO What is this, modifying state and not cleaning up, this needs to go
+//#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
-#endif
+  //      InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
+//#endif
 
         var action1 = new InputAction(name: "a");
         var action2 = new InputAction(name: "b");

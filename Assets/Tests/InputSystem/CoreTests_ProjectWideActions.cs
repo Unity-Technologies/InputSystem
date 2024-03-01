@@ -123,16 +123,18 @@ internal partial class CoreTests
         three.AddAction("D");
         three.AddAction("E");
     }
+    
+    // TODO Verify 
 
     [Test]
     [Ignore("Temporarily disabled until figured out how to mock this the best way")]
     [Category(TestCategory)]
     public void ProjectWideActions_AppearInEnabledActions() // TODO How is this really related to project-wide? Checking they are enabled?
     {
-        //GivenActions();
+        GivenActions();
 
         // Setup project-wide actions
-        //InputSystem.actions = actions;
+        InputSystem.actions = actions;
 
         // Assert that project-wide actions get enabled by default
         var actionCount = 3;
@@ -155,50 +157,5 @@ internal partial class CoreTests
 
         // TODO Modifying the actions object after being assigned should also enable newly added actions?
     }
-
-#if UNITY_EDITOR
-    [Test]
-    [Ignore("Reenable this test once clear how it relates or is specific to ProjectWideActions. Seems like this is rather testing something general. As a side-note likely no maps should be enabled in edit mode?!")]
-    [Category(TestCategory)]
-    public void ProjectWideActions_ThrowsWhenAddingOrRemovingWhileEnabled() // TODO Move to CoreTests
-    {
-        GivenActions();
-        var asset = actions;
-
-        // Verify adding ActionMap while enabled throws an exception
-        Assert.Throws<InvalidOperationException>(() => asset.AddActionMap("AnotherMap").AddAction("AnotherAction"));
-
-        asset.Disable();
-        asset.AddActionMap("AnotherMap").AddAction("AnotherAction");
-
-        // Verify enabled state reported correctly
-        Assert.That(asset.enabled, Is.False);
-        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.False);
-        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.False);
-
-        asset.Enable();
-
-        Assert.That(asset.enabled, Is.True);
-        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.True);
-        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.True);
-
-        // Verify adding/removing actions throws when ActionMap is enabled
-        Assert.Throws<System.InvalidOperationException>(() => asset.FindActionMap("AnotherMap", true).AddAction("YetAnotherAction"));
-        Assert.Throws<System.InvalidOperationException>(() => asset.RemoveAction("AnotherAction"));
-        Assert.Throws<InvalidOperationException>(() => asset.RemoveActionMap("AnotherMap"));
-
-        // Verify enabled state when enabling Action directly
-        asset.Disable();
-        asset.FindAction("AnotherAction", true).Enable();
-
-        Assert.That(asset.FindActionMap("InitialActionMapOne", true).enabled, Is.False);
-        Assert.That(asset.FindActionMap("AnotherMap", true).enabled, Is.True);
-        Assert.That(asset.FindAction("AnotherAction", true).enabled, Is.True);
-
-        // Verify removing any ActionMap throws if another one is enabled
-        Assert.Throws<System.InvalidOperationException>(() => asset.RemoveActionMap("InitialActionMapOne"));
-    }
-
-#endif // UNITY_EDITOR
 }
 #endif
