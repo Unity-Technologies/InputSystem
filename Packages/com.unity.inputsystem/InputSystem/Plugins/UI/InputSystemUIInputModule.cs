@@ -1394,6 +1394,7 @@ namespace UnityEngine.InputSystem.UI
         /// <seealso cref="AssignDefaultActions"/>
         public void UnassignActions()
         {
+            defaultActions?.Dispose();
             defaultActions = default;
             actionsAsset = default;
             cancel = default;

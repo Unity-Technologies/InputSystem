@@ -3026,6 +3026,12 @@ namespace UnityEngine.InputSystem
                 // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
                 // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
                 // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
+                //
+                // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
+                // state ensures that the they are active in all of these MonoBehavior methods:
+                //
+                //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
+                //
                 switch (playModeState)
                 {
                     case PlayModeStateChange.EnteredEditMode:
@@ -3092,8 +3098,10 @@ namespace UnityEngine.InputSystem
                 s_Manager.actions = value;
 
                 // Enable new project-wide actions
-                if (value != null && EditorApplication.isPlaying)
-                    value.Enable();
+#if UNITY_EDITOR
+                if (EditorApplication.isPlaying)
+#endif // UNITY_EDITOR
+                    value?.Enable();
             }
         }
 
@@ -3590,8 +3598,10 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled
-            if (actions != null && EditorApplication.isPlaying)
-                actions.Enable();
+#if UNITY_EDITOR
+            if (EditorApplication.isPlaying)
+#endif // UNITY_EDITOR
+                actions?.Enable();
 #endif
 
             RunInitialUpdate();
@@ -3879,10 +3889,10 @@ namespace UnityEngine.InputSystem
             // Touching the `actions` property will initialise it here (if it wasn't already).
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             // Note this is to eary for editor ! actions is not setup yet
+#if UNITY_EDITOR
             if (EditorApplication.isPlaying)
-            {
+#endif
                 actions?.Enable();
-            }
 #endif
 
             Profiler.EndSample();
