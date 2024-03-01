@@ -3051,14 +3051,20 @@ namespace UnityEngine.InputSystem
 
                 // Disable previous project-wide actions
                 if (current != null)
+                {
                     current.Disable();
-
-                // Update underlying value
-                s_Manager.actions = value;
-
+                    current.m_IsProjectWide = false;
+                }
+                
                 // Enable new project-wide actions
                 if (value != null)
+                {
+                    value.m_IsProjectWide = true;
                     value.Enable();
+                }
+                
+                // Update underlying value
+                s_Manager.actions = value;
             }
         }
 

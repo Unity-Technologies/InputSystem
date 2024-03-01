@@ -770,7 +770,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
-
+        
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
         internal bool IsFeatureEnabled(string featureName)

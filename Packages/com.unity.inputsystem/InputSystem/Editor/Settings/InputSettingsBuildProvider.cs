@@ -30,7 +30,6 @@ namespace UnityEngine.InputSystem.Editor
             // Input System asset + user assets.
             var actions = InputSystem.actions;
             var actionsMissing = NeedsToBeAdded(preloadedAssets, actions, ref newSize);
-            actions.m_IsProjectWide = true; 
 #endif
 
             // Determine if we need to preload InputSettings asset.
