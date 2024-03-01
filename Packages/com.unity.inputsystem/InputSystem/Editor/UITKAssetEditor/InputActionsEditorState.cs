@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionSerializationHelpers.GetId(otherSelectedActionMap))
                 : actionMapCount > 0 ? 0 : -1;
             var selectedActionMap = m_selectedActionMapIndex >= 0
-                ? GetActionMap(asset, m_selectedActionMapIndex) : null;
+                ? Selectors.GetActionMapAtIndex(asset, m_selectedActionMapIndex)?.wrappedProperty : null;
 
             // Attempt to preserve action selection by GUID, otherwise select first or last resort none
             var otherSelectedAction = m_selectedActionMapIndex >= 0 ?
@@ -304,25 +304,9 @@ namespace UnityEngine.InputSystem.Editor
             return key;
         }
 
-        private static SerializedProperty GetActionMap(SerializedObject serializedObject, int index)
-        {
-            if (serializedObject == null)
-                return null;
-            var property = serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-            if (index >= 0 && index < property.arraySize)
-                return property.GetArrayElementAtIndex(index);
-            return null;
-        }
-
         private SerializedProperty GetSelectedActionMap()
         {
-            return GetActionMap(serializedObject, selectedActionMapIndex);
-        }
-
-        private static SerializedProperty GetSelectedAction(SerializedProperty map, int actionIndex)
-        {
-            return map?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-                .GetArrayElementAtIndex(actionIndex);
+            return Selectors.GetActionMapAtIndex(serializedObject, selectedActionMapIndex)?.wrappedProperty;
         }
 
         /// <summary>

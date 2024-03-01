@@ -234,13 +234,6 @@ namespace UnityEngine.InputSystem.Editor
             public int selectedControlSchemeIndex;
             public int selectedDeviceIndex;
         }
-
-        public override void DestroyView()
-        {
-            base.DestroyView();
-
-            Debug.Log("Destroy View");
-        }
     }
 
     internal static partial class Selectors
