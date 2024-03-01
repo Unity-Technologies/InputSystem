@@ -43,6 +43,7 @@ If you’d like to delete all the default actions so that you can start from an 
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
+* To re-order actions in the list, drag an action and drop it to its new position in the list. **Note:** The order of actions in this window is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
 
 ## Action type and Control type
 
