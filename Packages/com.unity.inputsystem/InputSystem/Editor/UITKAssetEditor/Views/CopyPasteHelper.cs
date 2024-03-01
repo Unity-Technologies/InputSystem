@@ -399,10 +399,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int DeleteCutElements(InputActionsEditorState state)
         {
-            var cutElements = state.GetCutElements();
-            if (cutElements is null || cutElements.Count <= 0)
+            if (!state.hasCutElements)
                 return -1;
-
+            var cutElements = state.GetCutElements();
             var index = state.selectedActionMapIndex;
             if (cutElements[0].type == typeof(InputAction))
                 index = state.selectedActionIndex;

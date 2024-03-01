@@ -81,6 +81,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] int m_selectedControlSchemeIndex;
         [SerializeField] int m_selectedDeviceRequirementIndex;
         private List<CutElement> m_CutElements;
+        internal bool hasCutElements => m_CutElements != null && m_CutElements.Count > 0;
 
         public InputActionsEditorState(
             SerializedObject inputActionAsset,

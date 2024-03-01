@@ -140,7 +140,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var newIndex = -99;
-                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                if (state.hasCutElements)
                     newIndex = CopyPasteHelper.DeleteCutElements(state);
                 else
                 {
@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var newIndex = -1;
-                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                if (state.hasCutElements)
                     newIndex = CopyPasteHelper.DeleteCutElements(state);
                 else
                 {
@@ -219,7 +219,7 @@ namespace UnityEngine.InputSystem.Editor
                     relatedAction = Selectors.GetRelatedInputAction(state);
 
                 var newIndex = -1;
-                if (state.GetCutElements() != null && state.GetCutElements().Any())
+                if (state.hasCutElements)
                     newIndex = CopyPasteHelper.DeleteCutElements(state);
                 else
                 {
