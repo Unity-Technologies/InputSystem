@@ -3014,11 +3014,18 @@ namespace UnityEngine.InputSystem
         internal static bool hasActions => s_Manager.actions != null;
 
         /// <summary>
-        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
+        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available if
+        /// assigned in Input System Package settings in Edit, Project Settings, Input System Package.
         /// </summary>
         /// <remarks>
-        /// A default set of actions and action maps are installed and enabled by default on every project.
+        /// Project-wide actions may only be assigned in Edit Mode and any attempt to change this property
+        /// in Play Mode will result in an exception.
+        /// A default set of actions and action maps are installed and enabled by default on every project
+        /// that enables Project-wide Input Actions by assigning a project-wide asset in Project Settings.
         /// These actions and their bindings may be modified in the Project Settings.
+        /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
+        /// Play Mode and automatically disabled when exiting Play Mode.
+        /// The asset associated with this property will be included in a Player build as a preloaded asset.
         /// </remarks>
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputActionMap"/>
@@ -3028,6 +3035,13 @@ namespace UnityEngine.InputSystem
             get => s_Manager.actions;
             set
             {
+                // Prevent this property from being assigned in play-mode.
+                // The motivation for this restriction is to avoid anyone relying on the project-wide input
+                // actions from not reacting properly to any reassignments in run-time and hence simplifies
+                // their use.
+                if (Application.isPlaying)
+                    throw new Exception($"Attempted to set property InputSystem.actions during Play-mode which is not supported. Assigning this property is only allowed in Edit-mode.");
+
                 // Note that we use reference equality to determine if object changed or not.
                 // This allows us to change the associated value even if changed or destroyed.
                 var current = s_Manager.actions;
@@ -3035,18 +3049,8 @@ namespace UnityEngine.InputSystem
                     return;
 
 #if UNITY_EDITOR
-                // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
-                // Note that if set to null we need to remove the config object to not act as a broken reference.
-                // We also need to avoid assigning a config object o any asset that is not persisted with the ADB.
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
-                {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                        value, true);
-                }
-                else
-                {
-                    EditorBuildSettings.RemoveConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey);
-                }
+                // Track reference to enable including it in built Players
+                InputSettingsBuildProvider.actionsToIncludeInPlayerBuild = value;
 #endif // UNITY_EDITOR
 
                 // Disable previous project-wide actions
@@ -3063,9 +3067,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Event that is triggered if any of the maps, actions or bindings in <see cref="actions"/> changes or if
-        /// <see cref="actions"/> is replaced entirely with a new <see cref="InputActionAsset"/> object.
+        /// Event that is triggered if the instance assigned to property <see cref="actions"/> changes.
         /// </summary>
+        /// <remarks>
+        /// Note that any event handlers registered to this event will only receive callbacks in Edit mode
+        /// since assigning <c>InputSystem.actions</c> is not possible in Play mode.
+        /// </remarks>
         /// <seealso cref="actions"/>
         /// <seealso cref="InputActionAsset"/>
         public static event Action onActionsChange
@@ -3508,19 +3515,18 @@ namespace UnityEngine.InputSystem
                     out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
+                        Object.DestroyImmediate(s_Manager.m_Settings);
                     s_Manager.m_Settings = settingsAsset;
                     s_Manager.ApplySettings();
                 }
 
                 // See if we have a saved actions object
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                    out InputActionAsset inputActionAsset))
+                var savedActions = InputSettingsBuildProvider.actionsToIncludeInPlayerBuild;
+                if (savedActions != null)
                 {
                     if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
-                        ScriptableObject.DestroyImmediate(s_Manager.m_Actions);
-                    s_Manager.m_Actions = inputActionAsset;
-                    s_Manager.ApplyActions();
+                        Object.DestroyImmediate(s_Manager.m_Actions);
+                    s_Manager.m_Actions = savedActions;
                 }
 
                 InputEditorUserSettings.Load();

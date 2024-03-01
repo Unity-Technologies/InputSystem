@@ -189,7 +189,7 @@ namespace UnityEngine.InputSystem.Editor
 
 #if UNITY_2023_2_OR_NEWER
         /// <summary>
-        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
+        /// Checks if the default InputForUI UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
         /// </summary>
         internal static bool CheckForDefaultUIActionMapChanges(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)

@@ -14,6 +14,33 @@ namespace UnityEngine.InputSystem.Editor
         Object[] m_OriginalPreloadedAssets;
         public int callbackOrder => 0;
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
+        // Note that if set to null we need to remove the config object to not act as a broken reference.
+        // We also need to avoid assigning a config object o any asset that is not persisted with the ADB.
+        private const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
+
+        internal static InputActionAsset actionsToIncludeInPlayerBuild
+        {
+            get
+            {
+                EditorBuildSettings.TryGetConfigObject(kEditorBuildSettingsActionsConfigKey, out InputActionAsset value);
+                return value;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(kEditorBuildSettingsActionsConfigKey, value, true);
+                }
+                else
+                {
+                    EditorBuildSettings.RemoveConfigObject(kEditorBuildSettingsActionsConfigKey);
+                }
+            }
+        }
+        #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
         public void OnPreprocessBuild(BuildReport report)
         {
             m_OriginalPreloadedAssets = PlayerSettings.GetPreloadedAssets();
