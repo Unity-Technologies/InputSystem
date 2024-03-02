@@ -3732,6 +3732,7 @@ namespace UnityEngine.InputSystem
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (actions == null)
             {
                 var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
@@ -3744,6 +3745,7 @@ namespace UnityEngine.InputSystem
                     }
                 }
             }
+#endif
 
             // No domain reloads in the player so we don't need to look for existing
             // instances.
