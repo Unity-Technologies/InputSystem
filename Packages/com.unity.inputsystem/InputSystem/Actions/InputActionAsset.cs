@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -297,14 +296,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var fileJson = new WriteFileJson
+            return JsonUtility.ToJson(new WriteFileJson
             {
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            };
-
-            return JsonUtility.ToJson(fileJson, true);
+            }, true);
         }
 
         /// <summary>
@@ -944,6 +941,13 @@ namespace UnityEngine.InputSystem
         internal struct WriteFileJson
         {
             public string name;
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct WriteFileJsonNoName
+        {
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
         }

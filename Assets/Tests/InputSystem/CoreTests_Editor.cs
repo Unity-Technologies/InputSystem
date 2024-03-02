@@ -10,13 +10,10 @@ using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using UnityEditor;
-using UnityEngine.Scripting;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Layouts;
@@ -832,36 +829,6 @@ partial class CoreTests
             FileUtil.DeleteFileOrDirectory(kNewPath + ".meta");
             AssetDatabase.Refresh();
         }
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
-    {
-        const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
-        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
-        const string kDefaultContents = "{}";
-
-        AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
-        File.WriteAllText(kAssetPath, kDefaultContents);
-        AssetDatabase.ImportAsset(kAssetPath);
-
-        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
-        Assert.NotNull(asset, "Could not load asset: " + kAssetPath);
-
-        var inputActionAssetManager = new InputActionAssetManager(asset);
-        inputActionAssetManager.Initialize();
-        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
-
-        FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
-        AssetDatabase.Refresh();
-
-        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
-
-        var fileContents = File.ReadAllText(kAssetPathAfterMove);
-        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
-
-        AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
     }
 
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
