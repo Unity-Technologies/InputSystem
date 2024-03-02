@@ -3090,26 +3090,25 @@ namespace UnityEngine.InputSystem
                 }
 #endif // UNITY_EDITOR
 
-                // Disable previous project-wide actions
+                // Disable previous project-wide actions if assigned in play-mode
                 if (current != null)
                 {
                     current.Disable();
                     current.m_IsProjectWide = false;
                 }
-                
-                // Enable new project-wide actions
+
+                // Enable new project-wide actions if assigned in play-mode.
                 if (value != null)
                 {
                     value.m_IsProjectWide = true;
 #if UNITY_EDITOR
                     if (EditorApplication.isPlaying)
-                      value.Enable();
+                        value.Enable();
 #else
                     value.Enable();
 #endif // UNITY_EDITOR
-                    
                 }
-                
+
                 // Update underlying value
                 s_Manager.actions = value;
             }
