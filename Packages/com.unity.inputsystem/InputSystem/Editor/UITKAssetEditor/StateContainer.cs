@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e.Message);
+                    Debug.LogException(e);
                 }
             });
         }
