@@ -1,10 +1,12 @@
 #if UNITY_EDITOR
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputActionsEditorWindowUtils
+    internal static class InputActionsEditorWindowUtils
     {
         /// <summary>
         /// Return a relative path to the currently active theme style sheet.
@@ -13,18 +15,23 @@ namespace UnityEngine.InputSystem.Editor
         ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
         : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
 
-        public enum ConfirmSaveChangesDialogResult
+        // Similar to InputActionAsset.WriteFileJson but excludes the name
+        [Serializable]
+        private struct WriteFileJsonNoName
         {
-            Save = 0,
-            Cancel = 1,
-            DontSave = 2
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
         }
 
-        public static ConfirmSaveChangesDialogResult ConfirmSaveChanges(string path)
+        // Similar to InputActionAsset.ToJson() but converts to JSON excluding the name property and any additional JSON
+        // content that may be part of the file not recognized as required data.
+        public static string ToJsonWithoutName(InputActionAsset asset)
         {
-            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
-                $"Do you want to save the changes you made in:\n{path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
-            return (ConfirmSaveChangesDialogResult)result;
+            return JsonUtility.ToJson(new WriteFileJsonNoName
+            {
+                maps = InputActionMap.WriteFileJson.FromMaps(asset.m_ActionMaps).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(asset.m_ControlSchemes),
+            }, prettyPrint: true);
         }
     }
 }
