@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem.Editor
             );
         }
 
-        public readonly InputActionsEditorState ClearCutElements()
+        public InputActionsEditorState ClearCutElements()
         {
             return new InputActionsEditorState(
                 serializedObject,
