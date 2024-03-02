@@ -187,19 +187,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
-                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize();
-            }
-
-            // Hide the save / auto save buttons in the project wide input actions
-            // Project wide input actions always auto save
-            {
-                var element = m_RootVisualElement.Q("save-asset-toolbar-container");
-                if (element != null)
-                {
-                    element.style.visibility = Visibility.Hidden;
-                    element.style.display = DisplayStyle.None;
-                }
             }
         }
 

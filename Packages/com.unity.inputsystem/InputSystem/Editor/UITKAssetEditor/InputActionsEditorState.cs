@@ -66,13 +66,13 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedActionIndex { get {return m_selectedActionIndex; } }
         public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
         public SelectionType selectionType { get {return m_selectionType; } }
-        public SerializedObject serializedObject { get; }
+        public SerializedObject serializedObject { get; } // Note that state doesn't own this disposable object
         private readonly List<CutElement> cutElements => m_CutElements;
-
+      
         // Control schemes
         public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }
         public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
-        public InputControlScheme selectedControlScheme => m_ControlScheme;
+        public InputControlScheme selectedControlScheme => m_ControlScheme; // TODO Bad this either po
 
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
@@ -95,6 +95,8 @@ namespace UnityEngine.InputSystem.Editor
             int selectedDeviceRequirementIndex = -1,
             List<CutElement> cutElements = null)
         {
+            Debug.Assert(inputActionAsset != null);
+
             serializedObject = inputActionAsset;
 
             m_selectedActionMapIndex = selectedActionMapIndex;
@@ -111,34 +113,95 @@ namespace UnityEngine.InputSystem.Editor
             m_CutElements = cutElements;
         }
 
+        private static int AdjustSelection(SerializedObject serializedObject, string propertyName, int index)
+        {
+            if (index < 0)
+                return index;
+            var controlSchemesArrayProperty = serializedObject.FindProperty(propertyName);
+            if (index >= controlSchemesArrayProperty.arraySize)
+                return 0;
+            return index;
+        }
+
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
+            // Assign serialized object, not that this might be equal to other.serializedObject,
+            // a slight variation of it with any kind of changes or a completely different one.
+            // Hence, we do our best here to keep any selections consistent by remapping objects
+            // based on GUIDs (IDs) and when it fails, attempt to select first object and if that
+            // fails revert to not having a selection. This would even be true for domain reloads
+            // if the asset would be modified during domain reload.
             serializedObject = asset;
 
-            m_selectedActionMapIndex = other.m_selectedActionMapIndex;
-            m_selectedActionIndex = other.m_selectedActionIndex;
-            m_selectedBindingIndex = other.m_selectedBindingIndex;
-            m_selectionType = other.m_selectionType;
-            m_ControlScheme = other.m_ControlScheme;
+            // Attempt to preserve action map selection by GUID, otherwise select first or last resort none
+            var otherSelectedActionMap = other.GetSelectedActionMap();
+            var actionMapCount = Selectors.GetActionMapCount(asset);
+            m_selectedActionMapIndex = otherSelectedActionMap != null
+                ? Selectors.GetActionMapIndexFromId(asset,
+                InputActionSerializationHelpers.GetId(otherSelectedActionMap))
+                : actionMapCount > 0 ? 0 : -1;
+            var selectedActionMap = m_selectedActionMapIndex >= 0
+                ? Selectors.GetActionMapAtIndex(asset, m_selectedActionMapIndex)?.wrappedProperty : null;
+
+            // Attempt to preserve action selection by GUID, otherwise select first or last resort none
+            var otherSelectedAction = m_selectedActionMapIndex >= 0 ?
+                Selectors.GetSelectedAction(other) : null;
+            m_selectedActionIndex = selectedActionMap != null && otherSelectedAction.HasValue
+                ? Selectors.GetActionIndexFromId(selectedActionMap,
+                InputActionSerializationHelpers.GetId(otherSelectedAction.Value.wrappedProperty))
+                : Selectors.GetActionCount(selectedActionMap) > 0 ? 0 : -1;
+
+            // Attempt to preserve binding selection by GUID, otherwise select first or none
+            m_selectedBindingIndex = -1;
+            if (m_selectedActionMapIndex >= 0)
+            {
+                var otherSelectedBinding = Selectors.GetSelectedBinding(other);
+                if (otherSelectedBinding != null)
+                {
+                    var otherSelectedBindingId =
+                        InputActionSerializationHelpers.GetId(otherSelectedBinding.Value.wrappedProperty);
+                    var binding = Selectors.GetBindingForId(asset, otherSelectedBindingId.ToString(), out _);
+                    if (binding != null)
+                        m_selectedBindingIndex = binding.GetIndexOfArrayElement();
+                }
+            }
+
+            // Sanity check selection type and override any previous selection if not valid given indices
+            // since we have remapped GUIDs to selection indices for another asset (SerializedObject)
+            if (other.m_selectionType == SelectionType.Binding && m_selectedBindingIndex < 0)
+                m_selectionType = SelectionType.Action;
+            else
+                m_selectionType = other.m_selectionType;
+
             m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
 
-            // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload
-            if (m_selectedControlSchemeIndex >= 0 && m_selectedControlSchemeIndex < serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes)).arraySize)
+            // Selected ControlScheme index is serialized but we have to recreated actual object after domain reload.
+            // In case asset is different from from others asset the index might not even be valid range so we need
+            // to reattempt to preserve selection but range adapt.
+            // Note that control schemes and device requirements currently lack any GUID/ID to be uniquely identified.
+            var controlSchemesArrayProperty = serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+            if (m_selectedControlSchemeIndex >= 0 && controlSchemesArrayProperty.arraySize > 0)
             {
-                var controlSchemeSerializedProperty = serializedObject
-                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
-                    .GetArrayElementAtIndex(m_selectedControlSchemeIndex);
-
-                m_ControlScheme = new InputControlScheme(controlSchemeSerializedProperty);
+                if (m_selectedControlSchemeIndex >= controlSchemesArrayProperty.arraySize)
+                    m_selectedControlSchemeIndex = 0;
+                m_ControlScheme = new InputControlScheme(
+                    controlSchemesArrayProperty.GetArrayElementAtIndex(other.m_selectedControlSchemeIndex));
+                // TODO Preserve device requirement index
             }
             else
+            {
+                m_selectedControlSchemeIndex = -1;
+                m_selectedDeviceRequirementIndex = -1;
                 m_ControlScheme = new InputControlScheme();
+            }
 
-            // Editor may leave these as null after domain reloads, so recreate them
-            m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
-                ? new Dictionary<(string, string), HashSet<int>>()
-                : other.m_ExpandedCompositeBindings;
+            // Editor may leave these as null after domain reloads, so recreate them in that case.
+            // If they exist, we attempt to just preserve the same expanded items based on name for now for simplicity.
+            m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings == null ?
+                new Dictionary<(string, string), HashSet<int>>() :
+                new Dictionary<(string, string), HashSet<int>>(other.m_ExpandedCompositeBindings);
+
             m_CutElements = other.cutElements;
         }
 
@@ -366,7 +429,7 @@ namespace UnityEngine.InputSystem.Editor
             return expandedStates;
         }
 
-        private (string, string) GetSelectedActionMapAndActionKey()
+        internal (string, string) GetSelectedActionMapAndActionKey()
         {
             var selectedActionMap = GetSelectedActionMap();
 
@@ -383,16 +446,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private SerializedProperty GetSelectedActionMap()
         {
-            return serializedObject
-                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                .GetArrayElementAtIndex(selectedActionMapIndex);
+            return Selectors.GetActionMapAtIndex(serializedObject, selectedActionMapIndex)?.wrappedProperty;
         }
-
-        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
 
         /// <summary>
         /// Expanded states for the actions tree view. These are stored per InputActionMap
         /// </summary>
+        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
+
         private readonly InputControlScheme m_ControlScheme;
     }
 
