@@ -3011,6 +3011,47 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+#if UNITY_EDITOR
+        [InitializeOnLoad]
+        public static class PlayStateNotifier
+        {
+            static PlayStateNotifier()
+            {
+                EditorApplication.playModeStateChanged += ModeChanged;
+            }
+
+            static void ModeChanged(PlayModeStateChange playModeState)
+            {
+                // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
+                // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
+                // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
+                // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
+                //
+                // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
+                // state ensures that the they are active in all of these MonoBehavior methods:
+                //
+                //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
+                //
+                switch (playModeState)
+                {
+                    case PlayModeStateChange.EnteredEditMode:
+                        actions?.Disable();
+                        break;
+
+                    case PlayModeStateChange.ExitingEditMode:
+                        break;
+
+                    case PlayModeStateChange.EnteredPlayMode:
+                        actions?.Enable();
+                        break;
+
+                    case PlayModeStateChange.ExitingPlayMode:
+                        break;
+                }
+            }
+        }
+#endif // UNITY_EDITOR
+
         internal static bool hasActions => s_Manager.actions != null;
 
         /// <summary>
@@ -3060,7 +3101,13 @@ namespace UnityEngine.InputSystem
                 if (value != null)
                 {
                     value.m_IsProjectWide = true;
+#if UNITY_EDITOR
+                    if (EditorApplication.isPlaying)
+                      value.Enable();
+#else
                     value.Enable();
+#endif // UNITY_EDITOR
+                    
                 }
                 
                 // Update underlying value
@@ -3561,8 +3608,10 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled
-            if (actions != null)
-                actions.Enable();
+#if UNITY_EDITOR
+            if (EditorApplication.isPlaying)
+#endif // UNITY_EDITOR
+            actions?.Enable();
 #endif
 
             RunInitialUpdate();
@@ -3860,6 +3909,9 @@ namespace UnityEngine.InputSystem
             // Touching the `actions` property will initialise it here (if it wasn't already).
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             // Note this is to eary for editor ! actions is not setup yet
+#if UNITY_EDITOR
+            if (EditorApplication.isPlaying)
+#endif
             actions?.Enable();
 #endif
 
