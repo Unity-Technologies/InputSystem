@@ -269,7 +269,7 @@ namespace UnityEngine.InputSystem.Editor
                 Save();
             #endif
         }
-        
+
         private void HandleOnDestroy()
         {
             // Do we have unsaved changes that we need to ask the user to save or discard?
@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem.Editor
             CleanupStateContainer();
             if (m_AssetObjectForEditing != null)
                 DestroyImmediate(m_AssetObjectForEditing);
-                
+
             m_View.DestroyView();
         }
 

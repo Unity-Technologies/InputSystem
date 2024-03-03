@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.Editor
         public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; } // Note that state doesn't own this disposable object
         private readonly List<CutElement> cutElements => m_CutElements;
-      
+
         // Control schemes
         public int selectedControlSchemeIndex { get { return m_selectedControlSchemeIndex; } }
         public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
