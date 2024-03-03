@@ -185,13 +185,13 @@ namespace UnityEngine.InputSystem.Editor
                 m_selectedDeviceRequirementIndex = -1;
                 m_ControlScheme = new InputControlScheme();
             }
-            
+
             // Editor may leave these as null after domain reloads, so recreate them in that case.
             // If they exist, we attempt to just preserve the same expanded items based on name for now for simplicity.
             m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
                 new Dictionary<(string, string), HashSet<int>>(other.m_ExpandedCompositeBindings);
-            
+
             m_CutElements = other.cutElements;
         }
 
