@@ -187,7 +187,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
-
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize();
             }
