@@ -36,6 +36,7 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetJson;
         private bool m_IsDirty;
         private StateContainer m_StateContainer;
+        private InputActionsEditorView m_View;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -200,7 +201,7 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.Clear();
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, Save);
+            m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, Save);
 
             m_StateContainer.Initialize();
         }
@@ -307,6 +308,8 @@ namespace UnityEngine.InputSystem.Editor
             CleanupStateContainer();
             if (m_AssetObjectForEditing != null)
                 DestroyImmediate(m_AssetObjectForEditing);
+
+            m_View.DestroyView();
         }
 
         private void ReshowEditorWindowWithUnsavedChanges()
