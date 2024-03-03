@@ -3090,18 +3090,27 @@ namespace UnityEngine.InputSystem
                 }
 #endif // UNITY_EDITOR
 
-                // Disable previous project-wide actions
+                // Disable previous project-wide actions if assigned in play-mode
                 if (current != null)
+                {
                     current.Disable();
+                    current.m_IsProjectWide = false;
+                }
+
+                // Enable new project-wide actions if assigned in play-mode.
+                if (value != null)
+                {
+                    value.m_IsProjectWide = true;
+#if UNITY_EDITOR
+                    if (EditorApplication.isPlaying)
+                        value.Enable();
+#else
+                    value.Enable();
+#endif // UNITY_EDITOR
+                }
 
                 // Update underlying value
                 s_Manager.actions = value;
-
-                // Enable new project-wide actions
-#if UNITY_EDITOR
-                if (EditorApplication.isPlaying)
-#endif // UNITY_EDITOR
-                value?.Enable();
             }
         }
 
@@ -3723,8 +3732,20 @@ namespace UnityEngine.InputSystem
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (actions == null)
-                actions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputActionAsset>();
+            {
+                var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+                foreach (var candidate in candidates)
+                {
+                    if (candidate.m_IsProjectWide)
+                    {
+                        actions = candidate;
+                        break;
+                    }
+                }
+            }
+#endif
 
             // No domain reloads in the player so we don't need to look for existing
             // instances.
