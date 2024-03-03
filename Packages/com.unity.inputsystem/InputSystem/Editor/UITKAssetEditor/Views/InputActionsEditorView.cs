@@ -8,7 +8,11 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputActionsEditorView : ViewBase<InputActionsEditorView.ViewState>
+    interface IPasteListener
+    {
+        void OnPaste(InputActionsEditorState state);
+    }
+    internal class InputActionsEditorView : ViewBase<InputActionsEditorView.ViewState>, IPasteListener
     {
         private const string saveButtonId = "save-asset-toolbar-button";
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
@@ -99,6 +103,8 @@ namespace UnityEngine.InputSystem.Editor
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex,
                     selectedDeviceIndex = state.selectedDeviceRequirementIndex
                 });
+
+            s_OnPasteCutElements.Add(this);
         }
 
         private void OnReset()
@@ -233,6 +239,21 @@ namespace UnityEngine.InputSystem.Editor
             public IEnumerable<InputControlScheme> controlSchemes;
             public int selectedControlSchemeIndex;
             public int selectedDeviceIndex;
+        }
+
+        internal static List<IPasteListener> s_OnPasteCutElements = new();
+
+        public override void DestroyView()
+        {
+            base.DestroyView();
+            s_OnPasteCutElements.Remove(this);
+        }
+
+        public void OnPaste(InputActionsEditorState state)
+        {
+            if (state.Equals(stateContainer.GetState()))
+                return;
+            Dispatch(Commands.DeleteCutElements());
         }
     }
 
