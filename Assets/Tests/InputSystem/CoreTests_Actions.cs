@@ -4980,6 +4980,80 @@ partial class CoreTests
         Assert.That(asset.controlSchemes[1].deviceRequirements[2].isOR, Is.True);
     }
 
+    static string MinimalJson(string name = null)
+    {
+        if (name != null)
+            return "{\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+        return "{\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameIsSetToNameFromJson_IfCreatedFromJsonWithName()
+    {
+        // When constructed from JSON containing name, ScriptableObject.name is set based on name property
+        const string name = "My Actions";
+        var json = MinimalJson(name);
+        var asset = InputActionAsset.FromJson(json);
+        var assetName = asset.name;
+        ScriptableObject.Destroy(asset);
+        Assert.That(asset.name, Is.EqualTo(name));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameIsSetToEmptyString_IfCreatedFromJsonWithoutName()
+    {
+        // When constructed from JSON without a name, ScriptableObject.name is set to empty string.
+        var json = MinimalJson();
+        var asset = InputActionAsset.FromJson(json);
+        var name = asset.name;
+        ScriptableObject.Destroy(asset);
+        Assert.That(asset.name, Is.EqualTo(string.Empty));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToObjectName_IfCreatedFromObjectWithGivenName()
+    {
+        // When serializing JSON from object with a given name, name is preserved in JSON.
+        var json = MinimalJson("Your Actions");
+        var asset = InputActionAsset.FromJson(json);
+        var content = asset.ToJson();
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(json));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithEmptyName()
+    {
+        // When serializing JSON from object empty string as given name, name property is set to empty string.
+        var asset = InputActionAsset.FromJson(MinimalJson());
+        asset.name = string.Empty; // null is not allowed when converting to JSON
+        var content = asset.ToJson();
+        var expected = MinimalJson(string.Empty);
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithNullName()
+    {
+        // When serializing JSON from object without a given name, Unity forces the name to be an empty string.
+        // Basically Unity prevents us from doing serialization an omit optional members in a convenient way.
+        // Hence this test just verifies this behavior since its expected.
+        // Hence its not possible in an easy way to provide bidirectional transformation to/from JSON.
+        // Also note that any additional user augmentation in JSON is currently not supported.
+        var asset = InputActionAsset.FromJson(MinimalJson());
+        asset.name = null;
+        var content = asset.ToJson();
+        var expected = MinimalJson(string.Empty);
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(expected));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()

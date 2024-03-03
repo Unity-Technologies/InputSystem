@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - UI Toolkit input action editor now supports showing the derived bindings.
 - Device filtering support for control schemes in the UI-Toolkit Input Asset Editor.
 - Added right-click (context) menu support for empty areas below the Action Maps/Actions lists in the Project Settings Input Action Editor and Asset Input Action Editor.
+- Added text to show which action map asset was used to create each action in the Input Debug window.
 
 ### Fixed
 - Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
@@ -57,6 +58,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
 - Fixed Save shortcut (ctrl/cmd + S by default) not saving changes in Input Actions Editor windows. [ISXB-659](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-659).
 - Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
+- Fixed duplication of project wide input actions when loading/unloading scenes.
+- Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
+- Fixed a regression in IMGUI Input Action Editor where editor would auto-save on focus lost even when the auto-save toggle was disabled.
+- Fixed an issue where UI Toolkit based editor would not properly track tentative changes associated with a moved asset file.
+- Fixed an issue where selection state of UI Toolkit editor state would not be preserved when associated with a new serialized copy of the asset.
+- Fixed an issue where any exceptions throw from within UI Toolkit event queue would only log the error message and not the full exception stack trace, making debugging more difficult.
+- Fixed an issue where UI Toolkit Input Action Editor wouldn't provide a correct modification state when coming back from domain reload.
+- Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

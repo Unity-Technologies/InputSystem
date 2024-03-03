@@ -927,6 +927,15 @@ namespace UnityEngine.InputSystem.Editor
                 var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
+                if (action.actionMap != null && action.actionMap.m_Asset != null)
+                {
+                    name += $" ({action.actionMap.m_Asset.name})";
+                }
+                else
+                {
+                    name += " (no asset)";
+                }
+
                 var item = AddChild(parent, name, ref id);
 
                 // Grab state.

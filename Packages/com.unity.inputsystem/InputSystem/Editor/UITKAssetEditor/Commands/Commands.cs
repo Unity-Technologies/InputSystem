@@ -483,7 +483,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
+                // TODO This needs to callback to owning editor to save or have asset GUID
+                // TODO It makes more sense to call back to editor since editor owns target object?
+                //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
                 return state;
             };
@@ -498,7 +500,7 @@ namespace UnityEngine.InputSystem.Editor
                     // If it changed from disabled to enabled, perform an initial save.
                     if (newValue)
                     {
-                        InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
+                        //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                         postSaveAction?.Invoke();
                     }
 

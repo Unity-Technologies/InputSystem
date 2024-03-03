@@ -52,8 +52,13 @@ namespace UnityEngine.InputSystem.Editor
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Determine if we need to preload project-wide InputActionsAsset.
+            // Also make sure we set project wide flag on object that gets serialized into build.
+            // It will allow us to find the right object if multiple preloaded assets
+            // Input System asset + user assets.
             var actions = InputSystem.actions;
             var actionsMissing = NeedsToBeAdded(preloadedAssets, actions, ref newSize);
+            if (actionsMissing)
+                actions.m_IsProjectWide = true;
 #endif
 
             // Determine if we need to preload InputSettings asset.
