@@ -123,8 +123,8 @@ internal partial class CoreTests
         three.AddAction("D");
         three.AddAction("E");
     }
-    
-    // TODO Verify 
+
+    // TODO Verify
 
     [Test]
     [Ignore("Temporarily disabled until figured out how to mock this the best way")]
