@@ -5,11 +5,13 @@ uid: project-wide-actions
 
 The Input System stores your configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an [Action Asset](ActionAssets.md) file.
 
-While it's possible to have more than one Action Asset in a project, most projects only ever need a single Action Asset. This is because an Action Asset can contain multiple [Action Maps](ActionsEditor.html#configure-action-maps), which each containing a set of actions relevant to the various parts of your project (such as UI navigation, Gameplay, etc).
+While it's possible to have more than one Action Asset in a project, most projects only ever need a single Action Asset. This is because an Action Asset can contain multiple [Action Maps](ActionsEditor.html#configure-action-maps), which each containing a set of actions relevant to the various parts of your project (such as UI navigation, gameplay, etc).
 
 The Input System's **project-wide actions** feature allows you to choose an individual Action Asset as being available project-wide, which means the actions within that asset are available more conveniently through the Input System API without needing to set up a reference to the Actions Asset.
 
-Therefore, unless you have specific project requirements that require more than one Action Asset, the recommended workflow is to use a single Action Asset assigned as the project-wide actions, as described below.
+The Action Asset assigned as project-wide is also a [preloaded asset](https://docs.unity3d.com/ScriptReference/PlayerSettings.GetPreloadedAssets.html), loaded when your app starts up, and kept available until until it terminates.
+
+Unless you have specific project requirements that require more than one Action Asset, the recommended workflow is to use a single Action Asset assigned as the project-wide actions, as described below.
 
 ## Create and Assign a Project-Wide Actions Asset
 
@@ -37,7 +39,7 @@ Once you have created and assigned project-wide actions, the Input System Packag
 
 ## The default input actions
 
-When you create and assign default project-wide actions using the method described above, the Action Asset comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
+When you create and assign default project-wide actions using the method described above, the Action Asset comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input from the most common types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
 
 These default actions mean that in many cases, you can start scripting with the Input System without any configuration by referring to the names of the default actions that are already configured for you. You can also rename and reconfigure the default actions, or delete these default configurations to suit your needs.
 
@@ -53,3 +55,4 @@ For example, you can get a reference to an action named "Move" in your project-w
   InputSystem.actions.FindAction("Move");
 ```
 
+Project-wide actions are also enabled by default. 

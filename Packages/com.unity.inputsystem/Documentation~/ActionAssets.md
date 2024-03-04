@@ -31,7 +31,7 @@ The Actions Editor which opens is identical to the [Actions Editor in the Projec
 
 ## Type-safe C# API Generation
 
-Input Action Assets have a feature that is not present for project-wide actions, which is that you can **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
+Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
 
 ### Auto-generating script code for Actions
 
