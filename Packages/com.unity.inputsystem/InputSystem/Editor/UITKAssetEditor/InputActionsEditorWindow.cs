@@ -315,17 +315,28 @@ namespace UnityEngine.InputSystem.Editor
         private void ReshowEditorWindowWithUnsavedChanges()
         {
             var window = CreateWindow<InputActionsEditorWindow>();
-            CopyOldStatsToNewWindow(window);
+
+            // Move/transfer ownership of m_AssetObjectForEditing to new window
+            window.m_AssetObjectForEditing = m_AssetObjectForEditing;
+            m_AssetObjectForEditing = null;
+
+            // Move/transfer ownership of m_State to new window (struct)
+            window.m_State = m_State;
+            m_State = new InputActionsEditorState();
+
+            // Just copy trivial arguments
+            window.m_AssetGUID = m_AssetGUID;
+            window.m_AssetId = m_AssetId;
+            window.m_AssetJson = m_AssetJson;
+            window.m_IsDirty = m_IsDirty;
+
+            // Note that view and state container will get destroyed with this window instance
+            // and recreated for this window below
             window.BuildUI();
             window.Show();
-        }
 
-        private void CopyOldStatsToNewWindow(InputActionsEditorWindow window)
-        {
-            window.m_AssetId = m_AssetId;
-            window.m_State = m_State;
-            window.m_AssetJson = m_AssetJson;
-            window.m_IsDirty = true;
+            // Make sure window title is up to date
+            window.UpdateWindowTitle();
         }
 
         private bool TryUpdateFromAsset()

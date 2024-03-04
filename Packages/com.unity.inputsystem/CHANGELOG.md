@@ -68,6 +68,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed duplication of project wide input actions when loading/unloading scenes.
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
+- Fixed an issue where the InputActionAsset editor window would remove the unsaved changes asterisk when cancelling the window. [ISXB-797](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-797).
 
 ## [1.8.0-pre.2] - 2023-11-09
 
