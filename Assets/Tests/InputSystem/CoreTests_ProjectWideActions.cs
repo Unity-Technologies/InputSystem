@@ -86,7 +86,6 @@ internal partial class CoreTests
 
     private InputActionAsset actions;
     private InputActionAsset otherActions;
-    private int callbackCount;
 
     [OneTimeSetUp]
     public void OneTimeSetUp()
@@ -119,14 +118,6 @@ internal partial class CoreTests
             File.Delete("Assets/~TestBackupFiles.meta");
         }
 #endif // UNITY_EDITOR
-    }
-
-    [SetUp]
-    public override void Setup()
-    {
-        base.Setup();
-
-        callbackCount = 0;
     }
 
     [TearDown]
