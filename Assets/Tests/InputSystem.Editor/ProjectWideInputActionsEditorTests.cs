@@ -126,16 +126,14 @@ internal class ProjectWideInputActionsEditorTests
         ++callbackCount;
     }
 
-    // TODO This is useless when modified and tested in edit mode?!
-    // In player the tests freshly created input assets is assigned
-    [Test]
+    [Test(Description = "Verifies that project-wide actions are not set by default")]
     [Category(TestCategory)]
     public void ProjectWideActions_AreNotSetByDefault()
     {
         Assert.That(InputSystem.actions, Is.Null);
     }
 
-    [Test]
+    [Test(Description = "Verifies that project-wide actions defaults are constructed as an asset on the default asset path")]
     [Category(TestCategory)]
     public void ProjectWideActionsAsset_HasFilenameName()
     {
@@ -153,7 +151,7 @@ internal class ProjectWideInputActionsEditorTests
 
     // This test is only relevant for the InputForUI module which native part was introduced in 2023.2
 #if UNITY_2023_2_OR_NEWER
-    [Test]
+    [Test(Description = "Verifies that modifying the default project-wide action UI map generates console warnings")]
     [Category(TestCategory)]
     public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()
     {
@@ -186,7 +184,7 @@ internal class ProjectWideInputActionsEditorTests
 
 #endif // UNITY_2023_2_OR_NEWER
 
-    [Test]
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired if value is different but not when value is not different")]
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent()
     {
@@ -194,37 +192,28 @@ internal class ProjectWideInputActionsEditorTests
         GivenOtherActions();
         GivenActionsCallback();
 
-#if UNITY_EDITOR
-        var expected = 0;
-#else
-        var expected = 1;
-#endif
-
         // Can assign from null to null (no change)
         InputSystem.actions = null;
-        Assert.That(callbackCount, Is.EqualTo(expected));
+        Assert.That(callbackCount, Is.EqualTo(0));
 
         // Can assign asset from null to instance (change)
         InputSystem.actions = actions;
-        expected++;
-        Assert.That(callbackCount, Is.EqualTo(expected));
+        Assert.That(callbackCount, Is.EqualTo(1));
 
         // Can assign from instance to same instance (no change)
         InputSystem.actions = actions;
-        Assert.That(callbackCount, Is.EqualTo(expected));
+        Assert.That(callbackCount, Is.EqualTo(1)); // no callback expected
 
         // Can assign another instance (change
         InputSystem.actions = otherActions;
-        expected++;
-        Assert.That(callbackCount, Is.EqualTo(expected));
+        Assert.That(callbackCount, Is.EqualTo(2));
 
         // Can assign asset from instance to null (change)
         InputSystem.actions = null;
-        expected++;
-        Assert.That(callbackCount, Is.EqualTo(expected));
+        Assert.That(callbackCount, Is.EqualTo(3));
     }
 
-    [Test]
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when currently being assigned to a destroyed object and then assigning null")]
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenHavingDestroyedObjectAndAssignedNull()
     {
@@ -249,7 +238,7 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(callbackCount, Is.EqualTo(2));
     }
 
-    [Test]
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when assigned a destroyed object")]
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenAssignedDestroyedObject()
     {
@@ -274,9 +263,9 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(callbackCount, Is.EqualTo(2));
     }
 
-    [Test]
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when assigning and current object has been destroyed")]
     [Category(TestCategory)]
-    public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenHavingDestroyedObjectAndAssignedOther()
+    public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenAssignedAndDifferent_WhenHavingDestroyedObjectAndAssignedOther()
     {
         GivenActions();
         GivenOtherActions();
