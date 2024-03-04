@@ -233,6 +233,11 @@ namespace UnityEngine.InputSystem.Editor
         private void Save()
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            var projectWideActions = InputSystem.actions;
+            if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
+                ProjectWideActionsAsset.Validate(GetEditedAsset());
+            #endif
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
         }

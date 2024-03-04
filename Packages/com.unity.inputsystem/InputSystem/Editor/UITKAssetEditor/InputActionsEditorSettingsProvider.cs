@@ -106,7 +106,7 @@ namespace UnityEngine.InputSystem.Editor
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
                 var asset = GetAsset();
                 if (asset != null)
-                    ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
+                    ValidateAndSaveAsset(asset);
                 #endif
             }
         }
@@ -119,8 +119,14 @@ namespace UnityEngine.InputSystem.Editor
             // Project wide input actions always auto save - don't check the asset auto save status
             var asset = GetAsset();
             if (asset != null)
-                ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
+                ValidateAndSaveAsset(asset);
             #endif
+        }
+
+        private void ValidateAndSaveAsset(InputActionAsset asset)
+        {
+            ProjectWideActionsAsset.Validate(asset); // Ignore validation result for save
+            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         private void CreateUI()

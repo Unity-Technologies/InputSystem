@@ -3089,9 +3089,15 @@ namespace UnityEngine.InputSystem
                 if (ReferenceEquals(current, value))
                     return;
 
+                var valueIsNotNull = value != null;
 #if UNITY_EDITOR
-                // Track reference to enable including it in built Players
-                InputSettingsBuildProvider.actionsToIncludeInPlayerBuild = value;
+                // Do not allow assigning non-persistent assets (pure in-memory objects)
+                if (valueIsNotNull && !EditorUtility.IsPersistent(value))
+                    throw new ArgumentException($"Assigning a non-persistent {nameof(InputActionAsset)} to this property is not allowed. The assigned asset need to be persisted on disc inside the /Assets folder.");
+
+                // Track reference to enable including it in built Players, note that it will discard any non-persisted
+                // object reference
+                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
 #endif // UNITY_EDITOR
 
                 // Disable previous project-wide actions if assigned in play-mode
@@ -3102,7 +3108,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Enable new project-wide actions if assigned in play-mode.
-                if (value != null)
+                if (valueIsNotNull)
                 {
                     value.m_IsProjectWide = true;
 #if UNITY_EDITOR
@@ -3572,14 +3578,16 @@ namespace UnityEngine.InputSystem
                     s_Manager.ApplySettings();
                 }
 
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // See if we have a saved actions object
-                var savedActions = InputSettingsBuildProvider.actionsToIncludeInPlayerBuild;
+                var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                 {
                     if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
                         Object.DestroyImmediate(s_Manager.m_Actions);
                     s_Manager.m_Actions = savedActions;
                 }
+                #endif
 
                 InputEditorUserSettings.Load();
 
@@ -3612,11 +3620,19 @@ namespace UnityEngine.InputSystem
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled
+            // Make sure project wide input actions are enabled, note that UnityEngine.Object do not support ?. properly
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying)
+            {
+                var actionsValue = actions;
+                if (actionsValue != null)
+                    actionsValue.Enable();
+            }
+#else
+            var actionsValue = actions;
+            if (actionsValue != null)
+                actionsValue.Enable();
 #endif // UNITY_EDITOR
-            actions?.Enable();
 #endif
 
             RunInitialUpdate();

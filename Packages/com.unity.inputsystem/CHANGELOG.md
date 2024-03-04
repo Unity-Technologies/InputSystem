@@ -16,6 +16,8 @@ however, it has to be formatted properly to pass verification tests.
 - Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 - Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
 - Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
+- `InputSystem.actions` may now only be assigned in edit-mode. Any attempt to assign `InputSystem.actions` during play-mode will generate an exception.
+- `InputSystem.actions` may now only be assigned a persisted `InputActionAsset` instance since in-memory objects can anyway not be included in a player build. This now generates an `ArgumentException` when attempting to assign a non-persisted object.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -68,6 +70,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed duplication of project wide input actions when loading/unloading scenes.
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
+- Fixed an issue where InputActionAsset validation where not triggered for Project-wide input actions when the project-wide asset was edited in a regular windowed Input Action Asset editor window.
+- Updated InputSystem.actions and InputSystem.onActionsChanged property documentation to properly define API contract.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

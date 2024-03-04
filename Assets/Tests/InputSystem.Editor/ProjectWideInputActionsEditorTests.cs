@@ -1,5 +1,6 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -9,6 +10,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 internal class ProjectWideInputActionsEditorTests
 {
@@ -27,7 +29,9 @@ internal class ProjectWideInputActionsEditorTests
 
     private InputActionAsset savedUserActions;
     private InputActionAsset actions;
+    private bool actionsArePersisted;
     private InputActionAsset otherActions;
+    private bool otherActionsArePersisted;
     private int callbackCount;
 
     [OneTimeSetUp]
@@ -79,13 +83,16 @@ internal class ProjectWideInputActionsEditorTests
         AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
 
         // Clean-up objects created during test
-        if (actions != null)
+        if (actions != null && !actionsArePersisted)
             Object.DestroyImmediate(actions);
-        if (otherActions != null)
+        if (otherActions != null && !otherActionsArePersisted)
             Object.DestroyImmediate(otherActions);
 
         // Restore actions
         InputSystem.actions = savedUserActions;
+
+        // Clean-up
+        AssetDatabaseUtils.Restore();
     }
 
     private void GivenActionsCallback()
@@ -93,11 +100,8 @@ internal class ProjectWideInputActionsEditorTests
         InputSystem.onActionsChange += OnActionsChange;
     }
 
-    private void GivenActions()
+    private void GivenActions(bool persisted = false)
     {
-        if (actions != null)
-            return;
-
         // Create a small InputActionsAsset on the fly that we utilize for testing
         actions = ScriptableObject.CreateInstance<InputActionAsset>();
         actions.name = "TestAsset";
@@ -106,19 +110,34 @@ internal class ProjectWideInputActionsEditorTests
         one.AddAction("B");
         var two = actions.AddActionMap("Two");
         two.AddAction("C");
+
+        if (persisted)
+        {
+            var json = actions.ToJson();
+            Object.DestroyImmediate(actions);
+            actions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
+
+            actionsArePersisted = true;
+        }
     }
 
-    private void GivenOtherActions()
+    private void GivenOtherActions(bool persisted = false)
     {
-        if (otherActions != null)
-            return;
-
         // Create a small InputActionsAsset on the fly that we utilize for testing
         otherActions = ScriptableObject.CreateInstance<InputActionAsset>();
         otherActions.name = "OtherTestAsset";
         var three = otherActions.AddActionMap("Three");
         three.AddAction("D");
         three.AddAction("E");
+
+        if (persisted)
+        {
+            var json = otherActions.ToJson();
+            Object.DestroyImmediate(otherActions);
+            otherActions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
+
+            otherActionsArePersisted = true;
+        }
     }
 
     private void OnActionsChange()
@@ -135,7 +154,7 @@ internal class ProjectWideInputActionsEditorTests
 
     [Test(Description = "Verifies that project-wide actions defaults are constructed as an asset on the default asset path")]
     [Category(TestCategory)]
-    public void ProjectWideActionsAsset_HasFilenameName()
+    public void ProjectWideActionsAsset_DefaultAssetFileHasDefaultContent()
     {
         // Expect asset name to be set to the file name
         var expectedName = Path.GetFileNameWithoutExtension(ProjectWideActionsAsset.defaultAssetPath);
@@ -188,8 +207,8 @@ internal class ProjectWideInputActionsEditorTests
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent()
     {
-        GivenActions();
-        GivenOtherActions();
+        GivenActions(persisted: true);
+        GivenOtherActions(persisted: true);
         GivenActionsCallback();
 
         // Can assign from null to null (no change)
@@ -213,12 +232,53 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(callbackCount, Is.EqualTo(3));
     }
 
-    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when currently being assigned to a destroyed object and then assigning null")]
+    [Test(Description = "Verifies that when assigning InputSystem.actions in edit-mode, build settings are updated")]
     [Category(TestCategory)]
-    public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenHavingDestroyedObjectAndAssignedNull()
+    public void ProjectWideActions_WillUpdateBuildSettingsWhenChanged()
+    {
+        GivenActions(persisted: true);
+        GivenOtherActions(persisted: true);
+        GivenActionsCallback();
+
+        Debug.Assert(EditorUtility.IsPersistent(actions));
+
+        // Can assign from null to null (no change)
+        InputSystem.actions = null;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(null));
+
+        // Can assign asset from null to instance (change)
+        InputSystem.actions = actions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(actions));
+
+        // Can assign from instance to same instance (no change)
+        InputSystem.actions = actions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(actions));
+
+        // Can assign another instance (change
+        InputSystem.actions = otherActions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(otherActions));
+
+        // Can assign asset from instance to null (change)
+        InputSystem.actions = null;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(null));
+    }
+
+    [Test(Description =
+            "Verifies that when assigning InputSystem.actions in edit-mode with a temporary object not persisted on disc, an exception is thrown")]
+    [Category(TestCategory)]
+    public void ProjectWideActions_ThrowsArgumentException_WhenAssignedFromNonPersistedObject()
     {
         GivenActions();
-        GivenOtherActions();
+
+        Assert.Throws<ArgumentException>(() => InputSystem.actions = actions);
+    }
+
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when currently being assigned to a deleted asset (destroyed object) and then assigning null")]
+    [Category(TestCategory)]
+    public void ProjectWideActions_CanBeAssignedNullAndFiresCallback_WhenHavingDestroyedObjectAndAssignedNull()
+    {
+        GivenActions(persisted: true);
+        //GivenOtherActions(persisted: true);
         GivenActionsCallback();
 
         // Assign and make sure property returns the expected assigned value
@@ -226,8 +286,8 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(InputSystem.actions, Is.EqualTo(actions));
         Assert.That(callbackCount, Is.EqualTo(1));
 
-        // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
-        Object.DestroyImmediate(actions);
+        // Delete the associated asset make sure returned value evaluates to null (But actually Missing Reference).
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
         Assert.That(actions == null, Is.True);    // sanity check that it was destroyed
         Assert.That(InputSystem.actions == null); // note: we want to avoid cast to object since it would use another Equals
 
@@ -238,16 +298,17 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(callbackCount, Is.EqualTo(2));
     }
 
-    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when assigned a destroyed object")]
+    [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when the previously assigned asset has been destroyed object")]
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenAssignedDestroyedObject()
     {
-        GivenActions();
-        GivenOtherActions();
+        GivenActions(persisted: true);
+        //GivenOtherActions();
         GivenActionsCallback();
 
         // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
-        Object.DestroyImmediate(actions);
+        //Object.DestroyImmediate(actions);
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
         Assert.That(actions == null, Is.True);       // sanity check that it was destroyed
 
         // Assert that we can assign a destroyed object
@@ -267,8 +328,8 @@ internal class ProjectWideInputActionsEditorTests
     [Category(TestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenAssignedAndDifferent_WhenHavingDestroyedObjectAndAssignedOther()
     {
-        GivenActions();
-        GivenOtherActions();
+        GivenActions(persisted: true);
+        GivenOtherActions(persisted: true);
         GivenActionsCallback();
 
         // Assign and make sure property returns the expected assigned value
@@ -277,7 +338,7 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(callbackCount, Is.EqualTo(1));
 
         // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
-        Object.DestroyImmediate(actions);
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
         Assert.That(actions == null, Is.True);    // sanity check that it was destroyed
         Assert.That(InputSystem.actions == null); // note: we want to avoid cast to object since it would use another Equals
 
