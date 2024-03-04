@@ -7,7 +7,12 @@ using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 public class UnityRemoteTestScript : MonoBehaviour
 {
+// Suppress harmless warning about overriding camera from UnityEngine.Component.camera where this property have been
+// marked obsolete/deprecated and depending on Unity version this warning may trigger when building a player.
+// warning CS0109: The member 'UnityRemoteTestScript.camera' does not hide an accessible member. The new keyword is not required.
+#pragma warning disable 0109
     public new Camera camera;
+#pragma warning restore 0109
 
     public Text accelerometerInputText;
     public Text touchInputText;
