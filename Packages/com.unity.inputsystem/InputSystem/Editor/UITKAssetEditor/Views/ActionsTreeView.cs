@@ -330,21 +330,9 @@ namespace UnityEngine.InputSystem.Editor
         private void DeleteItem(ActionOrBindingData data)
         {
             if (data.isAction)
-            {
-                string actionToSelect = GetPreviousActionNameFromViewTree(data);
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
-                Dispatch(Commands.SelectAction(actionToSelect));
-            }
             else
-            {
-                int bindingIndexToSelect = GetPreviousBindingIndexFromViewTree(data, out string parentActionName);
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
-
-                if (bindingIndexToSelect >= 0)
-                    Dispatch(Commands.SelectBinding(bindingIndexToSelect));
-                else
-                    Dispatch(Commands.SelectAction(parentActionName));
-            }
 
             // Deleting an item sometimes causes the UI Panel to lose focus; make sure we keep it
             m_ActionsTreeView.Focus();
