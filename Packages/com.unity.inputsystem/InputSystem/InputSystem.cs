@@ -3060,13 +3060,16 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Project-wide actions may only be assigned in Edit Mode and any attempt to change this property
-        /// in Play Mode will result in an exception.
+        /// in Play Mode will result in an <c>System.Exception</c> being thrown.
         /// A default set of actions and action maps are installed and enabled by default on every project
         /// that enables Project-wide Input Actions by assigning a project-wide asset in Project Settings.
         /// These actions and their bindings may be modified in the Project Settings.
         /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
         /// Play Mode and automatically disabled when exiting Play Mode.
         /// The asset associated with this property will be included in a Player build as a preloaded asset.
+        ///
+        /// Note that attempting to assign a non-persisted <c>InputActionAsset</c> to this property will result in
+        /// <c>ArgumentException</c> being thrown.
         /// </remarks>
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputActionMap"/>
