@@ -68,6 +68,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
 - Fixed a compile-time warning: `warning CS0109: The member 'UnityRemoteTestScript.camera' does not hide an accessible member. The new keyword is not required.` showing up in the Console window when building a player including the Input System Unity Remote sample.
+- Fixed an issue where the InputActionAsset editor window would remove the unsaved changes asterisk when cancelling the window. [ISXB-797](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-797).
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
 - Fixed Composite types missing in context menu when "Any" ControlType selected. [ISXB-769](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-769).
