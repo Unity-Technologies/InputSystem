@@ -2,25 +2,75 @@
 
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
-#endif
-
-// TODO Since we disallow assigning InputSystem.actions in play-mode the only scenario valid
-//      to test for editor play-mode or player tests is with a fixed setup.
-// TODO Solve issue where callbacks are not restored between tests
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
+#endif // UNITY_EDITOR
 
 internal partial class CoreTests
 {
+#if UNITY_EDITOR
+    // Allows including a default project-wide asset into player tests which overrides user configured asset
+    private class ProjectWideInputActionsForTest : IPreprocessBuildWithReport, IPostprocessBuildWithReport
+    {
+        private InputActionAsset m_StoredActions;
+        private InputActionAsset m_AssetForTesting;
+        private Object m_Asset;
+
+        public int callbackOrder => 1000; // Larger than ProjectWideActionsBuilderProvider to override
+
+        private const string kAssetPath = "Assets/ProjectWideInputActionAssetForTesting.inputactions";
+
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            Debug.Assert(!File.Exists(kAssetPath));
+
+            // Store whatever setting exist before build
+            m_StoredActions = InputSystem.actions;
+
+            // Create an asset for testing
+            var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+
+            // Remove any "real" preloaded assets
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+            for (var i = preloadedAssets.Length - 1; i >= 0; --i)
+            {
+                var preloadedAsset = preloadedAssets[i] as InputActionAsset;
+                if (preloadedAsset != null)
+                {
+                    ArrayHelpers.EraseAt(ref preloadedAssets, i);
+                }
+            }
+
+            PlayerSettings.SetPreloadedAssets(preloadedAssets);
+
+            // Mark test asset to be included in build
+            asset.m_IsProjectWide = true;
+
+            // Add asset
+            m_Asset = BuildProviderHelpers.PreProcessSinglePreloadedAsset(asset);
+        }
+
+        public void OnPostprocessBuild(BuildReport report)
+        {
+            BuildProviderHelpers.PostProcessSinglePreloadedAsset(ref m_Asset);
+
+            InputSystem.actions = m_StoredActions;
+
+            // Remove the test-only asset after build
+            AssetDatabase.DeleteAsset(kAssetPath);
+        }
+    }
+#endif // UNITY_EDITOR
+
     // Note that only a selected few tests verifies the behavior associated with the editor support for
     // creating a dedicated asset. For all other logical tests we are better off constructing an asset on
     // the fly for functional tests to avoid differences between editor and playmode tests.
@@ -85,7 +135,7 @@ internal partial class CoreTests
 #if UNITY_EDITOR
         // Delete any default asset we may have created (backup is safe until test class is destroyed)
         AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-#endif
+#endif // UNITY_EDITOR
 
         // Clean-up objects created during test
         if (actions != null)
@@ -96,48 +146,30 @@ internal partial class CoreTests
         base.TearDown();
     }
 
-    private void GivenActions()
+// These are play-mode tests valid for editor play-mode or player play-mode
+    [Test]
+    [Category(TestCategory)]
+    public void ProjectWideActions_ThrowsException_WhenAssignedInPlayMode()
     {
-        if (actions != null)
-            return;
-
-        // Create a small InputActionsAsset on the fly that we utilize for testing
-        actions = ScriptableObject.CreateInstance<InputActionAsset>();
-        actions.name = "TestAsset";
-        var one = actions.AddActionMap("One");
-        one.AddAction("A");
-        one.AddAction("B");
-        var two = actions.AddActionMap("Two");
-        two.AddAction("C");
+        Assert.Throws<Exception>(() => InputSystem.actions = null);
     }
 
-    private void GivenOtherActions()
+// These are player tests of project-wide actions
+#if !UNITY_EDITOR
+    [Test]
+    [Category(TestCategory)]
+    public void ProjectWideActions_IsAutomaticallyAssignedFromPersistedAsset_WhenRunningInPlayer()
     {
-        if (otherActions != null)
-            return;
-
-        // Create a small InputActionsAsset on the fly that we utilize for testing
-        otherActions = ScriptableObject.CreateInstance<InputActionAsset>();
-        otherActions.name = "OtherTestAsset";
-        var three = otherActions.AddActionMap("Three");
-        three.AddAction("D");
-        three.AddAction("E");
+        Assert.That(InputSystem.actions, Is.Not.Null); // Verify that we have asset for testing
+        Assert.That(InputSystem.actions.name, Is.EqualTo("ProjectWideInputActionAssetForTesting"));
     }
-
-    // TODO Verify
 
     [Test]
-    [Ignore("Temporarily disabled until figured out how to mock this the best way")]
     [Category(TestCategory)]
-    public void ProjectWideActions_AppearInEnabledActions() // TODO How is this really related to project-wide? Checking they are enabled?
+    public void ProjectWideActions_AppearInEnabledActions()
     {
-        GivenActions();
-
-        // Setup project-wide actions
-        InputSystem.actions = actions;
-
         // Assert that project-wide actions get enabled by default
-        var actionCount = 3;
+        var actionCount = 19;
         var enabledActions = InputSystem.ListEnabledActions();
         Assert.That(enabledActions, Has.Count.EqualTo(actionCount));
 
@@ -157,5 +189,8 @@ internal partial class CoreTests
 
         // TODO Modifying the actions object after being assigned should also enable newly added actions?
     }
+
+#endif // !UNITY_EDITOR
 }
+
 #endif

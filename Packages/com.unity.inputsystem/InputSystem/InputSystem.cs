@@ -3077,11 +3077,8 @@ namespace UnityEngine.InputSystem
             set
             {
                 // Prevent this property from being assigned in play-mode.
-                // The motivation for this restriction is to avoid anyone relying on the project-wide input
-                // actions from not reacting properly to any reassignments in run-time and hence simplifies
-                // their use.
-                //if (Application.isPlaying)
-                //    throw new Exception($"Attempted to set property InputSystem.actions during Play-mode which is not supported. Assigning this property is only allowed in Edit-mode.");
+                if (Application.isPlaying)
+                    throw new Exception($"Attempted to set property InputSystem.actions during Play-mode which is not supported. Assigning this property is only allowed in Edit-mode.");
 
                 // Note that we use reference equality to determine if object changed or not.
                 // This allows us to change the associated value even if changed or destroyed.
