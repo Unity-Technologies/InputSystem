@@ -23,6 +23,9 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
 
+        private readonly ActionMapsView m_ActionMapsView;
+        private readonly ActionsTreeView m_ActionsTreeView;
+
         private readonly Action m_SaveAction;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
@@ -37,11 +40,12 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
             mainEditorAsset.CloneTree(root);
-            var actionsTreeView = new ActionsTreeView(root, stateContainer);
-            CreateChildView(new ActionMapsView(root, stateContainer));
-            CreateChildView(actionsTreeView);
+            m_ActionMapsView = new ActionMapsView(root, stateContainer);
+            m_ActionsTreeView = new ActionsTreeView(root, stateContainer);
+            CreateChildView(m_ActionMapsView);
+            CreateChildView(m_ActionsTreeView);
             CreateChildView(new PropertiesView(root, stateContainer));
-            InputActionViewsControlsHolder.Initialize(root, actionsTreeView);
+            InputActionViewsControlsHolder.Initialize(root, m_ActionsTreeView);
 
             m_ControlSchemesToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             m_ControlSchemesToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));
@@ -256,12 +260,12 @@ namespace UnityEngine.InputSystem.Editor
             if (copiedType == typeof(InputActionMap))
             {
                 evt.StopPropagation();
-                Dispatch(Commands.PasteActionMaps());
+                m_ActionMapsView.PasteItems(false);
             }
             else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
             {
                 evt.StopPropagation();
-                Dispatch(Commands.PasteActionsOrBindings());
+                m_ActionsTreeView.PasteItems();
             }
         }
 
