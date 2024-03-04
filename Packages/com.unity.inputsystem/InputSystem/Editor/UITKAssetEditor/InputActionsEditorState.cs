@@ -113,16 +113,6 @@ namespace UnityEngine.InputSystem.Editor
             m_CutElements = cutElements;
         }
 
-        private static int AdjustSelection(SerializedObject serializedObject, string propertyName, int index)
-        {
-            if (index < 0)
-                return index;
-            var controlSchemesArrayProperty = serializedObject.FindProperty(propertyName);
-            if (index >= controlSchemesArrayProperty.arraySize)
-                return 0;
-            return index;
-        }
-
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
             // Assign serialized object, not that this might be equal to other.serializedObject,
