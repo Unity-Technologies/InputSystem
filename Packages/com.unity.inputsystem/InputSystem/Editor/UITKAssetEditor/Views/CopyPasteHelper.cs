@@ -285,13 +285,15 @@ namespace UnityEngine.InputSystem.Editor
         private static void PasteAction(SerializedProperty arrayProperty, string jsonToInsert, int indexToInsert)
         {
             var json = jsonToInsert.Split(k_BindingData, StringSplitOptions.RemoveEmptyEntries);
-            var bindingJsons = json[1].Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
+            var bindingJsons = new string[] {};
+            if (json.Length > 1)
+                bindingJsons = json[1].Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
             var property = PasteElement(arrayProperty, json[0], indexToInsert, out _, "");
             var newName = PropertyName(property);
             var newId = property.FindPropertyRelative("m_Id").stringValue;
             var actionMapTo = Selectors.GetActionMapForAction(s_State, newId);
             var bindingArrayToInsertTo = actionMapTo.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var index = Selectors.GetBindingIndexBeforeAction(arrayProperty, indexToInsert, bindingArrayToInsertTo);
+            var index = Mathf.Clamp(Selectors.GetBindingIndexBeforeAction(arrayProperty, indexToInsert, bindingArrayToInsertTo), 0, bindingArrayToInsertTo.arraySize);
             foreach (var bindingJson in bindingJsons)
             {
                 var newIndex = PasteBindingOrComposite(bindingArrayToInsertTo, bindingJson, index, newName, false);
@@ -393,6 +395,51 @@ namespace UnityEngine.InputSystem.Editor
             elementProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
 
             return elementProperty;
+        }
+
+        public static int DeleteCutElements(InputActionsEditorState state)
+        {
+            if (!state.hasCutElements)
+                return -1;
+            var cutElements = state.GetCutElements();
+            var index = state.selectedActionMapIndex;
+            if (cutElements[0].type == typeof(InputAction))
+                index = state.selectedActionIndex;
+            else if (cutElements[0].type == typeof(InputBinding))
+                index = state.selectionType == SelectionType.Binding ? state.selectedBindingIndex : state.selectedActionIndex;
+
+            foreach (var cutElement in cutElements)
+            {
+                var cutIndex = cutElement.GetIndexOfProperty(state);
+                var actionMapIndex = cutElement.actionMapIndex(state);
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
+                var isInsertBindingIntoAction = cutElement.type == typeof(InputBinding) && state.selectionType == SelectionType.Action;
+                if (cutElement.type == typeof(InputBinding) || cutElement.type == typeof(InputAction))
+                {
+                    if (cutElement.type == typeof(InputAction))
+                    {
+                        var action = Selectors.GetActionForIndex(actionMap, cutIndex);
+                        var id = InputActionSerializationHelpers.GetId(action);
+                        InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, id);
+                    }
+                    else
+                    {
+                        var binding = Selectors.GetCompositeOrBindingInMap(actionMap, cutIndex).wrappedProperty;
+                        if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite && !isInsertBindingIntoAction)
+                            index -= InputActionSerializationHelpers.GetCompositePartCount(Selectors.GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings)), cutIndex);
+                        InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
+                    }
+                    if (cutIndex <= index && actionMapIndex == state.selectedActionMapIndex && !isInsertBindingIntoAction)
+                        index--;
+                }
+                else if (cutElement.type == typeof(InputActionMap))
+                {
+                    InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, InputActionSerializationHelpers.GetId(actionMap));
+                    if (cutIndex <= index)
+                        index--;
+                }
+            }
+            return index;
         }
 
         #endregion

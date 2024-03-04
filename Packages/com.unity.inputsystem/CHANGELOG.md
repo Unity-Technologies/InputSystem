@@ -65,6 +65,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where selection state of UI Toolkit editor state would not be preserved when associated with a new serialized copy of the asset.
 - Fixed an issue where any exceptions throw from within UI Toolkit event queue would only log the error message and not the full exception stack trace, making debugging more difficult.
 - Fixed an issue where UI Toolkit Input Action Editor wouldn't provide a correct modification state when coming back from domain reload.
+- Fixed duplication of project wide input actions when loading/unloading scenes.
+- Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
 - Fixed an issue where aliased enum values for ´GamepadButton´ would be seemingly randomly picked from an Inspector value picker. This is resolved with a custom property drawer that maps to a designated aliased type. [ISXB-543](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-543).
 
 ## [1.8.0-pre.2] - 2023-11-09
