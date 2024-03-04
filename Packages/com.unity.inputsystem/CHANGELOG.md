@@ -39,7 +39,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
-- Fixed selection not changing when right-clicking an Action Map or Action in the Project Settings Input Action Editor.
+- Fixed selection not changing when right-clicking an Action Map or Action in the Project Settings Input Actions Editor.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
@@ -52,26 +52,27 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
 - Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
 - Fixed InputAction asset appearing dirty after rename [ISXB-749](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
-- Fixed Error logged when InputActionEditor window opened without a valid asset.
+- Fixed Error logged when InputActionsEditor window opened without a valid asset.
 - Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
 - Fixed Project Settings header title styling for Input Actions editor.
 - Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
 - Fixed Save shortcut (ctrl/cmd + S by default) not saving changes in Input Actions Editor windows. [ISXB-659](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-659).
-- Fixed headers in InputActionEditor windows becoming squashed when there is a large number of Action Maps/Actions.
+- Fixed headers in InputActionsEditor windows becoming squashed when there is a large number of Action Maps/Actions.
 - Fixed duplication of project wide input actions when loading/unloading scenes.
 - Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
 - Fixed a regression in IMGUI Input Action Editor where editor would auto-save on focus lost even when the auto-save toggle was disabled.
 - Fixed an issue where UI Toolkit based editor would not properly track tentative changes associated with a moved asset file.
 - Fixed an issue where selection state of UI Toolkit editor state would not be preserved when associated with a new serialized copy of the asset.
 - Fixed an issue where any exceptions throw from within UI Toolkit event queue would only log the error message and not the full exception stack trace, making debugging more difficult.
-- Fixed an issue where UI Toolkit Input Action Editor wouldn't provide a correct modification state when coming back from domain reload.
-- Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue where UI Toolkit Input Actions Editor wouldn't provide a correct modification state when coming back from domain reload.
+- Fixed an issue in the Input Actions Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
 - Fixed a compile-time warning: `warning CS0109: The member 'UnityRemoteTestScript.camera' does not hide an accessible member. The new keyword is not required.` showing up in the Console window when building a player including the Input System Unity Remote sample.
 - Fixed an issue where the InputActionAsset editor window would remove the unsaved changes asterisk when cancelling the window. [ISXB-797](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-797).
-- Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
-- Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
+- Fixed an issue in the Input Actions Editor window where deleting items unfolded other actions or the selection switched unintended.
 - Fixed Composite types missing in context menu when "Any" ControlType selected. [ISXB-769](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-769).
+- Fixed 3D Vector and 1D Axis binding dropdown usage in Input Actions Editor throwing NotImplementedExceptions.
+- Fixed several missing tooltips from the Action/Binding Properties pane in Input Actions Editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
