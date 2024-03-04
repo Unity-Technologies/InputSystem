@@ -145,7 +145,7 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(asset.name, Is.EqualTo(expectedName));
 
         // Expect JSON name to be set to the file name
-        var json = EditorHelpers.ReadAllText(ProjectWideActionsAsset.defaultAssetPath);
+        var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(ProjectWideActionsAsset.defaultAssetPath));
         var parsedAsset = InputActionAsset.FromJson(json);
         Assert.That(parsedAsset.name, Is.EqualTo(expectedName));
         Object.DestroyImmediate(parsedAsset);
