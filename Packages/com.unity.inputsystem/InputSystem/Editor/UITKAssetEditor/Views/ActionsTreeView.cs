@@ -96,6 +96,8 @@ namespace UnityEngine.InputSystem.Editor
                     e.Q<VisualElement>("icon").style.backgroundImage =
                         new StyleBackground(
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
+
+                e.SetEnabled(!item.isCut);
             };
 
             m_ActionsTreeView.itemsChosen += objects =>
@@ -365,7 +367,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void PasteItems()
         {
-            Dispatch(Commands.PasteActionsOrBindings());
+            Dispatch(Commands.PasteActionsOrBindings(InputActionsEditorView.s_OnPasteCutElements));
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
@@ -546,7 +548,7 @@ namespace UnityEngine.InputSystem.Editor
 
     internal struct ActionOrBindingData
     {
-        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1)
+        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1, bool isCut = false)
         {
             this.name = name;
             this.isComposite = isComposite;
@@ -556,6 +558,7 @@ namespace UnityEngine.InputSystem.Editor
             this.bindingIndex = bindingIndex;
             this.isAction = isAction;
             this.actionIndex = actionIndex;
+            this.isCut = isCut;
         }
 
         public string name { get; }
@@ -566,6 +569,7 @@ namespace UnityEngine.InputSystem.Editor
         public string controlLayout { get; }
         public int bindingIndex { get; }
         public int actionIndex { get; }
+        public bool isCut { get; }
     }
 
     internal static partial class Selectors
@@ -613,7 +617,7 @@ namespace UnityEngine.InputSystem.Editor
                                 var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
                                 compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
                                     new ActionOrBindingData(isAction: false, name, actionMapIndex, isComposite: false,
-                                        isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding)));
+                                        isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, nextBinding.indexOfBinding))));
                             }
                             else
                                 hiddenCompositeParts = true;
@@ -628,7 +632,7 @@ namespace UnityEngine.InputSystem.Editor
                         var shouldCompositeBeVisible = !(compositeItems.Count == 0 && hiddenCompositeParts); //hide composite if all parts are hidden
                         if (shouldCompositeBeVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
-                                new ActionOrBindingData(isAction: false, serializedInputBinding.name, actionMapIndex, isComposite: true, isPartOfComposite: false, action.expectedControlType, bindingIndex: serializedInputBinding.indexOfBinding),
+                                new ActionOrBindingData(isAction: false, serializedInputBinding.name, actionMapIndex, isComposite: true, isPartOfComposite: false, action.expectedControlType, bindingIndex: serializedInputBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, serializedInputBinding.indexOfBinding)),
                                 compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
@@ -637,11 +641,12 @@ namespace UnityEngine.InputSystem.Editor
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
                                 new ActionOrBindingData(isAction: false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
-                                    isComposite: false, isPartOfComposite: false, GetControlLayout(serializedInputBinding.path), bindingIndex: serializedInputBinding.indexOfBinding)));
+                                    isComposite: false, isPartOfComposite: false, GetControlLayout(serializedInputBinding.path), bindingIndex: serializedInputBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, serializedInputBinding.indexOfBinding))));
                     }
                 }
+                var actionIndex = action.wrappedProperty.GetIndexOfArrayElement();
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(actionId, idDictionary),
-                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false, isPartOfComposite: false, action.expectedControlType, actionIndex: action.wrappedProperty.GetIndexOfArrayElement()), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false, isPartOfComposite: false, action.expectedControlType, actionIndex: actionIndex, isCut: state.IsActionCut(actionMapIndex, actionIndex)), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }

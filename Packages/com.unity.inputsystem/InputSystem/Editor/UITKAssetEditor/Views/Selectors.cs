@@ -47,11 +47,28 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputActionMap? GetActionMapAtIndex(InputActionsEditorState state, int index)
         {
-            var actionMaps = state.serializedObject
-                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-            if (actionMaps == null || index < 0 || index > actionMaps.arraySize - 1)
+            return GetActionMapAtIndex(state.serializedObject, index);
+        }
+
+        public static SerializedInputActionMap? GetActionMapAtIndex(SerializedObject serializedObject, int index)
+        {
+            var actionMaps = serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            if (actionMaps == null || index < 0 || index >= actionMaps.arraySize)
                 return null;
             return new SerializedInputActionMap(actionMaps.GetArrayElementAtIndex(index));
+        }
+
+        public static int GetActionMapIndexFromId(SerializedObject serializedObject, Guid id)
+        {
+            Debug.Assert(serializedObject.targetObject is InputActionAsset);
+            return InputActionSerializationHelpers.GetIndex(
+                serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps)), id);
+        }
+
+        public static int GetActionIndexFromId(SerializedProperty actionMapProperty, Guid id)
+        {
+            return InputActionSerializationHelpers.GetIndex(
+                actionMapProperty.FindPropertyRelative(nameof(InputActionMap.m_Actions)), id);
         }
 
         public static int? GetBindingCount(SerializedProperty actionMap)
@@ -59,7 +76,7 @@ namespace UnityEngine.InputSystem.Editor
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.arraySize;
         }
 
-        private static List<SerializedProperty> GetBindingsForAction(string actionName, InputActionsEditorState state)
+        public static List<SerializedProperty> GetBindingsForAction(string actionName, InputActionsEditorState state)
         {
             var actionMap = GetSelectedActionMap(state);
             var bindingsOfAction = actionMap?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
@@ -73,12 +90,20 @@ namespace UnityEngine.InputSystem.Editor
             return GetBindingsForAction(action.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue, state);
         }
 
+        public static int GetLastBindingIndexForSelectedAction(InputActionsEditorState state)
+        {
+            var actionName = GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue;
+            var bindingsOfAction = GetBindingsForAction(actionName, state);
+            return bindingsOfAction.Count > 0 ? bindingsOfAction.Select(b => b.GetIndexOfArrayElement()).Max() : 0;
+        }
+
         public static int GetSelectedBindingIndexAfterCompositeBindings(InputActionsEditorState state)
         {
             var bindings = GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             var item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(state.selectedBindingIndex));
             var index = state.selectedBindingIndex + (item.isComposite || item.isPartOfComposite ? 1 : 0);
             var toSkip = 0;
+
             while (index < bindings.arraySize && new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index)).isPartOfComposite)
             {
                 toSkip++;
@@ -99,12 +124,17 @@ namespace UnityEngine.InputSystem.Editor
                     return lastBindingOfAction.GetIndexOfArrayElement() + 1;
                 offset++;
             }
-            return 0; //no actions with bindings before paste index
+            return -1; //no actions with bindings before paste index
         }
 
         public static int? GetActionCount(SerializedProperty actionMap)
         {
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.arraySize;
+        }
+
+        public static int GetActionMapCount(SerializedObject serializedObject)
+        {
+            return serializedObject == null ? 0 : serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps)).arraySize;
         }
 
         public static int? GetActionMapCount(InputActionsEditorState state)
@@ -134,7 +164,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedProperty GetBindingForId(InputActionsEditorState state, string id, out SerializedProperty bindingArray)
         {
-            var actionMaps = state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            return GetBindingForId(state.serializedObject, id, out bindingArray);
+        }
+
+        public static SerializedProperty GetBindingForId(SerializedObject serializedObject, string id, out SerializedProperty bindingArray)
+        {
+            var actionMaps = serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
             for (int i = 0; i < actionMaps?.arraySize; i++)
             {
                 var bindings = actionMaps.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputActionMap.m_Bindings));

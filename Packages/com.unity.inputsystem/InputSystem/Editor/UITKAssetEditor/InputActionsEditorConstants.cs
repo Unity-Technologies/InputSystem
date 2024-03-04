@@ -1,10 +1,10 @@
-using UnityEngine.UIElements;
-
 #if UNITY_EDITOR
+
 namespace UnityEngine.InputSystem.Editor
 {
     internal static class InputActionsEditorConstants
     {
+        // Paths
         public const string PackagePath = "Packages/com.unity.inputsystem";
         public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 

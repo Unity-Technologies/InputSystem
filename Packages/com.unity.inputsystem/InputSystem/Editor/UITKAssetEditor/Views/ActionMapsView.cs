@@ -2,7 +2,6 @@
 using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -21,13 +20,14 @@ namespace UnityEngine.InputSystem.Editor
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
-                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+                Dispatch(Commands.SelectActionMap(((ActionMapData)m_ListView.selectedItem).mapName));
             };
 
             m_ListView.bindItem = (element, i) =>
             {
                 var treeViewItem = (InputActionMapsTreeViewItem)element;
-                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+                var mapData = (ActionMapData)m_ListView.itemsSource[i];
+                treeViewItem.label.text = mapData.mapName;
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
@@ -35,6 +35,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 treeViewItem.userData = i;
+                element.SetEnabled(!mapData.isDisabled);
 
                 ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem);
             };
@@ -62,8 +63,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.itemIndexChanged += OnReorder;
 
 
-            CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
-                (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
+            CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) => new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList())));
 
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
             m_AddActionMapButton.clicked += AddActionMap;
@@ -73,7 +73,6 @@ namespace UnityEngine.InputSystem.Editor
 
         void OnDroppedHandler(int mapIndex)
         {
-            Dispatch(Commands.CutActionsOrBindings());
             Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
         }
 
@@ -84,11 +83,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
-            m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
+            m_ListView.itemsSource = viewState.actionMapData?.ToList() ?? new List<ActionMapData>();
             if (viewState.selectedActionMap.HasValue)
             {
-                var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name);
-                m_ListView.SetSelection(indexOf);
+                var actionMapData = viewState.actionMapData?.Find(map => map.mapName.Equals(viewState.selectedActionMap.Value.name));
+                if (actionMapData.HasValue)
+                    m_ListView.SetSelection(viewState.actionMapData.IndexOf(actionMapData.Value));
             }
             m_ListView.Rebuild();
             RenameNewActionMaps();
@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void PasteItems(bool copiedAction)
         {
-            Dispatch(copiedAction ? Commands.PasteActionFromActionMap() : Commands.PasteActionMaps());
+            Dispatch(copiedAction ? Commands.PasteActionFromActionMap(InputActionsEditorView.s_OnPasteCutElements) : Commands.PasteActionMaps(InputActionsEditorView.s_OnPasteCutElements));
         }
 
         private void ChangeActionMapName(int index, string newName)
@@ -217,15 +217,31 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ListView m_ListView;
         private readonly Button m_AddActionMapButton;
 
+        internal struct ActionMapData
+        {
+            internal string mapName;
+            internal bool isDisabled;
+
+            public ActionMapData(string mapName, bool isDisabled)
+            {
+                this.mapName = mapName;
+                this.isDisabled = isDisabled;
+            }
+        }
+
         internal class ViewState
         {
             public SerializedInputActionMap? selectedActionMap;
-            public IEnumerable<string> actionMapNames;
+            public List<ActionMapData> actionMapData;
 
-            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames)
+            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames, IEnumerable<string> disabledActionMapNames)
             {
                 this.selectedActionMap = selectedActionMap;
-                this.actionMapNames = actionMapNames;
+                actionMapData = new List<ActionMapData>();
+                foreach (var name in actionMapNames)
+                {
+                    actionMapData.Add(new ActionMapData(name, disabledActionMapNames.Contains(name)));
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
@@ -16,6 +17,9 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
         StateContainer m_StateContainer;
+        private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
+
+        private InputActionsEditorView m_View;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -75,6 +79,8 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onActionsChange -= BuildUI;
 
             m_IsActivated = false;
+
+            m_View.DestroyView();
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -82,6 +88,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_HasEditFocus)
             {
                 m_HasEditFocus = true;
+                m_ActiveSettingsProvider = this;
             }
         }
 
@@ -180,19 +187,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
-                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize();
-            }
-
-            // Hide the save / auto save buttons in the project wide input actions
-            // Project wide input actions always auto save
-            {
-                var element = m_RootVisualElement.Q("save-asset-toolbar-container");
-                if (element != null)
-                {
-                    element.style.visibility = Visibility.Hidden;
-                    element.style.display = DisplayStyle.None;
-                }
             }
         }
 
@@ -206,6 +202,30 @@ namespace UnityEngine.InputSystem.Editor
         {
             return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
         }
+
+        #region Shortcuts
+        [Shortcut("Input Action Editor/Project Settings/Add Action Map", null, KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddActionMap());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Action", null, KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddAction());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Binding", null, KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddBinding());
+        }
+
+        #endregion
     }
 }
 
