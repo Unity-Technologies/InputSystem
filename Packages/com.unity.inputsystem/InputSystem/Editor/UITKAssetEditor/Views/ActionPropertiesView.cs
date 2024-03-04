@@ -76,7 +76,17 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
                 });
+
+                // ISX-1916 - When changing ActionType to a non-Button type, we must also update the ControlType
+                // to the currently selected value; the ValueChangedCallback is not fired in this scenario.
+                Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
+
                 rootElement.Add(controlType);
+            }
+            else
+            {
+                // ISX-1916 - When changing ActionType to a Button, we must also reset the ControlType
+                Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
             if (inputAction.type != InputActionType.Value)
