@@ -2,13 +2,11 @@ using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Composites
@@ -172,7 +170,7 @@ namespace UnityEngine.InputSystem.Composites
     }
 
     #if UNITY_EDITOR
-    internal class Vector3CompositeEditor : InputParameterEditor<Vector2Composite>
+    internal class Vector3CompositeEditor : InputParameterEditor<Vector3Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
             "How to synthesize a Vector3 from the inputs. Digital "
@@ -181,20 +179,20 @@ namespace UnityEngine.InputSystem.Composites
 
         public override void OnGUI()
         {
-            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+            target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var modeField = new EnumField("Mode", target.mode)
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
             {
-                tooltip = m_ModeLabel.text
+                tooltip = m_ModeLabel.tooltip
             };
 
             modeField.RegisterValueChangedCallback(evt =>
             {
-                target.mode = (Vector2Composite.Mode)evt.newValue;
+                target.mode = (Vector3Composite.Mode)evt.newValue;
                 onChangedCallback();
             });
 
