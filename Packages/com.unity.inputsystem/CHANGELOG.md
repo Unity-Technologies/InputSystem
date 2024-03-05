@@ -73,6 +73,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Composite types missing in context menu when "Any" ControlType selected. [ISXB-769](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-769).
 - Fixed 3D Vector and 1D Axis binding dropdown usage in Input Actions Editor throwing NotImplementedExceptions.
 - Fixed several missing tooltips from the Action/Binding Properties pane in Input Actions Editor.
+- Fixed an issue where newly created action map names were not editable
 
 ## [1.8.0-pre.2] - 2023-11-09
 
