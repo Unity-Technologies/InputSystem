@@ -131,6 +131,26 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command ResetSelectedControlScheme()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var controlSchemeSerializedProperty = state.serializedObject
+                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
+                    .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+
+                if (controlSchemeSerializedProperty == null)
+                {
+                    return state.With(
+                        selectedControlSchemeIndex: -1,
+                        selectedControlScheme: new InputControlScheme());
+                }
+
+                return state.With(
+                    selectedControlScheme: new InputControlScheme(controlSchemeSerializedProperty));
+            };
+        }
+
         public static Command SelectDeviceRequirement(int deviceRequirementIndex)
         {
             return (in InputActionsEditorState state) => state.With(selectedDeviceRequirementIndex: deviceRequirementIndex);
