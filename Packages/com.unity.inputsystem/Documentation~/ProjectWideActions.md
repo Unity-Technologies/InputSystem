@@ -17,7 +17,7 @@ Unless you have specific project requirements that require more than one Action 
 
 To create and assign the current project-wide actions, go to **Edit** > **Project Settings** > **Input System Package**.
 
-If you don't yet have an Action Asset assigned as project-wide in your project, the Input System Package settings window displays an empty field for you to assign your action asset, and a button allowing you to create and assign one. 
+If you don't yet have an Action Asset assigned as project-wide in your project, the Input System Package settings window displays an empty field for you to assign your action asset, and a button allowing you to create and assign one.
 ![image alt text](./Images/InputSettingsNoProjectWideAsset.png)</br>
 *The Input System Package Project Settings with no project-wide actions assigned*
 
@@ -61,4 +61,4 @@ For example, you can get a reference to an action named "Move" in your project-w
   InputSystem.actions.FindAction("Move");
 ```
 
-Project-wide actions are also enabled by default. 
+Project-wide actions are also enabled by default.

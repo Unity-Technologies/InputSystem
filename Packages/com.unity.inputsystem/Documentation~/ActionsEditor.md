@@ -45,7 +45,7 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-* 
+*
 
 
 If you select an Action, you can edit its properties in the right-hand pane of the window:
