@@ -3107,15 +3107,11 @@ namespace UnityEngine.InputSystem
 
                 // Disable previous project-wide actions if assigned in play-mode
                 if (current != null)
-                {
                     current.Disable();
-                    current.m_IsProjectWide = false;
-                }
 
                 // Enable new project-wide actions if assigned in play-mode.
                 if (valueIsNotNull)
                 {
-                    value.m_IsProjectWide = true;
 #if UNITY_EDITOR
                     if (EditorApplication.isPlaying)
                         value.Enable();

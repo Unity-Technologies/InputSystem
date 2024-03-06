@@ -8,16 +8,17 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class BuildProviderHelpers
     {
+        // Adds the given object to the list of preloaded asset if not already present and
+        // returns the argument given if the object was added to the list or null if already present.
         public static Object PreProcessSinglePreloadedAsset(Object assetToPreload)
         {
-            // Precondition
             Debug.Assert(assetToPreload == null);
 
             // If we operate on temporary object instead of a properly persisted asset, adding that temporary asset
             // would result in preloadedAssets containing null object "{fileID: 0}". Hence we ignore these.
             if (EditorUtility.IsPersistent(assetToPreload))
             {
-                // Add InputSettings object assets, if it's not in there already.
+                // Add asset object, if it's not in there already.
                 var preloadedAssets = PlayerSettings.GetPreloadedAssets();
                 if (preloadedAssets != null && preloadedAssets.IndexOf(assetToPreload) == -1)
                 {
@@ -30,6 +31,9 @@ namespace UnityEngine.InputSystem.Editor
             return null;
         }
 
+        // Removes the given object from preloaded assets if present.
+        // The object passed as argument if set to null by this function regardless if existing in preloaded
+        // assets or not.
         public static void PostProcessSinglePreloadedAsset(ref Object assetAddedByThisProvider)
         {
             if (assetAddedByThisProvider == null)
