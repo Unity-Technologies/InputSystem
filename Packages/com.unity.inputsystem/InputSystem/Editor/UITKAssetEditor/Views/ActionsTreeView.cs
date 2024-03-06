@@ -315,15 +315,15 @@ namespace UnityEngine.InputSystem.Editor
             m_RenameOnActionAdded = true;
         }
 
-        internal void AddBinding(int actionIndex)
+        internal void AddBinding(int index)
         {
-            Dispatch(Commands.SelectAction(actionIndex));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddBinding());
         }
 
-        internal void AddComposite(int actionIndex, string compositeType)
+        internal void AddComposite(int index, string compositeType)
         {
-            Dispatch(Commands.SelectAction(actionIndex));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddComposite(compositeType));
         }
 
