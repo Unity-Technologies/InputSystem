@@ -31,12 +31,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
                 previous = InputSystem.actions.FindAction("Player/Previous");
                 sprint = InputSystem.actions.FindAction("Player/Sprint");
                 crouch = InputSystem.actions.FindAction("Player/Crouch");
-
-                if (!InputSystem.actions.enabled)
-                {
-                    Debug.Log("Project Wide Input Actions should be enabled by default by Unity but they are not - enabling to make sure the input works");
-                    InputSystem.actions.Enable();
-                }
             }
             else
             {
