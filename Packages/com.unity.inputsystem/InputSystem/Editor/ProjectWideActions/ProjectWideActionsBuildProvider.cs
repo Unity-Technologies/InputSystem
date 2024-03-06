@@ -30,6 +30,13 @@ namespace UnityEngine.InputSystem.Editor
             }
             set
             {
+                // Get the current persisted configuration and remove tag when changed
+                if (EditorBuildSettings.TryGetConfigObject(kEditorBuildSettingsActionsConfigKey,
+                    out InputActionAsset current))
+                {
+                    current.m_IsProjectWide = false;
+                }
+
                 // Get asset path (note that this will fail if this is an in-memory object)
                 var path = AssetDatabase.GetAssetPath(value);
                 if (string.IsNullOrEmpty(path))
@@ -40,6 +47,7 @@ namespace UnityEngine.InputSystem.Editor
                 else
                 {
                     // Add configuration object as a persisted setting
+                    value.m_IsProjectWide = true;
                     EditorBuildSettings.AddConfigObject(kEditorBuildSettingsActionsConfigKey, value, true);
                 }
             }
@@ -48,11 +56,12 @@ namespace UnityEngine.InputSystem.Editor
         public void OnPreprocessBuild(BuildReport report)
         {
             // Make sure flag is set to indicate project-wide in build
-            if (InputSystem.actions != null)
-                InputSystem.actions.m_IsProjectWide = true;
+            var actions = actionsToIncludeInPlayerBuild;
+            if (actions != null)
+                actions.m_IsProjectWide = true;
 
             // Add asset
-            m_Asset = BuildProviderHelpers.PreProcessSinglePreloadedAsset(InputSystem.actions);
+            m_Asset = BuildProviderHelpers.PreProcessSinglePreloadedAsset(actions);
         }
 
         public void OnPostprocessBuild(BuildReport report)
@@ -61,4 +70,5 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+
 #endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

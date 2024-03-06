@@ -1,12 +1,11 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using System;
 using System.Text.RegularExpressions;
 
-public class ControlSchemesEditorTests
+public class ControlSchemesEditorTests : TestFixtureBase
 {
     [Test]
     [Category("AssetEditor")]

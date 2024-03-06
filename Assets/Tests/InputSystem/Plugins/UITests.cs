@@ -114,9 +114,9 @@ internal class UITests : CoreTestsFixture
     }
 
     [SetUp]
-    public override void Setup()
+    public override void SetUp()
     {
-        base.Setup();
+        base.SetUp();
     }
 
     private static TestObjects CreateUIScene()

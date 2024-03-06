@@ -106,6 +106,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public InputActionAsset actions
         {
             get
@@ -119,6 +120,7 @@ namespace UnityEngine.InputSystem
                 ApplyActions();
             }
         }
+        #endif
 
         public InputUpdateType updateMask
         {
@@ -246,11 +248,13 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public event Action onActionsChange
         {
             add => m_ActionsChangedListeners.AddCallback(value);
             remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
+        #endif
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
 
@@ -1764,12 +1768,18 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
+        #else
+        internal void Initialize(IInputRuntime runtime, InputSettings settings)
+        #endif
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             m_Actions = actions;
+            #endif
 
             InitializeData();
             InstallRuntime(runtime);
@@ -2050,7 +2060,9 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private CallbackArray<Action> m_ActionsChangedListeners;
+        #endif
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2079,7 +2091,9 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
-        internal InputActionAsset m_Actions;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private InputActionAsset m_Actions;
+        #endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -3788,7 +3802,9 @@ namespace UnityEngine.InputSystem
                 updateMask = m_UpdateMask,
                 metrics = m_Metrics,
                 settings = m_Settings,
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 actions = m_Actions,
+                #endif
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -3808,9 +3824,11 @@ namespace UnityEngine.InputSystem
                 Object.DestroyImmediate(m_Settings);
             m_Settings = state.settings;
 
-            if (m_Actions != null)
-                Object.DestroyImmediate(m_Actions);
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Note that we just reassign actions and never destroy them since always mapped to persisted asset
+            // and hence ownership lies with ADB.
             m_Actions = state.actions;
+            #endif
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;

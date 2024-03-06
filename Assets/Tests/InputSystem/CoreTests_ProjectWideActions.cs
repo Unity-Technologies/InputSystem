@@ -5,159 +5,102 @@ using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
-using Object = UnityEngine.Object;
+using UnityEngine.TestTools;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 #endif // UNITY_EDITOR
 
-internal partial class CoreTests
+// Note that editor edit mode behavior is tested in a dedicated tes suite in editor test assembly.
+//
+// Note that play-mode and player tests both use a dedicated asset setup via build hooks so that the
+// editor build configuration for preloaded Project-wide Input Actions asset may be temporarily replaced.
+// Note that the play mode tests in this file rely on an asset stored in a random file to avoid any
+// collisions with assets that may have been created by the user. These are automatically removed on
+// test termination.
+
+[TestFixture]
+internal class ProjectWideActionsTests : CoreTestsFixture, IPrebuildSetup, IPostBuildCleanup
 {
-#if UNITY_EDITOR
-    // Allows including a default project-wide asset into player tests which overrides user configured asset
-    private class ProjectWideInputActionsForTest : IPreprocessBuildWithReport, IPostprocessBuildWithReport
+    private const string kAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.inputactions";
+    private InputActionAsset m_ActionsToIncludeInPlayerBuildBeforeSetup;
+
+    private void CreateAndAssignProjectWideTestAsset()
     {
-        private InputActionAsset m_StoredActions;
-        private InputActionAsset m_AssetForTesting;
-        private Object m_Asset;
-
-        public int callbackOrder => 1000; // Larger than ProjectWideActionsBuilderProvider to override
-
-        private const string kAssetPath = "Assets/ProjectWideInputActionAssetForTesting.inputactions";
-
-        public void OnPreprocessBuild(BuildReport report)
-        {
-            Debug.Assert(!File.Exists(kAssetPath));
-
-            // Store whatever setting exist before build
-            m_StoredActions = InputSystem.actions;
-
-            // Create an asset for testing
-            var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
-
-            // Remove any "real" preloaded assets
-            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
-            for (var i = preloadedAssets.Length - 1; i >= 0; --i)
-            {
-                var preloadedAsset = preloadedAssets[i] as InputActionAsset;
-                if (preloadedAsset != null)
-                {
-                    ArrayHelpers.EraseAt(ref preloadedAssets, i);
-                }
-            }
-
-            PlayerSettings.SetPreloadedAssets(preloadedAssets);
-
-            // Mark test asset to be included in build
-            asset.m_IsProjectWide = true;
-
-            // Add asset
-            m_Asset = BuildProviderHelpers.PreProcessSinglePreloadedAsset(asset);
-        }
-
-        public void OnPostprocessBuild(BuildReport report)
-        {
-            BuildProviderHelpers.PostProcessSinglePreloadedAsset(ref m_Asset);
-
-            InputSystem.actions = m_StoredActions;
-
-            // Remove the test-only asset after build
-            AssetDatabase.DeleteAsset(kAssetPath);
-        }
+#if UNITY_EDITOR
+        // Create a temporary asset for testing and assign it as the asset to include in player build while
+        // we at the same time preserve the current configuration so we can restore it after the test build.
+        m_ActionsToIncludeInPlayerBuildBeforeSetup = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = asset;
+#endif
     }
-#endif // UNITY_EDITOR
 
-    // Note that only a selected few tests verifies the behavior associated with the editor support for
-    // creating a dedicated asset. For all other logical tests we are better off constructing an asset on
-    // the fly for functional tests to avoid differences between editor and playmode tests.
-    //
-    // Note that player tests are currently lacking since it would require a proper asset to be configured
-    // during edit mode and then built and then loaded indirectly via config object / resources.
-    //
-    // Note that any existing default created asset is preserved during test run by moving it via ADB.
+    private void CleanupProjectWideTestAsset()
+    {
+#if UNITY_EDITOR
+        // Restore setting
+        var testAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = m_ActionsToIncludeInPlayerBuildBeforeSetup;
+        m_ActionsToIncludeInPlayerBuildBeforeSetup = null;
+
+        // Remove asset
+        var path = AssetDatabase.GetAssetPath(testAsset);
+        AssetDatabase.DeleteAsset(path);
+#endif
+    }
+
+    // Runs before player build or before play-mode tests run, not to confuse with SetUp().
+    // Runs before [OneTimeSetUp] and before [SetUp]
+    #region IPrebuildSetup
+    public void Setup() { CreateAndAssignProjectWideTestAsset(); }
+    #endregion
+
+    // Runs after player build, not to confuse with TearDown()
+    // IMPORTANT: Does not run after editor play-mode tests, but do run as expected after player test builds.
+    //            Unclear if this is an issue in UTF or something wrong with this test.
+    //            A workaround is provided via OneTimeTearDown() below.
+    #region IPostBuildCleanup
+    public void Cleanup() { CleanupProjectWideTestAsset(); }
+    #endregion
+
+    // Note that this is mainly a workaround for editor play-mode tests since IPostBuildCleanup doesn't
+    // seem to be called. This may be removed if IPostBuildCleanup is invoked according to what is stated
+    // in UTF documentation.
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        CleanupProjectWideTestAsset();
+    }
 
     const string TestCategory = "ProjectWideActions";
-    const string m_AssetBackupDirectory = "Assets/~TestBackupFiles";
-    const string s_DefaultProjectWideAssetBackupPath = "Assets/~TestBackupFilesDefaultProjectWideAssetBackup.json";
 
-    private InputActionAsset actions;
-    private InputActionAsset otherActions;
-
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-#if UNITY_EDITOR
-        // Avoid overwriting any default asset already in /Assets folder by making a backup file not visible to AssetDatabase.
-        // This is for verifying the default output of templated actions from editor tools.
-        if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
-        {
-            if (!Directory.Exists(m_AssetBackupDirectory))
-                Directory.CreateDirectory(m_AssetBackupDirectory);
-            AssetDatabase.MoveAsset(oldPath: ProjectWideActionsAsset.defaultAssetPath,
-                newPath: s_DefaultProjectWideAssetBackupPath);
-        }
-#endif // UNITY_EDITOR
-    }
-
-    [OneTimeTearDown]
-    public void OneTimeTearDown() // TODO Remove
-    {
-#if UNITY_EDITOR
-        // Restore default asset if we made a backup copy of it during setup
-        if (File.Exists(s_DefaultProjectWideAssetBackupPath))
-        {
-            if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
-                AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-            AssetDatabase.MoveAsset(oldPath: s_DefaultProjectWideAssetBackupPath,
-                newPath: ProjectWideActionsAsset.defaultAssetPath);
-            Directory.Delete("Assets/~TestBackupFiles");
-            File.Delete("Assets/~TestBackupFiles.meta");
-        }
-#endif // UNITY_EDITOR
-    }
-
-    [TearDown]
-    public override void TearDown()
-    {
-#if UNITY_EDITOR
-        // Delete any default asset we may have created (backup is safe until test class is destroyed)
-        AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-#endif // UNITY_EDITOR
-
-        // Clean-up objects created during test
-        if (actions != null)
-            Object.Destroy(actions);
-        if (otherActions != null)
-            Object.Destroy(otherActions);
-
-        base.TearDown();
-    }
-
-// These are play-mode tests valid for editor play-mode or player play-mode
-    [Test]
-    [Category(TestCategory)]
+    [Test(Description = "Verifies that attempting to assign InputSystem.actions while in play-mode throws an exception.")]
+    [NUnit.Framework.Category(TestCategory)]
     public void ProjectWideActions_ThrowsException_WhenAssignedInPlayMode()
     {
         Assert.Throws<Exception>(() => InputSystem.actions = null);
     }
 
-// These are player tests of project-wide actions
-#if !UNITY_EDITOR
-    [Test]
-    [Category(TestCategory)]
+    [Test(Description = "Verifies that when entering play-mode InputSystem.actions is automatically assigned based on editor build configuration.")]
+    [NUnit.Framework.Category(TestCategory)]
     public void ProjectWideActions_IsAutomaticallyAssignedFromPersistedAsset_WhenRunningInPlayer()
     {
-        Assert.That(InputSystem.actions, Is.Not.Null); // Verify that we have asset for testing
-        Assert.That(InputSystem.actions.name, Is.EqualTo("ProjectWideInputActionAssetForTesting"));
+        // Regardless if editor play-mode or standalone player build we should always have project-wide input actions
+        // asset for the scenario setup, derived from editor build settings or preloaded assets.
+        Assert.That(InputSystem.actions, Is.Not.Null);
+
+        // In editor play-mode we may as well verify that the asset has the expected name
+        #if UNITY_EDITOR
+        var expectedName = InputActionImporter.NameFromAssetPath(AssetDatabase.GetAssetPath(InputSystem.actions));
+        Assert.That(InputSystem.actions.name, Is.EqualTo(expectedName));
+        #endif
     }
 
     [Test]
     [Category(TestCategory)]
-    public void ProjectWideActions_AppearInEnabledActions()
+    public void ProjectWideActions_AreEnabledByDefaultInPlayModeAndAppearInEnabledActions()
     {
         // Assert that project-wide actions get enabled by default
         var actionCount = 19;
@@ -180,8 +123,6 @@ internal partial class CoreTests
 
         // TODO Modifying the actions object after being assigned should also enable newly added actions?
     }
-
-#endif // !UNITY_EDITOR
 }
 
 #endif

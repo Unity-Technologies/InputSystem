@@ -106,7 +106,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static string defaultAssetPath => kDefaultAssetPath;
 
         // Returns the default template JSON content.
-        internal static string GetDefaultAssetJson() // TODO Consider making this a functor that could be configurable to override defaults, e.g. XRI could provide their own default asset when present
+        internal static string GetDefaultAssetJson()
         {
             return File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath));
         }
@@ -141,12 +141,6 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
             return true;
         }
-
-        /*internal static bool ValidateAndSaveAsset(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
-        {
-            new DefaultInputActionAssetValidator().Validate(asset, reporter); // Currently ignoring validation result
-            return EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
-        }*/
 
         private static bool ReportError(IReportInputActionAssetValidationErrors reporter, InputAction action, string message)
         {
@@ -207,15 +201,7 @@ namespace UnityEngine.InputSystem.Editor
             // Note that the extra work here is to override the JSON name from the source asset
             var inputActionAsset = InputActionAsset.FromJson(json);
             inputActionAsset.name = InputActionImporter.NameFromAssetPath(assetPath);
-
-            var doSave = true;
-            if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
-            {
-                doSave = EditorUtility.DisplayDialog("Create Input Action Asset", "This will overwrite an existing asset. Continue and overwrite?", "Ok", "Cancel");
-            }
-            if (doSave)
-                InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
-
+            InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
     }

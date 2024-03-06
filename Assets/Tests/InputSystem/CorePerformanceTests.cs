@@ -19,9 +19,9 @@ using UnityEngine.InputSystem.Utilities;
 
 internal class CorePerformanceTests : CoreTestsFixture
 {
-    public override void Setup()
+    public override void SetUp()
     {
-        base.Setup();
+        base.SetUp();
 
         // InputTestFixture enables leak detection with stack traces for native collections. The
         // stack traces make each native container allocation extremely expensive. For our

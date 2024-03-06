@@ -3010,49 +3010,33 @@ namespace UnityEngine.InputSystem
         #region Actions
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
-#if UNITY_EDITOR
-        [InitializeOnLoad]
-        public static class PlayStateNotifier
+        // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
+        // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
+        // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
+        // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
+        //
+        // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
+        // state ensures that the they are active in all of these MonoBehavior methods:
+        //
+        //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
+        //
+        private static void EnableActions()
         {
-            static PlayStateNotifier()
-            {
-                EditorApplication.playModeStateChanged += ModeChanged;
-            }
-
-            static void ModeChanged(PlayModeStateChange playModeState)
-            {
-                // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
-                // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
-                // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
-                // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
-                //
-                // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
-                // state ensures that the they are active in all of these MonoBehavior methods:
-                //
-                //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
-                //
-                switch (playModeState)
-                {
-                    case PlayModeStateChange.EnteredEditMode:
-                        actions?.Disable();
-                        break;
-
-                    case PlayModeStateChange.ExitingEditMode:
-                        break;
-
-                    case PlayModeStateChange.EnteredPlayMode:
-                        actions?.Enable();
-                        break;
-
-                    case PlayModeStateChange.ExitingPlayMode:
-                        break;
-                }
-            }
-        }
+#if UNITY_EDITOR
+            // Abort if not in play-mode in editor
+            if (actions == null || !EditorApplication.isPlaying)
+                return;
 #endif // UNITY_EDITOR
+            if (actions != null)
+                actions.Enable();
+        }
 
-        internal static bool hasActions => s_Manager.actions != null;
+        private static void DisableActions()
+        {
+            // Make sure project wide input actions are disabled
+            if (actions != null)
+                actions.Disable();
+        }
 
         /// <summary>
         /// An input action asset (see <see cref="InputActionAsset"/>) which is always available if
@@ -3065,7 +3049,7 @@ namespace UnityEngine.InputSystem
         /// that enables Project-wide Input Actions by assigning a project-wide asset in Project Settings.
         /// These actions and their bindings may be modified in the Project Settings.
         /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
-        /// Play Mode and automatically disabled when exiting Play Mode.
+        /// Play Mode (After <c>Start()</c> but before <c>OnEnable()</c>) and automatically disabled when exiting Play Mode.
         /// The asset associated with this property will be included in a Player build as a preloaded asset.
         ///
         /// Note that attempting to assign a non-persisted <c>InputActionAsset</c> to this property will result in
@@ -3582,12 +3566,8 @@ namespace UnityEngine.InputSystem
                 // See if we have a saved actions object
                 var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
-                {
-                    if (s_Manager.m_Actions != null && s_Manager.m_Actions.hideFlags == HideFlags.HideAndDontSave)
-                        Object.DestroyImmediate(s_Manager.m_Actions);
-                    s_Manager.m_Actions = savedActions;
-                }
-                #endif
+                    s_Manager.actions = savedActions;
+                #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
                 InputEditorUserSettings.Load();
 
@@ -3621,18 +3601,12 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled, note that UnityEngine.Object do not support ?. properly
-#if UNITY_EDITOR
             if (EditorApplication.isPlaying)
             {
                 var actionsValue = actions;
                 if (actionsValue != null)
                     actionsValue.Enable();
             }
-#else
-            var actionsValue = actions;
-            if (actionsValue != null)
-                actionsValue.Enable();
-#endif // UNITY_EDITOR
 #endif
 
             RunInitialUpdate();
@@ -3657,6 +3631,9 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
+                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    EnableActions();
+                    #endif
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3668,10 +3645,9 @@ namespace UnityEngine.InputSystem
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    // Make sure project wide input actions are disabled
-                    if (actions != null)
-                        actions.Disable();
+                    DisableActions();
 #endif
+
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
 
@@ -3749,12 +3725,13 @@ namespace UnityEngine.InputSystem
         }
 
 #else
-        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null, InputActionAsset actions = null)
+        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
         {
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InputActionAsset actions = null;
             if (actions == null)
             {
                 var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
@@ -3772,7 +3749,11 @@ namespace UnityEngine.InputSystem
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings, actions);
+#else
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+#endif
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3877,7 +3858,6 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputSystem.Reset");
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
             var projectWideActions = s_Manager?.actions;
             if (projectWideActions != null)
             {
@@ -3904,7 +3884,10 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings, actions: null);
+            s_Manager.Initialize(
+                runtime: runtime ?? NativeInputRuntime.instance,
+                settings: settings,
+                actions: ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild);
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
@@ -3928,15 +3911,9 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Touching the `actions` property will initialise it here (if it wasn't already).
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            // Note this is to eary for editor ! actions is not setup yet
-#if UNITY_EDITOR
-            if (EditorApplication.isPlaying)
-#endif
-            actions?.Enable();
-#endif
+            // Note this is too early for editor ! actions is not setup yet
+            EnableActions();
 
             Profiler.EndSample();
         }

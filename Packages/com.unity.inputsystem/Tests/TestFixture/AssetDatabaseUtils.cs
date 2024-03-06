@@ -1,28 +1,27 @@
 #if UNITY_EDITOR
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem
 {
     /// Provides convenience functions for creating and managing assets for test purposes.
     /// Note that all returned paths are converted to Unix paths when running on Windows
     /// for consistency and to avoid mixed path names.
-    public class AssetDatabaseUtils
+    public static class AssetDatabaseUtils
     {
-        private const string kAssetPath = "Assets";
-        private const string kTestPath = "TestFiles";
-        private const string kMetaExtension = ".meta";
+        private const string AssetPath = "Assets";
+        private const string TestPath = "TestFiles";
+        private const string MetaExtension = ".meta";
+        private const string DefaultAssetExtension = "asset";
 
         // Perform an operation equivalent to a file delete operation outside of Unity Editor.
         // Note that meta file is also removed to avoid generating warnings about non-clean delete.
         public static void ExternalDeleteFileOrDirectory(string path)
         {
             FileUtil.DeleteFileOrDirectory(path);
-            FileUtil.DeleteFileOrDirectory(path + kMetaExtension);
+            FileUtil.DeleteFileOrDirectory(path + MetaExtension);
         }
 
         // Perform an operation equivalent to a file move operation outside of Unity Editor.
@@ -30,7 +29,7 @@ namespace UnityEngine.InputSystem
         public static void ExternalMoveFileOrDirectory(string source, string dest)
         {
             FileUtil.MoveFileOrDirectory(source, dest);
-            FileUtil.MoveFileOrDirectory(source + kMetaExtension, dest + kMetaExtension);
+            FileUtil.MoveFileOrDirectory(source + MetaExtension, dest + MetaExtension);
         }
 
         // Create an asset at the given path containing the given text content.
@@ -58,9 +57,14 @@ namespace UnityEngine.InputSystem
             return obj;
         }
 
-        private static string SanitizePath(string path)
+        public static string SanitizePath(string path)
         {
             return path?.Replace("\\", "/");
+        }
+
+        public static void CreateRootDirectory()
+        {
+            CreateDirectories(RootPath());
         }
 
         // Creates all directories (including intermediate) defined in path.
@@ -69,10 +73,10 @@ namespace UnityEngine.InputSystem
             if (Directory.Exists(path))
                 return SanitizePath(path);
 
-            var parentFolder = kAssetPath;
+            var parentFolder = AssetPath;
             path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
             var directories = path.Split('/');
-            if (directories[0] != kAssetPath)
+            if (directories[0] != AssetPath)
                 throw new ArgumentException(path);
             for (var i = 1; i < directories.Length; ++i)
             {
@@ -153,8 +157,21 @@ namespace UnityEngine.InputSystem
             return "Test_" + (int)(Math.Floor(r * scale));
         }
 
-        private static string RandomAssetFilePath(string directoryPath, string extension)
+        public static string RandomAssetFilePath<T>(string directoryPath = null)
         {
+            return RandomAssetFilePath(directoryPath, AssetFileExtensionFromType(typeof(T)));
+        }
+
+        public static string RandomAssetFilePath(string directoryPath = null, string extension = null)
+        {
+            // Default to using test files root path
+            if (directoryPath == null)
+                directoryPath = RootPath();
+
+            // Default to default extension
+            if (extension == null)
+                extension = DefaultAssetExtension;
+
             string path;
             do
             {
@@ -166,7 +183,7 @@ namespace UnityEngine.InputSystem
 
         private static string RootPath()
         {
-            return SanitizePath(Path.Combine(kAssetPath, kTestPath));
+            return SanitizePath(Path.Combine(AssetPath, TestPath));
         }
 
         public static string RandomDirectoryPath()
@@ -184,7 +201,7 @@ namespace UnityEngine.InputSystem
         {
             if (type == typeof(InputActionAsset))
                 return InputActionAsset.Extension;
-            return "asset";
+            return DefaultAssetExtension;
         }
 
         private static string DefaultContentFromType(Type type)

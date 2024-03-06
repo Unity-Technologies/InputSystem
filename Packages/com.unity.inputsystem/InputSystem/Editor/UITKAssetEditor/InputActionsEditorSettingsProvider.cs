@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_IsActivated = false;
 
-            m_View.DestroyView();
+            m_View?.DestroyView();
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -173,7 +173,12 @@ namespace UnityEngine.InputSystem.Editor
             var createAssetButton = m_RootVisualElement.Q<Button>("create-asset");
             createAssetButton?.RegisterCallback<ClickEvent>(evt =>
             {
-                InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+                var assetPath = ProjectWideActionsAsset.defaultAssetPath;
+                Dialog.Result result = Dialog.Result.Discard;
+                if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
+                    result = Dialog.InputActionAsset.ShowCreateAndOverwriteExistingAsset(assetPath);
+                if (result == Dialog.Result.Discard)
+                    InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
             });
 
             // Remove input action editor if already present

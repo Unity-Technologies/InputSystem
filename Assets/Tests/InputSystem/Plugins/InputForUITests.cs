@@ -21,9 +21,9 @@ public class InputForUITests : InputTestFixture
     InputActionAsset m_OriginalGlobalActions;
 
     [SetUp]
-    public override void Setup()
+    public override void SetUp()
     {
-        base.Setup();
+        base.SetUp();
 
         var defaultActions = new DefaultInputActions();
         defaultActions.Enable();

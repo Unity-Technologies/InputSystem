@@ -21,9 +21,9 @@ internal class EnhancedTouchTests : CoreTestsFixture
 {
     private TouchSimulation m_OldTouchSimulationInstance;
 
-    public override void Setup()
+    public override void SetUp()
     {
-        base.Setup();
+        base.SetUp();
 
         // Disable() will not reset this so default initialize it here.
         Touch.s_GlobalState.historyLengthPerFinger = 64;

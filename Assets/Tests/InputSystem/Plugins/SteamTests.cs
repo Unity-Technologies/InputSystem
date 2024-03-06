@@ -22,9 +22,9 @@ internal class SteamTests : CoreTestsFixture
 {
     private TestSteamControllerAPI m_SteamAPI;
 
-    public override void Setup()
+    public override void SetUp()
     {
-        base.Setup();
+        base.SetUp();
         m_SteamAPI = new TestSteamControllerAPI();
         SteamSupport.api = m_SteamAPI;
         InputSystem.RegisterLayout<TestController>(
