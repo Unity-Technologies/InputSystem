@@ -1786,7 +1786,9 @@ namespace UnityEngine.InputSystem
             InstallGlobals();
 
             ApplySettings();
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             ApplyActions();
+            #endif
         }
 
         internal void Destroy()
