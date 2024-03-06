@@ -75,6 +75,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed several missing tooltips from the Action/Binding Properties pane in Input Actions Editor.
 - Fixed an issue in the InputActionAsset Editor where ControlType wasn't updated when ActionType changed.
 - Fixed an issue in the InputActionAsset Editor where Canceling ControlScheme changes didn't reset the values in the UI.
+- Fixed an issue where newly created action map names were not editable.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
