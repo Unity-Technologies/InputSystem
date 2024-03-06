@@ -1774,26 +1774,9 @@ namespace UnityEngine.InputSystem
 
             m_Settings = settings;
 
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Initialize project-wide actions:
-            // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
-            // - In player build we always attempt to find a preloaded asset.
-            #if UNITY_EDITOR
-            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-            #else
-            m_Actions = null;
-            var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
-            foreach (var candidate in candidates)
-            {
-                if (candidate.m_IsProjectWide)
-                {
-                    m_Actions = candidate;
-                    break;
-                }
-            }
-            #endif // UNITY_EDITOR
-            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InitializeActions();
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
@@ -1822,6 +1805,30 @@ namespace UnityEngine.InputSystem
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
                 Object.DestroyImmediate(m_Settings);
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private void InitializeActions()
+        {
+            // Initialize project-wide actions:
+            // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
+            // - In player build we always attempt to find a preloaded asset.
+#if UNITY_EDITOR
+            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+#else
+            m_Actions = null;
+            var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+            foreach (var candidate in candidates)
+            {
+                if (candidate.m_IsProjectWide)
+                {
+                    m_Actions = candidate;
+                    break;
+                }
+            }
+#endif // UNITY_EDITOR
+        }
+
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
         {

@@ -3027,15 +3027,23 @@ namespace UnityEngine.InputSystem
             if (!EditorApplication.isPlaying)
                 return;
 #endif // UNITY_EDITOR
-            if (actions != null)
-                actions.Enable();
+            if (actions == null)
+                return;
+
+            actions.Enable();
         }
 
-        private static void DisableActions()
+        private static void DisableActions(bool triggerSetupChanged = false)
         {
             // Make sure project wide input actions are disabled
-            if (actions != null)
-                actions.Disable();
+            var projectWideActions = actions;
+            if (projectWideActions == null)
+                return;
+
+            projectWideActions.Disable();
+
+            if (triggerSetupChanged)
+                projectWideActions.OnSetupChanged();
         }
 
         /// <summary>
@@ -3081,7 +3089,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         public static InputActionAsset actions
         {
-            get => s_Manager.actions;
+            get => s_Manager?.actions;
             set
             {
                 // Prevent this property from being assigned in play-mode.
@@ -3617,7 +3625,8 @@ namespace UnityEngine.InputSystem
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled
+            // Make sure project wide input actions are enabled.
+            // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
             EnableActions();
 #endif
 
@@ -3657,7 +3666,7 @@ namespace UnityEngine.InputSystem
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    DisableActions();
+                    DisableActions(false);
 #endif
 
                     // Nuke all InputUsers.
@@ -3850,13 +3859,7 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputSystem.Reset");
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            var projectWideActions = s_Manager?.actions;
-            if (projectWideActions != null)
-            {
-                projectWideActions.Disable();
-                projectWideActions.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
-                s_Manager.actions = null;
-            }
+            DisableActions(triggerSetupChanged: true);
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             // Some devices keep globals. Get rid of them by pretending the devices
