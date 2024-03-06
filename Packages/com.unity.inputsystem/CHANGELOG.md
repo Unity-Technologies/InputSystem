@@ -75,6 +75,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed several missing tooltips from the Action/Binding Properties pane in Input Actions Editor.
 - Fixed an issue in the InputActionAsset Editor where ControlType wasn't updated when ActionType changed.
 - Fixed an issue in the InputActionAsset Editor where Canceling ControlScheme changes didn't reset the values in the UI.
+- Fixed an issue where having unsaved changes in `InputActionsEditorWindow` would be discarded when entering play-mode (or triggering domain reload in general).
+- Fixed an issue where a `InputActionsEditorWindow` would not find an existing open editor window if the editor was open during a domain reload and then the asset was opened from the Project Explorer.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

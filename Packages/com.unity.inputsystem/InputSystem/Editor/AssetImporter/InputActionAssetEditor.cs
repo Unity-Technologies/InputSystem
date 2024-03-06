@@ -34,6 +34,17 @@ namespace UnityEngine.InputSystem.Editor
             s_EditorTypes.Remove(typeof(T));
         }
 
+        public static T FindOpenEditor<T>(string path) where T : EditorWindow
+        {
+            var openEditors = FindAllEditorsForPath(path);
+            foreach (var openEditor in openEditors)
+            {
+                if (openEditor.GetType() == typeof(T))
+                    return (T)openEditor;
+            }
+            return null;
+        }
+
         // Finds all asset editors associated with the asset given by path.
         public static IInputActionAssetEditor[] FindAllEditorsForPath(string path)
         {
