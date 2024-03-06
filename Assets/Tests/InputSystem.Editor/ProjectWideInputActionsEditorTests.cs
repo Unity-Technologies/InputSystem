@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
-using Tests.InputSystem.Editor;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.InputSystem;
