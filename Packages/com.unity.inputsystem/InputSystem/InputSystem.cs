@@ -3040,7 +3040,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// An input action asset (see <see cref="InputActionAsset"/>) which is always available if
-        /// assigned in Input System Package settings in Edit, Project Settings, Input System Package.
+        /// assigned in Input System Package settings in Edit, Project Settings, Input System Package in editor.
         /// </summary>
         /// <remarks>
         /// Project-wide actions may only be assigned in Edit Mode and any attempt to change this property
@@ -3048,8 +3048,10 @@ namespace UnityEngine.InputSystem
         /// A default set of actions and action maps are installed and enabled by default on every project
         /// that enables Project-wide Input Actions by assigning a project-wide asset in Project Settings.
         /// These actions and their bindings may be modified in the Project Settings.
+        ///
         /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
-        /// Play Mode (After <c>Start()</c> but before <c>OnEnable()</c>) and automatically disabled when exiting Play Mode.
+        /// Play Mode (After <c>Start()</c> but before <c>OnEnable()</c>) and automatically disabled when
+        /// exiting Play Mode.
         /// The asset associated with this property will be included in a Player build as a preloaded asset.
         ///
         /// Note that attempting to assign a non-persisted <c>InputActionAsset</c> to this property will result in
@@ -3058,6 +3060,25 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputActionMap"/>
         /// <seealso cref="InputAction"/>
+        /// <example>
+        /// <code>
+        ///  public class MyScript : MonoBehaviour
+        /// {
+        ///     InputAction move;
+        ///     InputAction jump;
+        ///
+        ///     void Start()
+        ///     {
+        ///         // Get InputAction references from Project-wide input actions.
+        ///         if (InputSystem.actions)
+        ///         {
+        ///             move = InputSystem.actions.FindAction("Player/Move");
+        ///             jump = InputSystem.actions.FindAction("Player/Jump");
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static InputActionAsset actions
         {
             get => s_Manager.actions;
@@ -3886,8 +3907,12 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(
                 runtime: runtime ?? NativeInputRuntime.instance,
-                settings: settings,
-                actions: ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild);
+                settings: settings
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                , actions: ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild);
+            #else
+                );
+            #endif
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;

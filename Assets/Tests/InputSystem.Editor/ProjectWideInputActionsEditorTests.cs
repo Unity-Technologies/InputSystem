@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-internal class ProjectWideInputActionsEditorTests
+internal class ProjectWideInputActionsEditorTests : TestFixtureBase
 {
     // Note that only a selected few tests verifies the behavior associated with the editor support for
     // creating a dedicated asset. For all other logical tests we are better off constructing an asset on
@@ -64,8 +64,10 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [SetUp]
-    public void Setup()
+    public override void SetUp()
     {
+        base.SetUp();
+
         callbackCount = 0;
 
         // In case project-wide actions have been configured, save a reference to the object to be able
@@ -75,7 +77,7 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [TearDown]
-    public void TearDown()
+    public override void TearDown()
     {
         InputSystem.onActionsChange -= OnActionsChange;
 
@@ -91,8 +93,7 @@ internal class ProjectWideInputActionsEditorTests
         // Restore actions
         InputSystem.actions = savedUserActions;
 
-        // Clean-up
-        AssetDatabaseUtils.Restore();
+        base.TearDown();
     }
 
     private void GivenActionsCallback()
