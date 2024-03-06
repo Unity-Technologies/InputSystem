@@ -108,7 +108,6 @@ namespace UnityEngine.InputSystem.Editor
             if (element == null)
                 return;
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
-            m_EnterRenamingMode = false;
         }
 
         private void DeleteActionMap(int index)
@@ -138,6 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ChangeActionMapName(int index, string newName)
         {
+            m_EnterRenamingMode = false;
             Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
