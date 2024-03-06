@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif // UNITY_EDITOR
 
-// Note that editor edit mode behavior is tested in a dedicated tes suite in editor test assembly.
+// Note that editor edit mode behavior is tested in a dedicated test suite in editor test assembly.
 //
 // Note that play-mode and player tests both use a dedicated asset setup via build hooks so that the
 // editor build configuration for preloaded Project-wide Input Actions asset may be temporarily replaced.

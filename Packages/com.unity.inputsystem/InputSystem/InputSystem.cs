@@ -3024,7 +3024,7 @@ namespace UnityEngine.InputSystem
         {
 #if UNITY_EDITOR
             // Abort if not in play-mode in editor
-            if (actions == null || !EditorApplication.isPlaying)
+            if (!EditorApplication.isPlaying)
                 return;
 #endif // UNITY_EDITOR
             if (actions != null)
@@ -3883,7 +3883,6 @@ namespace UnityEngine.InputSystem
             s_Manager.Initialize(
                 runtime: runtime ?? NativeInputRuntime.instance,
                 settings: settings);
-            #endif
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;

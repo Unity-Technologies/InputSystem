@@ -23,9 +23,9 @@ internal class ProjectWideInputActionsEditorTests
     //
     // Note that any existing default created asset is preserved during test run by moving it via ADB.
 
-    const string TestCategory = "ProjectWideActions";
+    const string kTestCategory = "ProjectWideActions";
     const string kAssetBackupDirectory = "Assets/~TestBackupFiles";
-    const string s_DefaultProjectWideAssetBackupPath = kAssetBackupDirectory + "/DefaultProjectWideAssetBackup.json";
+    const string kDefaultProjectWideAssetBackupPath = kAssetBackupDirectory + "/DefaultProjectWideAssetBackup.json";
 
     private InputActionAsset savedUserActions;
     private InputActionAsset actions;
@@ -44,7 +44,7 @@ internal class ProjectWideInputActionsEditorTests
             if (!Directory.Exists(kAssetBackupDirectory))
                 Directory.CreateDirectory(kAssetBackupDirectory);
             AssetDatabase.MoveAsset(oldPath: ProjectWideActionsAsset.defaultAssetPath,
-                newPath: s_DefaultProjectWideAssetBackupPath);
+                newPath: kDefaultProjectWideAssetBackupPath);
         }
     }
 
@@ -52,14 +52,13 @@ internal class ProjectWideInputActionsEditorTests
     public void OneTimeTearDown()
     {
         // Restore default asset if we made a backup copy of it during setup
-        if (File.Exists(s_DefaultProjectWideAssetBackupPath))
+        if (File.Exists(kDefaultProjectWideAssetBackupPath))
         {
             if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
                 AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-            AssetDatabase.MoveAsset(oldPath: s_DefaultProjectWideAssetBackupPath,
+            AssetDatabase.MoveAsset(oldPath: kDefaultProjectWideAssetBackupPath,
                 newPath: ProjectWideActionsAsset.defaultAssetPath);
-            Directory.Delete(kAssetBackupDirectory);
-            File.Delete(kAssetBackupDirectory + ".meta");
+            AssetDatabaseUtils.ExternalDeleteFileOrDirectory(kAssetBackupDirectory);
         }
     }
 
@@ -148,14 +147,14 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [Test(Description = "Verifies that project-wide actions are not set by default")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_AreNotSetByDefault()
     {
         Assert.That(InputSystem.actions, Is.Null);
     }
 
     [Test(Description = "Verifies that project-wide actions defaults are constructed as an asset on the default asset path")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActionsAsset_DefaultAssetFileHasDefaultContent()
     {
         // Expect asset name to be set to the file name
@@ -206,7 +205,7 @@ internal class ProjectWideInputActionsEditorTests
 #endif // UNITY_2023_2_OR_NEWER
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired if value is different but not when value is not different")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent()
     {
         GivenActions(persisted: true);
@@ -235,7 +234,7 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions in edit-mode, build settings are updated")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_WillUpdateBuildSettingsWhenChanged()
     {
         GivenActions(persisted: true);
@@ -267,7 +266,7 @@ internal class ProjectWideInputActionsEditorTests
 
     [Test(Description =
             "Verifies that when assigning InputSystem.actions in edit-mode with a temporary object not persisted on disc, an exception is thrown")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_ThrowsArgumentException_WhenAssignedFromNonPersistedObject()
     {
         GivenActions();
@@ -276,7 +275,7 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when currently being assigned to a deleted asset (destroyed object) and then assigning null")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_CanBeAssignedNullAndFiresCallback_WhenHavingDestroyedObjectAndAssignedNull()
     {
         GivenActions(persisted: true);
@@ -301,7 +300,7 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when the previously assigned asset has been destroyed object")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenAssignedDestroyedObject()
     {
         GivenActions(persisted: true);
@@ -327,7 +326,7 @@ internal class ProjectWideInputActionsEditorTests
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when assigning and current object has been destroyed")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenAssignedAndDifferent_WhenHavingDestroyedObjectAndAssignedOther()
     {
         GivenActions(persisted: true);
