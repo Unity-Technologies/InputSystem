@@ -6629,6 +6629,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
+#endif
+
         var action1 = new InputAction(name: "a");
         var action2 = new InputAction(name: "b");
 
