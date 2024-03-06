@@ -3,13 +3,11 @@ using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 #endif
 
 ////TODO: add support for ramp up/down
@@ -207,9 +205,9 @@ namespace UnityEngine.InputSystem.Composites
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var modeField = new EnumField("Mode", target.mode)
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
             {
-                tooltip = m_ModeLabel.text
+                tooltip = m_ModeLabel.tooltip
             };
 
             modeField.RegisterValueChangedCallback(evt =>
