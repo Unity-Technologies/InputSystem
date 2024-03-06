@@ -3058,8 +3058,7 @@ namespace UnityEngine.InputSystem
         /// These actions and their bindings may be modified in the Project Settings.
         ///
         /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
-        /// Play Mode (After <c>Start()</c> but before <c>OnEnable()</c>) and automatically disabled when
-        /// exiting Play Mode.
+        /// Play Mode and automatically disabled when exiting Play Mode.
         /// The asset associated with this property will be included in a Player build as a preloaded asset.
         ///
         /// Note that attempting to assign a non-persisted <c>InputActionAsset</c> to this property will result in
@@ -3113,23 +3112,10 @@ namespace UnityEngine.InputSystem
                 ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
 #endif // UNITY_EDITOR
 
-                // Disable previous project-wide actions if assigned in play-mode
-                if (current != null)
-                    current.Disable();
-
-                // Enable new project-wide actions if assigned in play-mode.
-                if (valueIsNotNull)
-                {
-#if UNITY_EDITOR
-                    if (EditorApplication.isPlaying)
-                        value.Enable();
-#else
-                    value.Enable();
-#endif // UNITY_EDITOR
-                }
-
                 // Update underlying value
                 s_Manager.actions = value;
+
+                // Note that we do not enable/disable any actions until play-mode
             }
         }
 
