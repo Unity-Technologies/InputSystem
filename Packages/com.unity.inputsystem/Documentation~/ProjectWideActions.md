@@ -37,7 +37,7 @@ Once you have created and assigned project-wide actions, the Input System Packag
 ![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input System Package Project Settings after creating and assigning the default actions*
 
-## The default input actions
+## The default actions
 
 When you create and assign default project-wide actions using the method described above, the Action Asset comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input from the most common types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
 
