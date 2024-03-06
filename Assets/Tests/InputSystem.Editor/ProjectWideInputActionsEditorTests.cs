@@ -24,8 +24,8 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
     // Note that any existing default created asset is preserved during test run by moving it via ADB.
 
     const string TestCategory = "ProjectWideActions";
-    const string m_AssetBackupDirectory = "Assets/~TestBackupFiles";
-    const string s_DefaultProjectWideAssetBackupPath = "Assets/~TestBackupFilesDefaultProjectWideAssetBackup.json";
+    const string kAssetBackupDirectory = "Assets/~TestBackupFiles";
+    const string s_DefaultProjectWideAssetBackupPath = kAssetBackupDirectory + "/DefaultProjectWideAssetBackup.json";
 
     private InputActionAsset savedUserActions;
     private InputActionAsset actions;
@@ -41,8 +41,8 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
         // This is for verifying the default output of templated actions from editor tools.
         if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
         {
-            if (!Directory.Exists(m_AssetBackupDirectory))
-                Directory.CreateDirectory(m_AssetBackupDirectory);
+            if (!Directory.Exists(kAssetBackupDirectory))
+                Directory.CreateDirectory(kAssetBackupDirectory);
             AssetDatabase.MoveAsset(oldPath: ProjectWideActionsAsset.defaultAssetPath,
                 newPath: s_DefaultProjectWideAssetBackupPath);
         }
@@ -58,8 +58,8 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
                 AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
             AssetDatabase.MoveAsset(oldPath: s_DefaultProjectWideAssetBackupPath,
                 newPath: ProjectWideActionsAsset.defaultAssetPath);
-            Directory.Delete("Assets/~TestBackupFiles");
-            File.Delete("Assets/~TestBackupFiles.meta");
+            Directory.Delete(kAssetBackupDirectory);
+            File.Delete(kAssetBackupDirectory + ".meta");
         }
     }
 
