@@ -20,8 +20,8 @@ using UnityEngine.InputSystem.Editor;
 // test termination.
 
 [TestFixture]
-[PrebuildSetup(typeof(ProjectWideActionsTests.BuildSetup))]
-[PostBuildCleanup(typeof(ProjectWideActionsTests.BuildSetup))]
+[PrebuildSetup(typeof(BuildSetup))]
+[PostBuildCleanup(typeof(BuildSetup))]
 internal class ProjectWideActionsTests : CoreTestsFixture
 {
     private const string kAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.inputactions";
@@ -82,14 +82,14 @@ internal class ProjectWideActionsTests : CoreTestsFixture
     const string TestCategory = "ProjectWideActions";
 
     [Test(Description = "Verifies that attempting to assign InputSystem.actions while in play-mode throws an exception.")]
-    [NUnit.Framework.Category(TestCategory)]
+    [Category(TestCategory)]
     public void ProjectWideActions_ThrowsException_WhenAssignedInPlayMode()
     {
         Assert.Throws<Exception>(() => InputSystem.actions = null);
     }
 
     [Test(Description = "Verifies that when entering play-mode InputSystem.actions is automatically assigned based on editor build configuration.")]
-    [NUnit.Framework.Category(TestCategory)]
+    [Category(TestCategory)]
     public void ProjectWideActions_IsAutomaticallyAssignedFromPersistedAsset_WhenRunningInPlayer()
     {
         // Regardless if editor play-mode or standalone player build we should always have project-wide input actions
@@ -121,7 +121,7 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
 
         // Disabling works
-        InputSystem.actions?.Disable();
+        InputSystem.actions.Disable();
         enabledActions = InputSystem.ListEnabledActions();
         Assert.That(enabledActions, Has.Count.EqualTo(1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
