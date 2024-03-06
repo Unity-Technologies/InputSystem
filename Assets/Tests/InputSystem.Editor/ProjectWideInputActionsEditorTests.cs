@@ -2,14 +2,11 @@
 
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.Utilities;
-using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 internal class ProjectWideInputActionsEditorTests
@@ -24,27 +21,39 @@ internal class ProjectWideInputActionsEditorTests
     // Note that any existing default created asset is preserved during test run by moving it via ADB.
 
     const string kTestCategory = "ProjectWideActions";
-    const string kAssetBackupDirectory = "Assets/~TestBackupFiles";
+    const string kAssetDirectory = "Assets";
+    const string kAssetBackupDirectory = kAssetDirectory + "/TestBackupFiles";
     const string kDefaultProjectWideAssetBackupPath = kAssetBackupDirectory + "/DefaultProjectWideAssetBackup.json";
 
-    private InputActionAsset savedUserActions;
-    private InputActionAsset actions;
-    private bool actionsArePersisted;
-    private InputActionAsset otherActions;
-    private bool otherActionsArePersisted;
-    private int callbackCount;
+    private string m_SavedAssetPath;
+
+    private InputActionAsset m_Actions;
+    private bool m_ActionsArePersisted;
+
+    private InputActionAsset m_OtherActions;
+    private bool m_OtherActionsArePersisted;
+
+    private int m_CallbackCount;
 
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        // Avoid overwriting any default asset already in /Assets folder by making a backup file not visible to AssetDatabase.
-        // This is for verifying the default output of templated actions from editor tools.
+        // Avoid changing the editor setting for project-wide input actions (if any). To achieve this we
+        // store the asset path since we cannot only keep a reference in case its equal to moved asset.
+        // If not equal to moved asset above a reference would be fine, but might as well use a more robust
+        // method.
+        m_SavedAssetPath = AssetDatabase.GetAssetPath(InputSystem.actions);
+
+        // Avoid overwriting any default asset already in /Assets folder by making a backup file not visible to
+        // AssetDatabase. This is for verifying the default output of templated actions from editor tools.
         if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
         {
             if (!Directory.Exists(kAssetBackupDirectory))
                 Directory.CreateDirectory(kAssetBackupDirectory);
-            AssetDatabase.MoveAsset(oldPath: ProjectWideActionsAsset.defaultAssetPath,
-                newPath: kDefaultProjectWideAssetBackupPath);
+            File.Copy(sourceFileName: ProjectWideActionsAsset.defaultAssetPath,
+                destFileName: kDefaultProjectWideAssetBackupPath, overwrite: true);
+            var wasDeleted = AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
+            Assert.That(wasDeleted, Is.True);
         }
     }
 
@@ -56,10 +65,15 @@ internal class ProjectWideInputActionsEditorTests
         {
             if (File.Exists(ProjectWideActionsAsset.defaultAssetPath))
                 AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
-            AssetDatabase.MoveAsset(oldPath: kDefaultProjectWideAssetBackupPath,
-                newPath: ProjectWideActionsAsset.defaultAssetPath);
+            File.Copy(sourceFileName: kDefaultProjectWideAssetBackupPath,
+                destFileName: ProjectWideActionsAsset.defaultAssetPath);
+            AssetDatabase.ImportAsset(ProjectWideActionsAsset.defaultAssetPath, ImportAssetOptions.ForceUpdate);
             AssetDatabaseUtils.ExternalDeleteFileOrDirectory(kAssetBackupDirectory);
         }
+
+        // Restore users project-wide input actions setting
+        var asset = m_SavedAssetPath != null ? AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_SavedAssetPath) : null;
+        InputSystem.actions = asset;
     }
 
     [SetUp]
@@ -67,11 +81,9 @@ internal class ProjectWideInputActionsEditorTests
     {
         TestUtils.MockDialogs();
 
-        callbackCount = 0;
+        m_CallbackCount = 0;
 
-        // In case project-wide actions have been configured, save a reference to the object to be able
-        // to restore after test run.
-        savedUserActions = InputSystem.actions;
+        // Always start with action null since this represents a fresh project
         InputSystem.actions = null;
     }
 
@@ -84,13 +96,12 @@ internal class ProjectWideInputActionsEditorTests
         AssetDatabase.DeleteAsset(ProjectWideActionsAsset.defaultAssetPath);
 
         // Clean-up objects created during test
-        if (actions != null && !actionsArePersisted)
-            Object.DestroyImmediate(actions);
-        if (otherActions != null && !otherActionsArePersisted)
-            Object.DestroyImmediate(otherActions);
+        if (m_Actions != null && !m_ActionsArePersisted)
+            Object.DestroyImmediate(m_Actions);
+        if (m_OtherActions != null && !m_OtherActionsArePersisted)
+            Object.DestroyImmediate(m_OtherActions);
 
-        // Restore actions
-        InputSystem.actions = savedUserActions;
+        InputSystem.actions = null;
 
         TestUtils.RestoreDialogs();
         AssetDatabaseUtils.Restore();
@@ -104,46 +115,46 @@ internal class ProjectWideInputActionsEditorTests
     private void GivenActions(bool persisted = false)
     {
         // Create a small InputActionsAsset on the fly that we utilize for testing
-        actions = ScriptableObject.CreateInstance<InputActionAsset>();
-        actions.name = "TestAsset";
-        var one = actions.AddActionMap("One");
+        m_Actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        m_Actions.name = "TestAsset";
+        var one = m_Actions.AddActionMap("One");
         one.AddAction("A");
         one.AddAction("B");
-        var two = actions.AddActionMap("Two");
+        var two = m_Actions.AddActionMap("Two");
         two.AddAction("C");
 
         if (persisted)
         {
-            var json = actions.ToJson();
-            Object.DestroyImmediate(actions);
-            actions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
+            var json = m_Actions.ToJson();
+            Object.DestroyImmediate(m_Actions);
+            m_Actions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
 
-            actionsArePersisted = true;
+            m_ActionsArePersisted = true;
         }
     }
 
     private void GivenOtherActions(bool persisted = false)
     {
         // Create a small InputActionsAsset on the fly that we utilize for testing
-        otherActions = ScriptableObject.CreateInstance<InputActionAsset>();
-        otherActions.name = "OtherTestAsset";
-        var three = otherActions.AddActionMap("Three");
+        m_OtherActions = ScriptableObject.CreateInstance<InputActionAsset>();
+        m_OtherActions.name = "OtherTestAsset";
+        var three = m_OtherActions.AddActionMap("Three");
         three.AddAction("D");
         three.AddAction("E");
 
         if (persisted)
         {
-            var json = otherActions.ToJson();
-            Object.DestroyImmediate(otherActions);
-            otherActions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
+            var json = m_OtherActions.ToJson();
+            Object.DestroyImmediate(m_OtherActions);
+            m_OtherActions = AssetDatabaseUtils.CreateAsset<InputActionAsset>(content: json);
 
-            otherActionsArePersisted = true;
+            m_OtherActionsArePersisted = true;
         }
     }
 
     private void OnActionsChange()
     {
-        ++callbackCount;
+        ++m_CallbackCount;
     }
 
     [Test(Description = "Verifies that project-wide actions are not set by default")]
@@ -165,8 +176,9 @@ internal class ProjectWideInputActionsEditorTests
         // Expect JSON name to be set to the file name
         var json = File.ReadAllText(EditorHelpers.GetPhysicalPath(ProjectWideActionsAsset.defaultAssetPath));
         var parsedAsset = InputActionAsset.FromJson(json);
-        Assert.That(parsedAsset.name, Is.EqualTo(expectedName));
+        var parsedAssetName = parsedAsset.name;
         Object.DestroyImmediate(parsedAsset);
+        Assert.That(parsedAssetName, Is.EqualTo(expectedName));
     }
 
     // This test is only relevant for the InputForUI module which native part was introduced in 2023.2
@@ -214,23 +226,23 @@ internal class ProjectWideInputActionsEditorTests
 
         // Can assign from null to null (no change)
         InputSystem.actions = null;
-        Assert.That(callbackCount, Is.EqualTo(0));
+        Assert.That(m_CallbackCount, Is.EqualTo(0));
 
         // Can assign asset from null to instance (change)
-        InputSystem.actions = actions;
-        Assert.That(callbackCount, Is.EqualTo(1));
+        InputSystem.actions = m_Actions;
+        Assert.That(m_CallbackCount, Is.EqualTo(1));
 
         // Can assign from instance to same instance (no change)
-        InputSystem.actions = actions;
-        Assert.That(callbackCount, Is.EqualTo(1)); // no callback expected
+        InputSystem.actions = m_Actions;
+        Assert.That(m_CallbackCount, Is.EqualTo(1)); // no callback expected
 
         // Can assign another instance (change
-        InputSystem.actions = otherActions;
-        Assert.That(callbackCount, Is.EqualTo(2));
+        InputSystem.actions = m_OtherActions;
+        Assert.That(m_CallbackCount, Is.EqualTo(2));
 
         // Can assign asset from instance to null (change)
         InputSystem.actions = null;
-        Assert.That(callbackCount, Is.EqualTo(3));
+        Assert.That(m_CallbackCount, Is.EqualTo(3));
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions in edit-mode, build settings are updated")]
@@ -241,23 +253,23 @@ internal class ProjectWideInputActionsEditorTests
         GivenOtherActions(persisted: true);
         GivenActionsCallback();
 
-        Debug.Assert(EditorUtility.IsPersistent(actions));
+        Debug.Assert(EditorUtility.IsPersistent(m_Actions));
 
         // Can assign from null to null (no change)
         InputSystem.actions = null;
         Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(null));
 
         // Can assign asset from null to instance (change)
-        InputSystem.actions = actions;
-        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(actions));
+        InputSystem.actions = m_Actions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(m_Actions));
 
         // Can assign from instance to same instance (no change)
-        InputSystem.actions = actions;
-        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(actions));
+        InputSystem.actions = m_Actions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(m_Actions));
 
         // Can assign another instance (change
-        InputSystem.actions = otherActions;
-        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(otherActions));
+        InputSystem.actions = m_OtherActions;
+        Assert.That(ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild, Is.EqualTo(m_OtherActions));
 
         // Can assign asset from instance to null (change)
         InputSystem.actions = null;
@@ -271,7 +283,7 @@ internal class ProjectWideInputActionsEditorTests
     {
         GivenActions();
 
-        Assert.Throws<ArgumentException>(() => InputSystem.actions = actions);
+        Assert.Throws<ArgumentException>(() => InputSystem.actions = m_Actions);
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when currently being assigned to a deleted asset (destroyed object) and then assigning null")]
@@ -283,20 +295,20 @@ internal class ProjectWideInputActionsEditorTests
         GivenActionsCallback();
 
         // Assign and make sure property returns the expected assigned value
-        InputSystem.actions = actions;
-        Assert.That(InputSystem.actions, Is.EqualTo(actions));
-        Assert.That(callbackCount, Is.EqualTo(1));
+        InputSystem.actions = m_Actions;
+        Assert.That(InputSystem.actions, Is.EqualTo(m_Actions));
+        Assert.That(m_CallbackCount, Is.EqualTo(1));
 
         // Delete the associated asset make sure returned value evaluates to null (But actually Missing Reference).
-        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
-        Assert.That(actions == null, Is.True);    // sanity check that it was destroyed
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_Actions));
+        Assert.That(m_Actions == null, Is.True);    // sanity check that it was destroyed
         Assert.That(InputSystem.actions == null); // note: we want to avoid cast to object since it would use another Equals
 
         // Assert that property may be assigned to null reference since its different from missing reference.
         InputSystem.actions = null;
         Assert.That(InputSystem.actions == null);
         Assert.That(ReferenceEquals(InputSystem.actions, null)); // check its really null and not just Missing Reference.
-        Assert.That(callbackCount, Is.EqualTo(2));
+        Assert.That(m_CallbackCount, Is.EqualTo(2));
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when the previously assigned asset has been destroyed object")]
@@ -309,20 +321,20 @@ internal class ProjectWideInputActionsEditorTests
 
         // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
         //Object.DestroyImmediate(actions);
-        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
-        Assert.That(actions == null, Is.True);       // sanity check that it was destroyed
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_Actions));
+        Assert.That(m_Actions == null, Is.True);       // sanity check that it was destroyed
 
         // Assert that we can assign a destroyed object
-        InputSystem.actions = actions;
-        Assert.That(InputSystem.actions == actions); // note: we want to avoid cast to object since it would use another Equals
+        InputSystem.actions = m_Actions;
+        Assert.That(InputSystem.actions == m_Actions); // note: we want to avoid cast to object since it would use another Equals
         Assert.That(!ReferenceEquals(InputSystem.actions, null)); // expecting missing reference
-        Assert.That(callbackCount, Is.EqualTo(1));
+        Assert.That(m_CallbackCount, Is.EqualTo(1));
 
         // Assert that property may be assigned to null reference since its different from missing reference.
         InputSystem.actions = null;
         Assert.That(InputSystem.actions == null);
         Assert.That(ReferenceEquals(InputSystem.actions, null)); // check its really null and not just Missing Reference.
-        Assert.That(callbackCount, Is.EqualTo(2));
+        Assert.That(m_CallbackCount, Is.EqualTo(2));
     }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired when assigning and current object has been destroyed")]
@@ -334,19 +346,19 @@ internal class ProjectWideInputActionsEditorTests
         GivenActionsCallback();
 
         // Assign and make sure property returns the expected assigned value
-        InputSystem.actions = actions;
-        Assert.That(InputSystem.actions, Is.EqualTo(actions));
-        Assert.That(callbackCount, Is.EqualTo(1));
+        InputSystem.actions = m_Actions;
+        Assert.That(InputSystem.actions, Is.EqualTo(m_Actions));
+        Assert.That(m_CallbackCount, Is.EqualTo(1));
 
         // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
-        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(actions));
-        Assert.That(actions == null, Is.True);    // sanity check that it was destroyed
+        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_Actions));
+        Assert.That(m_Actions == null, Is.True);    // sanity check that it was destroyed
         Assert.That(InputSystem.actions == null); // note: we want to avoid cast to object since it would use another Equals
 
         // Assert that property may be assigned to null reference since its different from missing reference.
-        InputSystem.actions = otherActions;
-        Assert.That(InputSystem.actions, Is.EqualTo(otherActions));
-        Assert.That(callbackCount, Is.EqualTo(2));
+        InputSystem.actions = m_OtherActions;
+        Assert.That(InputSystem.actions, Is.EqualTo(m_OtherActions));
+        Assert.That(m_CallbackCount, Is.EqualTo(2));
     }
 }
 
