@@ -30,22 +30,16 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.label.text = mapData.mapName;
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
-                treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
-                treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
-                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 treeViewItem.userData = i;
                 element.SetEnabled(!mapData.isDisabled);
 
-                ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem);
+                ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };
             m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
                 var treeViewElement = (InputActionMapsTreeViewItem)element;
                 treeViewElement.Reset();
-                treeViewElement.OnDeleteItem -= treeViewElement.DeleteCallback;
-                treeViewElement.OnDuplicateItem -= treeViewElement.DuplicateCallback;
                 treeViewElement.EditTextFinished -= treeViewElement.EditTextFinishedCallback;
             };
 
@@ -110,12 +104,21 @@ namespace UnityEngine.InputSystem.Editor
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
         }
 
-        private void DeleteActionMap(int index)
+        internal void RenameActionMap(int index)
+        {
+            m_ListView.ScrollToItem(index);
+            var element = m_ListView.GetRootElementForIndex(index);
+            if (element == null)
+                return;
+            ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
+        }
+
+        internal void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
         }
 
-        private void DuplicateActionMap(int index)
+        internal void DuplicateActionMap(int index)
         {
             Dispatch(Commands.DuplicateActionMap(index));
         }
@@ -162,10 +165,10 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     case CmdEvents.Delete:
                     case CmdEvents.SoftDelete:
-                        ((InputActionMapsTreeViewItem)selectedItem).DeleteItem();
+                        DeleteActionMap(m_ListView.selectedIndex);
                         break;
                     case CmdEvents.Duplicate:
-                        ((InputActionMapsTreeViewItem)selectedItem).DuplicateItem();
+                        DuplicateActionMap(m_ListView.selectedIndex);
                         break;
                     case CmdEvents.Copy:
                         CopyItems();

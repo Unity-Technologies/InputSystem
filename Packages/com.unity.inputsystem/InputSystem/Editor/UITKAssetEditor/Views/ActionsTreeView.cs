@@ -47,20 +47,16 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
-                treeViewItem.DeleteCallback = _ => DeleteItem(item);
-                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
-                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(this, treeViewItem, i);
                 else if (item.isAction)
                     ContextMenu.GetContextMenuForActionItem(this, treeViewItem, item.controlLayout, i);
                 else
-                    ContextMenu.GetContextMenuForBindingItem(this, treeViewItem);
+                    ContextMenu.GetContextMenuForBindingItem(this, treeViewItem, i);
 
                 if (item.isAction)
                 {
-                    Action action = ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    Action action = ContextMenu.GetContextMenuForActionAddItem(this, item.controlLayout, i);
                     addBindingButton.clicked += action;
                     addBindingButton.userData = action; // Store to use in unbindItem
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
@@ -123,8 +119,6 @@ namespace UnityEngine.InputSystem.Editor
                     button.clicked -= button.userData as Action;
                 }
 
-                treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -309,26 +303,34 @@ namespace UnityEngine.InputSystem.Editor
             treeViewItem?.FocusOnRenameTextField();
         }
 
+        internal void RenameActionItem(int index)
+        {
+            m_ActionsTreeView.ScrollToItem(index);
+            m_ActionsTreeView.GetRootElementForIndex(index)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+        }
+
         internal void AddAction()
         {
             Dispatch(Commands.AddAction());
             m_RenameOnActionAdded = true;
         }
 
-        internal void AddBinding(string actionName)
+        internal void AddBinding(int index)
         {
-            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddBinding());
         }
 
-        internal void AddComposite(string actionName, string compositeType)
+        internal void AddComposite(int index, string compositeType)
         {
-            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddComposite(compositeType));
         }
 
-        private void DeleteItem(ActionOrBindingData data)
+        internal void DeleteItem(int selectedIndex)
         {
+            var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(selectedIndex);
+
             if (data.isAction)
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
             else
@@ -338,8 +340,10 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.Focus();
         }
 
-        private void DuplicateItem(ActionOrBindingData data)
+        internal void DuplicateItem(int selectedIndex)
         {
+            var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(selectedIndex);
+
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
@@ -382,16 +386,16 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     case CmdEvents.Rename:
                         if (data.isAction || data.isComposite)
-                            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+                            RenameActionItem(m_ActionsTreeView.selectedIndex);
                         else
                             return;
                         break;
                     case CmdEvents.Delete:
                     case CmdEvents.SoftDelete:
-                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                        DeleteItem(m_ActionsTreeView.selectedIndex);
                         break;
                     case CmdEvents.Duplicate:
-                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                        DuplicateItem(m_ActionsTreeView.selectedIndex);
                         break;
                     case CmdEvents.Copy:
                         CopyItems();
