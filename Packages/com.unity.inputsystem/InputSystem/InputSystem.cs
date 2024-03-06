@@ -3578,7 +3578,7 @@ namespace UnityEngine.InputSystem
                     out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                        Object.DestroyImmediate(s_Manager.m_Settings);
+                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
                     s_Manager.m_Settings = settingsAsset;
                     s_Manager.ApplySettings();
                 }
@@ -3621,13 +3621,8 @@ namespace UnityEngine.InputSystem
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled, note that UnityEngine.Object do not support ?. properly
-            if (EditorApplication.isPlaying)
-            {
-                var actionsValue = actions;
-                if (actionsValue != null)
-                    actionsValue.Enable();
-            }
+            // Make sure project wide input actions are enabled
+            EnableActions();
 #endif
 
             RunInitialUpdate();
@@ -3751,30 +3746,10 @@ namespace UnityEngine.InputSystem
             if (settings == null)
                 settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            InputActionAsset actions = null;
-            if (actions == null)
-            {
-                var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
-                foreach (var candidate in candidates)
-                {
-                    if (candidate.m_IsProjectWide)
-                    {
-                        actions = candidate;
-                        break;
-                    }
-                }
-            }
-#endif
-
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings, actions);
-#else
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
-#endif
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3907,11 +3882,7 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(
                 runtime: runtime ?? NativeInputRuntime.instance,
-                settings: settings
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                , actions: ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild);
-            #else
-                );
+                settings: settings);
             #endif
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;

@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif // UNITY_EDITOR
@@ -47,7 +48,8 @@ internal class ProjectWideActionsTests : CoreTestsFixture
 
         // Remove asset
         var path = AssetDatabase.GetAssetPath(testAsset);
-        AssetDatabase.DeleteAsset(path);
+        if (File.Exists(path))
+            AssetDatabase.DeleteAsset(path);
 #endif
     }
 

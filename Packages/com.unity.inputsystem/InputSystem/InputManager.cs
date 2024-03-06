@@ -1768,18 +1768,31 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
-        #else
         internal void Initialize(IInputRuntime runtime, InputSettings settings)
-        #endif
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
+
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            m_Actions = actions;
-            #endif
+            // Initialize project-wide actions:
+            // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
+            // - In player build we always attempt to find a preloaded asset.
+            #if UNITY_EDITOR
+            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+            #else
+            m_Actions = null;
+            var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+            foreach (var candidate in candidates)
+            {
+                if (candidate.m_IsProjectWide)
+                {
+                    m_Actions = candidate;
+                    break;
+                }
+            }
+            #endif // UNITY_EDITOR
+            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             InitializeData();
             InstallRuntime(runtime);
