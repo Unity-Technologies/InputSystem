@@ -125,7 +125,8 @@ namespace UnityEngine.InputSystem.Editor
                     continue;
 
                 // Skip composites that don't match the expected control layout
-                if (expectedControlLayout != "Any" && expectedControlLayout != "")
+                // NOTE: "Any" is a special case and expected to be null
+                if (!string.IsNullOrEmpty(expectedControlLayout))
                 {
                     var valueType = InputBindingComposite.GetValueType(compositeName);
                     if (valueType != null &&
