@@ -3938,7 +3938,9 @@ namespace UnityEngine.InputSystem
 
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             // Note this is too early for editor ! actions is not setup yet
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
+            #endif
 
             Profiler.EndSample();
         }
