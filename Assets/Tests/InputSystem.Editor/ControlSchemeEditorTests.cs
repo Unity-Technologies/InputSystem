@@ -4,9 +4,22 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using System;
 using System.Text.RegularExpressions;
+using Tests.InputSystem.Editor;
 
-public class ControlSchemesEditorTests : TestFixtureBase
+public class ControlSchemesEditorTests
 {
+    [SetUp]
+    public void SetUp()
+    {
+        TestUtils.MockDialogs();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        TestUtils.RestoreDialogs();
+    }
+
     [Test]
     [Category("AssetEditor")]
     public void AddRequirementCommand_AddsDeviceRequirements()

@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Tests.InputSystem.Editor;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.InputSystem;
@@ -12,7 +13,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-internal class ProjectWideInputActionsEditorTests : TestFixtureBase
+internal class ProjectWideInputActionsEditorTests
 {
     // Note that only a selected few tests verifies the behavior associated with the editor support for
     // creating a dedicated asset. For all other logical tests we are better off constructing an asset on
@@ -64,9 +65,9 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
     }
 
     [SetUp]
-    public override void Setup()
+    public void Setup()
     {
-        base.Setup();
+        TestUtils.MockDialogs();
 
         callbackCount = 0;
 
@@ -77,7 +78,7 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
     }
 
     [TearDown]
-    public override void TearDown()
+    public void TearDown()
     {
         InputSystem.onActionsChange -= OnActionsChange;
 
@@ -93,7 +94,8 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
         // Restore actions
         InputSystem.actions = savedUserActions;
 
-        base.TearDown();
+        TestUtils.RestoreDialogs();
+        AssetDatabaseUtils.Restore();
     }
 
     private void GivenActionsCallback()

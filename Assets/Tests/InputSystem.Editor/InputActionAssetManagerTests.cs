@@ -8,8 +8,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 
-class InputActionAssetManagerEditorTests : TestFixtureBase
+class InputActionAssetManagerEditorTests
 {
+    [TearDown]
+    public void TearDown()
+    {
+        AssetDatabaseUtils.Restore();
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_InputActionAssetManager_ThrowsIfCreatedFromNullReference()

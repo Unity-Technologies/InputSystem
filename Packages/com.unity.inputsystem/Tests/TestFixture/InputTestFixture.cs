@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem
     /// that while the test is running, input that may be generated on the machine running
     /// the test will not infer with it.
     /// </remarks>
-    public class InputTestFixture : TestFixtureBase
+    public class InputTestFixture
     {
         /// <summary>
         /// Put <see cref="InputSystem"/> into a known state where it only has a basic set of
@@ -73,10 +73,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="TearDown"/>
         [SetUp]
-        public override void Setup()
+        public virtual void Setup()
         {
-            base.Setup();
-
             try
             {
                 // Apparently, NUnit is reusing instances :(
@@ -142,6 +140,14 @@ namespace UnityEngine.InputSystem
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
+
+                #if UNITY_EDITOR
+                // Default mock dialogs to avoid unexpected cancellation of standard flows
+                Dialog.InputActionAsset.SetSaveChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset((_) => Dialog.Result.Discard);
+                Dialog.ControlScheme.SetDeleteControlScheme((_) => Dialog.Result.Delete);
+                #endif
             }
             catch (Exception exception)
             {
@@ -161,7 +167,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <seealso cref="Setup"/>
         [TearDown]
-        public override void TearDown()
+        public virtual void TearDown()
         {
             if (!m_Initialized)
                 return;
@@ -183,6 +189,14 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 InputDebuggerWindow.Enable();
                 #endif
+
+                #if UNITY_EDITOR
+                // Re-enable dialogs.
+                Dialog.InputActionAsset.SetSaveChanges(null);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges(null);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset(null);
+                Dialog.ControlScheme.SetDeleteControlScheme(null);
+                #endif
             }
             catch (Exception exception)
             {
@@ -192,8 +206,6 @@ namespace UnityEngine.InputSystem
             }
 
             m_Initialized = false;
-
-            base.TearDown();
         }
 
         private bool? m_IsUnityTest;
