@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_IsActivated = false;
 
-            m_View.DestroyView();
+            m_View?.DestroyView();
         }
 
         private void OnEditFocus(FocusInEvent @event)
