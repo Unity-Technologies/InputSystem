@@ -42,6 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
 - Fixed selection not changing when right-clicking an Action Map or Action in the Project Settings Input Actions Editor.
+- Fixed right-click context menus throwing errors when dealing with multiple Input Actions Editor windows.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
