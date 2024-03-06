@@ -3,9 +3,9 @@ using UnityEngine.SceneManagement;
 
 public class CoreTestsFixture : InputTestFixture
 {
-    public override void SetUp()
+    public override void Setup()
     {
-        base.SetUp();
+        base.Setup();
 
         // https://fogbugz.unity3d.com/f/cases/1377009/
         // Make sure the runtime's timeline has an offset compared to the input timeline.

@@ -1,9 +1,7 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
-using System.IO;
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 
@@ -21,29 +19,31 @@ using UnityEngine.InputSystem.Editor;
 // test termination.
 
 [TestFixture]
-internal class ProjectWideActionsTests : CoreTestsFixture, IPrebuildSetup, IPostBuildCleanup
+[PrebuildSetup(typeof(ProjectWideActionsTests.BuildSetup))]
+[PostBuildCleanup(typeof(ProjectWideActionsTests.BuildSetup))]
+internal class ProjectWideActionsTests : CoreTestsFixture
 {
     private const string kAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.inputactions";
-    private InputActionAsset m_ActionsToIncludeInPlayerBuildBeforeSetup;
+    private static InputActionAsset s_ActionsToIncludeInPlayerBuildBeforeSetup;
 
-    private void CreateAndAssignProjectWideTestAsset()
+    private static void CreateAndAssignProjectWideTestAsset()
     {
 #if UNITY_EDITOR
         // Create a temporary asset for testing and assign it as the asset to include in player build while
         // we at the same time preserve the current configuration so we can restore it after the test build.
-        m_ActionsToIncludeInPlayerBuildBeforeSetup = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        s_ActionsToIncludeInPlayerBuildBeforeSetup = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = asset;
 #endif
     }
 
-    private void CleanupProjectWideTestAsset()
+    private static void CleanupProjectWideTestAsset()
     {
 #if UNITY_EDITOR
         // Restore setting
         var testAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = m_ActionsToIncludeInPlayerBuildBeforeSetup;
-        m_ActionsToIncludeInPlayerBuildBeforeSetup = null;
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = s_ActionsToIncludeInPlayerBuildBeforeSetup;
+        s_ActionsToIncludeInPlayerBuildBeforeSetup = null;
 
         // Remove asset
         var path = AssetDatabase.GetAssetPath(testAsset);
@@ -51,19 +51,22 @@ internal class ProjectWideActionsTests : CoreTestsFixture, IPrebuildSetup, IPost
 #endif
     }
 
-    // Runs before player build or before play-mode tests run, not to confuse with SetUp().
-    // Runs before [OneTimeSetUp] and before [SetUp]
-    #region IPrebuildSetup
-    public void Setup() { CreateAndAssignProjectWideTestAsset(); }
-    #endregion
+    private class BuildSetup : IPrebuildSetup, IPostBuildCleanup
+    {
+        // Runs before player build or before play-mode tests run, not to confuse with SetUp().
+        // Runs before [OneTimeSetUp] and before [SetUp]
+        #region IPrebuildSetup
+        public void Setup() { CreateAndAssignProjectWideTestAsset(); }
+        #endregion
 
-    // Runs after player build, not to confuse with TearDown()
-    // IMPORTANT: Does not run after editor play-mode tests, but do run as expected after player test builds.
-    //            Unclear if this is an issue in UTF or something wrong with this test.
-    //            A workaround is provided via OneTimeTearDown() below.
-    #region IPostBuildCleanup
-    public void Cleanup() { CleanupProjectWideTestAsset(); }
-    #endregion
+        // Runs after player build, not to confuse with TearDown()
+        // IMPORTANT: Does not run after editor play-mode tests, but do run as expected after player test builds.
+        //            Unclear if this is an issue in UTF or something wrong with this test.
+        //            A workaround is provided via OneTimeTearDown() below.
+        #region IPostBuildCleanup
+        public void Cleanup() { CleanupProjectWideTestAsset(); }
+        #endregion
+    }
 
     // Note that this is mainly a workaround for editor play-mode tests since IPostBuildCleanup doesn't
     // seem to be called. This may be removed if IPostBuildCleanup is invoked according to what is stated

@@ -73,9 +73,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="TearDown"/>
         [SetUp]
-        public override void SetUp()
+        public override void Setup()
         {
-            base.SetUp();
+            base.Setup();
 
             try
             {
@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Restore the state of the input system it had when the test was started.
         /// </summary>
-        /// <seealso cref="SetUp"/>
+        /// <seealso cref="Setup"/>
         [TearDown]
         public override void TearDown()
         {

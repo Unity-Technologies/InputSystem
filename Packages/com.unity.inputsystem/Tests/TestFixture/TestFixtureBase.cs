@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem
     public class TestFixtureBase
     {
         [SetUp]
-        public virtual void SetUp()
+        public virtual void Setup()
         {
 #if UNITY_EDITOR
             MockDialogs();

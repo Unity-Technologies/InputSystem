@@ -64,9 +64,9 @@ internal class ProjectWideInputActionsEditorTests : TestFixtureBase
     }
 
     [SetUp]
-    public override void SetUp()
+    public override void Setup()
     {
-        base.SetUp();
+        base.Setup();
 
         callbackCount = 0;
 
