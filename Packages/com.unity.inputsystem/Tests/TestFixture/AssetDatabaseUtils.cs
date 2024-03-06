@@ -57,12 +57,12 @@ namespace UnityEngine.InputSystem
             return obj;
         }
 
-        public static string SanitizePath(string path)
+        private static string SanitizePath(string path)
         {
             return path?.Replace("\\", "/");
         }
 
-        public static void CreateRootDirectory()
+        private static void CreateRootDirectory()
         {
             CreateDirectories(RootPath());
         }
@@ -157,12 +157,12 @@ namespace UnityEngine.InputSystem
             return "Test_" + (int)(Math.Floor(r * scale));
         }
 
-        public static string RandomAssetFilePath<T>(string directoryPath = null)
+        private static string RandomAssetFilePath<T>(string directoryPath = null)
         {
             return RandomAssetFilePath(directoryPath, AssetFileExtensionFromType(typeof(T)));
         }
 
-        public static string RandomAssetFilePath(string directoryPath = null, string extension = null)
+        private static string RandomAssetFilePath(string directoryPath = null, string extension = null)
         {
             // Default to using test files root path
             if (directoryPath == null)
