@@ -187,7 +187,7 @@ internal class ProjectWideInputActionsEditorTests
     // This test is only relevant for the InputForUI module which native part was introduced in 2023.2
 #if UNITY_2023_2_OR_NEWER
     [Test(Description = "Verifies that modifying the default project-wide action UI map generates console warnings")]
-    [Category(TestCategory)]
+    [Category(kTestCategory)]
     public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()
     {
         // Create a default template asset that we then modify to generate various warnings
