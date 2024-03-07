@@ -18,6 +18,11 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) => state.SelectAction(actionName);
         }
 
+        public static Command SelectAction(int index)
+        {
+            return (in InputActionsEditorState state) => state.SelectAction(index);
+        }
+
         public static Command SelectActionMap(string actionMapName)
         {
             return (in InputActionsEditorState state) => state.SelectActionMap(actionMapName);

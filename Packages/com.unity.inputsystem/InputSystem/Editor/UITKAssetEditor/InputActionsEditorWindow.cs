@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 
 namespace UnityEngine.InputSystem.Editor
@@ -32,9 +33,9 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
-        private int m_AssetId;
         private string m_AssetJson;
         private bool m_IsDirty;
+
         private StateContainer m_StateContainer;
         private InputActionsEditorView m_View;
 
@@ -82,16 +83,15 @@ namespace UnityEngine.InputSystem.Editor
             ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
             ////        only way to get programmatic docking with the current API).
             // See if we have an existing editor window that has the asset open.
-            var instanceId = asset.GetInstanceID();
-            var window = GetOrCreateWindow(instanceId, out var isAlreadyOpened);
-            if (isAlreadyOpened)
+            var existingWindow = InputActionAssetEditor.FindOpenEditor<InputActionsEditorWindow>(AssetDatabase.GetAssetPath(asset));
+            if (existingWindow != null)
             {
-                window.Focus();
-                return window;
+                existingWindow.Focus();
+                return existingWindow;
             }
 
+            var window = GetWindow<InputActionsEditorWindow>();
             window.m_IsDirty = false;
-            window.m_AssetId = instanceId;
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
@@ -108,19 +108,6 @@ namespace UnityEngine.InputSystem.Editor
         public static InputActionsEditorWindow OpenEditor(InputActionAsset asset)
         {
             return OpenWindow(asset, null, null);
-        }
-
-        private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
-        {
-            isAlreadyOpened = false;
-            if (HasOpenInstances<InputActionsEditorWindow>())
-            {
-                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsEditorWindow)) as InputActionsEditorWindow[];
-                var alreadyOpenWindow = openWindows?.ToList().FirstOrDefault(window => window.m_AssetId.Equals(id));
-                isAlreadyOpened = alreadyOpenWindow != null;
-                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsEditorWindow>();
-            }
-            return GetWindow<InputActionsEditorWindow>();
         }
 
         private static GUIContent GetEditorTitle(InputActionAsset asset, bool isDirty)
@@ -176,8 +163,23 @@ namespace UnityEngine.InputSystem.Editor
             // After domain reloads the state will be in a invalid state as some of the fields
             // cannot be serialized and will become null.
             // Therefore we recreate the state here using the fields which were saved.
-            if (m_State.serializedObject == null && !TryUpdateFromAsset())
-                return;
+            if (m_State.serializedObject == null)
+            {
+                try
+                {
+                    var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+                    m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
+                    m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
+                    m_IsDirty = HasContentChanged();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    Close();
+                    return;
+                }
+            }
 
             BuildUI();
         }
@@ -315,17 +317,27 @@ namespace UnityEngine.InputSystem.Editor
         private void ReshowEditorWindowWithUnsavedChanges()
         {
             var window = CreateWindow<InputActionsEditorWindow>();
-            CopyOldStatsToNewWindow(window);
+
+            // Move/transfer ownership of m_AssetObjectForEditing to new window
+            window.m_AssetObjectForEditing = m_AssetObjectForEditing;
+            m_AssetObjectForEditing = null;
+
+            // Move/transfer ownership of m_State to new window (struct)
+            window.m_State = m_State;
+            m_State = new InputActionsEditorState();
+
+            // Just copy trivial arguments
+            window.m_AssetGUID = m_AssetGUID;
+            window.m_AssetJson = m_AssetJson;
+            window.m_IsDirty = m_IsDirty;
+
+            // Note that view and state container will get destroyed with this window instance
+            // and recreated for this window below
             window.BuildUI();
             window.Show();
-        }
 
-        private void CopyOldStatsToNewWindow(InputActionsEditorWindow window)
-        {
-            window.m_AssetId = m_AssetId;
-            window.m_State = m_State;
-            window.m_AssetJson = m_AssetJson;
-            window.m_IsDirty = true;
+            // Make sure window title is up to date
+            window.UpdateWindowTitle();
         }
 
         private bool TryUpdateFromAsset()
@@ -345,8 +357,8 @@ namespace UnityEngine.InputSystem.Editor
                 var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
                 workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
                 m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
-                m_IsDirty = false;
                 m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
+                m_IsDirty = false;
             }
             catch (Exception e)
             {
