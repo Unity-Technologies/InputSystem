@@ -169,6 +169,10 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
                     var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+
+                    if (asset == null)
+                        throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
+                    
                     m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
                     m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
                     m_IsDirty = HasContentChanged();
@@ -311,7 +315,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_AssetObjectForEditing != null)
                 DestroyImmediate(m_AssetObjectForEditing);
 
-            m_View.DestroyView();
+            m_View?.DestroyView();
         }
 
         private void ReshowEditorWindowWithUnsavedChanges()
