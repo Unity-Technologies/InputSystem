@@ -63,8 +63,7 @@ namespace UnityEngine.InputSystem.Editor
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
-                        m_RenameOnActionAdded = false;
-                        ChangeActionName(item, newName);
+                        ChangeActionOrCompositName(item, newName);
                     };
                     treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 }
@@ -77,8 +76,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
-                            m_RenameOnActionAdded = false;
-                            ChangeCompositeName(item, newName);
+                            ChangeActionOrCompositName(item, newName);
                         };
                         treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                     }
@@ -144,6 +142,10 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
+
+            // ISXB-748 - Scrolling the view causes a visual glitch with the rename TextField. As a work-around we
+            // need to cancel the rename operation in this scenario.
+            m_ActionsTreeView.RegisterCallback<WheelEvent>(e => InputActionsTreeViewItem.CancelRename(), TrickleDown.TrickleDown);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -362,16 +364,14 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.PasteActionsOrBindings(InputActionsEditorView.s_OnPasteCutElements));
         }
 
-        private void ChangeActionName(ActionOrBindingData data, string newName)
+        private void ChangeActionOrCompositName(ActionOrBindingData data, string newName)
         {
             m_RenameOnActionAdded = false;
-            Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
-        }
 
-        private void ChangeCompositeName(ActionOrBindingData data, string newName)
-        {
-            m_RenameOnActionAdded = false;
-            Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
+            if (data.isAction)
+                Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
+            else if (data.isComposite)
+                Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)

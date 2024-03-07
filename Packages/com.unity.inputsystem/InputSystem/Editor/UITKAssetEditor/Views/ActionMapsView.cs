@@ -52,10 +52,14 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             m_ListView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+
+            // ISXB-748 - Scrolling the view causes a visual glitch with the rename TextField. As a work-around we
+            // need to cancel the rename operation in this scenario.
+            m_ListView.RegisterCallback<WheelEvent>(e => InputActionMapsTreeViewItem.CancelRename(), TrickleDown.TrickleDown);
+
             var treeView = root.Q<TreeView>("actions-tree-view");
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
             m_ListView.itemIndexChanged += OnReorder;
-
 
             CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) => new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList())));
 
