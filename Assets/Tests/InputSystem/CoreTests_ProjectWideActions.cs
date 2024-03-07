@@ -20,20 +20,25 @@ using UnityEngine.InputSystem.Editor;
 // collisions with assets that may have been created by the user. These are automatically removed on
 // test termination.
 
-[TestFixture]
-[PrebuildSetup(typeof(BuildSetup))]
-[PostBuildCleanup(typeof(BuildSetup))]
-internal class ProjectWideActionsTests : CoreTestsFixture
+internal class ProjectWideActionsBuildSetup : IPrebuildSetup, IPostBuildCleanup
 {
     private const string kAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.inputactions";
-    private static InputActionAsset s_ActionsToIncludeInPlayerBuildBeforeSetup;
+    private const string kCounterAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.counter";
+    #if UNITY_EDITOR
+    private const string kSavedActionsObject = ProjectWideActionsBuildProvider.EditorBuildSettingsActionsConfigKey + ".testbackup";
+    #endif
 
     private static void CreateAndAssignProjectWideTestAsset()
     {
 #if UNITY_EDITOR
-        // Create a temporary asset for testing and assign it as the asset to include in player build while
-        // we at the same time preserve the current configuration so we can restore it after the test build.
-        s_ActionsToIncludeInPlayerBuildBeforeSetup = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        // Preserve a backup of actual user configuration
+        var userAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        if (userAsset != null)
+            EditorBuildSettings.AddConfigObject(name: kSavedActionsObject, obj: userAsset, overwrite: true);
+        else
+            EditorBuildSettings.RemoveConfigObject(name: kSavedActionsObject);
+
+        // Create temporary asset and assign as setting
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = asset;
 #endif
@@ -42,44 +47,42 @@ internal class ProjectWideActionsTests : CoreTestsFixture
     private static void CleanupProjectWideTestAsset()
     {
 #if UNITY_EDITOR
-        // Restore setting
         var testAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = s_ActionsToIncludeInPlayerBuildBeforeSetup;
-        s_ActionsToIncludeInPlayerBuildBeforeSetup = null;
 
-        // Remove asset
+        // Restore users initial config and remove from settings
+        if (EditorBuildSettings.TryGetConfigObject(name: kSavedActionsObject, out InputActionAsset userAsset))
+            EditorBuildSettings.RemoveConfigObject(name: kSavedActionsObject);
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = userAsset;
+
+        // Remove temporary asset
         var path = AssetDatabase.GetAssetPath(testAsset);
         if (File.Exists(path))
             AssetDatabase.DeleteAsset(path);
 #endif
     }
 
-    private class BuildSetup : IPrebuildSetup, IPostBuildCleanup
-    {
-        // Runs before player build or before play-mode tests run, not to confuse with SetUp().
-        // Runs before [OneTimeSetUp] and before [SetUp]
-        #region IPrebuildSetup
-        public void Setup() { CreateAndAssignProjectWideTestAsset(); }
-        #endregion
+    // Runs before player build or before play-mode tests run, not to confuse with SetUp().
+    // Runs before [OneTimeSetUp] and before [SetUp]
+    #region IPrebuildSetup
+    public void Setup() { CreateAndAssignProjectWideTestAsset(); }
+    #endregion
 
-        // Runs after player build, not to confuse with TearDown()
-        // IMPORTANT: Does not run after editor play-mode tests, but do run as expected after player test builds.
-        //            Unclear if this is an issue in UTF or something wrong with this test.
-        //            A workaround is provided via OneTimeTearDown() below.
-        #region IPostBuildCleanup
-        public void Cleanup() { CleanupProjectWideTestAsset(); }
-        #endregion
-    }
+    // Runs after player build, not to confuse with TearDown()
+    // IMPORTANT: Does not run after editor play-mode tests if running with a filter (bug?),
+    //            but do run as expected after filtered player test builds.
+    //            Unclear if this is an issue in UTF or something wrong with this test.
+    //            A workaround is provided via OneTimeTearDown() below.
+    //            Seems to work fine when running all tests.
+    #region IPostBuildCleanup
+    public void Cleanup() { CleanupProjectWideTestAsset(); }
+    #endregion
+}
 
-    // Note that this is mainly a workaround for editor play-mode tests since IPostBuildCleanup doesn't
-    // seem to be called. This may be removed if IPostBuildCleanup is invoked according to what is stated
-    // in UTF documentation.
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        CleanupProjectWideTestAsset();
-    }
-
+[TestFixture]
+[PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+[PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+internal class ProjectWideActionsTests : CoreTestsFixture
+{
     const string TestCategory = "ProjectWideActions";
 
     [Test(Description = "Verifies that attempting to assign InputSystem.actions while in play-mode throws an exception.")]

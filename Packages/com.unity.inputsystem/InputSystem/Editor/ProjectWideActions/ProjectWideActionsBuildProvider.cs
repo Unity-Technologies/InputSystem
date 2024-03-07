@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.Editor
         public int callbackOrder => 0;
 
         // In the editor, we keep track of the appointed project-wide action asset through EditorBuildSettings.
-        private const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
+        internal const string EditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
 
         /// <summary>
         /// Holds an editor build setting for which InputActionAsset to be included as a preloaded asset in
@@ -25,13 +25,13 @@ namespace UnityEngine.InputSystem.Editor
             get
             {
                 // Attempt to get any persisted configuration
-                EditorBuildSettings.TryGetConfigObject(kEditorBuildSettingsActionsConfigKey, out InputActionAsset value);
+                EditorBuildSettings.TryGetConfigObject(EditorBuildSettingsActionsConfigKey, out InputActionAsset value);
                 return value;
             }
             set
             {
                 // Get the current persisted configuration and remove tag when changed
-                if (EditorBuildSettings.TryGetConfigObject(kEditorBuildSettingsActionsConfigKey,
+                if (EditorBuildSettings.TryGetConfigObject(EditorBuildSettingsActionsConfigKey,
                     out InputActionAsset current))
                 {
                     current.m_IsProjectWide = false;
@@ -42,13 +42,13 @@ namespace UnityEngine.InputSystem.Editor
                 if (string.IsNullOrEmpty(path))
                 {
                     // Remove the object to not keep a broken reference
-                    EditorBuildSettings.RemoveConfigObject(kEditorBuildSettingsActionsConfigKey);
+                    EditorBuildSettings.RemoveConfigObject(EditorBuildSettingsActionsConfigKey);
                 }
                 else
                 {
                     // Add configuration object as a persisted setting
                     value.m_IsProjectWide = true;
-                    EditorBuildSettings.AddConfigObject(kEditorBuildSettingsActionsConfigKey, value, true);
+                    EditorBuildSettings.AddConfigObject(EditorBuildSettingsActionsConfigKey, value, true);
                 }
             }
         }
