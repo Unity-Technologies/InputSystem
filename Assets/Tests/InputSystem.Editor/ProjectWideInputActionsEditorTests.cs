@@ -324,7 +324,6 @@ internal class ProjectWideInputActionsEditorTests
     public void ProjectWideActions_CanBeAssignedNullAndFiresCallback_WhenHavingDestroyedObjectAndAssignedNull()
     {
         GivenActions(persisted: true);
-        //GivenOtherActions(persisted: true);
         GivenActionsCallback();
 
         // Assign and make sure property returns the expected assigned value
@@ -349,11 +348,9 @@ internal class ProjectWideInputActionsEditorTests
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent_WhenAssignedDestroyedObject()
     {
         GivenActions(persisted: true);
-        //GivenOtherActions();
         GivenActionsCallback();
 
         // Destroy the associated asset and make sure returned value evaluates to null (But actually Missing Reference).
-        //Object.DestroyImmediate(actions);
         AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_Actions));
         Assert.That(m_Actions == null, Is.True);       // sanity check that it was destroyed
 
