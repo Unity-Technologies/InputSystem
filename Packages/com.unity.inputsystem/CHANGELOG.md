@@ -85,9 +85,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
 - Fixed an issue where InputActionAsset validation where not triggered for Project-wide input actions when the project-wide asset was edited in a regular windowed Input Action Asset editor window.
 - Fixed incorrect documentation in InputSystem.actions and InputSystem.onActionsChanged property API contract.
-- Fixed an issue where `InputSystem.actions` instance could be destroyed if the `InputSystem` would reset.
-- Fixed an issue where `InputSystem.actions` where incorrectly evaluated using null-propagation operator resulting in incorrect execution flow by not relying on `UnityEngine.Object` equality and inequality overloads.
-- Fixed an issue where `InputSystem.actions` would not be initialized during `InputSystem` initialization routines causing incorrect serialized manager state.
+- Fixed an issue where `InputSystem.actions` could be incorrectly evaluated if the associated asset was deleted.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
