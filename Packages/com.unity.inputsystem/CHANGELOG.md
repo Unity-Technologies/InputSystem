@@ -81,6 +81,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where newly created action map names were not editable.
 - Fixed an issue where having unsaved changes in `InputActionsEditorWindow` would be discarded when entering play-mode (or triggering domain reload in general).
 - Fixed an issue where a `InputActionsEditorWindow` would not find an existing open editor window if the editor was open during a domain reload and then the asset was opened from the Project Explorer.
+- Fixed a visual glitch in the InputActionAsset Editor when scrolling the Actions list with a rename in progress. [ISXB-748](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-748)
 - Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
 - Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
 - Fixed an issue where InputActionAsset validation where not triggered for Project-wide input actions when the project-wide asset was edited in a regular windowed Input Action Asset editor window.

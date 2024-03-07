@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         public event EventCallback<string> EditTextFinished;
 
         private bool m_IsEditing;
+        private static InputActionMapsTreeViewItem s_EditingItem = null;
 
         public InputActionMapsTreeViewItem()
         {
@@ -89,7 +90,13 @@ namespace UnityEngine.InputSystem.Editor
             DelayCall();
             renameTextfield.SelectAll();
 
+            s_EditingItem = this;
             m_IsEditing = true;
+        }
+
+        public static void CancelRename()
+        {
+            s_EditingItem?.OnEditTextFinished();
         }
 
         async void DelayCall()
@@ -107,6 +114,7 @@ namespace UnityEngine.InputSystem.Editor
 
             renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            s_EditingItem = null;
             m_IsEditing = false;
 
             var text = renameTextfield.text?.Trim();
