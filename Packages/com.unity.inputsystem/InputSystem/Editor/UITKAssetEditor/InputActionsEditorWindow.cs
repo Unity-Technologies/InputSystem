@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem.Editor
             // When opening the window for the first time there will be no state or asset yet.
             // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
             // Here we only recreate the UI e.g. after a domain reload.
-            if (string.IsNullOrEmpty(m_AssetGUID))
+            if (string.IsNullOrEmpty(m_AssetGUID) || m_AssetObjectForEditing == null)
                 return;
 
             // After domain reloads the state will be in a invalid state as some of the fields
