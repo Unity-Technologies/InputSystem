@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 #if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Editor;
 #endif // UNITY_EDITOR
 
@@ -105,7 +106,15 @@ internal class ProjectWideActionsTests : CoreTestsFixture
 
     [Test]
     [Category(TestCategory)]
-    public void ProjectWideActions_AreEnabledByDefaultInPlayModeAndAppearInEnabledActions()
+    public void ProjectWideActions_AreEnabled_WhenEnteringPlayMode()
+    {
+        Assert.That(InputSystem.actions, Is.Not.Null);
+        Assert.That(InputSystem.actions.enabled, Is.True);
+    }
+
+    [Test]
+    [Category(TestCategory)]
+    public void ProjectWideActions_AppearInEnabledActions()
     {
         // Assert that project-wide actions get enabled by default
         var actionCount = 19;

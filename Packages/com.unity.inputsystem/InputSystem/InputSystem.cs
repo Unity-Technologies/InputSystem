@@ -3527,6 +3527,7 @@ namespace UnityEngine.InputSystem
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
             Profiler.BeginSample("InputSystem.InitializeInEditor");
+
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -3640,7 +3641,7 @@ namespace UnityEngine.InputSystem
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     EnableActions();
-                    #endif
+                    #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3752,10 +3753,9 @@ namespace UnityEngine.InputSystem
                 SetUpRemoting();
 #endif
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && !UNITY_INCLUDE_TESTS
-            // Touching the `actions` property here will initialise it here (if it wasn't already).
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS // && !UNITY_INCLUDE_TESTS
             // This is the point where we initialise project-wide actions for the Player
-            actions?.Enable();
+            EnableActions();
 #endif
         }
 
@@ -3845,7 +3845,12 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputSystem.Reset");
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Note that in a test setup we might enter reset with project-wide actions already enabled but the
+            // reset itself has pushed the action system state on the state stack. To avoid action state memory
+            // problems we disable actions here and also request asset to be marked dirty and reimported.
             DisableActions(triggerSetupChanged: true);
+            if (s_Manager != null)
+                s_Manager.actions = null;
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             // Some devices keep globals. Get rid of them by pretending the devices
@@ -3892,7 +3897,7 @@ namespace UnityEngine.InputSystem
             EnhancedTouchSupport.Reset();
 
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            // Note this is too early for editor ! actions is not setup yet
+            // Note this is too early for editor ! actions is not setup yet.
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
             #endif

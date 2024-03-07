@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
             if (assetAddedByThisProvider == null)
                 return;
 
-            // Revert back to original state by removing all input settings from preloaded assets that was added by this processor.
+            // Revert back to original state by removing all object(s) from preloaded assets that was added by this processor.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             while (preloadedAssets != null && preloadedAssets.Length > 0)
             {

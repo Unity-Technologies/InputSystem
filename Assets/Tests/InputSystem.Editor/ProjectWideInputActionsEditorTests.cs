@@ -167,6 +167,36 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(InputSystem.actions, Is.Null);
     }
 
+    [Test(Description =
+            "Verifies that when assigning InputSystem.actions actions are not enabled in edit mode")]
+    [Category(kTestCategory)]
+    public void
+    ProjectWideActions_CanBeAssignedButAreNotEnabledInEditMode()
+    {
+        GivenActions(persisted: true);
+
+        InputSystem.actions = m_Actions;
+        Assert.That(InputSystem.actions.enabled, Is.False);
+    }
+
+    [Test(Description =
+            "Verifies that when reassigning InputSystem.actions only the last assigned asset is marked to be included in preloaded assets in player build")]
+    [Category(kTestCategory)]
+    public void
+    ProjectWideActions_CanBeAssignedAndAreMarkedAsProjectWide()
+    {
+        GivenActions(persisted: true);
+        GivenOtherActions(persisted: true);
+
+        InputSystem.actions = m_Actions;
+        Assert.That(m_Actions.m_IsProjectWide, Is.True);
+        Assert.That(m_OtherActions.m_IsProjectWide, Is.False);
+
+        InputSystem.actions = m_OtherActions;
+        Assert.That(m_Actions.m_IsProjectWide, Is.False);
+        Assert.That(m_OtherActions.m_IsProjectWide, Is.True);
+    }
+
     [Test(Description = "Verifies that project-wide actions defaults are constructed as an asset on the default asset path")]
     [Category(kTestCategory)]
     public void ProjectWideActionsAsset_DefaultAssetFileHasDefaultContent()

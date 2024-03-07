@@ -1804,14 +1804,16 @@ namespace UnityEngine.InputSystem
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
                 Object.DestroyImmediate(m_Settings);
+
+            // Project-wide Actions are never temporary so we do not destroy them.
         }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Initialize project-wide actions:
+        // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
+        // - In player build we always attempt to find a preloaded asset.
         private void InitializeActions()
         {
-            // Initialize project-wide actions:
-            // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
-            // - In player build we always attempt to find a preloaded asset.
 #if UNITY_EDITOR
             m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
 #else
