@@ -77,6 +77,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in the InputActionAsset Editor where ControlType wasn't updated when ActionType changed.
 - Fixed an issue in the InputActionAsset Editor where Canceling ControlScheme changes didn't reset the values in the UI.
 - Fixed an issue where newly created action map names were not editable.
+- Fixed an issue where having unsaved changes in `InputActionsEditorWindow` would be discarded when entering play-mode (or triggering domain reload in general).
+- Fixed an issue where a `InputActionsEditorWindow` would not find an existing open editor window if the editor was open during a domain reload and then the asset was opened from the Project Explorer.
 - Fixed a visual glitch in the InputActionAsset Editor when scrolling the Actions list with a rename in progress. [ISXB-748](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-748)
 
 ## [1.8.0-pre.2] - 2023-11-09
