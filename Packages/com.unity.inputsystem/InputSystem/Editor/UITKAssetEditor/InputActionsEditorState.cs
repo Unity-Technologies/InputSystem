@@ -123,6 +123,14 @@ namespace UnityEngine.InputSystem.Editor
             // if the asset would be modified during domain reload.
             serializedObject = asset;
 
+            if (other.Equals(default(InputActionsEditorState)))
+            {
+                // This instance was created by default constructor and thus is missing some appropriate defaults:
+                other.m_selectionType = SelectionType.Action;
+                other.m_selectedControlSchemeIndex = -1;
+                other.m_selectedDeviceRequirementIndex = -1;
+            }
+
             // Attempt to preserve action map selection by GUID, otherwise select first or last resort none
             var otherSelectedActionMap = other.GetSelectedActionMap();
             var actionMapCount = Selectors.GetActionMapCount(asset);
