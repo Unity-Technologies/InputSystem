@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (current == target)
             {
-                EditorGUILayout.HelpBox($"This asset contains the currently active {entity} for the Input System.", MessageType.Info);
+                EditorGUILayout.HelpBox($"These actions are assigned as the {entity}.", MessageType.Info);
                 return;
             }
 
@@ -95,9 +95,9 @@ namespace UnityEngine.InputSystem.Editor
             if (current != null)
                 currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(current);
             if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
-                currentlyActiveAssetsPath = $"The currently active {entity} are stored in {currentlyActiveAssetsPath}. ";
-            EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active {entity} for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make \"{targetName}\" the active one.", MessageType.Warning);
-            if (GUILayout.Button($"Make active", EditorStyles.miniButton))
+                currentlyActiveAssetsPath = $" The actions currently assigned as the {entity} are: {currentlyActiveAssetsPath}. ";
+            EditorGUILayout.HelpBox($"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath??""}", MessageType.Warning);
+            if (GUILayout.Button($"Assign as the {entity}", EditorStyles.miniButton))
                 apply(target);
         }
 
