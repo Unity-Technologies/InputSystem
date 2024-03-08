@@ -12,7 +12,9 @@ namespace UnityEngine.InputSystem.Editor
         // returns the argument given if the object was added to the list or null if already present.
         public static Object PreProcessSinglePreloadedAsset(Object assetToPreload)
         {
-            Debug.Assert(assetToPreload == null);
+            // Avoid including any null asset
+            if (assetToPreload == null)
+                return null;
 
             // If we operate on temporary object instead of a properly persisted asset, adding that temporary asset
             // would result in preloadedAssets containing null object "{fileID: 0}". Hence we ignore these.
