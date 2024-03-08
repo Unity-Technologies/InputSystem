@@ -1,5 +1,4 @@
 
-* [Pre-Release Notes](PreReleaseNotes.md)
 * [Introduction](index.md)
   * [Installation](Installation.md)
   * [Quickstart Guide](QuickStartGuide.md)
@@ -9,6 +8,7 @@
     * [Workflow - PlayerInput Component](Workflow-PlayerInput.md)
     * [Workflow - Directly Read Devices](Workflow-Direct.md)
 * [Using the Input System]()
+  * [Project-Wide Actions](ProjectWideActions.md)
   * [Configuring Input](ActionsEditor.md)
   * [Actions](Actions.md)
   * [Responding to Actions](RespondingToActions.md)
