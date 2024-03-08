@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        public static void DrawMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply)
+        public static void DrawMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
             where T : ScriptableObject
         {
             if (current == target)
@@ -97,8 +97,11 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
                 currentlyActiveAssetsPath = $" The actions currently assigned as the {entity} are: {currentlyActiveAssetsPath}. ";
             EditorGUILayout.HelpBox($"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath??""}", MessageType.Warning);
+            GUI.enabled = allowAssignActive;
             if (GUILayout.Button($"Assign as the {entity}", EditorStyles.miniButton))
                 apply(target);
+            if (!allowAssignActive)
+                GUI.enabled = true;
         }
 
         public static bool IsValidFileExtension(string path)
