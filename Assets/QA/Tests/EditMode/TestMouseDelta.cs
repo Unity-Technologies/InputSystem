@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.LowLevel;
 public class TestMouseDelta : MonoBehaviour
 {
     [Serializable]
-    class TestState
+    struct TestState
     {
         public Vector2 m_PreviousMousePosition;
         public Vector2 m_PreviousDelta;
@@ -52,6 +52,9 @@ public class TestMouseDelta : MonoBehaviour
 
     static void CheckState(Pointer mouse, ref TestState state)
     {
+        if (mouse == null)
+            return;
+
         state.m_PreviousMousePosition = mouse.position.ReadValue();
         state.m_PreviousDelta = mouse.delta.ReadValue();
     }
