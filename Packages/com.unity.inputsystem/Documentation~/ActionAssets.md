@@ -3,23 +3,17 @@ uid: input-system-action-assets
 ---
 # Input Action Assets
 
-* [Creating Action Assets](#creating-input-action-assets)
-* [Editing Action Assets](#editing-input-action-assets)
-* [Using Action Assets](#using-input-action-assets)
+- [Creating Input Action Assets](#creating-input-action-assets)
+- [Editing Input Action Assets](#editing-input-action-assets)
+- [Using Input Action Assets](#using-input-action-assets)
+- [Type-safe C# API Generation](#type-safe-c-api-generation)
 
 An Input Action Asset is an Asset which contains a set of [Input Actions](Actions.md) definitions and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes). These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
-### Why use an Input Action Asset instead of configuring actions in the Project Settings window?
+The input system creates an Action Asset when you set up the [default project-wide actions](ProjectWideActions.md), but you can also create new Action Assets directly in the Project window.
 
-Input Action Assets contain the same type of data that you see in the input settings in the Project Settings window, but instead of stored as part of your project settings, they are contained in an asset.
+For most common scenarios, you do not need to use more than one Input Action Asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
 
-For most common scenarios, you do not need to use an Input Action Asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
-
-Input Action Assets exist because, in earlier versions of the Input System package, they were the _only_ way to configure actions. Now that you can configure actions in the Project Settings window, creating Action Assets is a largely redundant workflow, but it still exists for backwards-compatibility.
-
-#### Type-safe C# API Generation
-
-Input Action Assets have a feature that is not present for project-wide actions, which is that you can **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string. This is one reason you might choose to use an Action Asset instead of the project-wide actions defined in the Project Settings window. See below for more information on this.
 
 ## Creating Input Action Assets
 
@@ -33,6 +27,11 @@ The Actions Editor which opens is identical to the [Actions Editor in the Projec
 
 
 ## Using Input Action Assets
+
+
+## Type-safe C# API Generation
+
+Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
 
 ### Auto-generating script code for Actions
 
@@ -118,4 +117,4 @@ void Start()
 }
 ```
 
-> __Note:__ This default actions asset is entirely separate from the default actions that appear in the project-wide actions in the Project Settings window, and should also be considered outdated and redundant.
+> __Note:__ This default actions asset is older than, and entirely separate from the [default project-wide actions](ProjectWideActions.md). It is a legacy asset that remains included in the package for backward compatibility.

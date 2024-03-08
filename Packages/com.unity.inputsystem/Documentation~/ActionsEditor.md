@@ -1,28 +1,30 @@
 ---
 uid: input-system-configuring-input
 ---
-# Configuring Input
+# Configuring Input with the Actions Editor
 
-The **Input Actions Editor** allows you to configure [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes).
+The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md).
 
-Open the Input Actions settings by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**
+It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-![image alt text](./Images/ProjectSettingsInputActions.png)
-*The Input Actions editor in the Project Settings window*
+It also alows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
-The Input Action editor is divided into three panels (marked A, B & C above).
+### Action Assets and Project-Wide Actions
 
-### The default Actions
+The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](ProjectWideActions.md).
 
-The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
+### Opening the Actions Editor
 
-When you first open the Input Actions Editor, you can see the default action maps and actions displayed.
+The **Input Actions Editor** is an editor window displayed when you open an Action Asset by double-clicking it.
 
-These default actions mean that in many cases, you can start scripting with the Input System without any configuration by referring to the names of the default actions that are already configured for you. You can also rename and reconfigure the default actions, or delete these default configurations to suit your needs.
+It is also displayed in the Project Settings window under **Edit** > **Project Settings** > **Input System Package** if you have an Action Asset assigned as project-wide.
 
-If you’d like to delete all the default actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete the default Action Maps, which deletes all the Actions contained in those maps in one go.
+![image alt text](./Images/ActionsEditorCallout.png)
+*The Input Actions editor, displaying the default actions*
 
 ### The Actions Editor panels
+
+The Input Actions editor is divided into three panels (marked A, B & C above).
 
 |Name|Description|
 |-|-|
@@ -43,7 +45,8 @@ If you’d like to delete all the default actions so that you can start from an 
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-* To re-order actions in the list, drag an action and drop it to its new position in the list. **Note:** The order of actions in this window is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+*
+
 
 ## Action type and Control type
 
