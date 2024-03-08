@@ -220,10 +220,8 @@ namespace UnityEngine.InputSystem.Editor
         private void SetObjectFieldEnabled(bool enabled)
         {
             // Update object picker enabled state based off editor play mode
-            if (m_RootVisualElement == null) return;
-            var objectField = m_RootVisualElement.Q<ObjectField>("current-asset");
-            if (objectField == null) return;
-            objectField.SetEnabled(enabled);
+            if (m_RootVisualElement != null)
+                UQueryExtensions.Q<ObjectField>(m_RootVisualElement, "current-asset")?.SetEnabled(enabled);
         }
 
         private void ModeChanged(PlayModeStateChange change)

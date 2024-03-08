@@ -100,8 +100,7 @@ namespace UnityEngine.InputSystem.Editor
             GUI.enabled = allowAssignActive;
             if (GUILayout.Button($"Assign as the {entity}", EditorStyles.miniButton))
                 apply(target);
-            if (!allowAssignActive)
-                GUI.enabled = true;
+            GUI.enabled = true;
         }
 
         public static bool IsValidFileExtension(string path)
