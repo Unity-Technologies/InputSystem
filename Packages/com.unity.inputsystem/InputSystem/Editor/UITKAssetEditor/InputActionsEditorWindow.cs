@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem.Editor
             // When opening the window for the first time there will be no state or asset yet.
             // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
             // Here we only recreate the UI e.g. after a domain reload.
-            if (string.IsNullOrEmpty(m_AssetGUID) || m_AssetObjectForEditing == null)
+            if (string.IsNullOrEmpty(m_AssetGUID))
                 return;
 
             // After domain reloads the state will be in a invalid state as some of the fields
@@ -165,6 +165,7 @@ namespace UnityEngine.InputSystem.Editor
             // Therefore we recreate the state here using the fields which were saved.
             if (m_State.serializedObject == null)
             {
+                InputActionAsset workingCopy = null;
                 try
                 {
                     var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
@@ -174,12 +175,22 @@ namespace UnityEngine.InputSystem.Editor
                         throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
 
                     m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
-                    m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
+
+                    if (m_AssetObjectForEditing == null)
+                    {
+                        workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
+                        m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
+                        m_AssetObjectForEditing = workingCopy;
+                    }
+                    else
+                        m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
                     m_IsDirty = HasContentChanged();
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
+                    if (workingCopy != null)
+                        DestroyImmediate(workingCopy);
                     Close();
                     return;
                 }
