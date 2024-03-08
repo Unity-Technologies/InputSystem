@@ -1,28 +1,30 @@
 ---
 uid: input-system-configuring-input
 ---
-# Configuring Input
+# Configuring Input with the Actions Editor
 
-The **Input Actions Editor** allows you to configure [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes).
+The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md).
 
-Open the Input Actions settings by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**
+It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-![image alt text](./Images/ProjectSettingsInputActions.png)
-*The Input Actions editor in the Project Settings window*
+It also alows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
-The Input Action editor is divided into three panels (marked A, B & C above).
+### Action Assets and Project-Wide Actions
 
-### The default Actions
+The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](ProjectWideActions.md).
 
-The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
+### Opening the Actions Editor
 
-When you first open the Input Actions Editor, you can see the default action maps and actions displayed.
+The **Input Actions Editor** is an editor window displayed when you open an Action Asset by double-clicking it.
 
-These default actions mean that in many cases, you can start scripting with the Input System without any configuration by referring to the names of the default actions that are already configured for you. You can also rename and reconfigure the default actions, or delete these default configurations to suit your needs.
+It is also displayed in the Project Settings window under **Edit** > **Project Settings** > **Input System Package** if you have an Action Asset assigned as project-wide.
 
-If you’d like to delete all the default actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete the default Action Maps, which deletes all the Actions contained in those maps in one go.
+![image alt text](./Images/ActionsEditorCallout.png)
+*The Input Actions editor, displaying the default actions*
 
 ### The Actions Editor panels
+
+The Input Actions editor is divided into three panels (marked A, B & C above).
 
 |Name|Description|
 |-|-|
@@ -43,13 +45,38 @@ If you’d like to delete all the default actions so that you can start from an 
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-* To re-order actions in the list, drag an action and drop it to its new position in the list. **Note:** The order of actions in this window is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+*
+
+
+## Action type and Control type
 
 If you select an Action, you can edit its properties in the right-hand pane of the window:
 
 ![Action Properties](Images/ActionProperties.png)
 
-### Editing Bindings
+#### Action Type
+
+The Action Type setting allows to to select between **Button**, **Value** or **PassThrough**.
+
+These options relate to whether this action should represent a discrete on/off button-style interaction or a value that can change over time while the control is being used.
+
+For device controls such as keyboard keys, mouse clicks, or gamepad buttons, select **Button**. For device controls such as mouse movement, a joystick or gamepad stick, or device orientation that provide continuously changing input over a period of time, select **Value**.
+
+The Button and Value types of action also provides data about the action such as whether it has started and stopped, and conflict resolution in situations where multiple bindings are mapped to the same action.
+
+The third option, **PassThrough**, is also a value type, and as such is suitable for the same types of device controls as value. The difference is that actions set to PassThrough only provide basic information about the values incoming from the device controls bound to it, and does not provide the extra data relating to the phase of the action, nor does it perform conflict resolution in the case of multiple controls mapped to the same action.
+
+For more detail about how these types work, see [action types](RespondingToActions.html#action-types) and [default interactions](Interactions.html#default-interaction).
+
+#### Control Type
+
+The Control Type setting allows you to select the type of control expected by the action. This limits the controls shown when setting up bindings in the UI and also limits which contols can be bound interactively to the action.
+
+For example, if you select **2D axis**, only those controls that can supply a 2D vector as value are available as options for the binding control path.
+
+There are more specific control types available which futher filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
+
+### Bindings
 
 * To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
