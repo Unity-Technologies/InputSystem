@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem
     // Utility allowing access to object T as well as a dispose delegate to clean-up any resources associated with it.
     // Useful with the 'using' keyword to provide scoped RAII-like cleanup of objects in tests without having a
     // dedicated fixture handling the clean-up.
-    public sealed class ScopedDisposable<T> : IDisposable
+    internal sealed class ScopedDisposable<T> : IDisposable
         where T : UnityEngine.Object
     {
         private Action<T> m_Dispose;
@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem
     }
 
     // Convenience API for scoped objects.
-    static class Scoped
+    internal static class Scoped
     {
         public static ScopedDisposable<T> Object<T>(T obj) where T : UnityEngine.Object
         {

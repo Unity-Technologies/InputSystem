@@ -20,7 +20,6 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
-        public const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
 
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // When Project Wide Actions are enabled we place this as a child node to main settings node.
