@@ -1,21 +1,20 @@
 #if UNITY_EDITOR
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem
 {
     /// Provides convenience functions for creating and managing assets for test purposes.
     /// Note that all returned paths are converted to Unix paths when running on Windows
     /// for consistency and to avoid mixed path names.
-    public class AssetDatabaseUtils
+    public static class AssetDatabaseUtils
     {
         private const string kAssetPath = "Assets";
         private const string kTestPath = "TestFiles";
         private const string kMetaExtension = ".meta";
+        private const string kDefaultAssetExtension = "asset";
 
         // Perform an operation equivalent to a file delete operation outside of Unity Editor.
         // Note that meta file is also removed to avoid generating warnings about non-clean delete.
@@ -61,6 +60,11 @@ namespace UnityEngine.InputSystem
         private static string SanitizePath(string path)
         {
             return path?.Replace("\\", "/");
+        }
+
+        private static void CreateRootDirectory()
+        {
+            CreateDirectories(RootPath());
         }
 
         // Creates all directories (including intermediate) defined in path.
@@ -153,8 +157,21 @@ namespace UnityEngine.InputSystem
             return "Test_" + (int)(Math.Floor(r * scale));
         }
 
-        private static string RandomAssetFilePath(string directoryPath, string extension)
+        private static string RandomAssetFilePath<T>(string directoryPath = null)
         {
+            return RandomAssetFilePath(directoryPath, AssetFileExtensionFromType(typeof(T)));
+        }
+
+        private static string RandomAssetFilePath(string directoryPath = null, string extension = null)
+        {
+            // Default to using test files root path
+            if (directoryPath == null)
+                directoryPath = RootPath();
+
+            // Default to default extension
+            if (extension == null)
+                extension = kDefaultAssetExtension;
+
             string path;
             do
             {
@@ -184,7 +201,7 @@ namespace UnityEngine.InputSystem
         {
             if (type == typeof(InputActionAsset))
                 return InputActionAsset.Extension;
-            return "asset";
+            return kDefaultAssetExtension;
         }
 
         private static string DefaultContentFromType(Type type)

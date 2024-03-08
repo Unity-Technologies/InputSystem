@@ -16,6 +16,10 @@ however, it has to be formatted properly to pass verification tests.
 - Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 - Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
 - Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
+- `InputSystem.actions` may now only be assigned in edit-mode. Any attempt to assign `InputSystem.actions` during play-mode will generate an exception.
+- `InputSystem.actions` may now only be assigned a persisted `InputActionAsset` instance since in-memory objects can anyway not be included in a player build. This now generates an `ArgumentException` when attempting to assign a non-persisted object.
+- Project Settings embedded Input Action Editor will now disallow selecting the Project-wide Actions asset during play-mode. The option is only available in edit-mode.
+- The "Assign as the Project-wide Input Actions" option visible in the Inspector when selecting an .inputactions asset that is not the current Project-wide Input Actions Asset is now disabled in play-mode.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -81,6 +85,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where a `InputActionsEditorWindow` would not find an existing open editor window if the editor was open during a domain reload and then the asset was opened from the Project Explorer.
 - Fixed a visual glitch in the InputActionAsset Editor when scrolling the Actions list with a rename in progress. [ISXB-748](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-748)
 - Fixed ProjectWideActions template so Previous/Next Actions are Button instead of Axis.
+- Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
+- Fixed an issue where InputActionAsset validation where not triggered for Project-wide input actions when the project-wide asset was edited in a regular windowed Input Action Asset editor window.
+- Fixed incorrect documentation in InputSystem.actions and InputSystem.onActionsChanged property API contract.
+- Fixed an issue where `InputSystem.actions` could be incorrectly evaluated if the associated asset was deleted.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

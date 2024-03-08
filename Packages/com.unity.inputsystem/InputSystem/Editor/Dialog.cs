@@ -29,6 +29,8 @@ namespace UnityEngine.InputSystem.Editor
         // User UI dialog windows related to InputActionAssets
         public static class InputActionAsset
         {
+            #region Save Changes Dialog
+
             private static Func<string, Result> saveChanges = DefaultSaveChanges;
 
             internal static void SetSaveChanges(Func<string, Result> dialog)
@@ -60,6 +62,10 @@ namespace UnityEngine.InputSystem.Editor
                 return saveChanges(path);
             }
 
+            #endregion
+
+            #region Discard Unsaved Changes Dialog
+
             private static Func<string, Result> discardUnsavedChanges = DefaultDiscardUnsavedChanges;
 
             internal static void SetDiscardUnsavedChanges(Func<string, Result> dialog)
@@ -84,6 +90,37 @@ namespace UnityEngine.InputSystem.Editor
             {
                 return discardUnsavedChanges(path);
             }
+
+            #endregion
+
+            #region Create and overwrite existing asset dialog
+
+            private static Func<string, Result>
+            createAndOverwriteExistingAsset = DefaultCreateAndOverwriteExistingAsset;
+
+            internal static void SetCreateAndOverwriteExistingAsset(Func<string, Result> dialog)
+            {
+                createAndOverwriteExistingAsset = dialog ?? DefaultCreateAndOverwriteExistingAsset;
+            }
+
+            private static Result DefaultCreateAndOverwriteExistingAsset(string path)
+            {
+                var pressedOkButton = EditorUtility.DisplayDialog(
+                    title: "Create Input Action Asset",
+                    message: $"This will overwrite the existing asset: '{path}'. Continue and overwrite?",
+                    ok: "Ok",
+                    cancel: "Cancel");
+                return pressedOkButton ? Result.Discard : Result.Cancel;
+            }
+
+            // Shows a dialog prompting the user whether the intention is to create an asset and overwrite the
+            // currently existing asset. May return Result.Discard to overwrite or Result.Cancel to cancel.
+            public static Result ShowCreateAndOverwriteExistingAsset(string path)
+            {
+                return createAndOverwriteExistingAsset(path);
+            }
+
+            #endregion
         }
 
         // User UI dialog windows related to InputControlSchemes

@@ -33,6 +33,9 @@ namespace UnityEngine.InputSystem.Editor
             if (m_IsActivated)
                 return;
 
+            // Monitor play mode state changes
+            EditorApplication.playModeStateChanged += ModeChanged;
+
             // Setup root element with focus monitoring
             m_RootVisualElement = rootElement;
             m_RootVisualElement.focusable = true;
@@ -61,6 +64,9 @@ namespace UnityEngine.InputSystem.Editor
             // This flag avoids making assumptions and executing logic twice.
             if (!m_IsActivated)
                 return;
+
+            // Stop monitoring play mode state changes
+            EditorApplication.playModeStateChanged -= ModeChanged;
 
             if (m_RootVisualElement != null)
             {
@@ -106,7 +112,7 @@ namespace UnityEngine.InputSystem.Editor
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
                 var asset = GetAsset();
                 if (asset != null)
-                    ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
+                    ValidateAndSaveAsset(asset);
                 #endif
             }
         }
@@ -119,8 +125,14 @@ namespace UnityEngine.InputSystem.Editor
             // Project wide input actions always auto save - don't check the asset auto save status
             var asset = GetAsset();
             if (asset != null)
-                ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
+                ValidateAndSaveAsset(asset);
             #endif
+        }
+
+        private void ValidateAndSaveAsset(InputActionAsset asset)
+        {
+            ProjectWideActionsAsset.Validate(asset); // Ignore validation result for save
+            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         private void CreateUI()
@@ -161,13 +173,21 @@ namespace UnityEngine.InputSystem.Editor
                     if (evt.newValue != asset)
                         InputSystem.actions = evt.newValue as InputActionAsset;
                 });
+
+                // Prevent reassignment in in editor which would result in exception during play-mode
+                objectField.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             }
 
             // Configure a button to allow the user to create and assign a new project-wide asset based on default template
             var createAssetButton = m_RootVisualElement.Q<Button>("create-asset");
             createAssetButton?.RegisterCallback<ClickEvent>(evt =>
             {
-                InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+                var assetPath = ProjectWideActionsAsset.defaultAssetPath;
+                Dialog.Result result = Dialog.Result.Discard;
+                if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
+                    result = Dialog.InputActionAsset.ShowCreateAndOverwriteExistingAsset(assetPath);
+                if (result == Dialog.Result.Discard)
+                    InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
             });
 
             // Remove input action editor if already present
@@ -195,6 +215,30 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionAsset GetAsset()
         {
             return m_State.serializedObject?.targetObject as InputActionAsset;
+        }
+
+        private void SetObjectFieldEnabled(bool enabled)
+        {
+            // Update object picker enabled state based off editor play mode
+            if (m_RootVisualElement != null)
+                UQueryExtensions.Q<ObjectField>(m_RootVisualElement, "current-asset")?.SetEnabled(enabled);
+        }
+
+        private void ModeChanged(PlayModeStateChange change)
+        {
+            switch (change)
+            {
+                case PlayModeStateChange.EnteredEditMode:
+                    SetObjectFieldEnabled(true);
+                    break;
+                case PlayModeStateChange.ExitingEditMode:
+                    SetObjectFieldEnabled(false);
+                    break;
+                case PlayModeStateChange.EnteredPlayMode:
+                case PlayModeStateChange.ExitingPlayMode:
+                default:
+                    break;
+            }
         }
 
         [SettingsProvider]
