@@ -1,5 +1,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
@@ -130,6 +131,18 @@ namespace UnityEngine.InputSystem.Editor
 
             m_IMGUIDropdownVisible = visible;
         }
+        
+        private async void DelayFocusLost(bool relatedTargetWasNull)
+        {
+            await Task.Delay(120);
+
+            // We delay this call to ensure that the IMGUI flag has a chance to change first. 
+            if (relatedTargetWasNull && m_HasEditFocus && !m_IMGUIDropdownVisible)
+            {
+                m_HasEditFocus = false;
+                SaveAssetOnFocusLost();
+            }
+        }
 
         private void OnEditFocusLost(FocusOutEvent @event)
         {
@@ -138,11 +151,7 @@ namespace UnityEngine.InputSystem.Editor
             // elements outside of project settings Editor Window. Also note that @event is null when we call this
             // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
-            if (element == null && m_HasEditFocus && !m_IMGUIDropdownVisible)
-            {
-                m_HasEditFocus = false;
-                SaveAssetOnFocusLost();
-            }
+            DelayFocusLost(element == null);
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
