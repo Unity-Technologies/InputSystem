@@ -131,12 +131,12 @@ namespace UnityEngine.InputSystem.Editor
 
             m_IMGUIDropdownVisible = visible;
         }
-        
+
         private async void DelayFocusLost(bool relatedTargetWasNull)
         {
             await Task.Delay(120);
 
-            // We delay this call to ensure that the IMGUI flag has a chance to change first. 
+            // We delay this call to ensure that the IMGUI flag has a chance to change first.
             if (relatedTargetWasNull && m_HasEditFocus && !m_IMGUIDropdownVisible)
             {
                 m_HasEditFocus = false;
