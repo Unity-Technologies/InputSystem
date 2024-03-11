@@ -1,5 +1,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
@@ -16,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_HasEditFocus;
         private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
+        private static bool m_IMGUIDropdownVisible;
         StateContainer m_StateContainer;
         private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
 
@@ -95,6 +97,50 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_HasEditFocus = true;
                 m_ActiveSettingsProvider = this;
+                SetIMGUIDropdownVisible(false, false);
+            }
+        }
+
+        void SaveAssetOnFocusLost()
+        {
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            var asset = GetAsset();
+            if (asset != null)
+                ValidateAndSaveAsset(asset);
+            #endif
+        }
+
+        public static void SetIMGUIDropdownVisible(bool visible, bool optionWasSelected)
+        {
+            // If we selected an item from the dropdown, we *should* still be focused on this settings window - but
+            // since the IMGUI dropdown is technically a separate window, we have to refocus manually.
+            //
+            // If we didn't select a dropdown option, there's not a simple way to know where the focus has gone,
+            // so assume we lost focus and save if appropriate. ISXB-801
+            if (!visible && m_IMGUIDropdownVisible)
+            {
+                if (optionWasSelected)
+                    m_ActiveSettingsProvider.m_RootVisualElement.Focus();
+                else
+                    m_ActiveSettingsProvider.SaveAssetOnFocusLost();
+            }
+            else if (visible && !m_IMGUIDropdownVisible)
+            {
+                m_ActiveSettingsProvider.m_HasEditFocus = false;
+            }
+
+            m_IMGUIDropdownVisible = visible;
+        }
+
+        private async void DelayFocusLost(bool relatedTargetWasNull)
+        {
+            await Task.Delay(120);
+
+            // We delay this call to ensure that the IMGUI flag has a chance to change first.
+            if (relatedTargetWasNull && m_HasEditFocus && !m_IMGUIDropdownVisible)
+            {
+                m_HasEditFocus = false;
+                SaveAssetOnFocusLost();
             }
         }
 
@@ -105,16 +151,7 @@ namespace UnityEngine.InputSystem.Editor
             // elements outside of project settings Editor Window. Also note that @event is null when we call this
             // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
-            if (element == null && m_HasEditFocus)
-            {
-                m_HasEditFocus = false;
-
-                #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-                var asset = GetAsset();
-                if (asset != null)
-                    ValidateAndSaveAsset(asset);
-                #endif
-            }
+            DelayFocusLost(element == null);
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
