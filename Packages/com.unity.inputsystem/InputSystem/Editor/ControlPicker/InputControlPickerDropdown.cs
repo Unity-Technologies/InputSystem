@@ -65,7 +65,9 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void OnDestroy()
         {
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(false, false);
+            #endif
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
         }
@@ -121,7 +123,9 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(false, true);
+            #endif
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
             m_OnPickCallback(path);
         }
