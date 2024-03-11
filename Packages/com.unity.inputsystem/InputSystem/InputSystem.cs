@@ -3024,7 +3024,7 @@ namespace UnityEngine.InputSystem
         {
 #if UNITY_EDITOR
             // Abort if not in play-mode in editor
-            if (!EditorApplication.isPlaying)
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 #endif // UNITY_EDITOR
             if (actions == null)
