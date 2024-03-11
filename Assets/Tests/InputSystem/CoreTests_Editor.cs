@@ -2890,7 +2890,7 @@ partial class CoreTests
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
     }
 
-    private static void DisableProjectWideActions() // AlexT - testing
+    private static void DisableProjectWideActions()
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // If the system has project-wide input actions they will also trigger enable/disable via
@@ -2909,7 +2909,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
-        DisableProjectWideActions();    // AlexT - testing
+        DisableProjectWideActions();
 
         // Initial state
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(0));
@@ -2920,7 +2920,7 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
-        DisableProjectWideActions();    // AlexT - testing
+        DisableProjectWideActions();
 
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         action.Enable();
