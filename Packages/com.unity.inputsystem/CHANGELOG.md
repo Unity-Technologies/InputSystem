@@ -8,6 +8,89 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.8.0] - 2024-03-12
+
+### Changed
+- From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
+- Changed the 'Max player count reached' error to a warning instead.
+- Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
+- Moved project wide input action storage over to an Asset to avoid issues with multiple assets in a single project settings file.
+- Migrate any project-wide input actions found in the InputManager.asset file to a new InputSystem_Actions.inputactions asset file.
+- `InputSystem.actions` may now only be assigned in edit-mode. Any attempt to assign `InputSystem.actions` during play-mode will generate an exception.
+- `InputSystem.actions` may now only be assigned a persisted `InputActionAsset` instance since in-memory objects can anyway not be included in a player build. This now generates an `ArgumentException` when attempting to assign a non-persisted object.
+- Project Settings embedded Input Action Editor will now disallow selecting the Project-wide Actions asset during play-mode. The option is only available in edit-mode.
+- The "Assign as the Project-wide Input Actions" option visible in the Inspector when selecting an .inputactions asset that is not the current Project-wide Input Actions Asset is now disabled in play-mode.
+
+### Added
+- Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
+  - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
+  - [`InputAction.GetControlMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetControlMagnitude) returns the current amount of actuation of the control that is driving the action.
+  - [`InputAction.WasCompletedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasCompletedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
+- Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+- Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
+- Added drag and drop support in the Input Action Asset Editor for Action Maps, Actions and Bindings.
+- UI Toolkit input action editor now supports showing the derived bindings.
+- Device filtering support for control schemes in the UI-Toolkit Input Asset Editor.
+- Added right-click (context) menu support for empty areas below the Action Maps/Actions lists in the Project Settings Input Action Editor and Asset Input Action Editor.
+- Added text to show which action map asset was used to create each action in the Input Debug window.
+
+### Fixed
+- Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
+- Fixed missing confirmation popup when deleting a control scheme.
+- Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
+- Fixed add bindings button to support left button click.
+- Fixed icon for adding bindings and composites button.
+- Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
+- Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
+- Fixed possible exceptions thrown when deleting and adding Action Maps.
+- Fixed selection not changing when right-clicking an Action Map or Action in the Project Settings Input Actions Editor.
+- Fixed right-click context menus throwing errors when dealing with multiple Input Actions Editor windows.
+- Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
+- Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
+- Fixed lingering highlight effect on Save Asset button after clicking.
+- Fixed missing name in window title for Input Action assets.
+- Fixed showing action properties view when there were no actions.
+- Fixed "Listen" functionality for selecting an input sometimes expecting the wrong input type.
+- Fixed console errors that can be produced when opening input package settings from the Inspector.
+- Fixed InputManager.asset file growing in size on each Reset call.
+- Fixed Opening InputDebugger throws 'Action map must have state at this point' error.
+- Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
+- Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
+- Fixed InputAction asset appearing dirty after rename [ISXB-749](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
+- Fixed Error logged when InputActionsEditor window opened without a valid asset.
+- Fixed ArgumentNullExceptions thrown when deleting items quickly in the UITK Editor.
+- Fixed Project Settings header title styling for Input Actions editor.
+- Fixed Input Actions Editor losing reference to current ControlScheme upon entering Play Mode [ISXB-770](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-770).
+- Fixed Save shortcut (ctrl/cmd + S by default) not saving changes in Input Actions Editor windows. [ISXB-659](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-659).
+- Fixed headers in InputActionsEditor windows becoming squashed when there is a large number of Action Maps/Actions.
+- Fixed duplication of project wide input actions when loading/unloading scenes.
+- Fixed an issue where UI Toolkit based editor would not close itself if the associated asset would be deleted (To mimic IMGUI Input Action Editor behavior).
+- Fixed a regression in IMGUI Input Action Editor where editor would auto-save on focus lost even when the auto-save toggle was disabled.
+- Fixed an issue where UI Toolkit based editor would not properly track tentative changes associated with a moved asset file.
+- Fixed an issue where selection state of UI Toolkit editor state would not be preserved when associated with a new serialized copy of the asset.
+- Fixed an issue where any exceptions throw from within UI Toolkit event queue would only log the error message and not the full exception stack trace, making debugging more difficult.
+- Fixed an issue where UI Toolkit Input Actions Editor wouldn't provide a correct modification state when coming back from domain reload.
+- Fixed an issue in the Input Actions Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue where preloaded InputActionAsset objects added by a Unity developer could accidentally be selected as the project-wide actions asset instead of the configured asset in built players.
+- Fixed a compile-time warning: `warning CS0109: The member 'UnityRemoteTestScript.camera' does not hide an accessible member. The new keyword is not required.` showing up in the Console window when building a player including the Input System Unity Remote sample.
+- Fixed an issue where the InputActionAsset editor window would remove the unsaved changes asterisk when cancelling the window. [ISXB-797](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-797).
+- Fixed an issue in the Input Actions Editor window where deleting items unfolded other actions or the selection switched unintended.
+- Fixed Composite types missing in context menu when "Any" ControlType selected. [ISXB-769](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-769).
+- Fixed 3D Vector and 1D Axis binding dropdown usage in Input Actions Editor throwing NotImplementedExceptions.
+- Fixed several missing tooltips from the Action/Binding Properties pane in Input Actions Editor.
+- Fixed an issue in the InputActionAsset Editor where ControlType wasn't updated when ActionType changed.
+- Fixed an issue in the InputActionAsset Editor where Canceling ControlScheme changes didn't reset the values in the UI.
+- Fixed an issue where newly created action map names were not editable.
+- Fixed an issue where having unsaved changes in `InputActionsEditorWindow` would be discarded when entering play-mode (or triggering domain reload in general).
+- Fixed an issue where a `InputActionsEditorWindow` would not find an existing open editor window if the editor was open during a domain reload and then the asset was opened from the Project Explorer.
+- Fixed a visual glitch in the InputActionAsset Editor when scrolling the Actions list with a rename in progress. [ISXB-748](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-748)
+- Fixed ProjectWideActions template so Previous/Next Actions are Button instead of Axis.
+- Fixed an issue in the Input Action Editor window where entries being cut would be deleted instantly and not after being pasted.
+- Fixed an issue in the Input Action Editor window where deleting items unfolded other actions or the selection switched unintended.
+- Fixed an issue where InputActionAsset validation where not triggered for Project-wide input actions when the project-wide asset was edited in a regular windowed Input Action Asset editor window.
+- Fixed incorrect documentation in InputSystem.actions and InputSystem.onActionsChanged property API contract.
+- Fixed an issue where `InputSystem.actions` could be incorrectly evaluated if the associated asset was deleted.
+
 ## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed
@@ -47,7 +130,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 - Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
-
+- Fixed issue where deleting a binding in the Input Action Editor would usually result in an unexpected item being selected next.
 
 ## [1.8.0-pre.1] - 2023-09-04
 

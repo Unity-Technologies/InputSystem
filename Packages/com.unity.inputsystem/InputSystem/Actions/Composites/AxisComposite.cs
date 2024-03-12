@@ -3,6 +3,13 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_EDITOR
+using System;
+using UnityEditor;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
+#endif
+
 namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
@@ -16,7 +23,7 @@ namespace UnityEngine.InputSystem.Composites
     /// <example>
     /// <code>
     /// var action = new InputAction();
-    /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+    /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
     ///     .With("Negative", "&lt;Keyboard&gt;/a")
     ///     .With("Positive", "&lt;Keyboard&gt;/d");
     /// </code>
@@ -73,7 +80,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <example>
         /// <code>
         /// var action = new InputAction();
-        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
         ///     .With("Negative", "&lt;Keyboard&gt;/a")
         ///     .With("Positive", "&lt;Keyboard&gt;/d");
         /// </code>
@@ -95,7 +102,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <example>
         /// <code>
         /// var action = new InputAction();
-        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2)")
         ///     .With("Negative", "&lt;Keyboard&gt;/a")
         ///     .With("Positive", "&lt;Keyboard&gt;/d");
         /// </code>
@@ -201,4 +208,38 @@ namespace UnityEngine.InputSystem.Composites
             Negative = 2,
         }
     }
+
+    #if UNITY_EDITOR
+    internal class AxisCompositeEditor : InputParameterEditor<AxisComposite>
+    {
+        private GUIContent m_WhichAxisWinsLabel = new GUIContent("Which Side Wins",
+            "Determine which axis 'wins' if both are actuated at the same time. "
+            + "If 'Neither' is selected, the result is 0 (or, more precisely, "
+            + "the midpoint between minValue and maxValue).");
+
+        public override void OnGUI()
+        {
+            target.whichSideWins = (AxisComposite.WhichSideWins)EditorGUILayout.EnumPopup(m_WhichAxisWinsLabel, target.whichSideWins);
+        }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var modeField = new EnumField(m_WhichAxisWinsLabel.text, target.whichSideWins)
+            {
+                tooltip = m_WhichAxisWinsLabel.tooltip
+            };
+
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.whichSideWins = (AxisComposite.WhichSideWins)evt.newValue;
+                onChangedCallback();
+            });
+
+            root.Add(modeField);
+        }
+
+#endif
+    }
+    #endif
 }

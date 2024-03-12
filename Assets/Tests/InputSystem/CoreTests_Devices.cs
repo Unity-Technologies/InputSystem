@@ -5196,6 +5196,55 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    // This test validates that when InputSettings.BackgroundBehavior.ResetAndDisableAllDevices is selected,
+    // events are not available to process once the app regains focus.
+    // Essentially, only the relevant input events are processed.
+    public void Devices_CanSkipProcessingEventsWhileInBackground()
+    {
+        InputSystem.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableAllDevices;
+
+        var time = 0;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var pressAction = new InputAction("Press", binding: "<Gamepad>/buttonSouth");
+        var performedCount = 0;
+
+        pressAction.performed += ctx =>
+        {
+            performedCount++;
+        };
+        pressAction.Enable();
+
+        InputSystem.Update();
+        Assert.That(gamepad.canRunInBackground, Is.False);
+
+        Press(gamepad.buttonSouth, time: time++);
+        Assert.That(performedCount, Is.EqualTo(1));
+
+        // Lose focus
+        runtime.PlayerFocusLost();
+        Assert.That(gamepad.enabled, Is.False);
+
+        // Queue an event while in the background. We don't want to see this event to be processed once focus
+        // is regained. If there is, the callback will be triggered again.
+        Press(gamepad.buttonSouth, queueEventOnly: true, time: time++);
+
+        // Run update to try process events accordingly while in the background
+        InputSystem.Update();
+
+        // Gain focus
+        runtime.PlayerFocusGained();
+
+        // Run update to try process events accordingly once focus is gained
+        InputSystem.Update();
+
+        Assert.That(gamepad.enabled, Is.True);
+        // Confirm that callback was not triggered again once focus was regained
+        Assert.That(performedCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanMarkDeviceAsBeingAbleToRunInBackground_ThroughIOCTL()
     {
         var deviceId = runtime.ReportNewInputDevice<Gamepad>();

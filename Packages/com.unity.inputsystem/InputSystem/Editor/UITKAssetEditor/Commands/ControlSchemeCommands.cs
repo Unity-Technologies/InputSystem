@@ -28,8 +28,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                var newDeviceIndex =
+                    Mathf.Clamp(
+                        selectedDeviceIndex <= state.selectedDeviceRequirementIndex
+                        ? state.selectedDeviceRequirementIndex - 1
+                        : state.selectedDeviceRequirementIndex, -1, state.selectedDeviceRequirementIndex);
                 return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
-                    state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)));
+                    state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)), selectedDeviceRequirementIndex: newDeviceIndex);
             };
         }
 
@@ -126,6 +131,31 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command ResetSelectedControlScheme()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var controlSchemeSerializedProperty = state.serializedObject
+                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
+                    .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+
+                if (controlSchemeSerializedProperty == null)
+                {
+                    return state.With(
+                        selectedControlSchemeIndex: -1,
+                        selectedControlScheme: new InputControlScheme());
+                }
+
+                return state.With(
+                    selectedControlScheme: new InputControlScheme(controlSchemeSerializedProperty));
+            };
+        }
+
+        public static Command SelectDeviceRequirement(int deviceRequirementIndex)
+        {
+            return (in InputActionsEditorState state) => state.With(selectedDeviceRequirementIndex: deviceRequirementIndex);
+        }
+
         /// <summary>
         /// Duplicate creates a new instance of the selected control scheme and places it in the selected
         /// control scheme property of the state but doesn't persist anything.
@@ -143,30 +173,32 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var selectedControlSchemeName = state.selectedControlScheme.name;
 
-                var serializedArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
-                var serializedControlScheme = serializedArray
-                    .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == selectedControlSchemeName);
-
-                if (serializedControlScheme == null)
+                var serializedArray = InputActionSerializationHelpers.GetControlSchemesArray(state.serializedObject);
+                var indexOfArrayElement = InputActionSerializationHelpers.IndexOfControlScheme(serializedArray, selectedControlSchemeName);
+                if (indexOfArrayElement < 0)
                     throw new InvalidOperationException("Control scheme doesn't exist in collection.");
 
-                var indexOfArrayElement = serializedControlScheme.GetIndexOfArrayElement();
+                // Ask for confirmation.
+                if (Dialog.Result.Cancel == Dialog.ControlScheme.ShowDeleteControlScheme(selectedControlSchemeName))
+                    return state;
+
                 serializedArray.DeleteArrayElementAtIndex(indexOfArrayElement);
                 state.serializedObject.ApplyModifiedProperties();
 
                 if (serializedArray.arraySize == 0)
                     return state.With(
                         selectedControlSchemeIndex: -1,
-                        selectedControlScheme: new InputControlScheme());
+                        selectedControlScheme: new InputControlScheme(),
+                        selectedDeviceRequirementIndex: -1);
 
                 if (indexOfArrayElement > serializedArray.arraySize - 1)
                     return state.With(
                         selectedControlSchemeIndex: serializedArray.arraySize - 1,
-                        selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)));
+                        selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)), selectedDeviceRequirementIndex: -1);
 
                 return state.With(
                     selectedControlSchemeIndex: indexOfArrayElement,
-                    selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)));
+                    selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)), selectedDeviceRequirementIndex: -1);
             };
         }
 
