@@ -17,8 +17,8 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static class ProjectSettingsProjectWideActionsAssetConverter
         {
-            internal const string kAssetPathInputManager = "ProjectSettings/InputManager.asset";
-            internal const string kAssetNameProjectWideInputActions = "ProjectWideInputActions";
+            private const string kAssetPathInputManager = "ProjectSettings/InputManager.asset";
+            private const string kAssetNameProjectWideInputActions = "ProjectWideInputActions";
 
             class ProjectSettingsPostprocessor : AssetPostprocessor
             {
@@ -38,18 +38,9 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private static string FixPath(string path)
+            private static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
             {
-#if UNITY_2021_2_OR_NEWER
-                return FileUtil.GetPhysicalPath(path);
-#else
-                return path;
-#endif
-            }
-
-            internal static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
-            {
-                var objects = AssetDatabase.LoadAllAssetsAtPath(FixPath(kAssetPathInputManager));
+                var objects = AssetDatabase.LoadAllAssetsAtPath(EditorHelpers.GetPhysicalPath(kAssetPathInputManager));
                 if (objects == null)
                     return;
 
@@ -60,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
                     //
                     string path = ProjectWideActionsAsset.kDefaultAssetPath;
 
-                    if (File.Exists(FixPath(path)))
+                    if (File.Exists(EditorHelpers.GetPhysicalPath(path)))
                     {
                         // We already have a path containing inputactions, find a new unique filename
                         //
@@ -79,7 +70,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
 
                     var json = inputActionsAsset.ToJson();
-                    InputActionAssetManager.SaveAsset(FixPath(path), json);
+                    InputActionAssetManager.SaveAsset(EditorHelpers.GetPhysicalPath(path), json);
 
                     Debug.Log($"Migrated Project-wide Input Actions from '{kAssetPathInputManager}' to '{path}' asset");
 
@@ -120,45 +111,20 @@ namespace UnityEngine.InputSystem.Editor
             return File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath));
         }
 
-        // Creates an asset at the given path containing the given JSON content.
-        private static InputActionAsset CreateAssetAtPathFromJson(string assetPath, string json)
-        {
-            // Note that the extra work here is to override the JSON name from the source asset
-            var inputActionAsset = InputActionAsset.FromJson(json);
-            inputActionAsset.name = InputActionImporter.NameFromAssetPath(assetPath);
-
-            var doSave = true;
-            if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
-            {
-                doSave = EditorUtility.DisplayDialog("Create Input Action Asset", "This will overwrite an existing asset. Continue and overwrite?", "Ok", "Cancel");
-            }
-            if (doSave)
-                InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
-
-            return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
-        }
-
         // Creates an asset at the given path containing the default template JSON.
         internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
         {
             return CreateAssetAtPathFromJson(assetPath, File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath)));
         }
 
-        // Returns the default UI action map as represented by the default template JSON.
-        internal static InputActionMap GetDefaultUIActionMap()
-        {
-            var actionMaps = InputActionMap.FromJson(GetDefaultAssetJson());
-            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
-        }
-
-        // These may be moved out to internal types if decided to extend validation at a later point
+        // These may be moved out to internal types if decided to extend validation at a later point.
 
         internal interface IReportInputActionAssetValidationErrors
         {
             bool OnValidationError(InputAction action, string message);
         }
 
-        internal class DefaultInputActionAssetValidationReporter : IReportInputActionAssetValidationErrors
+        private class DefaultInputActionAssetValidationReporter : IReportInputActionAssetValidationErrors
         {
             public bool OnValidationError(InputAction action, string message)
             {
@@ -176,12 +142,6 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        internal static bool ValidateAndSaveAsset(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
-        {
-            Validate(asset, reporter); // Currently ignoring validation result
-            return EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
-        }
-
         private static bool ReportError(IReportInputActionAssetValidationErrors reporter, InputAction action, string message)
         {
             return reporter.OnValidationError(action, message);
@@ -189,7 +149,7 @@ namespace UnityEngine.InputSystem.Editor
 
 #if UNITY_2023_2_OR_NEWER
         /// <summary>
-        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
+        /// Checks if the default InputForUI UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
         /// </summary>
         internal static bool CheckForDefaultUIActionMapChanges(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
@@ -227,6 +187,23 @@ namespace UnityEngine.InputSystem.Editor
         }
 
 #endif // UNITY_2023_2_OR_NEWER
+
+        // Returns the default UI action map as represented by the default template JSON.
+        private static InputActionMap GetDefaultUIActionMap()
+        {
+            var actionMaps = InputActionMap.FromJson(GetDefaultAssetJson());
+            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
+        }
+
+        // Creates an asset at the given path containing the given JSON content.
+        private static InputActionAsset CreateAssetAtPathFromJson(string assetPath, string json)
+        {
+            // Note that the extra work here is to override the JSON name from the source asset
+            var inputActionAsset = InputActionAsset.FromJson(json);
+            inputActionAsset.name = InputActionImporter.NameFromAssetPath(assetPath);
+            InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
+            return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+        }
     }
 }
 #endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

@@ -18,6 +18,11 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) => state.SelectAction(actionName);
         }
 
+        public static Command SelectAction(int index)
+        {
+            return (in InputActionsEditorState state) => state.SelectAction(index);
+        }
+
         public static Command SelectActionMap(string actionMapName)
         {
             return (in InputActionsEditorState state) => state.SelectActionMap(actionMapName);
@@ -445,8 +450,8 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 if (isCut)
-                    return state.ClearCutElements();
-                return state; // ActionsTreeView will dispatch a separate command to select the previous Action
+                    return state.With(selectedActionIndex: -1, selectionType: SelectionType.Action).ClearCutElements();
+                return state.With(selectedActionIndex: -1, selectionType: SelectionType.Action); // ActionsTreeView will dispatch a separate command to select the previous Action
             };
         }
 
@@ -461,8 +466,8 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 if (isCut)
-                    return state.ClearCutElements();
-                return state; // ActionsTreeView will dispatch a separate command to select the previous Binding
+                    return state.With(selectedBindingIndex: -1, selectionType: SelectionType.Binding).ClearCutElements();
+                return state.With(selectedBindingIndex: -1, selectionType: SelectionType.Binding); // ActionsTreeView will dispatch a separate command to select the previous Binding
             };
         }
 

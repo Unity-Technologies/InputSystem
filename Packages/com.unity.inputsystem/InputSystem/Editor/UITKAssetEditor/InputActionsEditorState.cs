@@ -113,16 +113,6 @@ namespace UnityEngine.InputSystem.Editor
             m_CutElements = cutElements;
         }
 
-        private static int AdjustSelection(SerializedObject serializedObject, string propertyName, int index)
-        {
-            if (index < 0)
-                return index;
-            var controlSchemesArrayProperty = serializedObject.FindProperty(propertyName);
-            if (index >= controlSchemesArrayProperty.arraySize)
-                return 0;
-            return index;
-        }
-
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
             // Assign serialized object, not that this might be equal to other.serializedObject,
@@ -132,6 +122,14 @@ namespace UnityEngine.InputSystem.Editor
             // fails revert to not having a selection. This would even be true for domain reloads
             // if the asset would be modified during domain reload.
             serializedObject = asset;
+
+            if (other.Equals(default(InputActionsEditorState)))
+            {
+                // This instance was created by default constructor and thus is missing some appropriate defaults:
+                other.m_selectionType = SelectionType.Action;
+                other.m_selectedControlSchemeIndex = -1;
+                other.m_selectedDeviceRequirementIndex = -1;
+            }
 
             // Attempt to preserve action map selection by GUID, otherwise select first or last resort none
             var otherSelectedActionMap = other.GetSelectedActionMap();
@@ -338,7 +336,7 @@ namespace UnityEngine.InputSystem.Editor
             //if no action selected (no actions available) set selection type to none
             if (index == -1)
                 return With(selectedActionIndex: index, selectionType: SelectionType.None);
-            return With(selectedActionIndex: index);
+            return With(selectedActionIndex: index, selectionType: SelectionType.Action);
         }
 
         public InputActionsEditorState SelectActionMap(int index)

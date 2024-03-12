@@ -1,6 +1,5 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using System;
@@ -8,6 +7,18 @@ using System.Text.RegularExpressions;
 
 public class ControlSchemesEditorTests
 {
+    [SetUp]
+    public void SetUp()
+    {
+        TestUtils.MockDialogs();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        TestUtils.RestoreDialogs();
+    }
+
     [Test]
     [Category("AssetEditor")]
     public void AddRequirementCommand_AddsDeviceRequirements()

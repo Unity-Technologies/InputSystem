@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.Editor
             // If this is invoked after a domain reload, importAsset will resolve itself.
             // However, if the asset do not exist importedAsset will be null and we cannot complete the operation.
             if (importedAsset == null)
-                throw new Exception("Unable to save changes. Associated asset do not exist.");
+                throw new Exception("Unable to save changes. Associated asset does not exist.");
 
             SaveAsset(path, m_AssetObjectForEditing.ToJson());
             SetDirty(false);

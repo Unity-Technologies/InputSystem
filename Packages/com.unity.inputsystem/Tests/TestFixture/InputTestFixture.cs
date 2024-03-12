@@ -141,12 +141,13 @@ namespace UnityEngine.InputSystem
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
 
+                #if UNITY_EDITOR
                 // Default mock dialogs to avoid unexpected cancellation of standard flows
-#if UNITY_EDITOR
                 Dialog.InputActionAsset.SetSaveChanges((_) => Dialog.Result.Discard);
                 Dialog.InputActionAsset.SetDiscardUnsavedChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset((_) => Dialog.Result.Discard);
                 Dialog.ControlScheme.SetDeleteControlScheme((_) => Dialog.Result.Delete);
-#endif
+                #endif
             }
             catch (Exception exception)
             {
@@ -189,12 +190,13 @@ namespace UnityEngine.InputSystem
                 InputDebuggerWindow.Enable();
                 #endif
 
+                #if UNITY_EDITOR
                 // Re-enable dialogs.
-#if UNITY_EDITOR
                 Dialog.InputActionAsset.SetSaveChanges(null);
                 Dialog.InputActionAsset.SetDiscardUnsavedChanges(null);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset(null);
                 Dialog.ControlScheme.SetDeleteControlScheme(null);
-#endif
+                #endif
             }
             catch (Exception exception)
             {

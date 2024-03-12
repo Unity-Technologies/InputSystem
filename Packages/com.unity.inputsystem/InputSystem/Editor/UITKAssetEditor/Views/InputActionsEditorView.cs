@@ -45,7 +45,6 @@ namespace UnityEngine.InputSystem.Editor
             CreateChildView(m_ActionMapsView);
             CreateChildView(m_ActionsTreeView);
             CreateChildView(new PropertiesView(root, stateContainer));
-            InputActionViewsControlsHolder.Initialize(root, m_ActionsTreeView);
 
             m_ControlSchemesToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             m_ControlSchemesToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));

@@ -47,28 +47,23 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
-                treeViewItem.DeleteCallback = _ => DeleteItem(item);
-                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
-                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(this, treeViewItem, i);
                 else if (item.isAction)
                     ContextMenu.GetContextMenuForActionItem(this, treeViewItem, item.controlLayout, i);
                 else
-                    ContextMenu.GetContextMenuForBindingItem(this, treeViewItem);
+                    ContextMenu.GetContextMenuForBindingItem(this, treeViewItem, i);
 
                 if (item.isAction)
                 {
-                    Action action = ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    Action action = ContextMenu.GetContextMenuForActionAddItem(this, item.controlLayout, i);
                     addBindingButton.clicked += action;
                     addBindingButton.userData = action; // Store to use in unbindItem
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
-                        m_RenameOnActionAdded = false;
-                        ChangeActionName(item, newName);
+                        ChangeActionOrCompositName(item, newName);
                     };
                     treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 }
@@ -81,8 +76,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
-                            m_RenameOnActionAdded = false;
-                            ChangeCompositeName(item, newName);
+                            ChangeActionOrCompositName(item, newName);
                         };
                         treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                     }
@@ -123,8 +117,6 @@ namespace UnityEngine.InputSystem.Editor
                     button.clicked -= button.userData as Action;
                 }
 
-                treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -150,6 +142,10 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
+
+            // ISXB-748 - Scrolling the view causes a visual glitch with the rename TextField. As a work-around we
+            // need to cancel the rename operation in this scenario.
+            m_ActionsTreeView.RegisterCallback<WheelEvent>(e => InputActionsTreeViewItem.CancelRename(), TrickleDown.TrickleDown);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -309,49 +305,47 @@ namespace UnityEngine.InputSystem.Editor
             treeViewItem?.FocusOnRenameTextField();
         }
 
+        internal void RenameActionItem(int index)
+        {
+            m_ActionsTreeView.ScrollToItem(index);
+            m_ActionsTreeView.GetRootElementForIndex(index)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+        }
+
         internal void AddAction()
         {
             Dispatch(Commands.AddAction());
             m_RenameOnActionAdded = true;
         }
 
-        internal void AddBinding(string actionName)
+        internal void AddBinding(int index)
         {
-            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddBinding());
         }
 
-        internal void AddComposite(string actionName, string compositeType)
+        internal void AddComposite(int index, string compositeType)
         {
-            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.SelectAction(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index).actionIndex));
             Dispatch(Commands.AddComposite(compositeType));
         }
 
-        private void DeleteItem(ActionOrBindingData data)
+        internal void DeleteItem(int selectedIndex)
         {
-            if (data.isAction)
-            {
-                string actionToSelect = GetPreviousActionNameFromViewTree(data);
-                Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
-                Dispatch(Commands.SelectAction(actionToSelect));
-            }
-            else
-            {
-                int bindingIndexToSelect = GetPreviousBindingIndexFromViewTree(data, out string parentActionName);
-                Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
+            var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(selectedIndex);
 
-                if (bindingIndexToSelect >= 0)
-                    Dispatch(Commands.SelectBinding(bindingIndexToSelect));
-                else
-                    Dispatch(Commands.SelectAction(parentActionName));
-            }
+            if (data.isAction)
+                Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
+            else
+                Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
 
             // Deleting an item sometimes causes the UI Panel to lose focus; make sure we keep it
             m_ActionsTreeView.Focus();
         }
 
-        private void DuplicateItem(ActionOrBindingData data)
+        internal void DuplicateItem(int selectedIndex)
         {
+            var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(selectedIndex);
+
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
@@ -370,16 +364,14 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.PasteActionsOrBindings(InputActionsEditorView.s_OnPasteCutElements));
         }
 
-        private void ChangeActionName(ActionOrBindingData data, string newName)
+        private void ChangeActionOrCompositName(ActionOrBindingData data, string newName)
         {
             m_RenameOnActionAdded = false;
-            Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
-        }
 
-        private void ChangeCompositeName(ActionOrBindingData data, string newName)
-        {
-            m_RenameOnActionAdded = false;
-            Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
+            if (data.isAction)
+                Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
+            else if (data.isComposite)
+                Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
@@ -395,16 +387,16 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     case CmdEvents.Rename:
                         if (data.isAction || data.isComposite)
-                            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+                            RenameActionItem(m_ActionsTreeView.selectedIndex);
                         else
                             return;
                         break;
                     case CmdEvents.Delete:
                     case CmdEvents.SoftDelete:
-                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                        DeleteItem(m_ActionsTreeView.selectedIndex);
                         break;
                     case CmdEvents.Duplicate:
-                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                        DuplicateItem(m_ActionsTreeView.selectedIndex);
                         break;
                     case CmdEvents.Copy:
                         CopyItems();
