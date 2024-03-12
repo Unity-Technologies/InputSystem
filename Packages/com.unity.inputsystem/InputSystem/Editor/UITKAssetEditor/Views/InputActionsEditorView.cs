@@ -251,20 +251,25 @@ namespace UnityEngine.InputSystem.Editor
 
         void OnExecuteCommand(ExecuteCommandEvent evt)
         {
-            if (evt.commandName != CmdEvents.Paste)
-                return;
-
-            var copiedType = CopyPasteHelper.GetCopiedClipboardType();
-
-            if (copiedType == typeof(InputActionMap))
+            if (allowUICommandExecution)
             {
-                evt.StopPropagation();
-                m_ActionMapsView.PasteItems(false);
-            }
-            else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
-            {
-                evt.StopPropagation();
-                m_ActionsTreeView.PasteItems();
+                if (evt.commandName != CmdEvents.Paste)
+                    return;
+
+                var copiedType = CopyPasteHelper.GetCopiedClipboardType();
+
+                if (copiedType == typeof(InputActionMap))
+                {
+                    evt.StopPropagation();
+                    m_ActionMapsView.PasteItems(false);
+                    allowUICommandExecution = false;
+                }
+                else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
+                {
+                    evt.StopPropagation();
+                    m_ActionsTreeView.PasteItems();
+                    allowUICommandExecution = false;
+                }
             }
         }
 
