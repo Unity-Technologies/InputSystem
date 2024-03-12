@@ -248,18 +248,15 @@ namespace UnityEngine.InputSystem
 
                             // Also, disabled if binding doesn't match with our binding mask (might be empty).
                             || (!isComposite && bindingMask != null &&
-                                !bindingMask.Value.Matches(ref unresolvedBinding,
-                                    InputBinding.MatchOptions.EmptyGroupMatchesAny))
+                                !bindingMask.Value.MatchesMask(ref unresolvedBinding))
 
                             // Also, disabled if binding doesn't match the binding mask on the map (might be empty).
                             || (!isComposite && bindingMaskOnThisMap != null &&
-                                !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding,
-                                    InputBinding.MatchOptions.EmptyGroupMatchesAny))
+                                !bindingMaskOnThisMap.Value.MatchesMask(ref unresolvedBinding))
 
                             // Finally, also disabled if binding doesn't match the binding mask on the action (might be empty).
                             || (!isComposite && action?.m_BindingMask != null &&
-                                !action.m_BindingMask.Value.Matches(ref unresolvedBinding,
-                                    InputBinding.MatchOptions.EmptyGroupMatchesAny));
+                                !action.m_BindingMask.Value.MatchesMask(ref unresolvedBinding));
 
                         // If the binding isn't disabled, look up controls now. We do this first as we may still disable the
                         // binding if it doesn't resolve to any controls or resolves only to controls already bound to by

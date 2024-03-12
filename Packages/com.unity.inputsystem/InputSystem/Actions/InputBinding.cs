@@ -842,6 +842,14 @@ namespace UnityEngine.InputSystem
             return Matches(ref binding);
         }
 
+        internal bool MatchesMask(ref InputBinding binding)
+        {
+            if (path != null)
+                if (InputControlPath.BindingPathMatchesMask(path, binding.path))
+                    return true;
+            return Matches(ref binding, MatchOptions.EmptyGroupMatchesAny);
+        }
+
         // Internally we pass by reference to not unnecessarily copy the struct.
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {

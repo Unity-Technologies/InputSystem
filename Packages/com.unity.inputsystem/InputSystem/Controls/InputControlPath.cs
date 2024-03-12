@@ -482,6 +482,12 @@ namespace UnityEngine.InputSystem
             return currentResult;
         }
 
+        internal static bool BindingPathMatchesMask(string mask, string bindingPath)
+        {
+            var bindingPathString = new InternedString(bindingPath);
+            return StringMatches(mask, bindingPathString);
+        }
+
         private static bool ControlLayoutMatchesPathComponent(ref InputControlLayout.ControlItem controlItem, ref PathParser parser)
         {
             // Match layout.

@@ -1151,6 +1151,164 @@ partial class CoreTests
     }
 
     [Test]
+    [Category("Actions")]
+    public void Actions_BindingMask_HandlesWildcards()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey }));
+
+            // Enable only keyboards via mask
+            action.bindingMask = new InputBinding(path: "<Keyboard>/*");
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey }));
+
+            Press(keyboard.aKey);
+            Release(keyboard.aKey);
+
+            Assert.That(trace,
+                Started(action, keyboard.aKey)
+                    .AndThen(Performed(action, keyboard.aKey))
+                    .AndThen(Canceled(action, keyboard.aKey)));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroup_MatchesEqualGroups()
+    {
+        var mask = new InputBinding(null, groups: "D");
+        var binding = new InputBinding(null, groups: "D");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroupNullName_MatchesIgnoringBindingName()
+    {
+        var mask = new InputBinding(null, name: null, groups: "B");
+        var binding = new InputBinding(null, name: "A", groups: "B");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroup_DoesNotMatchDifferentGroups()
+    {
+        var mask = new InputBinding(null, groups: "B");
+        var binding = new InputBinding(null, groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroupDifferentGroups_DoesNotMatchIgnoresEqualName()
+    {
+        var mask = new InputBinding(null, name: "A", groups: "B");
+        var binding = new InputBinding(null, name: "A", groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskName_DoesMatchSameName()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "A");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskName_DoesNotMatchDifferentNames()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "B");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskNameNullGroup_DoesMatchNamesIgnoringGroup()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "A", groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesMatchPath()
+    {
+        var mask = new InputBinding("<Keyboard>/e");
+        var binding = new InputBinding("<Keyboard>/e");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesNotMatchDifferentPaths()
+    {
+        var mask = new InputBinding("<Keyboard>/d");
+        var binding = new InputBinding("<Keyboard>/e");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesMatchWildcardToPath()
+    {
+        var mask = new InputBinding("<Keyboard>/*");
+        var binding = new InputBinding("<Keyboard>/e");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesNotMatchWildcardToDifferentPath()
+    {
+        var mask = new InputBinding("<Keyboard>/*");
+        var binding = new InputBinding("<Mouse>/leftButton");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPathToMask()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/e", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/d", "<Keyboard>/e"), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPathToMaskWithWildcardAtBeginning()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/e", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/d", "<Keyboard>/e"), Is.False);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/d", "<Keyboard>/d"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/leftButton", "<Mouse>/leftButton"), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPathToMaskWithWildcardAtEnd()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Mouse>/leftButton"), Is.False);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Keyboard>/d"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Mouse>/*", "<Mouse>/leftButton"), Is.True);
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_CanDetermineIfControlIsPressed()
     {
