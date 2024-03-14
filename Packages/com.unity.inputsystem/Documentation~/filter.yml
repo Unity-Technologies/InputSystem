@@ -1,4 +1,8 @@
 apiRules:
+  - include:
+      # IMECompositionEvent is marked as obsolete
+      uid: UnityEngine.InputSystem.LowLevel.IMECompositionEvent
+      type: Type
   - exclude:
       # inherited Object methods
       uidRegex: ^System\.Object\..*$

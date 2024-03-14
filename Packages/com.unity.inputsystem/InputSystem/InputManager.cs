@@ -3418,11 +3418,11 @@ namespace UnityEngine.InputSystem
                             break;
                         }
 
-                        case IMECompositionEvent.Type:
+                        case IMECompositionEventVariableSize.Type:
                         {
-                            var imeEventPtr = (IMECompositionEvent*)currentEventReadPtr;
+                            var imeEventPtr = (IMECompositionEventVariableSize*)currentEventReadPtr;
                             var textInputReceiver = device as ITextInputReceiver;
-                            textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
+                            textInputReceiver?.OnIMECompositionChanged(IMECompositionEventVariableSize.GetIMECompositionString(imeEventPtr));
                             break;
                         }
 
