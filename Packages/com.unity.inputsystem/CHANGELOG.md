@@ -11,7 +11,6 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.8.1] - 2024-03-14
 
 ### Fixed
-
 - NullReferenceException thrown when editing a binding path in InputActionAsset windows.
 
 ## [1.8.0] - 2024-03-12
