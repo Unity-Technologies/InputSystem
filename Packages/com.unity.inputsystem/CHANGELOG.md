@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.8.1] - 2024-03-14
+
+### Fixed
+- NullReferenceException thrown when editing a binding path in InputActionAsset windows.
+
 ## [1.8.0] - 2024-03-12
 
 ### Changed

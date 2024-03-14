@@ -112,6 +112,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void SetIMGUIDropdownVisible(bool visible, bool optionWasSelected)
         {
+            if (m_ActiveSettingsProvider == null)
+                return;
+
             // If we selected an item from the dropdown, we *should* still be focused on this settings window - but
             // since the IMGUI dropdown is technically a separate window, we have to refocus manually.
             //
