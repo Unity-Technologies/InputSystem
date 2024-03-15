@@ -8,7 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [Unreleased] - YYYY-MM-DD
+
+## [1.8.1] - 2024-03-14
+
+### Fixed
+- NullReferenceException thrown when editing a binding path in InputActionAsset windows.
+
+## [1.8.0] - 2024-03-12
 
 ### Changed
 - From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
