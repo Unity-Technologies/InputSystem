@@ -260,7 +260,7 @@ public class ControlSchemesEditorTests
     }
 
     [Test]
-    [Category("AssetEditor")]    
+    [Category("AssetEditor")]
     public void DeleteControlSchemeCommand_DeletesSelectedControlScheme()
     {
         var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme.WithOptionalDevice()).Generate();
@@ -281,7 +281,7 @@ public class ControlSchemesEditorTests
     [TestCase(3, 1, 1, "Test2")]
     [TestCase(3, 2, 1, "Test1")]
     [TestCase(1, 0, -1, null)]
-    [Category("AssetEditor")]  
+    [Category("AssetEditor")]
     public void DeleteControlSchemeCommand_SelectsAnotherControlSchemeAfterDelete(
         int controlSchemeCount,
         int selectedControlSchemeIndex,
