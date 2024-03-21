@@ -3099,9 +3099,6 @@ namespace UnityEngine.InputSystem
         public static InputActionAsset actions
         {
             get => s_Manager?.actions;
-            {
-                return UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.instance;
-            }
             set
             {
                 // Prevent this property from being assigned in play-mode.
@@ -3122,13 +3119,15 @@ namespace UnityEngine.InputSystem
                 // Track reference to enable including it in built Players, note that it will discard any non-persisted
                 // object reference
                 ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
-#endif // UNITY_EDITOR
+                #endif // UNITY_EDITOR
 
                 // Update underlying value
                 s_Manager.actions = value;
 
                 // Note that we do not enable/disable any actions until play-mode
             }
+        }
+
         /// <summary>
         /// Event that is triggered if the instance assigned to property <see cref="actions"/> changes.
         /// </summary>
@@ -3139,7 +3138,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="actions"/>
         /// <seealso cref="InputActionAsset"/>
         public static event Action onActionsChange
-            {
+        {
             add => s_Manager.onActionsChange += value;
             remove => s_Manager.onActionsChange -= value;
         }
@@ -3483,17 +3482,16 @@ namespace UnityEngine.InputSystem
         #if !UNITY_EDITOR
         private static bool ShouldEnableRemoting()
         {
-#if UNITY_INCLUDE_TESTS
+            #if UNITY_INCLUDE_TESTS
             var isRunningTests = true;
-#else
+            #else
             var isRunningTests = false;
-#endif
+            #endif
             if (isRunningTests)
                 return false; // Don't remote while running tests.
             return true;
         }
-
-        #endif
+        #endif //!UNITY_EDITOR
 #endif // DEVELOPMENT_BUILD || UNITY_EDITOR
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
@@ -3501,7 +3499,7 @@ namespace UnityEngine.InputSystem
 
         private static bool IsDomainReloadDisabledForPlayMode()
         {
-#if UNITY_EDITOR && !ENABLE_CORECLR
+            #if UNITY_EDITOR && !ENABLE_CORECLR
             if (!EditorSettings.enterPlayModeOptionsEnabled || (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) == 0)
                 return false;
             #endif
@@ -3534,7 +3532,7 @@ namespace UnityEngine.InputSystem
             {
                 RunInitialUpdate();
             }
-            #endif
+#endif // UNITY_EDITOR
         }
 
         // Initialization is triggered by accessing InputSystem. Some parts (like InputActions)
@@ -3570,26 +3568,25 @@ namespace UnityEngine.InputSystem
 
                 InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
-#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+                #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
                 InputSystem.PerformDefaultPluginInitialization();
-#endif
+                #endif
             }
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            ProjectWideActionsAsset.EnsureInitialized();
-#endif
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
                 if (globalReset)
                 {
-                ////FIXME: does not preserve action map state
+                    ////FIXME: does not preserve action map state
 
                     // If we're coming back out of a domain reload. We're restoring part of the
-                // InputManager state here but we're still waiting from layout registrations
-                // that happen during domain initialization.
+                    // InputManager state here but we're still waiting from layout registrations
+                    // that happen during domain initialization.
 
+                    s_DomainStateManager = existingSystemObjects[0];
+                    s_Manager.RestoreStateWithoutDevices(s_DomainStateManager.systemState.managerState);
+                    InputDebuggerWindow.ReviveAfterDomainReload();
 
                     // Restore remoting state.
                     s_RemoteConnection = s_DomainStateManager.systemState.remoteConnection;
@@ -3654,11 +3651,11 @@ namespace UnityEngine.InputSystem
             }
             s_DomainStateManager.newInputBackendsCheckedAsEnabled = true;
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Make sure project wide input actions are enabled.
             // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
             EnableActions();
-#endif
+            #endif
 
             RunInitialUpdate();
 
@@ -3695,9 +3692,9 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     DisableActions(false);
-#endif
+                    #endif
 
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
@@ -3728,8 +3725,6 @@ namespace UnityEngine.InputSystem
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
-            // NOTE: We access m_Settings directly here to make sure we're not running into asserts
-            //       from the settings getter checking it has a valid object.
             if (EditorUtility.InstanceIDToObject(s_Manager.settings.GetInstanceID()) == null)
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
@@ -3738,7 +3733,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#else
+#else // UNITY_EDITOR
         internal static void InitializeInPlayer(IInputRuntime runtime, bool loadSettingsAsset)
         {
             InputSettings settings = null;
@@ -3750,52 +3745,47 @@ namespace UnityEngine.InputSystem
             // instances.
             s_Manager = InputManager.CreateAndInitialize(runtime ?? NativeInputRuntime.instance, settings);
 
-#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
-#endif
+            #endif
 
             // Automatically enable remoting in development players.
-#if DEVELOPMENT_BUILD
+            #if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
-#endif
+            #endif
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS // && !UNITY_INCLUDE_TESTS
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // This is the point where we initialise project-wide actions for the Player
             EnableActions();
-#endif
+            #endif
         }
 
 #endif // UNITY_EDITOR
 
 #if UNITY_INCLUDE_TESTS
         //
-        // A (hopefully) temporary work-around to being unable to define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // within the Test-Framework assembly; called from within InputTestStateManager.Reset().
+        // We cannot define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONSw with the Test-Framework assembly, and
+        // so this hook is needed; it's called from InputTestStateManager.Reset().
         //
-        // This code should be removed when Actions init/reset flows are refactored, but we need it for now
-        // so ProjectWideActionstests will pass
-        //
-        internal static void DisableActionsForTests()
+        internal static void TestHook_DisableActions()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
             // reset itself has pushed the action system state on the state stack. To avoid action state memory
             // problems we disable actions here and also request asset to be marked dirty and reimported.
             DisableActions(triggerSetupChanged: true);
             if (s_Manager != null)
                 s_Manager.actions = null;
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         }
 
-        internal static void EnableActionsForTests()
+        internal static void TestHook_EnableActions()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Touching the `actions` property will initialise it here (if it wasn't already).
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            actions?.Enable();
-#endif
-
+            // Note this is too early for editor ! actions is not setup yet.
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            EnableActions();
+            #endif
         }
 #endif // UNITY_INCLUDE_TESTS
 

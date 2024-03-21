@@ -73,9 +73,9 @@ namespace UnityEngine.InputSystem
             }    
             newInst.m_Settings = settings;
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             newInst.InitializeActions();
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             newInst.InitializeData();
             newInst.InstallRuntime(runtime);
@@ -86,9 +86,9 @@ namespace UnityEngine.InputSystem
 
             newInst.ApplySettings();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             newInst.ApplyActions();
-#endif
+            #endif
             return newInst;
         }
 
@@ -383,9 +383,6 @@ namespace UnityEngine.InputSystem
                 "InputSystem.ShouldDrawWarningIconForBinding");
         }
 
-#endif // UNITY_EDITOR
-
-#if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
 
         /// <summary>
@@ -400,7 +397,8 @@ namespace UnityEngine.InputSystem
             get => m_RunPlayerUpdatesInEditMode;
             set => m_RunPlayerUpdatesInEditMode = value;
         }
-#endif
+
+#endif // UNITY_EDITOR
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
@@ -411,7 +409,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
+            m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #else
             m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -1847,15 +1845,15 @@ namespace UnityEngine.InputSystem
         }
 
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Initialize project-wide actions:
         // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
         // - In player build we always attempt to find a preloaded asset.
         private void InitializeActions()
         {
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-#else
+            #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
             foreach (var candidate in candidates)
@@ -1866,10 +1864,9 @@ namespace UnityEngine.InputSystem
                     break;
                 }
             }
-#endif // UNITY_EDITOR
+            #endif // UNITY_EDITOR
         }
-
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
         {
@@ -1885,10 +1882,10 @@ namespace UnityEngine.InputSystem
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
             m_HasFocus = Application.isFocused;
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
-#endif
+            #endif
 
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
@@ -2154,9 +2151,9 @@ namespace UnityEngine.InputSystem
         private IInputRuntime m_Runtime;
         private InputMetrics m_Metrics;
         private InputSettings m_Settings;
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
-#endif
+        #endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2505,7 +2502,7 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
             var isActive = m_Runtime.isEditorActive;
@@ -2538,7 +2535,7 @@ namespace UnityEngine.InputSystem
             SyncAllDevices();
         }
 
-#endif
+        #endif // UNITY_EDITOR
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2558,7 +2555,7 @@ namespace UnityEngine.InputSystem
             // At this point, we throw the device states away and forget about
             // what we had before the domain reload.
             m_SavedDeviceStates = null;
-            #endif
+            #endif // UNITY_EDITOR
         }
 
         private void OnBeforeUpdate(InputUpdateType updateType)
@@ -2720,9 +2717,8 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
         }
-
         #endif
-
+    
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
@@ -2884,7 +2880,7 @@ namespace UnityEngine.InputSystem
             m_HasFocus = focus;
         }
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         internal void LeavePlayMode()
         {
             // Reenable all devices and reset their play mode state.
@@ -2912,7 +2908,7 @@ namespace UnityEngine.InputSystem
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdate.s_LatestUpdateType);
         }
 
-#endif
+        #endif // UNITY_EDITOR
 
         internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
@@ -2923,7 +2919,7 @@ namespace UnityEngine.InputSystem
 
             var mask = m_UpdateMask;
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             // If the player isn't running, the only thing we run is editor updates, except if
             // explicitly overriden via `runUpdatesInEditMode`.
             // NOTE: This means that in edit mode (outside of play mode) we *never* switch to player
@@ -2932,7 +2928,7 @@ namespace UnityEngine.InputSystem
             //       it will see gamepad inputs going to the editor and respond to them.
             if (!gameIsPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
                 return false;
-#endif
+            #endif // UNITY_EDITOR
 
             return (updateType & mask) != 0;
         }
@@ -3031,21 +3027,21 @@ namespace UnityEngine.InputSystem
             // Figure out if we can just flush the buffer and early out.
             var canFlushBuffer =
                 false
-#if UNITY_EDITOR
+                #if UNITY_EDITOR
                 // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
                 || (!gameHasFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
                     (!m_Runtime.runInBackground ||
                         m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
-#else
+                #else
                 || (!gameHasFocus && !m_Runtime.runInBackground)
-#endif
+                #endif
             ;
             var canEarlyOut =
                 // Early out if there's no events to process.
                 eventBuffer.eventCount == 0
                 || canFlushBuffer
 
-#if UNITY_EDITOR
+                #if UNITY_EDITOR
                 // If we're in the background and not supposed to process events in this update (but somehow
                 // still ended up here), we're done.
                 || ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
@@ -3056,11 +3052,11 @@ namespace UnityEngine.InputSystem
                     // When the game is playing and has focus, we never process input in editor updates. All we
                     // do is just switch to editor state buffers and then exit.
                     || (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
-#endif
+                #endif
             ;
 
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             var dropStatusEvents = false;
             if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
             {
@@ -3069,7 +3065,7 @@ namespace UnityEngine.InputSystem
                 canEarlyOut = false;
                 dropStatusEvents = true;
             }
-#endif
+            #endif
 
             if (canEarlyOut)
             {
@@ -3133,7 +3129,7 @@ namespace UnityEngine.InputSystem
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
 
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                     if (dropStatusEvents)
                     {
                         // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
@@ -3144,7 +3140,7 @@ namespace UnityEngine.InputSystem
 
                         continue;
                     }
-#endif
+                    #endif
 
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
                     // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
@@ -3155,7 +3151,7 @@ namespace UnityEngine.InputSystem
                     //       here such as throwing partial touches away and then letting the rest of a touch go through.
                     //       Could be that ultimately we need to issue a full reset of all devices at the beginning of
                     //       play mode in the editor.
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                     if ((currentEventType == StateEvent.Type ||
                          currentEventType == DeltaStateEvent.Type) &&
                         (updateType & InputUpdateType.Editor) == 0 &&
@@ -3167,7 +3163,7 @@ namespace UnityEngine.InputSystem
                         m_InputEventStream.Advance(false);
                         continue;
                     }
-#endif
+                    #endif
 
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
@@ -3181,10 +3177,10 @@ namespace UnityEngine.InputSystem
                         device = TryGetDeviceById(currentEventReadPtr->deviceId);
                     if (device == null)
                     {
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                         ////TODO: see if this is a device we haven't created and if so, just ignore
                         m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
-#endif
+                    #endif
 
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3192,7 +3188,7 @@ namespace UnityEngine.InputSystem
 
                     // In the editor, we may need to bump events from editor updates into player updates
                     // and vice versa.
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                     if (isPlaying && !gameHasFocus)
                     {
                         if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
@@ -3223,7 +3219,7 @@ namespace UnityEngine.InputSystem
                             }
                         }
                     }
-#endif
+                    #endif // UNITY_EDITOR
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
@@ -3233,12 +3229,12 @@ namespace UnityEngine.InputSystem
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
                                                  InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
                     {
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                         // If the device is disabled in the backend, getting events for them
                         // is something that indicates a problem in the backend so diagnose.
                         if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
                             m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
-#endif
+                    #endif
 
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3310,17 +3306,17 @@ namespace UnityEngine.InputSystem
                     // Give the device a chance to do something with data before we propagate it to event listeners.
                     if (device.hasEventPreProcessor)
                     {
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
-#endif
+                        #endif
                         var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
                             Profiler.EndSample();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
-#endif
+                        #endif
                         if (!shouldProcess)
                         {
                             // Skip event if PreProcessEvent considers it to be irrelevant.
@@ -3372,7 +3368,7 @@ namespace UnityEngine.InputSystem
                             if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
                                 !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
                             {
-#if UNITY_EDITOR
+                                #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
 #elif UNITY_ANDROID
                                 // Android keyboards can send events out of order: Holding down a key will send multiple
@@ -3403,9 +3399,9 @@ namespace UnityEngine.InputSystem
                                 // If the state format doesn't match, ignore the event.
                                 if (device.stateBlock.format != eventPtr.stateFormat)
                                 {
-#if UNITY_EDITOR
+                                    #if UNITY_EDITOR
                                     m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
-#endif
+                                    #endif
                                     break;
                                 }
 
@@ -3421,9 +3417,9 @@ namespace UnityEngine.InputSystem
                             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
                             //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
                             if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
-#if UNITY_EDITOR
+                            #if UNITY_EDITOR
                                 && !(updateType == InputUpdateType.Editor && runPlayerUpdatesInEditMode)
-#endif
+                            #endif
                             )
                                 device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
@@ -3809,7 +3805,7 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             ////REVIEW: should this use the editor update ticks as quasi-frame-boundaries?
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
@@ -3823,7 +3819,7 @@ namespace UnityEngine.InputSystem
                 m_StateBuffers.m_EditorStateBuffers.SwapBuffers(device.m_DeviceIndex);
                 return true;
             }
-#endif
+            #endif
 
             // Flip buffers if we haven't already for this frame.
             if (device.m_CurrentUpdateStepCount != InputUpdate.s_UpdateStepCount)
@@ -3841,7 +3837,7 @@ namespace UnityEngine.InputSystem
 
         // Stuff everything that we want to survive a domain reload into
         // a m_SerializedState.
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Serializable]
         internal struct DeviceState
         {

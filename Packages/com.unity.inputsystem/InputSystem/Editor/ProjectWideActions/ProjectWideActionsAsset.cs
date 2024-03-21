@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
 using System.Collections.Generic;
@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem.Editor
                 private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
 #else
                 private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+#endif
                 {
                     if (!migratedInputActionAssets)
                     {
@@ -45,14 +46,19 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
             }
-            }
-        }
 
+            private static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
             {
                 var objects = AssetDatabase.LoadAllAssetsAtPath(EditorHelpers.GetPhysicalPath(kAssetPathInputManager));
                 if (objects == null)
                     return;
 
+                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetNameProjectWideInputActions) as InputActionAsset;
+                if (inputActionsAsset != default)
+                {
+                    // Found some actions in the InputManager.asset file
+                    //
+                    string path = ProjectWideActionsAsset.kDefaultAssetPath;
 
                     if (File.Exists(EditorHelpers.GetPhysicalPath(path)))
                     {
@@ -305,7 +311,6 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
-#endif // UNITY_EDITOR
     }
 }
 #endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

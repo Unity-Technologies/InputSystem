@@ -1,7 +1,9 @@
 using System;
 using UnityEngine.InputSystem;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+#endif
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem

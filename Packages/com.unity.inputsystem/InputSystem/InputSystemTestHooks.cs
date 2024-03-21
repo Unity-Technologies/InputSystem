@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+#endif
 using UnityEngine.InputSystem.LowLevel;
 
 #if UNITY_EDITOR || UNITY_INCLUDE_TESTS
