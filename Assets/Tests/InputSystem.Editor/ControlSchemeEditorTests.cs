@@ -259,6 +259,24 @@ public class ControlSchemesEditorTests
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
     }
 
+    [Test(Description = "Verifies that when duplicating Control Scheme ending on an Int it increments that Int and jumps already existing Int names")]
+    [Category("AssetEditor")]
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnIntJumpsExistingNumbers()
+    {
+        var asset = TestData.inputActionAsset
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test")))
+            .Generate();
+
+        asset.AddControlScheme(new InputControlScheme(("Test1")));
+
+        var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
+
+        state.serializedObject.Update();
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo("Test2"));
+    }
+
     [Test]
     [Category("AssetEditor")]
     public void DeleteControlSchemeCommand_DeletesSelectedControlScheme()
