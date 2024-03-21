@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.Reset");
 
-            UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.TestHook_Disable();
+            InputSystem.TestHook_DisableActions();
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-            UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.TestHook_Enable();
+            InputSystem.TestHook_EnableActions();
 
             Profiler.EndSample();
         }

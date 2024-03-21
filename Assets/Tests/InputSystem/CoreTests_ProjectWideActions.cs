@@ -38,6 +38,9 @@ internal class ProjectWideActionsBuildSetup : IPrebuildSetup, IPostBuildCleanup
         else
             EditorBuildSettings.RemoveConfigObject(name: kSavedActionsObject);
 
+        // Create temporary asset and assign as setting
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = asset;
 #endif
     }
 
