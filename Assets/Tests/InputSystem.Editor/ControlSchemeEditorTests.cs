@@ -263,17 +263,20 @@ public class ControlSchemesEditorTests
     [Category("AssetEditor")]
     public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnIntJumpsExistingNumbers()
     {
-        var asset = TestData.inputActionAsset
-            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test")))
-            .Generate();
+        var asset = TestData.inputActionAsset.Generate();
 
+        asset.AddControlScheme(new InputControlScheme(("Test")));
         asset.AddControlScheme(new InputControlScheme(("Test1")));
 
+        //select "Test" Control Scheme
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
         state.serializedObject.Update();
+
+        //duplicate "Test"
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
 
+        //duplicated Control Scheme should be names "Test2", skipping "Test1"
         Assert.That(newState.selectedControlScheme.name, Is.EqualTo("Test2"));
     }
 
