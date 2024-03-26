@@ -59,7 +59,7 @@ public class ExampleScript : MonoBehaviour
 
 This workflow has pros and cons when compared to using [Actions without a PlayerInput component](Workflow-Actions.html). Because it builds on the use of Actions, it comes with all the benefits provided by them, such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](ActionBindings.html#interactive-rebinding).
 
-This workflow also allows you to set up callbacks in the Editor using an interface in the Inspector, which can sometimes reduce code complexity but can also make debugging more difficult, because the connections between your actions and code are not themselves defined in code. 
+This workflow also allows you to set up callbacks in the Editor using an interface in the Inspector, which can sometimes reduce code complexity but can also make debugging more difficult, because the connections between your actions and code are not themselves defined in code.
 
 It also provides ready-made handling of the [assignment of devices](PlayerInput.html#device-assignments) and [screen-splitting](PlayerInputManager.html#split-screen) in local multiplayer scenarios. While these are things you can implement yourself, having a simple solution ready to go can be beneficial. However if you choose this option, the implementation is somewhat of a "black box", meaning you are less able to customise how it works.
 
