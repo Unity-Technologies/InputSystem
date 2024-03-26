@@ -110,6 +110,30 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         }
     }
 
+    // DualSense Edge has a different OutputReportSize
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    internal struct DualSenseEdgeHIDUSBOutputReport : IInputDeviceCommandInfo
+    {
+        public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
+        public FourCC typeStatic => Type;
+
+        internal const int kSize = InputDeviceCommand.BaseCommandSize + 64;
+
+        [FieldOffset(0)] public InputDeviceCommand baseCommand;
+        [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public byte reportId;
+        [FieldOffset(InputDeviceCommand.BaseCommandSize + 1)] public DualSenseHIDOutputReportPayload payload;
+
+        public static DualSenseHIDUSBOutputReport Create(DualSenseHIDOutputReportPayload payload)
+        {
+            return new DualSenseHIDUSBOutputReport
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                reportId = 2,
+                payload = payload
+            };
+        }
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal struct DualSenseHIDBluetoothOutputReport : IInputDeviceCommandInfo
     {
@@ -439,8 +463,18 @@ namespace UnityEngine.InputSystem.DualShock
 
             ////FIXME: Bluetooth reports are not working
             //var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
-            var command = DualSenseHIDUSBOutputReport.Create(payload);
-            return ExecuteCommand(ref command) >= 0;
+
+            // DualSense Edge has a larger OutputReportSize
+            if (device.description.capabilities.Contains(@"""productId"":3570"))
+            {
+                var command = DualSenseEdgeHIDUSBOutputReport.Create(payload);
+                return ExecuteCommand(ref command) >= 0;
+            }
+            else
+            {
+                var command = DualSenseHIDUSBOutputReport.Create(payload);
+                return ExecuteCommand(ref command) >= 0;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
