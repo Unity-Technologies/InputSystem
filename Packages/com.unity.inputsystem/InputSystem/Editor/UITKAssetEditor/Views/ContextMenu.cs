@@ -47,17 +47,20 @@ namespace UnityEngine.InputSystem.Editor
 
         // Add "Add Action Map" option to empty space under the ListView. Matches with old IMGUI style (ISX-1519).
         // Include Paste here as well, since it makes sense for adding ActionMaps.
-        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement listView)
+        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement element, bool onlyShowIfListIsEmpty = false)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+                if (!onlyShowIfListIsEmpty || mapView.GetMapCount() == 0)
+                {
+                    var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                        menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
 
-                menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
-            }) { target = listView };
+                    menuEvent.menu.AppendSeparator();
+                    menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
+                }
+            }) { target = element };
         }
 
         #endregion
@@ -77,17 +80,19 @@ namespace UnityEngine.InputSystem.Editor
 
         // Add "Add Action" option to empty space under the TreeView. Matches with old IMGUI style (ISX-1519).
         // Include Paste here as well, since it makes sense for Actions; thus users would expect it for Bindings too.
-        public static void GetContextMenuForActionsEmptySpace(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
+        public static void GetContextMenuForActionsEmptySpace(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target, bool onlyShowIfTreeIsEmpty = false)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
-                var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
-                if (hasPastableData)
-                    menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
+                if (actionsTreeView.GetMapCount() > 0 && (!onlyShowIfTreeIsEmpty || treeView.GetTreeCount() == 0))
+                {
+                    var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
+                    if (CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding)))
+                        menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
 
-                menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(add_Action_String, _ => actionsTreeView.AddAction());
+                    menuEvent.menu.AppendSeparator();
+                    menuEvent.menu.AppendAction(add_Action_String, _ => actionsTreeView.AddAction());
+                }
             }) { target = target };
         }
 
