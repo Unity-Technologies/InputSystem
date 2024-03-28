@@ -58,6 +58,19 @@ namespace UnityEngine.InputSystem.Editor
             property.FindPropertyRelative(nameof(InputAction.m_SingletonActionBindings))?.ClearArray();
             property.serializedObject?.ApplyModifiedPropertiesWithoutUndo();
         }
+
+        private void OnValidate()
+        {
+            ++m_AnalyticsData.onValidateCount;
+        }
+
+        private void OnDestroy()
+        {
+            ++m_AnalyticsData.onDestroyCount;
+            InputSystem.s_Manager.m_Runtime.SendAnalytic(new InputEditorAnalytics.InputActionInspectorEditorUserEngagementAnalytic(this));
+        }
+
+        [NonSerialized] internal InputEditorAnalytics.InputActionInspectorEditorUserEngagementData m_AnalyticsData;
     }
 }
 #endif // UNITY_EDITOR

@@ -48,10 +48,18 @@ namespace UnityEngine.InputSystem.Editor
             #endif
         }
 
+        public void OnValidate()
+        {
+            ++m_AnalyticsData.onValidateCount;
+        }
+
         public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
             InputUser.onChange -= OnUserChange;
+
+            ++m_AnalyticsData.onDestroyCount;
+            InputSystem.s_Manager.m_Runtime.SendAnalytic(new InputEditorAnalytics.PlayerInputEditorUserEngagementAnalytic(this));
         }
 
         private void Refresh()
@@ -583,6 +591,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
         [NonSerialized] private int m_ActionAssetInstanceID;
+
+        [NonSerialized] internal InputEditorAnalytics.PlayerInputInspectorEditorUserEngagementData m_AnalyticsData;
     }
 }
 #endif // UNITY_EDITOR
