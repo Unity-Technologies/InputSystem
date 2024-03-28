@@ -5,14 +5,22 @@ using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Plugins.InputForUI;
+using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
 
+// Note that these tests do not verify InputForUI default bindings at all.
+// It only verifies integration with Project-wide Input Actions.
+// Note that with current design and fixture, testing play-mode integration without Project-wide Input Actions
+// would require a separate assembly, or potentially e.g. delete all actions to prevent matching.
+//
 // These tests are not meant to test the InputForUI module itself, but rather the integration between the InputForUI
 // module and the InputSystem package.
 // Be aware that these tests don't account for events dispatched by the InputEventPartialProvider. Those events are
 // already tested in the Input Manager provider.
 // Also, the internals to test InputEventPartialProvider are not exposed publicly, so we can't test them here.
+[PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+[PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
 public class InputForUITests : InputTestFixture
 {
     readonly List<Event> m_InputForUIEvents = new List<Event>();
@@ -23,8 +31,10 @@ public class InputForUITests : InputTestFixture
     {
         base.Setup();
 
-        var defaultActions = new DefaultInputActions();
-        defaultActions.Enable();
+        // Test assumes a compatible project-wide action configuration exist for UI
+        // See CoreTests_ProjectWideActions for how its setup via build plugins.
+        Assert.That(InputSystem.actions, Is.Not.Null,
+            "Test is invalid since Project-wide Input System actions have not been setup for play-mode test environment");
 
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);

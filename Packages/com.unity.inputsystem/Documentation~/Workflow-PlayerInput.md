@@ -51,10 +51,13 @@ public class ExampleScript : MonoBehaviour
 }
 ```
 
+> __Note__: As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions), not `InputSystem.actions`.
+>
+> This is because the PlayerInput component performs device filtering to automatically assign devices to multiple players, so each instance has its own copy of the actions filtered for each player. If you bypass this by reading `InputSystem.actions` directly, the automatic device assignment won't work.
 
 This workflow has pros and cons when compared to the previous workflow which uses an [Actions without a PlayerInput component](Workflow-Actions.html).
 
-You can see compared with the previous workflow code example that this method requires less code, because you do not have to reference the Actions Asset or set up the event handler methods in your own script. However it does require more set-up in the Editor, and could make debugging more difficult because the connections between your actions and code are not hard-coded.
+You can see compared with the previous workflow, this workflow requires less code, because you do not have to reference the Actions Asset or set up the event handler methods in your own script. However it does require more set-up in the Editor, and could make debugging more difficult because the connections between your actions and code are not hard-coded.
 
 As with the other workflows described in this section, there is a trade-off between flexibility, simplicity, and speed of implementation.
 

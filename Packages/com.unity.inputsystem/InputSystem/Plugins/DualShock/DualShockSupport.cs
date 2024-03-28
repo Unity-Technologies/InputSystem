@@ -31,7 +31,12 @@ namespace UnityEngine.InputSystem.DualShock
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x54C) // Sony Entertainment.
-                    .WithCapability("productId", 0xCE6));
+                    .WithCapability("productId", 0xDF2)); // Dual Sense Edge
+            InputSystem.RegisterLayout<DualSenseGamepadHID>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0xCE6)); // Dual Sense
             InputSystem.RegisterLayout<DualShock4GamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")

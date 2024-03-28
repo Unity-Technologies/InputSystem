@@ -1,257 +1,144 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
 #if UNITY_EDITOR
+using System.IO;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Editor;
-#endif
+#endif // UNITY_EDITOR
 
-internal partial class CoreTests
+// Note that editor edit mode behavior is tested in a dedicated test suite in editor test assembly.
+//
+// Note that play-mode and player tests both use a dedicated asset setup via build hooks so that the
+// editor build configuration for preloaded Project-wide Input Actions asset may be temporarily replaced.
+// Note that the play mode tests in this file rely on an asset stored in a random file to avoid any
+// collisions with assets that may have been created by the user. These are automatically removed on
+// test termination.
+
+internal class ProjectWideActionsBuildSetup : IPrebuildSetup, IPostBuildCleanup
 {
-    const string TestCategory = "ProjectWideActions";
-    const string TestAssetPath = "Assets/TestInputManager.asset";
-    string m_TemplateAssetPath;
-
-#if UNITY_EDITOR
-    const int initialTotalActionCount = 12;
-    const int initialMapCount = 2;
-    const int initialFirstActionMapCount = 2;
-#else
-    const int initialTotalActionCount = 19;
-    const int initialMapCount = 2;
-#endif
-
-    [SetUp]
-    public override void Setup()
-    {
-        // @TODO: Currently we can only inject the TestActionsAsset in PlayMode tests.
-        // It would be nice to be able to inject it as a Preloaded asset into the Player tests so
-        // we don't need different tests for the player.
-        // This also means these tests are dependant on the content of InputManager.asset not being changed.
-#if UNITY_EDITOR
-        // This asset takes the place of ProjectSettings/InputManager.asset for the sake of testing, as we don't
-        // really want to go changing that asset in every test.
-        // This is used as a backing for `InputSystem.actions` in PlayMode tests.
-        var testAsset = ScriptableObject.CreateInstance<TestActionsAsset>();
-        AssetDatabase.CreateAsset(testAsset, TestAssetPath);
-
-        var defaultUIMapTemplate = ProjectWideActionsAsset.GetDefaultUIActionMap();
-
-        // Create a template `InputActionAsset` containing some test actions.
-        // This will then be used to populate the initially empty `TestActionsAsset` when it is first acessed.
-        var templateActions = ScriptableObject.CreateInstance<InputActionAsset>();
-        templateActions.name = "TestAsset";
-        var map = templateActions.AddActionMap("InitialActionMapOne");
-        map.AddAction("InitialActionOne");
-        map.AddAction("InitialActionTwo");
-
-        // Add the default UI map to the template
-        templateActions.AddActionMap(defaultUIMapTemplate);
-
-        m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/ProjectWideActionsTemplate.inputactions");
-        File.WriteAllText(m_TemplateAssetPath, templateActions.ToJson());
-
-        ProjectWideActionsAsset.SetAssetPaths(m_TemplateAssetPath, TestAssetPath);
-#endif
-
-        base.Setup();
-    }
-
-    [TearDown]
-    public override void TearDown()
-    {
-#if UNITY_EDITOR
-        ProjectWideActionsAsset.Reset();
-
-        if (File.Exists(m_TemplateAssetPath))
-            File.Delete(m_TemplateAssetPath);
-
-        AssetDatabase.DeleteAsset(TestAssetPath);
-#endif
-
-        base.TearDown();
-    }
-
-#if UNITY_EDITOR
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActionsAsset_TemplateAssetIsInstalledOnFirstUse()
-    {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
-
-        Assert.That(asset, Is.Not.Null);
-        Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
-        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
-    }
-
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActionsAsset_CanModifySaveAndLoadAsset()
-    {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
-
-        Assert.That(asset, Is.Not.Null);
-        Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
-        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
-
-        asset.Disable(); // Cannot modify active actions
-
-        // Add more actions
-        asset.actionMaps[0].AddAction("ActionTwo");
-        asset.actionMaps[0].AddAction("ActionThree");
-
-        // Modify existing
-        asset.actionMaps[0].actions[0].Rename("FirstAction");
-
-        // Add another map
-        asset.AddActionMap("ActionMapThree").AddAction("AnotherAction");
-
-        // Save
-        AssetDatabase.SaveAssets();
-
-        // Reload
-        asset = ProjectWideActionsAsset.GetOrCreate();
-
-        Assert.That(asset, Is.Not.Null);
-        Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount + 1));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount + 2));
-        Assert.That(asset.actionMaps[1].actions.Count, Is.EqualTo(10));
-        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("FirstAction"));
-        Assert.That(asset.actionMaps[2].actions[0].name, Is.EqualTo("AnotherAction"));
-    }
-
-    #if UNITY_2023_2_OR_NEWER
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()  // This test is only relevant for the InputForUI module
-    {
-        var asset = ProjectWideActionsAsset.GetOrCreate();
-        var indexOf = asset.m_ActionMaps.IndexOf(x => x.name == "UI");
-        var uiMap = asset.m_ActionMaps[indexOf];
-
-        // Change the name of the UI action map
-        uiMap.m_Name = "UI2";
-
-        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
-
-        LogAssert.Expect(LogType.Warning, new Regex("The action map named 'UI' does not exist"));
-
-        // Change the name of some UI map back to default and change the name of the actions
-        uiMap.m_Name = "UI";
-        var defaultActionName0 = uiMap.m_Actions[0].m_Name;
-        var defaultActionName1 = uiMap.m_Actions[1].m_Name;
-
-        uiMap.m_Actions[0].Rename("Navigation");
-        uiMap.m_Actions[1].Rename("Show");
-
-        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
-
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName0}' name has been modified"));
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName1}' name has been modified"));
-    }
-
+    private const string kAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.inputactions";
+    private const string kCounterAssetPath = "Assets/ProjectWideInputActionAssetForPlayModeTesting.counter";
+    #if UNITY_EDITOR
+    private const string kSavedActionsObject = ProjectWideActionsBuildProvider.EditorBuildSettingsActionsConfigKey + ".testbackup";
     #endif
 
+    private static void CreateAndAssignProjectWideTestAsset()
+    {
+#if UNITY_EDITOR
+        // Preserve a backup of actual user configuration
+        var userAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+        if (userAsset != null)
+            EditorBuildSettings.AddConfigObject(name: kSavedActionsObject, obj: userAsset, overwrite: true);
+        else
+            EditorBuildSettings.RemoveConfigObject(name: kSavedActionsObject);
+
+        // Create temporary asset and assign as setting
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = asset;
 #endif
+    }
+
+    private static void CleanupProjectWideTestAsset()
+    {
+#if UNITY_EDITOR
+        var testAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+
+        // Restore users initial config and remove from settings
+        if (EditorBuildSettings.TryGetConfigObject(name: kSavedActionsObject, out InputActionAsset userAsset))
+            EditorBuildSettings.RemoveConfigObject(name: kSavedActionsObject);
+        ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = userAsset;
+
+        // Remove temporary asset
+        var path = AssetDatabase.GetAssetPath(testAsset);
+        if (File.Exists(path))
+            AssetDatabase.DeleteAsset(path);
+#endif
+    }
+
+    // Runs before player build or before play-mode tests run, not to confuse with SetUp().
+    // Runs before [OneTimeSetUp] and before [SetUp]
+    #region IPrebuildSetup
+    public void Setup() { CreateAndAssignProjectWideTestAsset(); }
+    #endregion
+
+    // Runs after player build, not to confuse with TearDown()
+    // IMPORTANT: Does not run after editor play-mode tests if running with a filter (bug?),
+    //            but do run as expected after filtered player test builds.
+    //            Unclear if this is an issue in UTF or something wrong with this test.
+    //            A workaround is provided via OneTimeTearDown() below.
+    //            Seems to work fine when running all tests.
+    #region IPostBuildCleanup
+    public void Cleanup() { CleanupProjectWideTestAsset(); }
+    #endregion
+}
+
+[TestFixture]
+[PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+[PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+internal class ProjectWideActionsTests : CoreTestsFixture
+{
+    const string TestCategory = "ProjectWideActions";
+
+    [Test(Description = "Verifies that attempting to assign InputSystem.actions while in play-mode throws an exception.")]
+    [Category(TestCategory)]
+    public void ProjectWideActions_ThrowsException_WhenAssignedInPlayMode()
+    {
+        Assert.Throws<Exception>(() => InputSystem.actions = null);
+    }
+
+    [Test(Description = "Verifies that when entering play-mode InputSystem.actions is automatically assigned based on editor build configuration.")]
+    [Category(TestCategory)]
+    public void ProjectWideActions_IsAutomaticallyAssignedFromPersistedAsset_WhenRunningInPlayer()
+    {
+        // Regardless if editor play-mode or standalone player build we should always have project-wide input actions
+        // asset for the scenario setup, derived from editor build settings or preloaded assets.
+        Assert.That(InputSystem.actions, Is.Not.Null);
+
+        // In editor play-mode we may as well verify that the asset has the expected name
+        #if UNITY_EDITOR
+        var expectedName = InputActionImporter.NameFromAssetPath(AssetDatabase.GetAssetPath(InputSystem.actions));
+        Assert.That(InputSystem.actions.name, Is.EqualTo(expectedName));
+        #endif
+    }
 
     [Test]
     [Category(TestCategory)]
-    public void ProjectWideActions_AreEnabledByDefault()
+    public void ProjectWideActions_AreEnabled_WhenEnteringPlayMode()
     {
         Assert.That(InputSystem.actions, Is.Not.Null);
         Assert.That(InputSystem.actions.enabled, Is.True);
-    }
-
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActions_ContainsTemplateActions()
-    {
-        Assert.That(InputSystem.actions, Is.Not.Null);
-        Assert.That(InputSystem.actions.actionMaps.Count, Is.EqualTo(initialMapCount));
-
-#if UNITY_EDITOR
-        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
-        Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
-#else
-        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(9));
-        Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("Move"));
-#endif
     }
 
     [Test]
     [Category(TestCategory)]
     public void ProjectWideActions_AppearInEnabledActions()
     {
+        // Assert that project-wide actions get enabled by default
+        var actionCount = 19;
         var enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount));
+        Assert.That(enabledActions, Has.Count.EqualTo(actionCount));
 
-        // Add more actions also work
+        // Adding more actions also work
         var action = new InputAction(name: "standaloneAction");
         action.Enable();
 
         enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount + 1));
+        Assert.That(enabledActions, Has.Count.EqualTo(actionCount + 1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
 
         // Disabling works
-        InputSystem.actions?.Disable();
+        InputSystem.actions.Disable();
         enabledActions = InputSystem.ListEnabledActions();
         Assert.That(enabledActions, Has.Count.EqualTo(1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
-    }
 
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActions_CanReplaceExistingActions()
-    {
-        // Initial State
-        Assert.That(InputSystem.actions, Is.Not.Null);
-        Assert.That(InputSystem.actions.enabled, Is.True);
-        var enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount));
-
-        // Build new asset
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var map1 = new InputActionMap("replacedMap1");
-        var map2 = new InputActionMap("replacedMap2");
-        var action1 = map1.AddAction("replacedAction1", InputActionType.Button);
-        var action2 = map1.AddAction("replacedAction2", InputActionType.Button);
-        var action3 = map1.AddAction("replacedAction3", InputActionType.Button);
-        var action4 = map2.AddAction("replacedAction4", InputActionType.Button);
-
-        action1.AddBinding("<Gamepad>/buttonSouth");
-        action2.AddBinding("<Gamepad>/buttonWest");
-        action3.AddBinding("<Gamepad>/buttonNorth");
-        action4.AddBinding("<Gamepad>/buttonEast");
-        asset.AddActionMap(map1);
-        asset.AddActionMap(map2);
-
-        // Replace project-wide actions
-        InputSystem.actions = asset;
-
-        // State after replacing
-        Assert.That(InputSystem.actions, Is.Not.Null);
-        Assert.That(InputSystem.actions.enabled, Is.True);
-        enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(4));
-
-        Assert.That(InputSystem.actions.actionMaps.Count, Is.EqualTo(2));
-        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(3));
-        Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("replacedAction1"));
-        Assert.That(InputSystem.actions.actionMaps[1].actions.Count, Is.EqualTo(1));
-        Assert.That(InputSystem.actions.actionMaps[1].actions[0].name, Is.EqualTo("replacedAction4"));
+        // TODO Modifying the actions object after being assigned should also enable newly added actions?
     }
 }
 

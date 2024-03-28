@@ -1,39 +1,37 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
+using System;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputActionsEditorWindowUtils
+    internal static class InputActionsEditorWindowUtils
     {
+        /// <summary>
+        /// Return a relative path to the currently active theme style sheet.
+        /// </summary>
         public static StyleSheet theme => EditorGUIUtility.isProSkin
         ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
         : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
 
-        public static void SaveAsset(SerializedObject serializedAsset)
+        // Similar to InputActionAsset.WriteFileJson but excludes the name
+        [Serializable]
+        private struct WriteFileJsonNoName
         {
-            var asset = (InputActionAsset)serializedAsset.targetObject;
-            // For project-wide actions asset save works differently. The asset is in YAML format, not JSON.
-            if (asset.name == ProjectWideActionsAsset.kAssetName)
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        // Similar to InputActionAsset.ToJson() but converts to JSON excluding the name property and any additional JSON
+        // content that may be part of the file not recognized as required data.
+        public static string ToJsonWithoutName(InputActionAsset asset)
+        {
+            return JsonUtility.ToJson(new WriteFileJsonNoName
             {
-#if UNITY_2023_2_OR_NEWER
-                ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
-#endif
-                ProjectWideActionsAsset.UpdateInputActionReferences();
-                AssetDatabase.SaveAssets();
-                return;
-            }
-            var assetPath = AssetDatabase.GetAssetPath(asset);
-            var assetJson = asset.ToJson();
-            var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";
-            if (assetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, assetJson);
-                AssetDatabase.ImportAsset(assetPath);
-            }
+                maps = InputActionMap.WriteFileJson.FromMaps(asset.m_ActionMaps).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(asset.m_ControlSchemes),
+            }, prettyPrint: true);
         }
     }
 }

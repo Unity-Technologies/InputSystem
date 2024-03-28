@@ -1,12 +1,15 @@
 #if UNITY_EDITOR
+
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputActionsEditorConstants
+    internal static class InputActionsEditorConstants
     {
+        // Paths
         public const string PackagePath = "Packages/com.unity.inputsystem";
         public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 
         /// Template names
+        public const string ProjectSettingsUxml = "/InputActionsProjectSettings.uxml";
         public const string MainEditorViewNameUxml = "/InputActionsEditor.uxml";
         public const string BindingsPanelRowTemplateUxml = "/BindingPanelRowTemplate.uxml";
         public const string NameAndParametersListViewItemUxml = "/NameAndParameterListViewItemTemplate.uxml";
@@ -37,6 +40,9 @@ namespace UnityEngine.InputSystem.Editor
             public const string Delete = "Delete";
             public const string SoftDelete = "SoftDelete";
             public const string Duplicate = "Duplicate";
+            public const string Copy = "Copy";
+            public const string Cut = "Cut";
+            public const string Paste = "Paste";
         }
     }
 }
