@@ -9,6 +9,7 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - YYYY-MM-DD
+- Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746)
 
 ### Fixed
 - NullReferenceException thrown when right-clicking an empty Action Map list in Input Actions Editor windows [ISXB-833](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-833).

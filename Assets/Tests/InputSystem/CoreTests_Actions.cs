@@ -12029,4 +12029,99 @@ partial class CoreTests
         Assert.That(map.enabled, Is.True);
         Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
     }
+
+    // ResetDevice wasn't properly clearly Composite key state, i.e. BindingState.pressTime
+    // https://jira.unity3d.com/browse/ISXB-746
+    [Test]
+    [TestCase(false)]
+    [TestCase(true)]
+    [Category("Actions")]
+    public void Actions_CompositeBindingResetWhenResetDeviceCalledWhileExecutingAction(bool useTwoModifierComposite)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        bool actionPerformed;
+
+        // Enables "Modifier must be pressed first" behavior on all Composite Bindings
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
+        const string modifier1 = "<Keyboard>/shift";
+        const string modifier2 = "<Keyboard>/ctrl";
+        const string key = "<Keyboard>/F1";
+
+        var map = new InputActionMap();
+        var resetAction = map.AddAction("resetAction");
+
+        if (!useTwoModifierComposite)
+        {
+            resetAction.AddCompositeBinding("OneModifier")
+                .With("Modifier", modifier1)
+                .With("Binding", key);
+        }
+        else
+        {
+            resetAction.AddCompositeBinding("TwoModifiers")
+                .With("Modifier1", modifier1)
+                .With("Modifier2", modifier2)
+                .With("Binding", key);
+        }
+
+        resetAction.performed += (InputAction.CallbackContext ctx) =>
+        {
+            // Disable the Keyboard while action is being performed.
+            // This simulates an "OnFocusLost" event occurring while processing the Action, e.g. when switching primary displays or moving the main window
+            actionPerformed = true;
+            InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, false, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+        };
+
+        map.Enable();
+
+        actionPerformed = false;
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.f1Key);
+
+        Assert.IsTrue(actionPerformed);
+
+        // Re enable the Keyboard (before keys are released) and execute Action again
+        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
+        actionPerformed = false;
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.leftCtrlKey);
+        Release(keyboard.f1Key);
+
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.f1Key);
+
+        Assert.IsTrue(actionPerformed);
+
+        actionPerformed = false;
+        Release(keyboard.leftCtrlKey);
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.f1Key);
+
+        // Re enable the Keyboard (after keys are released) and execute Action one more time
+        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.f1Key);
+
+        Assert.IsTrue(actionPerformed);
+
+        actionPerformed = false;
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.f1Key);
+
+        // Re enable the Keyboard (before keys are released) and verify Action isn't triggered when Key pressed first
+        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
+        Press(keyboard.f1Key);
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.leftShiftKey);
+
+        Assert.IsFalse(actionPerformed);
+    }
 }
