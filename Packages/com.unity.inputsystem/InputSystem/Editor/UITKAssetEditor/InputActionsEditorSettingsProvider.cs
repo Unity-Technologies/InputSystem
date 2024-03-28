@@ -206,7 +206,7 @@ namespace UnityEngine.InputSystem.Editor
             // Construct from InputSystem.actions asset
             var asset = InputSystem.actions;
             var hasAsset = asset != null;
-            m_State = (asset != null) ? new InputActionsEditorState(new SerializedObject(asset)) : default;
+            m_State = (asset != null) ? new InputActionsEditorState(m_ActionEditorAnalytics, new SerializedObject(asset)) : default;
 
             // Dynamically show a section indicating that an asset is missing if not currently having an associated asset
             var missingAssetSection = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
