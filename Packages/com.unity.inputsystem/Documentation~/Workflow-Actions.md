@@ -98,3 +98,11 @@ public class Example : MonoBehaviour
 > **Note:** You should avoid using `FindAction` in your Update() loop, because it performs a string-based lookup which could impact performance. This is why the Action refeferences in the example above are found during the Start() functionm, and stored in variables after finding them.
 
 > **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you wish to access.
+
+## Pros and Cons
+
+This is the recommended workflow with the Input System Package, providing a flexible but simple solution suitable for most projects.
+
+You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](ActionBindings.html#interactive-rebinding).
+
+This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions & PlayerInput](./Workflow-PlayerInput.md) workflow.
