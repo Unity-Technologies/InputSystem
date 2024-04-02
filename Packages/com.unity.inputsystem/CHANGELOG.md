@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - YYYY-MM-DD
 
+### Fixed
+- NullReferenceException thrown when right-clicking an empty Action Map list in Input Actions Editor windows [ISXB-833](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-833).
+
 ## [1.8.1] - 2024-03-14
 
 ### Fixed
