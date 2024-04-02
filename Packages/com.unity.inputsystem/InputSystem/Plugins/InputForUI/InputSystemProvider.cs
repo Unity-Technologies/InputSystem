@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void Shutdown()
         {
-            UnregisterActions(m_Cfg);
+            UnregisterActions();
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void OnActionsChange()
         {
-            UnregisterActions(m_Cfg);
+            UnregisterActions();
 
             m_Cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(m_Cfg);
@@ -577,17 +577,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             m_InputActionAsset = cfg.ActionAsset;
 
-            if (m_InputActionAsset != null)
-            {
-                m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
-                m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
-                m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
-                m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
-                m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
-                m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
-                m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
-                m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
-            }
+            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
+            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
+            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
+            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
+            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
+            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
+            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
+            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
 
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed += OnPointerPerformed;
@@ -610,9 +607,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
 
-            // When adding new one's don't forget to add them to UnregisterActions
+            // When adding new actions, don't forget to add them to UnregisterActions
 
-            if (m_InputActionAsset != null)
+            if (InputSystem.actions == null)
+            {
+                // If we've not loaded a user-created set of actions, just enable the UI actions from our defaults.
+                m_InputActionAsset.FindActionMap("UI", true).Enable();
+            }
+            else
                 m_InputActionAsset.Enable();
 
             // TODO make it configurable as it is not part of default config
@@ -620,7 +622,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             RegisterNextPreviousAction();
         }
 
-        void UnregisterActions(Configuration cfg)
+        void UnregisterActions()
         {
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed -= OnPointerPerformed;
@@ -673,7 +675,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
-                return new Configuration
+                var config = new Configuration
                 {
                     ActionAsset = InputSystem.actions,
                     PointAction = "UI/Point",
@@ -685,6 +687,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     RightClickAction = "UI/RightClick",
                     ScrollWheelAction = "UI/ScrollWheel",
                 };
+
+                if (config.ActionAsset == null)
+                {
+                    // Use default asset if user didn't specifically set one, so that UI functions still work (ISXB-811)
+                    config.ActionAsset = new DefaultInputActions().asset;
+                }
+
+                return config;
             }
         }
     }
