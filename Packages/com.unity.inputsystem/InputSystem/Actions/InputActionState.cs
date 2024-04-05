@@ -4486,36 +4486,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal static void DeferredResolutionOfBindings()
-        {
-            ++InputActionMap.s_DeferBindingResolution;
-            try
-            {
-                for (var i = 0; i < s_GlobalState.globalList.length; ++i)
-                {
-                    var handle = s_GlobalState.globalList[i];
-
-                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
-                    if (state == null)
-                    {
-                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                        if (handle.IsAllocated)
-                            s_GlobalState.globalList[i].Free();
-                        s_GlobalState.globalList.RemoveAtWithCapacity(i);
-                        --i;
-                        continue;
-                    }
-
-                    for (var n = 0; n < state.totalMapCount; ++n)
-                        state.maps[n].ResolveBindingsIfNecessary();
-                }
-            }
-            finally
-            {
-                --InputActionMap.s_DeferBindingResolution;
-            }
-        }
-
         internal static void DisableAllActions()
         {
             for (var i = 0; i < s_GlobalState.globalList.length; ++i)

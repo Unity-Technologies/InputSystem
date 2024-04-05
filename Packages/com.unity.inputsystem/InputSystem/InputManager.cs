@@ -65,6 +65,9 @@ namespace UnityEngine.InputSystem
         {
             var newInst = new InputManager();
 
+            // Not directly used by InputManager, but we need  a single instance that's used in a variety of places without a static field
+            newInst.m_DeferBindingResolutionContext = new DeferBindingResolutionContext();
+
             // If settings object wasn't provided, create a temporary settings object for now
             if (settings == null)
             {
@@ -2070,6 +2073,25 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Acquires a temporary "lock" to suspend immediate re-resolution of bindings.
+        /// </summary>
+        /// <remarks>
+        /// When changing control setups, it may take multiple steps to get to the final setup but each individual
+        /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
+        /// Using Acquire/Release semantics via the returned context object, binding resolution can be deferred until the entire operation
+        /// is complete and the final binding setup is in place.
+        /// 
+        /// NOTE: Returned DeferBindingResolutionContext object is used globally for all ActionMaps.
+        /// </remarks>
+        internal DeferBindingResolutionContext DeferBindingResolution()
+        {
+            m_DeferBindingResolutionContext.Acquire();
+            return m_DeferBindingResolutionContext;
+        }
+
+        internal bool areDeferredBindingsToResolve => m_DeferBindingResolutionContext.deferredCount > 0;
+
         [Serializable]
         internal struct AvailableDevice
         {
@@ -2158,6 +2180,8 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
         #endif
+
+        private DeferBindingResolutionContext m_DeferBindingResolutionContext;
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
