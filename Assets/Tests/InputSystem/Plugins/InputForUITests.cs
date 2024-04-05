@@ -33,7 +33,7 @@ public class InputForUITests : InputTestFixture
 
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);
-        
+
         // Test assumes a compatible action asset configuration exists for UI
         Assert.That(m_InputSystemProvider.inputActionAsset, Is.Not.Null,
             "Test is invalid since InputSystemProvider actions are not available");
@@ -143,7 +143,7 @@ public class InputForUITests : InputTestFixture
         Assert.IsTrue(m_InputForUIEvents.Count == 1);
         Assert.That(m_InputForUIEvents[0].asPointerEvent.scroll, Is.EqualTo(new Vector2(0, 1)));
     }
-    
+
     [Test]
     [Category("InputForUI")]
     [TestCase(true)]
@@ -157,21 +157,21 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            // Remove the project-wide actions asset in play mode and player. 
+            // Remove the project-wide actions asset in play mode and player.
             // It will call InputSystem.onActionChange and re-set InputSystemProvider.actionAsset
             // This the case where no project-wide actions asset is available in the project.
             InputSystem.s_Manager.actions = null;
         }
         Update();
         MoveWithGamepad();
-        
+
         Assert.IsTrue(m_InputForUIEvents.Count == 1);
         Assert.That(m_InputForUIEvents[0] is Event
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Move,
-                direction: NavigationEvent.Direction.Left,
-                eventSource: EventSource.Gamepad}
+                                 direction: NavigationEvent.Direction.Left,
+                                 eventSource: EventSource.Gamepad}
         });
     }
 

@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public InputActionAsset inputActionAsset => m_InputActionAsset;
         InputActionAsset m_InputActionAsset;
-        
+
         InputActionReference m_PointAction;
         InputActionReference m_MoveAction;
         InputActionReference m_SubmitAction;
