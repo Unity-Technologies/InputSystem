@@ -31,13 +31,12 @@ public class InputForUITests : InputTestFixture
     {
         base.Setup();
 
-        // Test assumes a compatible project-wide action configuration exist for UI
-        // See CoreTests_ProjectWideActions for how its setup via build plugins.
-        Assert.That(InputSystem.actions, Is.Not.Null,
-            "Test is invalid since Project-wide Input System actions have not been setup for play-mode test environment");
-
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);
+        
+        // Test assumes a compatible action asset configuration exists for UI
+        Assert.That(m_InputSystemProvider.inputActionAsset, Is.Not.Null,
+            "Test is invalid since InputSystemProvider actions are not available");
         // Register at least one consumer so the mock update gets invoked
         EventProvider.Subscribe(InputForUIOnEvent);
     }
