@@ -546,24 +546,40 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     #endif
 
-    internal enum OptimizedControlsTest
+    internal enum OptimizationTestType
     {
+        NoOptimization,
         OptimizedControls,
-        NormalControls
+        ReadValueCaching,
+        OptimizedControlsAndReadValueCaching
+    }
+
+
+    public void SetInternalFeatureFlagsFromTestType(OptimizationTestType testType)
+    {
+        var useOptimizedControls = testType == OptimizationTestType.OptimizedControls
+            || testType == OptimizationTestType.OptimizedControlsAndReadValueCaching;
+        var useReadValueCaching = testType == OptimizationTestType.ReadValueCaching
+            || testType == OptimizationTestType.OptimizedControlsAndReadValueCaching;
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useReadValueCaching);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
     }
 
     [Test, Performance]
     [Category("Performance")]
-    [TestCase(OptimizedControlsTest.OptimizedControls)]
-    [TestCase(OptimizedControlsTest.NormalControls)]
-    public void Performance_OptimizedControls_ReadingMousePosition100kTimes(OptimizedControlsTest testSetup)
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.OptimizedControls)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    public void Performance_OptimizedControls_ReadingMousePosition100kTimes(OptimizationTestType testType)
     {
-        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+        SetInternalFeatureFlagsFromTestType(testType);
 
         var mouse = InputSystem.AddDevice<Mouse>();
+        var useOptimizedControls = testType == OptimizationTestType.OptimizedControls
+            || testType == OptimizationTestType.OptimizedControlsAndReadValueCaching;
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatVector2 : InputStateBlock.FormatInvalid));
@@ -579,17 +595,54 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
-#if ENABLE_VR
     [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizedControlsTest.OptimizedControls)]
     [TestCase(OptimizedControlsTest.NormalControls)]
-    public void Performance_OptimizedControls_ReadingPose4kTimes(OptimizedControlsTest testSetup)
+    [TestCase(OptimizedControlsTest.ReadValueCaching)]
+    [TestCase(OptimizedControlsTest.OptimizedControlsAndReadValueCaching)]
+    public void Performance_OptimizedControlsOnly_ReadAndUpdateWithMouse5kTimes(OptimizedControlsTest testSetup)
     {
-        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
+        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls
+            || testSetup == OptimizedControlsTest.OptimizedControlsAndReadValueCaching;
+        var useReadValueCaching = testSetup == OptimizedControlsTest.ReadValueCaching
+            || testSetup == OptimizedControlsTest.OptimizedControlsAndReadValueCaching;
+
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useReadValueCaching);
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.Update();
+
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatVector2 : InputStateBlock.FormatInvalid));
+
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 5000; ++i)
+            {
+                InputSystem.Update();
+                mouse.position.ReadValue();
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+#if ENABLE_VR
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.OptimizedControls)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    public void Performance_OptimizedControls_ReadingPose4kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
 
         runtime.ReportNewInputDevice(XRTests.PoseDeviceState.CreateDeviceDescription().ToJson());
 
@@ -598,6 +651,8 @@ internal class CorePerformanceTests : CoreTestsFixture
         var device = InputSystem.devices[0];
 
         var poseControl = device["posecontrol"] as UnityEngine.InputSystem.XR.PoseControl;
+        var useOptimizedControls = testType == OptimizationTestType.OptimizedControls
+            || testType == OptimizationTestType.OptimizedControlsAndReadValueCaching;
         Assert.That(poseControl.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatPose : InputStateBlock.FormatInvalid));
 
         Measure.Method(() =>
