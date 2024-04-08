@@ -67,6 +67,8 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionMapButton.clicked += AddActionMap;
 
             ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
+            // Only bring up this context menu for the List when it's empty, so we can treat it like right-clicking the empty space:
+            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, m_ListView, onlyShowIfListIsEmpty: true);
         }
 
         void OnDroppedHandler(int mapIndex)
@@ -154,6 +156,11 @@ namespace UnityEngine.InputSystem.Editor
             m_EnterRenamingMode = true;
         }
 
+        internal int GetMapCount()
+        {
+            return m_ListView.itemsSource.Count;
+        }
+
         private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
             var selectedItem = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
@@ -218,7 +225,8 @@ namespace UnityEngine.InputSystem.Editor
             if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
             {
                 var actionMap = (evt.target as VisualElement).GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
-                m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
+                if (actionMap != null)
+                    m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
             }
         }
 
