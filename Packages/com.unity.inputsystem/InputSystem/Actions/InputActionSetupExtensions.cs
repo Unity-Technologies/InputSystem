@@ -51,7 +51,8 @@ namespace UnityEngine.InputSystem
         /// <param name="map">A named action map.</param>
         /// <exception cref="ArgumentNullException"><paramref name="map"/> or <paramref name="asset"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
-        /// map with the same name.</exception>
+        /// map with the same name -or- <paramref name="map"/> is currently enabled -or- <paramref name="map"/> is part of
+        /// an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s that are enabled.</exception>
         /// <seealso cref="InputActionAsset.actionMaps"/>
         public static void AddActionMap(this InputActionAsset asset, InputActionMap map)
         {
@@ -69,9 +70,12 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"An action map called '{map.name}' already exists in the asset");
 
+            map.OnWantToChangeSetup();
+            asset.OnWantToChangeSetup();
+
             ArrayHelpers.Append(ref asset.m_ActionMaps, map);
-            asset.MarkAsDirty();
             map.m_Asset = asset;
+            asset.OnSetupChanged();
         }
 
         /// <summary>
@@ -82,7 +86,8 @@ namespace UnityEngine.InputSystem
         /// does nothing.</param>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="map"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
-        /// cref="InputActionMap.enabled"/>).</exception>
+        /// cref="InputActionMap.enabled"/>) or is part of an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s
+        /// that are currently enabled.</exception>
         /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
         /// <seealso cref="InputActionAsset.actionMaps"/>
         public static void RemoveActionMap(this InputActionAsset asset, InputActionMap map)
@@ -91,16 +96,17 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(asset));
             if (map == null)
                 throw new ArgumentNullException(nameof(map));
-            if (map.enabled)
-                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
+
+            map.OnWantToChangeSetup();
+            asset.OnWantToChangeSetup();
 
             // Ignore if not part of this asset.
             if (map.m_Asset != asset)
                 return;
 
             ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
-            asset.MarkAsDirty();
             map.m_Asset = null;
+            asset.OnSetupChanged();
         }
 
         /// <summary>
@@ -129,7 +135,7 @@ namespace UnityEngine.InputSystem
         ////TODO: add method to add an existing InputAction to a map
 
         /// <summary>
-        /// Ad a new <see cref="InputAction"/> to the given <paramref name="map"/>.
+        /// Add a new <see cref="InputAction"/> to the given <paramref name="map"/>.
         /// </summary>
         /// <param name="map">Action map to add the action to. The action will be appended to
         /// <see cref="InputActionMap.actions"/> of the map. The map must be disabled (see
@@ -151,8 +157,8 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is enabled (see <see cref="InputActionMap.enabled"/>)
+        /// or is part of an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s that are <see cref="InputActionMap.enabled"/>
         /// -or- <paramref name="map"/> already contains an action called <paramref name="name"/> (case-insensitive).</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="map"/> parent InputActionAsset has one or more maps enabled (see <see cref="InputActionAsset.enabled"/>).</exception>
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
@@ -160,14 +166,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(map));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Action must have name", nameof(name));
-            if (map.enabled)
-                throw new InvalidOperationException(
-                    $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
-            if (map.asset != null)
-                foreach (var assetMap in map.asset.actionMaps)
-                    if (assetMap.enabled)
-                        throw new InvalidOperationException(
-                            $"Cannot add action '{name}' to map '{map}' while any of the maps in the parent input asset are enabled, found '{assetMap}' currently enabled.");
+            map.OnWantToChangeSetup();
             if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
@@ -184,6 +183,7 @@ namespace UnityEngine.InputSystem
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
             {
+                // Will trigger OnSetupChanged.
                 action.AddBinding(binding, interactions: interactions, processors: processors, groups: groups);
             }
             else
@@ -196,13 +196,9 @@ namespace UnityEngine.InputSystem
                 // If no binding has been supplied but there are interactions and processors, they go on the action itself.
                 action.m_Interactions = interactions;
                 action.m_Processors = processors;
+
+                map.OnSetupChanged();
             }
-
-            if (map.asset != null)
-                map.asset.MarkAsDirty();
-
-            map.ClearPerActionCachedBindingData();
-            map.LazyResolveBindings();
 
             return action;
         }
@@ -212,9 +208,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="action">An input action that is part of an <see cref="InputActionMap"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException"><paramref name="action"/> is part of an <see cref="InputActionMap"/>
-        /// that has at least one enabled action -or- <paramref name="action"/> is a standalone action
+        /// <exception cref="ArgumentException"><paramref name="action"/> is a standalone action
         /// that is not part of an <see cref="InputActionMap"/> and thus cannot be removed from anything.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="action"/> is part of an <see cref="InputActionMap"/>
+        /// or <see cref="InputActionAsset"/> that has at least one enabled action.</exception>
         /// <remarks>
         /// After removal, the action's <see cref="InputAction.actionMap"/> will be set to <c>null</c>
         /// and the action will effectively become a standalone action that is not associated with
@@ -231,27 +228,23 @@ namespace UnityEngine.InputSystem
             if (actionMap == null)
                 throw new ArgumentException(
                     $"Action '{action}' does not belong to an action map; nowhere to remove from", nameof(action));
-            if (actionMap.enabled)
-                throw new ArgumentException($"Cannot remove action '{action}' while its action map is enabled");
+            actionMap.OnWantToChangeSetup();
 
             var bindingsForAction = action.bindings.ToArray();
 
-            var index = ArrayHelpers.IndexOfReference(actionMap.m_Actions, action);
+            var index = actionMap.m_Actions.IndexOfReference(action);
             Debug.Assert(index != -1, "Could not find action in map");
             ArrayHelpers.EraseAt(ref actionMap.m_Actions, index);
 
             action.m_ActionMap = null;
             action.m_SingletonActionBindings = bindingsForAction;
 
-            if (actionMap.asset != null)
-                actionMap.asset.MarkAsDirty();
-
-            actionMap.ClearPerActionCachedBindingData();
-
             // Remove bindings to action from map.
             var newActionMapBindingCount = actionMap.m_Bindings.Length - bindingsForAction.Length;
             if (newActionMapBindingCount == 0)
+            {
                 actionMap.m_Bindings = null;
+            }
             else
             {
                 var newActionMapBindings = new InputBinding[newActionMapBindingCount];
@@ -265,6 +258,8 @@ namespace UnityEngine.InputSystem
                 }
                 actionMap.m_Bindings = newActionMapBindings;
             }
+
+            actionMap.OnSetupChanged();
         }
 
         /// <summary>
@@ -438,6 +433,30 @@ namespace UnityEngine.InputSystem
                 action: action.id);
         }
 
+        /// <summary>
+        /// Add a new binding that triggers the action given by GUID <paramref name="action"/>.
+        /// </summary>
+        /// <param name="actionMap">Action map to add the binding to.</param>
+        /// <param name="path">Path of the control(s) to bind to. See <see cref="InputControlPath"/> and <see cref="InputBinding.path"/>.</param>
+        /// <param name="action">ID of the action as per <see cref="InputAction.id"/>.</param>
+        /// <param name="interactions">Optional list of names and parameters for interactions to apply to the
+        /// binding. See <see cref="InputBinding.interactions"/>.</param>
+        /// <param name="groups">Optional list of groups to apply to the binding. See <see cref="InputBinding.groups"/>.</param>
+        /// <returns>A write-accessor to the newly added binding.</returns>
+        /// <exception cref="ArgumentException"><paramref name="action"/> is not part of <paramref name="actionMap"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding"/>
+        /// <seealso cref="InputActionMap.bindings"/>
+        /// <remarks>
+        /// Example of adding a binding to an action map that binds to a Gamepad device "leftStick" control and associates it with an action:
+        /// <example>
+        /// <code>
+        /// var map = new InputActionMap();
+        /// var action = map.AddAction("action");
+        /// map.AddBinding("&lt;Gamepad&gt;/leftStick", action: action.id);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path, Guid action,
             string interactions = null, string groups = null)
         {
@@ -447,6 +466,16 @@ namespace UnityEngine.InputSystem
                 action: action.ToString());
         }
 
+        /// <summary>
+        /// Add a binding to the given action map.
+        /// </summary>
+        /// <param name="actionMap">Action map to add the binding to.</param>
+        /// <param name="binding">Binding to add to the action map.</param>
+        /// <returns>A write-accessor to the newly added binding.</returns>
+        /// <exception cref="ArgumentException"><paramref name="action"/> is not part of <paramref name="actionMap"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding"/>
+        /// <seealso cref="InputActionMap.bindings"/>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             if (actionMap == null)
@@ -479,8 +508,16 @@ namespace UnityEngine.InputSystem
 
             var actionMap = action.GetOrCreateActionMap();
 
-            ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, processors = processors, isComposite = true, action = action.name};
+            var binding = new InputBinding
+            {
+                name = NameAndParameters.ParseName(composite),
+                path = composite,
+                interactions = interactions,
+                processors = processors,
+                isComposite = true,
+                action = action.name
+            };
+
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
@@ -506,17 +543,15 @@ namespace UnityEngine.InputSystem
             if (map.asset != null)
                 map.asset.MarkAsDirty();
 
-            // Invalidate per-action binding sets so that this gets refreshed if
-            // anyone queries it.
-            map.ClearPerActionCachedBindingData();
-
-            // Make sure bindings get re-resolved.
-            map.LazyResolveBindings();
-
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
             if (map.m_SingletonAction != null)
                 map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
+
+            // NOTE: We treat this as a mere binding modification, even though we have added something.
+            //       InputAction.RestoreActionStatesAfterReResolvingBindings() can deal with bindings
+            //       having been removed or added.
+            map.OnBindingModified();
 
             return bindingIndex;
         }
@@ -552,6 +587,28 @@ namespace UnityEngine.InputSystem
             return new BindingSyntax(action.GetOrCreateActionMap(), indexOnMap, action);
         }
 
+        /// <summary>
+        /// Get write access to the binding in <see cref="InputAction.bindings"/> of <paramref name="action"/>
+        /// with the given <paramref name="name"/>.
+        /// </summary>
+        /// <param name="action">Action whose bindings to change.</param>
+        /// <param name="name">Name of the binding to be changed <see cref="InputAction.bindings"/>.</param>
+        /// <returns>A write accessor to the given binding.</returns>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Grab "fire" action from PlayerInput.
+        /// var fireAction = playerInput.actions["fire"];
+        ///
+        /// // Change its second binding to go to the left mouse button.
+        /// fireAction.ChangeBinding("fire")
+        ///     .WithPath("&lt;Mouse&gt;/leftButton");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is out of range (as per <see cref="InputAction.bindings"/>
+        /// of <paramref name="action"/>).</exception>
         public static BindingSyntax ChangeBinding(this InputAction action, string name)
         {
             return action.ChangeBinding(new InputBinding { name = name });
@@ -746,7 +803,7 @@ namespace UnityEngine.InputSystem
             if (bindingIndexInMap == -1)
                 return default;
 
-            return new BindingSyntax(actionMap, bindingIndexInMap);
+            return new BindingSyntax(actionMap, bindingIndexInMap, action);
         }
 
         /// <summary>
@@ -836,6 +893,7 @@ namespace UnityEngine.InputSystem
 
             var oldName = action.m_Name;
             action.m_Name = newName;
+            actionMap?.ClearActionLookupTable();
 
             if (actionMap?.asset != null)
                 actionMap?.asset.MarkAsDirty();
@@ -941,6 +999,12 @@ namespace UnityEngine.InputSystem
             asset.MarkAsDirty();
         }
 
+        /// <summary>
+        /// Associates the control scheme given by <paramref name="scheme"/> with the binding group given by <paramref name="bindingGroup"/>.
+        /// </summary>
+        /// <param name="scheme">The control scheme to modify.</param>
+        /// <param name="bindingGroup">The binding group to be associated with the control scheme.</param>
+        /// <returns><paramref name="scheme"/></returns>
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
@@ -1058,8 +1122,7 @@ namespace UnityEngine.InputSystem
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].name = name;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1075,8 +1138,7 @@ namespace UnityEngine.InputSystem
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].path = path;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1100,6 +1162,12 @@ namespace UnityEngine.InputSystem
                 return WithGroups(group);
             }
 
+            /// <summary>
+            /// Add all the groups specified in <paramref name="groups"/> to the list of <see cref="InputBinding.groups"/> of the binding.
+            /// </summary>
+            /// <param name="groups">A semi-colon separated list of group names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithGroups(string groups)
             {
                 if (!valid)
@@ -1114,12 +1182,18 @@ namespace UnityEngine.InputSystem
 
                 // Set groups on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].groups = groups;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
 
+            /// <summary>
+            /// Add an interaction via specified name in <paramref name="interaction"/> to the list of interactions.
+            /// </summary>
+            /// <param name="interaction">Interaction class name</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentException">If interaction name is null or empty.</exception>
             public BindingSyntax WithInteraction(string interaction)
             {
                 if (!valid)
@@ -1133,6 +1207,12 @@ namespace UnityEngine.InputSystem
                 return WithInteractions(interaction);
             }
 
+            /// <summary>
+            /// Add the set of interactions specified in <paramref name="interactions"/> to the list of interactions.
+            /// </summary>
+            /// <param name="interactions">A semi-colon separated list of interaction names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithInteractions(string interactions)
             {
                 if (!valid)
@@ -1147,25 +1227,39 @@ namespace UnityEngine.InputSystem
 
                 // Set interactions on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].interactions = interactions;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
 
+            /// <summary>
+            /// Add an interaction of type specified in <typeparamref name="TInteraction"/> to the list of interactions.
+            /// </summary>
+            /// <typeparam name="TInteraction"></typeparam>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="NotSupportedException">Interaction type has not been registered.</exception>
             public BindingSyntax WithInteraction<TInteraction>()
                 where TInteraction : IInputInteraction
             {
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
 
-                var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
+                var interactionName = InputInteraction.s_Interactions.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
-                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a processor");
+                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a interaction");
 
                 return WithInteraction(interactionName);
             }
 
+            /// <summary>
+            /// Add a processor to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <param name="processor">Name of the processor, such as &quot;Scale&quot;.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentException">The processor name is null or empty.</exception>
+            /// <exception cref="ArgumentException">The processor name contains a semi-colon.</exception>
             public BindingSyntax WithProcessor(string processor)
             {
                 if (!valid)
@@ -1174,11 +1268,17 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
                 if (processor.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
+                        $"Processor string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
 
                 return WithProcessors(processor);
             }
 
+            /// <summary>
+            /// Add processors to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <param name="processors">A semi-colon separated list of processor names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithProcessors(string processors)
             {
                 if (!valid)
@@ -1193,12 +1293,18 @@ namespace UnityEngine.InputSystem
 
                 // Set processors on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].processors = processors;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
 
+            /// <summary>
+            /// Add a processor to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <typeparam name="TProcessor">Type of processor.</typeparam>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="NotSupportedException">Processor type has not been registered.</exception>
             public BindingSyntax WithProcessor<TProcessor>()
             {
                 if (!valid)
@@ -1211,6 +1317,14 @@ namespace UnityEngine.InputSystem
                 return WithProcessor(processorName);
             }
 
+            /// <summary>
+            /// Specify which action to trigger.
+            /// </summary>
+            /// <param name="action">Action to trigger.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentNullException">Provided action is null.</exception>
+            /// <exception cref="ArgumentException">Provided action is a singleton action (not part of any action maps).</exception>
             public BindingSyntax Triggering(InputAction action)
             {
                 if (!valid)
@@ -1221,8 +1335,7 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException(
                         $"Cannot change the action a binding triggers on singleton action '{action}'", nameof(action));
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].action = action.name;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1242,12 +1355,12 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException("Accessor is not valid");
 
                 m_ActionMap.m_Bindings[m_BindingIndexInMap] = binding;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
 
                 // If it's a singleton action, we force the binding to stay with the action.
                 if (m_ActionMap.m_SingletonAction != null)
                     m_ActionMap.m_Bindings[m_BindingIndexInMap].action = m_ActionMap.m_SingletonAction.name;
+
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
@@ -1343,18 +1456,20 @@ namespace UnityEngine.InputSystem
             /// binding (see <see cref="InputSystem.RegisterBindingComposite"/></param>).
             /// <returns>A write accessor to the next composite binding or an invalid accessor (see
             /// <see cref="valid"/>) if no such binding was found.</returns>
-            /// <remarks>
-            /// <example>
-            /// <code>
-            /// var accessor = playerInput.actions["fire"].ChangeCompositeBinding("WASD")
-            /// </code>
-            /// </example>
-            /// </remarks>
             public BindingSyntax NextCompositeBinding(string compositeName = null)
             {
                 return IterateCompositeBinding(true, compositeName);
             }
 
+            /// <summary>
+            /// Iterate to the previous composite binding.
+            /// </summary>
+            /// <param name="compositeName">If <c>null</c> (default), an accessor to the previous composite binding,
+            /// regardless of name or type, is returned. If it is not <c>null</c>, can be either the name of
+            /// the binding (see <see cref="InputBinding.name"/>) or the name of the composite used in the
+            /// binding (see <see cref="InputSystem.RegisterBindingComposite"/>).</param>
+            /// <returns>A write accessor to the previous composite binding or an invalid accessor (see
+            /// <see cref="valid"/>) if no such binding was found.</returns>
             public BindingSyntax PreviousCompositeBinding(string compositeName = null)
             {
                 return IterateCompositeBinding(false, compositeName);
@@ -1461,11 +1576,13 @@ namespace UnityEngine.InputSystem
                 if (isComposite)
                 {
                     while (m_BindingIndexInMap < m_ActionMap.m_Bindings.LengthSafe() && m_ActionMap.m_Bindings[m_BindingIndexInMap].isPartOfComposite)
+                    {
                         ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap);
+                    }
                 }
 
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_Action.m_BindingsCount = m_ActionMap.m_Bindings.LengthSafe();
+                m_ActionMap.OnBindingModified();
 
                 // We have switched to a different binding array. For singleton actions, we need to
                 // sync up the reference that the action itself has.
@@ -1473,6 +1590,14 @@ namespace UnityEngine.InputSystem
                     m_ActionMap.m_SingletonAction.m_SingletonActionBindings = m_ActionMap.m_Bindings;
             }
 
+            /// <summary>
+            /// Insert a composite part into a composite binding.
+            /// </summary>
+            /// <param name="partName">Name of the part in composite binding.</param>
+            /// <param name="path">Control path to bind to.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">Part name is null or empty.</exception>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid or the binding accessor is not pointing to composite or part binding.</exception>
             public BindingSyntax InsertPartBinding(string partName, string path)
             {
                 if (string.IsNullOrEmpty(partName))
@@ -1492,6 +1617,26 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: remove this and merge it into BindingSyntax
+        /// <summary>
+        /// Write accessor to a composite binding.
+        /// </summary>
+        /// <remarks>
+        /// To add a composite binding to an action, you must first call <see cref="InputActionSetupExtensions.AddCompositeBinding"/>
+        /// and then use the CompositeSyntax struct to add composite parts.
+        /// <example>
+        /// <code>
+        /// playerInput.actions["fire"]
+        ///     .ChangeBinding(0)
+        ///     .AddCompositeBinding("2DVector")
+        ///     .With("Up", "&lt;Keyboard&gt;/w")
+        ///     .With("Down", "&lt;Keyboard&gt;/s")
+        ///     .With("Left", "&lt;Keyboard&gt;/a")
+        ///     .With("Right", "&lt;Keyboard&gt;/d");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="AddBinding(InputAction,InputBinding)"/>
+        /// <seealso cref="ChangeBinding(InputAction,int)"/>
         public struct CompositeSyntax
         {
             private readonly InputAction m_Action;
@@ -1540,23 +1685,31 @@ namespace UnityEngine.InputSystem
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
-                int bindingIndex;
-                if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
-                else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
+                using (InputActionRebindingExtensions.DeferBindingResolution())
+                {
+                    int bindingIndex;
+                    if (m_Action != null)
+                        bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
+                    else
+                        bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
 
-                m_ActionMap.m_Bindings[bindingIndex].name = name;
-                m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                    m_ActionMap.m_Bindings[bindingIndex].name = name;
+                    m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                }
 
                 return this;
             }
         }
 
+        /// <summary>
+        /// Write accessor to a control scheme.
+        /// </summary>
         public struct ControlSchemeSyntax
         {
+            // REVIEW: Consider removing this for major revision, e.g. v2 or let functionality used by it be internal to reduce API surface.
+
             private readonly InputActionAsset m_Asset;
             private readonly int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
@@ -1575,6 +1728,12 @@ namespace UnityEngine.InputSystem
                 m_ControlScheme = controlScheme;
             }
 
+            /// <summary>
+            /// Sets or overwrite the binding group for control scheme.
+            /// </summary>
+            /// <param name="bindingGroup">A binding group. See <see cref="InputBinding.groups"/>.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">If provided name is null or empty.</exception>
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
                 if (string.IsNullOrEmpty(bindingGroup))
@@ -1588,48 +1747,108 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Adds a required device to control scheme.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithRequiredDevice<TDevice>()
                 where TDevice : InputDevice
             {
                 return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Adds an optional device to control scheme.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOptional"/>
             public ControlSchemeSyntax WithOptionalDevice<TDevice>()
                 where TDevice : InputDevice
             {
                 return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Combines another required device with the previous device using boolean OR
+            /// logic such that either the previous device or this device are required to be present.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <remarks>
+            /// <example>
+            /// <code>
+            /// // Create an .inputactions asset.
+            /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+            ///
+            /// asset.AddControlScheme("KeyboardAndMouseOrPen")
+            ///     .WithRequiredDevice("&lt;Keyboard&gt;")
+            ///     .WithRequiredDevice("&lt;Mouse&gt;")
+            ///     .OrWithRequiredDevice("&lt;Pen&gt;")
+            /// </code>
+            /// </example>
+            /// </remarks>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOR"/>
             public ControlSchemeSyntax OrWithRequiredDevice<TDevice>()
                 where TDevice : InputDevice
             {
-                return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
+                return OrWithRequiredDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Combines another optional device with the previous device using boolean OR
+            /// logic such that either the previous device or this device are required to be present.
+            /// If this is the last device in a chain of OR'd devices, the entire chain of
+            /// devices becomes optional.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOR"/>
             public ControlSchemeSyntax OrWithOptionalDevice<TDevice>()
                 where TDevice : InputDevice
             {
-                return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
+                return OrWithOptionalDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Adds a required device to control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithRequiredDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.None);
                 return this;
             }
 
+            /// <summary>
+            /// Add an optional device to the control scheme.
+            /// </summary>
+            /// <param name="controlPath">The device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithOptionalDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Optional);
                 return this;
             }
 
+            /// <summary>
+            /// Adds another possible required device to the control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax OrWithRequiredDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Or);
                 return this;
             }
 
+            /// <summary>
+            /// Adds another possible optional device to control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax OrWithOptionalDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath,
@@ -1647,6 +1866,10 @@ namespace UnityEngine.InputSystem
                 return $"<{layoutName}>";
             }
 
+            /// <summary>
+            /// Call this method when done building out the control scheme to return the associated instance.
+            /// </summary>
+            /// <returns>The associated control scheme</returns>
             public InputControlScheme Done()
             {
                 if (m_Asset != null)

@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem
     public partial class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processes pending input events.
+        /// Allows you to control how the input system handles updates. In other words, how and when pending input events are processed.
         /// </summary>
         /// <value>When to run input updates.</value>
         /// <remarks>
@@ -112,14 +112,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// Currently: Option is deprecated and has no influence on the system. Filtering on noise is always enabled.
+        /// Previously: Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
         /// when there is only noise in the input.
         /// </summary>
-        /// <value>Whether to check input on devices for noise.</value>
         /// <remarks>
-        /// This is <em>disabled by default</em>.
-        ///
-        /// When toggled on, this property adds extra processing every time input is
+        /// We add extra processing every time input is
         /// received on a device that is considered noisy. These devices are those that
         /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
         /// A good example is the PS4 controller which has a gyroscope sensor built into
@@ -141,15 +139,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="InputControl.noisy"/>
+        [Obsolete("filterNoiseOnCurrent is deprecated, filtering of noise is always enabled now.", false)]
         public bool filterNoiseOnCurrent
         {
-            get => m_FilterNoiseOnCurrent;
+            get => false;
             set
             {
-                if (m_FilterNoiseOnCurrent == value)
-                    return;
-                m_FilterNoiseOnCurrent = value;
-                OnChange();
+                /* no op */
             }
         }
 
@@ -365,6 +361,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a slow-tap-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a slow-tap-interaction.</value>
+        /// <remarks>
+        /// A slow-tap-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a slow-tap-interaction.
+        ///
+        /// The default slow-tap time is 0.5 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
         public float defaultSlowTapTime
         {
             get => m_DefaultSlowTapTime;
@@ -378,6 +386,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a hold-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a hold-interaction.</value>
+        /// <remarks>
+        /// A hold-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a hold-interaction.
+        ///
+        /// The default hold time is 0.4 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.HoldInteraction"/>
         public float defaultHoldTime
         {
             get => m_DefaultHoldTime;
@@ -391,6 +411,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default maximum radius that a touch contact may be moved from its origin to evaluate to a tap-interaction.
+        /// </summary>
+        /// <value>The default maximum radius (in pixels) that a touch contact may be moved from its origin to evaluate to a tap-interaction.</value>
+        /// <remarks>
+        /// A tap-interaction or slow-tap-interaction is considered as a press-and-release sequence.
+        /// If the associated touch contact is moved a distance equal or greater to the value of this setting,
+        /// the input sequence do not qualify as a tap-interaction.
+        ///
+        /// The default tap-radius is 5 pixels.
+        /// </remarks>
+        /// <seealso cref="Interactions.TapInteraction"/>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
+        /// <seealso cref="Interactions.MultiTapInteraction"/>
         public float tapRadius
         {
             get => m_TapRadius;
@@ -404,6 +438,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the maximum duration that may pass between taps in order to evaluate to a multi-tap-interaction.
+        /// </summary>
+        /// <value>The default maximum duration (in seconds) that may pass between taps in order to evaluate to a multi-tap-interaction.</value>
+        /// <remarks>
+        /// A multi-tap interaction is considered as multiple press-and-release sequences.
+        /// This property defines the maximum duration that may pass between these press-and-release sequences.
+        /// If consecutive taps (press-and-release sequences) occur with a inter-sequence duration exceeding
+        /// this property, the interaction do not qualify as a multi-tap-interaction.
+        ///
+        /// The default multi-tap delay time is 0.75 seconds.
+        /// </remarks>
+        /// <seealso cref="defaultTapTime"/>
         public float multiTapDelayTime
         {
             get => m_MultiTapDelayTime;
@@ -474,6 +521,22 @@ namespace UnityEngine.InputSystem
                 if (m_EditorInputBehaviorInPlayMode == value)
                     return;
                 m_EditorInputBehaviorInPlayMode = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="InputActionPropertyDrawerMode"/>
+        public InputActionPropertyDrawerMode inputActionPropertyDrawerMode
+        {
+            get => m_InputActionPropertyDrawerMode;
+            set
+            {
+                if (m_InputActionPropertyDrawerMode == value)
+                    return;
+                m_InputActionPropertyDrawerMode = value;
                 OnChange();
             }
         }
@@ -614,6 +677,32 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Improves shortcut key support by making composite controls consume control input
+        /// </summary>
+        /// <remarks>
+        /// Actions are exclusively triggered and will consume/block other actions sharing the same input.
+        /// E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.
+        /// Please note that enabling this will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls.
+        /// Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first.
+        /// Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls.
+        /// This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered.
+        /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
+        /// However conflicts would not occur between actions which belong to different Action Assets.
+        /// </remarks>
+        public bool shortcutKeysConsumeInput
+        {
+            get => m_ShortcutKeysConsumeInputs;
+            set
+            {
+                if (m_ShortcutKeysConsumeInputs == value)
+                    return;
+
+                m_ShortcutKeysConsumeInputs = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// Enable or disable an internal feature by its name.
         /// </summary>
         /// <param name="featureName">Name of the feature.</param>
@@ -628,13 +717,27 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            if (m_FeatureFlags == null)
-                m_FeatureFlags = new HashSet<string>();
+            switch (featureName)
+            {
+                case InputFeatureNames.kUseOptimizedControls:
+                    optimizedControlsFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kUseReadValueCaching:
+                    readValueCachingFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kParanoidReadValueCachingChecks:
+                    paranoidReadValueCachingChecksEnabled = enabled;
+                    break;
+                default:
+                    if (m_FeatureFlags == null)
+                        m_FeatureFlags = new HashSet<string>();
 
-            if (enabled)
-                m_FeatureFlags.Add(featureName.ToUpperInvariant());
-            else
-                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+                    if (enabled)
+                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
+                    else
+                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+                    break;
+            }
 
             OnChange();
         }
@@ -649,9 +752,9 @@ namespace UnityEngine.InputSystem
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
-        [SerializeField] private bool m_FilterNoiseOnCurrent = false;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
         [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
+        [SerializeField] private InputActionPropertyDrawerMode m_InputActionPropertyDrawerMode = InputActionPropertyDrawerMode.Compact;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
@@ -666,8 +769,19 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
+
+        internal bool IsFeatureEnabled(string featureName)
+        {
+            return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
+        }
+
+        // Needs a static field because feature check is in the hot path
+        internal static bool optimizedControlsFeatureEnabled = false;
+        internal static bool readValueCachingFeatureEnabled;
+        internal static bool paranoidReadValueCachingChecksEnabled;
 
         internal void OnChange()
         {
@@ -801,6 +915,40 @@ namespace UnityEngine.InputSystem
             /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
             /// </summary>
             AllDeviceInputAlwaysGoesToGameView,
+        }
+
+        /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="inputActionPropertyDrawerMode"/>
+        public enum InputActionPropertyDrawerMode
+        {
+            /// <summary>
+            /// Display the property in a compact format, using a minimal number of lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a dropdown menu.
+            /// </summary>
+            Compact,
+
+            /// <summary>
+            /// Display the effective action underlying the property, using multiple lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see or revert prefab overrides and hide the field that is ignored.
+            /// </remarks>
+            MultilineEffective,
+
+            /// <summary>
+            /// Display both the input action and external reference underlying the property.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see both values of the property without needing to toggle Use Reference.
+            /// </remarks>
+            MultilineBoth,
         }
     }
 }

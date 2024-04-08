@@ -1,16 +1,16 @@
-#if UNITY_XR_AVAILABLE && ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+// Docs generation is skipped because these are intended to be replaced with the com.unity.xr.googlevr package.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;
-using UnityEngine.Scripting;
 
 namespace Unity.XR.GoogleVr
 {
     /// <summary>
     /// A head-mounted display powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(displayName = "Daydream Headset")]
-    [Preserve]
+    [InputControlLayout(displayName = "Daydream Headset", hideInUI = true)]
     public class DaydreamHMD : XRHMD
     {
     }
@@ -18,43 +18,31 @@ namespace Unity.XR.GoogleVr
     /// <summary>
     /// An XR controller powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
-    [Preserve]
+    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class DaydreamController : XRController
     {
         [InputControl]
-        [Preserve]
-        public Vector2Control touchpad { get; private set; }
+        public Vector2Control touchpad { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl volumeUp { get; private set; }
+        public ButtonControl volumeUp { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl recentered { get; private set; }
+        public ButtonControl recentered { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl volumeDown { get; private set; }
+        public ButtonControl volumeDown { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl recentering { get; private set; }
+        public ButtonControl recentering { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl app { get; private set; }
+        public ButtonControl app { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl home { get; private set; }
+        public ButtonControl home { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchpadClicked { get; protected set; }
         [InputControl]
-        [Preserve]
-        public ButtonControl touchpadTouched { get; private set; }
+        public ButtonControl touchpadTouched { get; protected set; }
         [InputControl(noisy = true)]
-        [Preserve]
-        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        [Preserve]
-        public Vector3Control deviceAcceleration { get; private set; }
+        public Vector3Control deviceAcceleration { get; protected set; }
 
         protected override void FinishSetup()
         {

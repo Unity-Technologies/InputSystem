@@ -1,20 +1,24 @@
+---
+uid: input-system-interactions
+---
 # Interactions
 
-* [Operation](#operation)
-    * [Multiple Controls on an Action](#multiple-controls-on-an-action)
-    * [Multiple Interactios on a Binding](#multiple-interactions-on-a-binding)
-    * [Timeouts](#timeouts)
-* [Using Interactions](#using-interactions)
-    * [Interactions applied to Bindings](#interactions-applied-to-bindings)
-    * [Interactions applied to Actions](#interactions-applied-to-actions)
-* [Predefined Interactions](#predefined-interactions)
-    * [Default Interaction](#default-interaction)
-    * [Press](#press)
-    * [Hold](#hold)
-    * [Tap](#tap)
-    * [SlowTap](#slowtap)
-    * [MultiTap](#multitap)
-* [Custom Interactions](#writing-custom-interactions)
+- [Interactions](#interactions)
+  - [Operation](#operation)
+    - [Multiple Controls on an Action](#multiple-controls-on-an-action)
+    - [Multiple Interactions on a Binding](#multiple-interactions-on-a-binding)
+    - [Timeouts](#timeouts)
+  - [Using Interactions](#using-interactions)
+    - [Interactions applied to Bindings](#interactions-applied-to-bindings)
+    - [Interactions applied to Actions](#interactions-applied-to-actions)
+  - [Predefined Interactions](#predefined-interactions)
+    - [Default Interaction](#default-interaction)
+    - [Press](#press)
+    - [Hold](#hold)
+    - [Tap](#tap)
+    - [SlowTap](#slowtap)
+    - [MultiTap](#multitap)
+  - [Writing custom Interactions](#writing-custom-interactions)
 
 An Interaction represents a specific input pattern. For example, a [hold](#hold) is an Interaction that requires a Control to be held for at least a minimum amount of time.
 
@@ -31,7 +35,7 @@ An Interaction has a set of distinct phases it can go through in response to rec
 |`Waiting`|The Interaction is waiting for input.|
 |`Started`|The Interaction has been started (that is, it received some of its expected input), but is not complete yet.|
 |`Performed`|The Interaction is complete.|
-|`Canceled`|The Interaction was interrupted and aborted. For example, the user pressed and then released a button before the minimum time required for a [hold  Interaction](#hold) to complete.|
+|`Canceled`|The Interaction was interrupted and aborted. For example, the user pressed and then released a button before the minimum time required for a [hold Interaction](#hold) to complete.|
 
 Not every Interaction triggers every phase, and the pattern in which specific Interactions trigger phases depends on the Interaction type.
 
@@ -67,7 +71,7 @@ fireAction.canceled +=
 
 ### Multiple Controls on an Action
 
-If you have multiple Controls bound to a Binding or an Action which has an Interaction, then the Input System first applies the [Control disambiguation](ActionBindings.md#disambiguation) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
+If you have multiple Controls bound to a Binding or an Action which has an Interaction, then the Input System first applies the [Control conflict resolution](ActionBindings.md#conflicting-inputs) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
 
 ### Multiple Interactions on a Binding
 
@@ -100,7 +104,7 @@ You can install Interactions on [Bindings](ActionBindings.md) or [Actions](Actio
 
 When you create Bindings for your [Actions](Actions.md), you can choose to add Interactions to the Bindings.
 
-If you're using [Input Action Assets](ActionAssets.md), you can add any Interaction to your Bindings in the Input Action editor. Once you [created some Bindings](ActionAssets.md#editing-bindings), select the Binding you want to add Interactions to, so that the right pane of the window shows the properties for that Binding. Next, click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. Choose an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout. If the Interaction has any parameters, you can now edit them here as well:
+If you're using [project-wide actions](ActionsEditor.md), or [Input Action Assets](ActionAssets.md), you can add any Interaction to your Bindings in the Input Action editor. Once you [created some Bindings](ActionsEditor.md#bindings), select the Binding you want to add Interactions to, so that the right pane of the window shows the properties for that Binding. Next, click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. Choose an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout. If the Interaction has any parameters, you can now edit them here as well:
 
 ![Binding Processors](Images/BindingProcessors.png)
 
@@ -116,7 +120,9 @@ action.AddBinding("<Gamepad>/leftStick")
 
 ### Interactions applied to Actions
 
-Interactions on Actions work very similar to Interactions on Bindings, but they affect all Controls bound to an Action, not just the ones coming from a specific Binding. If there are Interactions on both the Binding and the Action, the Input System processes the ones from the binding first.
+Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. It is thus more or less a shortcut that avoids manually adding the same Interaction(s) to each of the Bindings.
+
+If Interactions are applied __both__ to an Action and to its Bindings, then the effect is the same as if the Action's Interactions are *appended* to the list of Interactions on each of the Bindings. This means that the Binding's Interactions are applied *first*, and then the Action's Interactions are applied *after*.
 
 You can add and edit Interactions on Actions in the [Input Action Assets](ActionAssets.md) editor window the [same way](#interactions-applied-to-bindings) as you would do for Bindings: select an Action to Edit, then add the Interactions in the right window pane.
 
@@ -140,24 +146,24 @@ The following diagram shows the behavior of the built-in Interactions for a simp
 
 If you haven't specifically added an Interaction to a Binding or its Action, the default Interaction applies to the Binding.
 
-[`Value`](Actions.md#value) type Actions have the following behavior:
+[`Value`](RespondingToActions.md#value) type Actions have the following behavior:
 
 1. As soon as a bound Control becomes [actuated](Controls.md#control-actuation), the Action goes from `Waiting` to `Started`, and then immediately to `Performed` and back to `Started`. One callback occurs on [`InputAction.started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started), followed by one callback on [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed).
 2. For as long as the bound Control remains actuated, the Action stays in `Started` and triggers `Performed` whenever the value of the Control changes (that is, one call occurs to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)).
 3. When the bound Control stops being actuated, the Action goes to `Canceled` and then back to `Waiting`. One call occurs to [`InputAction.canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
 
-[`Button`](Actions.md#button) type Actions have the following behavior:
+[`Button`](RespondingToActions.md#button) type Actions have the following behavior:
 
 1. As soon as a bound Control becomes [actuated](Controls.md#control-actuation), the Action goes from `Waiting` to `Started`. One callback occurs on [`InputAction.started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started).
 2. If a Control then reaches or exceeds the button press threshold, the Action goes from `Started` to `Performed`. One callback occurs on [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed). The default value of the button press threshold is defined in the [input settings](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint). However, an individual control can [override](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_pressPoint) this value.
 3. Once the Action has `Performed`, if all Controls then go back to a level of actuation at or below the [release threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_buttonReleaseThreshold), the Action goes from `Performed` to `Canceled`. One call occurs to [`InputAction.canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
 4. If the Action never went to `Performed`, it will go to `Canceled` as soon as all Controls are released. One call occurs to [`InputAction.canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
 
-[`PassThrough`](Actions.md#pass-through) type Actions have a simpler behavior. The Input System doesn't try to track bound Controls as a single source of input. Instead, it triggers a `Performed` callback for each value change.
+[`PassThrough`](RespondingToActions.md#pass-through) type Actions have a simpler behavior. The Input System doesn't try to track bound Controls as a single source of input. Instead, it triggers a `Performed` callback for each value change.
 
-|__Callback__|[`InputActionType.Value`](Actions.md#value)|[`InputActionType.Button`](Actions.md#button)|[`InputActionType.PassThrough`](Actions.md#pass-through)|
+|__Callback__|[`InputActionType.Value`](RespondingToActions.md#value)|[`InputActionType.Button`](RespondingToActions.md#button)|[`InputActionType.PassThrough`](RespondingToActions.md#pass-through)|
 |-----------|-------------|------------|-----------------|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control(s) changed value away from the default value.|Button started being pressed but has not necessarily crossed the press threshold yet.|First Control actuation after Action was enabled.|
+|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control(s) changed value away from the default value.|Button started being pressed but has not necessarily crossed the press threshold yet.|not used|
 |[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control(s) changed value.|Button was pressed to at least the button [press threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint).|Control changed value.|
 |[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|Control(s) are no longer actuated.|Button was released. If the button was pressed above the press threshold, the button has now fallen to or below the [release threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_buttonReleaseThreshold). If the button was never fully pressed, the button is now back to completely unpressed.|Action is disabled.|
 
@@ -185,6 +191,17 @@ A [`HoldInteraction`](../api/UnityEngine.InputSystem.Interactions.HoldInteractio
 |---|---|---|
 |[`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration)|`float`|[`InputSettings.defaultHoldTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultHoldTime)|
 |[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+
+
+To display UI feedback when a button starts being held, use the [`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) callback.
+
+```C#
+
+    action.started += _ => ShowGunChargeUI();
+    action.performed += _ => FinishGunChargingAndHideChargeUI();
+    action.cancelled += _ => HideChargeUI();
+
+```
 
 |__Callbacks__||
 |---|---|

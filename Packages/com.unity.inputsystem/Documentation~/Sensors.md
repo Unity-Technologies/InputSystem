@@ -1,3 +1,6 @@
+---
+uid: input-system-sensors
+---
 # Sensor support
 
 * [Sampling Frequency](#sampling-frequency)
@@ -16,21 +19,31 @@
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
+>__Note__: To test your app on iOS or Android in the editor with sensor input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote). This currently supports [`Accelerometer`](#accelerometer), [`Gyroscope`](#gyroscope), [`GravitySensor`](#gravitysensor), [`AttitudeSensor`](#attitudesensor), and [`LinearAccelerationSensor`](#linearaccelerationsensor).
+
+To determine whether a particular sensor is present, you can use its `.current` getter.
+
+```CSharp
+// Determine if a Gyroscope sensor device is present.
+if (Gyroscope.current != null)
+    Debug.Log("Gyroscope present");
+```
+
 Unlike other devices, sensors are disabled by default. To enable a sensor, call [`InputSystem.EnableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_)).
 
-```
+```CSharp
 InputSystem.EnableDevice(Gyroscope.current);
 ```
 
 To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_).
 
-```
+```CSharp
 InputSystem.DisableDevice(Gyroscope.current);
 ```
 
 To check whether a sensor is currently enabled, use [`InputDevice.enabled`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_enabled).
 
-```
+```CSharp
 if (Gyroscope.current.enabled)
     Debug.Log("Gyroscope is enabled");
 ```
@@ -59,7 +72,7 @@ Each sensor Device implements a single Control which represents the data read by
 
 Sensors sample continuously at a set interval. You can set or query the sampling frequency for each sensor using the [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) property. The frequency is expressed in Hertz (number of samples per second).
 
-```
+```CSharp
 // Get sampling frequency of gyro.
 var frequency = Gyroscope.current.samplingFrequency;
 
@@ -83,6 +96,21 @@ Use the gravity sensor to determine the direction of the gravity vector relative
 
 Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
+**Note**: On Android devices, there are two types of attitude sensors: [**RotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [**GameRotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR). Some Android devices have both types of sensor, while other devices may only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. You can [read about the differences between them here](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot). Because of this variety in what type of rotation sensors are available across devices, when you require input from a rotation sensor on Android devices, you should include code that checks for your preferred type of rotation sensor with a fallback to the alternative type of rotation sensor if it is not present. For example:
+
+```CSharp
+AttitudeSensor attitudeSensor = InputSystem.GetDevice<AndroidRotationVector>();
+if (attitudeSensor == null)
+{
+    attitudeSensor = InputSystem.GetDevice<AndroidGameRotationVector>();
+    if (attitudeSensor == null)
+       Debug.LogError("AttitudeSensor is not available");
+}
+
+if (attitudeSensor != null)
+    InputSystem.EnableDevice(attitudeSensor);
+```
+
 ## <a name="linearaccelerationsensor"></a>[`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html)
 
 Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
@@ -102,6 +130,8 @@ This Input Device represents the atmospheric pressure measured by the device whi
 ## <a name="proximitysensor"></a>[`ProximitySensor`](../api/UnityEngine.InputSystem.ProximitySensor.html)
 
 This Input Device measures how close the device which is running the content is to the user. Phones typically use the proximity sensor to determine if the user is holding the phone to their ear or not. Values represent distance measured in centimeters.
+
+>NOTE: The Samsung devices' proximity sensor is only enabled during calls and not when using speakerphone or Bluetooth earphones. This means the lock screen function won't work, allowing the user to use the display during the call. It is important to note that the proximity sensor only works during non-speakerphone or non-Bluetooth calls, as it is designed to prevent accidental touches during calls. However, the proximity sensor can work slightly differently on different Samsung phones.
 
 ## <a name="humiditysensor"></a>[`HumiditySensor`](../api/UnityEngine.InputSystem.HumiditySensor.html)
 

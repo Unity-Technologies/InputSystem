@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UIElements;
 
 ////REVIEW: generalize this to something beyond just parameters?
 
@@ -15,6 +17,8 @@ namespace UnityEngine.InputSystem.Editor
     /// <remarks>
     /// When implementing a custom parameter editor, use <see cref="InputParameterEditor{TObject}"/> instead.
     /// </remarks>
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public abstract class InputParameterEditor
     {
         /// <summary>
@@ -27,6 +31,16 @@ namespace UnityEngine.InputSystem.Editor
         /// Callback for implementing a custom UI.
         /// </summary>
         public abstract void OnGUI();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        /// <summary>
+        /// Add visual elements for this parameter editor to a root VisualElement.
+        /// </summary>
+        /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>
+        /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
+        /// changes value.</param>
+        public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
+#endif
 
         internal abstract void SetTarget(object target);
 
@@ -168,13 +182,24 @@ namespace UnityEngine.InputSystem.Editor
             OnEnable();
         }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        /// <summary>
+        /// Default stub implementation of <see cref="InputParameterEditor.OnDrawVisualElements"/>.
+        /// Should be overridden to create the desired UI.
+        /// </summary>
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+        }
+
+#endif
+
         /// <summary>
         /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
         /// </summary>
         /// <remarks>
         /// Has a bool toggle to switch between default and custom value.
         /// </remarks>
-        internal struct CustomOrDefaultSetting
+        internal class CustomOrDefaultSetting
         {
             public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue,
                 Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true,
@@ -197,6 +222,98 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUIUtility.TrTextContent(
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+            {
+                var value = m_GetValue();
+
+                if (m_UseDefaultValue)
+                    value = m_GetDefaultValue();
+
+                // If previous value was an epsilon away from default value, it most likely means that value was set by our own code down in this method.
+                // Revert it back to default to show a nice readable value in UI.
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if ((value - float.Epsilon) == m_DefaultInitializedValue)
+                    value = m_DefaultInitializedValue;
+
+                var container = new VisualElement();
+                var settingsContainer = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+
+
+                m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
+                m_FloatField.Q("unity-text-input").AddToClassList("float-field");
+                m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
+                m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
+                m_FloatField.SetEnabled(!m_UseDefaultValue);
+
+                m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
+
+                m_DefaultToggle = new Toggle("Default") { value = m_UseDefaultValue };
+                m_DefaultToggle.RegisterValueChangedCallback(evt => ToggleUseDefaultValue(evt, onChangedCallback));
+
+
+                var buttonContainer = new VisualElement
+                {
+                    style =
+                    {
+                        flexDirection = FlexDirection.RowReverse
+                    }
+                };
+                m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
+                m_OpenInputSettingsButton.AddToClassList("open-settings-button");
+
+                settingsContainer.Add(m_FloatField);
+                settingsContainer.Add(m_DefaultToggle);
+                container.Add(settingsContainer);
+
+                if (m_UseDefaultValue)
+                {
+                    buttonContainer.Add(m_OpenInputSettingsButton);
+                    container.Add(m_HelpBox);
+                }
+
+                container.Add(buttonContainer);
+
+                root.Add(container);
+            }
+
+            private void ChangeSettingValue(ChangeEvent<float> evt)
+            {
+                if (m_UseDefaultValue) return;
+
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (evt.newValue == m_DefaultInitializedValue)
+                {
+                    // If user sets a value that is equal to default initialized, change value slightly so it doesn't pass potential default checks.
+                    ////TODO: refactor all of this to use tri-state values instead, there is no obvious float value that we can use as default (well maybe NaN),
+                    ////so instead it would be better to have a separate bool to show if value is present or not.
+                    m_SetValue(evt.newValue + float.Epsilon);
+                }
+                else
+                {
+                    m_SetValue(evt.newValue);
+                }
+            }
+
+            private void OnEditEnd(Action onChangedCallback)
+            {
+                onChangedCallback.Invoke();
+            }
+
+            private void ToggleUseDefaultValue(ChangeEvent<bool> evt, Action onChangedCallback)
+            {
+                if (evt.newValue != m_UseDefaultValue)
+                {
+                    m_SetValue(!evt.newValue ? m_GetDefaultValue() : m_DefaultInitializedValue);
+                    onChangedCallback.Invoke();
+                }
+
+                m_UseDefaultValue = evt.newValue;
+                m_FloatField?.SetEnabled(!m_UseDefaultValue);
+            }
+
+#endif
 
             public void OnGUI()
             {
@@ -265,6 +382,12 @@ namespace UnityEngine.InputSystem.Editor
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;
             private GUIContent m_HelpBoxText;
+            private FloatField m_FloatField;
+            private Button m_OpenInputSettingsButton;
+            private Toggle m_DefaultToggle;
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            private HelpBox m_HelpBox;
+#endif
         }
     }
 }

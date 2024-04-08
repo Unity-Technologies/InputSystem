@@ -10,21 +10,16 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="UnityEngine.InputSystem.XR.XRController"/>
     /// <seealso cref="UnityEngine.InputSystem.XR.XRHMD"/>
     [InputControlLayout(displayName = "Tracked Device", isGenericTypeOfDevice = true)]
-    [Preserve]
     public class TrackedDevice : InputDevice
     {
         [InputControl(synthetic = true)]
-        [Preserve]
-        public IntegerControl trackingState { get; private set; }
+        public IntegerControl trackingState { get; protected set; }
         [InputControl(synthetic = true)]
-        [Preserve]
-        public ButtonControl isTracked { get; private set; }
+        public ButtonControl isTracked { get; protected set; }
         [InputControl(noisy = true, dontReset = true)]
-        [Preserve]
-        public Vector3Control devicePosition { get; private set; }
+        public Vector3Control devicePosition { get; protected set; }
         [InputControl(noisy = true, dontReset = true)]
-        [Preserve]
-        public QuaternionControl deviceRotation { get; private set; }
+        public QuaternionControl deviceRotation { get; protected set; }
 
         protected override void FinishSetup()
         {

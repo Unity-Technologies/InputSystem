@@ -1,4 +1,4 @@
-Input System © 2021 Unity Technologies
+com.unity.inputsystem copyright © 2024 Unity Technologies
 
 Licensed under the Unity Companion License for Unity-dependent projects (see [https://unity3d.com/legal/licenses/unity_companion_license](https://unity3d.com/legal/licenses/unity_companion_license)).
 

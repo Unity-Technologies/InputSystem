@@ -177,10 +177,10 @@ public class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
     // for it a little bit. One thing we can do is expose the controls for our
     // device directly. While anyone can look up our controls using strings, exposing
     // the controls as properties makes it simpler to work with the device in script.
-    public ButtonControl firstButton { get; private set; }
-    public ButtonControl secondButton { get; private set; }
-    public ButtonControl thirdButton { get; private set; }
-    public StickControl stick { get; private set; }
+    public ButtonControl firstButton { get; protected set; }
+    public ButtonControl secondButton { get; protected set; }
+    public ButtonControl thirdButton { get; protected set; }
+    public StickControl stick { get; protected set; }
 
     // FinishSetup is where our device setup is finalized. Here we can look up
     // the controls that have been created.

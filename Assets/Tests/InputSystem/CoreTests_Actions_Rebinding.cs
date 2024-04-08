@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 
 internal partial class CoreTests
@@ -1149,13 +1152,23 @@ internal partial class CoreTests
         using (new InputActionRebindingExtensions.RebindingOperation()
                .WithAction(action)
                .WithControlsExcluding("<Pointer>/position")
-               .WithMatchingEventsBeingSuppressed().Start())
+               .WithControlsExcluding("<Pointer>/press")
+               .WithControlsExcluding("<Mouse>/leftButton")
+               .WithControlsExcluding("<Gamepad>/buttonEast")
+               .WithMatchingEventsBeingSuppressed()
+               .Start()
+        )
         {
+            // Non-bindable controls should not be suppressed and continue working as normal
             Set(mouse.position, new Vector2(123, 234));
-            Press(gamepad.buttonSouth);
+            Press(mouse.leftButton);
+            Press(gamepad.buttonEast);
 
+            Press(gamepad.buttonSouth);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonEast.isPressed, Is.True);
             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
         }
     }
@@ -1335,6 +1348,63 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanSaveAndLoadRebindOnlyForOverridesSet()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", processors: "invert");
+        action.AddBinding("<Keyboard>/space", interactions: "tap");
+
+        // Check that the effective paths are correct
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+        Assert.That(action.bindings[0].effectiveInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].effectiveProcessors, Is.EqualTo("invert"));
+
+        Assert.That(action.bindings[1].effectivePath, Is.EqualTo("<Keyboard>/space"));
+        Assert.That(action.bindings[1].effectiveInteractions, Is.EqualTo("tap"));
+        Assert.That(action.bindings[1].effectiveProcessors, Is.EqualTo(null));
+
+        action.ApplyBindingOverride(0, "<Gamepad>/buttonWest");
+        action.ApplyBindingOverride(1, new InputBinding
+        {
+            overridePath =  "<Keyboard>/a",
+            overrideInteractions = "",
+            overrideProcessors = "multiply",
+        });
+
+        var actionRebindsJson = action.SaveBindingOverridesAsJson();
+        Debug.Log(actionRebindsJson.ToString());
+
+        action.LoadBindingOverridesFromJson(actionRebindsJson);
+
+        // Check that effective binding path changed
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/buttonWest"));
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonWest"));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        // Check that effective interaction maintained it's null value
+        Assert.That(action.bindings[0].effectiveInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].overrideInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].interactions, Is.EqualTo(null));
+        // Check that effective interaction maintained it's previously set value
+        Assert.That(action.bindings[0].effectiveProcessors, Is.EqualTo("invert"));
+        Assert.That(action.bindings[0].overrideProcessors, Is.EqualTo(null));
+        Assert.That(action.bindings[0].processors, Is.EqualTo("invert"));
+
+        // Check that effective binding path changed
+        Assert.That(action.bindings[1].effectivePath, Is.EqualTo("<Keyboard>/a"));
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("<Keyboard>/a"));
+        Assert.That(action.bindings[1].path, Is.EqualTo("<Keyboard>/space"));
+        // Check that effective binding was disabled
+        Assert.That(action.bindings[1].effectiveInteractions, Is.EqualTo(""));
+        Assert.That(action.bindings[1].overrideInteractions, Is.EqualTo(""));
+        Assert.That(action.bindings[1].interactions, Is.EqualTo("tap"));
+        // Check that effective binding which was null before, now has changed
+        Assert.That(action.bindings[1].effectiveProcessors, Is.EqualTo("multiply"));
+        Assert.That(action.bindings[1].overrideProcessors, Is.EqualTo("multiply"));
+        Assert.That(action.bindings[1].processors, Is.EqualTo(null));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfEmpty()
     {
         var actionMap = new InputActionMap();
@@ -1460,5 +1530,354 @@ internal partial class CoreTests
         Assert.That(accessor.valid, Is.True);
         secondActionInMap.ChangeBinding(new InputBinding("<Keyboard>/e")).WithPath("<Keyboard>/f");
         Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/f"), out _), Is.EqualTo(2)); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase(null, "hold(duration=0.123)", "duration",  0.123f,  0.234f)]
+    [TestCase(null, "tap(duration=0.123);hold(duration=0.123)", "duration", 0.123f, 0.234f)]
+    [TestCase(null, "tap(duration=0.234);hold(duration=0.123)", "hold:duration", 0.123f, 0.234f)]
+    [TestCase("scale(factor=0.123)", null, "factor", 0.123f, 0.234f)]
+    [TestCase("normalize(min=0.123,max=1),clamp(min=0.123,max=1)", null, "min", 0.123f, 0.234f)]
+    [TestCase("normalize(min=0.234,max=1),clamp(min=0.123,max=1)", null, "clamp:min", 0.123f, 0.234f)]
+    public void Actions_CanApplyParameterOverrides(string processors, string interactions, string parameter, object defaultValue, object newValue)
+    {
+        var singleAction = new InputAction(processors: processors, interactions: interactions);
+        singleAction.AddBinding("<Gamepad>/buttonSouth");
+        singleAction.AddBinding("<Gamepad>/buttonNorth");
+
+        var actionMap = new InputActionMap();
+        var actionInMap = actionMap.AddAction("actionInMap", processors: processors,
+            interactions: interactions);
+        actionInMap.AddBinding("<Gamepad>/buttonSouth");
+        actionInMap.AddBinding("<Gamepad>/buttonNorth");
+
+        var actionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMapInAsset = actionAsset.AddActionMap("map");
+        var actionInAsset = actionMapInAsset.AddAction("actionInAsset", processors: processors,
+            interactions: interactions);
+        actionInAsset.AddBinding("<Gamepad>/buttonSouth");
+        actionInAsset.AddBinding("<Gamepad>/buttonNorth");
+
+        // Querying a non-existing parameter should return nothing.
+        Assert.That(singleAction.GetParameterValue("DoesNotExist"), Is.Null,
+            "Expecting getting non-existent parameter on single action to return null");
+        Assert.That(actionInMap.GetParameterValue("DoesNotExist"), Is.Null,
+            "Expecting getting non-existent parameter on action in map to return null");
+        Assert.That(actionInAsset.GetParameterValue("DoesNotExist"), Is.Null,
+            "Expecting getting non-existent parameter on action in asset to return null");
+
+        // Parameters should be at default values.
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
+
+        // Apply parameter overrides.
+        singleAction.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
+        actionInMap.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
+        actionInAsset.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
+
+        // Parameters should be at new values.
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
+
+        // Adding a device should not lead to any of the applied parameter values getting lost.
+        InputSystem.AddDevice<Gamepad>();
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_ToComposites()
+    {
+        var action = new InputAction();
+        action.AddCompositeBinding("1DAxis(whichSideWins=0)")
+            .With("Positive", "<Keyboard>/a")
+            .With("Negative", "<Keyboard>/s");
+
+        Assert.That(action.GetParameterValue("whichSideWins"), Is.EqualTo(PrimitiveValue.FromObject(0)));
+
+        action.ApplyParameterOverride("whichSideWins", 1);
+
+        Assert.That(action.GetParameterValue("whichSideWins"), Is.EqualTo(PrimitiveValue.FromObject(1)));
+        Assert.That(action.GetParameterValue("1DAxis:whichSideWins"), Is.EqualTo(PrimitiveValue.FromObject(1)));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_UsingBindingMask()
+    {
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Mouse>/delta", groups: "Mouse", processors: "scaleVector2(x=0.25,y=0.25)");
+        action.AddBinding("<Gamepad>/leftStick", groups: "Gamepad", processors: "scaleVector2(x=4,y=4)");
+
+        action.Enable();
+
+        Set(mouse.delta, new Vector2(11, 22));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(11 * 0.25f, 22 * 0.25f)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, new Vector2(0.5f, 0.5f));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.5f * 4, 0.5f * 4)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, default); // Reset so that we relinquish control over the action.
+
+        action.ApplyParameterOverride("x", 0.5f, InputBinding.MaskByGroup("Mouse"));
+
+        Set(mouse.delta, new Vector2(22, 33));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(22 * 0.5f, 33 * 0.25f)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, new Vector2(0.6f, 0.6f));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.6f * 4, 0.6f * 4)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_UsingBindingIndex()
+    {
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Mouse>/delta", processors: "scaleVector2(x=0.25,y=0.25)");
+        action.AddBinding("<Gamepad>/leftStick", processors: "scaleVector2(x=4,y=4)");
+
+        action.Enable();
+
+        Set(mouse.delta, new Vector2(11, 22));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(11 * 0.25f, 22 * 0.25f)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, new Vector2(0.5f, 0.5f));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.5f * 4, 0.5f * 4)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, default); // Reset so that we relinquish control over the action.
+
+        action.ApplyParameterOverride("x", 0.5f, 0);
+
+        Set(mouse.delta, new Vector2(22, 33));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(22 * 0.5f, 33 * 0.25f)).Using(Vector2EqualityComparer.Instance));
+
+        Set(gamepad.leftStick, new Vector2(0.6f, 0.6f));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.6f * 4, 0.6f * 4)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_WithOverridesNotGettingLostOnReResolution()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action = map.AddAction("action", type: InputActionType.Value);
+        action.AddBinding("<Gamepad>/leftTrigger", processors: "scale(factor=0.75)");
+        map.Enable();
+
+        action.ApplyParameterOverride("scale:factor", 0.25f);
+
+        // Add a completely new binding. This will throw lead to a full re-resolve.
+        // NOTE: We don't add a processor to this one.
+        action.AddBinding("<Gamepad>/rightTrigger");
+
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.25f * 0.25f).Within(0.00001));
+
+        Set(gamepad.rightTrigger, 0.75f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_WithOverridesGettingRetroactivelyAppliedToNewBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action = map.AddAction("action", type: InputActionType.Value);
+        map.Enable();
+
+        action.ApplyParameterOverride("scale:factor", 0.25f);
+        action.AddBinding("<Gamepad>/leftTrigger", processors: "scale(factor=0.75)");
+
+        Assert.That(action.GetParameterValue("scale:factor"), Is.EqualTo(new PrimitiveValue(0.25f)));
+
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.25f * 0.25f).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_WithMostSpecificOneBeingApplied()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.75)");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.25)");
+        map.Enable();
+
+        // Apply one override specifically to action1.
+        map.ApplyParameterOverride("scale:factor", 0.5f, new InputBinding { action = "action1" });
+
+        // And another not specifically to any action.
+        map.ApplyParameterOverride("scale:factor", 0.1f);
+
+        Assert.That(action1.GetParameterValue("scale:factor"), Is.EqualTo(new PrimitiveValue(0.5f)));
+        Assert.That(action2.GetParameterValue("scale:factor"), Is.EqualTo(new PrimitiveValue(0.1f)));
+
+        Set(gamepad.leftTrigger, 0.5f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.00001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_ThroughMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.75)");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.25)");
+        map.Enable();
+
+        Set(gamepad.leftTrigger, 0.5f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.75f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.25f).Within(0.0001));
+
+        map.ApplyParameterOverride("scale:factor", 0.1f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+
+        // Put a parameter override directly on action1. Should replace the one
+        // set on the map.
+        action1.ApplyParameterOverride("scale:factor", 0.5f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+
+        // Set a different override on the map. Should not replace the override
+        // active on action1.
+        map.ApplyParameterOverride("scale:factor", 0.2f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.2f).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_ThroughAsset()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map1");
+        var map2 = asset.AddActionMap("map2");
+        var action1 = map1.AddAction("action1", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.75)");
+        var action2 = map2.AddAction("action2", binding: "<Gamepad>/leftTrigger", processors: "scale(factor=0.25)");
+        asset.Enable();
+
+        Set(gamepad.leftTrigger, 0.5f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.75f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.25f).Within(0.0001));
+
+        asset.ApplyParameterOverride("scale:factor", 0.1f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+
+        // Put a parameter override directly on map1. Should replace the one
+        // set on the asset.
+        map1.ApplyParameterOverride("scale:factor", 0.5f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.1f).Within(0.0001));
+
+        // Set a different override on the asset. Should not replace the override
+        // active on action1.
+        asset.ApplyParameterOverride("scale:factor", 0.2f);
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.0001));
+        Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.2f).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_UsingExpressionSyntax()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction("action");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.123)");
+        action.AddBinding("<Mouse>/leftButton", interactions: "hold(duration=0.234)");
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.123).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.234).Within(0.0001));
+
+        asset.ApplyParameterOverride((TapInteraction x) => x.duration, 0.345f);
+        asset.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.456); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.345).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.456).Within(0.0001));
+
+        map.ApplyParameterOverride((TapInteraction x) => x.duration, 0.567f);
+        map.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.678); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.567).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.678).Within(0.0001));
+
+        action.ApplyParameterOverride((TapInteraction x) => x.duration, 0.789f);
+        action.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.987); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.789).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.987).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetParameterValue_ByBindingIndex()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.234)");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.345)");
+
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 0), Is.EqualTo(new PrimitiveValue(0.123f)));
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 1), Is.EqualTo(new PrimitiveValue(0.234f)));
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 2), Is.EqualTo(new PrimitiveValue(0.345f)));
     }
 }

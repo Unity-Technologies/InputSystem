@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
@@ -97,6 +98,19 @@ namespace UnityEngine.InputSystem
 
         public const char Separator = '/';
 
+        // We consider / a reserved character in control names. So, when this character does creep
+        // in there (e.g. from a device product name), we need to do something about it. We replace
+        // it with this character here.
+        // NOTE: Display names have no such restriction.
+        // NOTE: There are some Unicode characters that look sufficiently like a slash (e.g. FULLWIDTH SOLIDUS)
+        //       but that only makes for rather confusing output. So we just replace with a blank.
+        internal const char SeparatorReplacement = ' ';
+
+        internal static string CleanSlashes(this String pathComponent)
+        {
+            return pathComponent.Replace(Separator, SeparatorReplacement);
+        }
+
         public static string Combine(InputControl parent, string path)
         {
             if (parent == null)
@@ -116,7 +130,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Options for customizing the behavior of <see cref="ToHumanReadableString"/>.
+        /// Options for customizing the behavior of <see cref="ToHumanReadableString(string,HumanReadableStringOptions,InputControl)"/>.
         /// </summary>
         [Flags]
         public enum HumanReadableStringOptions
@@ -356,7 +370,7 @@ namespace UnityEngine.InputSystem
                 return null;
 
             if (parser.current.m_Layout.length > 0)
-                return parser.current.m_Layout.ToString();
+                return parser.current.m_Layout.ToString().Unescape();
 
             if (parser.current.isWildcard)
                 return Wildcard;
@@ -410,7 +424,7 @@ namespace UnityEngine.InputSystem
             if (parser.current.isWildcard)
                 return Wildcard;
 
-            return FindControlLayoutRecursive(ref parser, deviceLayoutName);
+            return FindControlLayoutRecursive(ref parser, deviceLayoutName.Unescape());
         }
 
         private static string FindControlLayoutRecursive(ref PathParser parser, string layoutName)
@@ -535,6 +549,8 @@ namespace UnityEngine.InputSystem
             while (posInStr < strLength && posInMatchTo < matchToLength)
             {
                 var nextChar = str[posInStr];
+                if (nextChar == '\\' && posInStr + 1 < strLength)
+                    nextChar = str[++posInStr];
                 if (nextChar == '*')
                 {
                     ////TODO: make sure we don't end up with ** here
@@ -543,7 +559,7 @@ namespace UnityEngine.InputSystem
                         return true; // Wildcard at end of string so rest is matched.
 
                     ++posInStr;
-                    nextChar = char.ToLower(str[posInStr]);
+                    nextChar = char.ToLower(str[posInStr], CultureInfo.InvariantCulture);
 
                     while (posInMatchTo < matchToLength && matchToLowerCase[posInMatchTo] != nextChar)
                         ++posInMatchTo;
@@ -551,7 +567,7 @@ namespace UnityEngine.InputSystem
                     if (posInMatchTo == matchToLength)
                         return false; // Matched all the way to end of matchTo but there's more in str after the wildcard.
                 }
-                else if (char.ToLower(nextChar) != matchToLowerCase[posInMatchTo])
+                else if (char.ToLower(nextChar, CultureInfo.InvariantCulture) != matchToLowerCase[posInMatchTo])
                 {
                     return false;
                 }
@@ -703,6 +719,54 @@ namespace UnityEngine.InputSystem
 
             var parser = new PathParser(expected);
             return MatchesRecursive(ref parser, control);
+        }
+
+        internal static bool MatchControlComponent(ref ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem, bool matchAlias = false)
+        {
+            bool controlItemNameMatched = false;
+            var anyUsageMatches = false;
+
+            // Check to see that there is a match with the name or alias if specified
+            // Exit early if we can't create a match.
+            if (!expectedControlComponent.m_Name.isEmpty)
+            {
+                if (StringMatches(expectedControlComponent.m_Name, controlItem.name))
+                    controlItemNameMatched = true;
+                else if (matchAlias)
+                {
+                    var aliases = controlItem.aliases;
+                    for (var i = 0; i < aliases.Count; i++)
+                    {
+                        if (StringMatches(expectedControlComponent.m_Name, aliases[i]))
+                        {
+                            controlItemNameMatched = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                    return false;
+            }
+
+            // All of usages should match to the one of usage in the control
+            foreach (var usage in expectedControlComponent.m_Usages)
+            {
+                if (!usage.isEmpty)
+                {
+                    var usageCount = controlItem.usages.Count;
+                    for (var i = 0; i < usageCount; ++i)
+                    {
+                        if (StringMatches(usage, controlItem.usages[i]))
+                        {
+                            anyUsageMatches = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Return whether or not we were able to match an alias or a usage
+            return controlItemNameMatched || anyUsageMatches;
         }
 
         /// <summary>
@@ -886,11 +950,6 @@ namespace UnityEngine.InputSystem
                     TControl lastMatch;
                     if (path[indexInPath] == '{')
                     {
-                        ////TODO: support scavenging a subhierarchy for usages
-                        if (!ReferenceEquals(control.device, control))
-                            throw new NotImplementedException(
-                                "Matching usages inside subcontrols instead of at device root");
-
                         // Usages are kind of like entry points that can route to anywhere else
                         // on a device's control hierarchy and then we keep going from that re-routed
                         // point.
@@ -913,11 +972,13 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
+            // NOTE: m_UsagesForEachControl includes usages for the device. m_UsageToControl does not.
+
             var usages = device.m_UsagesForEachControl;
             if (usages == null)
                 return null;
 
-            var usageCount = device.m_UsageToControl.Length;
+            var usageCount = device.m_UsageToControl.LengthSafe();
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
             var pathLength = path.Length;
@@ -1047,7 +1108,7 @@ namespace UnityEngine.InputSystem
                 }
                 else
                 {
-                    if (nextCharInPath == '/')
+                    if (nextCharInPath == '/' && componentType == PathComponentType.Name)
                         break;
                     if ((nextCharInPath == '>' && componentType == PathComponentType.Layout)
                         || (nextCharInPath == '}' && componentType == PathComponentType.Usage)
@@ -1095,7 +1156,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 var charInComponent = component[indexInComponent];
-                if (charInComponent == nextCharInPath || char.ToLower(charInComponent) == char.ToLower(nextCharInPath))
+                if (charInComponent == nextCharInPath || char.ToLower(charInComponent, CultureInfo.InvariantCulture) == char.ToLower(nextCharInPath, CultureInfo.InvariantCulture))
                 {
                     ++indexInComponent;
                     ++indexInPath;
@@ -1329,17 +1390,13 @@ namespace UnityEngine.InputSystem
                 if (!m_Layout.isEmpty)
                 {
                     // Check for direct match.
-                    var layoutMatches = Substring.Compare(m_Layout, control.layout,
-                        StringComparison.OrdinalIgnoreCase) == 0;
+                    var layoutMatches = ComparePathElementToString(m_Layout, control.layout);
                     if (!layoutMatches)
                     {
                         // No direct match but base layout may match.
                         var baseLayout = control.m_Layout;
                         while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
-                        {
-                            layoutMatches = Substring.Compare(m_Layout, baseLayout.ToString(),
-                                StringComparison.OrdinalIgnoreCase) == 0;
-                        }
+                            layoutMatches = ComparePathElementToString(m_Layout, baseLayout.ToString());
                     }
 
                     if (!layoutMatches)
@@ -1356,7 +1413,7 @@ namespace UnityEngine.InputSystem
                             var controlUsages = control.usages;
                             var haveUsageMatch = false;
                             for (var ci = 0; ci < controlUsages.Count; ++ci)
-                                if (Substring.Compare(controlUsages[ci].ToString(), m_Usages[i], StringComparison.OrdinalIgnoreCase) == 0)
+                                if (ComparePathElementToString(m_Usages[i], controlUsages[ci]))
                                 {
                                     haveUsageMatch = true;
                                     break;
@@ -1372,19 +1429,42 @@ namespace UnityEngine.InputSystem
                 if (!m_Name.isEmpty && !isWildcard)
                 {
                     ////FIXME: unlike the matching path we have in MatchControlsRecursive, this does not take aliases into account
-                    if (Substring.Compare(control.name, m_Name, StringComparison.OrdinalIgnoreCase) != 0)
+                    if (!ComparePathElementToString(m_Name, control.name))
                         return false;
                 }
 
                 // Match display name.
                 if (!m_DisplayName.isEmpty)
                 {
-                    if (Substring.Compare(control.displayName, m_DisplayName,
-                        StringComparison.OrdinalIgnoreCase) != 0)
+                    if (!ComparePathElementToString(m_DisplayName, control.displayName))
                         return false;
                 }
 
                 return true;
+            }
+
+            // In a path, characters may be escaped so in those cases, we can't just compare
+            // character-by-character.
+            private static bool ComparePathElementToString(Substring pathElement, string element)
+            {
+                var pathElementLength = pathElement.length;
+                var elementLength = element.Length;
+
+                for (int i = 0, j = 0;; i++, j++)
+                {
+                    var pathElementDone = i == pathElementLength;
+                    var elementDone     = j == elementLength;
+
+                    if (pathElementDone || elementDone)
+                        return pathElementDone == elementDone;
+
+                    var ch = pathElement[i];
+                    if (ch == '\\' && i + 1 < pathElementLength)
+                        ch = pathElement[++i];
+
+                    if (char.ToLowerInvariant(ch) != char.ToLowerInvariant(element[j]))
+                        return false;
+                }
             }
         }
 
@@ -1515,7 +1595,11 @@ namespace UnityEngine.InputSystem
 
                 var partStartIndex = rightIndexInPath;
                 while (rightIndexInPath < length && path[rightIndexInPath] != terminator)
+                {
+                    if (path[rightIndexInPath] == '\\' && rightIndexInPath + 1 < length)
+                        ++rightIndexInPath;
                     ++rightIndexInPath;
+                }
 
                 var partLength = rightIndexInPath - partStartIndex;
                 if (rightIndexInPath < length && terminator != '/')

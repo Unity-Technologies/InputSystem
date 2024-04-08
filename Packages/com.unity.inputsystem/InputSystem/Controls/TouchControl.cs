@@ -19,7 +19,6 @@ namespace UnityEngine.InputSystem.Controls
     /// at exactly those memory addresses.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchState))]
-    [Preserve]
     public class TouchControl : InputControl<TouchState>
     {
         /// <summary>
@@ -35,6 +34,12 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <seealso cref="phase"/>
         public TouchPressControl press { get; set; }
+
+        /// <summary>
+        /// Gets the index of the display that was touched.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public IntegerControl displayIndex { get; set; }
 
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
@@ -70,7 +75,7 @@ namespace UnityEngine.InputSystem.Controls
         /// controls. See <see cref="Pointer.delta"/> for details.
         /// </remarks>
         /// <seealso cref="TouchState.delta"/>
-        public Vector2Control delta { get; set; }
+        public DeltaControl delta { get; set; }
 
         /// <summary>
         /// Normalized pressure of the touch against the touch surface.
@@ -177,7 +182,7 @@ namespace UnityEngine.InputSystem.Controls
         {
             get
             {
-                switch (phase.ReadValue())
+                switch (phase.value)
                 {
                     case TouchPhase.Began:
                     case TouchPhase.Moved:
@@ -203,9 +208,10 @@ namespace UnityEngine.InputSystem.Controls
         protected override void FinishSetup()
         {
             press = GetChildControl<TouchPressControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             touchId = GetChildControl<IntegerControl>("touchId");
             position = GetChildControl<Vector2Control>("position");
-            delta = GetChildControl<Vector2Control>("delta");
+            delta = GetChildControl<DeltaControl>("delta");
             pressure = GetChildControl<AxisControl>("pressure");
             radius = GetChildControl<Vector2Control>("radius");
             phase = GetChildControl<TouchPhaseControl>("phase");

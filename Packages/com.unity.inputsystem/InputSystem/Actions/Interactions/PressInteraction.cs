@@ -1,9 +1,12 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 ////TODO: protect against the control *hovering* around the press point; this should not fire the press repeatedly; probably need a zone around the press point
@@ -31,7 +34,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
-    [Preserve]
     [DisplayName("Press")]
     public class PressInteraction : IInputInteraction
     {
@@ -73,7 +75,10 @@ namespace UnityEngine.InputSystem.Interactions
                         if (actuation <= releasePointOrDefault)
                         {
                             m_WaitingForRelease = false;
-                            context.Canceled();
+                            if (Mathf.Approximately(0f, actuation))
+                                context.Canceled();
+                            else
+                                context.Started();
                         }
                     }
                     else if (actuation >= pressPointOrDefault)
@@ -85,6 +90,10 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (actuation > 0 && !context.isStarted)
                     {
                         context.Started();
+                    }
+                    else if (Mathf.Approximately(0f, actuation) && context.isStarted)
+                    {
+                        context.Canceled();
                     }
                     break;
 
@@ -208,6 +217,27 @@ namespace UnityEngine.InputSystem.Interactions
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));
+
+            var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior)
+            {
+                tooltip = s_PressBehaviorLabel.tooltip
+            };
+            behaviourDropdown.RegisterValueChangedCallback(evt =>
+            {
+                target.behavior = (PressBehavior)evt.newValue;
+                onChangedCallback?.Invoke();
+            });
+            root.Add(behaviourDropdown);
+
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+        }
+
+#endif
 
         private CustomOrDefaultSetting m_PressPointSetting;
 

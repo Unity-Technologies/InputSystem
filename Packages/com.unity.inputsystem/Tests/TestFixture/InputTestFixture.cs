@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using NUnit.Framework.Internal;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -78,6 +79,8 @@ namespace UnityEngine.InputSystem
             {
                 // Apparently, NUnit is reusing instances :(
                 m_KeyInfos = default;
+                m_IsUnityTest = default;
+                m_CurrentTest = default;
 
                 // Disable input debugger so we don't waste time responding to all the
                 // input system activity from the tests.
@@ -88,8 +91,9 @@ namespace UnityEngine.InputSystem
                 runtime = new InputTestRuntime();
 
                 // Push current input system state on stack.
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
-
+#endif
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR
@@ -131,6 +135,19 @@ namespace UnityEngine.InputSystem
 
                 // Always want to merge by default
                 InputSystem.settings.disableRedundantEventsMerging = false;
+
+                // Turn on all optimizations and checks
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
+
+                #if UNITY_EDITOR
+                // Default mock dialogs to avoid unexpected cancellation of standard flows
+                Dialog.InputActionAsset.SetSaveChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset((_) => Dialog.Result.Discard);
+                Dialog.ControlScheme.SetDeleteControlScheme((_) => Dialog.Result.Delete);
+                #endif
             }
             catch (Exception exception)
             {
@@ -157,7 +174,9 @@ namespace UnityEngine.InputSystem
 
             try
             {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.Restore();
+#endif
                 runtime.Dispose();
 
                 // Unhook from play mode state changes.
@@ -170,6 +189,14 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 InputDebuggerWindow.Enable();
                 #endif
+
+                #if UNITY_EDITOR
+                // Re-enable dialogs.
+                Dialog.InputActionAsset.SetSaveChanges(null);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges(null);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset(null);
+                Dialog.ControlScheme.SetDeleteControlScheme(null);
+                #endif
             }
             catch (Exception exception)
             {
@@ -181,10 +208,19 @@ namespace UnityEngine.InputSystem
             m_Initialized = false;
         }
 
+        private bool? m_IsUnityTest;
+        private Test m_CurrentTest;
+
         // True if the current test is a [UnityTest].
-        private static bool IsUnityTest()
+        private bool IsUnityTest()
         {
-            var test = TestContext.CurrentContext.Test;
+            // We cache this value so that any call after the first in a test no
+            // longer allocates GC memory. Otherwise we'll run into trouble with
+            // DoesNotAllocate tests.
+            var test = TestContext.CurrentTestExecutionContext.CurrentTest;
+            if (m_IsUnityTest.HasValue && m_CurrentTest == test)
+                return m_IsUnityTest.Value;
+
             var className = test.ClassName;
             var methodName = test.MethodName;
 
@@ -201,14 +237,19 @@ namespace UnityEngine.InputSystem
                         break;
                 }
             }
+
             if (type == null)
-                return false;
+            {
+                m_IsUnityTest = false;
+            }
+            else
+            {
+                var method = type.GetMethod(methodName);
+                m_IsUnityTest = method?.GetCustomAttribute<UnityTestAttribute>() != null;
+            }
 
-            var method = type.GetMethod(methodName);
-            if (method == null)
-                return false;
-
-            return method.GetCustomAttribute<UnityTestAttribute>() != null;
+            m_CurrentTest = test;
+            return m_IsUnityTest.Value;
         }
 
         #if UNITY_EDITOR
@@ -451,7 +492,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the control.</typeparam>
         /// <example>
         /// <code>
@@ -484,7 +528,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
         /// <example>
         /// <code>
@@ -501,12 +548,12 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Device of control '{control}' has not been added to the system", nameof(control));
 
+            if (IsUnityTest())
+                queueEventOnly = true;
+
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
-                ////REVIEW: should we by default take the time from the device here?
-                if (time >= 0)
-                    eventPtr.time = time;
-                eventPtr.time += timeOffset;
+                eventPtr.time = (time >= 0 ? time : InputState.currentTime) + timeOffset;
                 control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
@@ -549,9 +596,9 @@ namespace UnityEngine.InputSystem
 
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
-            double time = -1, double timeOffset = 0)
+            double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void BeginTouch(int touchId, Vector2 position, float pressure, bool queueEventOnly = false, Touchscreen screen = null,
@@ -575,9 +622,9 @@ namespace UnityEngine.InputSystem
 
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
-            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+            Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void EndTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -608,13 +655,13 @@ namespace UnityEngine.InputSystem
         }
 
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = true,
-            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+            Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
             if (screen == null)
             {
                 screen = Touchscreen.current;
                 if (screen == null)
-                    throw new InvalidOperationException("No touchscreen has been added");
+                    screen = InputSystem.AddDevice<Touchscreen>();
             }
 
             InputSystem.QueueStateEvent(screen, new TouchState
@@ -624,7 +671,8 @@ namespace UnityEngine.InputSystem
                 position = position,
                 delta = delta,
                 pressure = pressure,
-            }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
+                displayIndex = displayIndex,
+            }, (time >= 0 ? time : InputState.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();
         }
@@ -700,10 +748,10 @@ namespace UnityEngine.InputSystem
         /// <value>Current time used by the input system.</value>
         public double currentTime
         {
-            get => runtime.currentTime;
+            get => runtime.currentTime - runtime.currentTimeOffsetToRealtimeSinceStartup;
             set
             {
-                runtime.currentTime = value;
+                runtime.currentTime = value + runtime.currentTimeOffsetToRealtimeSinceStartup;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
             }
         }
@@ -815,27 +863,27 @@ namespace UnityEngine.InputSystem
                 if (value != null)
                 {
                     var val = eventPtr.ReadValueAsObject();
-                    if (value is float f)
+                    if (val is float f)
                     {
-                        if (!Mathf.Approximately(f, Convert.ToSingle(val)))
+                        if (!Mathf.Approximately(f, Convert.ToSingle(value)))
                             return false;
                     }
-                    else if (value is double d)
+                    else if (val is double d)
                     {
-                        if (!Mathf.Approximately((float)d, (float)Convert.ToDouble(val)))
+                        if (!Mathf.Approximately((float)d, (float)Convert.ToDouble(value)))
                             return false;
                     }
-                    else if (value is Vector2 v2)
+                    else if (val is Vector2 v2)
                     {
-                        if (!Vector2EqualityComparer.Instance.Equals(v2, val.As<Vector2>()))
+                        if (!Vector2EqualityComparer.Instance.Equals(v2, value.As<Vector2>()))
                             return false;
                     }
-                    else if (value is Vector3 v3)
+                    else if (val is Vector3 v3)
                     {
-                        if (!Vector3EqualityComparer.Instance.Equals(v3, val.As<Vector3>()))
+                        if (!Vector3EqualityComparer.Instance.Equals(v3, value.As<Vector3>()))
                             return false;
                     }
-                    else if (!value.Equals(val))
+                    else if (!val.Equals(value))
                         return false;
                 }
 

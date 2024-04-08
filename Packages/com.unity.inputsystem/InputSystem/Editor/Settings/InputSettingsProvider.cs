@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
@@ -13,10 +12,22 @@ using UnityEngine.UIElements;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
+    internal static class InputSettingsPath
+    {
+        public const string kSettingsRootPath = "Project/Input System Package";
+    }
+
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
+
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // When Project Wide Actions are enabled we place this as a child node to main settings node.
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
+        #else
+        // When Project Wide Actions are not enabled we let this be the main settings node.
         public const string kSettingsPath = "Project/Input System Package";
+        #endif
 
         public static void Open()
         {
@@ -26,7 +37,14 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
+            {
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                // We put this in a child node called "Settings" when Project-wide Actions is enabled.
+                // When not enabled it sits on the main package Settings node.
+                label = "Settings"
+                #endif
+            };
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)
@@ -105,7 +123,6 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
                 EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
 
                 // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
@@ -146,6 +163,20 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
+                if (m_ShortcutKeysConsumeInputs.boolValue)
+                    EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
+                        + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
+                        + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                        + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
+                        + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                        + "However conflicts would not occur between actions which belong to different Action Assets. "
+                        + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
+                        , MessageType.None);
+
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
@@ -158,41 +189,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CreateNewSettingsAsset(string relativePath)
         {
-            // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            AssetDatabase.CreateAsset(settings, relativePath);
-            EditorGUIUtility.PingObject(settings);
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // Create and install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            InputSystem.settings = InputAssetEditorUtils.CreateAsset(ScriptableObject.CreateInstance<InputSettings>(), relativePath);
         }
 
         private static void CreateNewSettingsAsset()
         {
-            // Query for file name.
-            var projectName = PlayerSettings.productName;
-            var path = EditorUtility.SaveFilePanel("Create Input Settings File", "Assets",
-                projectName + ".inputsettings", "asset");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            // Make sure the path is in the Assets/ folder.
-            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
-            var dataPath = Application.dataPath + "/";
-            if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
-            {
-                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
-                return;
-            }
-
-            // Make sure it ends with .asset.
-            var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
-                path += ".asset";
-
-            // Create settings file.
-            var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            CreateNewSettingsAsset(relativePath);
+            var result = InputAssetEditorUtils.PromptUserForAsset(
+                friendlyName: "Input Settings",
+                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("inputsettings"),
+                assetFileExtension: "asset");
+            if (result.result == InputAssetEditorUtils.DialogResult.Valid)
+                CreateNewSettingsAsset(result.relativePath);
         }
 
         private void InitializeWithCurrentSettingsIfNecessary()
@@ -260,7 +269,6 @@ namespace UnityEngine.InputSystem.Editor
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
-            m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
             m_DefaultButtonPressPoint = m_SettingsObject.FindProperty("m_DefaultButtonPressPoint");
@@ -270,9 +278,9 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
+            m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
-            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on .current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
                 + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
@@ -298,6 +306,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
+            m_ShortcutKeysConsumeInputsContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -398,7 +407,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
-        [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
         [NonSerialized] private SerializedProperty m_DefaultButtonPressPoint;
@@ -408,6 +416,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
+        [NonSerialized] private SerializedProperty m_ShortcutKeysConsumeInputs;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -418,7 +427,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
-        private GUIContent m_FilterNoiseOnCurrentContent;
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;
@@ -431,6 +439,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_DefaultHoldTimeContent;
         private GUIContent m_TapRadiusContent;
         private GUIContent m_MultiTapDelayTimeContent;
+        private GUIContent m_ShortcutKeysConsumeInputsContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 
@@ -454,24 +463,20 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
-            GUILayout.Space(10);
+            EditorGUILayout.Space();
+
             if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
                 InputSettingsProvider.Open();
-            GUILayout.Space(10);
 
-            if (InputSystem.settings == target)
-                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
-            else
-            {
-                string currentlyActiveAssetsPath = null;
-                if (InputSystem.settings != null)
-                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
-                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
-                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
-                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
-                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
-                    InputSystem.settings = (InputSettings)target;
-            }
+            EditorGUILayout.Space();
+
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value);
+        }
+
+        protected override bool ShouldHideOpenButton()
+        {
+            return true;
         }
     }
 }

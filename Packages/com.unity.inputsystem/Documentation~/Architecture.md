@@ -1,3 +1,6 @@
+---
+uid: input-system-architecture
+---
 # Architecture
 
 The Input System has a layered architecture that consists of a low-level layer and a high-level layer.
@@ -28,4 +31,4 @@ The high-level Input System code interprets the data in a Device's state buffers
 
 Based on the information in the layouts, the Input System then creates [Control](Controls.md) representations for each of the Device's controls, which let you read the state of each individual Control in a Device.
 
-As part of the high-level system, you can also build another abstraction layer to map Input Controls to your application mechanics. Use [Actions](Actions.md) to [bind](ActionBindings.md) one or more Controls to an input in your application. The Input System then monitors these Controls for state changes, and notifies your game logic using [callbacks](Actions.md#responding-to-actions). You can also specify more complex behaviors for your Actions using [Processors](Processors.md) (which perform processing on the input data before sending it to you) and [Interactions](Interactions.md) (which let you specify patterns of input on a Control to listen to, such as multi-taps).
+As part of the high-level system, you can also build another abstraction layer to map Input Controls to your application mechanics. Use [Actions](Actions.md) to [bind](ActionBindings.md) one or more Controls to an input in your application. The Input System then monitors these Controls for state changes, and notifies your game logic using [callbacks](RespondingToActions.md#responding-to-actions-using-callbacks). You can also specify more complex behaviors for your Actions using [Processors](Processors.md) (which perform processing on the input data before sending it to you) and [Interactions](Interactions.md) (which let you specify patterns of input on a Control to listen to, such as multi-taps).

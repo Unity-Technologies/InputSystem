@@ -32,8 +32,8 @@ apiRules:
         uid: System.ObsoleteAttribute
       type: Type
   - exclude:
-      uidRegex: ^Global Namespace$
-      type: Namespace
-  - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.Samples\..*$
       type: Namespace
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.InputSystem\.runInBackground$
+      type: Member

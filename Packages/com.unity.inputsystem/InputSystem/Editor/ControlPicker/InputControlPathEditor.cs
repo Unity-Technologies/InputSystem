@@ -104,12 +104,26 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 20;
-            editButtonRect.x += bindingTextRect.width;
+            var bindingTextRectOffset = 80;
+            bindingTextRect.width += bindingTextRectOffset;
+            bindingTextRect.x -= bindingTextRectOffset + 20;
+            editButtonRect.x = bindingTextRect.x + bindingTextRect.width; // Place it directly after the textRect
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
-            var path = serializedProperty.stringValue;
+            var path = String.Empty;
+            try
+            {
+                path = serializedProperty.stringValue;
+            }
+            catch
+            {
+                // This try-catch block is a temporary fix for ISX-1436
+                // The plan is to convert InputControlPathEditor entirely to UITK and therefore this fix will
+                // no longer be required.
+                return;
+            }
+
             ////TODO: this should be cached; generates needless GC churn
             var displayName = InputControlPath.ToHumanReadableString(path);
 
@@ -148,6 +162,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
         {
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
+            #endif
             if (m_PickerDropdown == null)
             {
                 m_PickerDropdown = new InputControlPickerDropdown(

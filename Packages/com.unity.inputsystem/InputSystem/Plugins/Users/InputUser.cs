@@ -1170,7 +1170,8 @@ namespace UnityEngine.InputSystem.Users
 
             var deviceIndex = asLostDevice
                 ? s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount)
-                : s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
+                : s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allUserData[userIndex].deviceStartIndex,
+                s_GlobalState.allUserData[userIndex].deviceCount);
             if (deviceIndex == -1)
             {
                 // Device not in list. Ignore.
@@ -1506,10 +1507,10 @@ namespace UnityEngine.InputSystem.Users
                 // New device was added. See if it was a device we previously lost on a user.
                 case InputDeviceChange.Added:
                 {
-                    // Could be a previously lost device. Could affect multiple users. Repeatedly search in
-                    // s_AllLostDevices until we can't find the device anymore.
-                    var deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount);
-                    while (deviceIndex != -1)
+                    // Search all lost devices. Could affect multiple users.
+                    // Note that RemoveDeviceFromUser removes one element, hence no advancement of deviceIndex.
+                    for (var deviceIndex = FindLostDevice(device); deviceIndex != -1;
+                         deviceIndex = FindLostDevice(device, deviceIndex))
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
                         var userIndex = -1;
@@ -1523,20 +1524,15 @@ namespace UnityEngine.InputSystem.Users
                             }
                         }
 
-                        // Remove from list of lost devices. No notification.
-                        RemoveDeviceFromUser(userIndex, device, asLostDevice: true);
+                        // Remove from list of lost devices. No notification. Notice that we need to use device
+                        // from lost device list even if its another instance.
+                        RemoveDeviceFromUser(userIndex, s_GlobalState.allLostDevices[deviceIndex], asLostDevice: true);
 
                         // Notify.
                         Notify(userIndex, InputUserChange.DeviceRegained, device);
 
                         // Add back as normally paired device.
                         AddDeviceToUser(userIndex, device);
-
-                        // Search for another user who had lost the same device.
-                        // Note: s_AllLostDevices is modified (element erased) from within RemoveDeviceFromUser,
-                        //       hence, deviceIndex is not advanced and s_AllLostDeviceCount is one less than
-                        //       previous linear search iteration.
-                        deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, deviceIndex, s_GlobalState.allLostDeviceCount);
                     }
                     break;
                 }
@@ -1603,6 +1599,22 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
+        private static int FindLostDevice(InputDevice device, int startIndex = 0)
+        {
+            // Compare both by device ID and by reference. We may be looking at a device that was recreated
+            // due to layout changes (new InputDevice instance, same ID) or a device that was reconnected
+            // and thus fetched out of `disconnectedDevices` (same InputDevice instance, new ID).
+
+            var newDeviceId = device.deviceId;
+            for (var i = startIndex; i < s_GlobalState.allLostDeviceCount; ++i)
+            {
+                var lostDevice = s_GlobalState.allLostDevices[i];
+                if (device == lostDevice || lostDevice.deviceId == newDeviceId) return i;
+            }
+
+            return -1;
+        }
+
         // We hook this into InputSystem.onEvent when listening for activity on unpaired devices.
         // What this means is that we get to run *before* state reaches the device. This in turn
         // means that should the device get paired as a result, actions that are enabled as part
@@ -1646,7 +1658,10 @@ namespace UnityEngine.InputSystem.Users
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
+            {
+                Profiler.EndSample();
                 return;
+            }
 
             // Go through the changed controls in the event and look for ones actuated
             // above a magnitude of a little above zero.

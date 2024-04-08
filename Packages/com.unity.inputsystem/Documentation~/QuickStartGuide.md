@@ -1,96 +1,94 @@
-# Quick start guide
 
->__Note__: For information on how to install the new Input System, see [Installation](Installation.md).
+# Quickstart Guide
 
-- [Quick start guide](#quick-start-guide)
-  - [Getting input directly from an Input Device](#getting-input-directly-from-an-input-device)
-  - [Getting input indirectly through an Input Action](#getting-input-indirectly-through-an-input-action)
-    - [Step 1: Add a `PlayerInput` Component](#step-1-add-a-playerinput-component)
-    - [Step 2: Create Input Actions](#step-2-create-input-actions)
-    - [Step 3: Setting up Action responses](#step-3-setting-up-action-responses)
-  - [Alternate ways to set up Input Actions](#alternate-ways-to-set-up-input-actions)
+This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](Workflows.md) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
 
-## Getting input directly from an Input Device
+First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation.md).
 
-The quickest way to get started in script is to read the current state directly from Input Devices. For example, the following code gets the gamepad that a player last used, and reads its current state:
+## Create and assign the default project-wide actions
+
+The input system stores your input configuration in an **Actions Asset**. When you first install the input system package, you must create this Actions Asset.
+
+You can do this by going to by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**, then click the button labelled **Create and assign a default project-wide Action Asset**.
+
+![The Input Actions Settings window](Images/InputSettingsNoProjectWideAsset.png)
+
+## View and edit the default input settings
+
+Once you have created and assigned some project-wide actions, the **Input Actions Settings window** allows you to view and edit your input configuration.
+
+![The Input Actions Settings window](Images/ProjectSettingsInputActionsSimpleShot.png)
+*The input actions settings window displaying the default actions*
+
+You can use this window to view the Actions to find out their names, value types, and what their corresponding bindings. You can also edit, delete, or add new Actions here.
+
+[Read more about using the Input Action Settings Window.](ActionsEditor.md)
+
+
+## The default Action Maps and Actions
+
+Action Maps allow you to organise Actions into groups which represent specific situations where a set of actions make sense together.
+
+The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
+
+The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
+
+ Each each default action has bindings to several different types of Control. For example:
+
+- The "Move" action is bound to the "WSAD" keyboard keys and arrow keys, a gamepad stick, the primary 2D axis on an XR controller
+- The "Jump" action is bound to the space key, the "south" button on a gamepad, and the secondary button on an XR controller.
+
+
+## Read values from the default Actions
+
+The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
+
+This means, in many cases, you can start scripting with the Input System without any configuration.
+
+This workflow uses the following steps:
+
+1. Add the Input System "`using`" statement at the top of your script.
+2. Create variables to hold the Action references.
+3. In your Start method, find the and store the Action references.
+4. In your Update method, read the values from the Action references, and add your own code to respond accordingly.
+
+These steps are shown in the example script below:
 
 ```CSharp
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.InputSystem;  // 1. The Input System "using" statement
 
-public class MyPlayerScript : MonoBehaviour
+public class Example : MonoBehaviour
 {
+    // 2. These variables are to hold the Action references
+    InputAction moveAction;
+    InputAction jumpAction;
+
+    private void Start()
+    {
+        // 3. Find the references to the "Move" and "Jump" actions
+        moveAction = InputSystem.actions.FindAction("Move");
+        jumpAction = InputSystem.actions.FindAction("Jump");
+    }
+
     void Update()
     {
-        var gamepad = Gamepad.current;
-        if (gamepad == null)
-            return; // No gamepad connected.
+        // 4. Read the "Move" action value, which is a 2D vector
+        // and the "Jump" action state, which is a boolean value
 
-        if (gamepad.rightTrigger.wasPressedThisFrame)
+        Vector2 moveValue = moveAction.ReadValue<Vector2>();
+        // your movement code here
+
+        if (jumpAction.IsPressed())
         {
-            // 'Use' code here
+            // your jump code here
         }
-
-        Vector2 move = gamepad.leftStick.ReadValue();
-        // 'Move' code here
     }
 }
 ```
 
-The same approach works for other Device types (for example, [`Keyboard.current`](../api/UnityEngine.InputSystem.Keyboard.html) or [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html)).
+These actions named "Move" and "Jump" in this script work straight away with no configuration required because they match the names of some of the pre-configured defaults in the Input System package.
 
-## Getting input indirectly through an Input Action
+> **Note**: Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
 
-To get input directly through an Input Action, follow these steps:
-
-1. Add a `PlayerInput` component.
-2. Create Actions.
-3. Script Action responses.
-
-### Step 1: Add a `PlayerInput` Component
-
-Getting input directly from an Input Device is quick and convenient, but requires a separate path for each type of Device. That also makes it harder to later change which Device Control triggers a specific event in the game.
-
-Alternatively, you can use Actions as an intermediary between Devices and the in-game responses they trigger. The easiest way to do this is to use the [`PlayerInput`](Components.md) component. To add this component, click the __Add Component__ button in the GameObject Inspector:
-
-![Add Player Input Component](Images/AddPlayerInput.png)
-
-### Step 2: Create Input Actions
-
-Each [`PlayerInput`](Components.md) component represents one player in the game. To receive input, the component must be connected to a set of Input Actions. The quickest way to create a new set of Actions is to click the __Create Actions…__ button in the Inspector window for that component. This creates an Asset pre-populated with a default set of Input Action Maps, Input Actions, and Input Bindings.
-
-![Create Actions from Player Input Component](Images/PlayerInputCreateActions.png)
-
-When you click the __Create Actions__ button, Unity asks you where to create the new Asset. Choose a name and folder inside the `Assets` folder of your Project (or just accept the defaults) and select __Okay__. This creates a new `.inputactions` Asset in your Project, connects it to the [`PlayerInput`](Components.md) component, and brings up the editor window for `.inputactions` files.
-
-![MyGameActions](Images/MyGameActions.png)
-
-You can edit the default set to fit the needs of your Project. See the in-depth documentation for the [Action editor](ActionAssets.md#editing-input-action-assets) for instructions on how to use this window.
-
-### Step 3: Setting up Action responses
-
-Once the component has its Actions, you must set up a response for each Action. [`PlayerInput`](Components.md) allows you to set up responses in several ways, using the __Behavior__ property in the Inspector window:
-
-![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)
-
-For more details about the options, see documentation on [notification behaviors](Components.md#notification-behaviors). The screenshot above uses __Invoke Unity Events__, which uses `UnityEvent` in the same way the Unity UI does. Unity displays an event for each Action that is linked to the component. This allows you to directly wire in the target method for each event.
-
-![PlayerInput Action Events](Images/MyPlayerActionEvents.png)
-
-Each method takes an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) argument that gives access to the Control that triggered the Action and the Action's value. For more information, see documentation on [Action callbacks](Actions.md#action-callbacks).
-
-```CSharp
-public class MyPlayerScript : MonoBehaviour
-{
-    public void Fire(InputAction.CallbackContext context)
-    {
-        Debug.Log("Fire!");
-    }
-}
-```
-
-This completes the basic setup using [`PlayerInput`](Components.md).
-
-## Alternate ways to set up Input Actions
-
-There are ways other than [`PlayerInput`](Components.md) to set up Input Actions. For more information, see documentation on [Creating Actions](Actions.md#creating-actions).
+> **Note:** If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`

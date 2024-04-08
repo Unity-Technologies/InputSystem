@@ -26,6 +26,53 @@ namespace UnityEngine.InputSystem.LowLevel
     /// their data in different formats. This means that <see cref="GamepadState"/> will often <em>not</em>
     /// be the format in which a particular gamepad (such as <see cref="XInput.XInputController"/>,
     /// for example) stores its data.
+    ///
+    /// If your gamepad data is arriving in a different format, you should extend the "Gamepad" layout and customize its Controls.
+    ///
+    /// A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its layout looks like this:
+    ///
+    /// <example>
+    /// <code>
+    /// {
+    ///     "name" : "XboxGamepadOSX",
+    ///     "extend" : "Gamepad",
+    ///     "format" : "HID",
+    ///     "device" : { "interface" : "HID", "product" : "Xbox.*Controller" },
+    ///     "controls" : [
+    ///         { "name" : "leftShoulder", "offset" : 2, "bit" : 8 },
+    ///         { "name" : "rightShoulder", "offset" : 2, "bit" : 9 },
+    ///         { "name" : "leftStickPress", "offset" : 2, "bit" : 14 },
+    ///         { "name" : "rightStickPress", "offset" : 2, "bit" : 15 },
+    ///         { "name" : "buttonSouth", "offset" : 2, "bit" : 12 },
+    ///         { "name" : "buttonEast", "offset" : 2, "bit" : 13 },
+    ///         { "name" : "buttonWest", "offset" : 2, "bit" : 14 },
+    ///         { "name" : "buttonNorth", "offset" : 2, "bit" : 15 },
+    ///         { "name" : "dpad", "offset" : 2 },
+    ///         { "name" : "dpad/up", "offset" : 0, "bit" : 8 },
+    ///         { "name" : "dpad/down", "offset" : 0, "bit" : 9 },
+    ///         { "name" : "dpad/left", "offset" : 0, "bit" : 10 },
+    ///         { "name" : "dpad/right", "offset" : 0, "bit" : 11 },
+    ///         { "name" : "start", "offset" : 2, "bit" : 4 },
+    ///         { "name" : "select", "offset" : 2, "bit" : 5 },
+    ///         { "name" : "xbox", "offset" : 2, "bit" : 2, "layout" : "Button" },
+    ///         { "name" : "leftTrigger", "offset" : 4, "format" : "BYTE" },
+    ///         { "name" : "rightTrigger", "offset" : 5, "format" : "BYTE" },
+    ///         { "name" : "leftStick", "offset" : 6, "format" : "VC2S" },
+    ///         { "name" : "leftStick/x", "offset" : 0, "format" : "SHRT", "parameters" : "normalize,normalizeMin=-0.5,normalizeMax=0.5" },
+    ///         { "name" : "leftStick/y", "offset" : 2, "format" : "SHRT", "parameters" : "invert,normalize,normalizeMin=-0.5,normalizeMax=0.5" },
+    ///         { "name" : "rightStick", "offset" : 10, "format" : "VC2S" },
+    ///         { "name" : "rightStick/x", "offset" : 0, "format" : "SHRT", "parameters" : "normalize,normalizeMin=-0.5,normalizeMax=0.5" },
+    ///         { "name" : "rightStick/y", "offset" : 2, "format" : "SHRT", "parameters" : "invert,normalize,normalizeMin=-0.5,normalizeMax=0.5" }
+    ///     ]
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// The same principle applies if some buttons on your Device are swapped, for example. In this case, you can remap their offsets.
+    ///
+    ///
+    ///
+    ///
     /// </remarks>
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.
@@ -368,7 +415,6 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         /// <summary>
@@ -591,13 +637,12 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// When added, a device is automatically made current (see <see cref="InputDevice.MakeCurrent"/>), so
         /// when connecting a gamepad, it will also become current. After that, it will only become current again
-        /// when input on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
+        /// when input change on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
         ///
         /// For local multiplayer scenarios (or whenever there are multiple gamepads that need to be usable
         /// in a concurrent fashion), it is not recommended to rely on this property. Instead, it is recommended
         /// to use <see cref="PlayerInput"/> or <see cref="Users.InputUser"/>.
         /// </remarks>
-        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="all"/>
         public static Gamepad current { get; private set; }

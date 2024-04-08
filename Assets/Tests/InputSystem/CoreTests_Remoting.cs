@@ -120,6 +120,8 @@ partial class CoreTests
     [Category("Remote")]
     public void Remote_EventsAreSentToRemotes()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var remote = new FakeRemote())
@@ -528,10 +530,9 @@ partial class CoreTests
         }
     }
 
-    [Preserve]
     private class MyDevice : InputDevice
     {
-        public ButtonControl myControl { get; private set; }
+        public ButtonControl myControl { get; protected set; }
 
         protected override void FinishSetup()
         {

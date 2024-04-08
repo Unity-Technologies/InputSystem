@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -108,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space movement delta.</value>
         /// <seealso cref="TouchControl.delta"/>
-        [InputControl(displayName = "Delta")]
+        [InputControl(displayName = "Delta", layout = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
@@ -156,10 +157,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(33)]
         public byte tapCount;
 
-        // Not currently used, but still needed in this struct for padding,
-        // as il2cpp does not implement FieldOffset.
+        /// <summary>
+        /// The index of the display that was touched.
+        /// </summary>
+        [InputControl(name = "displayIndex", displayName = "Display Index", layout = "Integer")]
         [FieldOffset(34)]
-        byte displayIndex;
+        public byte displayIndex;
 
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 4)]
@@ -367,7 +370,7 @@ namespace UnityEngine.InputSystem.LowLevel
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
-        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
+        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta", layout = "Delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
@@ -488,8 +491,7 @@ namespace UnityEngine.InputSystem
     /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
-    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger, ICustomDeviceReset
     {
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
@@ -553,6 +555,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
 
             primaryTouch = GetChildControl<TouchControl>("primaryTouch");
+            displayIndex = primaryTouch.displayIndex;
 
             // Find out how many touch controls we have.
             var touchControlCount = 0;
@@ -951,6 +954,45 @@ namespace UnityEngine.InputSystem
 
             offset = touchControl.stateBlock.byteOffset - m_StateBlock.byteOffset;
             return true;
+        }
+
+        // Implement our own custom reset so that we can cancel touches instead of just wiping them
+        // with default state.
+        unsafe void ICustomDeviceReset.Reset()
+        {
+            var statePtr = currentStatePtr;
+
+            //// https://jira.unity3d.com/browse/ISX-930
+            ////TODO: Figure out a proper way to distinguish the source / reason for a state change.
+            ////      What we're doing here is constructing an event solely for the purpose of Finger.ShouldRecordTouch() not
+            ////      ignoring the state change like it does for delta resets.
+
+            using (var buffer = new NativeArray<byte>(StateEvent.GetEventSizeWithPayload<TouchState>(), Allocator.Temp))
+            {
+                var eventPtr = (StateEvent*)buffer.GetUnsafePtr();
+
+                eventPtr->baseEvent = new InputEvent(StateEvent.Type, buffer.Length, deviceId);
+
+                var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
+                if (primaryTouchState->phase.IsActive())
+                {
+                    UnsafeUtility.MemCpy(eventPtr->state, primaryTouchState, UnsafeUtility.SizeOf<TouchState>());
+                    ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                    InputState.Change(primaryTouch.phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                }
+
+                var touchStates = (TouchState*)((byte*)statePtr + touches[0].stateBlock.byteOffset);
+                var touchCount = touches.Count;
+                for (var i = 0; i < touchCount; ++i)
+                {
+                    if (touchStates[i].phase.IsActive())
+                    {
+                        UnsafeUtility.MemCpy(eventPtr->state, &touchStates[i], UnsafeUtility.SizeOf<TouchState>());
+                        ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                        InputState.Change(touches[i].phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                    }
+                }
+            }
         }
 
         internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)

@@ -82,6 +82,8 @@ namespace UnityEngine.InputSystem
         /// InputActionAssets.
         /// </remarks>
         public const string Extension = "inputactions";
+        ////REVIEW: actually pre-populate with some stuff?
+        internal const string kDefaultAssetLayoutJson = "{}";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.
@@ -187,7 +189,7 @@ namespace UnityEngine.InputSystem
 
                 m_BindingMask = value;
 
-                ReResolveIfNecessary();
+                ReResolveIfNecessary(fullResolve: true);
             }
         }
 
@@ -240,7 +242,7 @@ namespace UnityEngine.InputSystem
             set
             {
                 if (m_Devices.Set(value))
-                    ReResolveIfNecessary();
+                    ReResolveIfNecessary(fullResolve: false);
             }
         }
 
@@ -294,14 +296,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var fileJson = new WriteFileJson
+            return JsonUtility.ToJson(new WriteFileJson
             {
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            };
-
-            return JsonUtility.ToJson(fileJson, true);
+            }, true);
         }
 
         /// <summary>
@@ -832,7 +832,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Enumerate all actions in the asset.
         /// </summary>
-        /// <returns>Enumerate over all actions in the asset.</returns>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
         /// <remarks>
         /// Actions will be enumerated one action map in <see cref="actionMaps"/>
         /// after the other. The actions from each map will be yielded in turn.
@@ -854,6 +854,11 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Enumerate all actions in the asset.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
+        /// <seealso cref="GetEnumerator"/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -866,7 +871,28 @@ namespace UnityEngine.InputSystem
 #endif
         }
 
-        private void ReResolveIfNecessary()
+        internal bool IsEmpty()
+        {
+            return actionMaps.Count == 0 && controlSchemes.Count == 0;
+        }
+
+        internal void OnWantToChangeSetup()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnWantToChangeSetup();
+        }
+
+        internal void OnSetupChanged()
+        {
+            MarkAsDirty();
+
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnSetupChanged();
+            else
+                m_SharedStateForAllMaps = null;
+        }
+
+        private void ReResolveIfNecessary(bool fullResolve)
         {
             if (m_SharedStateForAllMaps == null)
                 return;
@@ -874,7 +900,15 @@ namespace UnityEngine.InputSystem
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
-            m_ActionMaps[0].LazyResolveBindings();
+            m_ActionMaps[0].LazyResolveBindings(fullResolve);
+        }
+
+        internal void ResolveBindingsIfNecessary()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                foreach (var map in m_ActionMaps)
+                    if (map.ResolveBindingsIfNecessary())
+                        break;
         }
 
         private void OnDestroy()
@@ -891,6 +925,9 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        [SerializeField] internal bool m_IsProjectWide;
+        #endif
 
         ////TODO: make this persistent across domain reloads
         /// <summary>
@@ -898,6 +935,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
+        [NonSerialized] internal int m_ParameterOverridesCount;
+        [NonSerialized] internal InputActionRebindingExtensions.ParameterOverride[] m_ParameterOverrides;
 
         [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 
@@ -905,6 +944,13 @@ namespace UnityEngine.InputSystem
         internal struct WriteFileJson
         {
             public string name;
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct WriteFileJsonNoName
+        {
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
         }

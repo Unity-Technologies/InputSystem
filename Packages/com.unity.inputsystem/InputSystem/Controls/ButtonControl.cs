@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
@@ -14,7 +15,6 @@ namespace UnityEngine.InputSystem.Controls
     /// yield full floating-point values and may thus have a range of values. See
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
-    [Preserve]
     public class ButtonControl : AxisControl
     {
         ////REVIEW: are per-control press points really necessary? can we just drop them?
@@ -76,7 +76,8 @@ namespace UnityEngine.InputSystem.Controls
         /// <returns>True if <paramref name="value"/> crosses the threshold to be considered pressed.</returns>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        public bool IsValueConsideredPressed(float value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public new bool IsValueConsideredPressed(float value)
         {
             return value >= pressPointOrDefault;
         }
@@ -92,11 +93,34 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        public bool isPressed => IsValueConsideredPressed(ReadValue());
+        public bool isPressed => IsValueConsideredPressed(value);
 
-        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        /// <summary>
+        /// Whether the press started this frame.
+        /// </summary>
+        /// <value>True if the current press of the button started this frame.</value>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // An example showing the use of this property on a gamepad button and a keyboard key.
+        ///
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class ExampleScript : MonoBehaviour
+        /// {
+        ///     void Update()
+        ///     {
+        ///         bool buttonPressed = Gamepad.current.aButton.wasPressedThisFrame;
+        ///         bool spaceKeyPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
-        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.

@@ -1,11 +1,12 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Composites
@@ -31,7 +32,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="Vector2Composite"/>
-    [Preserve]
     [DisplayStringFormat("{up}+{down}/{left}+{right}/{forward}+{backward}")]
     [DisplayName("Up/Down/Left/Right/Forward/Backward Composite")]
     public class Vector3Composite : InputBindingComposite<Vector3>
@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int up;
+        [InputControl(layout = "Axis")] public int up;
 
         /// <summary>
         /// Binding for the button that represents the down (that is, <c>(0,-1,0)</c>) direction of the vector.
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int down;
+        [InputControl(layout = "Axis")] public int down;
 
         /// <summary>
         /// Binding for the button that represents the left (that is, <c>(-1,0,0)</c>) direction of the vector.
@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int left;
+        [InputControl(layout = "Axis")] public int left;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(1,0,0)</c>) direction of the vector.
@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int right;
+        [InputControl(layout = "Axis")] public int right;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(0,0,1)</c>) direction of the vector.
@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int forward;
+        [InputControl(layout = "Axis")] public int forward;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(0,0,-1)</c>) direction of the vector.
@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int backward;
+        [InputControl(layout = "Axis")] public int backward;
 
         /// <summary>
         /// How to synthesize a <c>Vector3</c> from the values read from <see cref="up"/>, <see cref="down"/>,
@@ -135,6 +135,13 @@ namespace UnityEngine.InputSystem.Composites
             }
         }
 
+        /// <inheritdoc />
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            return value.magnitude;
+        }
+
         /// <summary>
         /// Determines how a <c>Vector3</c> is synthesized from part controls.
         /// </summary>
@@ -163,7 +170,7 @@ namespace UnityEngine.InputSystem.Composites
     }
 
     #if UNITY_EDITOR
-    internal class Vector3CompositeEditor : InputParameterEditor<Vector2Composite>
+    internal class Vector3CompositeEditor : InputParameterEditor<Vector3Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
             "How to synthesize a Vector3 from the inputs. Digital "
@@ -172,8 +179,27 @@ namespace UnityEngine.InputSystem.Composites
 
         public override void OnGUI()
         {
-            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+            target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
+            {
+                tooltip = m_ModeLabel.tooltip
+            };
+
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.mode = (Vector3Composite.Mode)evt.newValue;
+                onChangedCallback();
+            });
+
+            root.Add(modeField);
+        }
+
+#endif
     }
     #endif
 }

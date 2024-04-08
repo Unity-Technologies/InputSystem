@@ -41,7 +41,33 @@ namespace UnityEngine.InputSystem.XR
             PositionOnly,
         }
 
-        [SerializeField]
+        /// <summary>
+        /// These bit flags correspond with <c>UnityEngine.XR.InputTrackingState</c>
+        /// but that enum is not used to avoid adding a dependency to the XR module.
+        /// Only the Position and Rotation flags are used by this class, so velocity and acceleration flags are not duplicated here.
+        /// </summary>
+        [Flags]
+        enum TrackingStates
+        {
+            /// <summary>
+            /// Position and rotation are not valid.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Position is valid.
+            /// See <c>InputTrackingState.Position</c>.
+            /// </summary>
+            Position = 1 << 0,
+
+            /// <summary>
+            /// Rotation is valid.
+            /// See <c>InputTrackingState.Rotation</c>.
+            /// </summary>
+            Rotation = 1 << 1,
+        }
+
+        [SerializeField, Tooltip("Which Transform properties to update.")]
         TrackingType m_TrackingType;
         /// <summary>
         /// The tracking type being used by the Tracked Pose Driver
@@ -58,29 +84,37 @@ namespace UnityEngine.InputSystem.XR
         /// Options for which phases of the player loop will update <see cref="Transform"/> properties.
         /// </summary>
         /// <seealso cref="updateType"/>
+        /// <seealso cref="InputSystem.onAfterUpdate"/>
         public enum UpdateType
         {
             /// <summary>
             /// Update after the Input System has completed an update and right before rendering.
+            /// This is the recommended and default option to minimize lag for XR tracked devices.
             /// </summary>
-            /// <seealso cref="InputUpdateType.Dynamic"/>
             /// <seealso cref="InputUpdateType.BeforeRender"/>
             UpdateAndBeforeRender,
 
             /// <summary>
-            /// Update after the Input System has completed an update.
+            /// Update after the Input System has completed an update except right before rendering.
             /// </summary>
-            /// <seealso cref="InputUpdateType.Dynamic"/>
+            /// <remarks>
+            /// This may be dynamic update, fixed update, or a manual update depending on the Update Mode
+            /// project setting for Input System.
+            /// </remarks>
             Update,
 
             /// <summary>
-            /// Update right before rendering.
+            /// Update after the Input System has completed an update right before rendering.
             /// </summary>
+            /// <remarks>
+            /// Note that this update mode may not trigger if there are no XR devices added which use before render timing.
+            /// </remarks>
             /// <seealso cref="InputUpdateType.BeforeRender"/>
+            /// <seealso cref="InputDevice.updateBeforeRender"/>
             BeforeRender,
         }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Updates the Transform properties after these phases of Input System event processing.")]
         UpdateType m_UpdateType = UpdateType.UpdateAndBeforeRender;
         /// <summary>
         /// The update type being used by the Tracked Pose Driver
@@ -93,12 +127,26 @@ namespace UnityEngine.InputSystem.XR
             set => m_UpdateType = value;
         }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Ignore Tracking State and always treat the input pose as valid.")]
+        bool m_IgnoreTrackingState;
+        /// <summary>
+        /// Ignore tracking state and always treat the input pose as valid when updating the <see cref="Transform"/> properties.
+        /// The recommended value is <see langword="false"/> so the tracking state input is used.
+        /// </summary>
+        /// <seealso cref="trackingStateInput"/>
+        public bool ignoreTrackingState
+        {
+            get => m_IgnoreTrackingState;
+            set => m_IgnoreTrackingState = value;
+        }
+
+        [SerializeField, Tooltip("The input action to read the position value of a tracked device. Must be a Vector 3 control type.")]
         InputActionProperty m_PositionInput;
         /// <summary>
-        /// The action to read the position value of a tracked device.
+        /// The input action to read the position value of a tracked device.
         /// Must support reading a value of type <see cref="Vector3"/>.
         /// </summary>
+        /// <seealso cref="rotationInput"/>
         public InputActionProperty positionInput
         {
             get => m_PositionInput;
@@ -114,12 +162,13 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        [SerializeField]
+        [SerializeField, Tooltip("The input action to read the rotation value of a tracked device. Must be a Quaternion control type.")]
         InputActionProperty m_RotationInput;
         /// <summary>
-        /// The action to read the rotation value of a tracked device.
+        /// The input action to read the rotation value of a tracked device.
         /// Must support reading a value of type <see cref="Quaternion"/>.
         /// </summary>
+        /// <seealso cref="positionInput"/>
         public InputActionProperty rotationInput
         {
             get => m_RotationInput;
@@ -135,15 +184,70 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
+        [SerializeField, Tooltip("The input action to read the tracking state value of a tracked device. Identifies if position and rotation have valid data. Must be an Integer control type.")]
+        InputActionProperty m_TrackingStateInput;
+        /// <summary>
+        /// The input action to read the tracking state value of a tracked device.
+        /// Identifies if position and rotation have valid data.
+        /// Must support reading a value of type <see cref="int"/>.
+        /// </summary>
+        /// <remarks>
+        /// See [InputTrackingState](xref:UnityEngine.XR.InputTrackingState) enum for values the input action represents.
+        /// <list type="bullet">
+        /// <item>
+        /// <term>[InputTrackingState.None](xref:UnityEngine.XR.InputTrackingState.None) (0)</term>
+        /// <description>to indicate neither position nor rotation is valid.</description>
+        /// </item>
+        /// <item>
+        /// <term>[InputTrackingState.Position](xref:UnityEngine.XR.InputTrackingState.Position) (1)</term>
+        /// <description>to indicate position is valid.</description>
+        /// </item>
+        /// <item>
+        /// <term>[InputTrackingState.Rotation](xref:UnityEngine.XR.InputTrackingState.Rotation) (2)</term>
+        /// <description>to indicate rotation is valid.</description>
+        /// </item>
+        /// <item>
+        /// <term>[InputTrackingState.Position](xref:UnityEngine.XR.InputTrackingState.Position) <c>|</c> [InputTrackingState.Rotation](xref:UnityEngine.XR.InputTrackingState.Rotation) (3)</term>
+        /// <description>to indicate position and rotation is valid.</description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        /// <seealso cref="ignoreTrackingState"/>
+        public InputActionProperty trackingStateInput
+        {
+            get => m_TrackingStateInput;
+            set
+            {
+                if (Application.isPlaying)
+                    UnbindTrackingState();
+
+                m_TrackingStateInput = value;
+
+                if (Application.isPlaying && isActiveAndEnabled)
+                    BindTrackingState();
+            }
+        }
+
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
+        TrackingStates m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
         bool m_RotationBound;
         bool m_PositionBound;
+        bool m_TrackingStateBound;
+        bool m_IsFirstUpdate = true;
 
         void BindActions()
         {
             BindPosition();
             BindRotation();
+            BindTrackingState();
+        }
+
+        void UnbindActions()
+        {
+            UnbindPosition();
+            UnbindRotation();
+            UnbindTrackingState();
         }
 
         void BindPosition()
@@ -186,10 +290,24 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        void UnbindActions()
+        void BindTrackingState()
         {
-            UnbindPosition();
-            UnbindRotation();
+            if (m_TrackingStateBound)
+                return;
+
+            var action = m_TrackingStateInput.action;
+            if (action == null)
+                return;
+
+            action.performed += OnTrackingStatePerformed;
+            action.canceled += OnTrackingStateCanceled;
+            m_TrackingStateBound = true;
+
+            if (m_TrackingStateInput.reference == null)
+            {
+                action.Rename($"{gameObject.name} - TPD - Tracking State");
+                action.Enable();
+            }
         }
 
         void UnbindPosition()
@@ -226,28 +344,62 @@ namespace UnityEngine.InputSystem.XR
             m_RotationBound = false;
         }
 
+        void UnbindTrackingState()
+        {
+            if (!m_TrackingStateBound)
+                return;
+
+            var action = m_TrackingStateInput.action;
+            if (action == null)
+                return;
+
+            if (m_TrackingStateInput.reference == null)
+                action.Disable();
+
+            action.performed -= OnTrackingStatePerformed;
+            action.canceled -= OnTrackingStateCanceled;
+            m_TrackingStateBound = false;
+        }
+
         void OnPositionPerformed(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_PositionBound, this);
             m_CurrentPosition = context.ReadValue<Vector3>();
         }
 
         void OnPositionCanceled(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_PositionBound, this);
             m_CurrentPosition = Vector3.zero;
         }
 
         void OnRotationPerformed(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_RotationBound, this);
             m_CurrentRotation = context.ReadValue<Quaternion>();
         }
 
         void OnRotationCanceled(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_RotationBound, this);
             m_CurrentRotation = Quaternion.identity;
+        }
+
+        void OnTrackingStatePerformed(InputAction.CallbackContext context)
+        {
+            m_CurrentTrackingState = (TrackingStates)context.ReadValue<int>();
+        }
+
+        void OnTrackingStateCanceled(InputAction.CallbackContext context)
+        {
+            m_CurrentTrackingState = TrackingStates.None;
+        }
+
+        /// <summary>
+        /// This function is called when the user hits the Reset button in the Inspector's context menu
+        /// or when adding the component the first time. This function is only called in editor mode.
+        /// </summary>
+        protected void Reset()
+        {
+            m_PositionInput = new InputActionProperty(new InputAction("Position", expectedControlType: "Vector3"));
+            m_RotationInput = new InputActionProperty(new InputAction("Rotation", expectedControlType: "Quaternion"));
+            m_TrackingStateInput = new InputActionProperty(new InputAction("Tracking State", expectedControlType: "Integer"));
         }
 
         /// <summary>
@@ -256,9 +408,9 @@ namespace UnityEngine.InputSystem.XR
         protected virtual void Awake()
         {
 #if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
-            if (HasStereoCamera())
+            if (HasStereoCamera(out var cameraComponent))
             {
-                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, true);
             }
 #endif
         }
@@ -270,6 +422,10 @@ namespace UnityEngine.InputSystem.XR
         {
             InputSystem.onAfterUpdate += UpdateCallback;
             BindActions();
+
+            // Read current input values when becoming enabled,
+            // but wait until after the input update so the input is read at a consistent time
+            m_IsFirstUpdate = true;
         }
 
         /// <summary>
@@ -287,21 +443,100 @@ namespace UnityEngine.InputSystem.XR
         protected virtual void OnDestroy()
         {
 #if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
-            if (HasStereoCamera())
+            if (HasStereoCamera(out var cameraComponent))
             {
-                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, false);
             }
 #endif
         }
 
+        /// <summary>
+        /// The callback method called after the Input System has completed an update and processed all pending events.
+        /// </summary>
+        /// <seealso cref="InputSystem.onAfterUpdate"/>
         protected void UpdateCallback()
         {
+            if (m_IsFirstUpdate)
+            {
+                // Update current input values if this is the first update since becoming enabled
+                // since the performed callbacks may not have been executed
+                if (m_PositionInput.action != null)
+                    m_CurrentPosition = m_PositionInput.action.ReadValue<Vector3>();
+
+                if (m_RotationInput.action != null)
+                    m_CurrentRotation = m_RotationInput.action.ReadValue<Quaternion>();
+
+                ReadTrackingState();
+
+                m_IsFirstUpdate = false;
+            }
+
             if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
                 OnBeforeRender();
             else
                 OnUpdate();
         }
 
+        void ReadTrackingState()
+        {
+            var trackingStateAction = m_TrackingStateInput.action;
+            if (trackingStateAction != null && !trackingStateAction.enabled)
+            {
+                // Treat a disabled action as the default None value for the ReadValue call
+                m_CurrentTrackingState = TrackingStates.None;
+                return;
+            }
+
+            if (trackingStateAction == null || trackingStateAction.m_BindingsCount == 0)
+            {
+                // Treat an Input Action Reference with no reference the same as
+                // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
+                m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
+                return;
+            }
+
+            // Grab state.
+            var actionMap = trackingStateAction.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+            var state = actionMap.m_State;
+
+            // Get list of resolved controls to determine if a device actually has tracking state.
+            var hasResolvedControl = false;
+            if (state != null)
+            {
+                var actionIndex = trackingStateAction.m_ActionIndexInState;
+                var totalBindingCount = state.totalBindingCount;
+                for (var i = 0; i < totalBindingCount; ++i)
+                {
+                    unsafe
+                    {
+                        ref var bindingState = ref state.bindingStates[i];
+                        if (bindingState.actionIndex != actionIndex)
+                            continue;
+                        if (bindingState.isComposite)
+                            continue;
+
+                        if (bindingState.controlCount > 0)
+                        {
+                            hasResolvedControl = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Retain the current value if there is no resolved binding.
+            // Since the field initializes to allowing position and rotation,
+            // this allows for driving the Transform pose always when the device
+            // doesn't support reporting the tracking state.
+            if (hasResolvedControl)
+                m_CurrentTrackingState = (TrackingStates)trackingStateAction.ReadValue<int>();
+        }
+
+        /// <summary>
+        /// This method is called after the Input System has completed an update and processed all pending events
+        /// when the type of update is not <see cref="InputUpdateType.BeforeRender"/>.
+        /// </summary>
         protected virtual void OnUpdate()
         {
             if (m_UpdateType == UpdateType.Update ||
@@ -311,6 +546,10 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
+        /// <summary>
+        /// This method is called after the Input System has completed an update and processed all pending events
+        /// when the type of update is <see cref="InputUpdateType.BeforeRender"/>.
+        /// </summary>
         protected virtual void OnBeforeRender()
         {
             if (m_UpdateType == UpdateType.BeforeRender ||
@@ -320,30 +559,52 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
+        /// <summary>
+        /// Updates <see cref="Transform"/> properties with the current input pose values that have been read,
+        /// constrained by tracking type and tracking state.
+        /// </summary>
+        /// <seealso cref="SetLocalTransform"/>
+        protected virtual void PerformUpdate()
+        {
+            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
+        }
+
+        /// <summary>
+        /// Updates <see cref="Transform"/> properties, constrained by tracking type and tracking state.
+        /// </summary>
+        /// <param name="newPosition">The new local position to possibly set.</param>
+        /// <param name="newRotation">The new local rotation to possibly set.</param>
         protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation)
         {
-            if (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.RotationOnly)
+            var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Position) != 0;
+            var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Rotation) != 0;
+
+#if HAS_SET_LOCAL_POSITION_AND_ROTATION
+            if (m_TrackingType == TrackingType.RotationAndPosition && rotationValid && positionValid)
+            {
+                transform.SetLocalPositionAndRotation(newPosition, newRotation);
+                return;
+            }
+#endif
+
+            if (rotationValid &&
+                (m_TrackingType == TrackingType.RotationAndPosition ||
+                 m_TrackingType == TrackingType.RotationOnly))
             {
                 transform.localRotation = newRotation;
             }
 
-            if (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.PositionOnly)
+            if (positionValid &&
+                (m_TrackingType == TrackingType.RotationAndPosition ||
+                 m_TrackingType == TrackingType.PositionOnly))
             {
                 transform.localPosition = newPosition;
             }
         }
 
-        bool HasStereoCamera()
+        bool HasStereoCamera(out Camera cameraComponent)
         {
-            var cameraComponent = GetComponent<Camera>();
-            return cameraComponent != null && cameraComponent.stereoEnabled;
-        }
-
-        protected virtual void PerformUpdate()
-        {
-            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
+            return TryGetComponent(out cameraComponent) && cameraComponent.stereoEnabled;
         }
 
         #region DEPRECATED
@@ -354,6 +615,11 @@ namespace UnityEngine.InputSystem.XR
         [Obsolete]
         [SerializeField, HideInInspector]
         InputAction m_PositionAction;
+        /// <summary>
+        /// (Deprecated) The action to read the position value of a tracked device.
+        /// Must support reading a value of type <see cref="Vector3"/>.
+        /// </summary>
+        /// <seealso cref="positionInput"/>
         public InputAction positionAction
         {
             get => m_PositionInput.action;
@@ -363,6 +629,11 @@ namespace UnityEngine.InputSystem.XR
         [Obsolete]
         [SerializeField, HideInInspector]
         InputAction m_RotationAction;
+        /// <summary>
+        /// (Deprecated) The action to read the rotation value of a tracked device.
+        /// Must support reading a value of type <see cref="Quaternion"/>.
+        /// </summary>
+        /// <seealso cref="rotationInput"/>
         public InputAction rotationAction
         {
             get => m_RotationInput.action;
@@ -370,21 +641,6 @@ namespace UnityEngine.InputSystem.XR
         }
 #pragma warning restore 0649
         // ReSharper restore UnassignedField.Local
-
-        /// <summary>
-        /// Stores whether the fields of type <see cref="InputAction"/> have been migrated to fields of type <see cref="InputActionProperty"/>.
-        /// </summary>
-        [SerializeField, HideInInspector]
-        bool m_HasMigratedActions;
-
-        /// <summary>
-        /// This function is called when the user hits the Reset button in the Inspector's context menu
-        /// or when adding the component the first time. This function is only called in editor mode.
-        /// </summary>
-        protected void Reset()
-        {
-            m_HasMigratedActions = true;
-        }
 
         /// <inheritdoc />
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -394,13 +650,16 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            if (m_HasMigratedActions)
-                return;
+#pragma warning disable 0612 // Type or member is obsolete -- Deprecated fields are migrated to new properties.
+#pragma warning disable UNT0029 // Pattern matching with null on Unity objects -- Using true null is intentional, not operator== evaluation.
+            // We're checking for true null here since we don't want to migrate if the new field is already being used, even if the reference is missing.
+            // Migrate the old fields to the new properties added in Input System 1.1.0-pre.6.
+            if (m_PositionInput.serializedReference is null && m_PositionInput.serializedAction is null && !(m_PositionAction is null))
+                m_PositionInput = new InputActionProperty(m_PositionAction);
 
-#pragma warning disable 0612
-            m_PositionInput = new InputActionProperty(m_PositionAction);
-            m_RotationInput = new InputActionProperty(m_RotationAction);
-            m_HasMigratedActions = true;
+            if (m_RotationInput.serializedReference is null && m_RotationInput.serializedAction is null && !(m_RotationAction is null))
+                m_RotationInput = new InputActionProperty(m_RotationAction);
+#pragma warning restore UNT0029
 #pragma warning restore 0612
         }
 

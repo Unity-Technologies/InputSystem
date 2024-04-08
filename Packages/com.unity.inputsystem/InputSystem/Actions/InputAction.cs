@@ -389,7 +389,7 @@ namespace UnityEngine.InputSystem
 
                 var map = GetOrCreateActionMap();
                 if (map.m_State != null)
-                    map.LazyResolveBindings();
+                    map.LazyResolveBindings(fullResolve: true);
             }
         }
 
@@ -501,7 +501,6 @@ namespace UnityEngine.InputSystem
         /// only ever use <see cref="InputActionPhase.Performed"/> and not go to <see
         /// cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Canceled"/> (as
         /// pass-through actions do not follow the start-performed-canceled model in general).
-        /// Also, interactions can choose their
         ///
         /// While an action is disabled, its phase is <see cref="InputActionPhase.Disabled"/>.
         /// </remarks>
@@ -583,7 +582,7 @@ namespace UnityEngine.InputSystem
         public bool triggered => WasPerformedThisFrame();
 
         /// <summary>
-        /// The currently active control that is driving the action. Null while the action
+        /// The currently active control that is driving the action. <see langword="null"/> while the action
         /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
         /// state. Otherwise the control that last had activity on it which wasn't ignored.
         /// </summary>
@@ -604,6 +603,48 @@ namespace UnityEngine.InputSystem
                     if (controlIndex != InputActionState.kInvalidIndex)
                         return state.controls[controlIndex];
                 }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Type of value returned by <see cref="ReadValueAsObject"/> and currently expected
+        /// by <see cref="ReadValue{TValue}"/>. <see langword="null"/> while the action
+        /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
+        /// state as this is based on the currently active control that is driving the action.
+        /// </summary>
+        /// <value>Type of object returned when reading a value.</value>
+        /// <remarks>
+        /// The type of value returned by an action is usually determined by the
+        /// <see cref="InputControl"/> that triggered the action, i.e. by the
+        /// control referenced from <see cref="activeControl"/>.
+        ///
+        /// However, if the binding that triggered is a composite, then the composite
+        /// will determine values and not the individual control that triggered (that
+        /// one just feeds values into the composite).
+        ///
+        /// The active value type may change depending on which controls are actuated if there are multiple
+        /// bindings with different control types. This property can be used to ensure you are calling the
+        /// <see cref="ReadValue{TValue}"/> method with the expected type parameter if your action is
+        /// configured to allow multiple control types as otherwise that method will throw an <see cref="InvalidOperationException"/>
+        /// if the type of the control that triggered the action does not match the type parameter.
+        /// </remarks>
+        /// <seealso cref="InputControl.valueType"/>
+        /// <seealso cref="InputBindingComposite.valueType"/>
+        /// <seealso cref="activeControl"/>
+        public unsafe Type activeValueType
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        return state.GetValueType(actionStatePtr->bindingIndex, controlIndex);
+                }
+
                 return null;
             }
         }
@@ -669,6 +710,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputAction()
         {
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -724,8 +766,9 @@ namespace UnityEngine.InputSystem
                         path = binding,
                         interactions = interactions,
                         processors = processors,
-                        action = m_Name
-                    }
+                        action = m_Name,
+                        id = Guid.NewGuid(),
+                    },
                 };
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
@@ -737,6 +780,7 @@ namespace UnityEngine.InputSystem
             }
 
             m_ExpectedControlType = expectedControlType;
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -913,10 +957,16 @@ namespace UnityEngine.InputSystem
                 m_ExpectedControlType = m_ExpectedControlType,
                 m_Interactions = m_Interactions,
                 m_Processors = m_Processors,
+                m_Flags = m_Flags,
             };
             return clone;
         }
 
+        /// <summary>
+        /// Return an boxed instance of the action.
+        /// </summary>
+        /// <returns>An boxed clone of the action</returns>
+        /// <seealso cref="Clone"/>
         object ICloneable.Clone()
         {
             return Clone();
@@ -925,11 +975,11 @@ namespace UnityEngine.InputSystem
         ////TODO: ReadValue(void*, int)
 
         /// <summary>
-        /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
+        /// Read the current value of the control that is driving this action. If no bound control is actuated, returns
+        /// default(TValue), but note that binding processors are always applied.
         /// </summary>
         /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
-        /// <returns>The current value of the action or <c>default(TValue)</c> if the action is not currently in-progress.</returns>
+        /// <returns>The current value of the control/binding that is driving this action with all binding processors applied.</returns>
         /// <remarks>
         /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
         /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
@@ -980,21 +1030,14 @@ namespace UnityEngine.InputSystem
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
-            var result = default(TValue);
-
             var state = GetOrCreateActionMap().m_State;
-            if (state != null)
-            {
-                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                if (actionStatePtr->phase.IsInProgress())
-                {
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
-            }
+            if (state == null)
+                return default(TValue);
 
-            return result;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            return actionStatePtr->phase.IsInProgress()
+                ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
+                : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
 
         /// <summary>
@@ -1027,18 +1070,54 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Read the current amount of actuation of the control that is driving this action.
+        /// </summary>
+        /// <returns>Returns the current level of control actuation (usually [0..1]) or -1 if
+        /// the control is actuated but does not support computing magnitudes.</returns>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. Controls that have no meaningful magnitude
+        /// will return -1 when calling this method. Any negative magnitude value should be considered an invalid value.
+        /// <br />
+        /// The magnitude returned by an action is usually determined by the
+        /// <see cref="InputControl"/> that triggered the action, i.e. by the
+        /// control referenced from <see cref="activeControl"/>.
+        /// <br />
+        /// However, if the binding that triggered is a composite, then the composite
+        /// will determine the magnitude and not the individual control that triggered.
+        /// Instead, the value of the control that triggered the action will be fed into the composite magnitude calculation.
+        /// </remarks>
+        /// <seealso cref="InputControl.EvaluateMagnitude()"/>
+        /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
+        public unsafe float GetControlMagnitude()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->haveMagnitude)
+                    return actionStatePtr->magnitude;
+            }
+
+            return 0f;
+        }
+
+        /// <summary>
         /// Reset the action state to default.
         /// </summary>
         /// <remarks>
         /// This method can be used to forcibly cancel an action even while it is in progress. Note that unlike
         /// disabling an action, for example, this also effects APIs such as <see cref="WasPressedThisFrame"/>.
+        ///
+        /// Note that invoking this method will not modify enabled state.
         /// </remarks>
         /// <seealso cref="inProgress"/>
         /// <seealso cref="phase"/>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="Disable"/>
         public void Reset()
         {
             var state = GetOrCreateActionMap().m_State;
-            state?.ResetActionState(m_ActionIndexInState, hardReset: true);
+            state?.ResetActionState(m_ActionIndexInState, toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
         }
 
         /// <summary>
@@ -1087,6 +1166,22 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->isPressed;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Whether the action has been <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>.
+        /// </summary>
+        /// <returns>True if the action is currently triggering.</returns>
+        /// <seealso cref="phase"/>
+        public unsafe bool IsInProgress()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->phase.IsInProgress();
             }
             return false;
         }
@@ -1182,7 +1277,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
-        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
         public unsafe bool WasReleasedThisFrame()
         {
             var state = GetOrCreateActionMap().m_State;
@@ -1238,6 +1333,7 @@ namespace UnityEngine.InputSystem
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
+        /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         public unsafe bool WasPerformedThisFrame()
@@ -1249,6 +1345,79 @@ namespace UnityEngine.InputSystem
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
                 return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
+        /// value at least once in the current frame.
+        /// </summary>
+        /// <returns>True if the action completed this frame.</returns>
+        /// <remarks>
+        /// Although <see cref="InputActionPhase.Disabled"/> is technically a phase, this method does not consider disabling
+        /// the action while the action is in <see cref="InputActionPhase.Performed"/> to be "completed".
+        ///
+        /// This method is different from <see cref="WasReleasedThisFrame"/> in that it depends directly on the
+        /// interaction(s) driving the action (including the default interaction if no specific interaction
+        /// has been added to the action or binding).
+        ///
+        /// For example, let's say the action is bound to the space bar and that the binding has a
+        /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
+        /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
+        /// but <see cref="WasPerformedThisFrame"/> will still be false (because the hold has not been performed yet).
+        /// If at that time the space bar is released, <see cref="WasReleasedThisFrame"/> will be true (because the
+        /// button/key is now released) but <c>WasCompletedThisFrame</c> will still be false (because the hold
+        /// had not been performed yet). If instead the space bar is held down for long enough for the hold interaction,
+        /// the phase will change to and stay <see cref="InputActionPhase.Performed"/> and <see cref="WasPerformedThisFrame"/>
+        /// will be true for one frame as it meets the duration threshold. Once released, <c>WasCompletedThisFrame</c> will be true
+        /// (because the action is no longer performed) and only in the frame where the hold transitioned away from Performed.
+        ///
+        /// For another example where the action could be considered pressed but also completed, let's say the action
+        /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
+        /// to it such that it only performs in the forward sector area past a button press threshold. In the frame where the
+        /// thumbstick is pushed forward, both <see cref="WasPressedThisFrame"/> will be true (because the thumbstick actuation is
+        /// now considered pressed) and <see cref="WasPerformedThisFrame"/> will be true (because the thumbstick is in
+        /// the forward sector). If the thumbstick is then moved to the left in a sweeping motion, <see cref="IsPressed"/>
+        /// will still be true. However, <c>WasCompletedThisFrame</c> will also be true (because the thumbstick is
+        /// no longer in the forward sector while still crossed the button press threshold) and only in the frame where
+        /// the thumbstick was no longer within the forward sector. For more details about the Sector interaction, see
+        /// <a href="https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@2.5/api/UnityEngine.XR.Interaction.Toolkit.Inputs.Interactions.SectorInteraction.html"><c>SectorInteraction</c></a>
+        /// in the XR Interaction Toolkit Scripting API documentation.
+        /// <br />
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (that is, until the next
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
+        ///
+        /// <example>
+        /// <code>
+        /// var teleport = playerInput.actions["Teleport"];
+        /// if (teleport.WasPerformedThisFrame())
+        ///     InitiateTeleport();
+        /// else if (teleport.WasCompletedThisFrame())
+        ///     StopTeleport();
+        /// </code>
+        /// </example>
+        ///
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// </remarks>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="phase"/>
+        public unsafe bool WasCompletedThisFrame()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1277,8 +1446,8 @@ namespace UnityEngine.InputSystem
         /// completion percentage and <see cref="phase"/>.
         ///
         /// The meaning of the timeout is dependent on the interaction in play. For a <see cref="Interactions.HoldInteraction"/>,
-        /// the timeout represents "completion" (that is, the time until a "hold" is considered to be performed), whereas
-        /// for a <see cref="Interactions.TapInteraction"/> it represents "time to failure" (that is, the remaining time window
+        /// "completion" represents the duration timeout (that is, the time until a "hold" is considered to be performed), whereas
+        /// for a <see cref="Interactions.TapInteraction"/> "completion" represents "time to failure" (that is, the remaining time window
         /// that the interaction can be completed within).
         ///
         /// Note that an interaction might run multiple timeouts in succession. One such example is <see cref="Interactions.MultiTapInteraction"/>.
@@ -1368,7 +1537,7 @@ namespace UnityEngine.InputSystem
                         var duration = interactionState.timerDuration;
                         var startTime = interactionState.timerStartTime;
                         var endTime = startTime + duration;
-                        var remainingTime = endTime - InputRuntime.s_Instance.currentTime;
+                        var remainingTime = endTime - InputState.currentTime;
                         if (remainingTime <= 0)
                             timerCompletion = 1;
                         else
@@ -1475,8 +1644,8 @@ namespace UnityEngine.InputSystem
             {
                 if (m_ActionIndexInState == InputActionState.kInvalidIndex)
                     return new InputActionState.TriggerState();
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
+                Debug.Assert(m_ActionMap != null, "Action must have associated action map");
+                Debug.Assert(m_ActionMap.m_State != null, "Action map must have state at this point");
                 return m_ActionMap.m_State.FetchActionState(this);
             }
         }
@@ -1508,6 +1677,40 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction = this,
                 m_Bindings = m_SingletonActionBindings
             };
+        }
+
+        internal void RequestInitialStateCheckOnEnabledAction()
+        {
+            Debug.Assert(enabled, "This should only be called on actions that are enabled");
+
+            var map = GetOrCreateActionMap();
+            var state = map.m_State;
+            state.SetInitialStateCheckPending(m_ActionIndexInState);
+        }
+
+        // NOTE: This does *NOT* check whether the control is valid according to the binding it
+        //       resolved from and/or the current binding mask. If, for example, the binding is
+        //       "<Keyboard>/#(ä)" and the keyboard switches from a DE layout to a US layout, the
+        //       key would still be considered valid even if the path in the binding would actually
+        //       no longer resolve to it.
+        internal bool ActiveControlIsValid(InputControl control)
+        {
+            if (control == null)
+                return false;
+
+            // Device must still be added.
+            var device = control.device;
+            if (!device.added)
+                return false;
+
+            // If we have a device list in the map or asset, device
+            // must be in list.
+            var map = GetOrCreateActionMap();
+            var deviceList = map.devices;
+            if (deviceList != null && !deviceList.Value.ContainsReference(device))
+                return false;
+
+            return true;
         }
 
         internal InputBinding? FindEffectiveBindingMask()
@@ -1572,6 +1775,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: make current event available in some form
+        ////TODO: make source binding info available (binding index? binding instance?)
 
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.
@@ -1791,6 +1995,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
+            /// <seealso cref="activeValueType"/>
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
             /// <summary>
@@ -1819,8 +2024,6 @@ namespace UnityEngine.InputSystem
                     return m_State.GetValueSizeInBytes(bindingIndex, controlIndex);
                 }
             }
-
-            ////TODO: need ability to read as button
 
             /// <summary>
             /// Read the value of the action as a raw byte buffer. This allows reading
@@ -1887,8 +2090,13 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null && phase.IsInProgress())
-                    value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
+                if (m_State != null)
+                {
+                    value = phase.IsInProgress() ?
+                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                        m_State.ApplyProcessors(bindingIndex, value);
+                }
+
                 return value;
             }
 

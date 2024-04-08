@@ -3,12 +3,18 @@ InitTestScene*
 *.orig
 *.orig.meta
 .vs/
+.vsconfig
 Assets/Plugins/Editor/JetBrains
 Assets/Plugins/Editor/JetBrains.meta
-Builds/
-Logs/
-Library/
-Temp/
+
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
 *.sln
 *.sln*user
 *.csproj
@@ -22,6 +28,8 @@ docerrors.log
 
 Assets/**/*.api
 Assets/**/*.api.meta
+Assets/__TestInputAsset.inputactions
+Assets/__TestInputAsset.inputactions.meta
 
 Packages/packages-lock.json
 Packages/com.unity.inputsystem/artifacts/**

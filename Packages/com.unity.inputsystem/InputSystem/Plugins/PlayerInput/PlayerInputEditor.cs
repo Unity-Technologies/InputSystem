@@ -32,19 +32,19 @@ namespace UnityEngine.InputSystem.Editor
             InputUser.onChange += OnUserChange;
 
             // Look up properties.
-            m_ActionsProperty = serializedObject.FindProperty("m_Actions");
-            m_DefaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
-            m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty("m_NeverAutoSwitchControlSchemes");
-            m_DefaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
-            m_NotificationBehaviorProperty = serializedObject.FindProperty("m_NotificationBehavior");
-            m_CameraProperty = serializedObject.FindProperty("m_Camera");
-            m_ActionEventsProperty = serializedObject.FindProperty("m_ActionEvents");
-            m_DeviceLostEventProperty = serializedObject.FindProperty("m_DeviceLostEvent");
-            m_DeviceRegainedEventProperty = serializedObject.FindProperty("m_DeviceRegainedEvent");
-            m_ControlsChangedEventProperty = serializedObject.FindProperty("m_ControlsChangedEvent");
+            m_ActionsProperty = serializedObject.FindProperty(nameof(PlayerInput.m_Actions));
+            m_DefaultControlSchemeProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultControlScheme));
+            m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty(nameof(PlayerInput.m_NeverAutoSwitchControlSchemes));
+            m_DefaultActionMapProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultActionMap));
+            m_NotificationBehaviorProperty = serializedObject.FindProperty(nameof(PlayerInput.m_NotificationBehavior));
+            m_CameraProperty = serializedObject.FindProperty(nameof(PlayerInput.m_Camera));
+            m_ActionEventsProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ActionEvents));
+            m_DeviceLostEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DeviceLostEvent));
+            m_DeviceRegainedEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DeviceRegainedEvent));
+            m_ControlsChangedEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ControlsChangedEvent));
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
-            m_UIInputModuleProperty = serializedObject.FindProperty("m_UIInputModule");
+            m_UIInputModuleProperty = serializedObject.FindProperty(nameof(PlayerInput.m_UIInputModule));
             #endif
         }
 
@@ -73,8 +73,13 @@ namespace UnityEngine.InputSystem.Editor
             // Action config section.
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
-            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
+            var actionsWereChanged = false;
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
+            {
                 OnActionAssetChange();
+                actionsWereChanged = true;
+            }
+
             ++EditorGUI.indentLevel;
             if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 1) // Don't show if <Any> is the only option.
             {
@@ -162,7 +167,7 @@ namespace UnityEngine.InputSystem.Editor
             // Notifications/event section.
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_NotificationBehaviorProperty, m_NotificationBehaviorText);
-            if (EditorGUI.EndChangeCheck() || !m_NotificationBehaviorInitialized)
+            if (EditorGUI.EndChangeCheck() || actionsWereChanged || !m_NotificationBehaviorInitialized)
                 OnNotificationBehaviorChange();
             switch ((PlayerNotifications)m_NotificationBehaviorProperty.intValue)
             {
@@ -223,6 +228,22 @@ namespace UnityEngine.InputSystem.Editor
             // Debug UI.
             if (EditorApplication.isPlaying)
                 DoDebugUI();
+        }
+
+        // This checks changes that are not captured by BeginChangeCheck/EndChangeCheck.
+        // One such case is when the user triggers a "Reset" on the component.
+        bool CheckIfActionAssetChanged()
+        {
+            if (m_ActionsProperty.objectReferenceValue != null)
+            {
+                var assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
+                bool result = assetInstanceID != m_ActionAssetInstanceID;
+                m_ActionAssetInstanceID = (int)assetInstanceID;
+                return result;
+            }
+
+            m_ActionAssetInstanceID = -1;
+            return false;
         }
 
         private void DoHelpCreateAssetUI()
@@ -561,6 +582,7 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
+        [NonSerialized] private int m_ActionAssetInstanceID;
     }
 }
 #endif // UNITY_EDITOR

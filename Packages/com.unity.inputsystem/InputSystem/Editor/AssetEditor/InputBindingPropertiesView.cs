@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Layouts;
@@ -63,6 +64,9 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void DrawGeneralProperties()
         {
+            var currentPath = m_PathProperty.stringValue;
+            InputSystem.OnDrawCustomWarningForBindingPath(currentPath);
+
             if (m_IsComposite)
             {
                 if (m_CompositeParameters == null)
@@ -99,8 +103,74 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
+                // Show the specific controls which match the current path
+                DrawMatchingControlPaths();
+
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
+            }
+        }
+
+        /// <summary>
+        /// Used to keep track of which foldouts are expanded.
+        /// </summary>
+        private static bool showMatchingLayouts = false;
+        private static Dictionary<string, bool> showMatchingChildLayouts = new Dictionary<string, bool>();
+
+        private static void DrawMatchingControlPaths(List<MatchingControlPath> matchingControlPaths)
+        {
+            foreach (var matchingControlPath in matchingControlPaths)
+            {
+                bool showLayout = false;
+                EditorGUI.indentLevel++;
+
+                var text = $"{matchingControlPath.deviceName} > {matchingControlPath.controlName}";
+                if (matchingControlPath.children.Count() > 0 && !matchingControlPath.isRoot)
+                {
+                    showMatchingChildLayouts.TryGetValue(matchingControlPath.deviceName, out showLayout);
+                    showMatchingChildLayouts[matchingControlPath.deviceName] = EditorGUILayout.Foldout(showLayout, text);
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(text);
+                }
+
+                showLayout |= matchingControlPath.isRoot;
+                if (showLayout)
+                    DrawMatchingControlPaths(matchingControlPath.children);
+
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        /// <summary>
+        /// Finds all registered control paths implemented by concrete classes which match the current binding path and renders it.
+        /// </summary>
+        private void DrawMatchingControlPaths()
+        {
+            bool controlPathUsagePresent = false;
+            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(m_ControlPathEditor.pathProperty.stringValue, showMatchingLayouts, ref controlPathUsagePresent);
+            if (matchingControlPaths == null || matchingControlPaths.Count != 0)
+            {
+                EditorGUILayout.BeginVertical();
+                showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Derived Bindings");
+
+                if (showMatchingLayouts)
+                {
+                    if (matchingControlPaths == null)
+                    {
+                        if (controlPathUsagePresent)
+                            EditorGUILayout.HelpBox("No registered controls match this current binding. Some controls are only registered at runtime.", MessageType.Warning);
+                        else
+                            EditorGUILayout.HelpBox("No other registered controls match this current binding. Some controls are only registered at runtime.", MessageType.Warning);
+                    }
+                    else
+                    {
+                        DrawMatchingControlPaths(matchingControlPaths);
+                    }
+                }
+
+                EditorGUILayout.EndVertical();
             }
         }
 

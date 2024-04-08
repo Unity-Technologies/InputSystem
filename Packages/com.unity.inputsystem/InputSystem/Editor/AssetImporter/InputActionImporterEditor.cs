@@ -27,6 +27,8 @@ namespace UnityEngine.InputSystem.Editor
             // like in other types of editors.
             serializedObject.Update();
 
+            EditorGUILayout.Space();
+
             if (inputActionAsset == null)
                 EditorGUILayout.HelpBox("The currently selected object is not an editable input action asset.",
                     MessageType.Info);
@@ -34,11 +36,20 @@ namespace UnityEngine.InputSystem.Editor
             // Button to pop up window to edit the asset.
             using (new EditorGUI.DisabledScope(inputActionAsset == null))
             {
-                if (GUILayout.Button("Edit asset"))
-                    InputActionEditorWindow.OpenEditor(inputActionAsset);
+                if (GUILayout.Button(GetOpenEditorButtonText(inputActionAsset), GUILayout.Height(30)))
+                    OpenEditor(inputActionAsset);
             }
 
             EditorGUILayout.Space();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Project-wide Input Actions Asset UI.
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
+                inputActionAsset ? inputActionAsset.name : "Null", "Project-wide Input Actions",
+                (value) => InputSystem.actions = value, !EditorApplication.isPlayingOrWillChangePlaymode);
+
+            EditorGUILayout.Space();
+#endif
 
             // Importer settings UI.
             var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
@@ -99,6 +110,54 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionAsset GetAsset()
         {
             return assetTarget as InputActionAsset;
+        }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        protected override bool ShouldHideOpenButton()
+        {
+            return IsProjectWideActionsAsset();
+        }
+
+        private bool IsProjectWideActionsAsset()
+        {
+            return IsProjectWideActionsAsset(GetAsset());
+        }
+
+        private static bool IsProjectWideActionsAsset(InputActionAsset asset)
+        {
+            return !ReferenceEquals(asset, null) && InputSystem.actions == asset;
+        }
+
+#endif
+
+        private string GetOpenEditorButtonText(InputActionAsset asset)
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (IsProjectWideActionsAsset(asset))
+                return "Edit in Project Settings Window";
+#endif
+            return "Edit Asset";
+        }
+
+        private static void OpenEditor(InputActionAsset asset)
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Redirect to Project-settings Input Actions editor if this is the project-wide actions asset
+            if (IsProjectWideActionsAsset(asset))
+            {
+                SettingsService.OpenProjectSettings(InputSettingsPath.kSettingsRootPath);
+                return;
+            }
+
+            // Redirect to UI-Toolkit window editor if not configured to use IMGUI explicitly
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+                InputActionsEditorWindow.OpenEditor(asset);
+            else
+                InputActionEditorWindow.OpenEditor(asset);
+#else
+            // Redirect to IMGUI editor
+            InputActionEditorWindow.OpenEditor(asset);
+#endif
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");

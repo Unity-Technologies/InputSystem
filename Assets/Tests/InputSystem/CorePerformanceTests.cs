@@ -9,6 +9,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add test for domain reload logic
 
@@ -26,6 +27,19 @@ internal class CorePerformanceTests : CoreTestsFixture
         // stack traces make each native container allocation extremely expensive. For our
         // performance tests, turn this off entirely.
         NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void Performance_MakeCircles()
+    {
+        Measure.Method(() =>
+        {
+            SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
     }
 
     ////TODO: same test but with several actions listening on each gamepad
@@ -410,6 +424,62 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
+    public enum LookupByName
+    {
+        CaseMatches,
+        CaseDoesNotMatch
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(LookupByName.CaseMatches)]
+    [TestCase(LookupByName.CaseDoesNotMatch)]
+    public void Performance_LookupActionByName(LookupByName lookup)
+    {
+        const int kActionCount = 100;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        for (var n = 0; n < kActionCount; ++n)
+            map.AddAction("action" + n);
+
+        Measure.Method(() =>
+        {
+            var _ = asset[(lookup == LookupByName.CaseDoesNotMatch ? "ACTION" : "action") + (int)(kActionCount * 0.75f)];
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void Performance_LookupActionByGuid()
+    {
+        const int kActionCount = 100;
+
+        InputAction actionToFind = null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        for (var n = 0; n < kActionCount; ++n)
+        {
+            var action = map.AddAction("action" + n);
+            action.GenerateId();
+
+            if (n == (int)(kActionCount * 0.75f))
+                actionToFind = action;
+        }
+
+        Measure.Method(() =>
+        {
+            Assert.That(asset[actionToFind.id.ToString()], Is.SameAs(actionToFind));
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
     // We're hitting MatchesPrefix a lot from rebinding, so make sure it's performing reasonably well.
     [Test, Performance]
     [Category("Performance")]
@@ -475,4 +545,70 @@ internal class CorePerformanceTests : CoreTestsFixture
     }
 
     #endif
+
+    internal enum OptimizedControlsTest
+    {
+        OptimizedControls,
+        NormalControls
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizedControlsTest.OptimizedControls)]
+    [TestCase(OptimizedControlsTest.NormalControls)]
+    public void Performance_OptimizedControls_ReadingMousePosition100kTimes(OptimizedControlsTest testSetup)
+    {
+        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatVector2 : InputStateBlock.FormatInvalid));
+
+        Measure.Method(() =>
+        {
+            var pos = new Vector2();
+            for (var i = 0; i < 100000; ++i)
+                pos += mouse.position.ReadValue();
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+#if ENABLE_VR
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizedControlsTest.OptimizedControls)]
+    [TestCase(OptimizedControlsTest.NormalControls)]
+    public void Performance_OptimizedControls_ReadingPose4kTimes(OptimizedControlsTest testSetup)
+    {
+        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
+        runtime.ReportNewInputDevice(XRTests.PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        var poseControl = device["posecontrol"] as UnityEngine.InputSystem.XR.PoseControl;
+        Assert.That(poseControl.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatPose : InputStateBlock.FormatInvalid));
+
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 4000; ++i)
+                poseControl.ReadValue();
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+#endif
 }

@@ -7,15 +7,13 @@ using System.Linq;
 using System.CodeDom.Compiler;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
-using UnityEngine.Scripting;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Layouts;
@@ -29,6 +27,30 @@ using UnityEngine.TestTools;
 #pragma warning disable CS0649
 partial class CoreTests
 {
+    // It seems we're getting instabilities on the farm from using EditorGUIUtility.systemCopyBuffer directly in tests.
+    // Ideally, we'd have a mocking library to just work around that but well, we don't. So this provides a solution
+    // locally to tests.
+    private class FakeSystemCopyBuffer : IDisposable
+    {
+        private string m_Contents;
+        private readonly Action<string> m_OldSet;
+        private readonly Func<string> m_OldGet;
+
+        public FakeSystemCopyBuffer()
+        {
+            m_OldGet = EditorHelpers.GetSystemCopyBufferContents;
+            m_OldSet = EditorHelpers.SetSystemCopyBufferContents;
+            EditorHelpers.SetSystemCopyBufferContents = s => m_Contents = s;
+            EditorHelpers.GetSystemCopyBufferContents = () => m_Contents;
+        }
+
+        public void Dispose()
+        {
+            EditorHelpers.SetSystemCopyBufferContents = m_OldSet;
+            EditorHelpers.GetSystemCopyBufferContents = m_OldGet;
+        }
+    }
+
     [Serializable]
     internal struct PackageJson
     {
@@ -305,6 +327,27 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_CanRemoveDevicesDuringDomainReload()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>(); // just to make sure keyboard stays as-is
+
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+
+        runtime.ReportInputDeviceRemoved(device);
+
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
         InputSystem.SaveAndReset();
@@ -350,7 +393,6 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
@@ -359,13 +401,50 @@ partial class CoreTests
         // started with.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
         // So running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
+    }
 
+    [Test]
+    [Category("Editor")]
+    // Case 1368559
+    // Case 1367556
+    // Case 1372830
+    public void Editor_WhenPlaying_ItsPossibleToQueryPlayerStateAfterEditorUpdate()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // ----------------- Engine frame 1
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // ----------------- Engine frame 2
+
+        // Simulate early player loop callback
+        runtime.onPlayerLoopInitialization();
+
+        // This code might be running in EarlyUpdate or FixedUpdate, _before_ Dynamic update is invoked.
+        // We should read values from last player update, meaning we report values from last frame.
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Running a player update now should make the input come through in player state.
+        InputSystem.Update(InputUpdateType.Dynamic);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
@@ -416,14 +495,13 @@ partial class CoreTests
         var binding3Id = map.bindings[2].id;
 
         var obj = new SerializedObject(asset);
-
         var maps = obj.FindProperty("m_ActionMaps");
-        InputActionSerializationHelpers.AddElement(maps, "new map", 0);
+        InputActionTreeView.AddElement(maps, "new map", 0);
 
         var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
         var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
-        InputActionSerializationHelpers.AddElement(actions, "new action", 1);
-        InputActionSerializationHelpers.AddElement(bindings, "new binding", 1);
+        InputActionTreeView.AddElement(actions, "new action", 1);
+        InputActionTreeView.AddElement(bindings, "new binding", 1);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 
@@ -686,34 +764,71 @@ partial class CoreTests
         Assert.That(map.bindings[0].groups, Is.EqualTo(""));
     }
 
-    [Test]
-    [Category("Editor")]
-    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
+    struct AssetFileTestConstants
     {
-        const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
-        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
-        const string kDefaultContents = "{}";
+        public const string kOriginalAssetName = "zzMyInputActions";
+        public const string kOriginalDirectory = "zzStartingDirectory";
 
-        AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
-        File.WriteAllText(kAssetPath, kDefaultContents);
-        AssetDatabase.ImportAsset(kAssetPath);
+        public const string kNewAssetName = "NEWactions";
+        public const string kNewDirectory = "NewDirectory";
 
-        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
-        Assert.NotNull(asset, "Could not load asset: " + kAssetPath);
+        public const string kOriginalAssetPath = "Assets/" + kOriginalDirectory + "/" + kOriginalAssetName + "." + InputActionAsset.Extension;
+        public const string kOriginalAssetContents = "{\"name\": \"" + kOriginalAssetName + "\",\"maps\": [],\"controlSchemes\": []}";
+    }
 
-        var inputActionAssetManager = new InputActionAssetManager(asset);
-        inputActionAssetManager.Initialize();
-        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
+    [Test]
+    [TestCase("Assets/" + AssetFileTestConstants.kOriginalDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, false)]      // Move - Same directory but new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, false)]           // Move - New directory and new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kOriginalAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kOriginalAssetName, false)] // Move - New directory but same filename - expect original name
+    [TestCase("Assets/" + AssetFileTestConstants.kOriginalDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, true)]       // Copy - Same directory but new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kNewAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kNewAssetName, true)]            // Copy - New directory and new filename - expect changed name
+    [TestCase("Assets/" + AssetFileTestConstants.kNewDirectory + "/" + AssetFileTestConstants.kOriginalAssetName + "." + InputActionAsset.Extension, AssetFileTestConstants.kOriginalAssetName, true)]  // Copy - New directory but same filename - expect original name
+    [Category("Editor")]
+    public void Editor_InputActions_AssetFileUpdatedAfterMoveOrCopy(string newAssetPath, string expectedAssetName, bool executeCopy)
+    {
+        try
+        {
+            AssetDatabase.CreateFolder("Assets", AssetFileTestConstants.kOriginalDirectory);
+            AssetDatabase.CreateFolder("Assets", AssetFileTestConstants.kNewDirectory);
 
-        FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
-        AssetDatabase.Refresh();
+            File.WriteAllText(AssetFileTestConstants.kOriginalAssetPath, AssetFileTestConstants.kOriginalAssetContents);
+            AssetDatabase.ImportAsset(AssetFileTestConstants.kOriginalAssetPath);
 
-        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(AssetFileTestConstants.kOriginalAssetPath);
+            Assert.NotNull(asset, "Could not load asset: " + AssetFileTestConstants.kOriginalAssetPath);
 
-        var fileContents = File.ReadAllText(kAssetPathAfterMove);
-        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+            try
+            {
+                if (executeCopy)
+                {
+                    AssetDatabase.CopyAsset(AssetFileTestConstants.kOriginalAssetPath, newAssetPath);
+                    AssetDatabase.Refresh();
+                }
+                else AssetDatabase.MoveAsset(AssetFileTestConstants.kOriginalAssetPath, newAssetPath);
 
-        AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
+                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+                var fileContents = File.ReadAllText(newAssetPath);
+                newAsset.LoadFromJson(fileContents);
+
+                Assert.That(newAsset.name, Is.EqualTo(expectedAssetName));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(AssetFileTestConstants.kOriginalAssetPath);
+                AssetDatabase.DeleteAsset(newAssetPath);
+            }
+        }
+        finally
+        {
+            const string kOriginalPath = "Assets/" + AssetFileTestConstants.kOriginalDirectory;
+            const string kNewPath = "Assets/" + AssetFileTestConstants.kNewDirectory;
+
+            FileUtil.DeleteFileOrDirectory(kOriginalPath);
+            FileUtil.DeleteFileOrDirectory(kOriginalPath + ".meta");
+            FileUtil.DeleteFileOrDirectory(kNewPath);
+            FileUtil.DeleteFileOrDirectory(kNewPath + ".meta");
+            AssetDatabase.Refresh();
+        }
     }
 
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
@@ -1043,7 +1158,7 @@ partial class CoreTests
         tree.Reload();
         tree.SelectItem("map1");
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.CopySelectedItemsToClipboard();
             Assert.That(EditorHelpers.GetSystemCopyBufferContents(), Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
@@ -1096,7 +1211,7 @@ partial class CoreTests
         tree.Reload();
         tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[1]"));
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.CopySelectedItemsToClipboard();
             Assert.That(EditorHelpers.GetSystemCopyBufferContents(), Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
@@ -1133,7 +1248,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
@@ -1173,7 +1288,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
@@ -1207,7 +1322,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
@@ -1220,6 +1335,87 @@ partial class CoreTests
             Assert.That(tree["map1/action1"].children[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
             Assert.That(tree["map1/action2"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/rightStick"));
             Assert.That(tree["map1/action2"].children[1].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteBinding_IntoDifferentAsset()
+    {
+        var asset1 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset1.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset1.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+
+        var map1 = asset1.AddActionMap("map");
+        var action1 = map1.AddAction("actionOnlyInFirstAsset");
+        var action2 = map1.AddAction("actionInBothAssets");
+        action1.AddBinding("<Gamepad>/leftStick", groups: "Gamepad");
+        action1.AddBinding("<Keyboard>/a", groups: "Keyboard");
+        action2.AddBinding("*/{Back}", groups: "Gamepad;Keyboard");
+
+        var asset2 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset2.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset2.AddControlScheme("Mouse").WithRequiredDevice<Mouse>();
+
+        var map2 = asset2.AddActionMap("map");
+        map2.AddAction("actionOnlyInSecondAsset");
+        map2.AddAction("actionInBothAssets");
+
+        var serializedObject1 = new SerializedObject(asset1);
+        var tree1 = new InputActionTreeView(serializedObject1)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject1),
+        };
+        tree1.Reload();
+
+        var serializedObject2 = new SerializedObject(asset2);
+        var tree2 = new InputActionTreeView(serializedObject2)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject2),
+            onBindingAdded = prop => InputActionSerializationHelpers.RemoveUnusedBindingGroups(prop, asset2.controlSchemes)
+        };
+        tree2.Reload();
+
+        using (new FakeSystemCopyBuffer())
+        {
+            // Copy <Gamepad>/leftStick binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+
+            // Copy <Keyboard>/a binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset in second asset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(2));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().groups, Is.EqualTo(""));
+
+            // Copy */{Back} binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionInBothAssets in second asset.
+            // NOTE: Apparently, we don't currently support just pasting it straight onto the map.
+            tree2.SelectItem("map/actionInBothAssets");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionInBothAssets"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().path, Is.EqualTo("*/{Back}"));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
         }
     }
 
@@ -1244,7 +1440,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             selectionChanged = false;
@@ -1290,7 +1486,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
             selectionChanged = false;
@@ -1349,7 +1545,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
             selectionChanged = false;
@@ -1410,7 +1606,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
             tree.CopySelectedItemsToClipboard();
@@ -1471,7 +1667,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"));
             tree.CopySelectedItemsToClipboard();
@@ -1541,7 +1737,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem("map1/action1");
             selectionChanged = false;
@@ -1603,7 +1799,7 @@ partial class CoreTests
         };
         tree.SetItemSearchFilterAndReload("g:scheme1");
 
-        using (new EditorHelpers.FakeSystemCopyBuffer())
+        using (new FakeSystemCopyBuffer())
         {
             tree.SelectItem("map/action1");
             tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_CutCommand));
@@ -1616,6 +1812,49 @@ partial class CoreTests
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().groups, Is.EqualTo("scheme1"));
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().groups, Is.EqualTo("scheme2"));
+        }
+    }
+
+    // https://github.com/Unity-Technologies/InputSystem/pull/1024
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_WithControlSchemes()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a", groups: "scheme1")
+            .With("Negative", "<Keyboard>/b", groups: "scheme1");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.Reload();
+        tree.bindingGroupForNewBindings = "scheme2";
+
+        using (new FakeSystemCopyBuffer())
+        {
+            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree.CopySelectedItemsToClipboard();
+            tree.SelectItem("map/action2");
+            tree.PasteDataFromClipboard();
+
+            Assert.That(tree.FindItemByPath("map/action2"), Is.Not.Null);
+            var c = tree["map/action2"].children;
+            Assert.That(c, Has.Count.EqualTo(1));
+            Assert.That(c[0], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(c[0].As<CompositeBindingTreeItem>().groups, Is.EqualTo(""));
+            Assert.That(c[0].children, Has.Count.EqualTo(2));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/b"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
         }
     }
 
@@ -2050,6 +2289,9 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/a")
             .With("Positive", "<Keyboard>/b");
 
+        // Wipe name that AddCompositeBinding assigned.
+        action.ChangeBinding(0).WithName(null);
+
         var so = new SerializedObject(asset);
         var tree = new InputActionTreeView(so)
         {
@@ -2060,8 +2302,43 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
-    #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
-                         // still affected by the current platform.
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CustomBindingWarningIconsShown()
+    {
+        InputSystem.customBindingPathValidators += (string bindingPath) => {
+            // Mark <Gamepad> bindings with a warning
+            if (!bindingPath.StartsWith("<Gamepad>"))
+                return null;
+
+            return () => {}; // Any non-null Action is enough to indicate a warning
+        };
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction(name: "action", binding: "<Gamepad>/leftStick");
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/b");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+        };
+        tree.Reload();
+
+        Assert.That(tree["map/action"].children, Has.Count.EqualTo(2));
+        Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(tree["map/action"].children[1].As<BindingTreeItem>().path, Is.EqualTo("1DAxis"));
+
+        Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().showWarningIcon, Is.True);
+        Assert.That(tree["map/action"].children[1].As<BindingTreeItem>().showWarningIcon, Is.False);
+    }
+
+#if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
+    // still affected by the current platform.
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
@@ -2101,8 +2378,8 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
-    #endif
-
+#endif // !NET_STANDARD_2_0
+#endif
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
     // all derived layouts).
@@ -2153,6 +2430,7 @@ partial class CoreTests
         var map = new InputActionMap("set1");
         map.AddAction("actionA", binding: "<Gamepad>/leftStick");
         map.AddAction("actionB");
+        map.AddAction("A");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
 
@@ -2167,6 +2445,14 @@ partial class CoreTests
         Assert.That(map.actions[0].name, Is.EqualTo("actionB1"));
         Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
         Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("actionB1"));
+
+        // now check that unique renaming ignores the action being renamed, so A can be renamed to a and not a1.
+        var actionAProperty = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(2);
+
+        InputActionSerializationHelpers.RenameAction(actionAProperty, mapProperty, "a");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.actions[2].name, Is.EqualTo("a"));
     }
 
     [Test]
@@ -2238,7 +2524,6 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
-    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)
@@ -2568,7 +2853,7 @@ partial class CoreTests
 
         Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
 
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         updates.Clear();
 
@@ -2583,7 +2868,7 @@ partial class CoreTests
     public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
     {
         runtime.isInPlayMode = false;
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "<Gamepad>/leftTrigger");
@@ -2605,15 +2890,37 @@ partial class CoreTests
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
     }
 
+    private static void DisableProjectWideActions()
+    {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // If the system has project-wide input actions they will also trigger enable/disable via
+        // play mode change triggers above. Hence we adjust extra variable to compensate of
+        // state allocated by project-wide actions.
+        if (InputSystem.actions)
+        {
+            Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
+            InputSystem.actions.Disable();
+            InputActionState.DestroyAllActionMapStates();
+        }
+#endif
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
+        DisableProjectWideActions();
+
+        // Initial state
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(0));
+
         InputSystem.AddDevice<Gamepad>();
 
         // Enter play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        DisableProjectWideActions();
 
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         action.Enable();
@@ -2758,7 +3065,119 @@ partial class CoreTests
         Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
     }
 
+    [Test]
+    public void InputActionCodeGenerator_ShouldGenerateValidCSharpCode()
+    {
+        // Note that this only tests pre-generated code contents with respect to the code generator.
+        // The intent of this test is to capture changes to the generated source that would not be detected since code currently isn't automatically regenerated.
+        // Hence, one need to regenerate the source file below if code generator is updated to produce different output. This is not ideal and could be improved if dynamic compilation is used.
+
+        var directory = "Assets/Tests/InputSystem";
+        var csFilePath = $"{directory}/InputActionCodeGeneratorActions.cs";
+        var assetPath = $"{directory}/InputActionCodeGeneratorActions.inputactions";
+        var csFileContents = File.ReadAllText(csFilePath);
+        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+
+        var generatedCode = InputActionCodeGenerator.GenerateWrapperCode(asset);
+
+        Assert.That(generatedCode, Is.EqualTo(csFileContents), $"Unexpected content, likely code generator changed. Regenerate source from {assetPath}.");
+    }
+
+    private sealed class InputActionCodeGeneratorActionsStub : InputActionCodeGeneratorActions.IGameplayActions
+    {
+        public int m_Action1Count = 0;
+        public int m_Action2Count = 0;
+
+        public void OnAction1(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                ++m_Action1Count;
+        }
+
+        public void OnAction2(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                ++m_Action2Count;
+        }
+    }
+
+    [Test]
+    public void InputActionCodeGenerator_ShouldGenerateClassWithSupportForRegisteringAndUnregisteringActions()
+    {
+        // Note that this is only testing pre-generated code. See test above for consistency check on file contents of generated source code.
+
+        var instance1 = new InputActionCodeGeneratorActionsStub();
+        var instance2 = new InputActionCodeGeneratorActionsStub();
+        var actions = new InputActionCodeGeneratorActions();
+
+        // Register using SetCallbacks
+        actions.gameplay.SetCallbacks(instance1);
+        actions.Enable();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(0));
+
+        // Unregister using SetCallbacks(null)
+
+        actions.gameplay.SetCallbacks(null);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(0));
+
+        // Add using AddCallbacks
+        actions.gameplay.AddCallbacks(instance1);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(1));
+
+        // Add duplicate using AddCallbacks (Expecting duplicate to be ignored)
+        actions.gameplay.AddCallbacks(instance1);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+
+        // Remove previously registered instance
+        actions.gameplay.RemoveCallbacks(instance1);
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+
+        // Attempt to remove non-existent instance
+        actions.gameplay.RemoveCallbacks(null);
+        actions.gameplay.RemoveCallbacks(instance2);
+
+        // Add multiple instances and remove single
+        actions.gameplay.AddCallbacks(instance1);
+        actions.gameplay.AddCallbacks(instance2);
+
+        actions.gameplay.RemoveCallbacks(instance1);
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance2.m_Action2Count, Is.EqualTo(0));
+
+        // Multiple callbacks
+        actions.gameplay.AddCallbacks(instance1);
+
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(2));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action1Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action2Count, Is.EqualTo(0));
+    }
+
 #if UNITY_STANDALONE // CodeDom API not available in most players.
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -2766,7 +3185,6 @@ partial class CoreTests
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Touchscreen", typeof(Touchscreen))]
-    [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
     public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
     {
         var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");
@@ -2936,20 +3354,49 @@ partial class CoreTests
     internal static Type Compile(string code, string typeName, string options = null)
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
-        var cp = new CompilerParameters();
-        cp.CompilerOptions = options;
+        var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+#if UNITY_2022_1_OR_NEWER
+        // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable
+        // causing compilation failure for 2022 versions. This is a workaround for running these tests.
+        var netstandard = Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
+        cp.ReferencedAssemblies.Add(netstandard.Location);
+#endif
         var cr = codeProvider.CompileAssemblyFromSource(cp, code);
-        Assert.That(cr.Errors, Is.Empty);
+
         var assembly = cr.CompiledAssembly;
+
+        // on some machines/environments, mono/mcs (which the codedom compiler uses) outputs a byte order mark after a successful compile, which
+        // codedom interprets as an error. Check for that here and just load the assembly manually in that case
+        if (cr.Errors.HasErrors)
+        {
+            if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
+            {
+                var sb = new StringBuilder("Compilation of generated code failed:");
+                for (var i = 0; i < cr.Errors.Count; ++i)
+                    sb.Append("\n").Append(cr.Errors[i].ErrorText);
+                Assert.Fail(sb.ToString());
+            }
+
+            foreach (var tempFile in cr.TempFiles)
+            {
+                if (tempFile is string tempFileStr && tempFileStr.EndsWith("dll"))
+                {
+                    assembly = Assembly.Load(new AssemblyName { CodeBase = tempFileStr });
+                    break;
+                }
+            }
+        }
+
         Assert.That(assembly, Is.Not.Null);
         var type = assembly.GetType(typeName);
         Assert.That(type, Is.Not.Null);
         return type;
     }
 
-#endif
+#endif // !NET_STANDARD_2_0
+#endif // UNITY_STANDALONE
 
     [Test]
     [Category("Editor")]
@@ -2996,6 +3443,7 @@ partial class CoreTests
         {
         }
 
+        #pragma warning disable CS0114
         public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
         {
             return base.BuildRoot();

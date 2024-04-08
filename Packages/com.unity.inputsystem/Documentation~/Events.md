@@ -1,3 +1,6 @@
+---
+uid: input-system-events
+---
 # Input events
 
 * [Types of events](#types-of-events)
@@ -146,7 +149,35 @@ Note that queuing an event doesn't immediately consume the event. Event processi
 
 #### Sending state events
 
-The easiest way to create a state event is directly from the Device.
+For Devices that have a corresponding "state struct" describing the state of the device, the easiest way of sending input to the Device is to simply queue instances of those structs:
+
+```CSharp
+// Mouse.
+InputSystem.QueueStateEvent(Mouse.current, new MouseState { position = new Vector2(123, 234) });
+
+// Keyboard.
+InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(Key.LeftCtrl, Key.A));
+```
+
+`Touchscreen` is somewhat special in that it expects its input to be in [`TouchState`](../api/UnityEngine.InputSystem.LowLevel.TouchState.html) format.
+
+```CSharp
+// Start touch.
+InputSystem.QueueStateEvent(Touchscreen.current,
+    new TouchState { touchId = 1, phase = TouchPhase.Began, position = new Vector2(123, 234) });
+
+// Move touch.
+InputSystem.QueueStateEvent(Touchscreen.current,
+    new TouchState { touchId = 1, phase = TouchPhase.Moved, position = new Vector2(234, 345) });
+
+// End touch.
+InputSystem.QueueStateEvent(Touchscreen.current,
+    new TouchState { touchId = 1, phase = TouchPhase.Ended, position = new Vector2(123, 234) });
+```
+
+>__IMPORTANT:__ [Touch IDs](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
+
+If the exact format of the state used by a given Device is not known, the easiest way to send input to it is to simply create a [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html) from the Device itself:
 
 ```CSharp
 // `StateEvent.From` creates a temporary buffer in unmanaged memory that holds

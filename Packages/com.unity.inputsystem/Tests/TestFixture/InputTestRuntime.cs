@@ -350,6 +350,9 @@ namespace UnityEngine.InputSystem
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
+#if UNITY_EDITOR
+        public Action onPlayerLoopInitialization { get; set; }
+#endif
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
@@ -366,6 +369,7 @@ namespace UnityEngine.InputSystem
 
         public bool runInBackground { get; set; } = false;
 
+        public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -400,6 +404,25 @@ namespace UnityEngine.InputSystem
         public bool isInPlayMode { get; set; } = true;
         public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            get => m_UnityRemoteMessageHandler;
+            set => m_UnityRemoteMessageHandler = value;
+        }
+
+        public bool? unityRemoteGyroEnabled;
+        public float? unityRemoteGyroUpdateInterval;
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
@@ -419,6 +442,7 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

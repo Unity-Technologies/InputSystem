@@ -1,11 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
@@ -317,6 +322,36 @@ partial class CoreTests
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1336240/
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanWriteIntoHalfAxesOfSticks()
+    {
+        // Disable deadzoning.
+        InputSystem.settings.defaultDeadzoneMax = 1;
+        InputSystem.settings.defaultDeadzoneMin = 0;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick.left, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.left));
+
+        // Set "right" to 1 as well. This is a conflicting state. Result should
+        // be that left is 0 and right is 1.
+        Set(gamepad.leftStick.right, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.right));
+
+        Set(gamepad.leftStick.up, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo((Vector2.right + Vector2.up).normalized));
+
+        Set(gamepad.leftStick.down, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo((Vector2.right + Vector2.down).normalized));
+    }
+
     [Test]
     [Category("Controls")]
     public void Controls_CanEvaluateMagnitude()
@@ -404,6 +439,103 @@ partial class CoreTests
 
             Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.False);
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public unsafe void Controls_ValueIsReadFromStateMemoryOnlyWhenControlHasBeenMarkedAsStale()
+    {
+        // disable paranoid checks because this test is consciously writing to state memory directly
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // read the value once initially so it gets cached
+        var value = gamepad.leftTrigger.value;
+
+        // Note that we have to write a different value here (0.5) to the one we write below, otherwise the
+        // state comparison during the state update won't see any difference between the values and won't
+        // mark the control as stale
+        gamepad.leftTrigger.WriteValueIntoState(0.5f, gamepad.currentStatePtr);
+
+        // because we wrote the state manually into the current state ptr, the stale flag is not set, so calling
+        // value should return whatever was previously cached (0 by default).
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0));
+
+        // calling ApplyParameterChanges should recursively invalidate cached values
+        gamepad.ApplyParameterChanges();
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update();
+
+        // but this time, we updated state through the system which *does* set the stale flag on controls that
+        // have changed.
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
+    {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // The presence of any enabled actions means we have installed StateChangeMonitors
+        // which interferes with this test. Essentially when we update the device state
+        // and invalidate the cache (make it stale), immediately afterwards we
+        // call NotifyControlStateChanged for each of the actions which _may_ cause a Read()
+        // on the control and make it immediately cached (non-stale) again.
+        InputSystem.actions?.Disable();
+#endif
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // read all values to initially mark everything as cached
+        foreach (var control in keyboard.allControls)
+        {
+            var v = ((ButtonControl)control).value;
+        }
+
+        foreach (var control in keyboard.allControls)
+        {
+            Assert.That(control.m_CachedValueIsStale, Is.False);
+        }
+
+        var keyboardState = new KeyboardState((Key[])Enum.GetValues(typeof(Key)));
+        InputSystem.QueueStateEvent(keyboard, keyboardState);
+        InputSystem.Update();
+
+        foreach (var control in keyboard.allControls)
+        {
+            if (control == keyboard.imeSelected) // not a real key
+                continue;
+
+            Assert.That(control.m_CachedValueIsStale, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueIsSetToDefaultStateOnInitialization()
+    {
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""defaultState"" : ""0.5""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f));
     }
 
     [Test]
@@ -611,7 +743,7 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeForFixedUpdate = runtime.currentTime + 1;
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }
@@ -797,6 +929,22 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_FindControl_FindsControlDespiteTurkishCulture()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("/gamePAD/LEFTSTICK"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+        Thread.CurrentThread.CurrentCulture = culture;
     }
 
     [Test]
@@ -1004,6 +1152,35 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanDetermineIfControlIsPressed()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick, Vector2.one);
+        Set(gamepad.leftTrigger, 0.6f);
+        Press(gamepad.buttonSouth);
+
+        //// https://jira.unity3d.com/browse/ISX-926
+        ////REVIEW: IsPressed() should probably be renamed. As is apparent from the calls here, it's not always
+        ////        readily apparent that the way it is defined ("actuation level at least at button press threshold")
+        ////        does not always connect to what it intuitively means for the specific control.
+
+        Assert.That(gamepad.leftTrigger.IsPressed(), Is.True);
+        Assert.That(gamepad.rightTrigger.IsPressed(), Is.False);
+        Assert.That(gamepad.buttonSouth.IsPressed(), Is.True);
+        Assert.That(gamepad.buttonNorth.IsPressed(), Is.False);
+        Assert.That(gamepad.leftStick.IsPressed(), Is.True); // Note how this diverges from the actual meaning of "is the left stick pressed?"
+        Assert.That(gamepad.rightStick.IsPressed(), Is.False);
+
+        // https://fogbugz.unity3d.com/f/cases/1374024/
+        // Calling it on the entire device should be false.
+        Assert.That(gamepad.IsPressed(), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanCustomizeDefaultButtonPressPoint()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1108,12 +1285,19 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Left Stick [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Left Stick/X [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XR Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"),
+#if ENABLE_VR || UNITY_GAMECORE
+            // The layout settings for the display name to change from XRController to XR Controller
+            // is defined on the XRController class in GenericXRDevice.cs, so must match the preprocessor guard here.
+            Is.EqualTo("position [LeftHand XR Controller]"));
+#else
+            Is.EqualTo("position [LeftHand XRController]"));
+#endif
 
         // OmitDevice.
         Assert.That(
@@ -1144,7 +1328,6 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
-    [Preserve]
     private class DeviceWithoutAnyControls : InputDevice
     {
     }
@@ -1184,6 +1367,18 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
         Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPath_DoesNotMatchPrefixOnly()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.eKey), Is.True);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.eKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.escapeKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.escapeKey), Is.True);
     }
 
     [Test]
@@ -1300,5 +1495,109 @@ partial class CoreTests
 
         Assert.That(UnsafeUtility.SizeOf<TouchState>(), Is.EqualTo(TouchState.kSizeInBytes));
         Assert.That(touchscreen.touches[0].stateBlock.alignedSizeInBytes, Is.EqualTo(TouchState.kSizeInBytes));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_TrivialControlsAreOptimized()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatVector2));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_ParentChangesOptimization_IfChildIsNoLongerOptimized()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        mouse.position.x.invert = true;
+        mouse.position.x.ApplyParameterChanges();
+
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_PrecompiledLayouts_AllChildControlPropertiesHaveSetters()
+    {
+        var inputDevice = typeof(InputDevice);
+        var inputControlType = typeof(InputControl);
+        var checkedTypes = new HashSet<Type>();
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    // Skip base types
+                    if (type == inputControlType || type == inputDevice)
+                        continue;
+
+                    if (!inputControlType.IsAssignableFrom(type))
+                        continue;
+
+                    CheckChildControls(type, checkedTypes);
+                }
+            }
+            catch (ReflectionTypeLoadException)
+            {
+                // Suppress type load exceptions
+            }
+        }
+    }
+
+    static void CheckChildControls(Type type, HashSet<Type> checkedTypes)
+    {
+        if (!checkedTypes.Add(type))
+            return;
+
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        {
+            if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
+                continue;
+
+            // Note: This will miss InputDevice controls that don't have an InputControlAttribute, but is necessary
+            // because not all InputControl properties are actually controls. We would need to build the device to know
+            // for sure if a given property is a control
+            if (!property.GetCustomAttributes<InputControlAttribute>().Any())
+                continue;
+
+            var setMethod = property.SetMethod;
+            if (typeof(InputDevice).IsAssignableFrom(type))
+            {
+                // Properties on an InputDevice can be protected, since the precompiled layout will be an inherited class
+                var inputDeviceMessage = $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+                Assert.That(setMethod, Is.Not.Null, inputDeviceMessage);
+                Assert.That(setMethod.IsPrivate, Is.Not.True, inputDeviceMessage);
+                Assert.That(setMethod.IsAssembly, Is.Not.True, inputDeviceMessage);
+                continue;
+            }
+
+            var inputControlMessage = $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+            Assert.That(setMethod, Is.Not.Null, inputControlMessage);
+            Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
+        }
     }
 }

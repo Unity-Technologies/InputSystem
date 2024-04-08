@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
+        [InputControl(layout = "Delta", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
         [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
@@ -59,6 +59,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [InputControl(name = "press", displayName = "Press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
+
+        [InputControl(name = "displayIndex", layout = "Integer", displayName = "Display Index")]
+        public ushort displayIndex;
 
         public FourCC format => kFormat;
     }
@@ -83,7 +86,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Pen"/>
     /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -144,7 +146,7 @@ namespace UnityEngine.InputSystem
         /// not <c>(2,2)</c> even though that's the value received from the event.
         /// </remarks>
         /// <seealso cref="InputControlExtensions.AccumulateValueInEvent"/>
-        public Vector2Control delta { get; protected set; }
+        public DeltaControl delta { get; protected set; }
 
         ////REVIEW: move this down to only TouchScreen?
         /// <summary>
@@ -182,6 +184,13 @@ namespace UnityEngine.InputSystem
         public ButtonControl press { get; protected set; }
 
         /// <summary>
+        /// The index of the display the Pointer is currently on. This is useful for multiple screen setups.
+        /// This may not be supported on all platforms. When unsupported, this will always produce the index of the primary display i.e. zero.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public IntegerControl displayIndex { get; protected set; }
+
+        /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
         /// device connected to the system.
         /// </summary>
@@ -207,10 +216,11 @@ namespace UnityEngine.InputSystem
         protected override void FinishSetup()
         {
             position = GetChildControl<Vector2Control>("position");
-            delta = GetChildControl<Vector2Control>("delta");
+            delta = GetChildControl<DeltaControl>("delta");
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             press = GetChildControl<ButtonControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
 
             base.FinishSetup();
         }

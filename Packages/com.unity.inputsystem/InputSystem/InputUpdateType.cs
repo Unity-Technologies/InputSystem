@@ -12,6 +12,9 @@ namespace UnityEngine.InputSystem.LowLevel
     [Flags]
     public enum InputUpdateType
     {
+        /// <summary>
+        /// Performs no actual update but still allows devices to reset themselves. Usually occurs immediately after domain reload.
+        /// </summary>
         None = 0,
 
         /// <summary>
@@ -71,13 +74,12 @@ namespace UnityEngine.InputSystem.LowLevel
     internal static class InputUpdate
     {
         public static uint s_UpdateStepCount; // read only, but kept as a variable for performance reasons
-        public static InputUpdateType s_LastUpdateType;
+        public static InputUpdateType s_LatestUpdateType;
         public static UpdateStepCount s_PlayerUpdateStepCount;
         #if UNITY_EDITOR
+        public static InputUpdateType s_LatestNonEditorUpdateType;
         public static UpdateStepCount s_EditorUpdateStepCount;
         #endif
-        public static uint s_LastUpdateRetainedEventBytes;
-        public static uint s_LastUpdateRetainedEventCount;
 
         [Serializable]
         public struct UpdateStepCount
@@ -107,15 +109,14 @@ namespace UnityEngine.InputSystem.LowLevel
             public InputUpdateType lastUpdateType;
             public UpdateStepCount playerUpdateStepCount;
             #if UNITY_EDITOR
+            public InputUpdateType lastNonEditorUpdateType;
             public UpdateStepCount editorUpdateStepCount;
             #endif
-            public uint lastUpdateRetainedEventBytes;
-            public uint lastUpdateRetainedEventCount;
         }
 
         internal static void OnBeforeUpdate(InputUpdateType type)
         {
-            s_LastUpdateType = type;
+            s_LatestUpdateType = type;
             switch (type)
             {
                 case InputUpdateType.Dynamic:
@@ -123,6 +124,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnBeforeUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
+                    s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
@@ -135,7 +139,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal static void OnUpdate(InputUpdateType type)
         {
-            s_LastUpdateType = type;
+            s_LatestUpdateType = type;
             switch (type)
             {
                 case InputUpdateType.Dynamic:
@@ -143,6 +147,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
+                    s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
@@ -153,31 +160,38 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        #if UNITY_EDITOR
+        internal static void RestoreStateAfterEditorUpdate()
+        {
+            s_LatestUpdateType = s_LatestNonEditorUpdateType;
+            s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+        }
+
+        #endif
+
         public static SerializedState Save()
         {
             return new SerializedState
             {
-                lastUpdateType = s_LastUpdateType,
+                lastUpdateType = s_LatestUpdateType,
                 playerUpdateStepCount = s_PlayerUpdateStepCount,
                 #if UNITY_EDITOR
-                editorUpdateStepCount = s_EditorUpdateStepCount,
+                lastNonEditorUpdateType = s_LatestNonEditorUpdateType,
+                editorUpdateStepCount = s_EditorUpdateStepCount
                 #endif
-                lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
-                lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
         }
 
         public static void Restore(SerializedState state)
         {
-            s_LastUpdateType = state.lastUpdateType;
+            s_LatestUpdateType = state.lastUpdateType;
             s_PlayerUpdateStepCount = state.playerUpdateStepCount;
-            s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
-            s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
             #if UNITY_EDITOR
+            s_LatestNonEditorUpdateType = state.lastNonEditorUpdateType;
             s_EditorUpdateStepCount = state.editorUpdateStepCount;
             #endif
 
-            switch (s_LastUpdateType)
+            switch (s_LatestUpdateType)
             {
                 case InputUpdateType.Dynamic:
                 case InputUpdateType.Manual:
@@ -216,5 +230,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 return false;
             return updateType != default;
         }
+
+        #if UNITY_EDITOR
+        public static bool IsEditorUpdate(this InputUpdateType updateType)
+        {
+            return updateType == InputUpdateType.Editor;
+        }
+
+        #endif
     }
 }

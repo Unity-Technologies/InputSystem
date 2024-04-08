@@ -5,6 +5,10 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
+
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.InputSystem.UI;
 #endif
@@ -217,7 +221,7 @@ namespace UnityEngine.InputSystem
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
-    [HelpURL(InputSystem.kDocUrl + "/manual/Components.html#playerinput-component")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/PlayerInput.html")]
     public class PlayerInput : MonoBehaviour
     {
         /// <summary>
@@ -1196,7 +1200,6 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            ////REVIEW: should we *always* Instantiate()?
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
@@ -1607,6 +1610,16 @@ namespace UnityEngine.InputSystem
                     m_PlayerIndex = 0;
             }
         }
+
+        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        void Reset()
+        {
+            // Set default actions to project wide actions.
+            m_Actions = InputSystem.actions;
+            // TODO Need to monitor changes?
+        }
+
+        #endif
 
         private void OnEnable()
         {

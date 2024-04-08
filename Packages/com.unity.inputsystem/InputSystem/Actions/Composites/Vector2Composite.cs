@@ -3,11 +3,11 @@ using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 ////TODO: add support for ramp up/down
@@ -39,7 +39,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="Vector3Composite"/>
-    [Preserve]
     [DisplayStringFormat("{up}/{left}/{down}/{right}")] // This results in WASD.
     [DisplayName("Up/Down/Left/Right Composite")]
     public class Vector2Composite : InputBindingComposite<Vector2>
@@ -52,7 +51,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int up = 0;
+        [InputControl(layout = "Axis")] public int up;
 
         /// <summary>
         /// Binding for the button represents the down (that is, <c>(0,-1)</c>) direction of the vector.
@@ -62,7 +61,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int down = 0;
+        [InputControl(layout = "Axis")] public int down;
 
         /// <summary>
         /// Binding for the button represents the left (that is, <c>(-1,0)</c>) direction of the vector.
@@ -72,7 +71,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int left = 0;
+        [InputControl(layout = "Axis")] public int left;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(1,0)</c>) direction of the vector.
@@ -80,7 +79,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
-        [InputControl(layout = "Button")] public int right = 0;
+        [InputControl(layout = "Axis")] public int right;
 
         [Obsolete("Use Mode.DigitalNormalized with 'mode' instead")]
         public bool normalize = true;
@@ -202,6 +201,25 @@ namespace UnityEngine.InputSystem.Composites
         {
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
+            {
+                tooltip = m_ModeLabel.tooltip
+            };
+
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.mode = (Vector2Composite.Mode)evt.newValue;
+                onChangedCallback();
+            });
+
+            root.Add(modeField);
+        }
+
+#endif
     }
     #endif
 }

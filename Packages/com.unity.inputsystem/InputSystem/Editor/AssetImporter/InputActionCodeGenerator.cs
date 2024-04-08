@@ -83,6 +83,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine.InputSystem;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
+            writer.WriteLine("using UnityEngine;");
             writer.WriteLine("");
 
             // Begin namespace.
@@ -94,7 +95,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public partial class @{options.className} : IInputActionCollection2, IDisposable");
+            writer.WriteLine($"public partial class @{options.className}: IInputActionCollection2, IDisposable");
             writer.BeginBlock();
 
             writer.WriteLine($"public InputActionAsset asset {{ get; }}");
@@ -117,6 +118,16 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
                 }
+            }
+            writer.EndBlock();
+            writer.WriteLine();
+
+            writer.WriteLine($"~@{options.className}()");
+            writer.BeginBlock();
+            foreach (var map in maps)
+            {
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                writer.WriteLine($"Debug.Assert(!m_{mapName}.enabled, \"This will cause a leak and performance issues, {options.className}.{mapName}.Disable() has not been called.\");");
             }
             writer.EndBlock();
             writer.WriteLine();
@@ -172,6 +183,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.BeginBlock();
             writer.WriteLine("asset.Disable();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public IEnumerable<InputBinding> bindings => asset.bindings;");
             writer.WriteLine();
@@ -180,6 +192,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.BeginBlock();
             writer.WriteLine("return asset.FindAction(actionNameOrId, throwIfNotFound);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public int FindBinding(InputBinding bindingMask, out InputAction action)");
             writer.BeginBlock();
@@ -197,7 +210,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Caching field for action map.
                 writer.WriteLine($"private readonly InputActionMap m_{mapName};");
-                writer.WriteLine(string.Format("private I{0} m_{0}CallbackInterface;", mapTypeName));
+                writer.WriteLine(string.Format("private List<I{0}> m_{0}CallbackInterfaces = new List<I{0}>();", mapTypeName));
 
                 // Caching fields for all actions.
                 foreach (var action in map.actions)
@@ -234,30 +247,14 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine(
                     $"public static implicit operator InputActionMap({mapTypeName} set) {{ return set.Get(); }}");
 
-                // SetCallbacks method.
-                writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
+                // AddCallbacks method.
+                writer.WriteLine($"public void AddCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
-
-                ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
-
-                // Uninitialize existing interface.
-                writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterface != null)");
-                writer.BeginBlock();
-                foreach (var action in map.actions)
-                {
-                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
-
-                    writer.WriteLine($"@{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"@{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"@{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                }
-                writer.EndBlock();
 
                 // Initialize new interface.
-                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterface = instance;");
-                writer.WriteLine("if (instance != null)");
-                writer.BeginBlock();
+                writer.WriteLine($"if (instance == null || m_Wrapper.m_{mapTypeName}CallbackInterfaces.Contains(instance)) return;");
+                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterfaces.Add(instance);");
+
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
@@ -267,7 +264,45 @@ namespace UnityEngine.InputSystem.Editor
                     writer.WriteLine($"@{actionName}.performed += instance.On{actionTypeName};");
                     writer.WriteLine($"@{actionName}.canceled += instance.On{actionTypeName};");
                 }
+
                 writer.EndBlock();
+                writer.WriteLine();
+
+                // UnregisterCallbacks method.
+                writer.WriteLine($"private void UnregisterCallbacks(I{mapTypeName} instance)");
+                writer.BeginBlock();
+                foreach (var action in map.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
+
+                    writer.WriteLine($"@{actionName}.started -= instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed -= instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled -= instance.On{actionTypeName};");
+                }
+                writer.EndBlock();
+                writer.WriteLine();
+
+                // RemoveCallbacks method.
+                writer.WriteLine($"public void RemoveCallbacks(I{mapTypeName} instance)");
+                writer.BeginBlock();
+                writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterfaces.Remove(instance))");
+                writer.WriteLine($"    UnregisterCallbacks(instance);");
+                writer.EndBlock();
+                writer.WriteLine();
+
+                // SetCallbacks method.
+                writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
+                writer.BeginBlock();
+
+                ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
+
+                writer.WriteLine($"foreach (var item in m_Wrapper.m_{mapTypeName}CallbackInterfaces)");
+                writer.WriteLine($"    UnregisterCallbacks(item);");
+                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterfaces.Clear();");
+
+                // Initialize new interface.
+                writer.WriteLine("AddCallbacks(instance);");
                 writer.EndBlock();
                 writer.EndBlock();
 

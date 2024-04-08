@@ -476,6 +476,23 @@ namespace UnityEngine.InputSystem.Layouts
         }
 
         /// <summary>
+        /// Mark the input device created from this layout as noisy, irrespective of whether or not any
+        /// of its controls have been marked as noisy.
+        /// </summary>
+        /// <seealso cref="InputControlLayoutAttribute.isNoisy"/>
+        public bool isNoisy
+        {
+            get => (m_Flags & Flags.IsNoisy) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsNoisy;
+                else
+                    m_Flags &= ~Flags.IsNoisy;
+            }
+        }
+
+        /// <summary>
         /// Override value for <see cref="InputDevice.canRunInBackground"/>. If this is set by the
         /// layout, it will prevent <see cref="QueryCanRunInBackground"/> from being issued. However, other
         /// logic that affects <see cref="InputDevice.canRunInBackground"/> may still force a specific value
@@ -918,7 +935,7 @@ namespace UnityEngine.InputSystem.Layouts
                     m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
                     m_StateSizeInBytes = stateSizeInBytes,
-                    m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
+                    m_BaseLayouts = !string.IsNullOrEmpty(extendsLayout) ? new InlinedArray<InternedString>(new InternedString(extendsLayout)) : default,
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
                 };
@@ -976,6 +993,7 @@ namespace UnityEngine.InputSystem.Layouts
                 m_Description = layoutAttribute?.description,
                 m_DisplayName = layoutAttribute?.displayName,
                 canRunInBackground = layoutAttribute?.canRunInBackgroundInternal,
+                isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -1023,6 +1041,7 @@ namespace UnityEngine.InputSystem.Layouts
             IsOverride = 1 << 2,
             CanRunInBackground = 1 << 3,
             CanRunInBackgroundIsSet = 1 << 4,
+            IsNoisy = 1 << 5
         }
 
         private InputControlLayout(string name, Type type)
@@ -2026,6 +2045,7 @@ namespace UnityEngine.InputSystem.Layouts
                             overrideLayout.isOverride = false;
                             overrideLayout.isGenericTypeOfDevice = layout.isGenericTypeOfDevice;
                             overrideLayout.m_Name = layout.name;
+                            overrideLayout.m_BaseLayouts = layout.m_BaseLayouts;
 
                             layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);

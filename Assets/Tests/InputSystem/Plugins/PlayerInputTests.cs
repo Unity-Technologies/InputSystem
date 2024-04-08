@@ -2142,6 +2142,107 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerJoined, Is.True);
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenSecondPlayerJoins_UIInputForFirstPlayerContinuesWorking()
+    {
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var playerMap = actions.AddActionMap("Player");
+        var uiMap = actions.AddActionMap("UI");
+
+        var joinAction = playerMap.AddAction("Join", binding: "<Gamepad>/{PrimaryAction}");
+        joinAction.AddBinding("<Keyboard>/space");
+
+        // Left Stick is bound to UIInputModule Navigate
+        var navigateAction = uiMap.AddAction("Navigate", binding: "<Gamepad>/leftStick", type: InputActionType.PassThrough);
+        navigateAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+
+
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        var prefabUIModule = playerPrefab.AddComponent<InputSystemUIInputModule>();
+        prefabUIModule.AssignDefaultActions();
+        playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.GetComponent<PlayerInput>().actions = actions;
+        playerPrefab.GetComponent<PlayerInput>().uiInputModule = prefabUIModule;
+
+        var manager = new GameObject();
+        manager.SetActive(false);
+        var playerInputManager = manager.AddComponent<PlayerInputManager>();
+        playerInputManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInputManager.joinAction = new InputActionProperty(InputActionReference.Create(joinAction));
+        playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered;
+        playerInputManager.playerPrefab = playerPrefab;
+        manager.SetActive(true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        List<PlayerInput> joinedPlayers = new List<PlayerInput>();
+        playerInputManager.onPlayerJoined += input => joinedPlayers.Add(input);
+
+        // UIInputModule instance for player 1 will be bound to Gamepad
+        PressAndRelease(gamepad.buttonSouth);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(1));
+
+        // Player 1's controls are functional
+        bool player1Moved = false;
+        joinedPlayers[0].uiInputModule.move.action.performed += cxt => player1Moved = true;
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
+
+        Set(gamepad.leftStick, new Vector2(0.0f, 0.0f));
+        player1Moved = false;
+
+        // UIInputModule instance for player 2 will be bound to Keyboard
+        // And this should not affect player 1's controls
+        PressAndRelease(keyboard.spaceKey);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(2));
+        Assert.That(player1Moved, Is.False);
+
+        // Player 1's controls still work after player 2 joined
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
+    }
+
+    [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenOverridingDeviceLayout_LostDeviceShouldBeResolvedAndRepaired()
+    {
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        go.SetActive(true);
+
+        // Actuate gamepad to pair with user (other option would be initially paired)
+        Press(gamepad.buttonSouth);
+        Assert.That(playerInput.devices[0], Is.SameAs(gamepad));
+
+        // Register a layout override (this will recreate device)
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""GamepadPlayerUsageTags"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [
+                    ""Player1"", ""Player2""
+                ]
+            }
+        ");
+
+        // As reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+        // there would be no device assigned after registered layout override since this
+        // would recreate the device with the same device id (but a new instance).
+        Assert.That(playerInput.devices.Count, Is.EqualTo(1));
+        Assert.That(playerInput.devices[0], !Is.SameAs(gamepad)); // expected replacement (by design, not a requirement)
+        Assert.That(playerInput.devices[0].name, Is.EqualTo(gamepad.name));
+    }
+
     // An action is either
     //   (a) button-like, or
     //   (b) axis-like, or
@@ -2226,6 +2327,30 @@ internal class PlayerInputTests : CoreTestsFixture
             ]
         }
     ";
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanDisableAfterAssigningAction_WithControlSchemesAndInteractions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var action = actions.AddActionMap("map").AddAction("action", interactions: "Tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        actions.AddControlScheme("Gamepad")
+            .WithRequiredDevice<Gamepad>();
+        actions.AddControlScheme("Keyboard")
+            .WithRequiredDevice<Keyboard>();
+        actions.Enable();
+
+        var player = new GameObject();
+        var playerInput = player.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard";
+        playerInput.actions = actions;
+        player.SetActive(false); // Should cause full rebinding and not assert
+    }
 
     private struct Message : IEquatable<Message>
     {

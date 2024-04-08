@@ -53,8 +53,20 @@ namespace UnityEngine.InputSystem.Utilities
             var internedName = new InternedString(name);
 
             #if UNITY_EDITOR
-            if (table.ContainsValue(type))
-                aliases.Add(internedName);
+            // First check if the name has already been added to the table
+            // This allows safely calling this function multiple times with same name
+            // and prevents adding an alias to itself
+            Type originalType;
+            if (table.TryGetValue(internedName, out originalType))
+            {
+                // We don't warn about overriding any existing name/type mapping as that was previously supported
+                table.Remove(internedName);
+            }
+            else
+            {
+                if (table.ContainsValue(type))
+                    aliases.Add(internedName);
+            }
             #endif
 
             table[internedName] = type;
@@ -63,7 +75,10 @@ namespace UnityEngine.InputSystem.Utilities
         public Type LookupTypeRegistration(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
+                return null;
+
+            if (table == null)
+                throw new InvalidOperationException("Input System not yet initialized");
 
             var internedName = new InternedString(name);
             if (table.TryGetValue(internedName, out var type))

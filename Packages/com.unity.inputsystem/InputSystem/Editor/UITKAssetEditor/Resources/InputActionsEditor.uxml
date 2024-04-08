@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.unity.inputsystem/InputSystem/Editor/UITKAssetEditor/Resources/InputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#InputActionsEditorStyles" />
+    <ui:VisualElement name="action-editor" style="flex-direction: column; flex-grow: 1;">
+        <ui:VisualElement name="control-schemes-toolbar-container">
+            <uie:Toolbar>
+                <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
+                    <uie:ToolbarMenu display-tooltip-when-elided="true" text="No Control Schemes" name="control-schemes-toolbar-menu" style="min-width: 135px;" />
+                    <uie:ToolbarMenu display-tooltip-when-elided="true" text="All Devices" enabled="false" name="control-schemes-filter-toolbar-menu" />
+                </ui:VisualElement>
+                <ui:VisualElement>
+                    <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" style="display: none;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="save-asset-toolbar-container" style="flex-direction: row; justify-content: flex-end;">
+                    <uie:ToolbarButton text="Save Asset" display-tooltip-when-elided="true" name="save-asset-toolbar-button" style="align-items: auto;" />
+                    <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 69px;" />
+                </ui:VisualElement>
+            </uie:Toolbar>
+        </ui:VisualElement>
+        <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">
+            <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="200">
+                <ui:VisualElement name="action-maps-container" class="body-panel-container actions-container">
+                    <ui:VisualElement name="header" class="body-panel-header">
+                        <ui:Label text="Action Maps" display-tooltip-when-elided="true" style="flex-grow: 1;" />
+                        <ui:Button text="+" display-tooltip-when-elided="true" name="add-new-action-map-button" style="align-items: auto;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="body">
+                        <ui:ListView focusable="true" name="action-maps-list-view" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="rclick-area-to-add-new-action-map" style="flex-direction: column; flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="230" style="height: auto; min-width: 450px">
+                    <ui:VisualElement name="actions-container" class="body-panel-container">
+                        <ui:VisualElement name="header" class="body-panel-header" style="justify-content: space-between;">
+                            <ui:Label text="Actions" display-tooltip-when-elided="true" name="actions-label" />
+                            <ui:Button text="+" display-tooltip-when-elided="true" name="add-new-action-button" style="align-items: auto;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="body">
+                            <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="rclick-area-to-add-new-action" style="flex-direction: column; flex-grow: 1;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="properties-container" class="body-panel-container body-panel-container" style="min-width: 220;">
+                        <ui:VisualElement name="header" class="body-panel-header">
+                            <ui:Label text="Action Properties" display-tooltip-when-elided="true" name="properties-header-label" />
+                        </ui:VisualElement>
+                        <ui:ScrollView name="properties-scrollview">
+                            <ui:Foldout text="Action Properties" name="properties-foldout" class="properties-foldout" />
+                            <ui:Foldout text="Interactions" name="interactions-foldout" class="properties-foldout name-and-parameters-list-view">
+                                <ui:Label text="No interactions have been added." name="no-parameters-added-label" display-tooltip-when-elided="true" class="name-and-parameter-empty-label" style="display: flex;" />
+                            </ui:Foldout>
+                            <ui:Foldout text="Processors" name="processors-foldout" class="properties-foldout name-and-parameters-list-view">
+                                <ui:Label text="No processors have been added." name="no-parameters-added-label" display-tooltip-when-elided="true" class="name-and-parameter-empty-label" />
+                            </ui:Foldout>
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                </ui:TwoPaneSplitView>
+            </ui:TwoPaneSplitView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

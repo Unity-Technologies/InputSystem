@@ -120,8 +120,6 @@ PlayerSettings:
     Others: 1
   bundleVersion: 1.0
   preloadedAssets:
-  - {fileID: 0}
-  - {fileID: 0}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -631,7 +629,9 @@ PlayerSettings:
   il2cppCompilerConfiguration:
     Android: 0
   managedStrippingLevel:
+    Android: 3
     Standalone: 3
+    iPhone: 3
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 1
   additionalIl2CppArgs: 

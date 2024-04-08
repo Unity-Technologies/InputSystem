@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -110,21 +112,40 @@ namespace UnityEngine.InputSystem.Editor
             return indexInArray;
         }
 
-        public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public static void AddActionMaps(SerializedObject asset, SerializedObject sourceAsset)
         {
-            var uniqueName = FindUniqueName(arrayProperty, name);
-            if (index < 0)
-                index = arrayProperty.arraySize;
+            Debug.Assert(asset.targetObject is InputActionAsset);
+            Debug.Assert(sourceAsset.targetObject is InputActionAsset);
 
-            arrayProperty.InsertArrayElementAtIndex(index);
-            var elementProperty = arrayProperty.GetArrayElementAtIndex(index);
-            elementProperty.ResetValuesToDefault();
+            var mapArrayPropertySrc = sourceAsset.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            var mapArrayPropertyDst = asset.FindProperty(nameof(InputActionAsset.m_ActionMaps));
 
-            elementProperty.FindPropertyRelative("m_Name").stringValue = uniqueName;
-            elementProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-
-            return elementProperty;
+            // Copy each action map from source and paste at the end of destination
+            var buffer = new StringBuilder();
+            for (var i = 0; i < mapArrayPropertySrc.arraySize; ++i)
+            {
+                buffer.Clear();
+                var mapProperty = mapArrayPropertySrc.GetArrayElementAtIndex(i);
+                CopyPasteHelper.CopyItems(new List<SerializedProperty> {mapProperty}, buffer, typeof(InputActionMap), mapProperty);
+                CopyPasteHelper.PasteItems(buffer.ToString(), new[] { mapArrayPropertyDst.arraySize - 1 }, mapArrayPropertyDst);
+            }
         }
+
+        public static void AddControlSchemes(SerializedObject asset, SerializedObject sourceAsset)
+        {
+            Debug.Assert((asset.targetObject is InputActionAsset));
+            Debug.Assert((sourceAsset.targetObject is InputActionAsset));
+
+            var src = sourceAsset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+            var dst = asset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+
+            var buffer = new StringBuilder();
+            src.CopyToJson(buffer, ignoreObjectReferences: true);
+            dst.RestoreFromJson(buffer.ToString());
+        }
+
+#endif
 
         public static SerializedProperty AddActionMap(SerializedObject asset, int index = -1)
         {
@@ -144,6 +165,12 @@ namespace UnityEngine.InputSystem.Editor
             mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
+            // NB: This isn't always required: If there's already values in the mapArrayProperty, then inserting a new
+            // element will duplicate the values from the adjacent element to the new element.
+            // However, if the array has been emptied - i.e. if all action maps have been deleted -
+            // then the m_Asset property is null, and needs setting here.
+            if (mapProperty.FindPropertyRelative("m_Asset").objectReferenceValue == null)
+                mapProperty.FindPropertyRelative("m_Asset").objectReferenceValue = asset.targetObject;
 
             return mapProperty;
         }
@@ -155,6 +182,33 @@ namespace UnityEngine.InputSystem.Editor
             if (mapIndex == -1)
                 throw new ArgumentException($"No map with id {id} in {asset}", nameof(id));
             mapArrayProperty.DeleteArrayElementAtIndex(mapIndex);
+        }
+
+        public static void DeleteAllActionMaps(SerializedObject asset)
+        {
+            Debug.Assert(asset.targetObject is InputActionAsset);
+
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            while (mapArrayProperty.arraySize > 0)
+                mapArrayProperty.DeleteArrayElementAtIndex(0);
+        }
+
+        public static void MoveActionMap(SerializedObject asset, int fromIndex, int toIndex)
+        {
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            mapArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveAction(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var actionArrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            actionArrayProperty.MoveArrayElement(fromIndex, toIndex);
+        }
+
+        public static void MoveBinding(SerializedProperty actionMap, int fromIndex, int toIndex)
+        {
+            var arrayProperty = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            arrayProperty.MoveArrayElement(fromIndex, toIndex);
         }
 
         // Append a new action to the end of the set.
@@ -296,6 +350,12 @@ namespace UnityEngine.InputSystem.Editor
             return newBindingProperty;
         }
 
+        public static void SetBindingPartName(SerializedProperty bindingProperty, string partName)
+        {
+            //expects beautified partName
+            bindingProperty.FindPropertyRelative("m_Name").stringValue = partName;
+        }
+
         public static void ChangeBinding(SerializedProperty bindingProperty, string path = null, string groups = null,
             string interactions = null, string processors = null, string action = null)
         {
@@ -335,13 +395,18 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static void DeleteBinding(SerializedProperty bindingArrayProperty, Guid id)
+        public static void DeleteBinding(SerializedProperty binding, SerializedProperty actionMap)
         {
-            // If it's a composite, delete all its parts first.
-            var bindingIndex = GetIndex(bindingArrayProperty, id);
-            var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
+            var bindingsProperty = actionMap.FindPropertyRelative("m_Bindings");
+            DeleteBinding(binding, bindingsProperty, binding.GetIndexOfArrayElement());
+        }
+
+        private static void DeleteBinding(SerializedProperty bindingProperty, SerializedProperty bindingArrayProperty, int bindingIndex)
+        {
             var bindingFlags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
-            if ((bindingFlags & InputBinding.Flags.Composite) != 0)
+            var isComposite = (bindingFlags & InputBinding.Flags.Composite) != 0;
+            // If it's a composite, delete all its parts first.
+            if (isComposite)
             {
                 for (var partIndex = bindingIndex + 1; partIndex < bindingArrayProperty.arraySize;)
                 {
@@ -356,33 +421,11 @@ namespace UnityEngine.InputSystem.Editor
             bindingArrayProperty.DeleteArrayElementAtIndex(bindingIndex);
         }
 
-        public static void AssignUniqueIDs(SerializedProperty element)
+        public static void DeleteBinding(SerializedProperty bindingArrayProperty, Guid id)
         {
-            // Assign new ID to map.
-            AssignUniqueID(element);
-
-            //
-            foreach (var child in element.GetChildren())
-            {
-                if (!child.isArray)
-                    continue;
-
-                var fieldType = child.GetFieldType();
-                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
-                    fieldType == typeof(InputActionMap))
-                {
-                    ////TODO: update bindings that refer to actions by {id}
-                    for (var i = 0; i < child.arraySize; ++i)
-                        using (var childElement = child.GetArrayElementAtIndex(i))
-                            AssignUniqueIDs(childElement);
-                }
-            }
-        }
-
-        public static void AssignUniqueID(SerializedProperty property)
-        {
-            var idProperty = property.FindPropertyRelative("m_Id");
-            idProperty.stringValue = Guid.NewGuid().ToString();
+            var bindingIndex = GetIndex(bindingArrayProperty, id);
+            var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
+            DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);
         }
 
         public static void EnsureUniqueName(SerializedProperty arrayElement)
@@ -412,11 +455,36 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
+        public static void AssignUniqueIDs(SerializedProperty element)
+        {
+            AssignUniqueID(element);
+            foreach (var child in element.GetChildren())
+            {
+                if (!child.isArray)
+                    continue;
+
+                var fieldType = child.GetFieldType();
+                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
+                    fieldType == typeof(InputActionMap))
+                {
+                    for (var i = 0; i < child.arraySize; ++i)
+                        using (var childElement = child.GetArrayElementAtIndex(i))
+                            AssignUniqueIDs(childElement);
+                }
+            }
+        }
+
+        private static void AssignUniqueID(SerializedProperty property)
+        {
+            var idProperty = property.FindPropertyRelative("m_Id");
+            idProperty.stringValue = Guid.NewGuid().ToString();
+        }
+
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
         {
             // Make sure name is unique.
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
-            var uniqueName = FindUniqueName(actionsArrayProperty, newName);
+            var uniqueName = FindUniqueName(actionsArrayProperty, newName, actionProperty.GetIndexOfArrayElement());
 
             // Update all bindings that refer to the action.
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
@@ -439,7 +507,7 @@ namespace UnityEngine.InputSystem.Editor
             // Make sure name is unique in InputActionAsset.
             var assetObject = actionMapProperty.serializedObject;
             var mapsArrayProperty = assetObject.FindProperty("m_ActionMaps");
-            var uniqueName = FindUniqueName(mapsArrayProperty, newName);
+            var uniqueName = FindUniqueName(mapsArrayProperty, newName, actionMapProperty.GetIndexOfArrayElement());
 
             // Assign to map.
             var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");
@@ -624,6 +692,38 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
         }
+
+        public static void RemoveUnusedBindingGroups(SerializedProperty binding, ReadOnlyArray<InputControlScheme> controlSchemes)
+        {
+            var groupsProperty = binding.FindPropertyRelative(nameof(InputBinding.m_Groups));
+            groupsProperty.stringValue = string.Join(InputBinding.kSeparatorString,
+                groupsProperty.stringValue
+                    .Split(InputBinding.Separator)
+                    .Where(g => controlSchemes.Any(c => c.bindingGroup.Equals(g, StringComparison.InvariantCultureIgnoreCase))));
+        }
+
+        #region Control Schemes
+
+        public static void DeleteAllControlSchemes(SerializedObject asset)
+        {
+            var schemes = GetControlSchemesArray(asset);
+            while (schemes.arraySize > 0)
+                schemes.DeleteArrayElementAtIndex(0);
+        }
+
+        public static int IndexOfControlScheme(SerializedProperty controlSchemeArray, string controlSchemeName)
+        {
+            var serializedControlScheme = controlSchemeArray.FirstOrDefault(sp =>
+                sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == controlSchemeName);
+            return serializedControlScheme?.GetIndexOfArrayElement() ?? -1;
+        }
+
+        public static SerializedProperty GetControlSchemesArray(SerializedObject asset)
+        {
+            return asset.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+        }
+
+        #endregion // Control Schemes
     }
 }
 #endif // UNITY_EDITOR

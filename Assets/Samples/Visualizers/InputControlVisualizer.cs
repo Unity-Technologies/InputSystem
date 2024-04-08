@@ -243,6 +243,12 @@ namespace UnityEngine.InputSystem.Samples
                     break;
                 }
 
+                case Mode.DeviceCurrent:
+                {
+                    m_Visualizer = new VisualizationHelpers.CurrentDeviceVisualizer();
+                    break;
+                }
+
                 default:
                     throw new NotImplementedException();
             }
@@ -284,11 +290,11 @@ namespace UnityEngine.InputSystem.Samples
                 if (component.m_Control?.device != device || component.m_Visualizer == null)
                     continue;
 
-                component.OnEventImpl(eventPtr);
+                component.OnEventImpl(eventPtr, device);
             }
         }
 
-        private unsafe void OnEventImpl(InputEventPtr eventPtr)
+        private unsafe void OnEventImpl(InputEventPtr eventPtr, InputDevice device)
         {
             switch (m_Visualization)
             {
@@ -341,6 +347,12 @@ namespace UnityEngine.InputSystem.Samples
                         new Vector2(0, Mathf.Max(value, visualizer.limitsY.y));
                     break;
                 }
+
+                case Mode.DeviceCurrent:
+                {
+                    m_Visualizer.AddSample(device, eventPtr.time);
+                    break;
+                }
             }
         }
 
@@ -354,6 +366,7 @@ namespace UnityEngine.InputSystem.Samples
             Events = 4,
             MaximumLag = 6,
             Bytes = 7,
+            DeviceCurrent = 8,
         }
     }
 }

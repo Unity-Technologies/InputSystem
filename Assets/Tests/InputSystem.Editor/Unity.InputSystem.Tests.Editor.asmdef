@@ -1,0 +1,31 @@
+{
+    "name": "Unity.InputSystem.Tests.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "Unity",
+            "expression": "2022.3",
+            "define": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS"
+        }
+    ],
+    "noEngineReferences": false
+}

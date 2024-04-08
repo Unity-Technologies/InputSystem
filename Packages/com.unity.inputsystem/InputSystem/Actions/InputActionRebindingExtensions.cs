@@ -37,11 +37,28 @@ namespace UnityEngine.InputSystem
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
+    ///
+    /// To implement user-controlled rebinding, create a UI with a button to trigger rebinding.
+    /// If the user clicks the button to bind a control to an action, use `InputAction.PerformInteractiveRebinding`
+    /// to handle the rebinding, as in the following example:
+    /// <example>
+    /// <code>
+    /// void RemapButtonClicked(InputAction actionToRebind)
+    /// {
+    ///   var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+    ///   // To avoid accidental input from mouse motion
+    ///   .WithControlsExcluding("Mouse")
+    ///   .OnMatchWaitForAnother(0.1f)
+    ///   .Start();
+    /// }
+    /// </code>
+    /// </example>
+    /// You can install the Tanks Demo sample from the Input System package using the Package Manager window, which has an example of an interactive rebinding UI.
     /// </remarks>
     /// <seealso cref="InputActionSetupExtensions"/>
     /// <seealso cref="InputBinding"/>
     /// <seealso cref="InputAction.bindings"/>
-    public static class InputActionRebindingExtensions
+    public static partial class InputActionRebindingExtensions
     {
         /// <summary>
         /// Get the index of the first binding in <see cref="InputAction.bindings"/> on <paramref name="action"/>
@@ -591,9 +608,19 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
+            var enabled = action.enabled;
+            if (enabled)
+                action.Disable();
+
             bindingOverride.action = action.name;
             var actionMap = action.GetOrCreateActionMap();
             ApplyBindingOverride(actionMap, bindingOverride);
+
+            if (enabled)
+            {
+                action.Enable();
+                action.RequestInitialStateCheckOnEnabledAction();
+            }
         }
 
         /// <summary>
@@ -705,10 +732,7 @@ namespace UnityEngine.InputSystem
             }
 
             if (matchCount > 0)
-            {
-                actionMap.ClearPerActionCachedBindingData();
-                actionMap.LazyResolveBindings();
-            }
+                actionMap.OnBindingModified();
 
             return matchCount;
         }
@@ -740,8 +764,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         /// <summary>
@@ -835,8 +858,7 @@ namespace UnityEngine.InputSystem
                         binding.RemoveOverrides();
                     }
 
-                    actionMap.ClearPerActionCachedBindingData();
-                    actionMap.LazyResolveBindings();
+                    actionMap.OnBindingModified();
                 }
             }
         }
@@ -874,8 +896,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         ////REVIEW: are the IEnumerable variations worth having?
@@ -887,7 +908,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
         }
@@ -898,7 +918,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
-
 
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
@@ -1141,14 +1160,8 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 action = actions.FindAction(binding.action);
 
-            var @override = new InputActionMap.BindingOverrideJson
-            {
-                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
-                id = binding.id.ToString(),
-                path = binding.overridePath,
-                interactions = binding.overrideInteractions,
-                processors = binding.overrideProcessors
-            };
+            string actionName = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : "";
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, actionName);
 
             list.Add(@override);
         }
@@ -1258,17 +1271,11 @@ namespace UnityEngine.InputSystem
                     var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
                     if (bindingIndex != -1)
                     {
-                        action.ApplyBindingOverride(bindingIndex, new InputBinding
-                        {
-                            overridePath = entry.path,
-                            overrideInteractions = entry.interactions,
-                            overrideProcessors = entry.processors,
-                        });
+                        action.ApplyBindingOverride(bindingIndex, InputActionMap.BindingOverrideJson.ToBinding(entry));
                         continue;
                     }
                 }
-
-                throw new NotImplementedException();
+                Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }
 
@@ -2095,7 +2102,7 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
-                m_StartTime = InputRuntime.s_Instance.currentTime;
+                m_StartTime = InputState.currentTime;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2300,9 +2307,6 @@ namespace UnityEngine.InputSystem
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
-                    // The control is not explicitly excluded so we suppress the event, if that's enabled.
-                    suppressEvent = true;
-
                     // If controls have to match a certain path, check if this one does.
                     if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
                         continue;
@@ -2343,6 +2347,9 @@ namespace UnityEngine.InputSystem
                         continue;
                     }
 
+                    // At this point the control is a potential candidate for rebinding and therefore the event may need to be suppressed, if that's enabled.
+                    suppressEvent = true;
+
                     var magnitude = control.EvaluateMagnitude(statePtr);
                     if (magnitude >= 0)
                     {
@@ -2351,7 +2358,7 @@ namespace UnityEngine.InputSystem
                         {
                             // Haven't seen this control changing actuation yet. Record its current actuation as its
                             // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
-                            startingMagnitude = control.EvaluateMagnitude();
+                            startingMagnitude = control.magnitude;
                             m_StartingActuations.Add(control, startingMagnitude);
                         }
 
@@ -2390,7 +2397,7 @@ namespace UnityEngine.InputSystem
                             m_Scores[candidateIndex] = score;
 
                             if (m_WaitSecondsAfterMatch > 0)
-                                m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                                m_LastMatchTime = InputState.currentTime;
                         }
                     }
                     else
@@ -2404,7 +2411,7 @@ namespace UnityEngine.InputSystem
                         haveChangedCandidates = true;
 
                         if (m_WaitSecondsAfterMatch > 0)
-                            m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                            m_LastMatchTime = InputState.currentTime;
                     }
                 }
 
@@ -2490,7 +2497,7 @@ namespace UnityEngine.InputSystem
                 // If we don't have a match yet but we have a timeout and have expired it,
                 // cancel the operation.
                 if (m_LastMatchTime < 0 && m_Timeout > 0 &&
-                    InputRuntime.s_Instance.currentTime - m_StartTime > m_Timeout)
+                    InputState.currentTime - m_StartTime > m_Timeout)
                 {
                     Cancel();
                     return;
@@ -2505,7 +2512,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 // Complete if timeout has expired.
-                if (InputRuntime.s_Instance.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
+                if (InputState.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
                     Complete();
             }
 

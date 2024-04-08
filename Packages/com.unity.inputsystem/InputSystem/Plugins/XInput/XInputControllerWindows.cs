@@ -92,7 +92,6 @@ namespace UnityEngine.InputSystem.XInput
     /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
     /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
-    [Preserve]
     public class XInputControllerWindows : XInputController
     {
     }

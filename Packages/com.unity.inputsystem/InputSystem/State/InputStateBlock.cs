@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
@@ -44,6 +45,13 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public const uint InvalidOffset = 0xffffffff;
         public const uint AutomaticOffset = 0xfffffffe;
+
+        /// <summary>
+        /// Format code for invalid value type
+        /// </summary>
+        /// <seealso cref="format"/>
+        public static readonly FourCC FormatInvalid = new FourCC(0);
+        internal const int kFormatInvalid = 0;
 
         /// <summary>
         /// Format code for a variable-width bitfield representing an unsigned value,
@@ -134,12 +142,17 @@ namespace UnityEngine.InputSystem.LowLevel
 
         ////REVIEW: are these really useful?
         public static readonly FourCC FormatVector2 = new FourCC('V', 'E', 'C', '2');
+        internal const int kFormatVector2 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '2';
         public static readonly FourCC FormatVector3 = new FourCC('V', 'E', 'C', '3');
+        internal const int kFormatVector3 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '3';
         public static readonly FourCC FormatQuaternion = new FourCC('Q', 'U', 'A', 'T');
+        internal const int kFormatQuaternion = 'Q' << 24 | 'U' << 16 | 'A' << 8 | 'T';
         public static readonly FourCC FormatVector2Short = new FourCC('V', 'C', '2', 'S');
         public static readonly FourCC FormatVector3Short = new FourCC('V', 'C', '3', 'S');
         public static readonly FourCC FormatVector2Byte = new FourCC('V', 'C', '2', 'B');
         public static readonly FourCC FormatVector3Byte = new FourCC('V', 'C', '3', 'B');
+        public static readonly FourCC FormatPose = new FourCC('P', 'o', 's', 'e');
+        internal const int kFormatPose = 'P' << 24 | 'o' << 16 | 's' << 8 | 'e';
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
@@ -221,7 +234,17 @@ namespace UnityEngine.InputSystem.LowLevel
         // During setup, this can be InvalidOffset to indicate a control that should be placed
         // at an offset automatically; otherwise it denotes a fixed offset relative to the
         // parent control.
-        public uint byteOffset { get; set; }
+        public uint byteOffset
+        {
+            get => m_ByteOffset;
+            set
+            {
+                m_ByteOffset = value;
+            }
+        }
+
+        // Needed for fast access to avoid a call to getter in some places
+        internal uint m_ByteOffset;
 
         // Bit offset from the given byte offset. Also zero-based (i.e. first bit is at bit
         // offset #0).
@@ -414,7 +437,7 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 case kFormatBit:
                     if (sizeInBits == 1)
-                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);////REVIEW: Shouldn't this be the global button press point?
                     else
                         MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;

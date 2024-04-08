@@ -185,7 +185,8 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.interactions"/>
     /// <seealso cref="InputAction.interactions"/>
     /// <seealso cref="Editor.InputParameterEditor"/>
-    [Preserve]
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public interface IInputInteraction
     {
         /// <summary>
@@ -288,7 +289,6 @@ namespace UnityEngine.InputSystem
     /// In all other ways, this interface is identical to <see cref="IInputInteraction"/>.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces", Justification = "This interface is used to mark implementing classes to advertise the value it expects. This seems more elegant then the suggestion to use an attribute.")]
-    [Preserve]
     public interface IInputInteraction<TValue> : IInputInteraction
         where TValue : struct
     {

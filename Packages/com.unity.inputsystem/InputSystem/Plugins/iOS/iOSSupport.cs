@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -31,6 +31,12 @@ namespace UnityEngine.InputSystem.iOS
                     .WithDeviceClass("iOSGameController")
                     .WithProduct("DUALSHOCK 4 Wireless Controller"));
 
+            InputSystem.RegisterLayout<DualSenseGampadiOS>("DualSenseGampadiOS",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("iOSGameController")
+                    .WithProduct("DualSense Wireless Controller"));
+
             InputSystem.RegisterLayoutMatcher("GravitySensor",
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
@@ -56,4 +62,4 @@ namespace UnityEngine.InputSystem.iOS
         }
     }
 }
-#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS

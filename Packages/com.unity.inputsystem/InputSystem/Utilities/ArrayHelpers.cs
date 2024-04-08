@@ -114,6 +114,7 @@ namespace UnityEngine.InputSystem.Utilities
             return IndexOfReference(array, value, startIndex, count) != -1;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "index", Justification = "Keep this for future implementation")]
         public static bool HaveDuplicateReferences<TFirst>(this TFirst[] first, int index, int count)
         {
             for (var i = 0; i < count; ++i)
@@ -172,6 +173,21 @@ namespace UnityEngine.InputSystem.Utilities
             for (var i = 0; i < length; ++i)
                 if (predicate(array[i]))
                     return i;
+
+            return -1;
+        }
+
+        public static int IndexOf<TValue>(this TValue[] array, Predicate<TValue> predicate, int startIndex = 0, int count = -1)
+        {
+            if (array == null)
+                return -1;
+
+            var end = startIndex + (count < 0 ? array.Length - startIndex : count);
+            for (var i = startIndex; i < end; ++i)
+            {
+                if (predicate(array[i]))
+                    return i;
+            }
 
             return -1;
         }

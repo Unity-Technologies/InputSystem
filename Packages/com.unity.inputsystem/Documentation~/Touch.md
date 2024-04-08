@@ -1,9 +1,15 @@
+---
+uid: input-system-touch
+---
 # Touch support
 
-* [`Touchscreen` Device](#touchscreen-device)
-* [Using Touch with Actions](#using-touch-with-actionsactionsmd)
-* [`Touch` class](#enhancedtouchtouch-class)
-* [Touch Simulation](#touch-simulation)
+- [Touch support](#touch-support)
+  - [`Touchscreen` Device](#touchscreen-device)
+    - [Controls](#controls)
+    - [Using touch with Actions](#using-touch-with-actions)
+  - [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
+  - [Touch Simulation](#touch-simulation)
+  - [Reading all touches](#reading-all-touches)
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
@@ -12,6 +18,8 @@ Touch support is divided into:
 >__Note__: You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
+
+>__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
 
 ## `Touchscreen` Device
 
@@ -48,13 +56,13 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 |[`tap`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tap)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|A button Control that reports whether the OS recognizes a tap gesture from this touch.|
 |[`tapCount`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tapCount)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Reports the number of consecutive [`tap`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tap) reports from the OS. You can use this to detect double- and multi-tap gestures.|
 
-### Using touch with [Actions](Actions.md)
+### Using touch with Actions
 
 You can use touch input with Actions, like any other [`Pointer`](Pointers.md) Device. To do this, [bind](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This gets input from the primary touch, and any other non-touch pointer Devices.
 
 However, if you want to get input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`. Alternatively, use a wildcard Binding to bind one Action to all touches: `<Touchscreen>/touch*/press`.
 
-If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](Actions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
+If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](RespondingToActions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
 
 ## `EnhancedTouch.Touch` Class
 
@@ -96,3 +104,22 @@ Touch input can be simulated from input on other kinds of [Pointer](./Pointers.m
 In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./Debugging.md).
 
 [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) will add a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirror input on any [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.
+
+
+## Reading all touches
+
+To get all current touches from the touchscreen, use [`EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches), as in this example:
+
+```C#
+    using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+
+    public void Update()
+    {
+        foreach (var touch in Touch.activeTouches)
+            Debug.Log($"{touch.touchId}: {touch.screenPosition},{touch.phase}");
+    }
+```
+
+>__Note__: You must first enable enhanced touch support by calling  [`InputSystem.EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+
+You can also use the lower-level [`Touchscreen.current.touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) API.

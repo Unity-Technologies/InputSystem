@@ -1,5 +1,6 @@
 {
     "name": "Unity.InputSystem.Tests",
+    "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
@@ -8,7 +9,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.PerformanceTesting",
-        "Unity.Coding.Editor"
+        "Unity.Coding.Editor",
+        "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -28,6 +30,21 @@
             "name": "com.unity.package-manager-doctools",
             "expression": "1.0",
             "define": "HAVE_DOCTOOLS_INSTALLED"
+        },
+        {
+            "name": "Unity",
+            "expression": "2021.1",
+            "define": "TEMP_DISABLE_UITOOLKIT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.1",
+            "define": "TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.3",
+            "define": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS"
         }
     ],
     "noEngineReferences": false
