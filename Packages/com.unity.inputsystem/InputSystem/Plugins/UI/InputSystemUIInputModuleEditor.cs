@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.EventSystems;
+using UnityEngine.InputSystem.Editor;
 
 ////TODO: add button to automatically set up gamepad mouse cursor support
 
@@ -12,12 +13,11 @@ namespace UnityEngine.InputSystem.UI.Editor
     [InitializeOnLoad]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
-        SerializedProperty activeInputBackend;
         static InputSystemUIInputModuleEditor()
         {
 #if UNITY_6000_0_OR_NEWER
-            //TODO: only add this if backend selected is ONLY InputSystem
-            InputModuleComponentFactory.SetInputModuleComponentOverride(go => go.AddComponent<InputSystemUIInputModule>());
+            if (EditorPlayerSettingHelpers.newSystemBackendsEnabled && !EditorPlayerSettingHelpers.oldSystemBackendsEnabled)
+                InputModuleComponentFactory.SetInputModuleComponentOverride(go => go.AddComponent<InputSystemUIInputModule>());
 #endif
         }
 
