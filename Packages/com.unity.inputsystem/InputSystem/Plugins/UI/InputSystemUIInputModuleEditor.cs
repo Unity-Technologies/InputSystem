@@ -17,7 +17,8 @@ namespace UnityEngine.InputSystem.UI.Editor
         {
 #if UNITY_6000_0_OR_NEWER
             if (EditorPlayerSettingHelpers.newSystemBackendsEnabled && !EditorPlayerSettingHelpers.oldSystemBackendsEnabled)
-                InputModuleComponentFactory.SetInputModuleComponentOverride(go => go.AddComponent<InputSystemUIInputModule>());
+                InputModuleComponentFactory.SetInputModuleComponentOverride(
+                    go => ObjectFactory.AddComponent<InputSystemUIInputModule>(go));
 #endif
         }
 
