@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Default UI actions would not function without a user specifically setting up project-wide actions in Project Settings [ISXB-811](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-811).
+- Physical keyboards used on Android/ChromeOS could have keys "stuck" reporting as pressed after a long press and release [ISXB-475](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-475).
 - NullReferenceException thrown when right-clicking an empty Action Map list in Input Actions Editor windows [ISXB-833](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-833).
 
 ## [1.8.1] - 2024-03-14
