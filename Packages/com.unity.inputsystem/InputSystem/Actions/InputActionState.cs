@@ -4237,6 +4237,13 @@ namespace UnityEngine.InputSystem
 
         internal static GlobalState s_GlobalState;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeGlobalActionState()
+        {
+            ResetGlobals();
+            s_GlobalState = default;
+        }
+
         internal static ISavedState SaveAndResetState()
         {
             // Save current state

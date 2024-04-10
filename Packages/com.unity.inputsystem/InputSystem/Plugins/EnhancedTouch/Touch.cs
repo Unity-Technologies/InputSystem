@@ -593,12 +593,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 #endif
         }
 
-        private static GlobalState CreateGlobalState()
-        {   // Convenient method since parameterized construction is default
-            return new GlobalState { historyLengthPerFinger = 64 };
-        }
+        internal static GlobalState s_GlobalState;
 
-        internal static GlobalState s_GlobalState = CreateGlobalState();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeGlobalTouchState()
+        {
+            // Touch GlobalState doesn't require Dispose operations
+            s_GlobalState = new GlobalState { historyLengthPerFinger = 64 };
+        }
 
         internal static ISavedState SaveAndResetState()
         {
@@ -609,7 +611,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 () => { /* currently nothing to dispose */ });
 
             // Reset global state
-            s_GlobalState = CreateGlobalState();
+            InitializeGlobalTouchState();
 
             return savedState;
         }
