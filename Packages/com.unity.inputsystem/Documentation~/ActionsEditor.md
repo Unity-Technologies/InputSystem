@@ -1,7 +1,7 @@
 ---
-uid: input-system-configuring-input
+uid: input-system-configuring-actions
 ---
-# Configuring Input with the Actions Editor
+# Configuring Actions
 
 The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md).
 
@@ -48,13 +48,13 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 *
 
 
-## Action type and Control type
+## Action Properties
 
-If you select an Action, you can edit its properties in the right-hand pane of the window:
+When you select an action (as opposed to a binding) in the central pane of the Actions Editor window, you can edit the action properties in the right-hand pane of the window:
 
 ![Action Properties](Images/ActionProperties.png)
 
-#### Action Type
+### Action Type
 
 The Action Type setting allows to to select between **Button**, **Value** or **PassThrough**.
 
@@ -68,7 +68,7 @@ The third option, **PassThrough**, is also a value type, and as such is suitable
 
 For more detail about how these types work, see [action types](RespondingToActions.html#action-types) and [default interactions](Interactions.html#default-interaction).
 
-#### Control Type
+### Control Type
 
 The Control Type setting allows you to select the type of control expected by the action. This limits the controls shown when setting up bindings in the UI and also limits which contols can be bound interactively to the action.
 
@@ -76,7 +76,7 @@ For example, if you select **2D axis**, only those controls that can supply a 2D
 
 There are more specific control types available which futher filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
 
-### Bindings
+## Bindings
 
 * To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
@@ -87,11 +87,13 @@ You can add multiple bindings to an action, which is generally useful for suppor
 ![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
 _The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
 
-If you select a Binding, you can edit its properties in the right-hand pane of the window:
+### Binding Properties
+
+When you select a binding (as opposed to an action) in the center pane of the Actions Editor window, you can edit its properties in the right-hand pane of the window:
 
 ![Binding Properties](Images/BindingProperties.png)
 
-#### Picking Controls
+### Picking Controls
 
 The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ drop-down list. This displays a Control picker window.
 
@@ -131,7 +133,7 @@ You can assign multiple Bindings to the same part. You can also duplicate indivi
 
 ![Duplicated Part Bindings](./Images/DuplicatedPartBindings.png)
 
-### Editing Control Schemes
+## Control Schemes
 
 Input Action Assets can have multiple [Control Schemes](ActionBindings.md#control-schemes), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
 

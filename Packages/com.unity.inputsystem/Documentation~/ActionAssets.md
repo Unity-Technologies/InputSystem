@@ -12,24 +12,22 @@ An Input Action Asset is an Asset which contains a set of [Input Actions](Action
 
 The input system creates an Action Asset when you set up the [default project-wide actions](ProjectWideActions.md), but you can also create new Action Assets directly in the Project window.
 
-For most common scenarios, you do not need to use more than one Input Action Asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
+> __Note:__ For most common scenarios, you do not need to use more than one Input Action Asset. It is usually simpler to create and configure one action asset as project-wide actions in the Project Settings window.
 
+### Creating Input Action Assets
 
-## Creating Input Action Assets
+To create an Action Asset, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
 
-To create an Asset that contains [Input Actions](Actions.md) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
+### Editing Input Action Assets
 
-## Editing Input Action Assets
+To edit the actions defined in an Action Asset, you can open it in the [Actions Editor window](ActionsEditor.md).. To do this, Double-click an Action Asset in the Project Browser, or select the __Edit Asset__ button in the Inspector for that Asset. You can have more than one Actions Editor window open at the same time, but not for the same Asset.
 
-To bring up the Action editor, double-click an `.inputactions` Asset in the Project Browser, or select the __Edit Asset__ button in the Inspector for that Asset. You can have more than one editor window open at the same time, but not for the same Asset.
-
-The Actions Editor which opens is identical to the [Actions Editor in the Project Settings window](ActionsEditor.md).
-
+The Actions Editor window which opens is identical to the Actions Editor displayed in the Input section of the Project Settings window.
 
 ## Using Input Action Assets
 
 
-## Type-safe C# API Generation
+### Type-safe C# API Generation
 
 Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
 
