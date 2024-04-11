@@ -16,7 +16,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         Configuration m_Cfg;
 
-        public InputActionAsset inputActionAsset => m_InputActionAsset;
         InputActionAsset m_InputActionAsset;
 
         InputActionReference m_PointAction;
@@ -156,6 +155,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             m_SeenTouchEvents = false;
             m_SeenPenEvents = false;
+        }
+
+        public bool ActionAssetIsNotNull()
+        {
+            return m_InputActionAsset != null;
         }
 
         //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?

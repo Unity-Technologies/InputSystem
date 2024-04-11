@@ -35,7 +35,7 @@ public class InputForUITests : InputTestFixture
         EventProvider.SetMockProvider(m_InputSystemProvider);
 
         // Test assumes a compatible action asset configuration exists for UI
-        Assert.That(m_InputSystemProvider.inputActionAsset, Is.Not.Null,
+        Assert.IsTrue(m_InputSystemProvider.ActionAssetIsNotNull(),
             "Test is invalid since InputSystemProvider actions are not available");
         // Register at least one consumer so the mock update gets invoked
         EventProvider.Subscribe(InputForUIOnEvent);
