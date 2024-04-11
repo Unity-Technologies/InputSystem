@@ -3802,8 +3802,24 @@ namespace UnityEngine.InputSystem
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+
+        #if UNITY_EDITOR
+        // Plug-ins must only be initialized once, since many of them use static fields.
+        // When Domain Reloads are disabled, we must guard against this method being called a second time.
+        private static bool s_PluginsInitialized = false;
+        #endif
+
         internal static void PerformDefaultPluginInitialization()
         {
+            #if UNITY_EDITOR
+            if (s_PluginsInitialized)
+            {
+                Debug.Assert(false, "Attempted to re-initialize InputSystem Plugins!");
+                return;
+            }
+            s_PluginsInitialized = true;
+            #endif
+
             UISupport.Initialize();
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS

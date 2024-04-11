@@ -28,6 +28,8 @@ namespace UnityEngine.InputSystem
                 InputSystem.SetUpRemoting();
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            // Reset the flag so can re-initialize Plugins between tests.
+            InputSystem.s_PluginsInitialized = false;
             InputSystem.PerformDefaultPluginInitialization();
 #endif
         }
@@ -42,6 +44,7 @@ namespace UnityEngine.InputSystem
             InputSystem.s_DomainStateManager.OnBeforeSerialize();
             InputSystem.s_DomainStateManager = null;
             InputSystem.s_Manager = null; // Do NOT Dispose()! The native memory cannot be freed as it's reference by saved state
+            InputSystem.s_PluginsInitialized = false;
             InputSystem.InitializeInEditor(true, runtime);
         }
 #endif // UNITY_EDITOR

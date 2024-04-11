@@ -587,6 +587,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             internal CallbackArray<Action<Finger>> onFingerMove;
             internal CallbackArray<Action<Finger>> onFingerUp;
 
+            // Used by EnhancedTouchSupport but placed here to consolidate static fields
+            internal int enhancedTouchEnabled;
+            internal InputSettings.UpdateMode enhancedTouchUpdateMode;
+
             internal FingerAndTouchState playerState;
 #if UNITY_EDITOR
             internal FingerAndTouchState editorState;

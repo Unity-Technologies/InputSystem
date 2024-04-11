@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.Steam
             set
             {
                 s_API = value;
-                InstallHooks(s_API != null);
+                InstallControllerUpdateHooks(s_API != null);
             }
         }
 
@@ -38,11 +38,19 @@ namespace UnityEngine.InputSystem.Steam
             return s_API;
         }
 
-        internal static SteamHandle<SteamController>[] s_ConnectedControllers;
-        internal static SteamController[] s_InputDevices;
-        internal static int s_InputDeviceCount;
-        internal static bool s_HooksInstalled;
-        internal static ISteamControllerAPI s_API;
+        /// <summary>
+        /// Returns if the controller Update event handlers have been set or not.
+        /// </summary>
+        /// <remarks>
+        /// The s_ConnectedControllers array is allocated in response to setting event handlers and
+        /// so it can double as our "is installed" flag.
+        /// </remarks>
+        private static bool updateHooksInstalled => s_ConnectedControllers != null;
+
+        private static SteamHandle<SteamController>[] s_ConnectedControllers;
+        private static SteamController[] s_InputDevices;
+        private static int s_InputDeviceCount;
+        private static ISteamControllerAPI s_API;
 
         private const int STEAM_CONTROLLER_MAX_COUNT = 16;
 
@@ -54,22 +62,35 @@ namespace UnityEngine.InputSystem.Steam
             // We use this as a base layout.
             InputSystem.RegisterLayout<SteamController>();
 
-            if (api != null)
-                InstallHooks(true);
+            InstallControllerUpdateHooks(s_API != null);
         }
 
-        private static void InstallHooks(bool state)
+        /// <summary>
+        /// Disable Steam controller API support and reset the state.
+        /// </summary>
+        internal static void Shutdown()
         {
-            Debug.Assert(api != null);
-            if (state && !s_HooksInstalled)
+            InstallControllerUpdateHooks(false);
+
+            s_API = null;
+            s_InputDevices = null;
+            s_InputDeviceCount = 0;
+        }
+
+        private static void InstallControllerUpdateHooks(bool state)
+        {
+            Debug.Assert(api != null || !state);
+            if (state && !updateHooksInstalled)
             {
+                s_ConnectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
                 InputSystem.onBeforeUpdate += OnUpdate;
                 InputSystem.onActionChange += OnActionChange;
             }
-            else if (!state && s_HooksInstalled)
+            else if (!state && updateHooksInstalled)
             {
                 InputSystem.onBeforeUpdate -= OnUpdate;
                 InputSystem.onActionChange -= OnActionChange;
+                s_ConnectedControllers = null;
             }
         }
 
@@ -124,9 +145,7 @@ namespace UnityEngine.InputSystem.Steam
             // Update controller state.
             api.RunFrame();
 
-            // Check if we have any new controllers have appeared.
-            if (s_ConnectedControllers == null)
-                s_ConnectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
+            // Check if we have any new controllers have appeared.                
             var numConnectedControllers = api.GetConnectedControllers(s_ConnectedControllers);
             for (var i = 0; i < numConnectedControllers; ++i)
             {

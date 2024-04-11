@@ -675,8 +675,8 @@ namespace UnityEngine.InputSystem.DualShock
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDMinimalInputReport
         {
-            public static int ExpectedSize1 = 10;
-            public static int ExpectedSize2 = 78;
+            public const int ExpectedSize1 = 10;
+            public const int ExpectedSize2 = 78;
 
             [FieldOffset(0)] public byte reportId;
             [FieldOffset(1)] public byte leftStickX;
