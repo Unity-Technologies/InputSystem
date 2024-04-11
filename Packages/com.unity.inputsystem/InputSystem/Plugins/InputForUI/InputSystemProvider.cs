@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_SeenTouchEvents = false;
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-            RegisterActions(m_Cfg);
+            RegisterActions();
 
             InputSystem.onActionsChange += OnActionsChange;
         }
@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             UnregisterActions();
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-            RegisterActions(m_Cfg);
+            RegisterActions();
         }
 
         public void Update()
@@ -575,9 +575,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
         }
 
-        void RegisterActions(Configuration cfg)
+        void RegisterActions()
         {
-            m_InputActionAsset = cfg.ActionAsset;
+            m_InputActionAsset = m_Cfg.ActionAsset;
 
             m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
             m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
