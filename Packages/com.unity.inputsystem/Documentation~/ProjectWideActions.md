@@ -61,4 +61,4 @@ For example, you can get a reference to an action named "Move" in your project-w
   InputSystem.actions.FindAction("Move");
 ```
 
-Project-wide actions are also enabled by default.
+Read more about [responding to actions](RespondingToActions.md).

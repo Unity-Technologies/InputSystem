@@ -14,9 +14,9 @@ The simplest scenario is to create a game or app where your actions are all pre-
 
 The simplest ways to script responses to actions at runtime are to:
 
-- [Poll project-wide actions]()
-- [Set up callbacks from project-wide actions]()
-- [Set up callbacks using the PlayerInput component]()
+- [Poll project-wide actions](./RespondingToActions.md#polling-actions)
+- [Set up callbacks from project-wide actions](./RespondingToActions.md#responding-to-actions-using-callbacks)
+- [Set up callbacks using the PlayerInput component](./PlayerInput.md#connecting-actions-to-methods-or-callbacks)
 
 ### Interactively rebind actions at runtime
 
