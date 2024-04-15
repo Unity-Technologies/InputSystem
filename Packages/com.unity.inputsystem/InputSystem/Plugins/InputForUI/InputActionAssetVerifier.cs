@@ -106,14 +106,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 asset: asset,
                 actionNameOrId: config.SubmitAction,
                 actionType: InputActionType.Button,
-                expectedControlType: string.Empty,
+                expectedControlType: "Button", // indirectly Button derived from action type if not explicit (not exposed in UI, but InputActionRebindingExtensions suggests this)
                 missingPaths: ref missingPaths,
                 reporter: reporter);
             VerifyAction(
                 asset: asset,
                 actionNameOrId: config.CancelAction,
                 actionType: InputActionType.Button,
-                expectedControlType: string.Empty,
+                expectedControlType: "Button", // indirectly Button derived from action type if not explicit (not exposed in UI, but InputActionRebindingExtensions suggests this)
                 missingPaths: ref missingPaths,
                 reporter: reporter);
             VerifyAction(
