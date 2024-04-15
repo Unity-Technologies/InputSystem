@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             {
                 reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {kErrorSuffix}");
             }
-
+            
             if (action == null)
             {
                 const string kCouldNotBeFound = "could not be found";
@@ -64,9 +64,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             else if (action.bindings.Count == 0)
                 ActionWarning(actionNameOrId, "do not have any configured bindings");
             else if (action.type != actionType)
-                ActionWarning(actionNameOrId, $" has 'Action Type' {action.type}, but {actionType} was expected");
-            else if (expectedControlType != string.Empty && action.expectedControlType != expectedControlType)
-                ActionWarning(actionNameOrId, $" has 'Expected Control Type' '{action.expectedControlType}', but '{expectedControlType}' was expected");
+                ActionWarning(actionNameOrId, $"has 'type' set to '{nameof(InputActionType)}.{action.type}', but '{nameof(InputActionType)}.{actionType}' was expected");
+            else if (!string.IsNullOrEmpty(expectedControlType) && !string.IsNullOrEmpty(action.expectedControlType) && action.expectedControlType != expectedControlType)
+                ActionWarning(actionNameOrId, $"has 'expectedControlType' set to '{action.expectedControlType}', but '{expectedControlType}' was expected");
         }
 
         #region ProjectWideActionsAsset.IInputActionAssetVerifier

@@ -41,6 +41,16 @@ namespace UnityEngine.InputSystem.Editor
             return string.Empty;
         }
 
+        public static string GetHyperlink(string text, string path)
+        {
+            return "<a href=\"" + path + $">{text}</a>";
+        }
+        
+        public static string GetHyperlink(string path)
+        {
+            return GetHyperlink(path, path);
+        }
+
         public static void RestartEditorAndRecompileScripts(bool dryRun = false)
         {
             // The API here are not public. Use reflection to get to them.

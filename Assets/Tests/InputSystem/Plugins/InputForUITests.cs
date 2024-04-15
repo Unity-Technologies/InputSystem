@@ -1,5 +1,6 @@
 #if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -54,6 +55,11 @@ public class InputForUITests : InputTestFixture
         m_InputForUIEvents.Clear();
 
         InputSystem.s_Manager.actions = storedActions;
+
+#if UNITY_EDITOR        
+        if (File.Exists(kAssetPath))
+            UnityEditor.AssetDatabase.DeleteAsset(kAssetPath);
+#endif
 
         base.TearDown();
     }
@@ -190,45 +196,167 @@ public class InputForUITests : InputTestFixture
                                  eventSource: EventSource.Gamepad}
         });
     }
-
+    
 #if UNITY_EDITOR
-    [Test]
-    public void DefaultActions_ShouldNotGenerateAnyVerificationWarnings()
+    // These tests shouldn't really be in a non editor-only assembly but for now we guard them until moved.
+    private const string kAssetPath = "Assets/InputSystem_InputForUI_TestActions.inputactions";
+    
+    [Test(Description = "Verifies that default actions (Project-wide) OR default actions have no verification errors.")]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(true)]
+    public void DefaultActions_ShouldNotGenerateAnyVerificationWarnings(bool useProjectWideActions)
     {
-        var assetPath = "Assets/InputSystem_UI.inputactions";
-        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
-        InputSystem.s_Manager.actions = asset;
+        if (!useProjectWideActions)
+            InputSystem.s_Manager.actions = null;
         Update();
         LogAssert.NoUnexpectedReceived();
     }
     
-    [Test]
+    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
+    [Category(kTestCategory)]
     public void ActionsWithoutUIMap_ShouldGenerateWarnings()
     {
-        var assetPath = "Assets/InputSystem_UI.inputactions";
-        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
         
         InputSystem.s_Manager.actions = asset;
         Update();
+     
+        var link = EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Submit' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Cancel' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Click' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/MiddleClick' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset '{link}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset '{link}' could not be found."));
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if any required action is missing.")]
+    [Category(kTestCategory)]
+    [TestCase("UI/Point")]
+    [TestCase("UI/Navigate")]
+    [TestCase("UI/Submit")]
+    [TestCase("UI/Cancel")]
+    [TestCase("UI/Click")]
+    [TestCase("UI/MiddleClick")]
+    [TestCase("UI/RightClick")]
+    [TestCase("UI/ScrollWheel")]
+    public void ActionMapWithNonExistentRequiredAction_ShouldGenerateWarning(string actionPath)
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        var action = asset.FindAction(actionPath);
+        action.Rename("Other");
         
-        var cfg = InputSystemProvider.Configuration.GetDefaultConfiguration();
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset"));  //'{EditorHelpers.GetHyperlink(assetPath)}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Submit' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Cancel' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Click' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/MiddleClick' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset"));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset"));
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        
+        var link = EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' could not be found."));
         LogAssert.NoUnexpectedReceived();
     }
     
-    // TODO Write test cases for missing individual actions
+    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if they lack bindings.")]
+    [Category(kTestCategory)]
+    [TestCase("UI/Point")]
+    [TestCase("UI/Navigate")]
+    [TestCase("UI/Submit")]
+    [TestCase("UI/Cancel")]
+    [TestCase("UI/Click")]
+    [TestCase("UI/MiddleClick")]
+    [TestCase("UI/RightClick")]
+    [TestCase("UI/ScrollWheel")]
+    public void ActionMapWithUnboundRequiredAction_ShouldGenerateWarning(string actionPath)
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        var map = asset.FindActionMap("UI");
+
+        // Recreate a map with selected action bindings removed (unfortunately there is no remove so this is what we got)
+        asset.RemoveActionMap(map);
+        var newMap = new InputActionMap(map.name);
+        var n = map.actions.Count;
+        for (var i = 0; i < n; ++i)
+        {
+            // Create a cloned action with only binding changed
+            var source = map.actions[i];
+            var action = newMap.AddAction(name: source.name, 
+                type: source.type,
+                binding: actionPath == map.name + '/' + source.name ? null : "SomeIrrelevantBindingThatWillNeverResolve",
+                processors: source.processors,
+                interactions: source.interactions,
+                expectedControlLayout: null,
+                groups: null);
+            action.expectedControlType = source.expectedControlType;
+        }
+
+        asset.AddActionMap(newMap);
+        
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        
+        var link = EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' do not have any configured bindings."));
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test(Description =
+        "Verifies that user-supplied project-wide input actions generates warnings if they have a different action type")]
+    [TestCase("UI/Point", InputActionType.Button)]
+    [TestCase("UI/Navigate", InputActionType.Button)]
+    [TestCase("UI/Submit", InputActionType.Value)]
+    [TestCase("UI/Cancel", InputActionType.Value)]
+    [TestCase("UI/Click", InputActionType.Value)]
+    [TestCase("UI/MiddleClick", InputActionType.Value)]
+    [TestCase("UI/RightClick", InputActionType.Value)]
+    [TestCase("UI/ScrollWheel", InputActionType.Button)]
+    public void ActionWithUnexpectedActionType_ShouldGenerateWarning(string actionPath, InputActionType unexpectedType)
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        var action = asset.FindAction(actionPath);
+        Debug.Assert(action.type != unexpectedType); // not really an assert, sanity check test assumption for correctness
+        var expectedType = action.type;
+        action.m_Type = unexpectedType; // change directly via internals for now
+        
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        
+        var link = EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning,
+            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'type' set to 'InputActionType.{unexpectedType}'"));
+        LogAssert.NoUnexpectedReceived();
+    }
     
-    // TODO Write test cases for incorrect types
-#endif
+    [Test(Description =
+        "Verifies that user-supplied project-wide input actions generates warnings if they have a specified expected control type")]
+    [TestCase("UI/Point", "Quaternion")]
+    [TestCase("UI/Navigate", "Touch")]
+    [TestCase("UI/Submit", "Vector2")]
+    [TestCase("UI/Cancel", "Vector3")]
+    [TestCase("UI/Click", "Axis")]
+    [TestCase("UI/MiddleClick", "Delta")]
+    [TestCase("UI/RightClick", "Bone")]
+    [TestCase("UI/ScrollWheel", "Eyes")]
+    public void ActionWithDifferentExpectedControlType_ShouldGenerateWarning(string actionPath, string unexpectedControlType)
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        var action = asset.FindAction(actionPath);
+        Debug.Assert(action.expectedControlType != unexpectedControlType); // not really an assert, sanity check test assumption for correctness
+        var expectedControlType = action.expectedControlType;
+        action.expectedControlType = unexpectedControlType; 
+        
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        
+        var link = EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning,
+            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'expectedControlType' set to '{unexpectedControlType}'"));
+        LogAssert.NoUnexpectedReceived();
+    }
+#endif // UNITY_EDITOR
 
     static void Update()
     {
