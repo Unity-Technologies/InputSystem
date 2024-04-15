@@ -1,9 +1,11 @@
 #if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Plugins.InputForUI;
 using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
@@ -23,13 +25,19 @@ using EventProvider = UnityEngine.InputForUI.EventProvider;
 [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
 public class InputForUITests : InputTestFixture
 {
+    private const string kTestCategory = "InputForUI";
+
     readonly List<Event> m_InputForUIEvents = new List<Event>();
     InputSystemProvider m_InputSystemProvider;
+
+    private InputActionAsset storedActions;
 
     [SetUp]
     public override void Setup()
     {
         base.Setup();
+
+        storedActions = InputSystem.actions;
 
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);
@@ -45,6 +53,8 @@ public class InputForUITests : InputTestFixture
         EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
 
+        InputSystem.s_Manager.actions = storedActions;
+
         base.TearDown();
     }
 
@@ -55,7 +65,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     public void InputSystemActionAssetIsNotNull()
     {
         // Test assumes a compatible action asset configuration exists for UI
@@ -64,7 +74,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     public void PointerEventsAreDispatchedFromMouse()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -82,7 +92,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     // Checks that mouse events are ignored when a touch is active.
     // This is to workaround the issue ISXB-269 on Windows.
     public void TouchIsPressedAndMouseEventsAreIgnored()
@@ -110,7 +120,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     // Presses a gamepad left stick left and verifies that a navigation move event is dispatched
     public void NavigationMoveWorks()
     {
@@ -137,7 +147,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     public void SendWheelEvent()
     {
         var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
@@ -151,7 +161,7 @@ public class InputForUITests : InputTestFixture
     }
 
     [Test]
-    [Category("InputForUI")]
+    [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
     // The goal of this test is to make sure that InputSystemProvider works with and without project-wide actions asset
@@ -180,6 +190,45 @@ public class InputForUITests : InputTestFixture
                                  eventSource: EventSource.Gamepad}
         });
     }
+
+#if UNITY_EDITOR
+    [Test]
+    public void DefaultActions_ShouldNotGenerateAnyVerificationWarnings()
+    {
+        var assetPath = "Assets/InputSystem_UI.inputactions";
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        LogAssert.NoUnexpectedReceived();
+    }
+    
+    [Test]
+    public void ActionsWithoutUIMap_ShouldGenerateWarnings()
+    {
+        var assetPath = "Assets/InputSystem_UI.inputactions";
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
+        asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
+        
+        InputSystem.s_Manager.actions = asset;
+        Update();
+        
+        var cfg = InputSystemProvider.Configuration.GetDefaultConfiguration();
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset"));  //'{EditorHelpers.GetHyperlink(assetPath)}' could not be found."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Submit' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Cancel' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Click' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/MiddleClick' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset"));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset"));
+        LogAssert.NoUnexpectedReceived();
+    }
+    
+    // TODO Write test cases for missing individual actions
+    
+    // TODO Write test cases for incorrect types
+#endif
 
     static void Update()
     {

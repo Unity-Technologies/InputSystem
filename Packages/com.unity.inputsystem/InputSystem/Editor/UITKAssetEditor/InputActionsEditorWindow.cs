@@ -253,7 +253,7 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             var projectWideActions = InputSystem.actions;
             if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
-                ProjectWideActionsAsset.Validate(GetEditedAsset());
+                ProjectWideActionsAsset.Verify(GetEditedAsset());
             #endif
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
