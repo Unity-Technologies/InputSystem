@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && ENABLE_INPUT_SYSTEM
+#if UNITY_EDITOR && ENABLE_INPUT_SYSTEM && UNITY_2023_2_OR_NEWER
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -148,4 +148,4 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
     }
 }
 
-#endif // UNITY_EDITOR && ENABLE_INPUT_SYSTEM
+#endif // UNITY_EDITOR && ENABLE_INPUT_SYSTEM && UNITY_2023_2_OR_NEWER
