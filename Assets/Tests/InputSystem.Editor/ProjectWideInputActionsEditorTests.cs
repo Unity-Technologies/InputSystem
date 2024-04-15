@@ -354,41 +354,6 @@ internal class ProjectWideInputActionsEditorTests
         LogAssert.Expect(LogType.Exception, new Regex($"{TestReporter.kExceptionMessage}"));
     }
 
-//     // This test is only relevant for the InputForUI module which native part was introduced in 2023.2
-// #if UNITY_2023_2_OR_NEWER
-//     [Test(Description = "Verifies that modifying the default project-wide action UI map generates console warnings")]
-//     [Category(kTestCategory)]
-//     public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()
-//     {
-//         // Create a default template asset that we then modify to generate various warnings
-//         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
-//
-//         var indexOf = asset.m_ActionMaps.IndexOf(x => x.name == "UI");
-//         var uiMap = asset.m_ActionMaps[indexOf];
-//
-//         // Change the name of the UI action map
-//         uiMap.m_Name = "UI2";
-//
-//         ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges(asset);
-//
-//         LogAssert.Expect(LogType.Warning, new Regex("The action map named 'UI' does not exist"));
-//
-//         // Change the name of some UI map back to default and change the name of the actions
-//         uiMap.m_Name = "UI";
-//         var defaultActionName0 = uiMap.m_Actions[0].m_Name;
-//         var defaultActionName1 = uiMap.m_Actions[1].m_Name;
-//
-//         uiMap.m_Actions[0].Rename("Navigation");
-//         uiMap.m_Actions[1].Rename("Show");
-//
-//         ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges(asset);
-//
-//         LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName0}' name has been modified"));
-//         LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName1}' name has been modified"));
-//     }
-//
-// #endif // UNITY_2023_2_OR_NEWER
-
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired if value is different but not when value is not different")]
     [Category(kTestCategory)]
     public void ProjectWideActions_CanBeAssignedAndFiresCallbackWhenDifferent()
