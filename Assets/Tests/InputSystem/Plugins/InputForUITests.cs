@@ -56,7 +56,7 @@ public class InputForUITests : InputTestFixture
 
         InputSystem.s_Manager.actions = storedActions;
 
-#if UNITY_EDITOR        
+#if UNITY_EDITOR
         if (File.Exists(kAssetPath))
             UnityEditor.AssetDatabase.DeleteAsset(kAssetPath);
 #endif
@@ -196,11 +196,11 @@ public class InputForUITests : InputTestFixture
                                  eventSource: EventSource.Gamepad}
         });
     }
-    
+
 #if UNITY_EDITOR
     // These tests shouldn't really be in a non editor-only assembly but for now we guard them until moved.
     private const string kAssetPath = "Assets/InputSystem_InputForUI_TestActions.inputactions";
-    
+
     [Test(Description = "Verifies that default actions (Project-wide) OR default actions have no verification errors.")]
     [Category(kTestCategory)]
     [TestCase(true)]
@@ -212,17 +212,17 @@ public class InputForUITests : InputTestFixture
         Update();
         LogAssert.NoUnexpectedReceived();
     }
-    
+
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
     [Category(kTestCategory)]
     public void ActionsWithoutUIMap_ShouldGenerateWarnings()
     {
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
-        
+
         InputSystem.s_Manager.actions = asset;
         Update();
-     
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
         LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
@@ -251,15 +251,15 @@ public class InputForUITests : InputTestFixture
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         var action = asset.FindAction(actionPath);
         action.Rename("Other");
-        
+
         InputSystem.s_Manager.actions = asset;
         Update();
-        
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' could not be found."));
         LogAssert.NoUnexpectedReceived();
     }
-    
+
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if they lack bindings.")]
     [Category(kTestCategory)]
     [TestCase("UI/Point")]
@@ -283,7 +283,7 @@ public class InputForUITests : InputTestFixture
         {
             // Create a cloned action with only binding changed
             var source = map.actions[i];
-            var action = newMap.AddAction(name: source.name, 
+            var action = newMap.AddAction(name: source.name,
                 type: source.type,
                 binding: actionPath == map.name + '/' + source.name ? null : "SomeIrrelevantBindingThatWillNeverResolve",
                 processors: source.processors,
@@ -294,17 +294,17 @@ public class InputForUITests : InputTestFixture
         }
 
         asset.AddActionMap(newMap);
-        
+
         InputSystem.s_Manager.actions = asset;
         Update();
-        
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' do not have any configured bindings."));
         LogAssert.NoUnexpectedReceived();
     }
 
     [Test(Description =
-        "Verifies that user-supplied project-wide input actions generates warnings if they have a different action type")]
+            "Verifies that user-supplied project-wide input actions generates warnings if they have a different action type")]
     [TestCase("UI/Point", InputActionType.Button)]
     [TestCase("UI/Navigate", InputActionType.Button)]
     [TestCase("UI/Submit", InputActionType.Value)]
@@ -320,18 +320,18 @@ public class InputForUITests : InputTestFixture
         Debug.Assert(action.type != unexpectedType); // not really an assert, sanity check test assumption for correctness
         var expectedType = action.type;
         action.m_Type = unexpectedType; // change directly via internals for now
-        
+
         InputSystem.s_Manager.actions = asset;
         Update();
-        
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
             new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'type' set to 'InputActionType.{unexpectedType}'"));
         LogAssert.NoUnexpectedReceived();
     }
-    
+
     [Test(Description =
-        "Verifies that user-supplied project-wide input actions generates warnings if they have a specified expected control type")]
+            "Verifies that user-supplied project-wide input actions generates warnings if they have a specified expected control type")]
     [TestCase("UI/Point", "Quaternion")]
     [TestCase("UI/Navigate", "Touch")]
     [TestCase("UI/Submit", "Vector2")]
@@ -346,16 +346,17 @@ public class InputForUITests : InputTestFixture
         var action = asset.FindAction(actionPath);
         Debug.Assert(action.expectedControlType != unexpectedControlType); // not really an assert, sanity check test assumption for correctness
         var expectedControlType = action.expectedControlType;
-        action.expectedControlType = unexpectedControlType; 
-        
+        action.expectedControlType = unexpectedControlType;
+
         InputSystem.s_Manager.actions = asset;
         Update();
-        
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
             new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'expectedControlType' set to '{unexpectedControlType}'"));
         LogAssert.NoUnexpectedReceived();
     }
+
 #endif // UNITY_EDITOR
 
     static void Update()

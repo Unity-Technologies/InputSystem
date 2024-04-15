@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_SeenTouchEvents = false;
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-            
+
             RegisterActions(ref m_Cfg);
 
             InputSystem.onActionsChange += OnActionsChange;
@@ -595,7 +595,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         void RegisterActions(ref Configuration cfg)
         {
             m_InputActionAsset = m_Cfg.ActionAsset;
-            
+
 #if UNITY_EDITOR
             ProjectWideActionsAsset.Verify(m_InputActionAsset);
 #endif
@@ -644,7 +644,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             // The Next/Previous action is not part of the input actions asset
             RegisterNextPreviousAction();
         }
-        
+
         void UnregisterActions(ref Configuration cfg)
         {
             if (m_PointAction != null && m_PointAction.action != null)

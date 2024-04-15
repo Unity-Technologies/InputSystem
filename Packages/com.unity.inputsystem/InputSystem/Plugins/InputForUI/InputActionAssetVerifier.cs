@@ -40,11 +40,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             {
                 reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {kErrorSuffix}");
             }
-            
+
             if (action == null)
             {
                 const string kCouldNotBeFound = "could not be found";
-                
+
                 // Check if the map (if any) exists
                 var index = actionNameOrId.IndexOf('/');
                 if (index > 0)
