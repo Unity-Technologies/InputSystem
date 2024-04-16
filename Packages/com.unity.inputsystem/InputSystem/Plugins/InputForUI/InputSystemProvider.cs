@@ -1,9 +1,9 @@
 #if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
+using System;
 using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputForUI;
-using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Plugins.InputForUI
 {
@@ -46,6 +46,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         bool m_ResetSeenEventsOnUpdate;
 
         const float kScrollUGUIScaleFactor = 3.0f;
+
+        static Action<InputActionAsset> s_OnRegisterActions;
 
         static InputSystemProvider()
         {
@@ -596,9 +598,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             m_InputActionAsset = m_Cfg.ActionAsset;
 
-#if UNITY_EDITOR
-            ProjectWideActionsAsset.Verify(m_InputActionAsset);
-#endif
+            // Invoke potential lister observing registration
+            s_OnRegisterActions?.Invoke(m_InputActionAsset);
 
             m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.PointAction));
             m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.MoveAction));
@@ -712,6 +713,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     ScrollWheelAction = "UI/ScrollWheel",
                 };
             }
+        }
+
+        internal static void SetOnRegisterActions(Action<InputActionAsset> callback)
+        {
+            s_OnRegisterActions = callback;
         }
     }
 }

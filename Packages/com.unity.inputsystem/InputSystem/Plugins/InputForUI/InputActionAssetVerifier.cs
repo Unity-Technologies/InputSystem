@@ -11,6 +11,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             // Register an InputActionAsset verifier for this plugin.
             ProjectWideActionsAsset.RegisterInputActionAssetVerifier(() => new InputActionAssetVerifier());
+
+            InputSystemProvider.SetOnRegisterActions((asset) => { ProjectWideActionsAsset.Verify(asset); });
         }
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
