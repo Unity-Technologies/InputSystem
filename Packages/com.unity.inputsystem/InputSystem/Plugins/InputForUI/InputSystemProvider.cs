@@ -84,14 +84,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_Cfg = Configuration.GetDefaultConfiguration();
 
-            RegisterActions(ref m_Cfg);
+            RegisterActions();
 
             InputSystem.onActionsChange += OnActionsChange;
         }
 
         public void Shutdown()
         {
-            UnregisterActions(ref m_Cfg);
+            UnregisterActions();
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
@@ -101,10 +101,10 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void OnActionsChange()
         {
-            UnregisterActions(ref m_Cfg);
+            UnregisterActions();
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-            RegisterActions(ref m_Cfg);
+            RegisterActions();
         }
 
         public void Update()
@@ -594,21 +594,21 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
         }
 
-        void RegisterActions(ref Configuration cfg)
+        void RegisterActions()
         {
             m_InputActionAsset = m_Cfg.ActionAsset;
 
             // Invoke potential lister observing registration
             s_OnRegisterActions?.Invoke(m_InputActionAsset);
 
-            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.PointAction));
-            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.MoveAction));
-            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.SubmitAction));
-            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.CancelAction));
-            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.LeftClickAction));
-            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.MiddleClickAction));
-            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.RightClickAction));
-            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(cfg.ScrollWheelAction));
+            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
+            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
+            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
+            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
+            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
+            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
+            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
+            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
 
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed += OnPointerPerformed;
@@ -646,7 +646,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             RegisterNextPreviousAction();
         }
 
-        void UnregisterActions(ref Configuration cfg)
+        void UnregisterActions()
         {
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed -= OnPointerPerformed;
