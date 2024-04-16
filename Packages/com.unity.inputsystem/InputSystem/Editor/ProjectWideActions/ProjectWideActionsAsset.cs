@@ -35,6 +35,15 @@ namespace UnityEngine.InputSystem.Editor
                         MoveInputManagerAssetActionsToProjectWideInputActionAsset();
                         migratedInputActionAssets = true;
                     }
+
+                    if (!Application.isPlaying)
+                    {
+                        // If the Library folder is deleted, InputSystem will fail to retrieve the assigned Project-wide Asset because this look-up occurs
+                        // during initialization while the Library is being rebuilt. So, afterwards perform another check and assign PWA asset if needed.
+                        var pwaAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+                        if (InputSystem.actions == null && pwaAsset != null)
+                            InputSystem.actions = pwaAsset;
+                    }
                 }
             }
 
