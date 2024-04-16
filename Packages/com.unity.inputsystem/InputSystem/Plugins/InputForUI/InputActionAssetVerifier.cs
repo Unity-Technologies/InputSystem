@@ -7,6 +7,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 {
     internal class InputActionAssetVerifier : ProjectWideActionsAsset.IInputActionAssetVerifier
     {
+        public enum ReportPolicy
+        {
+            ReportAll,
+            SuppressChildErrors
+        }
+
+        public const ReportPolicy DefaultReportPolicy = ReportPolicy.SuppressChildErrors;
+
         static InputActionAssetVerifier()
         {
             // Register an InputActionAsset verifier for this plugin.
@@ -17,59 +25,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
-
-        private static void VerifyAction(InputActionAsset asset, string actionNameOrId,
-            InputActionType actionType, string expectedControlType, ref HashSet<string> missingPaths,
-            ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
-        {
-            var action = asset.FindAction(actionNameOrId);
-
-            string GetAssetReference()
-            {
-                var path = AssetDatabase.GetAssetPath(asset);
-                return (path == null)
-                    ? '"' + asset.name + '"'
-                    : "<a href=\"" + path + $">{path}</a>";
-            }
-
-            const string kErrorSuffix = "Run-time UI interactivity (input) may not work as expected. See <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html\">Input System Manual - UI Support</a> for guidance on required actions for UI integration or see <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions\">how to revert to defaults</a>.";
-            void ActionMapWarning(string actionMap, string problem)
-            {
-                reporter.Report($"InputActionMap with path '{actionMap}' in asset '{GetAssetReference()}' {problem}. {kErrorSuffix}");
-            }
-
-            void ActionWarning(string actionNameOrId, string problem)
-            {
-                reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {kErrorSuffix}");
-            }
-
-            if (action == null)
-            {
-                const string kCouldNotBeFound = "could not be found";
-
-                // Check if the map (if any) exists
-                var index = actionNameOrId.IndexOf('/');
-                if (index > 0)
-                {
-                    var path = actionNameOrId.Substring(0, index);
-                    if (asset.FindActionMap(path) == null)
-                    {
-                        if (missingPaths == null)
-                            missingPaths = new HashSet<string>(1);
-                        if (missingPaths.Add(path))
-                            ActionMapWarning(path, kCouldNotBeFound);
-                    }
-                }
-
-                ActionWarning(actionNameOrId, kCouldNotBeFound);
-            }
-            else if (action.bindings.Count == 0)
-                ActionWarning(actionNameOrId, "do not have any configured bindings");
-            else if (action.type != actionType)
-                ActionWarning(actionNameOrId, $"has 'type' set to '{nameof(InputActionType)}.{action.type}', but '{nameof(InputActionType)}.{actionType}' was expected");
-            else if (!string.IsNullOrEmpty(expectedControlType) && !string.IsNullOrEmpty(action.expectedControlType) && action.expectedControlType != expectedControlType)
-                ActionWarning(actionNameOrId, $"has 'expectedControlType' set to '{action.expectedControlType}', but '{expectedControlType}' was expected");
-        }
 
         #region ProjectWideActionsAsset.IInputActionAssetVerifier
 
@@ -83,69 +38,99 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         #endregion
 
-        internal static void Verify(InputActionAsset asset, ref InputSystemProvider.Configuration config,
+        private struct Context
+        {
+            const string errorSuffix = "Run-time UI interactivity (input) may not work as expected. See <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html\">Input System Manual - UI Support</a> for guidance on required actions for UI integration or see <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions\">how to revert to defaults</a>.";
+
+            public Context(InputActionAsset asset,
+                           ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter,
+                           ReportPolicy policy)
+            {
+                this.asset = asset;
+                this.missingPaths = new HashSet<string>();
+                this.reporter = reporter;
+                this.policy = policy;
+            }
+
+            private string GetAssetReference()
+            {
+                var path = AssetDatabase.GetAssetPath(asset);
+                return (path == null) ? '"' + asset.name + '"' : "<a href=\"" + path + $">{path}</a>";
+            }
+
+            private void ActionMapWarning(string actionMap, string problem)
+            {
+                reporter.Report($"InputActionMap with path '{actionMap}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+            }
+
+            private void ActionWarning(string actionNameOrId, string problem)
+            {
+                reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+            }
+
+            public void Verify(string actionNameOrId, InputActionType actionType, string expectedControlType)
+            {
+                var action = asset.FindAction(actionNameOrId);
+                if (action == null)
+                {
+                    const string kCouldNotBeFound = "could not be found";
+
+                    // Check if the map (if any) exists
+                    var noMapOrMapExists = true;
+                    var index = actionNameOrId.IndexOf('/');
+                    if (index > 0)
+                    {
+                        var path = actionNameOrId.Substring(0, index);
+                        if (asset.FindActionMap(path) == null)
+                        {
+                            if (missingPaths == null)
+                                missingPaths = new HashSet<string>(1);
+                            if (missingPaths.Add(path))
+                                ActionMapWarning(path, kCouldNotBeFound);
+                            noMapOrMapExists = false;
+                        }
+                    }
+
+                    if (!noMapOrMapExists && policy == ReportPolicy.SuppressChildErrors)
+                        return;
+
+                    ActionWarning(actionNameOrId, kCouldNotBeFound);
+                }
+                else if (action.bindings.Count == 0)
+                    ActionWarning(actionNameOrId, "do not have any configured bindings");
+                else if (action.type != actionType)
+                    ActionWarning(actionNameOrId, $"has 'type' set to '{nameof(InputActionType)}.{action.type}', but '{nameof(InputActionType)}.{actionType}' was expected");
+                else if (!string.IsNullOrEmpty(expectedControlType) && !string.IsNullOrEmpty(action.expectedControlType) && action.expectedControlType != expectedControlType)
+                    ActionWarning(actionNameOrId, $"has 'expectedControlType' set to '{action.expectedControlType}', but '{expectedControlType}' was expected");
+            }
+
+            private readonly InputActionAsset asset;
+            private readonly ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter;
+
+            private HashSet<string> missingPaths; // Avoids generating multiple warnings around missing map
+            private ReportPolicy policy;
+        }
+
+        private static void Verify(InputActionAsset asset, ref InputSystemProvider.Configuration config,
             ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
         {
-            // Temporary set used to track missing paths to avoid multiple similar warnings.
-            // Initialize to null to avoid allocation completely if no errors are found.
-            HashSet<string> missingPaths = null;
-
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.PointAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: nameof(Vector2),
-                missingPaths: ref missingPaths,
-                reporter: reporter); // initial state check true in PWA, false in DefaultActions, does it matter?
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.MoveAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: nameof(Vector2),
-                missingPaths: ref missingPaths,
-                reporter: reporter);
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.SubmitAction,
-                actionType: InputActionType.Button,
-                expectedControlType: "Button", // indirectly Button derived from action type if not explicit (not exposed in UI, but InputActionRebindingExtensions suggests this)
-                missingPaths: ref missingPaths,
-                reporter: reporter);
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.CancelAction,
-                actionType: InputActionType.Button,
-                expectedControlType: "Button", // indirectly Button derived from action type if not explicit (not exposed in UI, but InputActionRebindingExtensions suggests this)
-                missingPaths: ref missingPaths,
-                reporter: reporter);
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.LeftClickAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: "Button",
-                missingPaths: ref missingPaths,
-                reporter: reporter); // initial state check true in PWA, false in DefaultActions, does it matter?
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.MiddleClickAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: "Button",
-                missingPaths: ref missingPaths,
-                reporter: reporter);
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.RightClickAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: "Button",
-                missingPaths: ref missingPaths,
-                reporter: reporter);
-            VerifyAction(
-                asset: asset,
-                actionNameOrId: config.ScrollWheelAction,
-                actionType: InputActionType.PassThrough,
-                expectedControlType: nameof(Vector2),
-                missingPaths: ref missingPaths,
-                reporter: reporter);
+            // Note:
+            // PWA has initial state check true for "Point" action, DefaultActions do not, does it matter?
+            //
+            // Additionally note that "Submit" and "Cancel" are indirectly expected to be of Button action type.
+            // This is not available in UI configuration, but InputActionRebindingExtensions suggests this.
+            //
+            // Additional "LeftClick" has initial state check set in PWA, but not "MiddleClick" and "RightClick".
+            // Is this intentional? Are requirements different?
+            var context = new Context(asset, reporter, DefaultReportPolicy);
+            context.Verify(actionNameOrId: config.PointAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
+            context.Verify(actionNameOrId: config.MoveAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
+            context.Verify(actionNameOrId: config.SubmitAction, actionType: InputActionType.Button, expectedControlType: "Button");
+            context.Verify(actionNameOrId: config.CancelAction, actionType: InputActionType.Button, expectedControlType: "Button");
+            context.Verify(actionNameOrId: config.LeftClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: config.MiddleClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: config.RightClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: config.ScrollWheelAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
         }
     }
 }

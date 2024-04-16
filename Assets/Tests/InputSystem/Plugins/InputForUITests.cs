@@ -227,14 +227,18 @@ public class InputForUITests : InputTestFixture
 
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Submit' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Cancel' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Click' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/MiddleClick' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset '{link}' could not be found."));
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset '{link}' could not be found."));
+        if (InputActionAssetVerifier.DefaultReportPolicy == InputActionAssetVerifier.ReportPolicy.ReportAll)
+        {
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Submit' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Cancel' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Click' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/MiddleClick' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset '{link}' could not be found."));
+            LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset '{link}' could not be found."));
+        }
+        // else: expect suppression of child errors
         LogAssert.NoUnexpectedReceived();
     }
 
