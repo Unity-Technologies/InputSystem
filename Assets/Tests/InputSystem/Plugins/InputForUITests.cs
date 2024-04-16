@@ -6,7 +6,9 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+#endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
 using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
