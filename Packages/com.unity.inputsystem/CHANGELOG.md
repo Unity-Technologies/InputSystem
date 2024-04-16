@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - NullReferenceException thrown when right-clicking an empty Action Map list in Input Actions Editor windows [ISXB-833](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-833).
 - Fixed an issue where `System.ObjectDisposedException` would be thrown when deleting the last ActionMap item in the Input Actions Asset editor.
 - Fixed DualSense Edge's vibration and light bar not working on Windows
+- Fixed Project-wide Actions asset failing to reload properly after deleting project's Library folder.
 
 ### Changed
 - For Unity 6.0 and above, when an `EventSystem` GameObject is created in the Editor it will have the
