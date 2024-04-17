@@ -597,35 +597,83 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     [Test, Performance]
     [Category("Performance")]
-    [TestCase(OptimizedControlsTest.OptimizedControls)]
-    [TestCase(OptimizedControlsTest.NormalControls)]
-    [TestCase(OptimizedControlsTest.ReadValueCaching)]
-    [TestCase(OptimizedControlsTest.OptimizedControlsAndReadValueCaching)]
-    public void Performance_OptimizedControlsOnly_ReadAndUpdateWithMouse5kTimes(OptimizedControlsTest testSetup)
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.OptimizedControls)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    // Currently this tests shows that all the optimizations have a performance cost when reading from a Mouse device.
+    // OptimizedControls option is slower because of an extra check that is only done in Editor and Development Builds.
+    // ReadValueCaching option is slower because Mouse state is changed every update, which means cached values are
+    // always stale. And there is a cost when caching the value.
+    public void Performance_OptimizedControls_ReadingMousePosition1kTimes(OptimizationTestType testType)
     {
-        var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls
-            || testSetup == OptimizedControlsTest.OptimizedControlsAndReadValueCaching;
-        var useReadValueCaching = testSetup == OptimizedControlsTest.ReadValueCaching
-            || testSetup == OptimizedControlsTest.OptimizedControlsAndReadValueCaching;
-
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useReadValueCaching);
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+        SetInternalFeatureFlagsFromTestType(testType);
 
         var mouse = InputSystem.AddDevice<Mouse>();
-
         InputSystem.Update();
 
+        var useOptimizedControls = testType == OptimizationTestType.OptimizedControls
+            || testType == OptimizationTestType.OptimizedControlsAndReadValueCaching;
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatVector2 : InputStateBlock.FormatInvalid));
 
         Measure.Method(() =>
         {
-            for (var i = 0; i < 5000; ++i)
+            var pos = new Vector2();
+            for (var i = 0; i < 1000; ++i)
+            {
+                pos += mouse.position.ReadValue();
+                InputSystem.Update();
+
+                if (i % 100 == 0)
+                {
+                    // Make sure there's a new different value every 100 frames.
+                    InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(i + 1, i + 2) });
+                }
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // This tests shows a use case where ReadValueCaching optimization will perform better than without any
+    // optimization.
+    // It shows that there's a performance improvement when the control values being read are not changing every frame.
+    public void Performance_OptimizedControls_ReadAndUpdateGamepad1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            var pos = new Vector2();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.3f, 0.1f) });
+            InputSystem.Update();
+
+            pos = gamepad.leftStick.value;
+            Assert.That(gamepad.leftStick.m_CachedValueIsStale, Is.False);
+
+            for (var i = 0; i < 1000; ++i)
             {
                 InputSystem.Update();
-                mouse.position.ReadValue();
+                pos = gamepad.leftStick.value;
+                Assert.That(gamepad.leftStick.m_CachedValueIsStale, Is.False);
+
+                if (i % 100 == 0)
+                {
+                    // Make sure there's a new different value every 100 frames to mark the cached value as stale.
+                    InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(i / 1000f, i / 1000f) });
+                    InputSystem.Update();
+                }
             }
         })
             .MeasurementCount(100)
