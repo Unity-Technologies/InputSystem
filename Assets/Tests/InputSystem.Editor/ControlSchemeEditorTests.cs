@@ -197,7 +197,6 @@ public class ControlSchemesEditorTests
 
     [Test]
     [Category("AssetEditor")]
-    [Ignore("Instability ISX-1905")]
     public void WhenControlSchemeIsSelected_SelectedControlSchemeIsPopulatedWithSelection()
     {
         var asset = TestData.inputActionAsset
@@ -260,9 +259,29 @@ public class ControlSchemesEditorTests
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
     }
 
+    [Test(Description = "Verifies that when duplicating Control Scheme ending on an Int it increments that Int and jumps already existing Int names")]
+    [Category("AssetEditor")]
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnIntJumpsExistingNumbers()
+    {
+        var asset = TestData.inputActionAsset.Generate();
+
+        asset.AddControlScheme(new InputControlScheme(("Test")));
+        asset.AddControlScheme(new InputControlScheme(("Test1")));
+
+        //select "Test" Control Scheme
+        var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
+
+        state.serializedObject.Update();
+
+        //duplicate "Test"
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
+        //duplicated Control Scheme should be names "Test2", skipping "Test1"
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo("Test2"));
+    }
+
     [Test]
     [Category("AssetEditor")]
-    [Ignore("Disabled: This should not be called in batch mode.")]
     public void DeleteControlSchemeCommand_DeletesSelectedControlScheme()
     {
         var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme.WithOptionalDevice()).Generate();
@@ -284,7 +303,6 @@ public class ControlSchemesEditorTests
     [TestCase(3, 2, 1, "Test1")]
     [TestCase(1, 0, -1, null)]
     [Category("AssetEditor")]
-    [Ignore("Disabled: This should not be called in batch mode.")]
     public void DeleteControlSchemeCommand_SelectsAnotherControlSchemeAfterDelete(
         int controlSchemeCount,
         int selectedControlSchemeIndex,

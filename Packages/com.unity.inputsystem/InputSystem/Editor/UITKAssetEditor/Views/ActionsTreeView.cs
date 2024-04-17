@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class ActionsTreeView : ViewBase<ActionsTreeView.ViewState>
     {
+        private readonly ListView m_ActionMapsListView;
         private readonly TreeView m_ActionsTreeView;
         private readonly Button m_AddActionButton;
         private readonly ScrollView m_PropertiesScrollview;
@@ -31,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(root, stateContainer)
         {
+            m_ActionMapsListView = root.Q<ListView>("action-maps-list-view");
             m_AddActionButton = root.Q<Button>("add-new-action-button");
             m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
             m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
@@ -122,6 +124,8 @@ namespace UnityEngine.InputSystem.Editor
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
             ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
+            // Only bring up this context menu for the Tree when it's empty, so we can treat it like right-clicking the empty space:
+            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, m_ActionsTreeView, onlyShowIfTreeIsEmpty: true);
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
@@ -372,6 +376,11 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
             else if (data.isComposite)
                 Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
+        }
+
+        internal int GetMapCount()
+        {
+            return m_ActionMapsListView.itemsSource.Count;
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)

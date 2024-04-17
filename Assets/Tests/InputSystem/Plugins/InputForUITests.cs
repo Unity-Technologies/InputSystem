@@ -31,13 +31,9 @@ public class InputForUITests : InputTestFixture
     {
         base.Setup();
 
-        // Test assumes a compatible project-wide action configuration exist for UI
-        // See CoreTests_ProjectWideActions for how its setup via build plugins.
-        Assert.That(InputSystem.actions, Is.Not.Null,
-            "Test is invalid since Project-wide Input System actions have not been setup for play-mode test environment");
-
         m_InputSystemProvider = new InputSystemProvider();
         EventProvider.SetMockProvider(m_InputSystemProvider);
+
         // Register at least one consumer so the mock update gets invoked
         EventProvider.Subscribe(InputForUIOnEvent);
     }
@@ -56,6 +52,15 @@ public class InputForUITests : InputTestFixture
     {
         m_InputForUIEvents.Add(ev);
         return true;
+    }
+
+    [Test]
+    [Category("InputForUI")]
+    public void InputSystemActionAssetIsNotNull()
+    {
+        // Test assumes a compatible action asset configuration exists for UI
+        Assert.IsTrue(m_InputSystemProvider.ActionAssetIsNotNull(),
+            "Test is invalid since InputSystemProvider actions are not available");
     }
 
     [Test]
@@ -109,12 +114,7 @@ public class InputForUITests : InputTestFixture
     // Presses a gamepad left stick left and verifies that a navigation move event is dispatched
     public void NavigationMoveWorks()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        Update();
-        Press(gamepad.leftStick.left);
-        Update();
-        Release(gamepad.leftStick.left);
-        Update();
+        MoveWithGamepad();
 
         Assert.IsTrue(m_InputForUIEvents.Count == 1);
         Assert.That(m_InputForUIEvents[0] is Event
@@ -124,6 +124,16 @@ public class InputForUITests : InputTestFixture
                                  direction: NavigationEvent.Direction.Left,
                                  eventSource: EventSource.Gamepad}
         });
+    }
+
+    void MoveWithGamepad()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Update();
+        Press(gamepad.leftStick.left);
+        Update();
+        Release(gamepad.leftStick.left);
+        Update();
     }
 
     [Test]
@@ -138,6 +148,37 @@ public class InputForUITests : InputTestFixture
         Update();
         Assert.IsTrue(m_InputForUIEvents.Count == 1);
         Assert.That(m_InputForUIEvents[0].asPointerEvent.scroll, Is.EqualTo(new Vector2(0, 1)));
+    }
+
+    [Test]
+    [Category("InputForUI")]
+    [TestCase(true)]
+    [TestCase(false)]
+    // The goal of this test is to make sure that InputSystemProvider works with and without project-wide actions asset
+    // so that there is no impact in receiving the necessary input events for UI.
+    // When there are no project-wide actions asset, the InputSystemProvider should still work as it currently gets
+    // the actions from DefaultActionsAsset().asset.
+    public void EventProviderWorksWithAndWithoutProjectWideActionsSet(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            // Remove the project-wide actions asset in play mode and player.
+            // It will call InputSystem.onActionChange and re-set InputSystemProvider.actionAsset
+            // This the case where no project-wide actions asset is available in the project.
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+        MoveWithGamepad();
+
+        Assert.IsTrue(m_InputForUIEvents.Count == 1);
+        Assert.That(m_InputForUIEvents[0] is Event
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move,
+                                 direction: NavigationEvent.Direction.Left,
+                                 eventSource: EventSource.Gamepad}
+        });
     }
 
     static void Update()
