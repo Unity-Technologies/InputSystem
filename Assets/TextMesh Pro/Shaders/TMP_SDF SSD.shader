@@ -1,4 +1,4 @@
-﻿Shader "TextMeshPro/Distance Field SSD" {
+Shader "TextMeshPro/Distance Field SSD" {
 
 Properties {
     _FaceTex            ("Face Texture", 2D) = "white" {}
@@ -131,27 +131,27 @@ SubShader {
         struct vertex_t
         {
             UNITY_VERTEX_INPUT_INSTANCE_ID
-            float4	position        : POSITION;
-            float3	normal          : NORMAL;
-            float4	color           : COLOR;
-            float4	texcoord0       : TEXCOORD0;
-            float2	texcoord1       : TEXCOORD1;
+            float4  position        : POSITION;
+            float3  normal          : NORMAL;
+            float4  color           : COLOR;
+            float4  texcoord0       : TEXCOORD0;
+            float2  texcoord1       : TEXCOORD1;
         };
 
         struct pixel_t
         {
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
-            float4	position        : SV_POSITION;
-            float4	color           : COLOR;
-            float2	atlas           : TEXCOORD0;
-            float	weight          : TEXCOORD1;
-            float2	mask            : TEXCOORD2;		// Position in object space(xy)
-            float3	viewDir         : TEXCOORD3;
+            float4  position        : SV_POSITION;
+            float4  color           : COLOR;
+            float2  atlas           : TEXCOORD0;
+            float   weight          : TEXCOORD1;
+            float2  mask            : TEXCOORD2;        // Position in object space(xy)
+            float3  viewDir         : TEXCOORD3;
 
             #if (UNDERLAY_ON || UNDERLAY_INNER)
-            float2	texcoord2       : TEXCOORD4;
-            float4	underlayColor   : COLOR1;
+            float2  texcoord2       : TEXCOORD4;
+            float4  underlayColor   : COLOR1;
             #endif
 
             float4 textures         : TEXCOORD5;
