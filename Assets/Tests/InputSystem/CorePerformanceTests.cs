@@ -603,8 +603,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
     // Currently these tests shows that all the optimizations have a performance cost when reading from a Mouse device.
     // OptimizedControls option is slower because of an extra check that is only done in Editor and Development Builds.
-    // ReadValueCaching option is slower because Mouse state is changed every update, which means cached values are
-    // always stale. And there is a cost when caching the value.
+    // ReadValueCaching option is slower because Mouse state (FastMouse) is changed every update, which means cached
+    // values are always stale. And currently there is a cost when caching the value.
     public void Performance_OptimizedControls_ReadingMousePosition1kTimes(OptimizationTestType testType)
     {
         SetInternalFeatureFlagsFromTestType(testType);
@@ -684,6 +684,43 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // This shows a use case where ReadValueCaching optimization will perform worse when controls have stale cached
+    // values every frame. Meaning, when control values change in every frame.
+    public void Performance_OptimizedControls_ReadAndUpdateGamepadNewValuesEveryFrame1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            var pos = new Vector2();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.1f, 0.1f) });
+            InputSystem.Update();
+
+            gamepad.leftStick.ReadValue();
+            Assert.That(gamepad.leftStick.m_CachedValueIsStale, Is.False);
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                InputSystem.Update();
+                pos = gamepad.leftStick.value;
+                Assert.That(gamepad.leftStick.m_CachedValueIsStale, Is.False);
+                // Make sure there's a new different value every frames to mark the cached value as stale.
+                InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(i / 1000f, i / 1000f) });
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
@@ -693,14 +730,14 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         SetInternalFeatureFlagsFromTestType(testType);
 
-        // This adds a FastMouse, which updates state every frame and can lead to a performance cost when using ReadValueCaching.
+        // This adds FastMouse, which updates state every frame and can lead to a performance cost
+        // when using ReadValueCaching.
         var mouse = InputSystem.AddDevice<Mouse>();
         InputSystem.Update();
 
         Measure.Method(() =>
         {
-            for (var i = 0; i < 1000; ++i)
-                InputSystem.Update();
+            CallUpdate();
         })
             .MeasurementCount(100)
             .SampleGroup("Mouse Only")
@@ -713,13 +750,19 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         Measure.Method(() =>
         {
-            for (var i = 0; i < 1000; ++i)
-                InputSystem.Update();
+            CallUpdate();
         })
             .MeasurementCount(100)
             .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
+
+        return;
+
+        void CallUpdate()
+        {
+            for (var i = 0; i < 1000; ++i) InputSystem.Update();
+        }
     }
 
 #if ENABLE_VR
