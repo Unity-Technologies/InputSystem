@@ -3,40 +3,66 @@ uid: input-system-ui-support
 ---
 # UI support
 
-* [Setting up UI Input](#setting-up-ui-input)
-  * [How the bindings work](#how-the-bindings-work)
-    * [Pointer-type input](#pointer-type-input)
-    * [Navigation-type input](#navigation-type-input)
-    * [Tracked-type input](#tracked-type-input)
-* [Multiplayer UIs](#multiplayer-uis)
-* [Virtual mouse cursor control](#virtual-mouse-cursor-control)
-* [UI and game input](#ui-and-game-input)
-* [UI Toolkit support](#ui-toolkit-support)
+- [UI support](#ui-support)
+  - [Overview](#overview)
+  - [Setting up UI input](#setting-up-ui-input)
+  - [Required Actions for UI](#required-actions-for-ui)
+    - [Input System Module](#input-system-module)
+    - [How the bindings work](#how-the-bindings-work)
+  - [Multiplayer UIs](#multiplayer-uis)
+  - [Virtual mouse cursor control](#virtual-mouse-cursor-control)
+  - [UI and game input](#ui-and-game-input)
+    - [Handling ambiguities for pointer-type input](#handling-ambiguities-for-pointer-type-input)
+    - [Handling ambiguities for navigation-type input](#handling-ambiguities-for-navigation-type-input)
+  - [UI Toolkit support](#ui-toolkit-support)
+    - [Unity 2023.2 and onwards](#unity-20232-and-onwards)
+    - [Unity 2023.1 and earlier](#unity-20231-and-earlier)
+  - [Immediate Mode GUI (IMGUI / OnGUI)](#immediate-mode-gui-imgui--ongui)
+
+
+## Overview
 
 You can use the Input System package to control any in-game UI bindings created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html).
 
-
-From **Unity 2023.2** onwards, the Input System and UI Toolkit are fully integrated with each other. To configure UI Input you can configure the UI action map of [project-wide actions](Workflow-Actions.html) in **Project Settings > Input System Package > Input Actions**.
+From **Unity 2023.2** onwards, the Input System and UI Toolkit are fully integrated with each other. The default UI bindings are provided in the default [project-wide actions](./ProjectWideActions.md), under the "**UI**" action map.
 
 For older versions of Unity, the integration between the Input System and the UI system is handled by the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
-
-> **Note:** The Input System package does not support [Immediate Mode GUI](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) (IMGUI). If you have `OnGUI` methods in your player code (Editor code is unaffected), Unity does not receive any input events in those methods when the **Active Input Handling** [Player Setting](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to **Input System Package**. To restore functionality you can change the setting to **Both**, but this means that Unity processes the input twice.
-
 ## Setting up UI input
 
-When using [project-wide actions](Workflow-Actions.html) in Unity 2023.2 and newer, you can configure the UI action map in **Project Settings > Input System Package > Input Actions**.
+When using [project-wide actions](./ProjectWideActions.md) in Unity 2023.2 and newer, you can configure the UI action map in the [Actions Editor](./ActionsEditor.md). Go to **Project Settings > Input System Package**, then select "**UI**" in the Action Maps column.
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 
-You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("UI") and the names of the actions it contains ("Navigate", "Submit", "Cancel", etc) and their respective *Action Types* must remain the same to be compatible with expectations indirectly defined by the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class.
+## Required Actions for UI
+
+The default project-wide actions comes with all the required actions to be compatible with UI Toolkit.
+
+You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("**UI**"), the names of the actions it contains, and their respective **Action Types** must remain the same.
+
+These specific actions and types, which are expected by the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class, are as follows:
+
+**Action**|**Action Type**|**Control Type**
+-|-|-
+Navigate|PassThrough|Vector2
+Submit|Button|Button
+Cancel|Button|Button
+Point|PassThrough|Vector2
+Click|PassThrough|Button
+RightClick|PassThrough|Button
+MiddleClick|PassThrough|Button
+ScrollWheel|PassThrough|Vector2
 
 You can also reset the UI action map to its default bindings by selecting **Reset** from the **More (⋮)** menu, at the top right of the actions editor window. However, this will reset both the 'Player' and 'UI' action maps to their default bindings.
 
-> **Note:**
-> If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions.
+### Input System Module
 
-For versions of Unity prior to Unity 2023.2, the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package has. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System package instead of the legacy Input Manager to drive UI input.
+For versions of Unity prior to Unity 2023.2, to be compatible with the UI Toolkit package, you must use the "Input System UI Input Module". This is a component which you must add to a GameObject in your scene in order for your UI to receive input from the Input System.
+
+the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that is included in the Unity UI package. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System package instead of the legacy Input Manager to drive UI input.
+
+If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component take priority and are used instead of the UI settings in your project-wide actions.
+
 
 If you have a [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component on a GameObject, and the Input System is installed, Unity shows a button in the Inspector offering to automatically replace it with a [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) for you. The [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) is pre-configured to use default Input Actions to drive the UI, but you can override that configuration to suit your needs.
 
@@ -237,3 +263,17 @@ There are some additional things worth noting:
   button.clicked += () => ButtonWasClicked();
   ```
   the handle is invoked in both cases.
+
+
+
+
+## Immediate Mode GUI (IMGUI / OnGUI)
+
+The Input System package does not support [Immediate Mode GUI](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) (IMGUI) methods at runtime. 
+
+When the Editor's [**Active Input Handling**](https://docs.unity3d.com/Manual/class-PlayerSettings.html) setting is set to "**Input System Package**" (which is the default, when using the Input System package), `OnGUI` methods in your player code won't receive any input events.
+
+To restore functionality to runtime `OnGUI` methods, you can change the **Active Input Handling** setting to "**Both**", but this means that Unity processes the input twice.
+
+This only affects runtime (play mode) OnGUI methods. Editor GUI code is unaffected and will receive input events regardless.
+

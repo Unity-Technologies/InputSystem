@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         private struct Context
         {
-            const string errorSuffix = "Run-time UI interactivity (input) may not work as expected. See <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html\">Input System Manual - UI Support</a> for guidance on required actions for UI integration or see <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions\">how to revert to defaults</a>.";
+            const string errorSuffix = "The Input System's runtime UI integration relies on certain required input action definitions, some of which are missing. This means some runtime UI input may not work correctly. See <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html#required-actions-for-ui\">Input System Manual - UI Support</a> for guidance on required actions for UI integration or see <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions\">how to revert to defaults</a>.";
 
             public Context(InputActionAsset asset,
                            ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter,
