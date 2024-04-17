@@ -601,7 +601,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControls)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
-    // Currently this tests shows that all the optimizations have a performance cost when reading from a Mouse device.
+    // Currently these tests shows that all the optimizations have a performance cost when reading from a Mouse device.
     // OptimizedControls option is slower because of an extra check that is only done in Editor and Development Builds.
     // ReadValueCaching option is slower because Mouse state is changed every update, which means cached values are
     // always stale. And there is a cost when caching the value.
@@ -642,7 +642,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
-    // This tests shows a use case where ReadValueCaching optimization will perform better than without any
+    // These tests shows a use case where ReadValueCaching optimization will perform better than without any
     // optimization.
     // It shows that there's a performance improvement when the control values being read are not changing every frame.
     public void Performance_OptimizedControls_ReadAndUpdateGamepad1kTimes(OptimizationTestType testType)
@@ -677,6 +677,47 @@ internal class CorePerformanceTests : CoreTestsFixture
             }
         })
             .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.OptimizedControls)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    // These tests evaluate the performance when there's no read value performed and only InputSystem.Update() is called.
+    // Emulates a scenario where the controls are not being changed to evaluate the impact of the optimizations.
+    public void Performance_OptimizedControls_UpdateOnly1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        // This adds a FastMouse, which updates state every frame and can lead to a performance cost when using ReadValueCaching.
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 1000; ++i)
+                InputSystem.Update();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Mouse Only")
+            .WarmupCount(10)
+            .Run();
+
+        InputSystem.RemoveDevice(mouse);
+        InputSystem.AddDevice<Gamepad>();
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 1000; ++i)
+                InputSystem.Update();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
     }
