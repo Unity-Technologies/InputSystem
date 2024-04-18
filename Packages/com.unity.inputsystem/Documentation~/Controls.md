@@ -258,6 +258,8 @@ If there are any non-obvious inconsistencies, 'PARANOID_READ_VALUE_CACHING_CHECK
 
 When the `'USE_OPTIMIZED_CONTROLS'` internal feature flag is set, the Input System will use faster way to use state memory for some controls instances. This is very specific optimization and should be used with caution.
 
+> __Please note__: This optimization has a performance impact on `PlayMode` as we do extra checks to ensure that the controls have the correct memory representation during development. Don't be alarmed if you see a performance drop in `PlayMode` when using this optimization as it's expected at this stage.
+
 Most controls are flexible with regards to memory representation, like [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) can be one bit, multiple bits, a float, etc, or in [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) where x and y can have different memory representation.
 Yet for most controls there are common memory representation patterns, for example [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) are floats or single bytes. Or some [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) are two consequitive floats in memory.
 If a control matches a common representation we can bypass reading its children control and cast the memory directly to the common representation. For example if [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) is two consecutive floats in memory we can bypass reading `x` and `y` separately and just cast the state memory to `Vector2`.
