@@ -554,7 +554,6 @@ internal class CorePerformanceTests : CoreTestsFixture
         OptimizedControlsAndReadValueCaching
     }
 
-
     public void SetInternalFeatureFlagsFromTestType(OptimizationTestType testType)
     {
         var useOptimizedControls = testType == OptimizationTestType.OptimizedControls
@@ -573,6 +572,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControls)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    // Isolated tests for reading from Mouse device to evaluate the performance of the optimizations.
+    // Does not take into account the performance of the InputSystem.Update() call.
     public void Performance_OptimizedControls_ReadingMousePosition100kTimes(OptimizationTestType testType)
     {
         SetInternalFeatureFlagsFromTestType(testType);
@@ -605,7 +606,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     // OptimizedControls option is slower because of an extra check that is only done in Editor and Development Builds.
     // ReadValueCaching option is slower because Mouse state (FastMouse) is changed every update, which means cached
     // values are always stale. And currently there is a cost when caching the value.
-    public void Performance_OptimizedControls_ReadingMousePosition1kTimes(OptimizationTestType testType)
+    public void Performance_OptimizedControls_ReadAndUpdateMousePosition1kTimes(OptimizationTestType testType)
     {
         SetInternalFeatureFlagsFromTestType(testType);
 
@@ -772,6 +773,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControls)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]
+    // Isolated tests for reading from XR Pose device to evaluate the performance of the optimizations.
+    // Does not take into account the performance of the InputSystem.Update() call.
     public void Performance_OptimizedControls_ReadingPose4kTimes(OptimizationTestType testType)
     {
         SetInternalFeatureFlagsFromTestType(testType);
