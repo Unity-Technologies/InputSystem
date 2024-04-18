@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem
 #endif
         }
 
+#if !ENABLE_CORECLR
         internal static void TestHook_SimulateDomainReload(IInputRuntime runtime)
         {
             // This quite invasive goes into InputSystem internals. Unfortunately, we
@@ -41,12 +42,16 @@ namespace UnityEngine.InputSystem
             // internal methods here in a sequence similar to what we'd get during a domain reload.
             // Since we're faking it, pass 'true' for calledFromCtor param.
 
+            // Need to notify devices of removal so their static fields are cleaned up
+            InputSystem.s_Manager.TestHook_RemoveDevicesForSimulatedDomainReload();
+
             InputSystem.s_DomainStateManager.OnBeforeSerialize();
             InputSystem.s_DomainStateManager = null;
             InputSystem.s_Manager = null; // Do NOT Dispose()! The native memory cannot be freed as it's reference by saved state
             InputSystem.s_PluginsInitialized = false;
             InputSystem.InitializeInEditor(true, runtime);
         }
+#endif
 #endif // UNITY_EDITOR
 
         /// <summary>

@@ -1378,7 +1378,8 @@ namespace UnityEngine.InputSystem.UI
 
         public void AssignDefaultActions()
         {
-            if (defaultActions == null)
+            // Without Domain Reloads, the InputActionAsset could be "null" even if defaultActions is valid
+            if (defaultActions == null || defaultActions.asset == null)
             {
                 defaultActions = new DefaultInputActions();
             }

@@ -2520,7 +2520,7 @@ namespace UnityEngine.InputSystem
 
         private void RestoreDevicesAfterDomainReloadIfNecessary()
         {
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR && !ENABLE_CORECLR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
             #endif
@@ -2714,10 +2714,14 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            // Cache some values.
-            Touchscreen.s_TapTime = settings.defaultTapTime;
-            Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
-            Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
+            // Cache Touch specific settings to Touchscreen
+            Touchscreen.settings = new TouchscreenSettings
+            {
+                tapTime = settings.defaultTapTime,
+                tapDelayTime = settings.multiTapDelayTime,
+                tapRadiusSquared = settings.tapRadius * settings.tapRadius
+            };
+
             // Extra clamp here as we can't tell what we're getting from serialized data.
             ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
@@ -4009,6 +4013,7 @@ namespace UnityEngine.InputSystem
         internal DeviceState[] m_SavedDeviceStates;
         internal AvailableDevice[] m_SavedAvailableDevices;
 
+#if !ENABLE_CORECLR
         /// <summary>
         /// Recreate devices based on the devices we had before a domain reload.
         /// </summary>
@@ -4091,6 +4096,29 @@ namespace UnityEngine.InputSystem
 
             Profiler.EndSample();
         }
+
+        /// <summary>
+        /// Notifies all devices of removal to better cleanup data when using SimulateDomainReload test hook
+        /// </summary>
+        /// <remarks>
+        /// Devices maintain their own list of Devices within static fields, updated via NotifyAdded and NotifyRemoved overrides.
+        /// These fields are reset during a real DR, but not so when we "simulate" causing them to report incorrect values when
+        /// queried via direct APIs, e.g. Gamepad.all. So, to mitigate this we'll call NotifyRemove during this scenario.
+        /// </remarks>
+        internal void TestHook_RemoveDevicesForSimulatedDomainReload()
+        {
+            if (m_Devices == null)
+                return;
+
+            foreach (var device in m_Devices)
+            {
+                if (device == null)
+                    break;
+
+                device.NotifyRemoved();
+            }
+        }
+#endif // !ENABLE_CORECLR
 
         // We have two general types of devices we need to care about when recreating devices
         // after domain reloads:

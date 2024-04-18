@@ -534,6 +534,14 @@ namespace UnityEngine.InputSystem
         /// <value>Current touch screen.</value>
         public new static Touchscreen current { get; internal set; }
 
+        /// <summary>
+        /// The current global settings for Touchscreen devices.
+        /// </summary>
+        /// <remarks>
+        /// These are cached values taken from <see cref="InputSettings"/>.
+        /// </remarks>
+        internal static TouchscreenSettings settings { get; set; }
+
         /// <inheritdoc />
         public override void MakeCurrent()
         {
@@ -624,14 +632,14 @@ namespace UnityEngine.InputSystem
                 //       that to do so we would have to add another record to keep track of timestamps for each touch. And
                 //       since we know the maximum time that a tap can take, we have a reasonable estimate for when a prior
                 //       tap must have ended.
-                if (touchStatePtr->tapCount > 0 && InputState.currentTime >= touchStatePtr->startTime + s_TapTime + s_TapDelayTime)
+                if (touchStatePtr->tapCount > 0 && InputState.currentTime >= touchStatePtr->startTime + settings.tapTime + settings.tapDelayTime)
                     InputState.Change(touches[i].tapCount, (byte)0);
             }
 
             var primaryTouchState = (TouchState*)((byte*)statePtr + stateBlock.byteOffset);
             if (primaryTouchState->delta != default)
                 InputState.Change(primaryTouch.delta, Vector2.zero);
-            if (primaryTouchState->tapCount > 0 && InputState.currentTime >= primaryTouchState->startTime + s_TapTime + s_TapDelayTime)
+            if (primaryTouchState->tapCount > 0 && InputState.currentTime >= primaryTouchState->startTime + settings.tapTime + settings.tapDelayTime)
                 InputState.Change(primaryTouch.tapCount, (byte)0);
 
             Profiler.EndSample();
@@ -720,11 +728,11 @@ namespace UnityEngine.InputSystem
 
                         // Detect taps.
                         var isTap = newTouchState.isNoneEndedOrCanceled &&
-                            (eventPtr.time - newTouchState.startTime) <= s_TapTime &&
+                            (eventPtr.time - newTouchState.startTime) <= settings.tapTime &&
                             ////REVIEW: this only takes the final delta to start position into account, not the delta over the lifetime of the
                             ////        touch; is this robust enough or do we need to make sure that we never move more than the tap radius
                             ////        over the entire lifetime of the touch?
-                            (newTouchState.position - newTouchState.startPosition).sqrMagnitude <= s_TapRadiusSquared;
+                            (newTouchState.position - newTouchState.startPosition).sqrMagnitude <= settings.tapRadiusSquared;
                         if (isTap)
                             newTouchState.tapCount = (byte)(currentTouchState[i].tapCount + 1);
                         else
@@ -1044,8 +1052,16 @@ namespace UnityEngine.InputSystem
             state.isTapRelease = false;
         }
 
-        internal static float s_TapTime;
-        internal static float s_TapDelayTime;
-        internal static float s_TapRadiusSquared;
+        private static TouchscreenSettings s_Settings;
+    }
+
+    /// <summary>
+    /// Cached settings retrieved from <see cref="InputSettings"/>.
+    /// </summary>
+    internal struct TouchscreenSettings
+    {
+        public float tapTime;
+        public float tapDelayTime;
+        public float tapRadiusSquared;
     }
 }

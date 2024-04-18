@@ -165,6 +165,7 @@ partial class CoreTests
         Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
+#if !ENABLE_CORECLR
     // onFindLayoutForDevice allows dynamically injecting new layouts into the system that
     // are custom-tailored at runtime for the discovered device. Make sure that our domain
     // reload can restore these.
@@ -345,6 +346,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
     }
+#endif // !ENABLE_CORECLR
 
     [Test]
     [Category("Editor")]

@@ -325,8 +325,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
                 if (phase == TouchPhase.Ended)
                 {
-                    touch.isTap = time - oldTouchState->startTime <= Touchscreen.s_TapTime &&
-                        (position - oldTouchState->startPosition).sqrMagnitude <= Touchscreen.s_TapRadiusSquared;
+                    touch.isTap = time - oldTouchState->startTime <= Touchscreen.settings.tapTime &&
+                        (position - oldTouchState->startPosition).sqrMagnitude <= Touchscreen.settings.tapRadiusSquared;
                     if (touch.isTap)
                         ++touch.tapCount;
                 }
