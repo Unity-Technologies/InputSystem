@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where `System.ObjectDisposedException` would be thrown when deleting the last ActionMap item in the Input Actions Asset editor.
 - Fixed DualSense Edge's vibration and light bar not working on Windows
 - Fixed Project-wide Actions asset failing to reload properly after deleting project's Library folder.
+- Fixed Input Actions Editor window resource leak that could result in unexpected exceptions [ISXB-865](https://jira.unity3d.com/browse/ISXB-865)
 
 ### Changed
 - For Unity 6.0 and above, when an `EventSystem` GameObject is created in the Editor it will have the
