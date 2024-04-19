@@ -10,6 +10,8 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
+        private static InputActionsEditorSettingsProvider s_Provider;
+
         public static string SettingsPath => InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
@@ -284,7 +286,10 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
+            if (s_Provider == null)
+                s_Provider = new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
+
+            return s_Provider;
         }
 
         #region Shortcuts
