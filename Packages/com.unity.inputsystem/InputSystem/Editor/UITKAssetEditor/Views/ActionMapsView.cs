@@ -2,7 +2,6 @@
 using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -21,30 +20,26 @@ namespace UnityEngine.InputSystem.Editor
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
-                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+                Dispatch(Commands.SelectActionMap(((ActionMapData)m_ListView.selectedItem).mapName));
             };
 
             m_ListView.bindItem = (element, i) =>
             {
                 var treeViewItem = (InputActionMapsTreeViewItem)element;
-                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+                var mapData = (ActionMapData)m_ListView.itemsSource[i];
+                treeViewItem.label.text = mapData.mapName;
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
-                treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
-                treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
-                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 treeViewItem.userData = i;
+                element.SetEnabled(!mapData.isDisabled);
 
-                ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
+                ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };
             m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
                 var treeViewElement = (InputActionMapsTreeViewItem)element;
                 treeViewElement.Reset();
-                treeViewElement.OnDeleteItem -= treeViewElement.DeleteCallback;
-                treeViewElement.OnDuplicateItem -= treeViewElement.DuplicateCallback;
                 treeViewElement.EditTextFinished -= treeViewElement.EditTextFinishedCallback;
             };
 
@@ -57,22 +52,27 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             m_ListView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+
+            // ISXB-748 - Scrolling the view causes a visual glitch with the rename TextField. As a work-around we
+            // need to cancel the rename operation in this scenario.
+            m_ListView.RegisterCallback<WheelEvent>(e => InputActionMapsTreeViewItem.CancelRename(), TrickleDown.TrickleDown);
+
             var treeView = root.Q<TreeView>("actions-tree-view");
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
             m_ListView.itemIndexChanged += OnReorder;
 
-
-            CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
-                (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
+            CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) => new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList())));
 
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
             m_AddActionMapButton.clicked += AddActionMap;
-            ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
+
+            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
+            // Only bring up this context menu for the List when it's empty, so we can treat it like right-clicking the empty space:
+            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, m_ListView, onlyShowIfListIsEmpty: true);
         }
 
         void OnDroppedHandler(int mapIndex)
         {
-            Dispatch(Commands.CutActionsOrBindings());
             Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
         }
 
@@ -83,11 +83,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
-            m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
+            m_ListView.itemsSource = viewState.actionMapData?.ToList() ?? new List<ActionMapData>();
             if (viewState.selectedActionMap.HasValue)
             {
-                var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name);
-                m_ListView.SetSelection(indexOf);
+                var actionMapData = viewState.actionMapData?.Find(map => map.mapName.Equals(viewState.selectedActionMap.Value.name));
+                if (actionMapData.HasValue)
+                    m_ListView.SetSelection(viewState.actionMapData.IndexOf(actionMapData.Value));
             }
             m_ListView.Rebuild();
             RenameNewActionMaps();
@@ -107,15 +108,23 @@ namespace UnityEngine.InputSystem.Editor
             if (element == null)
                 return;
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
-            m_EnterRenamingMode = false;
         }
 
-        private void DeleteActionMap(int index)
+        internal void RenameActionMap(int index)
+        {
+            m_ListView.ScrollToItem(index);
+            var element = m_ListView.GetRootElementForIndex(index);
+            if (element == null)
+                return;
+            ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
+        }
+
+        internal void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
         }
 
-        private void DuplicateActionMap(int index)
+        internal void DuplicateActionMap(int index)
         {
             Dispatch(Commands.DuplicateActionMap(index));
         }
@@ -132,18 +141,24 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void PasteItems(bool copiedAction)
         {
-            Dispatch(copiedAction ? Commands.PasteActionFromActionMap() : Commands.PasteActionMaps());
+            Dispatch(copiedAction ? Commands.PasteActionFromActionMap(InputActionsEditorView.s_OnPasteCutElements) : Commands.PasteActionMaps(InputActionsEditorView.s_OnPasteCutElements));
         }
 
         private void ChangeActionMapName(int index, string newName)
         {
+            m_EnterRenamingMode = false;
             Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
-        private void AddActionMap()
+        internal void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
             m_EnterRenamingMode = true;
+        }
+
+        internal int GetMapCount()
+        {
+            return m_ListView.itemsSource.Count;
         }
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
@@ -151,31 +166,38 @@ namespace UnityEngine.InputSystem.Editor
             var selectedItem = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             if (selectedItem == null)
                 return;
-            switch (evt.commandName)
+
+            if (allowUICommandExecution)
             {
-                case CmdEvents.Rename:
-                    ((InputActionMapsTreeViewItem)selectedItem).FocusOnRenameTextField();
-                    break;
-                case CmdEvents.Delete:
-                case CmdEvents.SoftDelete:
-                    ((InputActionMapsTreeViewItem)selectedItem).DeleteItem();
-                    break;
-                case CmdEvents.Duplicate:
-                    ((InputActionMapsTreeViewItem)selectedItem).DuplicateItem();
-                    break;
-                case CmdEvents.Copy:
-                    CopyItems();
-                    break;
-                case CmdEvents.Cut:
-                    CutItems();
-                    break;
-                case CmdEvents.Paste:
-                    var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                        PasteItems(isActionCopied);
-                    break;
-                default:
-                    return; // Skip StopPropagation if we didn't execute anything
+                switch (evt.commandName)
+                {
+                    case CmdEvents.Rename:
+                        ((InputActionMapsTreeViewItem)selectedItem).FocusOnRenameTextField();
+                        break;
+                    case CmdEvents.Delete:
+                    case CmdEvents.SoftDelete:
+                        DeleteActionMap(m_ListView.selectedIndex);
+                        break;
+                    case CmdEvents.Duplicate:
+                        DuplicateActionMap(m_ListView.selectedIndex);
+                        break;
+                    case CmdEvents.Copy:
+                        CopyItems();
+                        break;
+                    case CmdEvents.Cut:
+                        CutItems();
+                        break;
+                    case CmdEvents.Paste:
+                        var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                        if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                            PasteItems(isActionCopied);
+                        break;
+                    default:
+                        return; // Skip StopPropagation if we didn't execute anything
+                }
+
+                // Prevent any UI commands from executing until after UI has been updated
+                allowUICommandExecution = false;
             }
             evt.StopPropagation();
         }
@@ -203,7 +225,8 @@ namespace UnityEngine.InputSystem.Editor
             if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
             {
                 var actionMap = (evt.target as VisualElement).GetFirstAncestorOfType<InputActionMapsTreeViewItem>();
-                m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
+                if (actionMap != null)
+                    m_ListView.SetSelection(actionMap.parent.IndexOf(actionMap));
             }
         }
 
@@ -212,15 +235,31 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ListView m_ListView;
         private readonly Button m_AddActionMapButton;
 
+        internal struct ActionMapData
+        {
+            internal string mapName;
+            internal bool isDisabled;
+
+            public ActionMapData(string mapName, bool isDisabled)
+            {
+                this.mapName = mapName;
+                this.isDisabled = isDisabled;
+            }
+        }
+
         internal class ViewState
         {
             public SerializedInputActionMap? selectedActionMap;
-            public IEnumerable<string> actionMapNames;
+            public List<ActionMapData> actionMapData;
 
-            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames)
+            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames, IEnumerable<string> disabledActionMapNames)
             {
                 this.selectedActionMap = selectedActionMap;
-                this.actionMapNames = actionMapNames;
+                actionMapData = new List<ActionMapData>();
+                foreach (var name in actionMapNames)
+                {
+                    actionMapData.Add(new ActionMapData(name, disabledActionMapNames.Contains(name)));
+                }
             }
         }
     }

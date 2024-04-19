@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.Editor
             interactions = serializedProperty.FindPropertyRelative("m_Interactions").stringValue;
             processors = serializedProperty.FindPropertyRelative("m_Processors").stringValue;
             action = serializedProperty.FindPropertyRelative("m_Action").stringValue;
+            propertyPath = wrappedProperty.propertyPath;
             var bindingGroups = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups)).stringValue;
             controlSchemes = bindingGroups != null
                 ? bindingGroups.Split(InputBinding.kSeparatorString, StringSplitOptions.RemoveEmptyEntries)
@@ -44,6 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         public string interactions { get; }
         public string processors { get; }
         public string action { get; }
+        public string propertyPath { get; }
         public string[] controlSchemes { get; }
         public InputBinding.Flags flags { get; }
 
@@ -87,7 +89,8 @@ namespace UnityEngine.InputSystem.Editor
                 && isComposite == other.isComposite
                 && isPartOfComposite == other.isPartOfComposite
                 && compositePath == other.compositePath
-                && controlSchemes.SequenceEqual(other.controlSchemes);
+                && controlSchemes.SequenceEqual(other.controlSchemes)
+                && propertyPath == other.propertyPath;
         }
 
         public override bool Equals(object obj)
@@ -109,6 +112,7 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(isPartOfComposite);
             hashCode.Add(compositePath);
             hashCode.Add(controlSchemes);
+            hashCode.Add(propertyPath);
             return hashCode.ToHashCode();
         }
     }

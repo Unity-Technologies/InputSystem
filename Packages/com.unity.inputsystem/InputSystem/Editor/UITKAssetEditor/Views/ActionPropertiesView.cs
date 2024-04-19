@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly Foldout m_ParentFoldout;
+        private readonly int m_DropdownLabelWidth = 90;
 
         public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(root, stateContainer)
@@ -41,6 +42,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 tooltip = inputAction.actionTypeTooltip
             };
+
+            // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
+            var actionLabel = actionType.Q<Label>();
+            actionLabel.style.minWidth = m_DropdownLabelWidth;
+            actionLabel.style.width = m_DropdownLabelWidth;
+
             actionType.RegisterValueChangedCallback(evt =>
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
@@ -51,6 +58,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var controlTypes = viewState.Item2;
                 var controlType = new DropdownField("Control Type");
+
+                // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
+                var controlLabel = controlType.Q<Label>();
+                controlLabel.style.minWidth = m_DropdownLabelWidth;
+                controlLabel.style.width = m_DropdownLabelWidth;
+
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
@@ -63,7 +76,17 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
                 });
+
+                // ISX-1916 - When changing ActionType to a non-Button type, we must also update the ControlType
+                // to the currently selected value; the ValueChangedCallback is not fired in this scenario.
+                Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
+
                 rootElement.Add(controlType);
+            }
+            else
+            {
+                // ISX-1916 - When changing ActionType to a Button, we must also reset the ControlType
+                Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
             if (inputAction.type != InputActionType.Value)

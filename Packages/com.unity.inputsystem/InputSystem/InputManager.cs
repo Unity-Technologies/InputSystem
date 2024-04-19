@@ -106,6 +106,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public InputActionAsset actions
         {
             get
@@ -119,6 +120,7 @@ namespace UnityEngine.InputSystem
                 ApplyActions();
             }
         }
+        #endif
 
         public InputUpdateType updateMask
         {
@@ -246,11 +248,13 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public event Action onActionsChange
         {
             add => m_ActionsChangedListeners.AddCallback(value);
             remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
+        #endif
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
 
@@ -1764,19 +1768,23 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
+        internal void Initialize(IInputRuntime runtime, InputSettings settings)
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
-            m_Actions = actions;
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InitializeActions();
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
 
             ApplySettings();
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             ApplyActions();
+            #endif
         }
 
         internal void Destroy()
@@ -1796,7 +1804,33 @@ namespace UnityEngine.InputSystem
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
                 Object.DestroyImmediate(m_Settings);
+
+            // Project-wide Actions are never temporary so we do not destroy them.
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Initialize project-wide actions:
+        // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
+        // - In player build we always attempt to find a preloaded asset.
+        private void InitializeActions()
+        {
+#if UNITY_EDITOR
+            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+#else
+            m_Actions = null;
+            var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+            foreach (var candidate in candidates)
+            {
+                if (candidate.m_IsProjectWide)
+                {
+                    m_Actions = candidate;
+                    break;
+                }
+            }
+#endif // UNITY_EDITOR
+        }
+
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
         {
@@ -2050,7 +2084,9 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private CallbackArray<Action> m_ActionsChangedListeners;
+        #endif
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2079,7 +2115,9 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
-        internal InputActionAsset m_Actions;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private InputActionAsset m_Actions;
+        #endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2635,11 +2673,14 @@ namespace UnityEngine.InputSystem
                 "InputSystem.onSettingsChange");
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
         }
+
+        #endif
 
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
@@ -3302,6 +3343,14 @@ namespace UnityEngine.InputSystem
                             {
 #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+#elif UNITY_ANDROID
+                                // Android keyboards can send events out of order: Holding down a key will send multiple
+                                // presses after a short time, like on most platforms. Unfortunately, on Android, the
+                                // last of these "presses" can be timestamped to be after the event of the key release.
+                                // If that happens, we'd skip the keyUp here, and the device state will have the key
+                                // "stuck" pressed. So, special case here to not skip keyboard events on Android. ISXB-475
+                                // N.B. Android seems to have similar issues with touch input (OnStateEvent, Touchscreen.cs)
+                                if (!(device is Keyboard))
 #endif
                                 break;
                             }
@@ -3788,7 +3837,9 @@ namespace UnityEngine.InputSystem
                 updateMask = m_UpdateMask,
                 metrics = m_Metrics,
                 settings = m_Settings,
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 actions = m_Actions,
+                #endif
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -3808,9 +3859,11 @@ namespace UnityEngine.InputSystem
                 Object.DestroyImmediate(m_Settings);
             m_Settings = state.settings;
 
-            if (m_Actions != null)
-                Object.DestroyImmediate(m_Actions);
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Note that we just reassign actions and never destroy them since always mapped to persisted asset
+            // and hence ownership lies with ADB.
             m_Actions = state.actions;
+            #endif
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;

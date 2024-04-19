@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using UnityEditor;
 
@@ -14,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
     [Serializable]
     internal class InputActionAssetManager : IDisposable
     {
-        [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
+        [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
         [SerializeField] private string m_AssetGUID;
         [SerializeField] private string m_ImportedAssetJson;
@@ -22,8 +23,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private SerializedObject m_SerializedObject;
 
+        /// <summary>
+        /// Returns the Asset GUID uniquely identifying the associated imported asset.
+        /// </summary>
         public string guid => m_AssetGUID;
 
+        /// <summary>
+        /// Returns the current Asset Path for the associated imported asset.
+        /// If the asset have been deleted this will be <c>null</c>.
+        /// </summary>
         public string path
         {
             get
@@ -33,12 +41,16 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        /// <summary>
+        /// Returns the name of the associated imported asset.
+        /// </summary>
         public string name
         {
             get
             {
-                if (m_ImportedAssetObject != null)
-                    return m_ImportedAssetObject.name;
+                var asset = importedAsset;
+                if (asset != null)
+                    return asset.name;
 
                 if (!string.IsNullOrEmpty(path))
                     return Path.GetFileNameWithoutExtension(path);
@@ -51,6 +63,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             get
             {
+                // Note that this may be null after deserialization from domain reload
                 if (m_ImportedAssetObject == null)
                     LoadImportedObjectFromGuid();
 
@@ -58,13 +71,21 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public InputActionAsset editedAsset => m_AssetObjectForEditing; // TODO Remove if redundant
+
         public Action<bool> onDirtyChanged { get; set; }
 
         public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
+            if (inputActionAsset == null)
+                throw new NullReferenceException(nameof(inputActionAsset));
+            m_AssetGUID = EditorHelpers.GetAssetGUID(inputActionAsset);
+            if (m_AssetGUID == null)
+                throw new Exception($"Failed to get asset {inputActionAsset.name} GUID");
+
             m_ImportedAssetObject = inputActionAsset;
-            bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(importedAsset, out m_AssetGUID, out long _);
-            Debug.Assert(isGUIDObtained, $"Failed to get asset {inputActionAsset.name} GUID");
+
+            Initialize();
         }
 
         public SerializedObject serializedObject => m_SerializedObject;
@@ -76,8 +97,10 @@ namespace UnityEngine.InputSystem.Editor
             if (m_AssetObjectForEditing == null)
             {
                 if (importedAsset == null)
+                {
                     // The asset we want to edit no longer exists.
                     return false;
+                }
 
                 CreateWorkingCopyAsset();
             }
@@ -91,13 +114,15 @@ namespace UnityEngine.InputSystem.Editor
 
         public void Dispose()
         {
+            if (m_SerializedObject == null)
+                return;
             m_SerializedObject?.Dispose();
+            m_SerializedObject = null;
         }
 
         public bool ReInitializeIfAssetHasChanged()
         {
-            var asset = importedAsset;
-            var json = asset.ToJson();
+            var json = importedAsset.ToJson();
             if (m_ImportedAssetJson == json)
                 return false;
 
@@ -105,31 +130,49 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        private void CreateWorkingCopyAsset()
+        public static InputActionAsset CreateWorkingCopy(InputActionAsset source)
+        {
+            var copy = Object.Instantiate(source);
+            copy.hideFlags = HideFlags.HideAndDontSave;
+            copy.name = source.name;
+            return copy;
+        }
+
+        public static void CreateWorkingCopyAsset(ref InputActionAsset copy, InputActionAsset source)
+        {
+            if (copy != null)
+                Cleanup(ref copy);
+
+            copy = CreateWorkingCopy(source);
+        }
+
+        private void CreateWorkingCopyAsset() // TODO Can likely be removed if combined with Initialize
         {
             if (m_AssetObjectForEditing != null)
                 Cleanup();
 
-            // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
-            // GUIDs.
+            // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve GUIDs.
             var asset = importedAsset;
-            m_AssetObjectForEditing = Object.Instantiate(asset);
-            m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
-            m_AssetObjectForEditing.name = importedAsset.name;
+            m_AssetObjectForEditing = CreateWorkingCopy(asset);
             m_ImportedAssetJson = asset.ToJson();
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }
 
         public void Cleanup()
         {
-            if (m_AssetObjectForEditing == null)
-                return;
-
-            Object.DestroyImmediate(m_AssetObjectForEditing);
-            m_AssetObjectForEditing = null;
+            Cleanup(ref m_AssetObjectForEditing);
         }
 
-        public void LoadImportedObjectFromGuid()
+        public static void Cleanup(ref InputActionAsset asset)
+        {
+            if (asset == null)
+                return;
+
+            Object.DestroyImmediate(asset);
+            asset = null;
+        }
+
+        private void LoadImportedObjectFromGuid()
         {
             // https://fogbugz.unity3d.com/f/cases/1313185/
             // InputActionEditorWindow being an EditorWindow, it will be saved as part of the editor's
@@ -152,13 +195,13 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void SaveChangesToAsset()
         {
-            Debug.Assert(importedAsset != null);
+            // If this is invoked after a domain reload, importAsset will resolve itself.
+            // However, if the asset do not exist importedAsset will be null and we cannot complete the operation.
+            if (importedAsset == null)
+                throw new Exception("Unable to save changes. Associated asset does not exist.");
 
-            m_ImportedAssetJson = m_AssetObjectForEditing.ToJson();
-            SaveAsset(path, m_ImportedAssetJson);
-
-            m_IsDirty = false;
-            onDirtyChanged(false);
+            SaveAsset(path, m_AssetObjectForEditing.ToJson());
+            SetDirty(false);
         }
 
         /// <summary>
@@ -176,50 +219,30 @@ namespace UnityEngine.InputSystem.Editor
             if (assetJson == existingJson)
                 return false;
 
-            // Attempt to checkout the file path for editing and inform the user if this fails.
-            if (!EditorHelpers.CheckOut(assetPath))
-            {
-                Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
-                return false;
-            }
+            // Attempt to write asset to disc (including checkout the file) and inform the user if this fails.
+            if (EditorHelpers.WriteAsset(assetPath, assetJson))
+                return true;
 
-            // (Over)write JSON content to file given by path.
-            EditorHelpers.WriteAllText(assetPath, assetJson);
-
-            // Reimport the asset (indirectly triggers ADB notification callbacks)
-            AssetDatabase.ImportAsset(assetPath);
-
-            return true;
+            Debug.LogError($"Unable save asset to \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
+            return false;
         }
 
-        /// <summary>
-        /// Saves the given asset to its associated asset path.
-        /// </summary>
-        /// <param name="asset">The asset to be saved.</param>
-        /// <returns><c>true</c> if the asset was modified or created, else <c>false</c>.</returns>
-        internal static bool SaveAsset(InputActionAsset asset)
+        public void MarkDirty()
         {
-            return SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
-        }
-
-        public void SetAssetDirty()
-        {
-            m_IsDirty = true;
-            onDirtyChanged(true);
-        }
-
-        public bool ImportedAssetObjectEquals(InputActionAsset inputActionAsset)
-        {
-            if (importedAsset == null)
-                return false;
-            return importedAsset.Equals(inputActionAsset);
+            SetDirty(true);
         }
 
         public void UpdateAssetDirtyState()
         {
             m_SerializedObject.Update();
-            m_IsDirty = m_AssetObjectForEditing.ToJson() != importedAsset.ToJson();
-            onDirtyChanged(m_IsDirty);
+            SetDirty(m_AssetObjectForEditing.ToJson() != importedAsset.ToJson()); // TODO Why not using cached version?
+        }
+
+        private void SetDirty(bool newValue)
+        {
+            m_IsDirty = newValue;
+            if (onDirtyChanged != null)
+                onDirtyChanged(newValue);
         }
     }
 }

@@ -114,6 +114,7 @@
     padding-bottom: 4px;
     border-bottom-width: 1px;
     height: 28px;
+    min-height: 28px;
     font-size: 14px;
     -unity-font-style: bold;
     align-items: center;

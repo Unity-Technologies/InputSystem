@@ -1,6 +1,8 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
@@ -15,7 +17,11 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_HasEditFocus;
         private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
+        private static bool m_IMGUIDropdownVisible;
         StateContainer m_StateContainer;
+        private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
+
+        private InputActionsEditorView m_View;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -28,6 +34,9 @@ namespace UnityEngine.InputSystem.Editor
             // This flag avoids making assumptions and executing logic twice.
             if (m_IsActivated)
                 return;
+
+            // Monitor play mode state changes
+            EditorApplication.playModeStateChanged += ModeChanged;
 
             // Setup root element with focus monitoring
             m_RootVisualElement = rootElement;
@@ -58,6 +67,9 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_IsActivated)
                 return;
 
+            // Stop monitoring play mode state changes
+            EditorApplication.playModeStateChanged -= ModeChanged;
+
             if (m_RootVisualElement != null)
             {
                 m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnEditFocusLost);
@@ -75,6 +87,8 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onActionsChange -= BuildUI;
 
             m_IsActivated = false;
+
+            m_View?.DestroyView();
         }
 
         private void OnEditFocus(FocusInEvent @event)
@@ -82,6 +96,54 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_HasEditFocus)
             {
                 m_HasEditFocus = true;
+                m_ActiveSettingsProvider = this;
+                SetIMGUIDropdownVisible(false, false);
+            }
+        }
+
+        void SaveAssetOnFocusLost()
+        {
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            var asset = GetAsset();
+            if (asset != null)
+                ValidateAndSaveAsset(asset);
+            #endif
+        }
+
+        public static void SetIMGUIDropdownVisible(bool visible, bool optionWasSelected)
+        {
+            if (m_ActiveSettingsProvider == null)
+                return;
+
+            // If we selected an item from the dropdown, we *should* still be focused on this settings window - but
+            // since the IMGUI dropdown is technically a separate window, we have to refocus manually.
+            //
+            // If we didn't select a dropdown option, there's not a simple way to know where the focus has gone,
+            // so assume we lost focus and save if appropriate. ISXB-801
+            if (!visible && m_IMGUIDropdownVisible)
+            {
+                if (optionWasSelected)
+                    m_ActiveSettingsProvider.m_RootVisualElement.Focus();
+                else
+                    m_ActiveSettingsProvider.SaveAssetOnFocusLost();
+            }
+            else if (visible && !m_IMGUIDropdownVisible)
+            {
+                m_ActiveSettingsProvider.m_HasEditFocus = false;
+            }
+
+            m_IMGUIDropdownVisible = visible;
+        }
+
+        private async void DelayFocusLost(bool relatedTargetWasNull)
+        {
+            await Task.Delay(120);
+
+            // We delay this call to ensure that the IMGUI flag has a chance to change first.
+            if (relatedTargetWasNull && m_HasEditFocus && !m_IMGUIDropdownVisible)
+            {
+                m_HasEditFocus = false;
+                SaveAssetOnFocusLost();
             }
         }
 
@@ -92,16 +154,7 @@ namespace UnityEngine.InputSystem.Editor
             // elements outside of project settings Editor Window. Also note that @event is null when we call this
             // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
-            if (element == null && m_HasEditFocus)
-            {
-                m_HasEditFocus = false;
-
-                #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-                var asset = GetAsset();
-                if (asset != null)
-                    ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
-                #endif
-            }
+            DelayFocusLost(element == null);
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
@@ -112,8 +165,14 @@ namespace UnityEngine.InputSystem.Editor
             // Project wide input actions always auto save - don't check the asset auto save status
             var asset = GetAsset();
             if (asset != null)
-                ProjectWideActionsAsset.ValidateAndSaveAsset(asset);
+                ValidateAndSaveAsset(asset);
             #endif
+        }
+
+        private void ValidateAndSaveAsset(InputActionAsset asset)
+        {
+            ProjectWideActionsAsset.Validate(asset); // Ignore validation result for save
+            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         private void CreateUI()
@@ -154,13 +213,21 @@ namespace UnityEngine.InputSystem.Editor
                     if (evt.newValue != asset)
                         InputSystem.actions = evt.newValue as InputActionAsset;
                 });
+
+                // Prevent reassignment in in editor which would result in exception during play-mode
+                objectField.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             }
 
             // Configure a button to allow the user to create and assign a new project-wide asset based on default template
             var createAssetButton = m_RootVisualElement.Q<Button>("create-asset");
             createAssetButton?.RegisterCallback<ClickEvent>(evt =>
             {
-                InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+                var assetPath = ProjectWideActionsAsset.defaultAssetPath;
+                Dialog.Result result = Dialog.Result.Discard;
+                if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
+                    result = Dialog.InputActionAsset.ShowCreateAndOverwriteExistingAsset(assetPath);
+                if (result == Dialog.Result.Discard)
+                    InputSystem.actions = ProjectWideActionsAsset.CreateDefaultAssetAtPath(assetPath);
             });
 
             // Remove input action editor if already present
@@ -180,19 +247,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
-                var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize();
-            }
-
-            // Hide the save / auto save buttons in the project wide input actions
-            // Project wide input actions always auto save
-            {
-                var element = m_RootVisualElement.Q("save-asset-toolbar-container");
-                if (element != null)
-                {
-                    element.style.visibility = Visibility.Hidden;
-                    element.style.display = DisplayStyle.None;
-                }
             }
         }
 
@@ -201,11 +257,59 @@ namespace UnityEngine.InputSystem.Editor
             return m_State.serializedObject?.targetObject as InputActionAsset;
         }
 
+        private void SetObjectFieldEnabled(bool enabled)
+        {
+            // Update object picker enabled state based off editor play mode
+            if (m_RootVisualElement != null)
+                UQueryExtensions.Q<ObjectField>(m_RootVisualElement, "current-asset")?.SetEnabled(enabled);
+        }
+
+        private void ModeChanged(PlayModeStateChange change)
+        {
+            switch (change)
+            {
+                case PlayModeStateChange.EnteredEditMode:
+                    SetObjectFieldEnabled(true);
+                    break;
+                case PlayModeStateChange.ExitingEditMode:
+                    SetObjectFieldEnabled(false);
+                    break;
+                case PlayModeStateChange.EnteredPlayMode:
+                case PlayModeStateChange.ExitingPlayMode:
+                default:
+                    break;
+            }
+        }
+
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
             return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
         }
+
+        #region Shortcuts
+        [Shortcut("Input Action Editor/Project Settings/Add Action Map", null, KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddActionMap());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Action", null, KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddAction());
+        }
+
+        [Shortcut("Input Action Editor/Project Settings/Add Binding", null, KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            if (m_ActiveSettingsProvider is { m_HasEditFocus : true })
+                m_ActiveSettingsProvider.m_StateContainer.Dispatch(Commands.AddBinding());
+        }
+
+        #endregion
     }
 }
 

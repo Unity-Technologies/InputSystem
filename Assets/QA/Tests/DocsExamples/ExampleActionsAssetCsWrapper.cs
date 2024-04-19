@@ -5,12 +5,10 @@ public class DocsExampleActionsAssetCsWrapper : MonoBehaviour
 {
     // this field will contain the actions wrapper instance
     ExampleActions actions;
-
     void Awake()
     {
         // instantiate the actions wrapper class
         actions = new ExampleActions();
-
         // for the "jump" action, we add a callback method for when it is performed
         actions.gameplay.jump.performed += OnJump;
     }

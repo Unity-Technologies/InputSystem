@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.Editor
             string content;
             try
             {
-                content = EditorHelpers.ReadAllText(context.assetPath);
+                content = File.ReadAllText(EditorHelpers.GetPhysicalPath(context.assetPath));
             }
             catch (Exception exception)
             {
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Force name of asset to be that on the file on disk instead of what may be serialized
                 // as the 'name' property in JSON. (Unless explicitly given)
-                asset.name = Path.GetFileNameWithoutExtension(context.assetPath);
+                asset.name = NameFromAssetPath(context.assetPath);
 
                 // Add asset.
                 ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
@@ -131,10 +131,6 @@ namespace UnityEngine.InputSystem.Editor
 
             if (m_GenerateWrapperCode)
                 GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
-
-            // Refresh editors.
-            InputActionEditorWindow.RefreshAllOnAssetReimport();
-            // TODO UITK editor window is missing
         }
 
         internal static void SetupAsset(InputActionAsset asset)
@@ -323,73 +319,86 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
 
-        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
-        // hold the old name and won't match what's in memory (asset looks "dirty"). To work around this, we
-        // must flush the updated JSON to the file whenever this operation occurs.
-        // https://jira.unity3d.com/browse/ISXB-749
-        private class InputActionAssetPostprocessor : AssetPostprocessor
+        // File extension of the associated asset
+        private const string kFileExtension = "." + InputActionAsset.Extension;
+
+        // Evaluates whether the given path is a path to an asset of the associated type based on extension.
+        public static bool IsInputActionAssetPath(string path)
         {
-            private static List<string> assetFilesNeedingRefresh;
+            return path != null && path.EndsWith(kFileExtension, StringComparison.InvariantCultureIgnoreCase);
+        }
 
-            private void OnPreprocessAsset()
+        // Returns a suitable object name for an asset based on its path.
+        public static string NameFromAssetPath(string assetPath)
+        {
+            Debug.Assert(IsInputActionAssetPath(assetPath));
+            return Path.GetFileNameWithoutExtension(assetPath);
+        }
+
+        // This processor was added to address this issue:
+        // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
+        //
+        // When an action asset is renamed, copied, or moved in the Editor, the "Name" field in the JSON will
+        // hold the old name and won't match the asset objects name in memory which is set based on the filename
+        // by the scripted imported. To avoid this, this asset post-processor detects any imported or moved assets
+        // with a JSON name property not matching the importer assigned name and updates the JSON name based on this.
+        // This basically solves any problem related to unmodified assets.
+        //
+        // Note that JSON names have no relevance for editor workflows and are basically ignored by the importer.
+        // Note that JSON names may be the only way to identify assets loaded from non-file sources or via
+        // UnityEngine.Resources in run-time.
+        //
+        // Note that if an asset is is imported and a name mismatch is detected, the asset will be modified and
+        // imported again, which will yield yet another callback to the post-processor. For the second iteration,
+        // the name will no longer be a mismatch and the cycle will be aborted.
+        private class InputActionJsonNameModifierAssetProcessor : AssetPostprocessor
+        {
+            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
+#if UNITY_2021_2_OR_NEWER
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                string[] movedAssets, string[] movedFromAssetPaths)
+#endif
             {
-                var importer = assetImporter as InputActionImporter;
-                if (importer == null)
-                    return;
-
-                var newName = Path.GetFileNameWithoutExtension(assetPath);
-                var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-                var newFileContents = File.ReadAllText(assetPath);
-
-                if (!string.IsNullOrEmpty(newFileContents))
+                foreach (var assetPath in importedAssets)
                 {
-                    newAsset.LoadFromJson(newFileContents);
-
-                    // If the serialized Name doesn't match the actual filename this asset file for refresh.
-                    // NOTE: We can't change the file while Asset Importing is in progress.
-                    if (newAsset.name != newName)
-                    {
-                        if (assetFilesNeedingRefresh == null)
-                            assetFilesNeedingRefresh = new List<string>();
-
-                        assetFilesNeedingRefresh.Add(assetPath);
-                    }
+                    if (IsInputActionAssetPath(assetPath))
+                        CheckAndRenameJsonNameIfDifferent(assetPath);
                 }
             }
 
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+            private static void CheckAndRenameJsonNameIfDifferent(string assetPath)
             {
-                if (assetFilesNeedingRefresh == null)
-                    return;
-
+                InputActionAsset asset = null;
                 try
                 {
-                    foreach (var assetPath in assetFilesNeedingRefresh)
+                    // Evaluate whether JSON name corresponds to desired name
+                    asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                    var desiredName = Path.GetFileNameWithoutExtension(assetPath);
+                    if (asset.name == desiredName)
+                        return;
+
+                    // Update JSON name by modifying the asset
+                    asset.name = desiredName;
+                    if (!EditorHelpers.WriteAsset(assetPath, asset.ToJson()))
                     {
-                        var newAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-
-                        try
-                        {
-                            var fileContents = File.ReadAllText(assetPath);
-
-                            newAsset.LoadFromJson(fileContents);
-                            newAsset.name = Path.GetFileNameWithoutExtension(assetPath);
-                            File.WriteAllText(assetPath, newAsset.ToJson());
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                        }
-
-                        ScriptableObject.DestroyImmediate(newAsset);
+                        Debug.LogError($"Unable to change JSON name for asset at \"{assetPath}\" since the asset-path could not be checked-out as editable in the underlying version-control system.");
                     }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
                 }
                 finally
                 {
-                    assetFilesNeedingRefresh = null;
+                    if (asset != null)
+                        DestroyImmediate(asset);
                 }
             }
         }
     }
 }
+
 #endif // UNITY_EDITOR
