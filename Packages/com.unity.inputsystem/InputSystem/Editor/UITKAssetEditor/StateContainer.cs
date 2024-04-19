@@ -45,6 +45,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public void Initialize(VisualElement rootVisualElement)
         {
+            // We need to use a root element for the TrackSerializedObjectValue that is destroyed with the view.
+            // Using a root element from the settings window would not enable the tracking callback to be destroyed or garbage collected.
+
             m_RootVisualElement = rootVisualElement;
 
             m_RootVisualElement.Unbind();
