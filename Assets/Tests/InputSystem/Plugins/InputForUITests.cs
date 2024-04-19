@@ -33,6 +33,7 @@ public class InputForUITests : InputTestFixture
     private const string kTestCategory = "InputForUI";
 
     readonly List<Event> m_InputForUIEvents = new List<Event>();
+    private int m_CurrentInputEventToCheck;
     InputSystemProvider m_InputSystemProvider;
 
     private InputActionAsset storedActions;
@@ -41,6 +42,7 @@ public class InputForUITests : InputTestFixture
     public override void Setup()
     {
         base.Setup();
+        m_CurrentInputEventToCheck = 0;
 
         storedActions = InputSystem.actions;
 
@@ -66,6 +68,11 @@ public class InputForUITests : InputTestFixture
 #endif
 
         base.TearDown();
+    }
+
+    internal Event GetNextRecordedUIEvent()
+    {
+        return m_InputForUIEvents[m_CurrentInputEventToCheck++];
     }
 
     private bool InputForUIOnEvent(in Event ev)
@@ -103,20 +110,12 @@ public class InputForUITests : InputTestFixture
         Update();
 
         Assert.AreEqual(1, m_InputForUIEvents.Count);
-        Assert.That(m_InputForUIEvents[0] is Event
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed,
                               eventSource: EventSource.Touch }
         });
-    }
-
-    void PressUpdateReleaseUpdate(ButtonControl button)
-    {
-        Press(button);
-        Update();
-        Release(button);
-        Update();
     }
 
     #region UI_Input_Actions
@@ -125,11 +124,68 @@ public class InputForUITests : InputTestFixture
     // When there are no project-wide actions asset, the InputSystemProvider should still work as it currently gets
     // the actions from DefaultActionsAsset().asset.
 
+    // Utility functions
+    void PressUpdateReleaseUpdate(ButtonControl button)
+    {
+        Press(button);
+        Update();
+        Release(button);
+        Update();
+    }
+
+    void TestGamepadNavigationCardinalDirections()
+    {
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Gamepad }
+        });
+    }
+
+    void TestKeyboardNavigationCardinalDirections()
+    {
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Keyboard }
+        });
+    }
+
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_NavigationActionsWork(bool useProjectWideActionsAsset)
+    public void UIActionNavigation_FiresUINavigationEvents_FromInputsGamepadJoystickAndKeyboard(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -146,67 +202,42 @@ public class InputForUITests : InputTestFixture
         PressUpdateReleaseUpdate(gamepad.leftStick.up);
         PressUpdateReleaseUpdate(gamepad.leftStick.right);
         PressUpdateReleaseUpdate(gamepad.leftStick.down);
+        TestGamepadNavigationCardinalDirections();
 
         PressUpdateReleaseUpdate(gamepad.rightStick.left);
         PressUpdateReleaseUpdate(gamepad.rightStick.up);
         PressUpdateReleaseUpdate(gamepad.rightStick.right);
         PressUpdateReleaseUpdate(gamepad.rightStick.down);
+        TestGamepadNavigationCardinalDirections();
 
         PressUpdateReleaseUpdate(gamepad.dpad.left);
         PressUpdateReleaseUpdate(gamepad.dpad.up);
         PressUpdateReleaseUpdate(gamepad.dpad.right);
         PressUpdateReleaseUpdate(gamepad.dpad.down);
-
-        for (var i = 0; i < 3; ++i)
-        {
-            Assert.That(m_InputForUIEvents[i * 4] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Gamepad }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 1] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Gamepad }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 2] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Gamepad }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 3] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Gamepad }
-            });
-        }
+        TestGamepadNavigationCardinalDirections();
 
 
         var joystick = InputSystem.AddDevice<Joystick>();
         PressUpdateReleaseUpdate(joystick.stick.left);
-        PressUpdateReleaseUpdate(joystick.stick.up);
-        PressUpdateReleaseUpdate(joystick.stick.right);
-        PressUpdateReleaseUpdate(joystick.stick.down);
-
-        Assert.That(m_InputForUIEvents[12] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Unspecified}
         });
-        Assert.That(m_InputForUIEvents[13] is
+        PressUpdateReleaseUpdate(joystick.stick.up);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Unspecified}
         });
-        Assert.That(m_InputForUIEvents[14] is
+        PressUpdateReleaseUpdate(joystick.stick.right);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Unspecified}
         });
-        Assert.That(m_InputForUIEvents[15] is
+        PressUpdateReleaseUpdate(joystick.stick.down);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Unspecified}
@@ -218,45 +249,20 @@ public class InputForUITests : InputTestFixture
         PressUpdateReleaseUpdate(keyboard.wKey);
         PressUpdateReleaseUpdate(keyboard.dKey);
         PressUpdateReleaseUpdate(keyboard.sKey);
+        TestKeyboardNavigationCardinalDirections();
 
         PressUpdateReleaseUpdate(keyboard.leftArrowKey);
         PressUpdateReleaseUpdate(keyboard.upArrowKey);
         PressUpdateReleaseUpdate(keyboard.rightArrowKey);
         PressUpdateReleaseUpdate(keyboard.downArrowKey);
-
-        for (var i = 0; i < 2; ++i)
-        {
-            Assert.That(m_InputForUIEvents[i * 4 + 16] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Keyboard }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 17] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Keyboard }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 18] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Keyboard }
-            });
-
-            Assert.That(m_InputForUIEvents[i * 4 + 19] is
-            {
-                type: Event.Type.NavigationEvent,
-                asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Keyboard }
-            });
-        }
+        TestKeyboardNavigationCardinalDirections();
     }
 
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_SubmitActionWorks(bool useProjectWideActionsAsset)
+    public void UIActionSubmit_FiresUISubmitEvents_FromInputsGamepadJoystickAndKeyboard(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -265,37 +271,35 @@ public class InputForUITests : InputTestFixture
         }
         Update();
 
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var joystick = InputSystem.AddDevice<Joystick>();
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        PressUpdateReleaseUpdate(gamepad.buttonSouth);
-        PressUpdateReleaseUpdate(joystick.trigger);
-        PressUpdateReleaseUpdate(keyboard.enterKey);
-
-        Assert.AreEqual(3, m_InputForUIEvents.Count);
-
-        Assert.That(m_InputForUIEvents[0] is
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Gamepad>().buttonSouth);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Gamepad }
         });
-        Assert.That(m_InputForUIEvents[1] is
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Joystick>().trigger);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Unspecified }
         });
-        Assert.That(m_InputForUIEvents[2] is
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Keyboard>().enterKey);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Keyboard }
         });
+
+        Assert.AreEqual(3, m_InputForUIEvents.Count);
     }
 
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_CancelActionWorks(bool useProjectWideActionsAsset)
+    public void UIActionCancel_FiresUICancelEvents_FromInputsGamepadAndKeyboard(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -304,30 +308,28 @@ public class InputForUITests : InputTestFixture
         }
         Update();
 
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        PressUpdateReleaseUpdate(gamepad.buttonEast);
-        PressUpdateReleaseUpdate(keyboard.escapeKey);
-
-        Assert.AreEqual(2, m_InputForUIEvents.Count);
-
-        Assert.That(m_InputForUIEvents[0] is
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Gamepad>().buttonEast);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Cancel, eventSource: EventSource.Gamepad }
         });
-        Assert.That(m_InputForUIEvents[1] is
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Keyboard>().escapeKey);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
             asNavigationEvent: { type: NavigationEvent.Type.Cancel, eventSource: EventSource.Keyboard }
         });
+
+        Assert.AreEqual(2, m_InputForUIEvents.Count);
     }
 
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_PointActionWorks(bool useProjectWideActionsAsset)
+    public void UIActionPoint_FiresUIPointEvents_FromInputsMousePenAndTouch(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -348,7 +350,7 @@ public class InputForUITests : InputTestFixture
         Move(pen.position, new Vector2(100f, 0.5f));
         Update();
 
-        var touch = InputSystem.AddDevice<Touchscreen>();
+        InputSystem.AddDevice<Touchscreen>();
         BeginTouch(1, new Vector2(0.5f, 0.5f));
         Update();
         EndTouch(1, new Vector2(100f, 100f));
@@ -356,17 +358,19 @@ public class InputForUITests : InputTestFixture
 
         // Touch screen move is three actions: press, move, release
         Assert.AreEqual(5, m_InputForUIEvents.Count);
-        Assert.That(m_InputForUIEvents[0] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse }
         });
-        Assert.That(m_InputForUIEvents[1] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Pen }
         });
-        Assert.That(m_InputForUIEvents[3] is
+        // Skip button down event that touch generates
+        ++m_CurrentInputEventToCheck;
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Touch }
@@ -377,7 +381,7 @@ public class InputForUITests : InputTestFixture
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_ClickActionWorks(bool useProjectWideActionsAsset)
+    public void UIActionClick_FiresUIClickEvents_FromInputsMousePenAndTouch(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -387,89 +391,82 @@ public class InputForUITests : InputTestFixture
         Update();
 
         var mouse = InputSystem.AddDevice<Mouse>();
-        var pen = InputSystem.AddDevice<Pen>();
-        var touch = InputSystem.AddDevice<Touchscreen>();
-
         Click(mouse.leftButton);
         Update();
-        Click(mouse.rightButton);
-        Update();
-        Click(mouse.middleButton);
-        Update();
-        Click(pen.tip);
-        Update();
-        BeginTouch(1, new Vector2(0.0f, 0.5f));
-        EndTouch(1, new Vector2(0.0f, 0.5f));
-        Update();
-
-        Assert.AreEqual(10, m_InputForUIEvents.Count);
-
-        // Mouse left
-        Assert.That(m_InputForUIEvents[0] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
-        Assert.That(m_InputForUIEvents[1] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
 
-        // Mouse right
-        Assert.That(m_InputForUIEvents[2] is
+        Click(mouse.rightButton);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseRight, clickCount: 1 }
         });
-        Assert.That(m_InputForUIEvents[3] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseRight, clickCount: 1 }
         });
 
-        // Mouse middle
-        Assert.That(m_InputForUIEvents[4] is
+        Click(mouse.middleButton);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseMiddle, clickCount: 1 }
         });
-        Assert.That(m_InputForUIEvents[5] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseMiddle, clickCount: 1 }
         });
 
-        // Pen
-        Assert.That(m_InputForUIEvents[6] is
+        var pen = InputSystem.AddDevice<Pen>();
+        Click(pen.tip);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Pen, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
-        Assert.That(m_InputForUIEvents[7] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Pen, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
 
-        // Touchscreen
-        Assert.That(m_InputForUIEvents[8] is
+        InputSystem.AddDevice<Touchscreen>();
+        BeginTouch(1, new Vector2(0.0f, 0.5f));
+        EndTouch(1, new Vector2(0.0f, 0.5f));
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Touch, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
-        Assert.That(m_InputForUIEvents[9] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Touch, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
         });
+
+        Assert.AreEqual(10, m_InputForUIEvents.Count);
     }
 
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    public void UI_Input_ScrollActionWorks(bool useProjectWideActionsAsset)
+    public void UIActionScroll_FiresUIScrollEvents_FromInputMouse(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -485,7 +482,7 @@ public class InputForUITests : InputTestFixture
         Set(mouse.scroll.y, -1f / kScrollUGUIScaleFactor);
         Update();
         Assert.AreEqual(1, m_InputForUIEvents.Count);
-        Assert.That(m_InputForUIEvents[0] is
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: 1} }
