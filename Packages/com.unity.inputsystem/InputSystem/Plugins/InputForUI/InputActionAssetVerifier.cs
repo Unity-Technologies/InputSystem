@@ -13,7 +13,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             SuppressChildErrors
         }
 
-        public const ReportPolicy DefaultReportPolicy = ReportPolicy.SuppressChildErrors;
+        // Note: This is intentionally not a constant to avoid dead code warning in tests while this remains
+        // as a setting type of value.
+        public static ReportPolicy DefaultReportPolicy = ReportPolicy.SuppressChildErrors;
 
         static InputActionAssetVerifier()
         {
