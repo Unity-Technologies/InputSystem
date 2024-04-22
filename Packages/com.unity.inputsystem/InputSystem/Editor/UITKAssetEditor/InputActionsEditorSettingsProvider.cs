@@ -76,6 +76,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnEditFocus);
             }
 
+            // Make sure any remaining changes are actually saved
+            SaveAssetOnFocusLost();
+
             // Note that OnDeactivate will also trigger when opening the Project Settings (existing instance).
             // Hence we guard against duplicate OnDeactivate() calls.
             if (m_HasEditFocus)
@@ -272,6 +275,8 @@ namespace UnityEngine.InputSystem.Editor
                     SetObjectFieldEnabled(true);
                     break;
                 case PlayModeStateChange.ExitingEditMode:
+                    // Ensure any changes are saved to the asset; FocusLost isn't always triggered when entering PlayMode.
+                    SaveAssetOnFocusLost();
                     SetObjectFieldEnabled(false);
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
