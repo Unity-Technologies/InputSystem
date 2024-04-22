@@ -15,6 +15,16 @@
                     <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 69px;" />
                 </ui:VisualElement>
             </uie:Toolbar>
+            <!-- <uie:Toolbar>
+                <ui:VisualElement name="warning-container" style="flex-direction: row; flex-grow: 1;"> unity-input-actions-editor-hidden
+                    <ui:VisualElement name="editor-warning-icon" display-tooltip-when-elided="true" class="tree-view-item-warning-icon" style="height: 19px; -unity-background-scale-mode: scale-to-fit;" />
+                    <ui:Label text="This asset currently 1 warning affecting 'UI Toolkit Input Integration'. Show warnings in console." />
+                    <ui:VisualElement name="warning-toolbar-container" style="flex-direction: row; justify-content: flex-end;">
+                        <uie:ToolbarButton text="Log to Console" display-tooltip-when-elided="true" name="log-warnings-toolbar-button" style="align-items: auto;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </uie:Toolbar> -->
+            <ui:HelpBox name="warning-help-box" message-type="Warning" text="1 warning affecting 'UI Toolkit Input Integration'. Examine individual warnings by hovering over the corresponding icon or click this link to Show Warnings in Console. Alternatively consult the UI Support documentation or Reset to Defaults to remove this warning." />
         </ui:VisualElement>
         <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">
             <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="200">

@@ -100,6 +100,20 @@
     height: 16px;
 }
 
+.tree-view-item-warning-icon{
+    justify-content: center;
+    background-image: var(--unity-icons-console_entry_warn_small);
+    width: 16px;
+    height: 16px;
+}
+
+.tree-view-item-link-icon{
+    justify-content: center;
+    background-image: var(--unity-icons-link-checked);
+    width: 16px;
+    height: 16px;
+}
+
 .body-panel-header {
     background-color: var(--unity-colors-toolbar-background);
     border-bottom-color: var(--unity-colors-toolbar-border);

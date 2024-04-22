@@ -12,11 +12,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
     using EventModifiers = UnityEngine.InputForUI.EventModifiers;
     using EventProvider = UnityEngine.InputForUI.EventProvider;
 
-    /// <summary>
-    /// UI/Input integration plugin for UI Toolkit customization support for actions.
-    /// See <see cref="InputSystemProviderRequirements"/> for details on how to update supported actions and
-    /// requirements.
-    /// </summary>
     internal class InputSystemProvider : IEventProviderImpl
     {
         Configuration m_Cfg;
@@ -662,7 +657,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             // Let others know that we change configuration
             s_ConfigurationChangedHandler?.Invoke(ConfigurationState.Unregister, ref m_Cfg);
-
+            
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed -= OnPointerPerformed;
 

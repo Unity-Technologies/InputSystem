@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -21,6 +22,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarMenu m_ControlSchemesToolbar;
         private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
+        private readonly HelpBox m_WarningHelpBox;
 
         private readonly Action m_SaveAction;
 
@@ -89,6 +91,8 @@ namespace UnityEngine.InputSystem.Editor
                 { target = assetMenuButton, activators = { new ManipulatorActivationFilter() { button = MouseButton.LeftMouse } } };
             }
 
+            m_WarningHelpBox = root.Q<HelpBox>("warning-help-box");
+
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
             stateContainer.StateChanged += OnStateChanged;
@@ -104,6 +108,47 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             s_OnPasteCutElements.Add(this);
+        }
+
+        private class TrackingReporter : IInputActionAssetRequirementFailureReporter
+        {
+            private InputActionsEditorState m_EditorState;
+
+            public TrackingReporter(InputActionsEditorState editorState)
+            {
+                m_EditorState = editorState;
+            }
+
+            public void Report(InputActionAssetRequirementFailure failure)
+            {
+                var path = failure.requirement.actionPath;
+            }
+        }
+
+        private new void OnStateChanged(InputActionsEditorState state)
+        {
+            // Show warning help box with summary of issues reported if there are verification failures.
+            if (state.verificationResult.hasFailures)
+            {
+                var sb = new StringBuilder();
+                foreach (var part in state.verificationResult.parts)
+                {
+                    if (sb.Length > 0)
+                        sb.Append('\n');
+                    sb.Append($"There are {state.verificationResult.failures.Count} dependency warning(s) affecting <b>{part.requirements.owner}</b> which depend on this asset. {part.requirements.implication}"); // TODO Separate guidance from implication?!
+                }
+
+                m_WarningHelpBox.text = sb.ToString();
+
+                if (m_WarningHelpBox.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName))
+                    m_WarningHelpBox.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            }
+            else if (!m_WarningHelpBox.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName))
+            {
+                m_WarningHelpBox.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            }
+
+            base.OnStateChanged(state);
         }
 
         private void OnReset()

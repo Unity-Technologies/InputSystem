@@ -68,6 +68,8 @@ namespace UnityEngine.InputSystem.Editor
                         ChangeActionOrCompositName(item, newName);
                     };
                     treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
+                    treeViewItem.SetRequirements(item.requirements);
+                    treeViewItem.SetFailures(item.failures);
                 }
                 else
                 {
@@ -553,7 +555,10 @@ namespace UnityEngine.InputSystem.Editor
 
     internal struct ActionOrBindingData
     {
-        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1, bool isCut = false)
+        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false,
+                                   bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1,
+                                   bool isCut = false, IReadOnlyList<InputActionRequirement> requirements = null,
+                                   IReadOnlyList<InputActionAssetRequirementFailure> failures = null)
         {
             this.name = name;
             this.isComposite = isComposite;
@@ -564,8 +569,12 @@ namespace UnityEngine.InputSystem.Editor
             this.isAction = isAction;
             this.actionIndex = actionIndex;
             this.isCut = isCut;
+            this.requirements = requirements;
+            this.failures = failures;
         }
 
+        public IReadOnlyList<InputActionRequirement> requirements { get; }
+        public IReadOnlyList<InputActionAssetRequirementFailure> failures { get; }
         public string name { get; }
         public bool isAction { get; }
         public int actionMapIndex { get; }
@@ -587,6 +596,7 @@ namespace UnityEngine.InputSystem.Editor
 
             if (actionMap == null)
                 return new List<TreeViewItemData<ActionOrBindingData>>();
+            var actionMapName = actionMap.Value.name;
 
             var actions = actionMap.Value.wrappedProperty
                 .FindPropertyRelative(nameof(InputActionMap.m_Actions))
@@ -649,9 +659,16 @@ namespace UnityEngine.InputSystem.Editor
                                     isComposite: false, isPartOfComposite: false, GetControlLayout(serializedInputBinding.path), bindingIndex: serializedInputBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, serializedInputBinding.indexOfBinding))));
                     }
                 }
+
                 var actionIndex = action.wrappedProperty.GetIndexOfArrayElement();
+                var actionPath = actionMapName + '/' + action.name;
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(actionId, idDictionary),
-                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false, isPartOfComposite: false, action.expectedControlType, actionIndex: actionIndex, isCut: state.IsActionCut(actionMapIndex, actionIndex)), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false,
+                        isPartOfComposite: false, action.expectedControlType, actionIndex: actionIndex,
+                        isCut: state.IsActionCut(actionMapIndex, actionIndex),
+                        requirements: InputActionAssetRequirements.GetActionRequirements(actionPath), // TODO Should be null if not an action
+                        failures: state.verificationResult.GetActionFailures(actionPath)),  // TODO Should be null if not an action
+                    bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }

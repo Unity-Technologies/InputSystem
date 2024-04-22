@@ -31,8 +31,9 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.userData = i;
+                treeViewItem.SetRequirements(mapData.requirements);
+                treeViewItem.SetFailures(mapData.failures);
                 element.SetEnabled(!mapData.isDisabled);
-
                 ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };
             m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
@@ -61,7 +62,8 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
             m_ListView.itemIndexChanged += OnReorder;
 
-            CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) => new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList())));
+            CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) =>
+                new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList()), InputActionAssetRequirements.GetActionMapRequirements(), state.verificationResult.GetActionMapFailures()));
 
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
             m_AddActionMapButton.clicked += AddActionMap;
@@ -239,11 +241,16 @@ namespace UnityEngine.InputSystem.Editor
         {
             internal string mapName;
             internal bool isDisabled;
+            internal IReadOnlyList<InputActionRequirement> requirements;
+            internal IReadOnlyList<InputActionAssetRequirementFailure> failures;
 
-            public ActionMapData(string mapName, bool isDisabled)
+            public ActionMapData(string mapName, bool isDisabled, IReadOnlyList<InputActionRequirement> requirements,
+                                 IReadOnlyList<InputActionAssetRequirementFailure> failures)
             {
                 this.mapName = mapName;
                 this.isDisabled = isDisabled;
+                this.requirements = requirements;
+                this.failures = failures;
             }
         }
 
@@ -252,13 +259,19 @@ namespace UnityEngine.InputSystem.Editor
             public SerializedInputActionMap? selectedActionMap;
             public List<ActionMapData> actionMapData;
 
-            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames, IEnumerable<string> disabledActionMapNames)
+            public ViewState(SerializedInputActionMap? selectedActionMap,
+                             IEnumerable<string> actionMapNames,
+                             IEnumerable<string> disabledActionMapNames,
+                             IReadOnlyDictionary<string, IReadOnlyList<InputActionRequirement>> requirements,
+                             IReadOnlyDictionary<string, IReadOnlyList<InputActionAssetRequirementFailure>> failures)
             {
                 this.selectedActionMap = selectedActionMap;
                 actionMapData = new List<ActionMapData>();
                 foreach (var name in actionMapNames)
                 {
-                    actionMapData.Add(new ActionMapData(name, disabledActionMapNames.Contains(name)));
+                    requirements.TryGetValue(name, out var actionMapRequirements);
+                    failures.TryGetValue(name, out var actionMapFailures);
+                    actionMapData.Add(new ActionMapData(name, disabledActionMapNames.Contains(name), actionMapRequirements, actionMapFailures));
                 }
             }
         }

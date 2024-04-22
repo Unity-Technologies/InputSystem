@@ -1,6 +1,8 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -20,6 +22,8 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsEditing;
         private static InputActionsTreeViewItem s_EditingItem = null;
 
+        private readonly FailureValue m_Failure;
+
         public InputActionsTreeViewItem()
         {
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -34,10 +38,54 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
-
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
+
+            m_Failure = new FailureValue(this, "Action", this.Q<VisualElement>("warning-icon"), this.Q<VisualElement>("dependency-icon"));
         }
+
+        public void SetRequirements(IReadOnlyList<InputActionRequirement> requirements)
+        {
+            m_Failure.SetRequirements(requirements);
+        }
+
+        public void SetFailures(IReadOnlyList<InputActionAssetRequirementFailure> failures)
+        {
+            m_Failure.SetFailures(failures);
+        }
+
+        /*public IReadOnlyList<InputActionAssetRequirementFailure> failures
+        {
+            get => m_Failures;
+            set
+            {
+                var newHasFailures = value != null && value.Count > 0;
+                m_Failures = value;
+                if (m_WarningIcon == null)
+                    m_WarningIcon = this.Q<VisualElement>("warning-icon");
+                var isVisible = !m_WarningIcon.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName);
+                if (newHasFailures)
+                {
+                    var sb = new StringBuilder($"This Action currently has {m_Failures.Count} warning(s):\n");
+                    const int maxErrorsInTooltip = 3;
+                    for (var i=0; i < m_Failures.Count; ++i)
+                    {
+                        if (i == maxErrorsInTooltip)
+                        {
+                            sb.Append($"...");
+                            break;
+                        }
+                        sb.Append($"- {failures[i].Describe(includeAssetReference: false, includeImplication: false)}\n");
+                    }
+                    m_WarningIcon.tooltip = sb.ToString();
+
+                    if (!isVisible)
+                        m_WarningIcon.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+                }
+                else if (isVisible)
+                    m_WarningIcon.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            }
+        }*/
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);

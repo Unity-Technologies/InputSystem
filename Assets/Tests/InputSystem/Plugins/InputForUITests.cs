@@ -227,7 +227,7 @@ public class InputForUITests : InputTestFixture
 
         var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
-        if (InputActionAssetVerifier.DefaultReportPolicy == InputActionAssetVerifier.ReportPolicy.ReportAll)
+        if (InputActionAssetRequirementVerifier.DefaultReportPolicy == InputActionAssetRequirementVerifier.ReportPolicy.ReportAll)
         {
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Navigate' in asset '{link}' could not be found."));

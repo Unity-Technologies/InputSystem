@@ -1,6 +1,9 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -21,6 +24,8 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsEditing;
         private static InputActionMapsTreeViewItem s_EditingItem = null;
 
+        private readonly FailureValue m_Failure;
+
         public InputActionMapsTreeViewItem()
         {
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -37,11 +42,22 @@ namespace UnityEngine.InputSystem.Editor
 
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
+
+            m_Failure = new FailureValue(this, "Action Map", this.Q<VisualElement>("warning-icon"), this.Q<VisualElement>("dependency-icon"));
+        }
+
+        public void SetRequirements(IReadOnlyList<InputActionRequirement> requirements)
+        {
+            m_Failure.SetRequirements(requirements);
+        }
+
+        public void SetFailures(IReadOnlyList<InputActionAssetRequirementFailure> failures)
+        {
+            m_Failure.SetFailures(failures);
         }
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
-
 
         public void UnregisterInputField()
         {
