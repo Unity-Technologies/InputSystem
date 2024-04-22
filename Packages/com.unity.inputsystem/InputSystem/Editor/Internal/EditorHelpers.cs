@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static string GetHyperlink(string text, string path)
         {
-            return "<a href=\"" + path + $">{text}</a>";
+            return "<a href=\"" + path + $"\">{text}</a>";
         }
 
         public static string GetHyperlink(string path)
