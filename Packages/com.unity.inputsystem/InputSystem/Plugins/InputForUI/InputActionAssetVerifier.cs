@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Plugins.InputForUI
 {
+    // Unlike InputSystemProvider we want the verifier to register itself directly on domain reload in editor.
+    [InitializeOnLoad]
     internal class InputActionAssetVerifier : ProjectWideActionsAsset.IInputActionAssetVerifier
     {
         public enum ReportPolicy
@@ -24,9 +26,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             InputSystemProvider.SetOnRegisterActions((asset) => { ProjectWideActionsAsset.Verify(asset); });
         }
-
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
 
         #region ProjectWideActionsAsset.IInputActionAssetVerifier
 
