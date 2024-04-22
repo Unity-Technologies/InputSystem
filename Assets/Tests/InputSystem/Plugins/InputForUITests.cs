@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
@@ -215,6 +216,7 @@ public class InputForUITests : InputTestFixture
         LogAssert.NoUnexpectedReceived();
     }
 
+    [Ignore("We currently allow a PWA asset without an UI action map and rely on defaults instead. This allows users that do not want it or use something else to avoid using it.")]
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
     [Category(kTestCategory)]
     public void ActionsWithoutUIMap_ShouldGenerateWarnings()
@@ -261,8 +263,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' could not be found."));
+        //var link = AssetDatabase.GetAssetPath()//EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" could not be found."));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -304,8 +306,7 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' do not have any configured bindings."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" do not have any configured bindings."));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -330,9 +331,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
-            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'type' set to 'InputActionType.{unexpectedType}'"));
+            new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" has 'type' set to 'InputActionType.{unexpectedType}'"));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -357,9 +357,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
-            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'expectedControlType' set to '{unexpectedControlType}'"));
+            new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" has 'expectedControlType' set to '{unexpectedControlType}'"));
         LogAssert.NoUnexpectedReceived();
     }
 

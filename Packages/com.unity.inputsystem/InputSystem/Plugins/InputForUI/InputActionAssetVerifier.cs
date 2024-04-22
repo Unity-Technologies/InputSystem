@@ -57,17 +57,17 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                return (path == null) ? '"' + asset.name + '"' : "<a href=\"" + path + $">{path}</a>";
+                return path ?? asset.name;
             }
 
             private void ActionMapWarning(string actionMap, string problem)
             {
-                reporter.Report($"InputActionMap with path '{actionMap}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+                reporter.Report($"InputActionMap with path '{actionMap}' in asset \"{GetAssetReference()}\" {problem}. {errorSuffix}");
             }
 
             private void ActionWarning(string actionNameOrId, string problem)
             {
-                reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+                reporter.Report($"InputAction with path '{actionNameOrId}' in asset \"{GetAssetReference()}\" {problem}. {errorSuffix}");
             }
 
             public void Verify(string actionNameOrId, InputActionType actionType, string expectedControlType)
