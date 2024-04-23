@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ValidateAndSaveAsset(InputActionAsset asset)
         {
-            ProjectWideActionsAsset.Validate(asset); // Ignore validation result for save
+            ProjectWideActionsAsset.Verify(asset); // Ignore verification result for save
             EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 

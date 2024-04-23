@@ -3,15 +3,19 @@ uid: input-system-ui-support
 ---
 # UI support
 
-* [Setting up UI Input](#setting-up-ui-input)
-  * [How the bindings work](#how-the-bindings-work)
-    * [Pointer-type input](#pointer-type-input)
-    * [Navigation-type input](#navigation-type-input)
-    * [Tracked-type input](#tracked-type-input)
-* [Multiplayer UIs](#multiplayer-uis)
-* [Virtual mouse cursor control](#virtual-mouse-cursor-control)
-* [UI and game input](#ui-and-game-input)
-* [UI Toolkit support](#ui-toolkit-support)
+- [UI support](#ui-support)
+  - [Setting up UI input](#setting-up-ui-input)
+  - [Required Actions for UI](#required-actions-for-ui)
+    - [Input System Module](#input-system-module)
+    - [How the bindings work](#how-the-bindings-work)
+  - [Multiplayer UIs](#multiplayer-uis)
+  - [Virtual mouse cursor control](#virtual-mouse-cursor-control)
+  - [UI and game input](#ui-and-game-input)
+    - [Handling ambiguities for pointer-type input](#handling-ambiguities-for-pointer-type-input)
+    - [Handling ambiguities for navigation-type input](#handling-ambiguities-for-navigation-type-input)
+  - [UI Toolkit support](#ui-toolkit-support)
+    - [Unity 2023.2 and onwards](#unity-20232-and-onwards)
+    - [Unity 2023.1 and earlier](#unity-20231-and-earlier)
 
 You can use the Input System package to control any in-game UI bindings created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html).
 
@@ -29,9 +33,28 @@ When using [project-wide actions](Workflow-Actions.html) in Unity 2023.2 and new
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 
-You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("UI") and the names of the actions it contains ("Navigate", "Submit", "Cancel", etc) and their respective *Action Types* must remain the same to be compatible with expectations indirectly defined by the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class.
+## Required Actions for UI
+
+The default project-wide actions comes with all the required actions to be compatible with UI Toolkit.
+
+You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("**UI**"), the names of the actions it contains, and their respective **Action Types** must remain the same.
+
+These specific actions and types, which are expected by the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class, are as follows:
+
+**Action**|**Action Type**|**Control Type**
+-|-|-
+Navigate|PassThrough|Vector2
+Submit|Button|Button
+Cancel|Button|Button
+Point|PassThrough|Vector2
+Click|PassThrough|Button
+RightClick|PassThrough|Button
+MiddleClick|PassThrough|Button
+ScrollWheel|PassThrough|Vector2
 
 You can also reset the UI action map to its default bindings by selecting **Reset** from the **More (⋮)** menu, at the top right of the actions editor window. However, this will reset both the 'Player' and 'UI' action maps to their default bindings.
+
+### Input System Module
 
 > **Note:**
 > If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions.

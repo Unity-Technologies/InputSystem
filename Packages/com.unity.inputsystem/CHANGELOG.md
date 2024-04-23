@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Project-wide Actions asset failing to reload properly after deleting project's Library folder.
 - Fixed an issue where `System.InvalidOperationException` is thrown when entering PlayMode after deleting an ActionMap from Project-wide actions and later resetting it.
 - Fixed Input Actions Editor window resource leak that could result in unexpected exceptions [ISXB-865](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-865).
+- Fixed an issue where UI integration would throw exceptions when Project-wide Input Actions asset did not contain the implicitly required `UI` action map or was missing any of the required actions. Additionally this fix now also generates warnings in the console for any divergence from expected action configuration or lack of bindings in edit-mode.
 
 ### Changed
 - For Unity 6.0 and above, when an `EventSystem` GameObject is created in the Editor it will have the
