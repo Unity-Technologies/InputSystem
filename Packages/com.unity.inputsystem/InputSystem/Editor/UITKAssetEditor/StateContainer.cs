@@ -11,20 +11,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         public event Action<InputActionsEditorState> StateChanged;
 
-        private readonly VisualElement m_RootVisualElement;
+        private VisualElement m_RootVisualElement;
         private InputActionsEditorState m_State;
 
-        public StateContainer(VisualElement rootVisualElement, InputActionsEditorState initialState)
+        public StateContainer(InputActionsEditorState initialState)
         {
-            m_RootVisualElement = rootVisualElement;
             m_State = initialState;
-
-            rootVisualElement.Unbind();
-            m_RootVisualElement.TrackSerializedObjectValue(initialState.serializedObject, so =>
-            {
-                StateChanged?.Invoke(m_State);
-            });
-            rootVisualElement.Bind(initialState.serializedObject);
         }
 
         public void Dispatch(Command command)
@@ -51,9 +43,20 @@ namespace UnityEngine.InputSystem.Editor
             });
         }
 
-        public void Initialize()
+        public void Initialize(VisualElement rootVisualElement)
         {
+            // We need to use a root element for the TrackSerializedObjectValue that is destroyed with the view.
+            // Using a root element from the settings window would not enable the tracking callback to be destroyed or garbage collected.
+
+            m_RootVisualElement = rootVisualElement;
+
+            m_RootVisualElement.Unbind();
+            m_RootVisualElement.TrackSerializedObjectValue(m_State.serializedObject, so =>
+            {
+                StateChanged?.Invoke(m_State);
+            });
             StateChanged?.Invoke(m_State);
+            rootVisualElement.Bind(m_State.serializedObject);
         }
 
         /// <summary>
