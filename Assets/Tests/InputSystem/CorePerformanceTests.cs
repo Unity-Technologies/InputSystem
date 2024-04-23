@@ -766,6 +766,66 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // These tests show the performance of the ReadValueCaching optimization when there are state changes to gamepad
+    // controls.
+    // Two cases of control changes are evaluated to show the current performance impact:
+    // 1) When the control value changed is a float. In this case there's a performance loss when using
+    // ReadValueCaching.
+    // 2) When the control value changed is a composite control. In this case there's a performance improvement when
+    // using ReadValueCaching.
+    public void Performance_OptimizedControls_EvaluateStaleControlReadsWhenGamepadStateChanges(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var value = 0f;
+        var value2d = Vector2.zero;
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 1000; ++i)
+            {
+                // Make sure state changes are different from previous state so that we mark the controls as
+                // stale.
+                InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = i / 1000f, rightTrigger = i / 1000f});
+                InputSystem.Update();
+
+                value = gamepad.leftTrigger.value;
+                value = gamepad.rightTrigger.value;
+            }
+        }).SampleGroup("ReadValueCaching Expected With WORSE Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+
+
+        Measure.Method(() =>
+        {
+            for (var i = 0; i < 1000; ++i)
+            {
+                // Make sure state changes are different from previous state so that we mark the controls as
+                // stale.
+                InputSystem.QueueStateEvent(gamepad,
+                    new GamepadState
+                    {
+                        leftStick = new Vector2(i / 1000f, i / 1000f),
+                        rightStick = new Vector2(i / 1000f, i / 1200f)
+                    });
+                InputSystem.Update();
+
+                value2d = gamepad.leftStick.value;
+                value2d = gamepad.rightStick.value;
+            }
+        }).SampleGroup("ReadValueCaching Expected With BETTER Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
 #if ENABLE_VR
     [Test, Performance]
     [Category("Performance")]
