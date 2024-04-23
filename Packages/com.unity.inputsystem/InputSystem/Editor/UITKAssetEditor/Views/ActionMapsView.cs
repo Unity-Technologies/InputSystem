@@ -31,8 +31,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.userData = i;
-                treeViewItem.SetRequirements(mapData.requirements);
-                treeViewItem.SetFailures(mapData.failures);
+                treeViewItem.dependencies.Update(mapData.mapName, mapData.requirements, mapData.failures);
                 element.SetEnabled(!mapData.isDisabled);
                 ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };
@@ -241,10 +240,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             internal string mapName;
             internal bool isDisabled;
-            internal IReadOnlyList<InputActionRequirement> requirements;
+            internal IEnumerable<InputActionAssetRequirements> requirements;
             internal IReadOnlyList<InputActionAssetRequirementFailure> failures;
 
-            public ActionMapData(string mapName, bool isDisabled, IReadOnlyList<InputActionRequirement> requirements,
+            public ActionMapData(string mapName, bool isDisabled, IEnumerable<InputActionAssetRequirements> requirements,
                                  IReadOnlyList<InputActionAssetRequirementFailure> failures)
             {
                 this.mapName = mapName;
@@ -262,7 +261,7 @@ namespace UnityEngine.InputSystem.Editor
             public ViewState(SerializedInputActionMap? selectedActionMap,
                              IEnumerable<string> actionMapNames,
                              IEnumerable<string> disabledActionMapNames,
-                             IReadOnlyDictionary<string, IReadOnlyList<InputActionRequirement>> requirements,
+                             IReadOnlyDictionary<string, IEnumerable<InputActionAssetRequirements>> requirements,
                              IReadOnlyDictionary<string, IReadOnlyList<InputActionAssetRequirementFailure>> failures)
             {
                 this.selectedActionMap = selectedActionMap;

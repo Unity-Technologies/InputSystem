@@ -107,11 +107,23 @@
     height: 16px;
 }
 
-.tree-view-item-link-icon{
+.tree-view-item-icon-base {
     justify-content: center;
-    background-image: var(--unity-icons-link-checked);
     width: 16px;
     height: 16px;
+}
+
+.dependency-icon {
+    background-image: var(--unity-icons-lock-checked);
+}
+
+.dependency-icon-unlocked {
+    background-image: var(--unity-icons-lock);
+    -unity-background-image-tint-color: var(--unity-colors-warning-text)
+}
+
+.warning-icon {
+    background-image: var(--unity-icons-console_entry_warn_small);
 }
 
 .body-panel-header {

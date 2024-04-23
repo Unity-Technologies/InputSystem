@@ -1,7 +1,9 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -200,6 +202,60 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public IEnumerable<InputActionAssetRequirementFailure> GetFailures(string actionPath = null)
+        {
+            // TODO Considering storing cached result of each verify request into a static map.
+            //      This way, it may be obtained later by enumerating failures.
+
+            return null;
+        }
+
+        public IEnumerable<InputActionRequirement> EnumerateRequirement(string actionPath)
+        {
+            foreach (var requirement in requirements)
+            {
+                if (actionPath == null || requirement.actionPath.Contains(actionPath))
+                    yield return requirement;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates all sets of requirements, optionally matching the specified action path.
+        /// </summary>
+        /// <param name="actionPath">Optional action path to filter the enumeration.</param>
+        /// <returns>Enumerable requirements.</returns>
+        public static IEnumerable<InputActionAssetRequirements> Enumerate(string actionPath = null) // TODO Consider return a filtered object keeping the actionPath?
+        {
+            foreach (var requirements in s_Requirements)
+            {
+                foreach (var requirement in requirements.requirements)
+                {
+                    if (actionPath == null || requirement.actionPath.Contains(actionPath))
+                    {
+                        yield return requirements;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /*public static IReadOnlyDictionary<string, IReadOnlyList<InputActionRequirement>> GetActionRequirementsPerOwner(string actionPath)
+        {
+            List<InputActionRequirement> result = null;
+            foreach (var requirements in s_Requirements)
+            {
+                foreach (var requirement in requirements.requirements)
+                {
+                    if (requirement.actionPath.Contains(actionPath))
+                    {
+                        result ??= new List<InputActionRequirement>();
+                        result.Add(requirement);
+                    }
+                }
+            }
+            return result;
+        }*/
+
         public static IReadOnlyList<InputActionRequirement> GetActionRequirements(string actionPath)
         {
             List<InputActionRequirement> result = null;
@@ -207,7 +263,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 foreach (var requirement in requirements.requirements)
                 {
-                    if (requirement.actionPath.Equals(actionPath))
+                    if (requirement.actionPath.Contains(actionPath))
                     {
                         result ??= new List<InputActionRequirement>();
                         result.Add(requirement);
@@ -217,24 +273,28 @@ namespace UnityEngine.InputSystem.Editor
             return result;
         }
 
-        public static IReadOnlyDictionary<string, IReadOnlyList<InputActionRequirement>> GetActionMapRequirements()
+        public static IReadOnlyDictionary<string, IEnumerable<InputActionAssetRequirements>> GetActionMapRequirements()
         {
-            var dictionary = new Dictionary<string, List<InputActionRequirement>>();
+            var dictionary = new Dictionary<string, List<InputActionAssetRequirements>>();
             foreach (var requirements in s_Requirements)
             {
                 foreach (var requirement in requirements.requirements)
                 {
                     var actionMapName = requirement.actionMapName;
                     if (!dictionary.TryGetValue(actionMapName,
-                        out List<InputActionRequirement> actionMapRequirements))
+                        out List<InputActionAssetRequirements> actionMapRequirements))
                     {
-                        actionMapRequirements = new List<InputActionRequirement>();
+                        actionMapRequirements = new List<InputActionAssetRequirements>();
                         dictionary.Add(actionMapName, actionMapRequirements);
                     }
-                    actionMapRequirements.Add(requirement);
+                    actionMapRequirements.Add(requirements);
+                    break; // no need to process more requirements for this set of requirements here
                 }
             }
-            return dictionary.AsReadOnly<string, List<InputActionRequirement>, IReadOnlyList<InputActionRequirement>>();
+
+            return dictionary
+                .AsReadOnly<string, List<InputActionAssetRequirements>, IEnumerable<InputActionAssetRequirements>>();
+            //return dictionary.AsReadOnly<string, List<IEnumerable<InputActionAssetRequirements>>, IEnumerable<InputActionAssetRequirements>>();
         }
 
         public static IReadOnlyList<InputActionRequirement> FindRequirements(string path)

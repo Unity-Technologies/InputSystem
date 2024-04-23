@@ -5,102 +5,134 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
+using UnityEngine.AI;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
-    /// Utility class to reduce code bloat required to visualize requirement failures.
+    /// Utility class to reduce code bloat required to visualize dependency requirements or dependency requirement failures.
     /// </summary>
-    class FailureValue
+    sealed class InputActionDependency
     {
-        private IReadOnlyList<InputActionRequirement> m_Requirements;
-        private IReadOnlyList<InputActionAssetRequirementFailure> m_Failures;
-
-        private readonly VisualElement m_WarningIcon;
         private readonly VisualElement m_DependencyIcon;
         private readonly string m_Entity;
         private readonly VisualElement m_Parent;
+        private readonly DependencyType m_Type;
+
+        public enum DependencyType
+        {
+            None,
+            ActionMap,
+            Action
+        }
 
         /// <summary>
         /// Constructs a new instance.
         /// </summary>
         /// <param name="parent">The parent visual element.</param>
         /// <param name="entity">A friendly-name representing the associated element.</param>
-        /// <param name="warningIcon">A reference to a visual element acting as warning icon.</param>
+        /// <param name="type"></param>
         /// <param name="dependencyIcon">A reference to a visual element acting as dependency icon.</param>
-        public FailureValue(VisualElement parent, string entity, VisualElement warningIcon, VisualElement dependencyIcon)
+        public InputActionDependency(VisualElement parent, string entity, DependencyType type, VisualElement dependencyIcon)
         {
             m_Parent = parent;
-            m_Requirements = null;
-            m_Failures = null;
             m_Entity = entity;
-            m_WarningIcon = warningIcon;
             m_DependencyIcon = dependencyIcon;
+            m_Type = type;
         }
 
-        /// <summary>
-        /// Sets the requirements to be displayed.
-        /// </summary>
-        /// <param name="value">A list of requirements associated with this element. May be <c>null</c>.</param>
-        public void SetRequirements(IReadOnlyList<InputActionRequirement> value)
+        public InputActionDependency(VisualElement parent, string entity, DependencyType type)
+            : this(parent, entity, type, parent.Q<VisualElement>("dependency-icon"))
+        {}
+
+        public void Update(string actionPath, IEnumerable<InputActionAssetRequirements> requirements,
+            IReadOnlyList<InputActionAssetRequirementFailure> failures)
         {
+            // If we do not have any visual representation we cannot do much
             if (m_DependencyIcon == null)
                 return;
 
-            var newHasRequirements = value != null && value.Count > 0;
-            m_Requirements = value;
-            var isVisible = !m_DependencyIcon.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName);
-            if (newHasRequirements)
-            {
-                // TODO To achieve this in a good way we need to have another object for InputActionRequirement lists providing this for us, e.g. foreach (var owner in requirements.owners) requirements.Count(owner)
-                // TODO Extract all requirement owners and write message as e.g.
-                // UI Toolkit Input System Integration has 1 dependency requirement on "UI" action map.
-                var sb = new StringBuilder($"This {m_Entity} currently has {m_Requirements.Count} dependency requirements(s):\n");
-                m_DependencyIcon.tooltip = sb.ToString();
-                if (!isVisible)
-                    m_DependencyIcon.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-            }
-            else if (isVisible)
-                m_DependencyIcon.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
-        }
+            const char bullet = '\u2022';
+            StringBuilder message = null;
 
-        /// <summary>
-        /// Sets the failures to be displayed.
-        /// </summary>
-        /// <param name="value">A list of failures associated with this element. May be <c>null</c>.</param>
-        public void SetFailures(IReadOnlyList<InputActionAssetRequirementFailure> value)
-        {
-            if (m_WarningIcon == null)
-                return;
-
-            var newHasFailures = value != null && value.Count > 0;
-            m_Failures = value;
-            var isVisible = !m_WarningIcon.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName);
-            if (newHasFailures)
+            // Handle failures first since if failures are present we show them instead of requirements
+            var hasFailures = failures != null && failures.Count > 0;
+            if (hasFailures)
             {
-                var sb = new StringBuilder($"This {m_Entity} currently has {m_Failures.Count} warning(s):\n");
+                message = new StringBuilder($"This {m_Entity} currently has {failures.Count} warning");
+                if (failures.Count > 1)
+                    message.Append('s');
+                message.Append(":\n");
                 const int maxErrorsInTooltip = 3;
-                for (var i = 0; i < m_Failures.Count; ++i)
+                for (var i = 0; i < failures.Count; ++i)
                 {
-                    // Limit the maximum numbers of warnings that may be seen at one point in time.
+                    if (i > 0)
+                        message.Append('\n');
                     if (i == maxErrorsInTooltip)
                     {
-                        sb.Append($"\\n...");
+                        message.Append($"...");
                         break;
                     }
 
-                    // Note that we exclude asset reference since implicit while editing an asset
-                    sb.Append($"\\n- {value[i].Describe(includeAssetReference: false, includeImplication: true)}\n");
+                    // Note that we exclude asset reference since implicit while editing an asset.
+                    // We also exclude implication since this is shown in header warning box.
+                    message.Append($"{bullet} {failures[i].Describe(includeAssetReference: false, includeImplication: false)}");
                 }
-                m_WarningIcon.tooltip = sb.ToString();
-
-                if (!isVisible)
-                    m_WarningIcon.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
             }
-            else if (isVisible)
-                m_WarningIcon.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+
+            // In case no failures are present, show requirements (if present)
+            if (!hasFailures && requirements != null)
+            {
+                int reqsCount = 0;
+                StringBuilder reqs = null;
+                foreach (var requirementSet in requirements)
+                {
+                    reqs ??= new StringBuilder();
+                    foreach (var requirement in requirementSet.EnumerateRequirement(actionPath)) // TODO Need filter
+                    {
+                        if (reqs.Length > 0)
+                            reqs.Append('\n');
+                        reqs.Append(m_Type == DependencyType.ActionMap
+                            ? $"{bullet} Action named \"{requirement.actionPath}\" need to exist."
+                            : $"{bullet} Action named \"{requirement.actionPath}\" with 'Action Type' set to '{requirement.actionType}' and 'Control Type' set to '{requirement.expectedControlType}' need to exist.");
+                        ++reqsCount;
+                    }
+
+                    message ??= new StringBuilder();
+                    message.Append($"<b>\"{requirementSet.owner}\"</b> has {reqsCount} dependency requirement");
+                    if (reqsCount > 1)
+                        message.Append('s');
+                    message.Append($" on this {m_Entity}:\n");
+                    message.Append(reqs);
+                }
+            }
+
+            // Update tooltip based on either requirements or failures text
+            m_DependencyIcon.tooltip = message?.ToString();
+
+            // Change icon
+            const string dependencyWarningIconClass = "warning-icon";
+            const string dependencyIconClass = "dependency-icon";
+            var hasRequirementsOrFailures = message != null;
+            if (hasFailures && !m_DependencyIcon.ClassListContains(dependencyWarningIconClass))
+            {
+                m_DependencyIcon.RemoveFromClassList(dependencyIconClass);
+                m_DependencyIcon.AddToClassList(dependencyWarningIconClass);
+            }
+            else if (hasRequirementsOrFailures && !m_DependencyIcon.ClassListContains(dependencyIconClass))
+            {
+                m_DependencyIcon.RemoveFromClassList(dependencyWarningIconClass);
+                m_DependencyIcon.AddToClassList(dependencyIconClass);
+            }
+
+            // Change icon visibility
+            var isCurrentlyVisible = !m_DependencyIcon.ClassListContains(InputActionsEditorConstants.HiddenStyleClassName);
+            if (!isCurrentlyVisible && hasRequirementsOrFailures)
+                m_DependencyIcon.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            else if (isCurrentlyVisible && !hasRequirementsOrFailures)
+                m_DependencyIcon.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
         }
     }
 }

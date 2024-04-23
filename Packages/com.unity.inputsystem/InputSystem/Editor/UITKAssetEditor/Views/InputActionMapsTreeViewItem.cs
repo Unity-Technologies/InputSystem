@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsEditing;
         private static InputActionMapsTreeViewItem s_EditingItem = null;
 
-        private readonly FailureValue m_Failure;
+        //private readonly FailureValue m_Failure;
 
         public InputActionMapsTreeViewItem()
         {
@@ -43,18 +43,10 @@ namespace UnityEngine.InputSystem.Editor
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
 
-            m_Failure = new FailureValue(this, "Action Map", this.Q<VisualElement>("warning-icon"), this.Q<VisualElement>("dependency-icon"));
+            dependencies = new InputActionDependency(this, entity: "Action Map", type: InputActionDependency.DependencyType.ActionMap);
         }
 
-        public void SetRequirements(IReadOnlyList<InputActionRequirement> requirements)
-        {
-            m_Failure.SetRequirements(requirements);
-        }
-
-        public void SetFailures(IReadOnlyList<InputActionAssetRequirementFailure> failures)
-        {
-            m_Failure.SetFailures(failures);
-        }
+        public InputActionDependency dependencies { get; }
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);

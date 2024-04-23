@@ -68,8 +68,7 @@ namespace UnityEngine.InputSystem.Editor
                         ChangeActionOrCompositName(item, newName);
                     };
                     treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
-                    treeViewItem.SetRequirements(item.requirements);
-                    treeViewItem.SetFailures(item.failures);
+                    treeViewItem.dependencies.Update(item.actionPath, item.requirements, item.failures);
                 }
                 else
                 {
@@ -84,6 +83,8 @@ namespace UnityEngine.InputSystem.Editor
                         };
                         treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                     }
+
+                    treeViewItem.dependencies.Update("", null, null); // TODO Temporary fix, why would this be needed, are we cloning something?
                 }
 
                 if (!string.IsNullOrEmpty(item.controlLayout))
@@ -557,7 +558,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false,
                                    bool isPartOfComposite = false, string controlLayout = "", int bindingIndex = -1, int actionIndex = -1,
-                                   bool isCut = false, IReadOnlyList<InputActionRequirement> requirements = null,
+                                   bool isCut = false, string actionPath = null, IEnumerable<InputActionAssetRequirements> requirements = null,
                                    IReadOnlyList<InputActionAssetRequirementFailure> failures = null)
         {
             this.name = name;
@@ -569,11 +570,13 @@ namespace UnityEngine.InputSystem.Editor
             this.isAction = isAction;
             this.actionIndex = actionIndex;
             this.isCut = isCut;
+            this.actionPath = actionPath;
             this.requirements = requirements;
             this.failures = failures;
         }
 
-        public IReadOnlyList<InputActionRequirement> requirements { get; }
+        public string actionPath { get; }
+        public IEnumerable<InputActionAssetRequirements> requirements { get; }
         public IReadOnlyList<InputActionAssetRequirementFailure> failures { get; }
         public string name { get; }
         public bool isAction { get; }
@@ -666,8 +669,9 @@ namespace UnityEngine.InputSystem.Editor
                     new ActionOrBindingData(isAction: true, action.name, actionMapIndex, isComposite: false,
                         isPartOfComposite: false, action.expectedControlType, actionIndex: actionIndex,
                         isCut: state.IsActionCut(actionMapIndex, actionIndex),
-                        requirements: InputActionAssetRequirements.GetActionRequirements(actionPath), // TODO Should be null if not an action
-                        failures: state.verificationResult.GetActionFailures(actionPath)),  // TODO Should be null if not an action
+                        actionPath: actionPath,
+                        requirements: InputActionAssetRequirements.Enumerate(actionPath),
+                        failures: state.verificationResult.GetActionFailures(actionPath)),
                     bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
