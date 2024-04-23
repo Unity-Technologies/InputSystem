@@ -21,6 +21,11 @@ namespace UnityEngine.InputSystem.Android
 
         public static void Initialize()
         {
+            InputSystem.RegisterLayout<AndroidDevice>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(kAndroidInterface)
+                    .WithDeviceClass("AndroidDevice"));
+         
             InputSystem.RegisterLayout<AndroidGamepad>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
