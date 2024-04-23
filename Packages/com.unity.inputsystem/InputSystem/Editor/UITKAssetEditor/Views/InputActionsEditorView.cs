@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private new void OnStateChanged(InputActionsEditorState state)
+        private void UpdateDependencyInfo(ref InputActionsEditorState state)
         {
             // Show warning help box with summary of issues reported if there are verification failures.
             if (state.verificationResult.hasFailures)
@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     if (sb.Length > 0)
                         sb.Append('\n');
-                    sb.Append($"There are {state.verificationResult.failures.Count} dependency warning(s) affecting <b>{part.requirements.owner}</b> which depend on this asset. {part.requirements.implication}"); // TODO Separate guidance from implication?!
+                    sb.Append($"There are {state.verificationResult.failures.Count} dependency warning(s) affecting <b>{part.requirements.owner}</b> which depend on this asset. {part.requirements.implication}");
                 }
 
                 m_WarningHelpBox.text = sb.ToString();
@@ -147,7 +147,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_WarningHelpBox.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             }
+        }
 
+        private new void OnStateChanged(InputActionsEditorState state)
+        {
+            UpdateDependencyInfo(ref state);
             base.OnStateChanged(state);
         }
 
