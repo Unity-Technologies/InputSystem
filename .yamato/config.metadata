@@ -47,8 +47,8 @@ platforms_nix:
     scripting-backend: Il2Cpp
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
   - name: linux
-    type: Unity::VM::linux
-    image: package-ci/ubuntu-22.04:default
+    type: Unity::VM
+    image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
 scripting_backends:
   - name: mono
