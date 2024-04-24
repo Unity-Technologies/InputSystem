@@ -3601,7 +3601,7 @@ namespace UnityEngine.InputSystem
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
-                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor.";
+                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor. If you do this, you will need to start the import process again for any packages that are waiting to be imported.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
                 {
