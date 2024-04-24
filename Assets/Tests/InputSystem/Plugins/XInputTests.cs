@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
-#if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
