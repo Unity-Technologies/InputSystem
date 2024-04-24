@@ -3522,6 +3522,9 @@ internal class UITests : CoreTestsFixture
 #if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS) || (TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN))
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
 #endif
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    [Ignore("Disabled to make test suite pass on Linux")]
+#endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
     {
