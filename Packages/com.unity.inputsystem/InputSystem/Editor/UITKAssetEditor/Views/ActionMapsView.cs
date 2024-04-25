@@ -113,15 +113,22 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void RenameActionMap(int index)
         {
+            // Abort if item is currently locked by dependent plugin
             m_ListView.ScrollToItem(index);
             var element = m_ListView.GetRootElementForIndex(index);
             if (element == null)
                 return;
+
             ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
         }
 
         internal void DeleteActionMap(int index)
         {
+            // Abort if item is currently locked by dependent plugin
+            var item = m_ListView.GetRootElementForIndex(index) as InputActionMapsTreeViewItem;
+            if (item != null && item.isLocked)
+                return;
+
             Dispatch(Commands.DeleteActionMap(index));
         }
 
@@ -173,7 +180,7 @@ namespace UnityEngine.InputSystem.Editor
                 switch (evt.commandName)
                 {
                     case CmdEvents.Rename:
-                        ((InputActionMapsTreeViewItem)selectedItem).FocusOnRenameTextField();
+                        ((InputActionMapsTreeViewItem)selectedItem)?.FocusOnRenameTextField();
                         break;
                     case CmdEvents.Delete:
                     case CmdEvents.SoftDelete:

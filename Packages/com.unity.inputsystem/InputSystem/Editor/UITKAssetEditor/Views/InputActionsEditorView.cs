@@ -130,12 +130,30 @@ namespace UnityEngine.InputSystem.Editor
             // Show warning help box with summary of issues reported if there are verification failures.
             if (state.verificationResult.hasFailures)
             {
+                var container = m_WarningHelpBox.Q<VisualElement>("warning-help-box-container");
+                container.Clear();
+
                 var sb = new StringBuilder();
                 foreach (var part in state.verificationResult.parts)
                 {
                     if (sb.Length > 0)
                         sb.Append('\n');
                     sb.Append($"There are {state.verificationResult.failures.Count} dependency warning(s) affecting <b>{part.requirements.owner}</b> which depend on this asset. {part.requirements.implication}");
+
+                    foreach (var resolver in part.requirements.resolvers)
+                    {
+                        var button = new Button();
+                        button.AddToClassList("resolver-button");
+                        //button.name = kDynamicVisualElement;
+                        button.text = resolver.name;
+                        button.tooltip = resolver.description;
+                        button.clicked += () =>
+                        {
+                            resolver.Resolve(stateContainer.GetState().serializedObject);
+                            //Dispatch(Commands.Arbitrary(() => resolver.Resolve(stateContainer.GetState().serializedObject)));
+                        };
+                        container.Add(button);
+                    }
                 }
 
                 m_WarningHelpBox.text = sb.ToString();

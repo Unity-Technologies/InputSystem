@@ -113,6 +113,11 @@
     height: 16px;
 }
 
+.resolver-button {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 .dependency-icon {
     background-image: var(--unity-icons-lock-checked);
 }

@@ -24,17 +24,28 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_Action_String = "Add Action";
         private static readonly string add_Binding_String = "Add Binding";
 
+        private static DropdownMenuAction.Status GetStatus(InputActionMapsTreeViewItem item)
+        {
+            return item.dependencies.isLocked ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
+        }
+
+        private static DropdownMenuAction.Status GetStatus(InputActionsTreeViewItem item)
+        {
+            return item.dependencies.isLocked ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
+        }
+
         #region ActionMaps
         public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem, int index)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
                 // TODO: AddAction should enable m_RenameOnActionAdded
+                var dependencyStatus = GetStatus(treeViewItem);
                 menuEvent.menu.AppendAction(add_Action_String, _ => mapView.Dispatch(Commands.AddAction()));
                 menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(rename_String, _ => mapView.RenameActionMap(index));
+                menuEvent.menu.AppendAction(rename_String, _ => mapView.RenameActionMap(index), dependencyStatus);
                 menuEvent.menu.AppendAction(duplicate_String, _ => mapView.DuplicateActionMap(index));
-                menuEvent.menu.AppendAction(delete_String, _ => mapView.DeleteActionMap(index));
+                menuEvent.menu.AppendAction(delete_String, _ => mapView.DeleteActionMap(index), dependencyStatus);
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
                 menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
@@ -103,8 +114,8 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(add_Binding_String, _ => treeView.AddBinding(index));
                 AppendCompositeMenuItems(treeView, controlLayout, index, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
                 menuEvent.menu.AppendSeparator();
-                AppendRenameAction(menuEvent, treeView, index);
-                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
+                AppendRenameAction(menuEvent, treeView, index, GetStatus(treeViewItem));
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index, GetStatus(treeViewItem));
             }) { target = treeViewItem };
         }
 
@@ -151,8 +162,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                AppendRenameAction(menuEvent, treeView, index);
-                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
+                AppendRenameAction(menuEvent, treeView, index, DropdownMenuAction.Status.Normal);
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index, DropdownMenuAction.Status.Normal);
             }) { target = treeViewItem };
         }
 
@@ -160,20 +171,21 @@ namespace UnityEngine.InputSystem.Editor
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
+                AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index, GetStatus(treeViewItem));
             }) { target = treeViewItem };
         }
 
-        private static void AppendRenameAction(ContextualMenuPopulateEvent menuEvent, ActionsTreeView treeView, int index)
+        private static void AppendRenameAction(ContextualMenuPopulateEvent menuEvent, ActionsTreeView treeView, int index, DropdownMenuAction.Status status)
         {
-            menuEvent.menu.AppendAction(rename_String, _ => treeView.RenameActionItem(index));
+            menuEvent.menu.AppendAction(rename_String, _ => treeView.RenameActionItem(index), status: status);
         }
 
         // These actions are always either all present, or all missing, so we can group their Append calls here.
-        private static void AppendDuplicateDeleteCutAndCopyActionsSection(ContextualMenuPopulateEvent menuEvent, ActionsTreeView actionsTreeView, int index)
+        private static void AppendDuplicateDeleteCutAndCopyActionsSection(ContextualMenuPopulateEvent menuEvent, ActionsTreeView actionsTreeView, int index,
+            DropdownMenuAction.Status deleteStatus)
         {
             menuEvent.menu.AppendAction(duplicate_String, _ => actionsTreeView.DuplicateItem(index));
-            menuEvent.menu.AppendAction(delete_String, _ => actionsTreeView.DeleteItem(index));
+            menuEvent.menu.AppendAction(delete_String, _ => actionsTreeView.DeleteItem(index), status: deleteStatus);
             menuEvent.menu.AppendSeparator();
             menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems());
             menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems());

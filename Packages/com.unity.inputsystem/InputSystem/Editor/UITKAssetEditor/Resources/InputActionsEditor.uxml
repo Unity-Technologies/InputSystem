@@ -24,7 +24,15 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
             </uie:Toolbar> -->
-            <ui:HelpBox name="warning-help-box" message-type="Warning" text="1 warning affecting 'UI Toolkit Input Integration'. Examine individual warnings by hovering over the corresponding icon or click this link to Show Warnings in Console. Alternatively consult the UI Support documentation or Reset to Defaults to remove this warning." />
+            <ui:HelpBox name="warning-help-box" message-type="Warning" text="1 warning affecting 'UI Toolkit Input Integration'. Examine individual warnings by hovering over the corresponding icon or click this link to Show Warnings in Console. Alternatively consult the UI Support documentation or Reset to Defaults to remove this warning.">
+                <ui:VisualElement name="warning-help-box-container">
+
+                </ui:VisualElement>
+             <!--   <ui:Button text="Fix Issues" tooltip="Automatically fixes issues by changing configuration to comply to requirements. Note that this option will not delete any existing actions or action maps but might rename them to avoid conflicts." />
+                <ui:Button text="Open Documentation" tooltip="Opens the corresponding online Unity manual pages to read about requirements for configuration and how to comply." /> -->
+            </ui:HelpBox>
+
+
         </ui:VisualElement>
         <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">
             <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="200">

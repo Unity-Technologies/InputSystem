@@ -147,6 +147,7 @@ namespace UnityEngine.InputSystem
                 Dialog.InputActionAsset.SetDiscardUnsavedChanges((_) => Dialog.Result.Discard);
                 Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset((_) => Dialog.Result.Discard);
                 Dialog.ControlScheme.SetDeleteControlScheme((_) => Dialog.Result.Delete);
+                Dialog.InputActionAsset.SetMergeConflictResolution((_) => Dialog.Result.Overwrite);
                 #endif
             }
             catch (Exception exception)
@@ -195,6 +196,7 @@ namespace UnityEngine.InputSystem
                 Dialog.InputActionAsset.SetSaveChanges(null);
                 Dialog.InputActionAsset.SetDiscardUnsavedChanges(null);
                 Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset(null);
+                Dialog.InputActionAsset.SetMergeConflictResolution(null);
                 Dialog.ControlScheme.SetDeleteControlScheme(null);
                 #endif
             }

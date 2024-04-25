@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using Resolver = UnityEngine.Rendering.VirtualTexturing.Resolver;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -128,6 +129,26 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
+    readonly struct InputActionAssetResolution
+    {
+        private readonly Action<SerializedObject> m_Resolver;
+
+        public InputActionAssetResolution(string name, Action<SerializedObject> resolver, string description)
+        {
+            this.name = name;
+            this.m_Resolver = resolver;
+            this.description = description;
+        }
+
+        public void Resolve(SerializedObject obj)
+        {
+            m_Resolver.Invoke(obj);
+        }
+
+        public string name { get; }
+        public string description { get; }
+    }
+
     /// <summary>
     /// Represents a set of requirements on an <c>InputActionAsset</c>.
     /// </summary>
@@ -136,10 +157,14 @@ namespace UnityEngine.InputSystem.Editor
         // Global list of registered requirements
         private static readonly List<InputActionAssetRequirements> s_Requirements = new List<InputActionAssetRequirements>();
 
-        public InputActionAssetRequirements(string owner, IEnumerable<InputActionRequirement> requirements, string implicationOfFailedRequirements)
+        private readonly List<InputActionAssetResolution> s_Resolvers = new List<InputActionAssetResolution>();
+
+        public InputActionAssetRequirements(string owner, IEnumerable<InputActionRequirement> requirements,
+                                            IEnumerable<InputActionAssetResolution> resolvers, string implicationOfFailedRequirements)
         {
             this.owner = owner ?? throw new ArgumentNullException(nameof(owner));
             this.requirements = requirements.ToArray();
+            this.resolvers = resolvers.ToArray();
             this.implication = implicationOfFailedRequirements ?? throw new ArgumentNullException(nameof(implicationOfFailedRequirements));
         }
 
@@ -152,6 +177,8 @@ namespace UnityEngine.InputSystem.Editor
         /// Retrieves a read-only list of the requirements in this set of requirements.
         /// </summary>
         public IReadOnlyList<InputActionRequirement> requirements { get; }
+
+        public IReadOnlyList<InputActionAssetResolution> resolvers { get; }
 
         /// <summary>
         /// Describes the main implication of not meeting this particular set of requirements.

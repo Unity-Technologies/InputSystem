@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && ENABLE_INPUT_SYSTEM && UNITY_2023_2_OR_NEWER
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 
@@ -21,11 +22,15 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
     internal static class InputSystemProviderRequirements
     {
         // Provides a user-facing message explaining implication of failed requirements for this integration plugin.
+        private const string kUISupportUrl =
+            "https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html";
+        private const string kProjectWideActionsUrl =
+            "https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions";
         private const string kImplicationOfFailedRequirements =
             "Run-time UI interactivity (input) may not work as expected. See " +
-            "<a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/UISupport.html\">Input System Manual - UI Support</a>" +
+            "<a href=\"" + kUISupportUrl + "\">Input System Manual - UI Support</a>" +
             " for guidance on required actions for UI integration or see " +
-            "<a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/ProjectWideActions.html#the-default-actions\">UI Support</a> for information on how to revert to defaults.";
+            "<a href=\"" + kProjectWideActionsUrl + "\">UI Support</a> for information on how to revert to defaults.";
 
         // Holds the current applied requirements for this integration plugin.
         private static InputActionAssetRequirements s_Requirements;
@@ -58,12 +63,34 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             RegisterRequirements(ref cfg);
         }
 
+        private static void FixIssues(SerializedObject obj)
+        {
+            var tempAsset = InputActionAsset.FromJson(ProjectWideActionsAsset.GetDefaultAssetJson());
+            try
+            {
+                using (var src = new SerializedObject(tempAsset))
+                {
+                    if (InputActionSerializationHelpers.MergeActionMapsWithConflictResolution(
+                        dst: new SerializedInputActionAsset(obj).actionMaps,
+                        src: new SerializedInputActionAsset(src).actionMaps,
+                        predicate: (map) => map.name == "UI"))
+                    {
+                        obj.ApplyModifiedProperties();
+                    }
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(tempAsset);
+            }
+        }
+
         private static void RegisterRequirements(ref InputSystemProvider.Configuration cfg)
         {
             // Register action requirements to allow the system to perform verification and user-feedback
             const string kOwner = "UI Toolkit Input System Integration";
             s_Requirements = new InputActionAssetRequirements(kOwner,
-                new InputActionRequirement[]
+                requirements: new InputActionRequirement[]
                 {
                     new InputActionRequirement(cfg.PointAction, actionType: InputActionType.PassThrough,
                         expectedControlType: nameof(Vector2), kImplicationOfFailedRequirements),
@@ -81,7 +108,15 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                         expectedControlType: "Button", kImplicationOfFailedRequirements),
                     new InputActionRequirement(cfg.ScrollWheelAction, actionType: InputActionType.PassThrough,
                         expectedControlType: nameof(Vector2), kImplicationOfFailedRequirements)
-                }, kImplicationOfFailedRequirements);
+                },
+                resolvers: new InputActionAssetResolution[]
+                {
+                    new InputActionAssetResolution("Fix Issues", FixIssues,
+                        "Attempt to automatically fix issues by changing configuration to comply to requirements via action configuration merge strategy. In case of any conflicts you will be prompted to take action."),
+                    new InputActionAssetResolution("See Manual", (_) => Application.OpenURL(kUISupportUrl),
+                        "Opens the relevant Unity manual pages in the web browser that explains how to configure UI compatible input actions.")
+                },
+                kImplicationOfFailedRequirements);
 
             // Register requirements driven by this implementation to enable system to perform verification
             InputActionAssetRequirements.Register(s_Requirements);

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Security;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -24,6 +25,9 @@ namespace UnityEngine.InputSystem.Editor
 
             // User decided to delete the associated resource.
             Delete = 3,
+
+            Overwrite = 4,
+            Rename = 5,
         }
 
         // User UI dialog windows related to InputActionAssets
@@ -118,6 +122,37 @@ namespace UnityEngine.InputSystem.Editor
             public static Result ShowCreateAndOverwriteExistingAsset(string path)
             {
                 return createAndOverwriteExistingAsset(path);
+            }
+
+            private static Func<string, Result>
+            mergeConflictResolution = DefaultMergeConflictResolution;
+
+            internal static void SetMergeConflictResolution(Func<string, Result> dialog)
+            {
+                mergeConflictResolution = dialog ?? DefaultMergeConflictResolution;
+            }
+
+            internal static Result DefaultMergeConflictResolution(string conflict)
+            {
+                var id = EditorUtility.DisplayDialogComplex(
+                    title: "Merge Conflict Resolution",
+                    message: $"Performing this merge operation on the current asset is not possible to perform in a non-destructive way due to the following conflict(s):\n\n{conflict}.\n\nSelect preferred way to resolve conflicts or cancel. Note that resolve options may be undone after being performed.",
+                    ok: " Overwrite elements in conflict with defaults ",
+                    alt: " Rename elements in conflict and add defaults ",
+                    cancel: "Cancel");
+                switch (id)
+                {
+                    case 0: return Result.Overwrite;
+                    case 1: return Result.Rename;
+                    case 2: return Result.Cancel;
+                    default: throw new ArgumentOutOfRangeException(nameof(id));
+                }
+            }
+
+            // Shows a dialog prompting the user on what action to take on an action asset merge conflict.
+            public static Result ShowMergeConflictResolution(string conflict)
+            {
+                return mergeConflictResolution(conflict);
             }
 
             #endregion

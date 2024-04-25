@@ -1,5 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
+using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -8,43 +10,74 @@ namespace UnityEngine.InputSystem.Editor
     {
         public SerializedInputAction(SerializedProperty serializedProperty)
         {
-            // TODO: check that the passed serialized property actually is an InputAction. Reflect over all
-            // serialized fields and make sure they're present?
             wrappedProperty = serializedProperty ?? throw new ArgumentNullException(nameof(serializedProperty));
+
+            Debug.Assert(serializedProperty.boxedValue is InputAction);
 
             id = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue;
             name = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
-            expectedControlType = ReadExpectedControlType(serializedProperty);
-            type = (InputActionType)serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
-            interactions = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions)).stringValue;
-            processors = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Processors)).stringValue;
-            propertyPath = wrappedProperty.propertyPath;
-            initialStateCheck = ReadInitialStateCheck(serializedProperty);
-            actionTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).GetTooltip();
-            expectedControlTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).GetTooltip();
         }
+
+        private SerializedProperty typeProperty => wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Type));
+        private SerializedProperty expectedControlTypeProperty => wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType));
+        private SerializedProperty flagsProperty => wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Flags));
+        private SerializedProperty interactionsProperty =>
+            wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions));
+        private SerializedProperty processorsProperty =>
+            wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Processors));
 
         public string id { get; }
         public string name { get; }
-        public string expectedControlType { get; }
-        public InputActionType type { get; }
-        public string interactions { get; }
-        public string processors { get; }
-        public string propertyPath { get; }
-        public bool initialStateCheck { get; }
-        public string actionTypeTooltip { get; }
-        public string expectedControlTypeTooltip { get; }
-        public SerializedProperty wrappedProperty { get; }
 
-        private static string ReadExpectedControlType(SerializedProperty serializedProperty)
+        public string expectedControlType
         {
-            var controlType = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue;
-            if (!string.IsNullOrEmpty(controlType))
-                return controlType;
+            get
+            {
+                var controlType = expectedControlTypeProperty.stringValue;
+                if (!string.IsNullOrEmpty(controlType))
+                    return controlType;
 
-            var actionType = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
-            return actionType == (int)InputActionType.Button ? "Button" : null;
+                var actionType = typeProperty.intValue;
+                return actionType == (int)InputActionType.Button ? "Button" : string.Empty;
+            }
+            set => expectedControlTypeProperty.stringValue = value?.ToString();
         }
+        public InputActionType type
+        {
+            get => (InputActionType)typeProperty.intValue;
+            set => typeProperty.intValue = (int)value;
+        }
+
+        public string interactions
+        {
+            get => interactionsProperty.stringValue;
+            set => interactionsProperty.stringValue = value;
+        }
+
+        public string processors
+        {
+            get => processorsProperty.stringValue;
+            set => processorsProperty.stringValue = value;
+        }
+
+        public string propertyPath => wrappedProperty.propertyPath;
+        public bool initialStateCheck
+        {
+            get => (flagsProperty.intValue & (int)InputAction.ActionFlags.WantsInitialStateCheck) != 0;
+            set
+            {
+                var flags = flagsProperty.intValue;
+                if (value)
+                    flags |= (int)InputAction.ActionFlags.WantsInitialStateCheck;
+                else
+                    flags &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
+                flagsProperty.intValue = flags;
+            }
+        }
+
+        public string actionTypeTooltip => typeProperty.GetTooltip();
+        public string expectedControlTypeTooltip => expectedControlTypeProperty.GetTooltip();
+        public SerializedProperty wrappedProperty { get; }
 
         private static bool ReadInitialStateCheck(SerializedProperty serializedProperty)
         {
@@ -83,6 +116,22 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(expectedControlTypeTooltip);
             hashCode.Add(propertyPath);
             return hashCode.ToHashCode();
+        }
+
+        public SerializedProperty parentActionMapProperty =>
+            wrappedProperty.GetParentProperty().GetParentProperty().GetParentProperty();
+
+        public StringBuilder CopyToBuffer(StringBuilder buffer)
+        {
+            buffer ??= new StringBuilder();
+            CopyPasteHelper.CopyItems(new List<SerializedProperty> { wrappedProperty }, buffer, typeof(InputAction),
+                actionMap: parentActionMapProperty);
+            return buffer;
+        }
+
+        public void Duplicate()
+        {
+            CopyPasteHelper.DuplicateAction(wrappedProperty.GetParentProperty(), wrappedProperty, parentActionMapProperty);
         }
     }
 }

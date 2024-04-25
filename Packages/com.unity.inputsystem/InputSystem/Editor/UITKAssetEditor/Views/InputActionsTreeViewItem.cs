@@ -43,6 +43,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         public InputActionDependency dependencies { get; }
+        public bool isLocked => dependencies.isLocked;
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
@@ -82,8 +83,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public void FocusOnRenameTextField()
         {
-            if (m_IsEditing)
+            if (m_IsEditing || isLocked)
                 return;
+
             delegatesFocus = true;
 
             renameTextfield.SetValueWithoutNotify(label.text);

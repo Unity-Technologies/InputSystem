@@ -341,7 +341,12 @@ namespace UnityEngine.InputSystem.Editor
             var data = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(selectedIndex);
 
             if (data.isAction)
+            {
+                if (data.requirements != null) // TODO Would like to use isLocked here, or is this better?
+                    return;
+
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
+            }
             else
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
 

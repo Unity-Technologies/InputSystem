@@ -16,6 +16,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     sealed class InputActionDependency
     {
+        // Currently a constant t allow turning locking on or off during development.
+        private const bool kLockValue = true;
+
         private readonly VisualElement m_DependencyIcon;
         private readonly string m_Entity;
         private readonly VisualElement m_Parent;
@@ -47,12 +50,17 @@ namespace UnityEngine.InputSystem.Editor
             : this(parent, entity, type, parent.Q<VisualElement>("dependency-icon"))
         {}
 
+        public bool isLocked { get; private set; }
+
         public void Update(string actionPath, IEnumerable<InputActionAssetRequirements> requirements,
             IReadOnlyList<InputActionAssetRequirementFailure> failures)
         {
             // If we do not have any visual representation we cannot do much
             if (m_DependencyIcon == null)
+            {
+                isLocked = kLockValue;
                 return;
+            }
 
             const char bullet = '\u2022';
             StringBuilder message = null;
@@ -106,6 +114,8 @@ namespace UnityEngine.InputSystem.Editor
                         message.Append('s');
                     message.Append($" on this {m_Entity}:\n");
                     message.Append(reqs);
+
+                    message.Append("\n\nThis prevents deleting or modifying partial properties of this item.");
                 }
             }
 
@@ -116,6 +126,7 @@ namespace UnityEngine.InputSystem.Editor
             const string dependencyWarningIconClass = "warning-icon";
             const string dependencyIconClass = "dependency-icon";
             var hasRequirementsOrFailures = message != null;
+            isLocked = hasRequirementsOrFailures ? kLockValue : false;
             if (hasFailures && !m_DependencyIcon.ClassListContains(dependencyWarningIconClass))
             {
                 m_DependencyIcon.RemoveFromClassList(dependencyIconClass);

@@ -291,7 +291,7 @@ namespace UnityEngine.InputSystem.Editor
             var property = PasteElement(arrayProperty, json[0], indexToInsert, out _, "");
             var newName = PropertyName(property);
             var newId = property.FindPropertyRelative("m_Id").stringValue;
-            var actionMapTo = Selectors.GetActionMapForAction(s_State, newId);
+            var actionMapTo = arrayProperty.GetParentProperty();
             var bindingArrayToInsertTo = actionMapTo.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             var index = Mathf.Clamp(Selectors.GetBindingIndexBeforeAction(arrayProperty, indexToInsert, bindingArrayToInsertTo), 0, bindingArrayToInsertTo.arraySize);
             foreach (var bindingJson in bindingJsons)
@@ -448,6 +448,14 @@ namespace UnityEngine.InputSystem.Editor
         public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, SerializedProperty actionMap, InputActionsEditorState state)
         {
             s_State = state;
+            var buffer = new StringBuilder();
+            buffer.Append(toDuplicate.CopyToJson(true));
+            AppendBindingDataForAction(buffer, actionMap, toDuplicate);
+            PasteAction(arrayProperty, buffer.ToString(), toDuplicate.GetIndexOfArrayElement() + 1);
+        }
+
+        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, SerializedProperty actionMap)
+        {
             var buffer = new StringBuilder();
             buffer.Append(toDuplicate.CopyToJson(true));
             AppendBindingDataForAction(buffer, actionMap, toDuplicate);

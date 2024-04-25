@@ -45,6 +45,43 @@ namespace UnityEngine.InputSystem.Editor
             return -1;
         }
 
+        public static int GetIndex(SerializedProperty arrayProperty, string name)
+        {
+            Debug.Assert(arrayProperty.isArray, $"Property {arrayProperty.propertyPath} is not an array");
+            for (var i = 0; i < arrayProperty.arraySize; ++i)
+            {
+                using (var element = arrayProperty.GetArrayElementAtIndex(i))
+                    if (GetName(element) == name)
+                        return i;
+            }
+            return -1;
+        }
+
+        public static int IndexOf(SerializedProperty arrayProperty, Predicate<SerializedProperty> predicate)
+        {
+            Debug.Assert(arrayProperty.isArray, $"Property {arrayProperty.propertyPath} is not an array");
+            for (var i = 0; i < arrayProperty.arraySize; ++i)
+            {
+                using (var element = arrayProperty.GetArrayElementAtIndex(i))
+                {
+                    if (predicate(element))
+                        return i;
+                }
+            }
+            return -1;
+        }
+
+        public static int IndexOf(SerializedProperty property, string arrayPropertyIdentifier, Predicate<SerializedProperty> predicate)
+        {
+            return IndexOf(property.FindPropertyRelative(arrayPropertyIdentifier), predicate);
+        }
+
+        public static SerializedProperty GetItem(SerializedProperty arrayProperty, string name)
+        {
+            var index = GetIndex(arrayProperty, name);
+            return index >= 0 ? arrayProperty.GetArrayElementAtIndex(index) : null;
+        }
+
         public static int GetIndex(SerializedProperty arrayProperty, SerializedProperty arrayElement)
         {
             return GetIndex(arrayProperty, GetId(arrayElement));
@@ -113,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        public static void AddActionMaps(SerializedObject asset, SerializedObject sourceAsset)
+        public static void AddActionMaps(SerializedObject asset, SerializedObject sourceAsset, Predicate<InputActionMap> predicate = null)
         {
             Debug.Assert(asset.targetObject is InputActionAsset);
             Debug.Assert(sourceAsset.targetObject is InputActionAsset);
@@ -127,9 +164,296 @@ namespace UnityEngine.InputSystem.Editor
             {
                 buffer.Clear();
                 var mapProperty = mapArrayPropertySrc.GetArrayElementAtIndex(i);
-                CopyPasteHelper.CopyItems(new List<SerializedProperty> {mapProperty}, buffer, typeof(InputActionMap), mapProperty);
+                if (predicate != null && !predicate(mapProperty.boxedValue as InputActionMap))
+                    continue;
+                CopyPasteHelper.CopyItems(new List<SerializedProperty> {mapProperty}, buffer, typeof(InputActionMap), mapArrayPropertySrc);
                 CopyPasteHelper.PasteItems(buffer.ToString(), new[] { mapArrayPropertyDst.arraySize - 1 }, mapArrayPropertyDst);
             }
+        }
+
+        // public static void MergeActionMaps(SerializedProperty dst, SerializedProperty src,
+        //     SerializedInputActionMapPredicate predicate = null, StringBuilder buffer = null, List<string> dryRun = null)
+        // {
+        //     Debug.Assert(dst.isArray);
+        //     Debug.Assert(src.isArray);
+        //
+        //     if (buffer == null)
+        //         buffer = new StringBuilder();
+        //     for (var i = 0; i < src.arraySize; ++i)
+        //     {
+        //         var srcMap = new SerializedInputActionMap(src.GetArrayElementAtIndex(i));
+        //         if (predicate != null && !predicate(srcMap))
+        //             continue;
+        //
+        //         var dstElement = GetItem(dst, srcMap.name);
+        //         if (dstElement == null)
+        //         {
+        //             dryRun?.Add($"Copy {nameof(InputActionMap)} \"{srcMap.name}\" into {(dst.serializedObject.targetObject as InputActionAsset)?.name}.");
+        //
+        //             buffer.Clear();
+        //             CopyPasteHelper.CopyItems(new List<SerializedProperty> { srcMap.wrappedProperty }, buffer, typeof(InputActionMap), src);
+        //             CopyPasteHelper.PasteItems(buffer.ToString(), new[] { dst.arraySize - 1 }, dst);
+        //             continue;
+        //         }
+        //
+        //         MergeActions(dstElement.FindPropertyRelative(nameof(InputActionMap.m_Actions)),
+        //             srcMap.actionsProperty, srcMap.wrappedProperty, null, buffer);
+        //     }
+        // }
+
+        public static bool MergeActionMapsWithConflictResolution(SerializedArrayProperty<SerializedInputActionMap> dst,
+            SerializedArrayProperty<SerializedInputActionMap> src,
+            Predicate<SerializedInputActionMap> predicate = null, StringBuilder buffer = null)
+        {
+            // First execute a dry-run merge operation
+            var dryRun = new List<string>();
+            buffer = MergeActionMaps(dst, src, predicate, buffer, dryRun, false);
+            if (dryRun.Count > 0)
+            {
+                // Construct conflict information message
+                buffer ??= new StringBuilder();
+                buffer.Clear();
+                for (var i = 0; i < dryRun.Count; ++i)
+                {
+                    if (i > 0)
+                        buffer.Append('\n');
+                    buffer.Append("Conflict #").Append(i + 1).Append(": ").Append(dryRun[i]).Append('.');
+                }
+
+                // Prompt user to resolve conflicts
+                var result = Dialog.InputActionAsset.ShowMergeConflictResolution(buffer.ToString());
+                switch (result)
+                {
+                    case Dialog.Result.Overwrite:
+                        // User decided to resolve conflicts by overwrite
+                        MergeActionMaps(dst, src, predicate, buffer, null, true);
+                        return true;
+                    case Dialog.Result.Rename:
+                        // User decided to resolve conflicts by renaming existing elements
+                        MergeActionMaps(dst, src, predicate, buffer, null, false);
+                        return true;
+                    case Dialog.Result.Cancel:
+                    default:
+                        return false;
+                }
+            }
+
+            // No conflicts, perform merge
+            MergeActionMaps(dst, src, predicate, buffer, null, false);
+            return true;
+        }
+
+        // Attempts to merge elements from src into dst. Only elements for which predicate is true are merged.
+        private static StringBuilder MergeActionMaps(SerializedArrayProperty<SerializedInputActionMap> dst,
+            SerializedArrayProperty<SerializedInputActionMap> src,
+            Predicate<SerializedInputActionMap> predicate, StringBuilder buffer, List<string> dryRun,
+            bool overwrite)
+        {
+            for (var i = 0; i < src.length; ++i)
+            {
+                var srcMap = src[i];
+                if (predicate != null && !predicate(srcMap))
+                    continue;
+
+                var dstMap = dst.FindByName(srcMap.name);
+                if (!dstMap.HasValue)
+                {
+                    if (dryRun == null)
+                    {
+                        buffer = srcMap.CopyToBuffer(buffer);
+                        dst.Paste(buffer);
+                    }
+                    continue;
+                }
+
+                buffer = MergeActions(dstMap.Value.actions, srcMap.actions, srcMap.wrappedProperty,
+                    null, buffer, dryRun, overwrite);
+            }
+
+            return buffer;
+        }
+
+        // Attempts to merge actions from src into dst, optionally using the provided predicate filter.
+        private static StringBuilder MergeActions(SerializedArrayProperty<SerializedInputAction> dst,
+            SerializedArrayProperty<SerializedInputAction> src, SerializedProperty srcMap,
+            Predicate<SerializedInputAction> predicate, StringBuilder buffer, List<string> dryRun,
+            bool overwrite)
+        {
+            for (var i = 0; i < src.length; ++i)
+            {
+                var srcElement = src[i];
+                if (predicate != null && !predicate(srcElement))
+                    continue;
+
+                var name = srcElement.name;
+                var dstElement = dst.Find((action) => action.name == name);
+                if (!dstElement.HasValue)
+                {
+                    if (dryRun == null)
+                    {
+                        buffer = srcElement.CopyToBuffer(buffer);
+                        dst.Paste(buffer);
+                    }
+                    continue;
+                }
+
+                // Attempt merge on property level
+                if (srcElement.Equals(dstElement))
+                    continue; // equal so skip
+
+                // If we are not resolving conflicts via overwrite, we make a copy of existing action before
+                // modifying it. This way we can keep id / GUID intact.
+                if (dryRun == null && !overwrite)
+                {
+                    RenameAction(dstElement.Value.wrappedProperty, dstElement.Value.name + " - Before Merge");
+                    buffer = srcElement.CopyToBuffer(buffer);
+                    dst.Paste(buffer);
+                    continue;
+                }
+
+                // Note: no need to check name property since we already used this to match
+                // Note: we do not want to change IDs or GUIDs since that may break references.
+                var d = dstElement.Value;
+                if (!d.type.Equals(srcElement.type))
+                {
+                    if (dryRun != null)
+                        dryRun?.Add($"Modify {nameof(InputAction.type)} (Action Type) of action \"{d.name}\" from '{d.type}' to '{srcElement.type}'");
+                    else
+                        d.type = srcElement.type;
+                }
+                if (!d.expectedControlType.Equals(srcElement.expectedControlType))
+                {
+                    if (dryRun != null)
+                        dryRun?.Add($"Modify {nameof(InputAction.expectedControlType)} (Control Type) of action \"{d.name}\" from '{d.expectedControlType}' to '{srcElement.expectedControlType}'");
+                    else
+                        d.expectedControlType = srcElement.expectedControlType;
+                }
+                if (!d.initialStateCheck.Equals(srcElement.initialStateCheck)) // TODO Not checked in requirements, leave unaffected for UI integration case?
+                {
+                    if (dryRun != null)
+                        dryRun?.Add($"Modify Initial State Check flag of action \"{d.name}\" from '{d.initialStateCheck}' to '{srcElement.initialStateCheck}'");
+                    else
+                        d.initialStateCheck = srcElement.initialStateCheck;
+                }
+                if (!d.interactions.Equals(srcElement.interactions)) // TODO OK to leave unaffected for UI integration case? Have flags for properties?
+                {
+                    if (dryRun != null)
+                        dryRun?.Add($"Modify {nameof(InputAction.interactions)} of action \"{d.name}\" from \"{d.interactions}\" to \"{srcElement.interactions}\"");
+                    else
+                        d.interactions = srcElement.interactions;
+                }
+                if (!d.processors.Equals(srcElement.processors)) // TODO OK to leave unaffected for UI integration case? Have flags for properties?
+                {
+                    if (dryRun != null)
+                        dryRun?.Add($"Modify {nameof(InputAction.processors)} of action \"{d.name}\" from \"{d.processors}\" to \"{srcElement.processors}\"");
+                    else
+                        d.processors = srcElement.processors;
+                }
+
+                // TODO Issue Action Properties do not update when serialized object property changes
+
+                // TODO Additionally we want to merge in bindings not already present
+
+                //Debug.Log(srcElement + " is not equal");
+
+                //var dstAction = dstElement.boxedValue as InputAction;
+                // TODO Temporarily just rename existing actions and copy from dst
+                //if (dstAction != null)
+                //RenameAction(dstElement, dstElement.GetParentProperty(), $"{dstAction.name} (Before Merge)");
+
+                // TODO Need to determine if equal
+
+                // TODO Apply properties and copy bindings, keep GUID intact?
+                //MergeActionProperties(dstElement.FindPropertyRelative(nameof(InputActionMap.m_Actions)),
+                //    srcElement.FindPropertyRelative(nameof(InputActionMap.m_Actions)));
+            }
+
+            return buffer;
+        }
+
+        // public static void Merge<T>(SerializedProperty dst, SerializedProperty src, Predicate<T> predicate = null, StringBuilder buffer = null,
+        //     Action<SerializedProperty, SerializedProperty, StringBuilder> conflictHandler = null, SerializedProperty map = null)
+        //     where T : class
+        // {
+        //     Debug.Assert(dst.isArray);
+        //     Debug.Assert(src.isArray);
+        //
+        //     if (buffer == null)
+        //         buffer = new StringBuilder();
+        //     for (var i = 0; i < src.arraySize; ++i)
+        //     {
+        //         var srcElement = src.GetArrayElementAtIndex(i);
+        //         var srcMap = srcElement.boxedValue as T;
+        //         if (srcMap == null || (predicate != null && !predicate(srcMap)))
+        //             continue;
+        //
+        //         var prop = srcElement.FindPropertyRelative("m_Name");
+        //         var dstElement = GetItem(dst, prop.stringValue); // TODO FIX
+        //         if (dstElement == null)
+        //         {
+        //             buffer.Clear();
+        //             CopyPasteHelper.CopyItems(new List<SerializedProperty> { srcElement }, buffer, typeof(T), map ?? src); // TODO This should not take a src parameter, it could be retrieved via srcElement instead
+        //             CopyPasteHelper.PasteItems(buffer.ToString(), new[] { dst.arraySize - 1 }, dst);
+        //         }
+        //         else if (conflictHandler != null)
+        //         {
+        //             conflictHandler(dstElement, srcElement, buffer);
+        //         }
+        //     }
+        // }
+        //
+        // // TODO No good need to handle action differently
+        //
+        // public static void MergeActionMaps(SerializedProperty dst, SerializedProperty src,
+        //     Predicate<InputActionMap> predicate = null, StringBuilder buffer = null)
+        // {
+        //     Merge(dst, src, predicate, buffer, (dst, src, buffer) =>
+        //             Merge<InputAction>(dst.FindPropertyRelative(nameof(InputActionMap.m_Actions)),
+        //                 src.FindPropertyRelative(nameof(InputActionMap.m_Actions)), buffer: buffer, map : src));
+        // }
+
+
+        public static void AddActions(SerializedProperty dstActionMap, SerializedProperty sourceActionMap,
+            Predicate<InputAction> predicate = null)
+        {
+            Debug.Assert(dstActionMap.serializedObject.targetObject is InputActionAsset);
+            Debug.Assert(sourceActionMap.serializedObject.targetObject is InputActionAsset);
+
+            //var dst = dstActionMap.boxedValue as InputActionMap;
+            //var src = sourceActionMap.boxedValue as InputActionMap;
+
+            var actionArrayPropertyDst = dstActionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            var actionArrayPropertySrc = sourceActionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+
+            var buffer = new StringBuilder();
+            for (var i = 0; i < actionArrayPropertySrc.arraySize; ++i)
+            {
+                var srcActionProperty = actionArrayPropertySrc.GetArrayElementAtIndex(i);
+                var srcAction = srcActionProperty.boxedValue as InputAction;
+                if (predicate != null && !predicate(srcAction))
+                    continue;
+
+                var srcActionName = GetName(srcActionProperty);
+                var dstActionProperty = GetItem(actionArrayPropertyDst, srcActionName);
+                //var dstAction = dst.FindAction(src.actions[i].name);
+                Debug.Log($"Already has {srcActionName}: {dstActionProperty != null}");
+                if (dstActionProperty == null)
+                {
+                    //var srcAction = actionArrayPropertySrc.GetArrayElementAtIndex(i);
+                    CopyPasteHelper.CopyItems(new List<SerializedProperty>() { srcActionProperty }, buffer, typeof(InputAction), sourceActionMap);
+                    CopyPasteHelper.PasteItems(buffer.ToString(), new[] { actionArrayPropertyDst.arraySize - 1 }, actionArrayPropertyDst);
+                }
+            }
+
+            /*var actionArrayPropertySrc = sourceActionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            var actionArrayPropertyDst = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+
+            for (var i = 0; i < actionArrayPropertySrc.arraySize; ++i)
+            {
+                var actionSrc = actionArrayPropertySrc.GetArrayElementAtIndex(i);
+                var actionSrcName =
+                (actionMap.boxedValue as InputActionMap).FindAction(actionSrc.)
+            }*/
         }
 
         public static void AddControlSchemes(SerializedObject asset, SerializedObject sourceAsset)
@@ -478,6 +802,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             var idProperty = property.FindPropertyRelative("m_Id");
             idProperty.stringValue = Guid.NewGuid().ToString();
+        }
+
+        public static void RenameAction(SerializedProperty actionProperty, string newName)
+        {
+            RenameAction(actionProperty, actionProperty.GetParentProperty().GetParentProperty().GetParentProperty(), newName);
         }
 
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
