@@ -27,6 +27,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - For Unity 6.0 and above, when an `EventSystem` GameObject is created in the Editor it will have the
 `InputSystemUIInputModule` by default if the Input System package is installed and enabled.
+- Added information to the 'Restart Editor' dialog to clarify impact on packages pending import [ISXB-608](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-608).
 
 ## [1.8.1] - 2024-03-14
 
