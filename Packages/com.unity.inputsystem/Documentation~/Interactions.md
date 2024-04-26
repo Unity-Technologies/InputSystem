@@ -79,7 +79,7 @@ If multiple Interactions are present on a single Binding or Action, then the Inp
 
 At any one time, only one Interaction can be "driving" the action (that is, it gets to determine the action's current [`phase`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_phase)). If an Interaction higher up in the stack cancels, Interactions lower down in the stack can take over.
 
-Note that the order of interactions can effect which interaction is passed to your callback function. For example, an action with Tap, Multi Tap and Hold interactions will have different behaviour when the interactions are in a different order, such as Hold, Multi Tap and Tap. If you get unexpected behaviour, you may need to experiment with a different ordering.
+Note that the order of interactions can effect which interaction is passed to your callback function. For example, an action with [Tap](#tap), [MultiTap](#multitap) and [Hold](#hold) interactions will have different behaviour when the interactions are in a different order, such as [Hold](#hold), [MultiTap](#multitap) and [Tap](#tap). If you get unexpected behaviour, you may need to experiment with a different ordering.
 
 ### Timeouts
 
