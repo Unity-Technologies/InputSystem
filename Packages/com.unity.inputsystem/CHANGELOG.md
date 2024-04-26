@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - YYYY-MM-DD
 
 ### Added
+- Documentation to clarify effects of ordering of interactions when a single action has multiple interactions [ISXB-221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-221).
 - Additional tests for UI Input default actions (Navigate, Submit, Scroll etc.)
 
 ### Fixed
