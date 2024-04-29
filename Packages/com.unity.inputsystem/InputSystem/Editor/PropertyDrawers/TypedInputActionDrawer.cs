@@ -6,10 +6,10 @@ using UnityEditor.IMGUI.Controls;
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
-    /// Property drawer for <see cref="InputAction"/>.
+    /// Property drawer for <see cref="TypedInputAction<T>"/>.
     /// </summary>
-    [CustomPropertyDrawer(typeof(InputAction)/*, useForChildren: true*/)]
-    internal class InputActionDrawer : InputActionDrawerBase
+    [CustomPropertyDrawer(typeof(TypedInputAction<>), useForChildren: true)]
+    internal class TypedInputActionDrawer : InputActionDrawerBase
     {
         protected override TreeViewItem BuildTree(SerializedProperty property)
         {

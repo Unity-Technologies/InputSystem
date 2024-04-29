@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using Cinemachine.Editor;
 using UnityEditor;
 using UnityEditor.Presets;
-using UnityEngine;using UnityEngine.InputSystem;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 
@@ -109,8 +110,10 @@ public class BindingContext
 
 // TODO We want to pick a preset to be applied via a menu or preset menu?!
 [Serializable]
-public class BindableInputAction<T> //: ScriptableObject 
+public class Input3<T> //: ScriptableObject 
 {
+    
+    
     // We do not want hint to be serialized since we want it defined by code
     //[NonSerialized] private readonly IBindingPreset m_Hint;
     //[SerializeField] private int x = 123;
@@ -125,7 +128,7 @@ public class BindableInputAction<T> //: ScriptableObject
     // An embedded input action
     [SerializeField] public InputAction action;
     
-    public BindableInputAction(Action<InputAction> preset)
+    public Input3(Action<InputAction> preset)
     {
         this.preset = preset;
     }
@@ -142,14 +145,14 @@ public class BindableInputAction<T> //: ScriptableObject
         
     }
     
-    public static implicit operator bool(BindableInputAction<T> input)
+    public static implicit operator bool(Input3<T> input)
     {
         return !ReferenceEquals(null, input); // TODO Return true if input has values
     }
 
     public void OnBeforeSerialize()
     {
-        
+        Debug.Log("Before serialize");
     }
 
     public void OnAfterDeserialize()
@@ -168,7 +171,7 @@ public class BindableInputAction<T> //: ScriptableObject
     }
 }
 
-[CustomPropertyDrawer(typeof(BindableInputAction<>), useForChildren: true)]
+[CustomPropertyDrawer(typeof(Input3<>), useForChildren: true)]
 public class BindableInputActionPropertyDrawer : PropertyDrawer
 {
     private const string kPresetName = "preset";
@@ -200,9 +203,11 @@ public class BindableInputActionPropertyDrawer : PropertyDrawer
         
         label = EditorGUI.BeginProperty(position, label, property);
 
-        EditorGUI.LabelField(position, new GUIContent("Preset"), new GUIContent("Jump"));
+        EditorGUI.LabelField(position, new GUIContent("Preset"), new GUIContent("[Preset]"));
 
-        position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+        //EditorGUI.ObjectField()
+        
+        //position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
         //EditorGUI.PropertyField(position, actionProperty);
 
         EditorGUI.EndProperty();
@@ -220,23 +225,29 @@ public class BindableInputActionPropertyDrawer : PropertyDrawer
     }
 }
 
-[Serializable]
-public class CustomType<T> where T : struct
+// Allows picking an asset.
+// If not saved to an asset its saved with the scene.
+// If ScriptableSingleton its saved as a project wide.
+public class Scriptable : ScriptableObject
 {
-    [SerializeField] public T value;
-}
-
-[CustomPropertyDrawer(typeof(CustomType<>), useForChildren: true)]
-public class CustomTypePropertyDrawer : PropertyDrawer
-{
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    private void OnValidate()
     {
+        Debug.Log("Scriptable OnValidate");
+    }
 
-        //GUI.enabled = false;
-        //if (prop != null)
-        //    EditorGUI.PropertyField(position, prop, new GUIContent(prop.displayName));
-        //GUI.enabled = true;
-        //base.OnGUI(position, property, label);
+    private void OnEnable()
+    {
+        Debug.Log("Scriptable OnEnable");
+    }
+
+    private void OnDisable()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void OnDestroy()
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -245,9 +256,17 @@ public class Concept : MonoBehaviour
     [SerializeField] private InputAction fire;
 
     [Header("Bindable Actions")]
-    
-    [SerializeField] private BindableInputAction<bool> jump3 = new(BindingPresets.Platformer2D.jump);
+    //[SerializeField] private Input<bool> move = new(preset: BindingPresets.ByGenre.Platformer2D.Move);
+    //[SerializeField] private Input<bool> jump
+    //
+    //= new(BindingPresets.ByGenre.Platformer2D.Jump);
 
+    [SerializeField] public TypedInputAction<bool> jump = new(preset: BindingPresets.ByGenre.Platformer2D.Jump);
+
+    [SerializeField] public Scriptable scriptable;
+    //[SerializeField] private InputAction jump3;
+
+    
     //[SerializeFiel] public CustomType<Vector2> custom;
     
     // Start is called before the first frame update
@@ -261,8 +280,8 @@ public class Concept : MonoBehaviour
     {
         // Apply a binding preset if not bound in editor
         //fire.ApplyPresetIfNotBound(BindingPresets.Platformer2D.jump);
-        jump3.ApplyPresetIfNotAlreadyBound();
-        jump3.action.Enable();
+        jump.ApplyPresetIfNotAlreadyBound(); // TODO Could just have passed preset here unless we want it from editor, could be achieved with attribute
+        jump.Enable();
     }
 
     // Update is called once per frame
@@ -278,10 +297,36 @@ public class Concept : MonoBehaviour
         Debug.Log("Fire was invoked");
     }*/
 
+    // Small but doesn't encapsulate full callback context
     [InputBindable(hint : BindingHint.Platformer2D.Jump)]
     public void Jump()
     {
         Debug.Log("Jump was invoked");
+    }
+}
+
+public class ConceptUtils
+{
+    public static T[] GetAllInstances<T>() where T : ScriptableObject
+    {
+        var guids = AssetDatabase.FindAssets("t:" + typeof(T).Name); //FindAssets uses tags check documentation for more info
+        var a = new T[guids.Length];
+        for (var i =0; i < guids.Length; ++i)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            a[i] = AssetDatabase.LoadAssetAtPath<T>(path);
+        }
+        return a;
+    }
+}
+
+public class MenuTest : MonoBehaviour
+{
+    // Add a menu item named "Do Something" to MyMenu in the menu bar.
+    [MenuItem("MyMenu/Do Something")]
+    static void DoSomething()
+    {
+        //foreach (var x : ConceptUtils.GetAllInstances<InputBindable>())
     }
 }
 

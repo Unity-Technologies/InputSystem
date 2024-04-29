@@ -1183,9 +1183,13 @@ namespace UnityEngine.InputSystem.Editor
             if (drawHeader)
                 DrawHeader(ref rect);
 
+            //GUI.enabled = false;
+            
             base.OnGUI(rect);
 
             HandleCopyPasteCommandEvent(Event.current);
+
+            //GUI.enabled = true;
         }
 
         private void DrawHeader(ref Rect rect)

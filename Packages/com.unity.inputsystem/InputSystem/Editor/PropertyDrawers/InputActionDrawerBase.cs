@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -106,9 +107,11 @@ namespace UnityEngine.InputSystem.Editor
             if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
 
+            var t = property.type.StartsWith("TypedInputAction"); // TODO Dirty quick fix, fix correctly  
+            
             if (property.displayName != null &&
                 property.displayName.Length > 0 &&
-                (property.type == nameof(InputAction) || property.type == nameof(InputActionMap)))
+                (property.type == nameof(InputAction) || t || property.type == nameof(InputActionMap)))
             {
                 return $"{property.displayName}{propertyTitleNumeral}";
             }

@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputActionAsset"/>
     /// <seealso cref="InputBinding"/>
     [Serializable]
-    public sealed class InputAction : ICloneable, IDisposable
+    public class InputAction : ICloneable, IDisposable
     {
         /// <summary>
         /// Name of the action.
