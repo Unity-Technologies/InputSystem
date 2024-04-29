@@ -3,20 +3,21 @@ uid: input-system-ui-support
 ---
 # UI support
 
-- [UI support](#ui-support)
-  - [Overview and compatibility](#overview-and-compatibility)
-  - [Setting up UI input](#setting-up-ui-input)
-  - [Required Actions for UI](#required-actions-for-ui)
-  - [The UI Input Module component](#the-ui-input-module-component)
-    - [UI Input Module properties](#ui-input-module-properties)
-    - [How the bindings work](#how-the-bindings-work)
-    - [Other notes about the UI Input Module](#other-notes-about-the-ui-input-module)
-  - [Multiplayer UIs](#multiplayer-uis)
-  - [Virtual mouse cursor control](#virtual-mouse-cursor-control)
-  - [UI and game input](#ui-and-game-input)
-    - [Handling ambiguities for pointer-type input](#handling-ambiguities-for-pointer-type-input)
-    - [Handling ambiguities for navigation-type input](#handling-ambiguities-for-navigation-type-input)
-  - [Immediate Mode GUI](#immediate-mode-gui)
+- [Overview and compatibility](#overview-and-compatibility)
+- [Setting up UI input](#setting-up-ui-input)
+- [Required Actions for UI](#required-actions-for-ui)
+- [The UI Input Module component](#the-ui-input-module-component)
+  - [Using the UI Input Module](#using-the-ui-input-module)
+  - [UI Input Module properties](#ui-input-module-properties)
+  - [How the bindings work](#how-the-bindings-work)
+  - [Other notes about the UI Input Module](#other-notes-about-the-ui-input-module)
+- [Multiplayer UIs](#multiplayer-uis)
+- [Virtual mouse cursor control](#virtual-mouse-cursor-control)
+  - [Using the Virtual Mouse component](#using-the-virtual-mouse-component)
+- [Distinguishing between UI and game input](#distinguishing-between-ui-and-game-input)
+  - [Handling ambiguities for pointer-type input](#handling-ambiguities-for-pointer-type-input)
+  - [Handling ambiguities for navigation-type input](#handling-ambiguities-for-navigation-type-input)
+- [Immediate Mode GUI](#immediate-mode-gui)
 
 
 ## Overview and compatibility
@@ -27,12 +28,12 @@ In some cases you must use the **UI Input Module** (a component supplied in the 
 
 The three main UI solutions are **UI Toolkit**, **Unity UI**, and **IMGUI**. The compatibility and workflow for each of these are as follows:
 
-**For [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html), also known as "UI Elements" (an XML/CSS style solution):**
+**For [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html), also known as "UI Elements" (an XML/CSS style UI solution):**
 
 - From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./ProjectWideActions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
 - In versions of Unity prior to 2023.2, you must use the UI Input Module component to define which actions are passed through from the Input System to the UI.
 
-**For [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI" (a GameObject and Component style solution):**
+**For [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI" (a GameObject and Component style UI solution):**
 
 When using Unity UI (uGUI), you must always use the UI Input Module component to define which actions are passed through from the Input System to the UI.
 
@@ -85,12 +86,14 @@ When working with Unity UI (uGUI), or when using UI Toolkit in versions of Unity
 
 The UI Input module is implemented in the class [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 
+### Using the UI Input Module
+
 The UI Input Module is a component which you must add to a GameObject in your scene in order for your UI to receive input from the Input System. To do this:
 
-1. Create a new empty Game Object
+1. Create a new empty GameObject
 2. Click [**Add Component**](https://docs.unity3d.com/Manual/UsingComponents.html) in the inspector
 3. In the search field displayed, type "Input System UI Input Module"
-4. Select **Input System UI Input Module** to add it to the Game Object.
+4. Select **Input System UI Input Module** to add it to the GameObject.
 
 ![InputSystemUIInputModule](Images/InputSystemUIInputModuleAdd.png)
 
@@ -224,20 +227,28 @@ The properties of the Multiplayer Event System component are identical to those 
 
 If your application uses gamepads and joysticks as an input, you can use the [navigation Actions](#navigation-type-input) to operate the UI. However, it usually involves extra work to make the UI work well with navigation. An alternative way to operate the UI is to allow gamepads and joysticks to drive the cursor from a "virtual mouse cursor".
 
-> **Note:**
->While pointer input generated from a `VirtualMouseInput` component is received in UI Toolkit, the `VirtualMouseInput` component is not officially supported for use with [UI Toolkit](#ui-toolkit-support). At the moment, it only works in combination with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system.
+The Input System package provides a **Virtual Mouse** component for this purpose.
 
-To see an example of a [VirtualMouseInput](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) setup, see the [Gamepad Mouse Cursor sample](Installation.md#installing-samples) included with the Input System package.
+> **Note**: This component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit.
 
-To set this up, follow these steps:
+To see an example of the Virtual Mouse in a project, see the [Gamepad Mouse Cursor sample](Installation.md#installing-samples) included with the Input System package.
 
-1. Create a UI `GameObject` with an `Image` component. This represents a software mouse cursor. Then, add it as a child of the `Canvas` that the cursor should operate on. Set the anchor position of the GameObject's `RectTransform` to the bottom left. Make it the last child of the `Canvas` so that the cursor draws on top of everything else.
-2. Add a [VirtualMouseInput](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component to the GameObject. Then, link the `Image` component to the `Cursor Graphic` property, and the `RectTransform` of the cursor GameObject to the `Cursor Transform` property.
-3. If you want the virtual mouse to control the system mouse cursor, set [Cursor Mode](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to `Hardware Cursor If Available`. In this mode, the `Cursor Graphic` is hidden when a system `Mouse` is present and you use [Mouse.WarpCursorPosition](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_) to move the system mouse cursor instead of the software cursor. The transform linked through `Cursor Transform` is not updated in that case.
-4. To configure the input to drive the virtual mouse, either add  bindings on the various actions (such as `Stick Action`), or enable `Use Reference` and link existing actions from an `.inputactions` asset.
+### Using the Virtual Mouse component
+
+To set up the Virtual Mouse component with the Unity UI system:
+
+1. Create a UI GameObject with an **Image** component. This GameObject is the mouse pointer. It can help to rename it "_Pointer_".
+2. Parent the pointer GameObject as a child of your **Canvas** GameObject that contains the UI which the cursor should operate on.
+3. Set the anchor position of the GameObject's `RectTransform` to the bottom left.
+4. Ensure your pointer GameObject is the last child of the Canvas so that the cursor draws on top of everything else.
+5. Add a **Virtual Mouse** component to the GameObject.
+6. Drag the **Image** component of the pointer GameObject into the **Cursor Graphic** field of the Virtual Mouse component. 
+7. Drag the **Rect Transform** component of the pointer GameObject to the **Cursor Transform** field of the Virtual Mouse component.
+8. If you want the virtual mouse to control the system mouse cursor, set [Cursor Mode](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to **Hardware Cursor If Available**. In this mode, the **Cursor Graphic** is hidden when a system mouse is present and you use [Mouse.WarpCursorPosition](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_) to move the system mouse cursor instead of the software cursor. The transform linked through **Cursor Transform** is not updated in that case.
+9.  To configure the input to drive the virtual mouse, either add  bindings on the various actions (such as **Stick Action**), or enable **Use Reference** and link existing actions from an Input Actions asset.
 
 > **Important:**
->Make sure that the UI Input Module component on the UI's `EventSystem` does not receive navigation input from the same devices that feed into `VirtualMouseInput`. If, for example, `VirtualMouseInput` is set up to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on `InputSystemUIInputModule` are also linked to the gamepad, then the UI receives input from the gamepad on two channels.
+> Make sure the UI Input Module component on the UI's **Event System** does not receive navigation input from the same devices that feed into the Virtual Mouse component. If, for example, the Virtual Mouse component is set up to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels.
 
 ![VirtualMouseInput](Images/VirtualMouseInput.png)
 
@@ -245,14 +256,16 @@ At runtime, the component adds a virtual [Mouse](../api/UnityEngine.InputSystem.
 
 Note that the resulting [Mouse](../api/UnityEngine.InputSystem.Mouse.html) input is visible in all code that picks up input from the mouse device. You can therefore use the component for mouse simulation elsewhere, not just with [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 
->[!NOTE]
->Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using `VirtualMouseInput`. If both `VirtualMouseInput` and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
+> **Note**:
+> Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using the Virtual Mouse component. If both the Virtual Mouse component and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
 
-## UI and game input
+## Distinguishing between UI and game input
 
-UI in Unity consumes input through the same mechanisms as game/player code. Right now, there is no mechanism that implicitly ensures that if a certain input &ndash; such as a click &ndash; is consumed by the UI, it is not also "consumed" by the game. This can create ambiguities between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) of an Action bound to `<Mouse>/leftButton`.
+UI in Unity receives input through the same mechanisms as the input for the rest of your game or app. There is no automatic mechanism that implicitly ensures that if a certain input &ndash; such as a click &ndash; is consumed by the UI, it is not also received by your gameplay code.
 
-Whether such ambiguities exist depends on *how* UIs are used. In the following scenarios, ambiguities are avoided:
+This can create ambiguities between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) of an Action bound to `<Mouse>/leftButton`.
+
+Whether such ambiguities exist depends on *how* UIs are used. For example, you can avoid ambiguities by implementing your UI in one of the following ways:
 
 * All interaction is performed through UI elements. A 2D/3D scene is rendered in the background but all interaction is performed through UI events (including those such as 'background' clicks on the `Canvas`).
 * UI is overlaid over a 2D/3D scene but the UI elements cannot be interacted with directly.
