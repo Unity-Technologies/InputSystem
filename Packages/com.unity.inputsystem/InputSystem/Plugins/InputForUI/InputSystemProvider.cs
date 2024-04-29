@@ -698,11 +698,19 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
+                // Only use default actions asset configuration if (ISX-1954):
+                // - Project-wide Input Actions have not been configured, OR
+                // - Project-wide Input Actions have been configured but contains no UI action map.
+                var projectWideInputActions = InputSystem.actions;
+                var useProjectWideInputActions =
+                    projectWideInputActions != null &&
+                    projectWideInputActions.FindActionMap("UI") != null;
+
                 // Use InputSystem.actions (Project-wide Actions) if available, else use default asset if
                 // user didn't specifically set one, so that UI functions still work (ISXB-811).
                 return new Configuration
                 {
-                    ActionAsset = (InputSystem.actions != null ? InputSystem.actions : new DefaultInputActions().asset),
+                    ActionAsset = useProjectWideInputActions ? InputSystem.actions : new DefaultInputActions().asset,
                     PointAction = "UI/Point",
                     MoveAction = "UI/Navigate",
                     SubmitAction = "UI/Submit",

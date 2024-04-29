@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Plugins.InputForUI
 {
+    // Unlike InputSystemProvider we want the verifier to register itself directly on domain reload in editor.
+    [InitializeOnLoad]
     internal class InputActionAssetVerifier : ProjectWideActionsAsset.IInputActionAssetVerifier
     {
         public enum ReportPolicy
@@ -13,7 +15,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             SuppressChildErrors
         }
 
-        public const ReportPolicy DefaultReportPolicy = ReportPolicy.SuppressChildErrors;
+        // Note: This is intentionally not a constant to avoid dead code warning in tests while this remains
+        // as a setting type of value.
+        public static ReportPolicy DefaultReportPolicy = ReportPolicy.SuppressChildErrors;
 
         static InputActionAssetVerifier()
         {
@@ -22,9 +26,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             InputSystemProvider.SetOnRegisterActions((asset) => { ProjectWideActionsAsset.Verify(asset); });
         }
-
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
 
         #region ProjectWideActionsAsset.IInputActionAssetVerifier
 
@@ -55,17 +56,17 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                return (path == null) ? '"' + asset.name + '"' : "<a href=\"" + path + $">{path}</a>";
+                return path ?? asset.name;
             }
 
             private void ActionMapWarning(string actionMap, string problem)
             {
-                reporter.Report($"InputActionMap with path '{actionMap}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+                reporter.Report($"InputActionMap with path '{actionMap}' in asset \"{GetAssetReference()}\" {problem}. {errorSuffix}");
             }
 
             private void ActionWarning(string actionNameOrId, string problem)
             {
-                reporter.Report($"InputAction with path '{actionNameOrId}' in asset '{GetAssetReference()}' {problem}. {errorSuffix}");
+                reporter.Report($"InputAction with path '{actionNameOrId}' in asset \"{GetAssetReference()}\" {problem}. {errorSuffix}");
             }
 
             public void Verify(string actionNameOrId, InputActionType actionType, string expectedControlType)

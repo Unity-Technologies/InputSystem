@@ -6,7 +6,9 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
@@ -31,6 +33,7 @@ public class InputForUITests : InputTestFixture
     private const string kTestCategory = "InputForUI";
 
     readonly List<Event> m_InputForUIEvents = new List<Event>();
+    private int m_CurrentInputEventToCheck;
     InputSystemProvider m_InputSystemProvider;
 
     private InputActionAsset storedActions;
@@ -39,6 +42,7 @@ public class InputForUITests : InputTestFixture
     public override void Setup()
     {
         base.Setup();
+        m_CurrentInputEventToCheck = 0;
 
         storedActions = InputSystem.actions;
 
@@ -66,6 +70,11 @@ public class InputForUITests : InputTestFixture
         base.TearDown();
     }
 
+    internal Event GetNextRecordedUIEvent()
+    {
+        return m_InputForUIEvents[m_CurrentInputEventToCheck++];
+    }
+
     private bool InputForUIOnEvent(in Event ev)
     {
         m_InputForUIEvents.Add(ev);
@@ -79,24 +88,6 @@ public class InputForUITests : InputTestFixture
         // Test assumes a compatible action asset configuration exists for UI
         Assert.IsTrue(m_InputSystemProvider.ActionAssetIsNotNull(),
             "Test is invalid since InputSystemProvider actions are not available");
-    }
-
-    [Test]
-    [Category(kTestCategory)]
-    public void PointerEventsAreDispatchedFromMouse()
-    {
-        var mouse = InputSystem.AddDevice<Mouse>();
-        Update();
-
-        PressAndRelease(mouse.leftButton);
-
-        Update();
-
-        Assert.IsTrue(m_InputForUIEvents.Count == 2);
-        Assert.That(m_InputForUIEvents[0].type, Is.EqualTo(Event.Type.PointerEvent));
-        Assert.That(m_InputForUIEvents[0].asPointerEvent.type, Is.EqualTo(PointerEvent.Type.ButtonPressed));
-        Assert.That(m_InputForUIEvents[1].type, Is.EqualTo(Event.Type.PointerEvent));
-        Assert.That(m_InputForUIEvents[1].asPointerEvent.type, Is.EqualTo(PointerEvent.Type.ButtonReleased));
     }
 
     [Test]
@@ -118,8 +109,8 @@ public class InputForUITests : InputTestFixture
         Move(mouse.position, new Vector2(100f, 0.5f));
         Update();
 
-        Assert.IsTrue(m_InputForUIEvents.Count == 1);
-        Assert.That(m_InputForUIEvents[0] is Event
+        Assert.AreEqual(1, m_InputForUIEvents.Count);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.PointerEvent,
             asPointerEvent: { type: PointerEvent.Type.ButtonPressed,
@@ -127,56 +118,74 @@ public class InputForUITests : InputTestFixture
         });
     }
 
-    [Test]
-    [Category(kTestCategory)]
-    // Presses a gamepad left stick left and verifies that a navigation move event is dispatched
-    public void NavigationMoveWorks()
-    {
-        MoveWithGamepad();
+    #region UI_Input_Actions
+    // Test all default UI actions, and sure that InputSystemProvider works with and without project-wide actions asset
+    // so that there is no impact in receiving the necessary input events for UI.
+    // When there are no project-wide actions asset, the InputSystemProvider should still work as it currently gets
+    // the actions from DefaultActionsAsset().asset.
 
-        Assert.IsTrue(m_InputForUIEvents.Count == 1);
-        Assert.That(m_InputForUIEvents[0] is Event
+    // Utility functions
+    void PressUpdateReleaseUpdate(ButtonControl button)
+    {
+        Press(button);
+        Update();
+        Release(button);
+        Update();
+    }
+
+    void TestGamepadNavigationCardinalDirections()
+    {
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
-            asNavigationEvent: { type: NavigationEvent.Type.Move,
-                                 direction: NavigationEvent.Direction.Left,
-                                 eventSource: EventSource.Gamepad}
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Gamepad }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Gamepad }
         });
     }
 
-    void MoveWithGamepad()
+    void TestKeyboardNavigationCardinalDirections()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        Update();
-        Press(gamepad.leftStick.left);
-        Update();
-        Release(gamepad.leftStick.left);
-        Update();
-    }
-
-    [Test]
-    [Category(kTestCategory)]
-    public void SendWheelEvent()
-    {
-        var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
-        var mouse = InputSystem.AddDevice<Mouse>();
-        Update();
-        // Make the minimum step of scroll delta to be ±1.0f
-        Set(mouse.scroll.y, -1f / kScrollUGUIScaleFactor);
-        Update();
-        Assert.IsTrue(m_InputForUIEvents.Count == 1);
-        Assert.That(m_InputForUIEvents[0].asPointerEvent.scroll, Is.EqualTo(new Vector2(0, 1)));
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Keyboard }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Keyboard }
+        });
     }
 
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
     [TestCase(false)]
-    // The goal of this test is to make sure that InputSystemProvider works with and without project-wide actions asset
-    // so that there is no impact in receiving the necessary input events for UI.
-    // When there are no project-wide actions asset, the InputSystemProvider should still work as it currently gets
-    // the actions from DefaultActionsAsset().asset.
-    public void EventProviderWorksWithAndWithoutProjectWideActionsSet(bool useProjectWideActionsAsset)
+    public void UIActionNavigation_FiresUINavigationEvents_FromInputsGamepadJoystickAndKeyboard(bool useProjectWideActionsAsset)
     {
         Update();
         if (!useProjectWideActionsAsset)
@@ -187,17 +196,300 @@ public class InputForUITests : InputTestFixture
             InputSystem.s_Manager.actions = null;
         }
         Update();
-        MoveWithGamepad();
 
-        Assert.IsTrue(m_InputForUIEvents.Count == 1);
-        Assert.That(m_InputForUIEvents[0] is Event
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        PressUpdateReleaseUpdate(gamepad.leftStick.left);
+        PressUpdateReleaseUpdate(gamepad.leftStick.up);
+        PressUpdateReleaseUpdate(gamepad.leftStick.right);
+        PressUpdateReleaseUpdate(gamepad.leftStick.down);
+        TestGamepadNavigationCardinalDirections();
+
+        PressUpdateReleaseUpdate(gamepad.rightStick.left);
+        PressUpdateReleaseUpdate(gamepad.rightStick.up);
+        PressUpdateReleaseUpdate(gamepad.rightStick.right);
+        PressUpdateReleaseUpdate(gamepad.rightStick.down);
+        TestGamepadNavigationCardinalDirections();
+
+        PressUpdateReleaseUpdate(gamepad.dpad.left);
+        PressUpdateReleaseUpdate(gamepad.dpad.up);
+        PressUpdateReleaseUpdate(gamepad.dpad.right);
+        PressUpdateReleaseUpdate(gamepad.dpad.down);
+        TestGamepadNavigationCardinalDirections();
+
+
+        var joystick = InputSystem.AddDevice<Joystick>();
+        PressUpdateReleaseUpdate(joystick.stick.left);
+        Assert.That(GetNextRecordedUIEvent() is
         {
             type: Event.Type.NavigationEvent,
-            asNavigationEvent: { type: NavigationEvent.Type.Move,
-                                 direction: NavigationEvent.Direction.Left,
-                                 eventSource: EventSource.Gamepad}
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Left, eventSource: EventSource.Unspecified}
+        });
+        PressUpdateReleaseUpdate(joystick.stick.up);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Up, eventSource: EventSource.Unspecified}
+        });
+        PressUpdateReleaseUpdate(joystick.stick.right);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Right, eventSource: EventSource.Unspecified}
+        });
+        PressUpdateReleaseUpdate(joystick.stick.down);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Move, direction: NavigationEvent.Direction.Down, eventSource: EventSource.Unspecified}
+        });
+
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        PressUpdateReleaseUpdate(keyboard.aKey);
+        PressUpdateReleaseUpdate(keyboard.wKey);
+        PressUpdateReleaseUpdate(keyboard.dKey);
+        PressUpdateReleaseUpdate(keyboard.sKey);
+        TestKeyboardNavigationCardinalDirections();
+
+        PressUpdateReleaseUpdate(keyboard.leftArrowKey);
+        PressUpdateReleaseUpdate(keyboard.upArrowKey);
+        PressUpdateReleaseUpdate(keyboard.rightArrowKey);
+        PressUpdateReleaseUpdate(keyboard.downArrowKey);
+        TestKeyboardNavigationCardinalDirections();
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UIActionSubmit_FiresUISubmitEvents_FromInputsGamepadJoystickAndKeyboard(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Gamepad>().buttonSouth);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Gamepad }
+        });
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Joystick>().trigger);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Unspecified }
+        });
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Keyboard>().enterKey);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Submit, eventSource: EventSource.Keyboard }
+        });
+
+        Assert.AreEqual(3, m_InputForUIEvents.Count);
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UIActionCancel_FiresUICancelEvents_FromInputsGamepadAndKeyboard(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Gamepad>().buttonEast);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Cancel, eventSource: EventSource.Gamepad }
+        });
+
+        PressUpdateReleaseUpdate(InputSystem.AddDevice<Keyboard>().escapeKey);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.NavigationEvent,
+            asNavigationEvent: { type: NavigationEvent.Type.Cancel, eventSource: EventSource.Keyboard }
+        });
+
+        Assert.AreEqual(2, m_InputForUIEvents.Count);
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UIActionPoint_FiresUIPointEvents_FromInputsMousePenAndTouch(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Set(mouse.position, new Vector2(0.5f, 0.5f));
+        Update();
+        Move(mouse.position, new Vector2(100f, 0.5f));
+        Update();
+
+        var pen = InputSystem.AddDevice<Pen>();
+        Set(pen.position, new Vector2(0.5f, 0.5f));
+        Update();
+        Move(pen.position, new Vector2(100f, 0.5f));
+        Update();
+
+        InputSystem.AddDevice<Touchscreen>();
+        BeginTouch(1, new Vector2(0.5f, 0.5f));
+        Update();
+        EndTouch(1, new Vector2(100f, 100f));
+        Update();
+
+        // Touch screen move is three actions: press, move, release
+        Assert.AreEqual(5, m_InputForUIEvents.Count);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Pen }
+        });
+        // Skip button down event that touch generates
+        ++m_CurrentInputEventToCheck;
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Touch }
         });
     }
+
+    [Test]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UIActionClick_FiresUIClickEvents_FromInputsMousePenAndTouch(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Click(mouse.leftButton);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+
+        Click(mouse.rightButton);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseRight, clickCount: 1 }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseRight, clickCount: 1 }
+        });
+
+        Click(mouse.middleButton);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseMiddle, clickCount: 1 }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Mouse, button: PointerEvent.Button.MouseMiddle, clickCount: 1 }
+        });
+
+        var pen = InputSystem.AddDevice<Pen>();
+        Click(pen.tip);
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Pen, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Pen, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+
+        InputSystem.AddDevice<Touchscreen>();
+        BeginTouch(1, new Vector2(0.0f, 0.5f));
+        EndTouch(1, new Vector2(0.0f, 0.5f));
+        Update();
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Touch, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.ButtonReleased, eventSource: EventSource.Touch, button: PointerEvent.Button.MouseLeft, clickCount: 1 }
+        });
+
+        Assert.AreEqual(10, m_InputForUIEvents.Count);
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UIActionScroll_FiresUIScrollEvents_FromInputMouse(bool useProjectWideActionsAsset)
+    {
+        Update();
+        if (!useProjectWideActionsAsset)
+        {
+            InputSystem.s_Manager.actions = null;
+        }
+        Update();
+
+        var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Update();
+        // Make the minimum step of scroll delta to be ±1.0f
+        Set(mouse.scroll.y, -1f / kScrollUGUIScaleFactor);
+        Update();
+        Assert.AreEqual(1, m_InputForUIEvents.Count);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: 1} }
+        });
+    }
+
+    #endregion
 
 #if UNITY_EDITOR
     // These tests shouldn't really be in a non editor-only assembly but for now we guard them until moved.
@@ -215,6 +507,7 @@ public class InputForUITests : InputTestFixture
         LogAssert.NoUnexpectedReceived();
     }
 
+    [Ignore("We currently allow a PWA asset without an UI action map and rely on defaults instead. This allows users that do not want it or use something else to avoid using it.")]
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
     [Category(kTestCategory)]
     public void ActionsWithoutUIMap_ShouldGenerateWarnings()
@@ -261,8 +554,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' could not be found."));
+        //var link = AssetDatabase.GetAssetPath()//EditorHelpers.GetHyperlink(kAssetPath);
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" could not be found."));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -304,8 +597,7 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset '{link}' do not have any configured bindings."));
+        LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" do not have any configured bindings."));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -330,9 +622,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
-            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'type' set to 'InputActionType.{unexpectedType}'"));
+            new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" has 'type' set to 'InputActionType.{unexpectedType}'"));
         LogAssert.NoUnexpectedReceived();
     }
 
@@ -357,9 +648,8 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
-        var link = EditorHelpers.GetHyperlink(kAssetPath);
         LogAssert.Expect(LogType.Warning,
-            new Regex($"^InputAction with path '{actionPath}' in asset '{link}' has 'expectedControlType' set to '{unexpectedControlType}'"));
+            new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" has 'expectedControlType' set to '{unexpectedControlType}'"));
         LogAssert.NoUnexpectedReceived();
     }
 
