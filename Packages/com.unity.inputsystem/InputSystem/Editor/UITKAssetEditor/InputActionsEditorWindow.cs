@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -212,7 +214,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             CleanupStateContainer();
 
-            m_StateContainer = new StateContainer(rootVisualElement, m_State);
+            m_StateContainer = new StateContainer(m_State);
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();
@@ -220,7 +222,7 @@ namespace UnityEngine.InputSystem.Editor
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, Save);
 
-            m_StateContainer.Initialize();
+            m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
@@ -253,7 +255,7 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             var projectWideActions = InputSystem.actions;
             if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
-                ProjectWideActionsAsset.Validate(GetEditedAsset());
+                ProjectWideActionsAsset.Verify(GetEditedAsset());
             #endif
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();

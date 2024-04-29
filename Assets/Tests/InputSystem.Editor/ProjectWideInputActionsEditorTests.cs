@@ -1,11 +1,13 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.SearchService;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
@@ -214,40 +216,143 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(parsedAssetName, Is.EqualTo(expectedName));
     }
 
-    // This test is only relevant for the InputForUI module which native part was introduced in 2023.2
-#if UNITY_2023_2_OR_NEWER
-    [Test(Description = "Verifies that modifying the default project-wide action UI map generates console warnings")]
-    [Category(kTestCategory)]
-    public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()
+    private class TestReporter : ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors
     {
-        // Create a default template asset that we then modify to generate various warnings
-        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+        public const string kExceptionMessage = "Intentional Exception";
+        public readonly List<string> messages;
+        public bool throwsException;
 
-        var indexOf = asset.m_ActionMaps.IndexOf(x => x.name == "UI");
-        var uiMap = asset.m_ActionMaps[indexOf];
+        public TestReporter(List<string> messages = null, bool throwsException = false)
+        {
+            this.messages = messages;
+            this.throwsException = throwsException;
+        }
 
-        // Change the name of the UI action map
-        uiMap.m_Name = "UI2";
-
-        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges(asset);
-
-        LogAssert.Expect(LogType.Warning, new Regex("The action map named 'UI' does not exist"));
-
-        // Change the name of some UI map back to default and change the name of the actions
-        uiMap.m_Name = "UI";
-        var defaultActionName0 = uiMap.m_Actions[0].m_Name;
-        var defaultActionName1 = uiMap.m_Actions[1].m_Name;
-
-        uiMap.m_Actions[0].Rename("Navigation");
-        uiMap.m_Actions[1].Rename("Show");
-
-        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges(asset);
-
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName0}' name has been modified"));
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName1}' name has been modified"));
+        public void Report(string message)
+        {
+            if (throwsException)
+                throw new Exception(kExceptionMessage);
+            messages?.Add(message);
+        }
     }
 
-#endif // UNITY_2023_2_OR_NEWER
+    [Test(Description = "Verifies that the default asset do not generate any verification errors (Regardless of existing requirements)")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldSupportAssetVerification_AndHaveNoVerificationErrorsForDefaultAsset()
+    {
+        var messages = new List<string>();
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+        ProjectWideActionsAsset.Verify(asset, new TestReporter(messages));
+        Assert.That(messages.Count, Is.EqualTo(0));
+    }
+
+    class TestVerifier : ProjectWideActionsAsset.IInputActionAssetVerifier
+    {
+        public const string kFailureMessage = "Intentional failure";
+        public InputActionAsset forwardedAsset;
+        public bool throwsException;
+
+        public TestVerifier(bool throwsException = false)
+        {
+            this.throwsException = throwsException;
+        }
+
+        public void Verify(InputActionAsset asset, ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
+        {
+            if (throwsException)
+                throw new Exception(TestReporter.kExceptionMessage);
+            forwardedAsset = asset;
+            reporter.Report(kFailureMessage);
+        }
+    }
+
+    [Test(Description = "Verifies that the default asset verification registers errors for a registered verifier)")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldSupportAssetVerification_IfVerifierHasBeenRegistered()
+    {
+        var messages = new List<string>();
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+        var verifier = new TestVerifier();
+        Func<ProjectWideActionsAsset.IInputActionAssetVerifier> factory = () => verifier;
+        try
+        {
+            Assert.That(ProjectWideActionsAsset.RegisterInputActionAssetVerifier(factory), Is.True);
+            ProjectWideActionsAsset.Verify(asset, new TestReporter(messages));
+            Assert.That(messages.Count, Is.EqualTo(1));
+            Assert.That(messages[0], Is.EqualTo(TestVerifier.kFailureMessage));
+            Assert.That(verifier.forwardedAsset, Is.EqualTo(asset));
+        }
+        finally
+        {
+            Assert.That(ProjectWideActionsAsset.UnregisterInputActionAssetVerifier(factory), Is.True);
+        }
+    }
+
+    [Test(Description = "Verifies that a verification factory cannot be registered twice")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldReturnError_IfFactoryHasAlreadyBeenRegisteredAndAttemptingToRegisterAgain()
+    {
+        Func<ProjectWideActionsAsset.IInputActionAssetVerifier> factory = () => null;
+        try
+        {
+            Assert.That(ProjectWideActionsAsset.RegisterInputActionAssetVerifier(factory), Is.True);
+            Assert.That(ProjectWideActionsAsset.RegisterInputActionAssetVerifier(factory), Is.False);
+        }
+        finally
+        {
+            Assert.That(ProjectWideActionsAsset.UnregisterInputActionAssetVerifier(factory), Is.True);
+        }
+    }
+
+    [Test(Description = "Verifies that a verification factory cannot be registered twice")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldReturnError_IfAttemptingToUnregisterAFactoryThatHasNotBeenRegistered()
+    {
+        ProjectWideActionsAsset.IInputActionAssetVerifier Factory() => null;
+        Assert.That(ProjectWideActionsAsset.UnregisterInputActionAssetVerifier(Factory), Is.False);
+    }
+
+    [Test(Description = "Verifies that a throwing reporter is handled gracefully")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldCatchAndReportException_IfReporterThrows()
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+        var verifier = new TestVerifier();
+        Func<ProjectWideActionsAsset.IInputActionAssetVerifier> factory = () => verifier;
+        try
+        {
+            // Note that reporter failures shouldn't affect verification result
+            Assert.That(ProjectWideActionsAsset.RegisterInputActionAssetVerifier(factory), Is.True);
+            Assert.That(ProjectWideActionsAsset.Verify(asset, new TestReporter(throwsException: true)), Is.True);
+        }
+        finally
+        {
+            Assert.That(ProjectWideActionsAsset.UnregisterInputActionAssetVerifier(factory), Is.True);
+        }
+
+        LogAssert.Expect(LogType.Exception, new Regex($"{TestReporter.kExceptionMessage}"));
+    }
+
+    [Test(Description = "Verifies that a throwing verifier is handled gracefully and reported as a failure")]
+    [Category(kTestCategory)]
+    public void ProjectWideActions_ShouldCatchAndReportException_IfVerifierThrows()
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath();
+        var verifier = new TestVerifier(throwsException: true);
+        Func<ProjectWideActionsAsset.IInputActionAssetVerifier> factory = () => verifier;
+        try
+        {
+            // Note that verifier failures should affect verification result
+            Assert.That(ProjectWideActionsAsset.RegisterInputActionAssetVerifier(factory), Is.True);
+            Assert.That(ProjectWideActionsAsset.Verify(asset, new TestReporter()), Is.False);
+        }
+        finally
+        {
+            Assert.That(ProjectWideActionsAsset.UnregisterInputActionAssetVerifier(factory), Is.True);
+        }
+
+        LogAssert.Expect(LogType.Exception, new Regex($"{TestReporter.kExceptionMessage}"));
+    }
 
     [Test(Description = "Verifies that when assigning InputSystem.actions a callback is fired if value is different but not when value is not different")]
     [Category(kTestCategory)]
