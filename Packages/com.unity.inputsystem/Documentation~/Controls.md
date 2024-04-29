@@ -248,11 +248,11 @@ When the `'USE_READ_VALUE_CACHING'` internal feature flag is set, the Input Syst
 
 A positive performance impact has been seen when:
 - Reading from controls that do not change frequently.
-- Reading from controls with complex composite controls that change every frame; e.g. on a Gamepad, reading `leftStick`, `leftStick.x` and `leftStick.left` for example.
+- In case the controls change every frame, are being read and have actions bound to them as well, e.g. on a Gamepad, reading `leftStick`, `leftStick.x` and `leftStick.left` for example when there's a action with composite bindings setup.
 
 On the other hand, it is likely to have a negative performance impact when:
 - No control reads are performed for a control, and there are a lot of changes for that particular control.
-- Reading from devices with non-composite controls; e.g. on a Gamepad, reading the `leftTrigger` control for example.
+- Reading from controls that change frequently that have no actions bound to those controls.
 
 Moreover, this feature is not enabled by default as it can result in the following minor behavioural changes:
  * Some control processors use global state. Without cached value optimizations, it is possible to read the control value, change the global state, read the control value again, and get a new value due to the fact that the control processor runs on every call. With cached value optimizations, reading the control value will only ever return a new value if the physical control has been actuated. Changing the global state of a control processor will have no effect otherwise.
