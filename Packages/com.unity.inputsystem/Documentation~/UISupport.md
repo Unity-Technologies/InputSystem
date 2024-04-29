@@ -184,7 +184,7 @@ The Unity UI (uGUI) package contains an older equivalent module called "**[Stand
 
 If you have one of these older Standalone Input Module components on a GameObject in your project, and the Input System is installed, Unity displays a button in the Inspector offering to automatically replace it with the equivalent newer Input System UI Input Module for you.
 
-#### UI Input Module priority 
+#### UI Input Module priority
 
 The UI Input Module component is not required with UI Toolkit in Unity 2023.2 and onwards. However, if you do use it, the settings on that component take priority over the UI settings in your project-wide actions.
 
@@ -242,7 +242,7 @@ To set up the Virtual Mouse component with the Unity UI system:
 3. Set the anchor position of the GameObject's `RectTransform` to the bottom left.
 4. Ensure your pointer GameObject is the last child of the Canvas so that the cursor draws on top of everything else.
 5. Add a **Virtual Mouse** component to the GameObject.
-6. Drag the **Image** component of the pointer GameObject into the **Cursor Graphic** field of the Virtual Mouse component. 
+6. Drag the **Image** component of the pointer GameObject into the **Cursor Graphic** field of the Virtual Mouse component.
 7. Drag the **Rect Transform** component of the pointer GameObject to the **Cursor Transform** field of the Virtual Mouse component.
 8. If you want the virtual mouse to control the system mouse cursor, set [Cursor Mode](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to **Hardware Cursor If Available**. In this mode, the **Cursor Graphic** is hidden when a system mouse is present and you use [Mouse.WarpCursorPosition](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_) to move the system mouse cursor instead of the software cursor. The transform linked through **Cursor Transform** is not updated in that case.
 9.  To configure the input to drive the virtual mouse, either add  bindings on the various actions (such as **Stick Action**), or enable **Use Reference** and link existing actions from an Input Actions asset.
@@ -308,4 +308,3 @@ When the Editor's [**Active Input Handling**](https://docs.unity3d.com/Manual/cl
 To restore functionality to runtime `OnGUI` methods, you can change the **Active Input Handling** setting to "**Both**". Doing this means that Unity processes the input twice which could introduce a small performance impact.
 
 This only affects runtime (play mode) OnGUI methods. Editor GUI code is unaffected and will receive input events regardless.
-
