@@ -760,6 +760,56 @@ internal class AndroidTests : CoreTestsFixture
         Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(processStickValue(leftStick)).Using(Vector2EqualityComparer.Instance));
         Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(processStickValue(rightStick)).Using(Vector2EqualityComparer.Instance));
     }
+
+    [Test]
+    [Category("Devices")]
+#if !UNITY_6000_0_OR_NEWER
+    [Ignore("Android Device is only available on Unity 6000.0 or newer")]
+#endif
+    public unsafe void Devices_CanSetBackButtonLeavesAppSetting()
+    {
+        var device = InputSystem.AddDevice("AndroidDevice");
+        Assert.That(InputSystem.settings.android.backButtonLeavesApp, Is.EqualTo(false));
+
+        // AndroidDevice.AndroidCustomCommand.BackButtonLeavesApp = 0;
+        uint backButtonLeavesAppCommandCode = 0;
+        bool backButtonLeavesApp = false;
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == SetCustomCommand.Type)
+                {
+                    Assert.That(id, Is.EqualTo(device.deviceId));
+                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
+                    var setCustomCommand = ((SetCustomCommand*)commandPtr);
+                    if (setCustomCommand->code == backButtonLeavesAppCommandCode)
+                    {
+                        backButtonLeavesApp = setCustomCommand->payload >= 1;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                    return InputDeviceCommand.GenericFailure;
+                }
+                if (commandPtr->type == GetCustomCommand.Type)
+                {
+                    Assert.That(id, Is.EqualTo(device.deviceId));
+                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
+                    ((GetCustomCommand*)commandPtr)->code = backButtonLeavesAppCommandCode;
+                    ((GetCustomCommand*)commandPtr)->payload = Convert.ToUInt32(backButtonLeavesApp);
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(device, Is.Not.Null);
+
+        var command = GetCustomCommand.Create();
+        device.ExecuteCommand(ref command);
+        Assert.That(command.payload == 0, Is.True);
+
+        InputSystem.settings.android.backButtonLeavesApp = true;
+        device.ExecuteCommand(ref command);
+        Assert.That(backButtonLeavesApp, Is.True);
+    }
 }
 
 #endif // UNITY_EDITOR || UNITY_ANDROID
