@@ -3,6 +3,7 @@
 using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
@@ -41,10 +42,9 @@ namespace UnityEngine.InputSystem.Android.LowLevel
                 var command = GetCustomCommand.Create();
                 if (ExecuteCommand(ref command) >= 0)
                 {
-                    return command.value >= 1;
+                    return command.payload >= 1;
                 }
                 return false;
-
             }
             set
             {
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             }
         }
 
-        private enum AndroidCustomCommand
+        internal enum AndroidCustomCommand
         {
             BackButtonLeavesApp = 0,
         }

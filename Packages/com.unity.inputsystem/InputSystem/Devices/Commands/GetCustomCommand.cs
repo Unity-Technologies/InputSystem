@@ -1,10 +1,8 @@
-#if UNITY_EDITOR || UNITY_ANDROID
-
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Android
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Command to get a custom value from the runtime
@@ -21,11 +19,17 @@ namespace UnityEngine.InputSystem.Android
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        /// <summary>
+        /// Custom code to specify the type of action to perform at runtime.
+        /// </summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public uint code;
 
+        /// <summary>
+        /// Payload associated with the custom code that will be retrieved from runtime.
+        /// </summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(uint))]
-        public uint value;
+        public uint payload;
 
         public FourCC typeStatic
         {
@@ -41,5 +45,3 @@ namespace UnityEngine.InputSystem.Android
         }
     }
 }
-
-#endif // UNITY_EDITOR || UNITY_ANDROID
