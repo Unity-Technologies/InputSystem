@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Android
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Command to set a custom value in the runtime

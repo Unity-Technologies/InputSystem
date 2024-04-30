@@ -3688,6 +3688,68 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_CanSetCustomCommandInDevice()
+    {
+        var device  = InputSystem.AddDevice<Keyboard>();
+        uint customCommandCode = 0;
+        var customCommandPayload = false;
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == SetCustomCommand.Type)
+                {
+                    Assert.That(id, Is.EqualTo(device.deviceId));
+                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
+                    var setCustomCommand = ((SetCustomCommand*)commandPtr);
+                    if (setCustomCommand->code == customCommandCode)
+                    {
+                        customCommandPayload = setCustomCommand->payload >= 1;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(device, Is.Not.Null);
+
+        var command = SetCustomCommand.Create(customCommandCode, Convert.ToUInt32(true));
+        device.ExecuteCommand(ref command);
+
+        Assert.That(customCommandPayload, Is.True);
+    }
+
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanGetCustomCommandFromDevice()
+    {
+        var device  = InputSystem.AddDevice<Keyboard>();
+        uint customCommandCode = 0;
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == GetCustomCommand.Type)
+                {
+                    Assert.That(id, Is.EqualTo(device.deviceId));
+                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
+                    ((GetCustomCommand*)commandPtr)->code = customCommandCode;
+                    ((GetCustomCommand*)commandPtr)->payload = 2;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(device, Is.Not.Null);
+
+        var command = GetCustomCommand.Create();
+        device.ExecuteCommand(ref command);
+
+        Assert.That(command.code, Is.EqualTo(customCommandCode));
+        Assert.That(command.payload, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_AddingDisabledSensorMakesItCurrent()
     {
         var deviceId = runtime.ReportNewInputDevice<Accelerometer>();
