@@ -26,6 +26,8 @@ namespace UnityEngine.InputSystem
                 }
                 set
                 {
+                    if (value == m_BackButtonLeavesApp)
+                        return;
                     m_BackButtonLeavesApp = value;
                     InputSystem.s_Manager.ApplySettings();
                 }
