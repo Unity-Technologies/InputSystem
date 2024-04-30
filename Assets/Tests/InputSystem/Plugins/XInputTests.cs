@@ -10,6 +10,9 @@ using UnityEngine.InputSystem.Processors;
 #if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+using UnityEngine.InputSystem.Linux;
+#endif
 
 internal class XInputTests : CoreTestsFixture
 {
