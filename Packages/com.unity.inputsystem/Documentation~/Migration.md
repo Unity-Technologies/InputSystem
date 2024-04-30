@@ -64,7 +64,7 @@ All of the new APIs listed below are in the `UnityEngine.InputSystem` namespace.
 |Input Manager (Old)|Input System (New)|
 |--|--|
 [`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|[`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html)
-[`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|No corresponding API yet.
+[`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|[`InputSystem.settings.android.backButtonLeavesApp`](../api/UnityEngine.InputSystem.InputSettings.AndroidSettings.html#UnityEngine_InputSystem_InputSettings_AndroidSettings_backButtonLeavesApp)
 [`Input.compass`](https://docs.unity3d.com/ScriptReference/Input-compass.html)|No corresponding API yet.
 [`Input.compensateSensors`](https://docs.unity3d.com/ScriptReference/Input-compensateSensors.html)|[`InputSystem.settings.compensateForScreenOrientation`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_compensateForScreenOrientation).
 [`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|[`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_)
