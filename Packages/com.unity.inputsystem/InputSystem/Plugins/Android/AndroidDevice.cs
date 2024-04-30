@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     {
         [InputControl(synthetic = true)]
         public ButtonControl button { get; protected set; }
-        
+
         /// <inheritdoc />
         protected override void OnAdded()
         {
@@ -29,15 +29,15 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             InputSystem.onSettingsChange -= OnSettingsChange;
             base.OnRemoved();
         }
-        
+
         private void OnSettingsChange()
         {
             backButtonLeavesApp = InputSystem.settings.android.backButtonLeavesApp;
         }
-        
+
         private bool backButtonLeavesApp
         {
-            get 
+            get
             {
                 var command = GetCustomCommand.Create();
                 if (ExecuteCommand(ref command) >= 0)

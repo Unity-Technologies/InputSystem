@@ -3718,7 +3718,6 @@ partial class CoreTests
         Assert.That(customCommandPayload, Is.True);
     }
 
-
     [Test]
     [Category("Devices")]
     public unsafe void Devices_CanGetCustomCommandFromDevice()

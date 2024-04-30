@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public bool backButtonLeavesApp
             {
-                get 
+                get
                 {
                     return m_BackButtonLeavesApp;
                 }
