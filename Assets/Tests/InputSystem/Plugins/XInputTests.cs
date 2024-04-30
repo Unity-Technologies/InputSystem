@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
-#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
@@ -24,7 +24,9 @@ internal class XInputTests : CoreTestsFixture
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
-    [UnityPlatform(exclude = new[] { Runtimeplatform.StandaloneLinux64, Runtimeplatform.Editor})]  
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    [TestCase("Xbox One Controller", "Microsoft Corp.", "SDL", "Gamepad")]
+#endif    
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
     {
         var description = new InputDeviceDescription
