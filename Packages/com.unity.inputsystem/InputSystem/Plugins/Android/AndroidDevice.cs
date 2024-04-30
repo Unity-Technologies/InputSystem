@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_ANDROID
+#if (UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER
 
 using System;
 using UnityEngine.InputSystem.Controls;
@@ -59,4 +59,4 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         }
     }
 }
-#endif
+#endif // (UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER
