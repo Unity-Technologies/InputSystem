@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased] - YYYY-MM-DD
+## [Unreleased] - yyyy-mm-dd
+
+## [1.8.2] - 2024-04-29
 
 ### Added
 - Additional tests for UI Input default actions (Navigate, Submit, Scroll etc.)
@@ -21,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed DualSense Edge's vibration and light bar not working on Windows
 - Fixed Project-wide Actions asset failing to reload properly after deleting project's Library folder.
 - Fixed an issue where `System.InvalidOperationException` is thrown when entering PlayMode after deleting an ActionMap from Project-wide actions and later resetting it.
+- Fixed OnPointerClick events not propagating to child objects unless the child also handled OnPointerDown events [ISXB-857](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-857).
 - Fixed Input Actions Editor window resource leak that could result in unexpected exceptions [ISXB-865](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-865).
 - Fixed an issue where UI integration would throw exceptions when Project-wide Input Actions asset did not contain the implicitly required `UI` action map or was missing any of the required actions. Additionally this fix now also generates warnings in the console for any divergence from expected action configuration or lack of bindings in edit-mode.
 - Fixed a minor issue when importing InputAction assets that could result in unexpected logging during internal package validation checks.
