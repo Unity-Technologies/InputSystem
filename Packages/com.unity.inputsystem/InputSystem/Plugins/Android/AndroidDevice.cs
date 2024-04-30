@@ -1,4 +1,4 @@
-#if (UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER
+#if ((UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER) || PACKAGE_DOCS_GENERATION
 
 using System;
 using UnityEngine.InputSystem.Controls;
@@ -7,9 +7,10 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    // <summary>
+    /// <summary>
     /// Input device that represents an Android handheld device.
     /// </summary>
+    /// <remarks> Android device is available starting on 6000.0 and newer. </remarks>
     [InputControlLayout(displayName = "Android Device", hideInUI = true)]
     public class AndroidDevice : InputDevice
     {
@@ -59,4 +60,4 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         }
     }
 }
-#endif // (UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER
+#endif // ((UNITY_EDITOR || UNITY_ANDROID) && UNITY_6000_0_OR_NEWER) || PACKAGE_DOCS_GENERATION
