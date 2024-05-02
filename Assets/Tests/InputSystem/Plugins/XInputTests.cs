@@ -25,7 +25,7 @@ internal class XInputTests : CoreTestsFixture
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
 #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-    [Ignore("Disabled to make test suite pass on Linux")]
+     [UnityEngine.TestTools.UnityPlatform(exclude = new [] { RuntimePlatform.LinuxEditor, RuntimePlatform.LinuxPlayer })]
 #endif    
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
     {
