@@ -24,9 +24,7 @@ internal class XInputTests : CoreTestsFixture
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
-#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-     [UnityEngine.TestTools.UnityPlatform(exclude = new [] { RuntimePlatform.LinuxEditor, RuntimePlatform.LinuxPlayer })]
-#endif    
+    [UnityEngine.TestTools.UnityPlatform(exclude = new [] { RuntimePlatform.LinuxEditor, RuntimePlatform.LinuxPlayer })]
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
     {
         var description = new InputDeviceDescription
