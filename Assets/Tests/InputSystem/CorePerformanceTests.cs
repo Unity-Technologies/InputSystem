@@ -766,6 +766,89 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // These tests show the performance of the ReadValueCaching optimization when there are state changes per frame on
+    // gamepad controls and there are composite actions that read from controls.
+    // Currently, there is a positive performance impact by using ReadValueCaching when reading from controls which have
+    // composite bindings.
+    public void Performance_OptimizedControls_EvaluateStaleControlReadsWhenGamepadStateChanges(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Disable the project wide actions actions to avoid performance impact.
+        InputSystem.actions.Disable();
+#endif
+
+        Measure.Method(() =>
+        {
+            MethodToMeasure(gamepad);
+        }).SampleGroup("ReadValueCaching Expected With WORSE Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+
+        // Create composite actions to show the performance improvement when using ReadValueCaching.
+
+        var leftStickCompositeAction = new InputAction("LeftStickComposite", InputActionType.Value);
+        leftStickCompositeAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+
+
+        var rightStickCompositeAction = new InputAction("RightStickComposite", InputActionType.Value);
+        rightStickCompositeAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Gamepad>/rightStick/up")
+            .With("Down", "<Gamepad>/rightStick/down")
+            .With("Left", "<Gamepad>/rightStick/left")
+            .With("Right", "<Gamepad>/rightStick/right");
+
+        leftStickCompositeAction.Enable();
+        rightStickCompositeAction.Enable();
+
+        Measure.Method(() =>
+        {
+            MethodToMeasure(gamepad);
+        }).SampleGroup("ReadValueCaching Expected With BETTER Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Re-enable the project wide actions actions.
+        InputSystem.actions.Enable();
+#endif
+        return;
+
+        void MethodToMeasure(Gamepad gamepad)
+        {
+            var value2d = Vector2.zero;
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                // Make sure state changes are different from previous state so that we mark the controls as
+                // stale.
+                InputSystem.QueueStateEvent(gamepad,
+                    new GamepadState
+                    {
+                        leftStick = new Vector2(i / 1000f, i / 1000f),
+                        rightStick = new Vector2(i / 1000f, i / 1200f)
+                    });
+                InputSystem.Update();
+
+                value2d = gamepad.leftStick.value;
+            }
+        }
+    }
+
 #if ENABLE_VR
     [Test, Performance]
     [Category("Performance")]
