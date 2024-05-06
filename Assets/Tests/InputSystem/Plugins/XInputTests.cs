@@ -16,7 +16,8 @@ internal class XInputTests : CoreTestsFixture
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
 #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-    /*
+    /* ////Brute-forcing by commenting out of Devices_SupportsXInputDevicesOnPlatform
+       ////since the test would still run while [Ignore] or UnityPlatform excluding it.
 #endif
     [Test]
     [Category("Devices")]
@@ -27,7 +28,6 @@ internal class XInputTests : CoreTestsFixture
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
-    [UnityEngine.TestTools.UnityPlatform(exclude = new [] { RuntimePlatform.LinuxEditor, RuntimePlatform.LinuxPlayer })]
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
     {
         var description = new InputDeviceDescription
