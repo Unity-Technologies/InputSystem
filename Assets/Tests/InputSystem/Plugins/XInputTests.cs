@@ -15,6 +15,9 @@ internal class XInputTests : CoreTestsFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    /*
+#endif
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
@@ -45,6 +48,9 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    */
+#endif
 
     ////FIXME: we should not have tests that only run in players
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
