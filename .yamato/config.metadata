@@ -54,12 +54,12 @@ platforms_nix:
     type: Unity::VM
     image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
-    runtime: StandaloneLinux
+    runtime: StandaloneLinux64
   - name: linux_standalone_il2cpp
     type: Unity::VM
     image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
-    runtime: StandaloneLinux
+    runtime: StandaloneLinux64
     scripting-backend: Il2Cpp
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
 scripting_backends:
