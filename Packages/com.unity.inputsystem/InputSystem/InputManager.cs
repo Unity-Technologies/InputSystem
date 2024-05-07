@@ -3380,7 +3380,10 @@ namespace UnityEngine.InputSystem
                                 haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
                             }
 
+
                             totalEventBytesProcessed += eventPtr.sizeInBytes;
+                            if (Debug.isDebugBuild)
+                                LogProcessedEventForDevice(device, totalEventBytesProcessed, eventPtr);
 
                             // Update timestamp on device.
                             // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
@@ -3491,6 +3494,17 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        private void LogProcessedEventForDevice(InputDevice device, uint totalEventBytesProcessed, InputEventPtr eventPtr)
+        {
+            if (m_Settings.debugLogProcessedEventForDevice && (m_CurrentUpdate != InputUpdateType.Editor))
+            {
+                Debug.Log("Frame Count: " + Time.frameCount +
+                    ", Device: " + device.name +
+                    ", Bytes Processed: " + totalEventBytesProcessed +
+                    ", Event Size: " + eventPtr.sizeInBytes);
+            }
         }
 
         // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.

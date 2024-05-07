@@ -702,6 +702,27 @@ namespace UnityEngine.InputSystem
             }
         }
 
+
+        /// <summary>
+        /// Enables or disables logging of amount of processed input events for each device. This is done per
+        /// InputSystem.Update() call.
+        /// </summary>
+        ///
+        /// This should only be used for debugging purposes. It is useful to track down devices that are sending
+        /// a lot of input events per frame. It will pollute the console log with a lot of messages.
+        public bool debugLogProcessedEventForDevice
+        {
+            get => m_DebugLogProcessedEventForDevice;
+            set
+            {
+                if (m_DebugLogProcessedEventForDevice == value)
+                    return;
+
+                m_DebugLogProcessedEventForDevice = value;
+                OnChange();
+            }
+        }
+
         /// <summary>
         /// Enable or disable an internal feature by its name.
         /// </summary>
@@ -770,6 +791,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
+        [SerializeField] private bool m_DebugLogProcessedEventForDevice = false;
+
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
