@@ -11,6 +11,9 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 - Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746)
 
+### Changed
+- Removed editor controls for modifying parts of a composite action. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
+
 ## [1.8.2] - 2024-04-29
 
 ### Added
