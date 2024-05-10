@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                     ContextMenu.GetContextMenuForCompositeItem(this, treeViewItem, i);
                 else if (item.isAction)
                     ContextMenu.GetContextMenuForActionItem(this, treeViewItem, item.controlLayout, i);
-                else
+                else if(!item.isPartOfComposite) // composite parts should not be altered: ISXB-804
                     ContextMenu.GetContextMenuForBindingItem(this, treeViewItem, i);
 
                 if (item.isAction)
@@ -391,6 +391,8 @@ namespace UnityEngine.InputSystem.Editor
             if (allowUICommandExecution)
             {
                 var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
+                if (data.isPartOfComposite) // composite parts should not be changeable: ISXB-804
+                    return;
                 switch (evt.commandName)
                 {
                     case CmdEvents.Rename:
