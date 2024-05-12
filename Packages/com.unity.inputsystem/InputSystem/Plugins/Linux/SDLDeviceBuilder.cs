@@ -16,11 +16,16 @@ namespace UnityEngine.InputSystem.Linux
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description, string matchedLayout,
             InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
+            // If the system found a matching layout, there's nothing for us to do.
+            if (!string.IsNullOrEmpty(matchedLayout))
+                return null;
+            
+            // If the device isn't an SDL joystick, we have nothing to do.
             if (description.interfaceName != LinuxSupport.kInterfaceName)
                 return null;
-
             if (string.IsNullOrEmpty(description.capabilities))
                 return null;
+            
 
             // Try to parse the SDL descriptor.
             SDLDeviceDescriptor deviceDescriptor;
