@@ -1458,13 +1458,13 @@ partial class CoreTests
         actionWithModifier.AddCompositeBinding("OneModifier")
             .With("Binding", "<Keyboard>/space")
             .With("Modifier", "<Keyboard>/ctrl");
-        actionWithModifier.performed += _ => ++withModiferReceivedCalls;
+        actionWithModifier.performed += _ => ++ withModiferReceivedCalls;
 
         var actionWithoutModifier = map.AddAction("One", type: InputActionType.Button, binding: "<Keyboard>/space");
         actionWithoutModifier.performed += _ => actionWithModifier.Disable();
 
         map.Enable();
-       
+
         PressAndRelease(keyboard.spaceKey);
         InputSystem.Update();
         Assume.That(actionWithModifier.enabled, Is.False);
