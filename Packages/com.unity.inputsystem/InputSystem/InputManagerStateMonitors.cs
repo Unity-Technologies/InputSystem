@@ -351,6 +351,11 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
+            Debug.Assert(m_StateChangeMonitors[deviceIndex].listeners != null);
+            
+            if (m_StateChangeMonitors == null || m_StateChangeMonitors.Length <= deviceIndex ||
+                m_StateChangeMonitors[deviceIndex].listeners == null)
+                return; 
 
             // NOTE: This method must be safe for mutating the state change monitor arrays from *within*
             //       NotifyControlStateChanged()! This includes all monitors for the device being wiped
