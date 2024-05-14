@@ -2365,13 +2365,16 @@ partial class CoreTests
     [Category("Events")]
     public void Events_MaximumEventLoadPerUpdateIsLimited()
     {
-        // Default setting is 5MB.
+        // Default limit setting is 5MB.
         Assert.That(InputSystem.settings.maxEventBytesPerUpdate, Is.EqualTo(5 * 1024 * 1024));
 
+        // Limit the maximum events to be processed per update to 2 Mouse state events.
         InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
 
         var mouse = InputSystem.AddDevice<Mouse>();
 
+        // Queue 3 events, where the 3rd one will raise a log error.
+        // Only 2 events from 3 should be processed.
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
@@ -2387,6 +2390,15 @@ partial class CoreTests
         Assert.That(eventCount, Is.EqualTo(2));
         Assert.That(mouse.rightButton.isPressed, Is.True);
         Assert.That(mouse.middleButton.isPressed, Is.False);
+
+        // Queue 1 event after error has been raised
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right, false));
+        InputSystem.Update();
+
+        // Check that we have only processed the new event.
+        // Confirms that the 3rd event setting MouseButton.middle was discarded.
+        Assert.That(eventCount, Is.EqualTo(3));
+        Assert.That(mouse.rightButton.isPressed, Is.False);
 
         eventCount = 0;
 
