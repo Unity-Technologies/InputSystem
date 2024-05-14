@@ -11,8 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
-- Avoid potential crashes from NullReferenceException in FireStateChangeNotifications [ISXB-724](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-724)
-- Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746)
+- Avoid potential crashes from NullReferenceException in FireStateChangeNotifications.
+- Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746).
 
 ## [1.8.2] - 2024-04-29
 
