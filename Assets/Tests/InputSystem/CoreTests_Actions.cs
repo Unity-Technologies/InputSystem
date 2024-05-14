@@ -1578,6 +1578,9 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if UNITY_TVOS
+    [Ignore("tvOS crash debug")]
+#endif
     public void Actions_CanQueryIfPerformedInCurrentFrame()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3863,9 +3866,9 @@ partial class CoreTests
 
             var actions = trace.ToArray();
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Assert.That(actions, Has.Length.EqualTo(5));
-            #endif
+#endif
 
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
@@ -3876,12 +3879,12 @@ partial class CoreTests
             Assert.That(actions[1].action, Is.SameAs(buttonAction));
             Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[2].control, Is.SameAs(gamepad.buttonWest)); // Control immediately following buttonSouth in list of controls.
             Assert.That(actions[2].action, Is.SameAs(buttonAction));
             Assert.That(actions[2].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
-            #endif
+#endif
 
             Assert.That(actions[actions.Length - 2].phase, Is.EqualTo(InputActionPhase.Performed)); // Last control to be actuated.
             Assert.That(actions[actions.Length - 2].control, Is.SameAs(gamepad.buttonNorth));
@@ -6349,7 +6352,7 @@ partial class CoreTests
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
- #endif
+#endif
 
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
 
@@ -6684,7 +6687,7 @@ partial class CoreTests
         Assert.That(TestInteraction.s_GotInvoked, Is.True);
     }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [Test]
     [Category("Actions")]
     public void Actions_RegisteringExistingInteractionUnderNewName_CreatesAlias()
@@ -6694,7 +6697,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.interactions.aliases.Contains(new InternedString("TestTest")));
     }
 
-    #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
     [Test]
     [Category("Actions")]
@@ -8963,7 +8966,7 @@ partial class CoreTests
         Assert.That(wasPerformed, Is.False);
     }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [Test]
     [Category("Actions")]
     public void Actions_RegisteringExistingCompositeUnderNewName_CreatesAlias()
@@ -8973,9 +8976,9 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.composites.aliases.Contains(new InternedString("TestTest")));
     }
 
-    #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
-    #pragma warning disable CS0649
+#pragma warning disable CS0649
     private class CompositeWithParameters : InputBindingComposite<float>
     {
         public int intParameter;
