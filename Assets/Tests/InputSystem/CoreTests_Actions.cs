@@ -3155,9 +3155,6 @@ partial class CoreTests
     [TestCase(InputActionType.Value, "Scale(factor=2)")]
     [TestCase(InputActionType.Button)]
     [TestCase(InputActionType.Button, "Scale(factor=2)")]
-#if UNITY_TVOS
-    [Ignore("tvos debug")]
-#endif
     public void Actions_CanQueryMagnitudeFromAction_WithAxisControl(InputActionType actionType, string processors = null)
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
