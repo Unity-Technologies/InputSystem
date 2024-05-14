@@ -1465,16 +1465,22 @@ partial class CoreTests
 
         map.Enable();
 
+        // Press the SPACE key used by both binding
+        // actionWithModifier : SPACE key binding state will have current time but without a preceding CTRL key it will not trigger
+        // actionWithoutModifier : SPACE key binding will trigger the performed lambda which will disable actionWithModifier
         PressAndRelease(keyboard.spaceKey);
         InputSystem.Update();
         Assume.That(actionWithModifier.enabled, Is.False);
 
-        // Re-enable action which has been disabled by space
+        // Re-enable action which has been disabled by actionWithoutModifier
         actionWithModifier.Enable();
+
+        // Press the CTRL+SPACE to trigger actionWithModifier and not actionWithoutModifier
         Press(keyboard.leftCtrlKey, queueEventOnly: true);
         Press(keyboard.spaceKey);
         InputSystem.Update();
         Assert.That(withModiferReceivedCalls, Is.EqualTo(1));
+        Assert.That(actionWithModifier.enabled, Is.True);
     }
 
     [Test]
