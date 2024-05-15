@@ -91,10 +91,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// device current.
         /// </remarks>
         public static void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default,
-            InputEventPtr eventPtr = default)
+            InputEventPtr eventPtr = default, double time = 0.0)
             where TState : struct
         {
-            Change(control, ref state, updateType, eventPtr);
+            Change(control, ref state, updateType, eventPtr, time);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// device current.
         /// </remarks>
         public static unsafe void Change<TState>(InputControl control, ref TState state, InputUpdateType updateType = default,
-            InputEventPtr eventPtr = default)
+            InputEventPtr eventPtr = default, double time = 0.0)
             where TState : struct
         {
             if (control == null)
@@ -122,12 +122,20 @@ namespace UnityEngine.InputSystem.LowLevel
             var statePtr = UnsafeUtility.AddressOf(ref state);
             var stateOffset = control.stateBlock.byteOffset - device.stateBlock.byteOffset;
 
+            // Report any calls with no event and no specified time (relying on both default parameter values)
+            // This may not matter but would like to know about these during testing with more devices
+            //
+            if (!eventPtr.valid && time == 0.0)
+            {
+                Debug.Log($"InputState.Change<>('{control.name}') called with null event and default time=0.0\n");
+            }
+
             InputSystem.s_Manager.UpdateState(device,
                 updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType, statePtr, stateOffset,
                 (uint)stateSize,
                 eventPtr.valid
                 ? eventPtr.internalTime
-                : InputRuntime.s_Instance.currentTime,
+                : time,
                 eventPtr: eventPtr);
         }
 

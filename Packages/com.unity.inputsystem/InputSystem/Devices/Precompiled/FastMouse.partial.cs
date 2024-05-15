@@ -8,8 +8,9 @@ namespace UnityEngine.InputSystem
         {
             // Changing these separately seems to not result in much of a difference
             // compared to just doing an InputState.Change with a complete MouseState.
-            InputState.Change(delta, Vector2.zero, InputState.currentUpdateType);
-            InputState.Change(scroll, Vector2.zero, InputState.currentUpdateType);
+            double now = InputRuntime.s_Instance.currentTime;
+            InputState.Change(delta, Vector2.zero, InputState.currentUpdateType, time: now);
+            InputState.Change(scroll, Vector2.zero, InputState.currentUpdateType, time: now);
         }
 
         // For FastMouse, we know that our layout is MouseState so we can just go directly
