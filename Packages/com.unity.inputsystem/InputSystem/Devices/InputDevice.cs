@@ -675,7 +675,7 @@ namespace UnityEngine.InputSystem
         // Index in InputManager.m_Devices.
         internal int m_DeviceIndex;
         // Amount of bytes processed in the current update step. Used only for logging purposes.
-        internal uint m_CurrentProcessedEventBytesOnUpdate; 
+        internal uint m_CurrentProcessedEventBytesOnUpdate;
         internal InputDeviceDescription m_Description;
 
         /// <summary>
