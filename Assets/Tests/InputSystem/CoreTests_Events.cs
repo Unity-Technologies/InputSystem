@@ -2382,8 +2382,11 @@ partial class CoreTests
         var eventCount = 0;
         InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
 
+        var totalProcessedMouseStateEventBytes = InputSystem.settings.maxEventBytesPerUpdate;
         LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.\n"
+            + "Total events processed by devices in last update call:\n"
+            + $" - {totalProcessedMouseStateEventBytes} bytes processed by Mouse:/Mouse\n");
 
         InputSystem.Update();
 
