@@ -29,6 +29,15 @@ namespace UnityEngine.InputSystem.Editor
         public string id { get; }
         public string name { get; }
 
+        public string path
+        {
+            get
+            {
+                var map = actionMap;
+                return map.HasValue ? map.Value.name + '/' + name : name;
+            }
+        }
+
         public string expectedControlType
         {
             get
@@ -118,8 +127,19 @@ namespace UnityEngine.InputSystem.Editor
             return hashCode.ToHashCode();
         }
 
-        public SerializedProperty parentActionMapProperty =>
-            wrappedProperty.GetParentProperty().GetParentProperty().GetParentProperty();
+        private SerializedProperty parentActionMapProperty =>
+            wrappedProperty?.GetParentProperty()?.GetParentProperty()?.GetParentProperty();
+
+        public SerializedInputActionMap? actionMap
+        {
+            get
+            {
+                var property = parentActionMapProperty;
+                if (property == null)
+                    return null;
+                return new SerializedInputActionMap(property);
+            }
+        }
 
         public StringBuilder CopyToBuffer(StringBuilder buffer)
         {

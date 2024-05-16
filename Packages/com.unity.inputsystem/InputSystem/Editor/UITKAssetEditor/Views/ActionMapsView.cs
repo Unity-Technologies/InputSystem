@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.userData = i;
                 treeViewItem.dependencies.Update(mapData.mapName, mapData.requirements, mapData.failures);
                 element.SetEnabled(!mapData.isDisabled);
-                ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
+                ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i, treeViewItem.dependencies.isLocked);
             };
             m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>

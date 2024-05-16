@@ -1,12 +1,6 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using UnityEditor;
-using UnityEngine.AI;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -16,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     sealed class InputActionDependency
     {
-        // Currently a constant t allow turning locking on or off during development.
+        // Currently a constant to allow turning locking on or off during development.
         private const bool kLockValue = true;
 
         private readonly VisualElement m_DependencyIcon;
@@ -69,6 +63,10 @@ namespace UnityEngine.InputSystem.Editor
             var hasFailures = failures != null && failures.Count > 0;
             if (hasFailures)
             {
+                var formatter = new DefaultInputActionRequirementFailureFormatter(
+                    includeAssetReference: false,
+                    includeImplication: false);
+
                 message = new StringBuilder($"This {m_Entity} currently has {failures.Count} warning");
                 if (failures.Count > 1)
                     message.Append('s');
@@ -86,7 +84,7 @@ namespace UnityEngine.InputSystem.Editor
 
                     // Note that we exclude asset reference since implicit while editing an asset.
                     // We also exclude implication since this is shown in header warning box.
-                    message.Append($"{bullet} {failures[i].Describe(includeAssetReference: false, includeImplication: false)}");
+                    message.Append($"{bullet} {formatter.Format(failures[i])}");
                 }
             }
 
@@ -98,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
                 foreach (var requirementSet in requirements)
                 {
                     reqs ??= new StringBuilder();
-                    foreach (var requirement in requirementSet.EnumerateRequirement(actionPath)) // TODO Need filter
+                    foreach (var requirement in requirementSet.EnumerateRequirements(actionPath)) // TODO Need filter
                     {
                         if (reqs.Length > 0)
                             reqs.Append('\n');

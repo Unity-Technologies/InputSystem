@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_VerificationResult != null)
                     return m_VerificationResult;
                 m_VerificationResult = InputActionAssetRequirements.Verify(serializedObject.targetObject as InputActionAsset);
-                Debug.Log("VerificationResult has failures: " + m_VerificationResult.hasFailures);
+                //Debug.Log("VerificationResult has failures: " + m_VerificationResult.hasFailures);
                 return m_VerificationResult;
             }
         }

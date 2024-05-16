@@ -26,16 +26,21 @@ namespace UnityEngine.InputSystem.Editor
 
         private static DropdownMenuAction.Status GetStatus(InputActionMapsTreeViewItem item)
         {
-            return item.dependencies.isLocked ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
+            return GetStatus(item.dependencies.isLocked);
         }
 
         private static DropdownMenuAction.Status GetStatus(InputActionsTreeViewItem item)
         {
-            return item.dependencies.isLocked ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
+            return GetStatus(item.dependencies.isLocked);
+        }
+
+        private static DropdownMenuAction.Status GetStatus(bool isLocked)
+        {
+            return isLocked ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
         }
 
         #region ActionMaps
-        public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem, int index)
+        public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem, int index, bool isLocked)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
@@ -48,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(delete_String, _ => mapView.DeleteActionMap(index), dependencyStatus);
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
-                menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
+                menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems(), GetStatus(isLocked));
 
                 var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
                 if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))

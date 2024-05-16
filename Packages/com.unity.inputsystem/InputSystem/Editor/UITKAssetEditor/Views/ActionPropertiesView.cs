@@ -42,6 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 tooltip = inputAction.actionTypeTooltip
             };
+            // TODO actionType.SetEnabled(false); // TODO Base on whether action type is matching required, this would require us to lookup based on action here?!
 
             // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
             var actionLabel = actionType.Q<Label>();
@@ -71,6 +72,7 @@ namespace UnityEngine.InputSystem.Editor
                 controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
                 controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
                 controlType.tooltip = inputAction.expectedControlTypeTooltip;
+                // TODO controlType.SetEnabled(false); // TODO Base on fact whether control type is valid, this would require us to lookup based on requirements here
 
                 controlType.RegisterValueChangedCallback(evt =>
                 {

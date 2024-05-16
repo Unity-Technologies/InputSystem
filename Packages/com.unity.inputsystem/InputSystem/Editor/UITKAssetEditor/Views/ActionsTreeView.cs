@@ -675,7 +675,7 @@ namespace UnityEngine.InputSystem.Editor
                         isPartOfComposite: false, action.expectedControlType, actionIndex: actionIndex,
                         isCut: state.IsActionCut(actionMapIndex, actionIndex),
                         actionPath: actionPath,
-                        requirements: InputActionAssetRequirements.Enumerate(actionPath),
+                        requirements: InputActionAssetRequirements.Get(actionPath),
                         failures: state.verificationResult.GetActionFailures(actionPath)),
                     bindingItems.Count > 0 ? bindingItems : null));
             }
