@@ -87,8 +87,26 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>True if button is currently pressed.</value>
         /// <remarks>
-        /// A button is considered press if it's value is equal to or greater
+        /// A button is considered pressed if its value is equal to or greater
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
+        /// 
+        /// 
+        /// You can us this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
+        /// <example>
+        /// <code>
+        /// // Using KeyControl property directly.
+        /// Keyboard.current.spaceKey.isPressed
+        /// Keyboard.current.aKey.isPressed // etc.
+        /// 
+        /// // Using Key enum.
+        /// Keyboard.current[Key.Space].isPressed
+        /// 
+        /// // Using key name.
+        /// (KeyControl)Keyboard.current["space"]).isPressed
+        /// </code>
+        /// </example>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// 
         /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
@@ -117,6 +135,7 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
         /// </remarks>
         public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
