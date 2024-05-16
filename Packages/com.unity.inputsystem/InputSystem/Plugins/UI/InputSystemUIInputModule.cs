@@ -496,6 +496,9 @@ namespace UnityEngine.InputSystem.UI
                 // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
                 // become null.
                 eventData.pointerPress = newPressed;
+                #if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
+                eventData.pointerClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                #endif
                 eventData.rawPointerPress = currentOverGo;
 
                 // Save the drag handler for drag events during this mouse down.
@@ -516,7 +519,11 @@ namespace UnityEngine.InputSystem.UI
                 //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
                 //          click and OnPointerClick is thus never invoked.
                 var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                #if UNITY_2020_1_OR_NEWER
+                var isClick = eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
+                #else
                 var isClick = eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+                #endif
                 if (isClick)
                 {
                     // Count clicks.
@@ -539,7 +546,11 @@ namespace UnityEngine.InputSystem.UI
 
                 // Invoke OnPointerClick or OnDrop.
                 if (isClick)
+                    #if UNITY_2020_1_OR_NEWER
+                    ExecuteEvents.Execute(eventData.pointerClick, eventData, ExecuteEvents.pointerClickHandler);
+                    #else
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
+                    #endif
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
 
