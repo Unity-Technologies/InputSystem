@@ -1,5 +1,4 @@
 #if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
-using System;
 using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine.InputSystem.Controls;
@@ -13,12 +12,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
     internal class InputSystemProvider : IEventProviderImpl
     {
-        Configuration m_Cfg;
-
         InputEventPartialProvider m_InputEventPartialProvider;
 
-        InputActionAsset m_InputActionAsset;
+        Configuration m_Cfg;
 
+        InputActionAsset m_InputActionAsset;
         InputActionReference m_PointAction;
         InputActionReference m_MoveAction;
         InputActionReference m_SubmitAction;
@@ -47,15 +45,13 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         const float kScrollUGUIScaleFactor = 3.0f;
 
-        static Action<InputActionAsset> s_OnRegisterActions;
-
         static InputSystemProvider()
         {
             // Only if InputSystem is enabled in the PlayerSettings do we set it as the provider.
             // This includes situations where both InputManager and InputSystem are enabled.
 #if ENABLE_INPUT_SYSTEM
             EventProvider.SetInputSystemProvider(new InputSystemProvider());
-#endif // ENABLE_INPUT_SYSTEM
+#endif
         }
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -83,15 +79,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_SeenTouchEvents = false;
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-
-            RegisterActions();
+            RegisterActions(m_Cfg);
 
             InputSystem.onActionsChange += OnActionsChange;
         }
 
         public void Shutdown()
         {
-            UnregisterActions();
+            UnregisterActions(m_Cfg);
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
@@ -101,10 +96,10 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void OnActionsChange()
         {
-            UnregisterActions();
+            UnregisterActions(m_Cfg);
 
             m_Cfg = Configuration.GetDefaultConfiguration();
-            RegisterActions();
+            RegisterActions(m_Cfg);
         }
 
         public void Update()
@@ -161,11 +156,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_SeenPenEvents = false;
         }
 
-        public bool ActionAssetIsNotNull()
-        {
-            return m_InputActionAsset != null;
-        }
-
         //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
         void DirectionNavigation(DiscreteTime currentTime)
         {
@@ -208,28 +198,18 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 case NavigationEvent.Direction.Up:
                 case NavigationEvent.Direction.Right:
                 case NavigationEvent.Direction.Down:
-                    if (m_MoveAction != null)
-                        return m_MoveAction.action.activeControl.device;
-                    break;
+                    return m_MoveAction.action.activeControl.device;
                 case NavigationEvent.Direction.Next:
                 case NavigationEvent.Direction.Previous:
-                    if (m_NextPreviousAction != null)
-                        return m_NextPreviousAction.activeControl.device;
-                    break;
+                    return m_NextPreviousAction.activeControl.device;
                 case NavigationEvent.Direction.None:
                 default:
-                    break;
+                    return Keyboard.current;
             }
-
-            return Keyboard.current;
         }
 
         (Vector2, bool) ReadCurrentNavigationMoveVector()
         {
-            // In case action has not been configured we return defaults
-            if (m_MoveAction == null)
-                return (default, default);
-
             var move = m_MoveAction.action.ReadValue<Vector2>();
             // Check if the action was "pressed" this frame to deal with repeating events
             var axisWasPressed = m_MoveAction.action.WasPressedThisFrame();
@@ -238,7 +218,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         NavigationEvent.Direction ReadNextPreviousDirection()
         {
-            if (m_NextPreviousAction.IsPressed()) // Note: never null since created through code
+            if (m_NextPreviousAction.IsPressed())
             {
                 //TODO: For now it only deals with Keyboard, needs to deal with other devices if we can add bindings
                 //      for Gamepad, etc
@@ -584,9 +564,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_NextPreviousAction.Enable();
         }
 
-        void UnregisterFixedActions()
+        void UnregisterNextPreviousAction()
         {
-            // The Next/Previous action is not part of the input actions asset
             if (m_NextPreviousAction != null)
             {
                 m_NextPreviousAction.Disable();
@@ -594,21 +573,21 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
         }
 
-        void RegisterActions()
+        void RegisterActions(Configuration cfg)
         {
-            m_InputActionAsset = m_Cfg.ActionAsset;
+            m_InputActionAsset = cfg.ActionAsset;
 
-            // Invoke potential lister observing registration
-            s_OnRegisterActions?.Invoke(m_InputActionAsset);
-
-            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
-            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
-            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
-            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
-            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
-            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
-            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
-            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
+            if (m_InputActionAsset != null)
+            {
+                m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
+                m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
+                m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
+                m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
+                m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
+                m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
+                m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
+                m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
+            }
 
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed += OnPointerPerformed;
@@ -631,14 +610,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
 
-            // When adding new actions, don't forget to add them to UnregisterActions
+            // When adding new one's don't forget to add them to UnregisterActions
 
-            if (InputSystem.actions == null)
-            {
-                // If we've not loaded a user-created set of actions, just enable the UI actions from our defaults.
-                m_InputActionAsset.FindActionMap("UI", true).Enable();
-            }
-            else
+            if (m_InputActionAsset != null)
                 m_InputActionAsset.Enable();
 
             // TODO make it configurable as it is not part of default config
@@ -646,7 +620,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             RegisterNextPreviousAction();
         }
 
-        void UnregisterActions()
+        void UnregisterActions(Configuration cfg)
         {
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed -= OnPointerPerformed;
@@ -681,7 +655,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_InputActionAsset != null)
                 m_InputActionAsset.Disable();
 
-            UnregisterFixedActions();
+            // The Next/Previous action is not part of the input actions asset
+            UnregisterNextPreviousAction();
         }
 
         public struct Configuration
@@ -698,19 +673,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
-                // Only use default actions asset configuration if (ISX-1954):
-                // - Project-wide Input Actions have not been configured, OR
-                // - Project-wide Input Actions have been configured but contains no UI action map.
-                var projectWideInputActions = InputSystem.actions;
-                var useProjectWideInputActions =
-                    projectWideInputActions != null &&
-                    projectWideInputActions.FindActionMap("UI") != null;
-
-                // Use InputSystem.actions (Project-wide Actions) if available, else use default asset if
-                // user didn't specifically set one, so that UI functions still work (ISXB-811).
                 return new Configuration
                 {
-                    ActionAsset = useProjectWideInputActions ? InputSystem.actions : new DefaultInputActions().asset,
+                    ActionAsset = InputSystem.actions,
                     PointAction = "UI/Point",
                     MoveAction = "UI/Navigate",
                     SubmitAction = "UI/Submit",
@@ -721,11 +686,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     ScrollWheelAction = "UI/ScrollWheel",
                 };
             }
-        }
-
-        internal static void SetOnRegisterActions(Action<InputActionAsset> callback)
-        {
-            s_OnRegisterActions = callback;
         }
     }
 }

@@ -1164,9 +1164,6 @@ namespace UnityEngine.InputSystem
                     SetInitialStateCheckPending(bindingStatePtr, false);
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
 
-                // Ensure that pressTime is reset if the composite binding is reenable. ISXB-505
-                bindingStatePtr->pressTime = default;
-
                 SetControlEnabled(controlIndex, false);
             }
         }
@@ -1467,43 +1464,37 @@ namespace UnityEngine.InputSystem
                     // If the binding is part of a composite, check for interactions on the composite
                     // itself and give them a first shot at processing the value change.
                     var haveInteractionsOnComposite = false;
-                    var compositeAlreadyTriggered = false;
                     if (bindingStatePtr->isPartOfComposite)
                     {
                         var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
                         var compositeBindingPtr = &bindingStates[compositeBindingIndex];
 
-                        // If the composite has already been triggered from the very same event set a flag so it isn't triggered again.
+                        // If the composite has already been triggered from the very same event, ignore it.
                         // Example: KeyboardState change that includes both A and W key state changes and we're looking
                         //          at a WASD composite binding. There's a state change monitor on both the A and the W
                         //          key and thus the manager will notify us individually of both changes. However, we
                         //          want to perform the action only once.
-                        // NOTE: Do NOT ignore this Event, we still need finish processing the individual button states.
-                        if (!ShouldIgnoreInputOnCompositeBinding(compositeBindingPtr, eventPtr))
-                        {
-                            // Update magnitude for composite.
-                            var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
-                            var compositeContext = new InputBindingCompositeContext
-                            {
-                                m_State = this,
-                                m_BindingIndex = compositeBindingIndex
-                            };
-                            trigger.magnitude = composites[compositeIndex].EvaluateMagnitude(ref compositeContext);
-                            memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
+                        if (ShouldIgnoreInputOnCompositeBinding(compositeBindingPtr, eventPtr))
+                            return;
 
-                            // Run through interactions on composite.
-                            var interactionCountOnComposite = compositeBindingPtr->interactionCount;
-                            if (interactionCountOnComposite > 0)
-                            {
-                                haveInteractionsOnComposite = true;
-                                ProcessInteractions(ref trigger,
-                                    compositeBindingPtr->interactionStartIndex,
-                                    interactionCountOnComposite);
-                            }
-                        }
-                        else
+                        // Update magnitude for composite.
+                        var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                        var compositeContext = new InputBindingCompositeContext
                         {
-                            compositeAlreadyTriggered = true;
+                            m_State = this,
+                            m_BindingIndex = compositeBindingIndex
+                        };
+                        trigger.magnitude = composites[compositeIndex].EvaluateMagnitude(ref compositeContext);
+                        memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
+
+                        // Run through interactions on composite.
+                        var interactionCountOnComposite = compositeBindingPtr->interactionCount;
+                        if (interactionCountOnComposite > 0)
+                        {
+                            haveInteractionsOnComposite = true;
+                            ProcessInteractions(ref trigger,
+                                compositeBindingPtr->interactionStartIndex,
+                                interactionCountOnComposite);
                         }
                     }
 
@@ -1512,31 +1503,21 @@ namespace UnityEngine.InputSystem
                     // one of higher magnitude) or may even lead us to switch to processing a different binding
                     // (e.g. when an input of previously greater magnitude has now fallen below the level of another
                     // ongoing input with now higher magnitude).
-                    //
-                    // If Composite has already been triggered, skip this step; it's unnecessary and could also
-                    // cause a processing issue if we switch to another binding.
-                    var isConflictingInput = false;
-                    if (!compositeAlreadyTriggered)
-                    {
-                        isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
-                        bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
-                    }
+                    var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
+                    bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
                     // Process button presses/releases.
-                    // We MUST execute this processing even if Composite has already been triggered to ensure button states
-                    // are properly updated (ISXB-746)
                     if (!isConflictingInput)
                         ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
 
                     // If we have interactions, let them do all the processing. The presence of an interaction
                     // essentially bypasses the default phase progression logic of an action.
-                    // Interactions are skipped if compositeAlreadyTriggered is set.
                     var interactionCount = bindingStatePtr->interactionCount;
                     if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
                     {
                         ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
                     }
-                    else if (!haveInteractionsOnComposite && !isConflictingInput && !compositeAlreadyTriggered)
+                    else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
                         ProcessDefaultInteraction(ref trigger, actionIndex);
                     }

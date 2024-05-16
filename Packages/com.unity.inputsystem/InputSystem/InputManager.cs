@@ -2972,7 +2972,8 @@ namespace UnityEngine.InputSystem
             InputUpdate.OnUpdate(updateType);
 
             // Ensure optimized controls are in valid state
-            CheckAllDevicesOptimizedControlsHaveValidState();
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
@@ -3491,17 +3492,6 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
-        }
-
-        // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.
-        [Conditional("UNITY_EDITOR")]
-        void CheckAllDevicesOptimizedControlsHaveValidState()
-        {
-            if (!InputSettings.optimizedControlsFeatureEnabled)
-                return;
-
-            foreach (var device in devices)
-                device.EnsureOptimizationTypeHasNotChanged();
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)

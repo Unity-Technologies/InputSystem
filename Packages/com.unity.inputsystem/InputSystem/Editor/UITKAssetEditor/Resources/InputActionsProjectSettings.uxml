@@ -8,7 +8,7 @@
         <uie:ObjectField name="current-asset" type="UnityEngine.InputSystem.InputActionAsset, Unity.InputSystem" label="Project-wide Actions" />
     </ui:VisualElement>
     <ui:VisualElement name="missing-asset-section">
-        <ui:HelpBox text="Actions for the Input System are stored in an Action Asset. You can assign an Action Asset as project-wide in the field above to make them accessible directly through the InputSystem.actions API.&#10;&#10;Click the button below to create a new Action Asset containing default actions, which will be assigned as project-wide." message-type="Info"/>
+        <ui:HelpBox text="Actions for the Input System are stored in an Action Asset. You can assign an Action Asset as project-wide in the field above to make them accessible directly through the InputSystem.actions API.\n\nClick the button below to create a new Action Asset containing default actions, which will be assigned as project-wide." message-type="Info"/>
         <ui:Button text="Create and assign a default project-wide Action Asset" name="create-asset"/>
     </ui:VisualElement>
 </ui:UXML>

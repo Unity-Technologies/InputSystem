@@ -99,11 +99,11 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public byte reportId;
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 1)] public DualSenseHIDOutputReportPayload payload;
 
-        public static DualSenseHIDUSBOutputReport Create(DualSenseHIDOutputReportPayload payload, int outputReportSize)
+        public static DualSenseHIDUSBOutputReport Create(DualSenseHIDOutputReportPayload payload)
         {
             return new DualSenseHIDUSBOutputReport
             {
-                baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + outputReportSize),
+                baseCommand = new InputDeviceCommand(Type, kSize),
                 reportId = 2,
                 payload = payload
             };
@@ -127,11 +127,11 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public unsafe fixed byte rawData[74];
 
-        public static DualSenseHIDBluetoothOutputReport Create(DualSenseHIDOutputReportPayload payload, byte outputSequenceId, int outputReportSize)
+        public static DualSenseHIDBluetoothOutputReport Create(DualSenseHIDOutputReportPayload payload, byte outputSequenceId)
         {
             var report = new DualSenseHIDBluetoothOutputReport
             {
-                baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + outputReportSize),
+                baseCommand = new InputDeviceCommand(Type, kSize),
                 reportId = 0x31,
                 tag1 = (byte)((outputSequenceId & 0xf) << 4),
                 tag2 = 0x10,
@@ -317,11 +317,11 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
             blueColor = (byte)Mathf.Clamp(color.b * 255, 0, 255);
         }
 
-        public static DualShockHIDOutputReport Create(int outputReportSize)
+        public static DualShockHIDOutputReport Create()
         {
             return new DualShockHIDOutputReport
             {
-                baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + outputReportSize),
+                baseCommand = new InputDeviceCommand(Type, kSize),
                 reportId = kReportId,
             };
         }
@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem.DualShock
 
             ////FIXME: Bluetooth reports are not working
             //var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
-            var command = DualSenseHIDUSBOutputReport.Create(payload, hidDescriptor.outputReportSize);
+            var command = DualSenseHIDUSBOutputReport.Create(payload);
             return ExecuteCommand(ref command) >= 0;
         }
 
@@ -732,7 +732,7 @@ namespace UnityEngine.InputSystem.DualShock
             if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
                 return;
 
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(0f, 0f);
             ////REVIEW: when pausing&resuming haptics, you probably don't want the lightbar color to change
             if (m_LightBarColor.HasValue)
@@ -746,7 +746,7 @@ namespace UnityEngine.InputSystem.DualShock
             if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
                 return;
 
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(0f, 0f);
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
@@ -763,7 +763,7 @@ namespace UnityEngine.InputSystem.DualShock
             if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
                 return;
 
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
 
             if (m_LowFrequencyMotorSpeed.HasValue || m_HighFrequenceyMotorSpeed.HasValue)
                 command.SetMotorSpeeds(m_LowFrequencyMotorSpeed.Value, m_HighFrequenceyMotorSpeed.Value);
@@ -777,7 +777,7 @@ namespace UnityEngine.InputSystem.DualShock
 
         public override void SetLightBarColor(Color color)
         {
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
             command.SetColor(color);
 
             ExecuteCommand(ref command);
@@ -787,7 +787,7 @@ namespace UnityEngine.InputSystem.DualShock
 
         public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
@@ -815,7 +815,7 @@ namespace UnityEngine.InputSystem.DualShock
         /// for the respective documentation regarding setting rumble and light bar color.</remarks>
         public bool SetMotorSpeedsAndLightBarColor(float lowFrequency, float highFrequency, Color color)
         {
-            var command = DualShockHIDOutputReport.Create(hidDescriptor.outputReportSize);
+            var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(lowFrequency, highFrequency);
             command.SetColor(color);
 

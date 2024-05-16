@@ -35,15 +35,6 @@ namespace UnityEngine.InputSystem.Editor
                         MoveInputManagerAssetActionsToProjectWideInputActionAsset();
                         migratedInputActionAssets = true;
                     }
-
-                    if (!Application.isPlaying)
-                    {
-                        // If the Library folder is deleted, InputSystem will fail to retrieve the assigned Project-wide Asset because this look-up occurs
-                        // during initialization while the Library is being rebuilt. So, afterwards perform another check and assign PWA asset if needed.
-                        var pwaAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-                        if (InputSystem.actions == null && pwaAsset != null)
-                            InputSystem.actions = pwaAsset;
-                    }
                 }
             }
 
@@ -128,178 +119,80 @@ namespace UnityEngine.InputSystem.Editor
 
         // These may be moved out to internal types if decided to extend validation at a later point.
 
-        /// <summary>
-        /// Interface for reporting asset verification errors.
-        /// </summary>
-        internal interface IReportInputActionAssetVerificationErrors
+        internal interface IReportInputActionAssetValidationErrors
         {
-            /// <summary>
-            /// Reports a failure to comply to requirements with a message meaningful to the user.
-            /// </summary>
-            /// <param name="message">User-friendly error message.</param>
-            void Report(string message);
+            bool OnValidationError(InputAction action, string message);
         }
 
-        /// <summary>
-        /// Interface for asset verification.
-        /// </summary>
-        internal interface IInputActionAssetVerifier
+        private class DefaultInputActionAssetValidationReporter : IReportInputActionAssetValidationErrors
         {
-            /// <summary>
-            /// Verifies the given asset.
-            /// </summary>
-            /// <param name="asset">The asset to be verified</param>
-            /// <param name="reporter">The reporter to be used to report failure to meet requirements.</param>
-            public void Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter);
-        }
-
-        /// <summary>
-        /// Verifier managing verification and reporting of asset compliance with external requirements.
-        /// </summary>
-        class Verifier : IReportInputActionAssetVerificationErrors
-        {
-            private readonly IReportInputActionAssetVerificationErrors m_Reporter;
-
-            // Default verification error reporter which generates feedback as debug warnings.
-            private class DefaultInputActionAssetVerificationReporter : IReportInputActionAssetVerificationErrors
+            public bool OnValidationError(InputAction action, string message)
             {
-                public void Report(string message)
-                {
-                    Debug.LogWarning(message);
-                }
-            }
-
-            /// <summary>
-            /// Constructs a an instance associated with the given reporter.
-            /// </summary>
-            /// <param name="reporter">The associated reporter instance. If null, a default reporter will be constructed.</param>
-            public Verifier(IReportInputActionAssetVerificationErrors reporter = null)
-            {
-                m_Reporter = reporter ?? new DefaultInputActionAssetVerificationReporter();
-                errors = 0;
-            }
-
-            #region IReportInputActionAssetVerificationErrors interface
-
-            /// <inheritdoc cref="IReportInputActionAssetVerificationErrors"/>
-            public void Report(string message)
-            {
-                ++errors;
-
-                try
-                {
-                    m_Reporter.Report(message);
-                }
-                catch (Exception e)
-                {
-                    // Only log unexpected but non-fatal exception
-                    Debug.LogException(e);
-                }
-            }
-
-            #endregion
-
-            /// <summary>
-            /// Returns the total number of errors seen in verification (accumulative).
-            /// </summary>
-            public int errors { get; private set; }
-
-            /// <summary>
-            /// Returns <c>true</c> if the number of reported errors in verification is zero, else <c>false</c>.
-            /// </summary>
-            public bool isValid => errors == 0;
-
-            private static List<Func<IInputActionAssetVerifier>> s_VerifierFactories;
-
-            /// <summary>
-            /// Registers a factory instance.
-            /// </summary>
-            /// <param name="factory">The factory instance.</param>
-            /// <returns>true if successfully added, <c>false</c> if the factory have already been registered.</returns>
-            public static bool RegisterFactory(Func<IInputActionAssetVerifier> factory)
-            {
-                if (s_VerifierFactories == null)
-                    s_VerifierFactories = new List<Func<IInputActionAssetVerifier>>(1);
-                if (s_VerifierFactories.Contains(factory))
-                    return false;
-                s_VerifierFactories.Add(factory);
+                Debug.LogWarning(message);
                 return true;
             }
+        }
 
-            /// <summary>
-            /// Unregisters a factory instance that has previously been registered.
-            /// </summary>
-            /// <param name="factory">The factory instance to be removed.</param>
-            /// <returns>true if successfully unregistered, <c>false</c> if the given factory instance could not be found.</returns>
-            public static bool UnregisterFactory(Func<IInputActionAssetVerifier> factory)
+        internal static bool Validate(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
+        {
+#if UNITY_2023_2_OR_NEWER
+            reporter ??= new DefaultInputActionAssetValidationReporter();
+            CheckForDefaultUIActionMapChanges(asset, reporter);
+#endif // UNITY_2023_2_OR_NEWER
+            return true;
+        }
+
+        private static bool ReportError(IReportInputActionAssetValidationErrors reporter, InputAction action, string message)
+        {
+            return reporter.OnValidationError(action, message);
+        }
+
+#if UNITY_2023_2_OR_NEWER
+        /// <summary>
+        /// Checks if the default InputForUI UI action map has been modified or removed, to let the user know if their changes will
+        /// break the UI input at runtime, when using the UI Toolkit.
+        /// </summary>
+        internal static bool CheckForDefaultUIActionMapChanges(InputActionAsset asset, IReportInputActionAssetValidationErrors reporter = null)
+        {
+            reporter ??= new DefaultInputActionAssetValidationReporter();
+
+            var defaultUIActionMap = GetDefaultUIActionMap();
+            var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
+
+            // "UI" action map has been removed or renamed.
+            if (uiMapIndex == -1)
             {
-                return s_VerifierFactories.Remove(factory);
+                ReportError(reporter, null,
+                    "The action map named 'UI' does not exist.\r\n " +
+                    "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
+                return false;
             }
-
-            /// <summary>
-            /// Verifies the given project-wide input action asset using all registered verifiers.
-            /// </summary>
-            /// <param name="asset">The asset to be verified.</param>
-            /// <returns><c>true</c> if no verification errors occurred, else <c>false</c>.</returns>
-            /// <remarks>
-            /// Throws <c>System.ArgumentNullException</c> if <c>asset</c> is <c>null</c>.
-            ///
-            /// If any registered factory and/or verifier instance throws an exception this will be evaluated
-            /// as a verification error since the execution of the verifier could not continue. However, any
-            /// exceptions thrown will be caught and logged but not stop execution of the calling thread.
-            /// </remarks>
-            bool Verify(InputActionAsset asset)
+            var uiMap = asset.m_ActionMaps[uiMapIndex];
+            foreach (var action in defaultUIActionMap.actions)
             {
-                if (asset == null)
-                    throw new ArgumentNullException(nameof(asset));
-
-                if (s_VerifierFactories == null || s_VerifierFactories.Count == 0)
-                    return true;
-
-                var instance = new Verifier(m_Reporter);
-                foreach (var factory in s_VerifierFactories)
+                // "UI" actions have been modified.
+                if (uiMap.FindAction(action.name) == null)
                 {
-                    try
-                    {
-                        factory.Invoke().Verify(asset, instance);
-                    }
-                    catch (Exception e)
-                    {
-                        // Only log unexpected but non-fatal exception and count to fail verification
-                        ++errors;
-                        Debug.LogException(e);
-                    }
+                    var abort = !ReportError(reporter, action,
+                        $"The UI action '{action.name}' name has been modified.\r\n" +
+                        $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
+                    if (abort)
+                        return false;
                 }
 
-                return errors == 0;
+                // TODO Add additional validation here, e.g. check expected action type etc. this is currently missing.
             }
 
-            /// <summary>
-            /// Verifies the given project-wide input action asset using all registered verifiers.
-            /// </summary>
-            /// <param name="asset">The asset to be verified.</param>
-            /// <param name="reporter">The reporter to be used. If this argument is <c>null</c> the default reporter will be used.</param>
-            /// <returns><c>true</c> if no verification errors occurred, else <c>false</c>.</returns>
-            /// <remarks>Throws <c>System.ArgumentNullException</c> if <c>asset</c> is <c>null</c>.</remarks>
-            public static bool Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter = null)
-            {
-                return (s_VerifierFactories == null || s_VerifierFactories.Count == 0) || new Verifier(reporter).Verify(asset);
-            }
+            return true;
         }
 
-        internal static bool Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter = null)
-        {
-            return Verifier.Verify(asset, reporter);
-        }
+#endif // UNITY_2023_2_OR_NEWER
 
-        internal static bool RegisterInputActionAssetVerifier(Func<IInputActionAssetVerifier> factory)
+        // Returns the default UI action map as represented by the default template JSON.
+        private static InputActionMap GetDefaultUIActionMap()
         {
-            return Verifier.RegisterFactory(factory);
-        }
-
-        internal static bool UnregisterInputActionAssetVerifier(Func<IInputActionAssetVerifier> factory)
-        {
-            return Verifier.UnregisterFactory(factory);
+            var actionMaps = InputActionMap.FromJson(GetDefaultAssetJson());
+            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
         }
 
         // Creates an asset at the given path containing the given JSON content.

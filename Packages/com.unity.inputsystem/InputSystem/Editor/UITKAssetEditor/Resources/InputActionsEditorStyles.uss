@@ -95,7 +95,7 @@
 
 .tree-view-item-icon{
     justify-content: center;
-    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png');
+    background-image: url("/Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png");
     width: 16px;
     height: 16px;
 }

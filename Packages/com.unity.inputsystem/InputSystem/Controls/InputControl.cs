@@ -952,9 +952,8 @@ namespace UnityEngine.InputSystem
         // This is mainly to AxisControl fields being public and capable of changing at any time even if we were not anticipated such a usage pattern.
         // Also it's not clear if InputControl.stateBlock.format can potentially change at any time, likely not.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // Only do this check in and editor in hope that it will be sufficient to catch any misuse during development.
-        // It is not done in debug builds because it has a performance cost and it will show up when profiled.
-        [Conditional("UNITY_EDITOR")]
+        // Only do this check in development builds and editor in hope that it will be sufficient to catch any misuse during development.
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         internal void EnsureOptimizationTypeHasNotChanged()
         {
             if (!InputSettings.optimizedControlsFeatureEnabled)
@@ -970,7 +969,7 @@ namespace UnityEngine.InputSystem
                     "after the changes to the control to fix this error.");
 
                 // Automatically fix the issue
-                // Note this function is only executed in the editor
+                // Note this function is only executed in editor and development builds
                 m_OptimizedControlDataType = currentOptimizedControlDataType;
             }
 

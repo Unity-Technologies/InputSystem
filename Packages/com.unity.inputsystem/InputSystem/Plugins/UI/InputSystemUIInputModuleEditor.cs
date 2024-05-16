@@ -2,25 +2,14 @@
 using System;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.EventSystems;
-using UnityEngine.InputSystem.Editor;
 
 ////TODO: add button to automatically set up gamepad mouse cursor support
 
 namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
-    [InitializeOnLoad]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
-        static InputSystemUIInputModuleEditor()
-        {
-#if UNITY_6000_0_OR_NEWER && ENABLE_INPUT_SYSTEM
-            InputModuleComponentFactory.SetInputModuleComponentOverride(
-                go => ObjectFactory.AddComponent<InputSystemUIInputModule>(go));
-#endif
-        }
-
         private static InputActionReference GetActionReferenceFromAssets(InputActionReference[] actions, params string[] actionNames)
         {
             foreach (var actionName in actionNames)
