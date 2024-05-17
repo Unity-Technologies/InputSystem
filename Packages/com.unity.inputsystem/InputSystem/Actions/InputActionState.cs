@@ -1164,6 +1164,9 @@ namespace UnityEngine.InputSystem
                     SetInitialStateCheckPending(bindingStatePtr, false);
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
 
+                // Ensure that pressTime is reset if the composite binding is reenable. ISXB-505
+                bindingStatePtr->pressTime = default;
+
                 SetControlEnabled(controlIndex, false);
             }
         }
