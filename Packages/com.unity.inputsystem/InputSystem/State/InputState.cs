@@ -90,10 +90,28 @@ namespace UnityEngine.InputSystem.LowLevel
         /// also performs related tasks such as checking state change monitors, flipping buffers, or making the respective
         /// device current.
         /// </remarks>
-        public static void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default,
-            InputEventPtr eventPtr = default, double time = 0.0)
-            where TState : struct
+        public static void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default, InputEventPtr eventPtr = default)
+                where TState : struct
         {
+            double time = eventPtr.valid ? default : InputRuntime.s_Instance.currentTime; 
+            Change(control, ref state, updateType, eventPtr, time);
+        }
+
+        /// <summary>
+        /// Perform one update of input state specifying the time
+        /// </summary>
+        /// <remarks>
+        /// Incorporates the given state and triggers all state change monitors as needed.
+        ///
+        /// Note that input state changes performed with this method will not be visible on remotes as they will bypass
+        /// event processing. It is effectively equivalent to directly writing into input state memory except that it
+        /// also performs related tasks such as checking state change monitors, flipping buffers, or making the respective
+        /// device current.
+        /// </remarks>
+        public static unsafe void Change<TState>(InputControl control, TState state, double time, InputUpdateType updateType = default)
+                where TState : struct
+        {
+            InputEventPtr eventPtr = new InputEventPtr(null);
             Change(control, ref state, updateType, eventPtr, time);
         }
 
@@ -109,7 +127,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// device current.
         /// </remarks>
         public static unsafe void Change<TState>(InputControl control, ref TState state, InputUpdateType updateType = default,
-            InputEventPtr eventPtr = default, double time = 0.0)
+            InputEventPtr eventPtr = default, double time = default)
             where TState : struct
         {
             if (control == null)
@@ -121,14 +139,6 @@ namespace UnityEngine.InputSystem.LowLevel
             var stateSize = Math.Min(UnsafeUtility.SizeOf<TState>(), control.m_StateBlock.alignedSizeInBytes);
             var statePtr = UnsafeUtility.AddressOf(ref state);
             var stateOffset = control.stateBlock.byteOffset - device.stateBlock.byteOffset;
-
-            // Report any calls with no event and no specified time (relying on both default parameter values)
-            // This may not matter but would like to know about these during testing with more devices
-            //
-            if (!eventPtr.valid && time == 0.0)
-            {
-                Debug.Log($"InputState.Change<>('{control.name}') called with null event and default time=0.0\n");
-            }
 
             InputSystem.s_Manager.UpdateState(device,
                 updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType, statePtr, stateOffset,
