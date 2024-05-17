@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746)
 - Fixed resource designation for "d_InputControl" icon to address CI failure
 - Fixed Composite binding isn't triggered after disabling action while there are in progress [ISXB-505](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-505)
+- Fixed Missing default control scheme used by PlayerInput component are now correctly shown in the inspector [ISXB-818](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-818)
 
 ## [1.8.2] - 2024-04-29
 
