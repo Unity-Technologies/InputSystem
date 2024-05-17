@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Controls
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
         /// 
         /// 
-        /// You can us this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
+        /// You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
         /// <example>
         /// <code>
         /// // Using KeyControl property directly.
@@ -107,6 +107,30 @@ namespace UnityEngine.InputSystem.Controls
         /// </example>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
         /// 
+        /// You can also use this to read mouse buttons, as shown in the following examples:
+        /// 
+        /// <example>
+        /// <code>
+        /// Mouse.current.leftButton.isPressed
+        /// Mouse.current.rightButton.isPressed
+        /// Mouse.current.middleButton.isPressed
+        /// 
+        /// // You can also go through all buttons on the mouse (does not allocate).
+        /// var controls = Mouse.current.allControls;
+        /// for (var i = 0; i < controls.Count; ++i)
+        /// {
+        ///     var button = controls[i] as ButtonControl;
+        ///     if (button != null && button.isPressed)
+        ///     {
+        ///         // respond to mouse button press here...
+        ///     }
+        /// }
+        ///
+        /// // Or look up controls by name.
+        /// ((ButtonControl)Mouse.current["leftButton"]).isPressed
+        /// 
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
@@ -136,9 +160,45 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// 
+        /// You can also use this property to read mouse buttons. For example:
+        /// 
+        /// <example>
+        /// <code>
+        /// Mouse.current.leftButton.wasPressedThisFrame
+        /// Mouse.current.rightButton.wasPressedThisFrame
+        /// Mouse.current.middleButton.wasPressedThisFrame
+        /// </code>
+        /// </example>
+        ///
+        ///
         /// </remarks>
         public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
+        /// <summary>
+        /// Whether the press ended this frame.
+        /// </summary>
+        /// <value>True if the current press of the button ended this frame.</value>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // An example showing the use of this property on a gamepad button and a keyboard key.
+        ///
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class ExampleScript : MonoBehaviour
+        /// {
+        ///     void Update()
+        ///     {
+        ///         bool buttonPressed = Gamepad.current.aButton.wasReleasedThisFrame;
+        ///         bool spaceKeyPressed = Keyboard.current.spaceKey.wasReleasedThisFrame;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// </remarks>
         public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
         // We make the current global default button press point available as a static so that we don't have to
