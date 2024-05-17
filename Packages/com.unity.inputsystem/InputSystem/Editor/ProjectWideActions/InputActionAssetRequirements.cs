@@ -129,7 +129,7 @@ namespace UnityEngine.InputSystem.Editor
         //private readonly List<InputActionAssetResolution> s_Resolvers = new List<InputActionAssetResolution>();
 
         public InputActionAssetRequirements(string owner, IEnumerable<InputActionRequirement> requirements,
-                                            IEnumerable<InputActionAssetResolution> resolvers,
+                                            IEnumerable<InputActionAssetRequirementFailureResolver> resolvers,
                                             string implicationOfFailedRequirements)
         {
             if (owner == null)
@@ -145,7 +145,7 @@ namespace UnityEngine.InputSystem.Editor
             this.owner = owner;
             this.implication = implicationOfFailedRequirements;
             this.requirements = requirements != null ? requirements.ToArray() : Array.Empty<InputActionRequirement>();
-            this.resolvers = resolvers != null ? resolvers.ToArray() : Array.Empty<InputActionAssetResolution>();
+            this.resolvers = resolvers != null ? resolvers.ToArray() : Array.Empty<InputActionAssetRequirementFailureResolver>();
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <summary>
         /// Retrieves a read-only list of the resolvers associated with this set of requirements.
         /// </summary>
-        public IReadOnlyList<InputActionAssetResolution> resolvers { get; }
+        public IReadOnlyList<InputActionAssetRequirementFailureResolver> resolvers { get; }
 
         /// <summary>
         /// Describes the main implication of not meeting this particular set of requirements.

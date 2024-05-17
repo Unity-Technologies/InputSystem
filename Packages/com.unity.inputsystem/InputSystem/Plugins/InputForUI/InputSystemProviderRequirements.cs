@@ -109,11 +109,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     new InputActionRequirement(cfg.ScrollWheelAction, actionType: InputActionType.PassThrough,
                         expectedControlType: nameof(Vector2), kImplicationOfFailedRequirements)
                 },
-                resolvers: new InputActionAssetResolution[]
+                resolvers: new InputActionAssetRequirementFailureResolver[]
                 {
-                    new InputActionAssetResolution("Fix Issues", FixIssues,
+                    new InputActionAssetRequirementFailureResolver("Fix Issues", FixIssues,
                         "Attempt to automatically fix issues by changing configuration to comply to requirements via action configuration merge strategy. In case of any conflicts you will be prompted to take action."),
-                    new InputActionAssetResolution("See Manual", (_) => Application.OpenURL(kUISupportUrl),
+                    new InputActionAssetRequirementFailureResolver("See Manual", (_) => Application.OpenURL(kUISupportUrl),
                         "Opens the relevant Unity manual pages in the web browser that explains how to configure UI compatible input actions.")
                 },
                 kImplicationOfFailedRequirements);
