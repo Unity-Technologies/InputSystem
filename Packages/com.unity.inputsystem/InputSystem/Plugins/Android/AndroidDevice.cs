@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     /// </summary>
     /// <remarks> Android device is available starting on 6000.0 and newer. </remarks>
     [InputControlLayout(displayName = "Android Device", hideInUI = true)]
-    public class AndroidDevice : InputDevice
+    internal class AndroidDevice : InputDevice
     {
         [InputControl(synthetic = true)]
         public ButtonControl button { get; protected set; }
