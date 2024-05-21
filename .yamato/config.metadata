@@ -65,3 +65,5 @@ platforms_nix:
 scripting_backends:
   - name: mono
   - name: il2cpp
+  
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:default 
