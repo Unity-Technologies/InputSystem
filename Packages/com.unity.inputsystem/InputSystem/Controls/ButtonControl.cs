@@ -89,35 +89,31 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// A button is considered pressed if its value is equal to or greater
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
-        /// 
-        /// 
         /// You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
         /// <example>
         /// <code>
         /// // Using KeyControl property directly.
         /// Keyboard.current.spaceKey.isPressed
         /// Keyboard.current.aKey.isPressed // etc.
-        /// 
+        ///
         /// // Using Key enum.
         /// Keyboard.current[Key.Space].isPressed
-        /// 
+        ///
         /// // Using key name.
         /// (KeyControl)Keyboard.current["space"]).isPressed
         /// </code>
         /// </example>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
-        /// 
         /// You can also use this to read mouse buttons, as shown in the following examples:
-        /// 
         /// <example>
         /// <code>
         /// Mouse.current.leftButton.isPressed
         /// Mouse.current.rightButton.isPressed
         /// Mouse.current.middleButton.isPressed
-        /// 
+        ///
         /// // You can also go through all buttons on the mouse (does not allocate).
         /// var controls = Mouse.current.allControls;
-        /// for (var i = 0; i < controls.Count; ++i)
+        /// for (var i = 0; i &lt; controls.Count; ++i)
         /// {
         ///     var button = controls[i] as ButtonControl;
         ///     if (button != null && button.isPressed)
@@ -128,7 +124,7 @@ namespace UnityEngine.InputSystem.Controls
         ///
         /// // Or look up controls by name.
         /// ((ButtonControl)Mouse.current["leftButton"]).isPressed
-        /// 
+        ///
         /// </code>
         /// </example>
         /// </remarks>
@@ -160,9 +156,9 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
-        /// 
+        ///
         /// You can also use this property to read mouse buttons. For example:
-        /// 
+        ///
         /// <example>
         /// <code>
         /// Mouse.current.leftButton.wasPressedThisFrame

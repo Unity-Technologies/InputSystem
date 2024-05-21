@@ -7,11 +7,12 @@ uid: input-system-migration
 - [Which system is enabled?](#which-system-is-enabled)
 - [List of corresponding API in the old Input Manager new Input System package](#list-of-corresponding-api-in-the-old-input-manager-new-input-system-package)
   - [Action-based input](#action-based-input)
+  - [Directly reading Gamepad and Joystick controls](#directly-reading-gamepad-and-joystick-controls)
   - [Keyboard](#keyboard)
   - [Mouse](#mouse)
   - [Touch and Pen](#touch-and-pen)
   - [Sensors](#sensors)
-  
+
 This page is provided to help you match input-related API from Unity's old, built-in input (known as the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html)) to the corresponding API in the new Input System package.
 
 ## Read the introductory documentation first
@@ -45,7 +46,7 @@ All of the new APIs listed below are in the `UnityEngine.InputSystem` namespace.
 
 ### Action-based input
 
-Action-based input refers to reading pre-configured named axes, buttons, or other controls.
+Action-based input refers to reading pre-configured named axes, buttons, or other controls. ([Read more about Action-based input](./Workflow-Actions.md))
 
 - In the old Input Manager, these are defined in the **Axes** list, in the **Input Manager** section of the **Project Settings** window.
 - In the new Input System, these are defined in the [Actions Editor](ActionsEditor.md), which can be found in the **Input System Package** section of the **Project Settings** window, or by opening an [Action Asset](ActionAssets.md).
@@ -54,16 +55,34 @@ Action-based input refers to reading pre-configured named axes, buttons, or othe
 
 __Note:__ In most cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
 
+To find and store references to actions, which can be axes or buttons use [`FindAction`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_FindAction_System_String_System_Boolean_). For example:
+```
+InputAction moveAction = InputSystem.actions.FindAction("Move"); // A 2D axis
+InputAction jumpAction = InputSystem.actions.FindAction("Jump"); // A button
+```
+
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)|Set up an action as a 1D or 2D axis in the Actions Editor, then use [`InputAction.ReadValue`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1) to read the value or 2D vector from the axis. There are some default built-in axis actions. See the [Quickstart Guide](QuickStartGuide.md) to get started quickly.<br/><br/>Use [`FindAction`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_FindAction_System_String_System_Boolean_) to find and store a reference to the action.<br/>For example: `InputAction moveAction = InputSystem.actions.FindAction("Move")`.<br/><br/>Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) to read the current value of the axis.<br/>For example: `Vector2 moveValue = moveAction.ReadValue<Vector2>()`.
+[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)<br/><br/>For example, to read the horizontal and vertical axes:<br/>`float h = Input.GetAxis("Horizontal");`<br/>`float v = Input.GetAxis("Vertical");`<br/><br/> | Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) on the reference to the action to read the current value of the axis.<br/>Example: `Vector2 moveVector = moveAction.ReadValue<Vector2>()`.
+[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example: `bool jump = Input.GetButton("Jump");`|Use [`IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the reference to the action to read the button value.<br/>Example: `bool jumpValue = jumpAction.IsPressed()`.<br/><br/>
+[`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)<br/>Example: `bool jump = Input.GetButtonDown("Jump");`<br/><br/>|Use [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the reference to the action to read if the button was pressed this frame.<br/>Example: `bool jumpValue = jumpAction.WasPressedThisFrame()`.<br/><br/>
+[`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)<br/>Example: `bool jump = Input.GetButtonUp("Jump");`<br/><br/>|Use [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the reference to the action to read whether the button was released this frame.<br/>Example: `bool jumpValue = jumpAction.WasReleasedThisFrame()`.<br/><br/>
 [`Input.GetAxisRaw`](https://docs.unity3d.com/ScriptReference/Input.GetAxisRaw.html)|Not directly applicable. You can use [`InputControl<>.ReadUnprocessedValue()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) to read unprocessed values from any control.
+
+
+
+### Directly reading Gamepad and Joystick controls
+
+Directly reading hardware controls bypasses the new Input System's action-based workflow, which has some benefits and some drawbacks. ([Read more about directly reading devices](./Workflow-Direct.md))
+
+
+|Input Manager (Old)|Input System (New)|
+|--|--|
 [`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)|Use [`InputAction.IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the corresponding Gamepad button.<br/>Example: `Input.GetKey(KeyCode.JoystickButton0)` becomes: `InputSystem.GamePad.current.buttonNorth.isPressed`.
 [`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)|Use [`InputAction.WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the corresponding Gamepad button.
 [`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)|Use [`InputAction.WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the corresponding Gamepad button.
-[`Input.GetJoystickNames`](https://docs.unity3d.com/ScriptReference/Input.GetJoystickNames.html)|There is no API that corresponds to this exactly, but there are examples of [how to read all connected devices here](Gamepad.html#discover-all-connected-devices). 
+[`Input.GetJoystickNames`](https://docs.unity3d.com/ScriptReference/Input.GetJoystickNames.html)|There is no API that corresponds to this exactly, but there are examples of [how to read all connected devices here](Gamepad.html#discover-all-connected-devices).
 [`Input.IsJoystickPreconfigured`](https://docs.unity3d.com/ScriptReference/Input.IsJoystickPreconfigured.html)|Not needed. Devices which derive from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) always correctly implement the mapping of axes and buttons to the corresponding [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) members of the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class. [`Input.ResetInputAxes`](https://docs.unity3d.com/ScriptReference/Input.ResetInputAxes.html)
-
 
 
 

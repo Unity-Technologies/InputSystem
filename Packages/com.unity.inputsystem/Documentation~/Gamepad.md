@@ -199,7 +199,7 @@ The Input System support Switch Pro controllers on desktop computers via the [`S
 
 To give gamepads and joysticks control over a hardware or software cursor, you can use the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. See [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control) in the UI section of the manual.
 
-## Discover all connected devices 
+## Discover all connected devices
 
 There are various ways to discover the currently connected devices, as shown in the code samples below.
 

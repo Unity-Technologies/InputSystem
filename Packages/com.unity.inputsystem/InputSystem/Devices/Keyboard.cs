@@ -980,7 +980,7 @@ namespace UnityEngine.InputSystem
         /// };
         /// </code>
         /// </example>
-        /// 
+        ///
         /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
