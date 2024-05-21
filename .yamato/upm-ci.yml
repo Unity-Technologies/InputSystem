@@ -80,7 +80,7 @@ build_ios_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on ios
   agent:
     type: Unity::VM::osx
-    image: ios_and_tvos_macos_bokken_image
+    image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -99,7 +99,7 @@ run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
       type: Unity::mobile::iPhone
-      image: ios_and_tvos_macos_bokken_image
+      image: {{ ios_and_tvos_macos_bokken_image }}
       model: SE
       flavor: b1.medium
   skip_checkout: true
@@ -117,7 +117,7 @@ build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
-    image: ios_and_tvos_macos_bokken_image
+    image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -136,7 +136,7 @@ run_tvos_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on tvos
   agent:
       type: Unity::mobile::appletv
-      image: ios_and_tvos_macos_bokken_image
+      image: {{ ios_and_tvos_macos_bokken_image }}
       flavor: b1.medium
   skip_checkout: true
   dependencies:
