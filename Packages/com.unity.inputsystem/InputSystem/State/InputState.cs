@@ -91,9 +91,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// device current.
         /// </remarks>
         public static void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default, InputEventPtr eventPtr = default)
-                where TState : struct
+            where TState : struct
         {
-            double time = eventPtr.valid ? default : InputRuntime.s_Instance.currentTime; 
+            double time = eventPtr.valid ? default : InputRuntime.s_Instance.currentTime;
             Change(control, ref state, updateType, eventPtr, time);
         }
 
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// device current.
         /// </remarks>
         public static unsafe void Change<TState>(InputControl control, TState state, double time, InputUpdateType updateType = default)
-                where TState : struct
+            where TState : struct
         {
             InputEventPtr eventPtr = new InputEventPtr(null);
             Change(control, ref state, updateType, eventPtr, time);
