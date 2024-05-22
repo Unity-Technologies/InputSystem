@@ -499,7 +499,8 @@ namespace UnityEngine.InputSystem.Editor
             var selectedDefaultControlScheme = playerInput.defaultControlScheme;
             m_InvalidDefaultControlSchemeName = null;
             m_SelectedDefaultControlScheme = 0;
-            var controlSchemesNames = asset.controlSchemes.OrderBy(cs => cs.name).Select(cs => cs.name).ToList();
+            ////TODO: sort alphabetically and ensure that the order is the same in the schemes editor
+            var controlSchemesNames = asset.controlSchemes.Select(cs => cs.name).ToList();
 
             // try to find the selected Default Control Scheme
             if (!string.IsNullOrEmpty(selectedDefaultControlScheme))
