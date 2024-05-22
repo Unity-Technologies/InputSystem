@@ -43,6 +43,6 @@
   * [Input testing](Testing.md)
 * [How do I...?](HowDoI.md)
 * [Architecture](Architecture.md)
-* [Migrating from the old input system](Migration.md)
+* [Migrating from the old Input Manager](Migration.md)
 * [Contributing](Contributing.md)
 * [Known Limitations](KnownLimitations.md)

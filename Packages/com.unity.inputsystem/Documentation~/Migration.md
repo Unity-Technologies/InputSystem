@@ -19,7 +19,7 @@ This page is provided to help you match input-related API from Unity's old, buil
 
 If you're new to the Input System package and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](QuickStartGuide.md), and the [Concepts](Concepts.md) and [Workflows](Workflows.md) pages from the introduction section of the documentation, so that you can make sure you're choosing the best workflow for your project's input requirements.
 
-This is because there are a number of different ways to read input using the Input System, and many of the directly corresponding API methods on this page might give you the quickest but least flexible solution, and may not be suitable for a project with more complex requirements.
+This is because there are a number of different ways to read input using the Input System, and some of the directly corresponding API methods on this page might give you the quickest - but least flexible - solution, and may not be suitable for a project with more complex requirements.
 
 ## Which system is enabled?
 
@@ -48,23 +48,28 @@ All of the new APIs listed below are in the `UnityEngine.InputSystem` namespace.
 
 Action-based input refers to reading pre-configured named axes, buttons, or other controls. ([Read more about Action-based input](./Workflow-Actions.md))
 
-- In the old Input Manager, these are defined in the **Axes** list, in the **Input Manager** section of the **Project Settings** window.
-- In the new Input System, these are defined in the [Actions Editor](ActionsEditor.md), which can be found in the **Input System Package** section of the **Project Settings** window, or by opening an [Action Asset](ActionAssets.md).
+- In the old Input Manager, these are defined in the **Axes** list, in the **Input Manager** section of the **Project Settings** window. _(Below, left)_
+- In the new Input System, these are defined in the [Actions Editor](ActionsEditor.md), which can be found in the **Input System Package** section of the **Project Settings** window, or by opening an [Action Asset](ActionAssets.md). _(Below, right)_
 
 ![](Images/InputManagerVsInputActions.png)</br>_On the left, the old Input Manager Axes Configuration window, in Project settings. On the right, the new Input System's [Actions Editor](ActionsEditor.md)._
 
-__Note:__ In most cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
+__Note:__ In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
 
 To find and store references to actions, which can be axes or buttons use [`FindAction`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_FindAction_System_String_System_Boolean_). For example:
 ```
-InputAction moveAction = InputSystem.actions.FindAction("Move"); // A 2D axis
-InputAction jumpAction = InputSystem.actions.FindAction("Jump"); // A button
+ // A 2D axis action named "Move"
+InputAction moveAction = InputSystem.actions.FindAction("Move");
+
+ // A button action named "Jump"
+InputAction jumpAction = InputSystem.actions.FindAction("Jump");
 ```
+
+Then, to read the action values, use the following:
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)<br/><br/>For example, to read the horizontal and vertical axes:<br/>`float h = Input.GetAxis("Horizontal");`<br/>`float v = Input.GetAxis("Vertical");`<br/><br/> | Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) on the reference to the action to read the current value of the axis.<br/>Example: `Vector2 moveVector = moveAction.ReadValue<Vector2>()`.
-[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example: `bool jump = Input.GetButton("Jump");`|Use [`IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the reference to the action to read the button value.<br/>Example: `bool jumpValue = jumpAction.IsPressed()`.<br/><br/>
+[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)<br/>In the old Input Manager System, all axes are 1D and return float values. For example, to read the horizontal and vertical axes:<br/>`float h = Input.GetAxis("Horizontal");`<br/>`float v = Input.GetAxis("Vertical");`<br/><br/> | Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up. This example shows a 2D axis:<br/>`Vector2 moveVector = moveAction.ReadValue<Vector2>()`.<br/><br/>
+[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example:<br/>`bool jumpValue = Input.GetButton("Jump");`<br/><br/>|Use [`IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the reference to the action to read the button value.<br/>Example:<br/>`bool jumpValue = jumpAction.IsPressed()`.<br/><br/>
 [`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)<br/>Example: `bool jump = Input.GetButtonDown("Jump");`<br/><br/>|Use [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the reference to the action to read if the button was pressed this frame.<br/>Example: `bool jumpValue = jumpAction.WasPressedThisFrame()`.<br/><br/>
 [`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)<br/>Example: `bool jump = Input.GetButtonUp("Jump");`<br/><br/>|Use [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the reference to the action to read whether the button was released this frame.<br/>Example: `bool jumpValue = jumpAction.WasReleasedThisFrame()`.<br/><br/>
 [`Input.GetAxisRaw`](https://docs.unity3d.com/ScriptReference/Input.GetAxisRaw.html)|Not directly applicable. You can use [`InputControl<>.ReadUnprocessedValue()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) to read unprocessed values from any control.
@@ -78,9 +83,9 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)|Use [`InputAction.IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the corresponding Gamepad button.<br/>Example: `Input.GetKey(KeyCode.JoystickButton0)` becomes: `InputSystem.GamePad.current.buttonNorth.isPressed`.
-[`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)|Use [`InputAction.WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the corresponding Gamepad button.
-[`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)|Use [`InputAction.WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the corresponding Gamepad button.
+[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example: `Input.GetKey(KeyCode.JoystickButton0)`<br/><br/>|Use [`isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding Gamepad button.<br/>Example: `InputSystem.GamePad.current.buttonNorth.isPressed`.<br/>
+[`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)<br/>Example: `Input.GetGetButtonDownKey(KeyCode.JoystickButton0)`<br/><br/>|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding Gamepad button.<br/>Example: `InputSystem.GamePad.current.buttonNorth.WasPressedThisFrame`.<br/>
+[`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)<br/>Example: `Input.GetButtonUp(KeyCode.JoystickButton0)`<br/><br/>|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding Gamepad button.<br/>Example: `InputSystem.GamePad.current.buttonNorth.wasReleasedThisFrame`.<br/>
 [`Input.GetJoystickNames`](https://docs.unity3d.com/ScriptReference/Input.GetJoystickNames.html)|There is no API that corresponds to this exactly, but there are examples of [how to read all connected devices here](Gamepad.html#discover-all-connected-devices).
 [`Input.IsJoystickPreconfigured`](https://docs.unity3d.com/ScriptReference/Input.IsJoystickPreconfigured.html)|Not needed. Devices which derive from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) always correctly implement the mapping of axes and buttons to the corresponding [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) members of the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class. [`Input.ResetInputAxes`](https://docs.unity3d.com/ScriptReference/Input.ResetInputAxes.html)
 
@@ -89,12 +94,12 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 ### Keyboard
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetKey`](https://docs.unity3d.com/ScriptReference/Input.GetKey.html)|Use [`ButtonControl.isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding key.<br/>Example: `Input.GetKey(KeyCode.Space)` becomes: `InputSystem.Keyboard.current.spaceKey.isPressed`
-[`Input.GetKeyDown`](https://docs.unity3d.com/ScriptReference/Input.GetKeyDown.html)|Use [`ButtonControl.wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding key.
-[`Input.GetKeyUp`](https://docs.unity3d.com/ScriptReference/Input.GetKeyUp.html)|Use [`ButtonControl.wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding key.
-[`Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)|[`onAnyButtonPress`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress)<br/>
-[`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|[`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html)
-[`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|[`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_)
+[`Input.GetKey`](https://docs.unity3d.com/ScriptReference/Input.GetKey.html)<br/>Example: `Input.GetKey(KeyCode.Space)`<br/><br/>|Use [`isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding key.<br/> Example: `InputSystem.Keyboard.current.spaceKey.isPressed`<br/><br/>
+[`Input.GetKeyDown`](https://docs.unity3d.com/ScriptReference/Input.GetKeyDown.html)<br/>Example: `Input.GetKeyDown(KeyCode.Space)`<br/><br/>|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding key.<br/> Example: `InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame`<br/><br/>
+[`Input.GetKeyUp`](https://docs.unity3d.com/ScriptReference/Input.GetKeyUp.html)<br/>Example: `Input.GetKeyUp(KeyCode.Space)`<br/><br/>|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding key.<br/> Example: `InputSystem.Keyboard.current.spaceKey.wasReleasedThisFrame`<br/><br/>
+[`Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)|Use [`onAnyButtonPress`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress).<br/>This also includes controller buttons as well as keyboard keys.
+[`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|Use [`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html)
+[`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_)
 [`Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)|Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange).
 [`Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)|No corresponding API yet.
 [`Input.imeIsSelected`](https://docs.unity3d.com/ScriptReference/Input-imeIsSelected.html)|Get: `Keyboard.current.imeSelected`<br/>Set: `Keyboard.current.SetIMEEnabled(true);`
@@ -103,11 +108,11 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 ### Mouse
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)|Use [`ButtonControl.isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding mouse button.<br/>Example: `Input.GetKey(KeyCode.Mouse0)` becomes: `InputSystem.Mouse.current.leftButton.isPressed`
-[`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)|Use [`ButtonControl.wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding mouse button.
-[`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)|Use [`ButtonControl.wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding mouse button.
-[`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|[`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html)<br/>__Note__: Mouse simulation from touch isn't implemented yet.
-[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|[`Mouse.current != null`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
+[`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`
+[`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
+[`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
+[`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html)<br/>__Note__: Mouse simulation from touch isn't implemented yet.
+[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Use [`Mouse.current != null`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
 
 
 ### Touch and Pen

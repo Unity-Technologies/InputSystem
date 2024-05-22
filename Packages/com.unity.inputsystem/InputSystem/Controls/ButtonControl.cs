@@ -103,17 +103,25 @@ namespace UnityEngine.InputSystem.Controls
         /// (KeyControl)Keyboard.current["space"]).isPressed
         /// </code>
         /// </example>
-        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        ///
         /// You can also use this to read mouse buttons, as shown in the following examples:
         /// <example>
         /// <code>
-        /// Mouse.current.leftButton.isPressed
-        /// Mouse.current.rightButton.isPressed
-        /// Mouse.current.middleButton.isPressed
-        ///
-        /// // You can also go through all buttons on the mouse (does not allocate).
+        /// <![CDATA[
+        /// bool leftPressed = Mouse.current.leftButton.isPressed;
+        /// bool rightPressed = Mouse.current.rightButton.isPressed;
+        /// bool middlePressed = Mouse.current.middleButton.isPressed;
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// 
+        /// You can also check through all numbered buttons on the mouse: (this example does not cause allocations)
+        /// <example>
+        /// <code>
+        /// <![CDATA[
         /// var controls = Mouse.current.allControls;
-        /// for (var i = 0; i &lt; controls.Count; ++i)
+        /// for (var i = 0; i < controls.Count; ++i)
         /// {
         ///     var button = controls[i] as ButtonControl;
         ///     if (button != null && button.isPressed)
@@ -121,10 +129,16 @@ namespace UnityEngine.InputSystem.Controls
         ///         // respond to mouse button press here...
         ///     }
         /// }
-        ///
-        /// // Or look up controls by name.
-        /// ((ButtonControl)Mouse.current["leftButton"]).isPressed
-        ///
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// 
+        /// Or you can look up controls by name, like this:
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// bool leftPressed = ((ButtonControl)Mouse.current["leftButton"]).isPressed;
+        /// ]]>
         /// </code>
         /// </example>
         /// </remarks>
