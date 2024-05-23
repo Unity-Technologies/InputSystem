@@ -11,10 +11,10 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
-- Avoid potential crashes from NullReferenceException in FireStateChangeNotifications.
-- Fixed Composite binding isn't triggered after ResetDevice() called during Action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746).
-- Fixed resource designation for "d_InputControl" icon to address CI failure
-- Fixed Composite binding isn't triggered after disabling action while there are in progress [ISXB-505](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-505)
+- Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
+- Fixed an issue where a composite binding would not be consecutively triggered after ResetDevice() has been called from the associated action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746).
+- Fixed resource designation for "d_InputControl" icon to address CI failure.
+- Fixed an issue where a composite binding would not be consecutively triggered after disabling actions while there are action modifiers in progress [ISXB-505](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-505).
 
 ## [1.8.2] - 2024-04-29
 
