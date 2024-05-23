@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] public ISavedState inputUserState;
     }
 
-    // TODO: ISX-1860
+    // ISX-1860 - #ifdef out Domain Reload specific functionality from CoreCLR
 #if UNITY_EDITOR
     /// <summary>
     /// A hidden, internal object we put in the editor to bundle input system state
@@ -45,10 +45,38 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     internal class InputSystemStateManager : ScriptableObject, ISerializationCallbackReceiver
     {
+        /// <summary>
+        /// References the "core" input state that must survive domain reloads.
+        /// </summary>
         [SerializeField] public InputSystemState systemState;
+
+        /// <summary>
+        /// Triggers Editor restart when enabling NewInput back-ends.
+        /// </summary>
         [SerializeField] public bool newInputBackendsCheckedAsEnabled;
+
+        /// <summary>
+        /// Saves and restores InputSettings across domain reloads
+        /// </summary>
+        /// <remarks>
+        /// InputSettings are serialized to JSON which this string holds.
+        /// </remarks>
         [SerializeField] public string settings;
+
+        /// <summary>
+        /// Timestamp retrieved from InputRuntime.currentTime when exiting EditMode.
+        /// </summary>
+        /// <remarks>
+        /// All input events occurring between exiting EditMode and entering PlayMode are discarded.
+        /// </remarks>
         [SerializeField] public double exitEditModeTime;
+
+        /// <summary>
+        /// Timestamp retrieved from InputRuntime.currentTime when entering PlayMode.
+        /// </summary>
+        /// <remarks>
+        /// All input events occurring between exiting EditMode and entering PlayMode are discarded.
+        /// </remarks>
         [SerializeField] public double enterPlayModeTime;
 
         public void OnBeforeSerialize()

@@ -1209,7 +1209,7 @@ namespace UnityEngine.InputSystem
         private static void InitializeGlobalPlayerState()
         {
             // Touch GlobalState doesn't require Dispose operations
-            s_GlobalState = new GlobalState
+            s_GlobalState = new PlayerInput.GlobalState
             {
                 initPlayerIndex = -1,
                 initSplitScreenIndex = -1

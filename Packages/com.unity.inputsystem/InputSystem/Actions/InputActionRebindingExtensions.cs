@@ -2782,7 +2782,7 @@ namespace UnityEngine.InputSystem
         }
     }
 
-    internal class DeferBindingResolutionContext : IDisposable
+    internal sealed class DeferBindingResolutionContext : IDisposable
     {
         public int deferredCount => m_DeferredCount;
 
@@ -2793,14 +2793,13 @@ namespace UnityEngine.InputSystem
 
         public void Release()
         {
-            if (m_DeferredCount > 0)
-                --m_DeferredCount;
-            if (m_DeferredCount == 0)
+            if (m_DeferredCount > 0 && --m_DeferredCount == 0)
                 ExecuteDeferredResolutionOfBindings();
         }
 
         /// <summary>
-        /// Allows usage within using() blocks.
+        /// Allows usage within using() blocks, i.e. we need a "Release" method to match "Acquire", but we also want
+        /// to implement IDisposable so instance are automatically cleaned up when exiting a using() block.
         /// </summary>
         public void Dispose()
         {

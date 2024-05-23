@@ -61,12 +61,12 @@ namespace UnityEngine.InputSystem
     {
         private InputManager() { }
 
-        public static InputManager CreateAndInitialize(IInputRuntime runtime, InputSettings settings, bool fakeRemove = false)
+        public static InputManager CreateAndInitialize(IInputRuntime runtime, InputSettings settings, bool fakeManagerForRemotingTests = false)
         {
-            var newInst = new InputManager();
+            var newInstance = new InputManager();
 
             // Not directly used by InputManager, but we need  a single instance that's used in a variety of places without a static field
-            newInst.m_DeferBindingResolutionContext = new DeferBindingResolutionContext();
+            newInstance.m_DeferBindingResolutionContext = new DeferBindingResolutionContext();
 
             // If settings object wasn't provided, create a temporary settings object for now
             if (settings == null)
@@ -74,25 +74,26 @@ namespace UnityEngine.InputSystem
                 settings = ScriptableObject.CreateInstance<InputSettings>();
                 settings.hideFlags = HideFlags.HideAndDontSave;
             }    
-            newInst.m_Settings = settings;
+            newInstance.m_Settings = settings;
 
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            newInst.InitializeActions();
+            newInstance.InitializeActions();
             #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-            newInst.InitializeData();
-            newInst.InstallRuntime(runtime);
+            newInstance.InitializeData();
+            newInstance.InstallRuntime(runtime);
 
-            // Skip if initializing for "Fake Remove" manager (in tests)
-            if (!fakeRemove)
-                newInst.InstallGlobals();
+            // For remoting tests, we need to create a "fake manager" that simulates a remote endpoint.
+            // In this case don't install globals as this will corrupt the "local" manager state.
+            if (!fakeManagerForRemotingTests)
+                newInstance.InstallGlobals();
 
-            newInst.ApplySettings();
+            newInstance.ApplySettings();
 
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            newInst.ApplyActions();
+            newInstance.ApplyActions();
             #endif
-            return newInst;
+            return newInstance;
         }
 
 #region Dispose implementation
@@ -3985,7 +3986,7 @@ namespace UnityEngine.InputSystem
             if (state.settings == null)
             {
                 state.settings = ScriptableObject.CreateInstance<InputSettings>();
-                state.settings.hideFlags = HideFlags.HideAndDontSave;
+                state.settings.hideFlags = HideFlags.HideAndDontSave; // Hide from the project Hierarchy and Scene
             }
 
             if (m_Settings != null && m_Settings != state.settings)

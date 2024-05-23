@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RuntimeInitialize()
-    {
+        {
             GlobalInitialize(false);
         }
 
@@ -3483,12 +3483,9 @@ namespace UnityEngine.InputSystem
         private static bool ShouldEnableRemoting()
         {
             #if UNITY_INCLUDE_TESTS
-            var isRunningTests = true;
-            #else
-            var isRunningTests = false;
+            return false; // Don't remote while running tests.
             #endif
-            if (isRunningTests)
-                return false; // Don't remote while running tests.
+
             return true;
         }
         #endif //!UNITY_EDITOR
@@ -3517,7 +3514,7 @@ namespace UnityEngine.InputSystem
             // must initialize via the Runtime call.
 
             if (calledFromCtor || IsDomainReloadDisabledForPlayMode())
-        {
+            {
                 InitializeInEditor(calledFromCtor);
             }
 #else
@@ -3544,7 +3541,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
 
-        // TODO: ISX-1860
+        // ISX-1860 - #ifdef out Domain Reload specific functionality from CoreCLR
         private static InputSystemStateManager s_DomainStateManager;
         internal static InputSystemStateManager domainStateManager => s_DomainStateManager;
 
@@ -3573,8 +3570,8 @@ namespace UnityEngine.InputSystem
                 #endif
             }
 
-            var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
-            if (existingSystemObjects != null && existingSystemObjects.Length > 0)
+            var existingSystemStateManagers = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
+            if (existingSystemStateManagers != null && existingSystemStateManagers.Length > 0)
             {
                 if (globalReset)
                 {
@@ -3584,7 +3581,7 @@ namespace UnityEngine.InputSystem
                     // InputManager state here but we're still waiting from layout registrations
                     // that happen during domain initialization.
 
-                    s_DomainStateManager = existingSystemObjects[0];
+                    s_DomainStateManager = existingSystemStateManagers[0];
                     s_Manager.RestoreStateWithoutDevices(s_DomainStateManager.systemState.managerState);
                     InputDebuggerWindow.ReviveAfterDomainReload();
 
@@ -3765,7 +3762,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INCLUDE_TESTS
         //
-        // We cannot define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONSw with the Test-Framework assembly, and
+        // We cannot define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS within the Test-Framework assembly, and
         // so this hook is needed; it's called from InputTestStateManager.Reset().
         //
         internal static void TestHook_DisableActions()
