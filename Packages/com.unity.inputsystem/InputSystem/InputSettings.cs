@@ -85,6 +85,23 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Controls how platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// By default, the range used for the delta is converted to be uniform across all platforms.
+        /// </summary>
+        /// <value>The conversion behavior.</value>
+        public ScrollDeltaBehavior scrollDeltaBehavior
+        {
+            get => m_ScrollDeltaBehavior;
+            set
+            {
+                if (m_ScrollDeltaBehavior == value)
+                    return;
+                m_ScrollDeltaBehavior = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// If true, sensors that deliver rotation values on handheld devices will automatically adjust
         /// rotations when the screen orientation changes.
         /// </summary>
@@ -748,6 +765,7 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private ScrollDeltaBehavior m_ScrollDeltaBehavior = ScrollDeltaBehavior.UniformAcrossAllPlatforms;
         [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
@@ -843,6 +861,29 @@ namespace UnityEngine.InputSystem
             /// accumulating or some input getting lost.
             /// </summary>
             ProcessEventsManually,
+        }
+
+        /// <summary>
+        /// How platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// </summary>
+        public enum ScrollDeltaBehavior
+        {
+            /// <summary>
+            /// The range used for the delta is converted to be uniform across all platforms.
+            /// </summary>
+            /// <remarks>
+            /// The resulting range will be [-1, 1] regardless of the platform used.
+            /// </remarks>
+            UniformAcrossAllPlatforms = 0,
+
+            /// <summary>
+            /// The range used for the delta is the same as returned by the platform input.
+            /// </summary>
+            /// <remarks>
+            /// The range will typically be [-120, 120] on Windows and [-1, 1] on MacOS and Linux.
+            /// Other platforms may have different ranges.
+            /// </remarks>
+            KeepPlatformSpecificInputRange = 1
         }
 
         /// <summary>

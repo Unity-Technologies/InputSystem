@@ -3423,6 +3423,8 @@ namespace UnityEngine.InputSystem
             set => s_Manager.m_Runtime.runInBackground = value;
         }
 
+        internal static float scrollWheelDeltaPerTick => InputRuntime.s_Instance.scrollWheelDeltaPerTick;
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
