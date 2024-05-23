@@ -3062,10 +3062,6 @@ namespace UnityEngine.InputSystem
                 // Handle events.
                 while (m_InputEventStream.remainingEventCount > 0)
                 {
-                    // Discard events in case the maximum event bytes per update has been exceeded
-                    if (WasMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
-                        break;
-
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
@@ -3461,6 +3457,10 @@ namespace UnityEngine.InputSystem
                     }
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
+
+                    // Discard events in case the maximum event bytes per update has been exceeded
+                    if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
+                        break;
                 }
 
                 m_Metrics.totalEventProcessingTime +=
@@ -3492,7 +3492,7 @@ namespace UnityEngine.InputSystem
             m_CurrentUpdate = default;
         }
 
-        bool WasMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
+        bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
         {
             if (m_Settings.maxEventBytesPerUpdate > 0 &&
                 totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
