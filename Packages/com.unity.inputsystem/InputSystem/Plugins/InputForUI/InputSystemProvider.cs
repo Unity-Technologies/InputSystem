@@ -45,7 +45,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         NavigationEventRepeatHelper m_RepeatHelper = new();
         bool m_ResetSeenEventsOnUpdate;
 
+#if UNITY_6000_0_OR_NEWER
+        const float kScrollUGUIScaleFactor = UIElements.WheelEvent.scrollDeltaPerTick;
+#else
         const float kScrollUGUIScaleFactor = 3.0f;
+#endif
 
         static Action<InputActionAsset> s_OnRegisterActions;
 
@@ -529,8 +533,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
-            var scrollDelta = ctx.ReadValue<Vector2>();
-            if (scrollDelta.sqrMagnitude < k_SmallestReportedMovementSqrDist)
+            // ISXB-704: convert potentially platform-specific input value to uniform ticks before sending them to UI.
+            var scrollTicks = ctx.ReadValue<Vector2>() / InputSystem.scrollWheelDeltaPerTick;
+            if (scrollTicks.sqrMagnitude < k_SmallestReportedMovementSqrDist)
                 return;
 
             var eventSource = GetEventSource(ctx);
@@ -550,9 +555,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 targetDisplay = Mouse.current.displayIndex.ReadValue();
             }
 
-            // Make it look similar to IMGUI event scroll values.
-            scrollDelta.x *= kScrollUGUIScaleFactor;
-            scrollDelta.y *= -kScrollUGUIScaleFactor;
+            // Make scrollDelta look similar to IMGUI event scroll values.
+            var scrollDelta = new Vector2
+            {
+                x = scrollTicks.x * kScrollUGUIScaleFactor,
+                y = -scrollTicks.y * kScrollUGUIScaleFactor
+            };
 
             DispatchFromCallback(Event.From(new PointerEvent
             {

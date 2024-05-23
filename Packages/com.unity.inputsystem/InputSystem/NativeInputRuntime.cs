@@ -281,6 +281,25 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
+        public bool allowPlatformSpecificInputForScrollWheelDelta
+        {
+#if UNITY_6000_0_OR_NEWER
+            get => NativeInputSystem.allowPlatformSpecificInputForScrollWheelDelta;
+            set => NativeInputSystem.allowPlatformSpecificInputForScrollWheelDelta = value;
+#else
+            get; set;
+#endif
+        }
+
+        public float scrollWheelDeltaPerTick
+        {
+#if UNITY_6000_0_OR_NEWER
+            get { return NativeInputSystem.GetScrollWheelDeltaPerTick(); }
+#else
+            get => 1.0f;
+#endif
+        }
+
         public bool isInBatchMode => Application.isBatchMode;
 
         #if UNITY_EDITOR
