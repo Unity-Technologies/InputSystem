@@ -462,11 +462,17 @@ partial class CoreTests
     }
 
     // The way we keep state does not allow observing the state change on the final
-    // state of the button. However, actions will still see the change.
+    // state of the button, unless the readValueCaching path is enabled.
+    // However, actions will still see the change.
     [Test]
     [Category("State")]
-    public void State_PressingAndReleasingButtonInSameFrame_DoesNotShowStateChange()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange_WithCaching(bool usesReadValueCaching)
     {
+        var originalSetting = InputSettings.readValueCachingFeatureEnabled;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, usesReadValueCaching);
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
@@ -478,8 +484,18 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
-        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
+        if (usesReadValueCaching)
+        {
+            Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+            Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+        }
+        else
+        {
+            Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+            Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
+        }
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, originalSetting);
     }
 
     [Test]

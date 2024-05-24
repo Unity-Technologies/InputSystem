@@ -1583,6 +1583,7 @@ namespace UnityEngine.InputSystem
             device.m_Device = device;
 
             device.m_ChildrenForEachControl = new InputControl[controlCount];
+            device.m_UpdatedButtons = new Dictionary<int, ButtonControl>();
             if (usageCount > 0)
             {
                 device.m_UsagesForEachControl = new InternedString[usageCount];

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
 ////TODO: runtime remapping of control usages on a per-device basis
@@ -681,7 +682,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Timestamp of last event we received.
         /// </summary>
-        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="LowLevel.InputEvent.time"/>
         internal double m_LastUpdateTimeInternal;
 
         // Update count corresponding to the current front buffers that are active on the device.
@@ -706,6 +707,9 @@ namespace UnityEngine.InputSystem
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        // Used with value caching so we update button press states.
+        internal Dictionary<int, ButtonControl> m_UpdatedButtons;
 
         // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
         // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
@@ -975,25 +979,27 @@ namespace UnityEngine.InputSystem
             if (m_ControlTreeNodes.Length == 0)
                 return;
 
+            // Reset counter for how many controls have updated
+            m_UpdatedButtons.Clear();
+
             // if we're dealing with a delta state event or just an individual control update through InputState.ChangeState
             // the size of the new data will not be the same size as the device state block, so use the 'partial' change state
             // method to update just those controls that overlap with the changed state.
             if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
-                        stateOffsetInDevice * 8, deviceStateBuffer, m_ControlTreeNodes[0], 0);
+                    WritePartialChangedControlStatesInternal(stateSizeInBytes * 8,
+                        stateOffsetInDevice * 8, m_ControlTreeNodes[0], 0);
             }
             else
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
-                        deviceStateBuffer, m_ControlTreeNodes[0], 0);
+                    WriteChangedControlStatesInternal(statePtr, deviceStateBuffer, m_ControlTreeNodes[0], 0);
             }
         }
 
-        private unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
-            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        private void WritePartialChangedControlStatesInternal(uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, ControlBitRangeNode parentNode, uint startOffset)
         {
             var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
             // TODO recheck
@@ -1004,12 +1010,14 @@ namespace UnityEngine.InputSystem
                 for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
                 {
                     var controlIndex = m_ControlTreeIndices[i];
-                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                    var control = m_ChildrenForEachControl[controlIndex];
+                    control.MarkAsStale();
+                    if (control is ButtonControl)
+                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
                 }
 
                 if (leftNode.leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
-                        deviceStatePtr, leftNode, startOffset);
+                    WritePartialChangedControlStatesInternal(stateSizeInBits, stateOffsetInDeviceInBits, leftNode, startOffset);
             }
 
             var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
@@ -1021,12 +1029,14 @@ namespace UnityEngine.InputSystem
                 for (int i = rightNode.controlStartIndex; i < controlEndIndex; i++)
                 {
                     var controlIndex = m_ControlTreeIndices[i];
-                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                    var control = m_ChildrenForEachControl[controlIndex];
+                    control.MarkAsStale();
+                    if (control is ButtonControl)
+                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
                 }
 
                 if (rightNode.leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
-                        deviceStatePtr, rightNode, leftNode.endBitOffset);
+                    WritePartialChangedControlStatesInternal(stateSizeInBits, stateOffsetInDeviceInBits, rightNode, leftNode.endBitOffset);
             }
         }
 
@@ -1065,7 +1075,7 @@ namespace UnityEngine.InputSystem
             return string.Join("\n", output);
         }
 
-        private unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+        private unsafe void WriteChangedControlStatesInternal(void* statePtr,
             byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
         {
             var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
@@ -1089,12 +1099,16 @@ namespace UnityEngine.InputSystem
                     // points at a block of memory of the same size as the device state.
                     if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
                         (byte*)statePtr - m_StateBlock.byteOffset, null))
+                    {
                         control.MarkAsStale();
+                        if (control is ButtonControl)
+                            m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                    }
                 }
 
                 // process the left child node if it exists
                 if (leftNode.leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                    WriteChangedControlStatesInternal(statePtr, deviceStatePtr,
                         leftNode, startOffset);
             }
 
@@ -1119,11 +1133,15 @@ namespace UnityEngine.InputSystem
 
                 if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
                     (byte*)statePtr - m_StateBlock.byteOffset, null))
+                {
                     control.MarkAsStale();
+                    if (control is ButtonControl)
+                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                }
             }
 
             if (rightNode.leftChildIndex != -1)
-                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                WriteChangedControlStatesInternal(statePtr, deviceStatePtr,
                     rightNode, leftNode.endBitOffset);
         }
 

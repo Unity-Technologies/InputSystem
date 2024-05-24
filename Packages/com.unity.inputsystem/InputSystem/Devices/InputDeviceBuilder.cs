@@ -142,6 +142,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // we are rebuilding the control hierarchy.
                 m_Device.m_AliasesForEachControl = null;
                 m_Device.m_ChildrenForEachControl = null;
+                m_Device.m_UpdatedButtons = null;
                 m_Device.m_UsagesForEachControl = null;
                 m_Device.m_UsageToControl = null;
 
@@ -364,6 +365,7 @@ namespace UnityEngine.InputSystem.Layouts
                         ref controlLayout);
                 }
             }
+            m_Device.m_UpdatedButtons = new Dictionary<int, ButtonControl>();
         }
 
         private InputControl AddChildControl(InputControlLayout layout, InternedString variants, InputControl parent,

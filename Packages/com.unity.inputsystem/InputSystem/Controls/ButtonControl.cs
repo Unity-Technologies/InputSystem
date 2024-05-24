@@ -17,6 +17,10 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     public class ButtonControl : AxisControl
     {
+        private uint updateCountLastPressed = uint.MaxValue;
+        private uint updateCountLastReleased = uint.MaxValue;
+        private bool lastUpdateWasPress = false;
+
         ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
         /// The minimum value the button has to reach for it to be considered pressed.
@@ -118,9 +122,42 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// </remarks>
-        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasPressedThisFrame
+        {
+            get
+            {
+                if (InputSettings.readValueCachingFeatureEnabled)
+                    return InputUpdate.s_UpdateStepCount == updateCountLastPressed;
 
-        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                return device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+            }
+        }
+
+        public bool wasReleasedThisFrame
+        {
+            get
+            {
+                if (InputSettings.readValueCachingFeatureEnabled)
+                    return InputUpdate.s_UpdateStepCount == updateCountLastReleased;
+
+                return device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+            }
+        }
+
+        internal void UpdateWasPressed(uint updateStepCount)
+        {
+            var isNowPressed = isPressed;
+
+            if (lastUpdateWasPress != isNowPressed)
+            {
+                if (isNowPressed)
+                    updateCountLastPressed = updateStepCount;
+                else
+                    updateCountLastReleased = updateStepCount;
+
+                lastUpdateWasPress = isNowPressed;
+            }
+        }
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
