@@ -88,8 +88,11 @@ namespace UnityEngine.InputSystem.Editor
                 // if the invalid DefaultControlSchemeName is selected set the popup draw the BG color in red
                 if (m_InvalidDefaultControlSchemeName != null && m_SelectedDefaultControlScheme == 1)
                     GUI.backgroundColor = Color.red;
-                var selected = EditorGUILayout.Popup(m_DefaultControlSchemeText, m_SelectedDefaultControlScheme,
-                    m_ControlSchemeOptions);
+
+                var rect = EditorGUILayout.GetControlRect();
+                var label = EditorGUI.BeginProperty(rect, m_DefaultControlSchemeText, m_DefaultControlSchemeProperty);
+                var selected = EditorGUI.Popup(rect, label, m_SelectedDefaultControlScheme, m_ControlSchemeOptions);
+                EditorGUI.EndProperty();
                 if (selected != m_SelectedDefaultControlScheme)
                 {
                     if (selected == 0)
@@ -111,8 +114,12 @@ namespace UnityEngine.InputSystem.Editor
                 // Restore the initial color
                 GUI.backgroundColor = currentBg;
 
+
+                rect = EditorGUILayout.GetControlRect();
+                label = EditorGUI.BeginProperty(rect, m_AutoSwitchText, m_NeverAutoSwitchControlSchemesProperty);
                 var neverAutoSwitchValueOld = m_NeverAutoSwitchControlSchemesProperty.boolValue;
-                var neverAutoSwitchValueNew = !EditorGUILayout.Toggle(m_AutoSwitchText, !neverAutoSwitchValueOld);
+                var neverAutoSwitchValueNew = !EditorGUI.Toggle(rect, label, !neverAutoSwitchValueOld);
+                EditorGUI.EndProperty();
                 if (neverAutoSwitchValueOld != neverAutoSwitchValueNew)
                 {
                     m_NeverAutoSwitchControlSchemesProperty.boolValue = neverAutoSwitchValueNew;
@@ -122,9 +129,11 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ActionMapOptions != null && m_ActionMapOptions.Length > 0)
             {
                 // Default action map picker.
-
-                var selected = EditorGUILayout.Popup(m_DefaultActionMapText, m_SelectedDefaultActionMap,
+                var rect = EditorGUILayout.GetControlRect();
+                var label = EditorGUI.BeginProperty(rect, m_DefaultActionMapText, m_DefaultActionMapProperty);
+                var selected = EditorGUI.Popup(rect, label, m_SelectedDefaultActionMap,
                     m_ActionMapOptions);
+                EditorGUI.EndProperty();
                 if (selected != m_SelectedDefaultActionMap)
                 {
                     if (selected == 0)
