@@ -33,9 +33,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // If the name is the same as the current name, don't change it
                     var newName = ((TextField)evt.currentTarget).value.Trim();
-                    if (String.Compare(newName, state.selectedControlScheme.name) == 0)
+                    if (string.IsNullOrEmpty(newName) || String.Compare(newName, state.selectedControlScheme.name) == 0)
                     {
                         m_NewName = "";
+                        // write back the value to the text field if the name was empty
+                        ((TextField)evt.currentTarget).value = state.selectedControlScheme.name;
                     }
                     else
                     {
@@ -43,6 +45,7 @@ namespace UnityEngine.InputSystem.Editor
                         // write back the value to the text field if the name was not unique
                         ((TextField)evt.currentTarget).value = m_NewName;
                     }
+
                     return state.With(selectedControlScheme: state.selectedControlScheme);
                 });
             });
