@@ -16,7 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed resource designation for "d_InputControl" icon to address CI failure.
 - Fixed an issue where a composite binding would not be consecutively triggered after disabling actions while there are action modifiers in progress [ISXB-505](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-505).
 - Fixed prefabs and missing default control scheme used by PlayerInput component are now correctly shown in the inspector [ISXB-818](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-818)
-- Fixed error thrown when Cancelling Control Scheme creation in Input Actions Editor [ISXB-892](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-892)
+- Fixed error thrown when Cancelling Control Scheme creation in Input Actions Editor.
 
 ## [1.8.2] - 2024-04-29
 
