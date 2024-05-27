@@ -983,11 +983,11 @@ namespace UnityEngine.InputSystem
                 Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);
                 return;
             }
-            
+
             if (currentActionMap == null)
             {
                 //Disabling all action maps, because we don't know which one is currently enabled
-                foreach(var i in m_Actions.actionMaps)
+                foreach (var i in m_Actions.actionMaps)
                 {
                     i.Disable();
                 }
