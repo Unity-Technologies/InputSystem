@@ -7863,6 +7863,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Description("ISXB-895 Can attempt to lookup non-existent action in asset by path")]
+    public void Actions_CanAttemptToLookUpNonExistentActionInAssetByPath()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null);
+
+        var map = asset.AddActionMap("Map");
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null); // ISXB-895 using a path to find non-existent (NullReferenceException)
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanLookUpActionInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
