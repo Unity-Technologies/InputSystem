@@ -983,8 +983,22 @@ namespace UnityEngine.InputSystem
                 Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);
                 return;
             }
-
+            
+            if (currentActionMap == null)
+            {
+                //Disabling all action maps, because we don't know which one is currently enabled
+                foreach(var i in m_Actions.actionMaps)
+                {
+                    i.Disable();
+                }
+            }
+            else
+            {
+                //Disabling the currently enabled action map
+                currentActionMap.Disable();
+            }
             currentActionMap = actionMap;
+            currentActionMap.Enable();
         }
 
         /// <summary>
@@ -1621,6 +1635,11 @@ namespace UnityEngine.InputSystem
 
         #endif
 
+        private void Start()
+        {
+            ActivateInput();
+        }
+
         private void OnEnable()
         {
             m_Enabled = true;
@@ -1630,7 +1649,6 @@ namespace UnityEngine.InputSystem
                 AssignPlayerIndex();
                 InitializeActions();
                 AssignUserAndDevices();
-                ActivateInput();
             }
 
             // Split-screen index defaults to player index.
