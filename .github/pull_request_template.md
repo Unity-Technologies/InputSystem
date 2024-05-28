@@ -40,4 +40,4 @@ During merge:
 
 After merge:
 
-- [ ] Create forward port if needed. If you are blocked from doing that now for some reason please add a task to ISX-1444. 
+- [ ] Create forward/backward port if needed. If you are blocked from creating a forward port now please add a task to ISX-1444. 
