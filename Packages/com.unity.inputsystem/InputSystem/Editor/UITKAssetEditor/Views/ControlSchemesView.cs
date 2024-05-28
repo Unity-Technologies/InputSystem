@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
                     var newName = ((TextField)evt.currentTarget).value.Trim();
                     if (string.IsNullOrEmpty(newName) || String.Compare(newName, state.selectedControlScheme.name) == 0)
                     {
-                        m_NewName = "";
+                        m_NewName = String.Empty;
                         // write back the value to the text field if the name was empty
                         ((TextField)evt.currentTarget).value = state.selectedControlScheme.name;
                     }
@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.Editor
             // the changes retained. However, if a different ControlScheme is selected or the Asset
             // Editor window is closed, then the changes are lost.
 
-            m_NewName = "";
+            m_NewName = string.Empty;
             OnClosing?.Invoke(this);
         }
 
