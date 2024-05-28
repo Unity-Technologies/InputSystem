@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
             type = (InputActionType)serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
             interactions = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions)).stringValue;
             processors = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Processors)).stringValue;
+            propertyPath = wrappedProperty.propertyPath;
             initialStateCheck = ReadInitialStateCheck(serializedProperty);
             actionTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).GetTooltip();
             expectedControlTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).GetTooltip();
@@ -29,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionType type { get; }
         public string interactions { get; }
         public string processors { get; }
+        public string propertyPath { get; }
         public bool initialStateCheck { get; }
         public string actionTypeTooltip { get; }
         public string expectedControlTypeTooltip { get; }
@@ -60,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
                 && initialStateCheck == other.initialStateCheck
                 && actionTypeTooltip == other.actionTypeTooltip
                 && expectedControlTypeTooltip == other.expectedControlTypeTooltip
-                && wrappedProperty.propertyPath == other.wrappedProperty.propertyPath;
+                && propertyPath == other.propertyPath;
         }
 
         public override bool Equals(object obj)
@@ -79,7 +81,7 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(initialStateCheck);
             hashCode.Add(actionTypeTooltip);
             hashCode.Add(expectedControlTypeTooltip);
-            hashCode.Add(wrappedProperty.propertyPath);
+            hashCode.Add(propertyPath);
             return hashCode.ToHashCode();
         }
     }

@@ -2972,8 +2972,7 @@ namespace UnityEngine.InputSystem
             InputUpdate.OnUpdate(updateType);
 
             // Ensure optimized controls are in valid state
-            foreach (var device in devices)
-                device.EnsureOptimizationTypeHasNotChanged();
+            CheckAllDevicesOptimizedControlsHaveValidState();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
@@ -3343,6 +3342,14 @@ namespace UnityEngine.InputSystem
                             {
 #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+#elif UNITY_ANDROID
+                                // Android keyboards can send events out of order: Holding down a key will send multiple
+                                // presses after a short time, like on most platforms. Unfortunately, on Android, the
+                                // last of these "presses" can be timestamped to be after the event of the key release.
+                                // If that happens, we'd skip the keyUp here, and the device state will have the key
+                                // "stuck" pressed. So, special case here to not skip keyboard events on Android. ISXB-475
+                                // N.B. Android seems to have similar issues with touch input (OnStateEvent, Touchscreen.cs)
+                                if (!(device is Keyboard))
 #endif
                                 break;
                             }
@@ -3484,6 +3491,17 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.
+        [Conditional("UNITY_EDITOR")]
+        void CheckAllDevicesOptimizedControlsHaveValidState()
+        {
+            if (!InputSettings.optimizedControlsFeatureEnabled)
+                return;
+
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
