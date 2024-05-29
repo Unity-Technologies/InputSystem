@@ -5,7 +5,7 @@ uid: input-system-migration
 
 - [Read the introductory documentation first](#read-the-introductory-documentation-first)
 - [Which system is enabled?](#which-system-is-enabled)
-- [List of corresponding API in the old Input Manager new Input System package](#list-of-corresponding-api-in-the-old-input-manager-new-input-system-package)
+- [Comparison of API in the old Input Manager and the new Input System package](#comparison-of-api-in-the-old-input-manager-and-the-new-input-system-package)
   - [Action-based input](#action-based-input)
   - [Directly reading Gamepad and Joystick controls](#directly-reading-gamepad-and-joystick-controls)
   - [Keyboard](#keyboard)
@@ -39,10 +39,10 @@ There are scripting symbols defined which allow you to use conditional compilati
 
 > **Note:** It is possible to have both systems enabled at the same time, in which case both sets of code in the example above above will be active.
 
-## List of corresponding API in the old Input Manager new Input System package
+## Comparison of API in the old Input Manager and the new Input System package
 
-All of the new APIs listed below are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
-
+Below is a list comparing the API from the old Input Manager with the corresponding API for the new Input System package. 
+All of the new Input System package APIs listed below are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity.
 
 ### Action-based input
 
@@ -68,11 +68,11 @@ Then, to read the action values, use the following:
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)<br/>In the old Input Manager System, all axes are 1D and return float values. For example, to read the horizontal and vertical axes:<br/>`float h = Input.GetAxis("Horizontal");`<br/>`float v = Input.GetAxis("Vertical");`<br/><br/> | Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up. This example shows a 2D axis:<br/>`Vector2 moveVector = moveAction.ReadValue<Vector2>()`.<br/><br/>
-[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example:<br/>`bool jumpValue = Input.GetButton("Jump");`<br/><br/>|Use [`IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the reference to the action to read the button value.<br/>Example:<br/>`bool jumpValue = jumpAction.IsPressed()`.<br/><br/>
-[`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)<br/>Example: `bool jump = Input.GetButtonDown("Jump");`<br/><br/>|Use [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the reference to the action to read if the button was pressed this frame.<br/>Example: `bool jumpValue = jumpAction.WasPressedThisFrame()`.<br/><br/>
-[`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)<br/>Example: `bool jump = Input.GetButtonUp("Jump");`<br/><br/>|Use [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the reference to the action to read whether the button was released this frame.<br/>Example: `bool jumpValue = jumpAction.WasReleasedThisFrame()`.<br/><br/>
-[`Input.GetAxisRaw`](https://docs.unity3d.com/ScriptReference/Input.GetAxisRaw.html)|Not directly applicable. You can use [`InputControl<>.ReadUnprocessedValue()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) to read unprocessed values from any control.
+[`Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)<br/>In the old Input Manager System, all axes are 1D and return float values. For example, to read the horizontal and vertical axes:<br/>`float h = Input.GetAxis("Horizontal");`<br/>`float v = Input.GetAxis("Vertical");`<br/><br/> | Use [`ReadValue`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_UnityEngine_InputSystem_InputBindingCompositeContext__) on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up. This example shows a 2D axis:<br/>`Vector2 moveVector = moveAction.ReadValue<Vector2>();`.<br/><br/>
+[`Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)<br/>Example:<br/>`bool jumpValue = Input.GetButton("Jump");`<br/><br/>|Use [`IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_) on the reference to the action to read the button value.<br/>Example:<br/>`bool jumpValue = jumpAction.IsPressed();`.<br/><br/>
+[`Input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)<br/>Example: `bool jump = Input.GetButtonDown("Jump");`<br/><br/>|Use [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) on the reference to the action to read if the button was pressed this frame.<br/>Example: `bool jumpValue = jumpAction.WasPressedThisFrame();`.<br/><br/>
+[`Input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)<br/>Example: `bool jump = Input.GetButtonUp("Jump");`<br/><br/>|Use [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) on the reference to the action to read whether the button was released this frame.<br/>Example: `bool jumpValue = jumpAction.WasReleasedThisFrame();`.<br/><br/>
+[`Input.GetAxisRaw`](https://docs.unity3d.com/ScriptReference/Input.GetAxisRaw.html)<br/>For example, to read the raw values of the horizontal and vertical axes:<br/>`float h = Input.GetAxisRaw("Horizontal");`<br/>`float v = Input.GetAxisRaw("Vertical");`<br/><br/>|No direct equivalent, but if there are [processors](Processors.md) associated with the action, you can use [`InputControl<>.ReadUnprocessedValue()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) to read unprocessed values.<br/>Example: `Vector2 moveVector = moveAction.ReadUnprocessedValue();`<br/>Note: This returns the same value as ReadValue when there are no processors on the action.
 
 
 
@@ -98,7 +98,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.GetKeyDown`](https://docs.unity3d.com/ScriptReference/Input.GetKeyDown.html)<br/>Example: `Input.GetKeyDown(KeyCode.Space)`<br/><br/>|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding key.<br/> Example: `InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame`<br/><br/>
 [`Input.GetKeyUp`](https://docs.unity3d.com/ScriptReference/Input.GetKeyUp.html)<br/>Example: `Input.GetKeyUp(KeyCode.Space)`<br/><br/>|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding key.<br/> Example: `InputSystem.Keyboard.current.spaceKey.wasReleasedThisFrame`<br/><br/>
 [`Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)|Use [`onAnyButtonPress`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress).<br/>This also includes controller buttons as well as keyboard keys.
-[`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|Use [`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html)
+[`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|Use [`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_anyKey)
 [`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_)
 [`Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)|Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange).
 [`Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)|No corresponding API yet.
@@ -111,15 +111,15 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`
 [`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
 [`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
-[`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html)<br/>__Note__: Mouse simulation from touch isn't implemented yet.
-[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Use [`Mouse.current != null`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
+[`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html)<br/>Example: `Vector2 position = Mouse.current.position.ReadValue();`<br/>__Note__: Mouse simulation from touch isn't implemented yet.
+[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Check whether [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current) is null.<br/>Example: `bool isMousePresent = Mouse.current != null;`
 
 
 ### Touch and Pen
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetTouch`](https://docs.unity3d.com/ScriptReference/Input.GetTouch.html)|Use [`EnhancedTouch.Touch.activeTouches[i]`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+[`Input.GetTouch`](https://docs.unity3d.com/ScriptReference/Input.GetTouch.html)<br/>For example:<br/>`Touch touch = Input.GetTouch(0);`<br/>`Vector2 touchPos = touch.position;`|Use [`EnhancedTouch.Touch.activeTouches[i]`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)<br/>Example: `Vector2 touchPos = EnhancedTouch.Touch.activeTouches[0].position;`<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 [`Input.multiTouchEnabled`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|No corresponding API yet.
 [`Input.simulateMouseWithTouches`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|No corresponding API yet.
 [`Input.stylusTouchSupported`](https://docs.unity3d.com/ScriptReference/Input-stylusTouchSupported.html)|No corresponding API yet.
@@ -127,9 +127,9 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html)|[`EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable)
 [`Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)|No corresponding API yet.
 [`Input.touchSupported`](https://docs.unity3d.com/ScriptReference/Input-touchSupported.html)|[`Touchscreen.current != null`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_current)
-[`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html)|No corresponding API yet. Use `TouchScreenKeyboard` for now.
 [`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|No corresponding API yet.
 
+Note: [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html) is not part of the old Input Manager, so you can continue to use it when migrating to the new Input System package.
 
 ### Sensors
 |Input Manager (Old)|Input System (New)|
