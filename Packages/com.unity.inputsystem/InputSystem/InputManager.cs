@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
@@ -3497,15 +3498,12 @@ namespace UnityEngine.InputSystem
             if (m_Settings.maxEventBytesPerUpdate > 0 &&
                 totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
             {
-                var eventsProcessedByDeviceLog = "";
+                var eventsProcessedByDeviceLog = String.Empty;
                 // Only log the events processed by devices in last update call if we are in debug mode.
                 // This is to avoid the slightest overhead in release builds of having to iterate over all devices and
                 // reset the byte count, by the end of every update call with ResetCurrentProcessedEventBytesForDevices().
                 if (Debug.isDebugBuild)
-                {
-                    eventsProcessedByDeviceLog = "Total events processed by devices in last update call:\n" +
-                        MakeStringWithEventsProcessedByDevice();
-                }
+                    eventsProcessedByDeviceLog = $"Total events processed by devices in last update call:\n{MakeStringWithEventsProcessedByDevice()}";
 
                 Debug.LogError(
                     "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
@@ -3520,18 +3518,14 @@ namespace UnityEngine.InputSystem
 
         private string MakeStringWithEventsProcessedByDevice()
         {
-            string eventsProcessedByDeviceLog = "";
-
+            var eventsProcessedByDeviceLog = new StringBuilder();
             for (int i = 0; i < m_DevicesCount; i++)
             {
                 var deviceToLog = devices[i];
                 if (deviceToLog != null && deviceToLog.m_CurrentProcessedEventBytesOnUpdate > 0)
-                {
-                    eventsProcessedByDeviceLog += $" - {deviceToLog.m_CurrentProcessedEventBytesOnUpdate} bytes processed by {deviceToLog}\n";
-                }
+                    eventsProcessedByDeviceLog.Append($" - {deviceToLog.m_CurrentProcessedEventBytesOnUpdate} bytes processed by {deviceToLog}\n");
             }
-
-            return eventsProcessedByDeviceLog;
+            return eventsProcessedByDeviceLog.ToString();
         }
 
         // Reset the number of bytes processed by devices in the current update, for debug builds.
