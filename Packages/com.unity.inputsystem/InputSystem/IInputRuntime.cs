@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
-        bool allowPlatformSpecificInputForScrollWheelDelta { get; set; }
+        bool normalizeScrollWheelDelta { get; set; }
         float scrollWheelDeltaPerTick { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.

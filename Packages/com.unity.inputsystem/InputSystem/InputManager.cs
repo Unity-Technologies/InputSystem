@@ -169,8 +169,8 @@ namespace UnityEngine.InputSystem
 
                 m_ScrollDeltaBehavior = value;
 
-                InputRuntime.s_Instance.allowPlatformSpecificInputForScrollWheelDelta =
-                    m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.KeepPlatformSpecificInputRange;
+                InputRuntime.s_Instance.normalizeScrollWheelDelta =
+                    m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
             }
         }
 
