@@ -281,11 +281,11 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
-        public bool allowPlatformSpecificInputForScrollWheelDelta
+        public bool normalizeScrollWheelDelta
         {
 #if UNITY_6000_0_OR_NEWER
-            get => NativeInputSystem.allowPlatformSpecificInputForScrollWheelDelta;
-            set => NativeInputSystem.allowPlatformSpecificInputForScrollWheelDelta = value;
+            get => NativeInputSystem.normalizeScrollWheelDelta;
+            set => NativeInputSystem.normalizeScrollWheelDelta = value;
 #else
             get; set;
 #endif
