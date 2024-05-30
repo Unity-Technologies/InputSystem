@@ -20,6 +20,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Scheme Name in Control Scheme editor menu that gets reset when editing devices [ISXB-763](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-763).
 - Fixed an issue where `InputActionAsset.FindAction(string, bool)` would throw `System.NullReferenceException` instead of returning `null` if searching for a non-existent action with an explicit action path and using `throwIfNotFound: false`, e.g. searching for "Map/Action" when `InputActionMap` "Map" exists but no `InputAction` named "Action" exists within that map [ISXB-895](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-895).
 
+## Added
+- Added additional device information when logging the error due to exceeding the maximum number of events processed
+  set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
+  only.
+
 ## [1.8.2] - 2024-04-29
 
 ### Added
