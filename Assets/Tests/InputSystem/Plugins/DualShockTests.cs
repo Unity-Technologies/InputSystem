@@ -176,7 +176,7 @@ internal class DualShockTests : CoreTestsFixture
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
     }
-    
+
     [Test]
     [Category("Devices")]
     [TestCase(0x54C, 0xCE6)]
