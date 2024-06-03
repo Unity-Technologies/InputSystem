@@ -71,7 +71,17 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="clampMin"/>
         /// <seealso cref="clampMax"/>
         /// <seealso cref="clampConstant"/>
-        public Clamp clamp;
+        public Clamp clamp
+        {
+            get => m_Clamp;
+            set
+            {
+                m_Clamp = value;
+                ApplyParameterChanges();
+            }
+        }
+
+        Clamp m_Clamp;
 
         /// <summary>
         /// Lower end of the clamping range when <see cref="clamp"/> is not
@@ -100,7 +110,17 @@ namespace UnityEngine.InputSystem.Controls
         /// If true, the input value will be inverted, i.e. multiplied by -1. Off by default.
         /// </summary>
         /// <value>Whether to invert the input value.</value>
-        public bool invert;
+        public bool invert
+        {
+            get => m_Invert;
+            set
+            {
+                m_Invert = value;
+                ApplyParameterChanges();
+            }
+        }
+
+        bool m_Invert;
 
         /// <summary>
         /// If true, normalize the input value to [0..1] or [-1..1] (depending on the
@@ -109,8 +129,18 @@ namespace UnityEngine.InputSystem.Controls
         /// <value>Whether to normalize input values or not.</value>
         /// <seealso cref="normalizeMin"/>
         /// <seealso cref="normalizeMax"/>
-        public bool normalize;
+        public bool normalize
+        {
+            get => m_Normalize;
 
+            set
+            {
+                m_Normalize = value;
+                ApplyParameterChanges();
+            }
+        }
+
+        bool m_Normalize;
         ////REVIEW: shouldn't these come from the control min/max value by default?
 
         /// <summary>
@@ -163,7 +193,16 @@ namespace UnityEngine.InputSystem.Controls
         /// Whether the scale the input value by <see cref="scaleFactor"/>. Off by default.
         /// </summary>
         /// <value>True if inputs should be scaled by <see cref="scaleFactor"/>.</value>
-        public bool scale;
+        public bool scale
+        {
+            get => m_Scale;
+            set
+            {
+                m_Scale = value;
+                ApplyParameterChanges();
+            }
+        }
+        bool m_Scale;
 
         /// <summary>
         /// Value to multiple input values with. Only applied if <see cref="scale"/> is <c>true</c>.
@@ -184,20 +223,20 @@ namespace UnityEngine.InputSystem.Controls
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected float Preprocess(float value)
         {
-            if (scale)
+            if (m_Scale)
                 value *= scaleFactor;
-            if (clamp == Clamp.ToConstantBeforeNormalize)
+            if (m_Clamp == Clamp.ToConstantBeforeNormalize)
             {
                 if (value < clampMin || value > clampMax)
                     value = clampConstant;
             }
-            else if (clamp == Clamp.BeforeNormalize)
+            else if (m_Clamp == Clamp.BeforeNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
-            if (normalize)
+            if (m_Normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
-            if (clamp == Clamp.AfterNormalize)
+            if (m_Clamp == Clamp.AfterNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
-            if (invert)
+            if (m_Invert)
                 value *= -1.0f;
             return value;
         }
@@ -206,11 +245,11 @@ namespace UnityEngine.InputSystem.Controls
         {
             // Does not reverse the effect of clamping (we don't know what the unclamped value should be).
 
-            if (invert)
+            if (m_Invert)
                 value *= -1f;
-            if (normalize)
+            if (m_Normalize)
                 value = NormalizeProcessor.Denormalize(value, normalizeMin, normalizeMax, normalizeZero);
-            if (scale)
+            if (m_Scale)
                 value /= scaleFactor;
             return value;
         }
@@ -311,10 +350,10 @@ namespace UnityEngine.InputSystem.Controls
         protected override FourCC CalculateOptimizedControlDataType()
         {
             var noProcessingNeeded =
-                clamp == Clamp.None &&
-                invert == false &&
-                normalize == false &&
-                scale == false;
+                m_Clamp == Clamp.None &&
+                m_Invert == false &&
+                m_Normalize == false &&
+                m_Scale == false;
 
             if (noProcessingNeeded &&
                 m_StateBlock.format == InputStateBlock.FormatFloat &&
