@@ -45,11 +45,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         NavigationEventRepeatHelper m_RepeatHelper = new();
         bool m_ResetSeenEventsOnUpdate;
 
-#if UNITY_6000_0_OR_NEWER
-        const float kScrollUGUIScaleFactor = UIElements.WheelEvent.scrollDeltaPerTick;
-#else
         const float kScrollUGUIScaleFactor = 3.0f;
-#endif
 
         static Action<InputActionAsset> s_OnRegisterActions;
 
@@ -533,7 +529,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
-            // ISXB-704: convert potentially platform-specific input value to uniform ticks before sending them to UI.
+            // ISXB-704: convert input value to uniform ticks before sending them to UI.
             var scrollTicks = ctx.ReadValue<Vector2>() / InputSystem.scrollWheelDeltaPerTick;
             if (scrollTicks.sqrMagnitude < k_SmallestReportedMovementSqrDist)
                 return;

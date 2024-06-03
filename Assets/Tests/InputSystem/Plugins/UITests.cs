@@ -1037,7 +1037,7 @@ internal class UITests : CoreTestsFixture
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.scrollDelta, Is.EqualTo(Vector2.one * (1 / InputSystemUIInputModule.kPixelPerLine)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.rightChildReceiver.events[0].pointerData.scrollDelta, Is.EqualTo(Vector2.one).Using(Vector2EqualityComparer.Instance));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.Null);

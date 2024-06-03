@@ -2070,10 +2070,11 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
 
-            var scrollDelta = context.ReadValue<Vector2>();
+            state.scrollDelta = context.ReadValue<Vector2>();
 
-            // ISXB-704: convert potentially platform-specific input value to BaseInputModule convention.
-            state.scrollDelta = scrollDelta * (scrollWheelDeltaPerTick / InputSystem.scrollWheelDeltaPerTick);
+            // Need to scale as the UI system expects values in the [-1, 1] range.
+            // ISXB-704: convert input value to BaseInputModule convention.
+            state.scrollDelta *= (1.0f / InputSystem.scrollWheelDeltaPerTick);
 
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
