@@ -171,15 +171,28 @@ namespace UnityEngine.InputSystem.Utilities
             var instanceType = instance.GetType();
 
             ////REVIEW: what about properties?
+
+
             var field = instanceType.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new ArgumentException(
-                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)", nameof(instance));
+            {
+                //try to find a property
+                var property = instanceType.GetProperty(name,
+                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (property == null)
+                    throw new ArgumentException(
+                        $"Cannot find public field or property '{name}' in '{instanceType.Name}' (while trying to apply parameter)", nameof(instance));
 
-            ////REVIEW: would be awesome to be able to do this without boxing
-            var fieldTypeCode = Type.GetTypeCode(field.FieldType);
-            field.SetValue(instance, value.ConvertTo(fieldTypeCode).ToObject());
+                var propertyType = Type.GetTypeCode(property.PropertyType);
+                property.SetValue(instance, value.ConvertTo(propertyType).ToObject());
+            }
+            else
+            {
+                ////REVIEW: would be awesome to be able to do this without boxing
+                var fieldTypeCode = Type.GetTypeCode(field.FieldType);
+                field.SetValue(instance, value.ConvertTo(fieldTypeCode).ToObject());
+            }
         }
 
         public static void ApplyAllToObject<TParameterList>(object instance, TParameterList parameters)
