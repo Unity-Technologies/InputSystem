@@ -1559,4 +1559,6 @@ namespace UnityEngine.InputSystem
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }
+
+    public class IsControlParameterAttribute : Attribute {}
 }

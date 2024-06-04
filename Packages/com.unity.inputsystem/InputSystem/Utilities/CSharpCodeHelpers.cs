@@ -150,10 +150,18 @@ namespace UnityEngine.InputSystem.Utilities
                 fields.Where(f => (f.FieldType.IsPrimitive || f.FieldType.IsEnum) && !f.GetValue(instance).Equals(f.GetValue(defaults)))
                     .Select(f => $"{f.Name} = {f.GetValue(instance).ToLiteral()}"));
 
-            if (string.IsNullOrEmpty(fieldInits))
+            //TODO Improve this logic
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanRead && p.CanWrite && (p.PropertyType.IsPrimitive || p.PropertyType.IsEnum) && p.GetCustomAttribute<Attribute>(false) != null);
+            var propertyInits = string.Join(", ",
+                properties.Where(p => !p.GetValue(instance).Equals(p.GetValue(defaults)))
+                    .Select(p => $"{p.Name} = {p.GetValue(instance).ToLiteral()}"));
+
+            if (string.IsNullOrEmpty(fieldInits) && string.IsNullOrEmpty(propertyInits))
                 return "()";
 
-            return " { " + fieldInits + " }";
+            var separator  = string.IsNullOrEmpty(fieldInits) || string.IsNullOrEmpty(propertyInits) ? "" : ",";
+
+            return " { " + fieldInits + separator + " " + propertyInits + " }";
         }
 
         #endif

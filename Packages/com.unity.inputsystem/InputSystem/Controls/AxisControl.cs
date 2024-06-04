@@ -71,6 +71,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="clampMin"/>
         /// <seealso cref="clampMax"/>
         /// <seealso cref="clampConstant"/>
+        [IsControlParameter]
         public Clamp clamp
         {
             get => m_Clamp;
@@ -110,6 +111,7 @@ namespace UnityEngine.InputSystem.Controls
         /// If true, the input value will be inverted, i.e. multiplied by -1. Off by default.
         /// </summary>
         /// <value>Whether to invert the input value.</value>
+        [IsControlParameter]
         public bool invert
         {
             get => m_Invert;
@@ -129,6 +131,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <value>Whether to normalize input values or not.</value>
         /// <seealso cref="normalizeMin"/>
         /// <seealso cref="normalizeMax"/>
+        [IsControlParameter]
         public bool normalize
         {
             get => m_Normalize;
@@ -193,6 +196,7 @@ namespace UnityEngine.InputSystem.Controls
         /// Whether the scale the input value by <see cref="scaleFactor"/>. Off by default.
         /// </summary>
         /// <value>True if inputs should be scaled by <see cref="scaleFactor"/>.</value>
+        [IsControlParameter]
         public bool scale
         {
             get => m_Scale;
