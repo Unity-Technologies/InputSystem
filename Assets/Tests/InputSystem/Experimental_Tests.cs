@@ -1,0 +1,213 @@
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.InputSystem.Experimental;
+using UnityEngine.InputSystem.Experimental.Device;
+using Vector2 = UnityEngine.Vector2;
+
+// TODO Do we need a FixedInput type?
+
+namespace Tests.InputSystem
+{
+    internal class ListObserver<T> : IObserver<T>
+    {
+        public readonly List<Exception> Error = new();
+        public readonly List<T> Next = new();
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnError(Exception error)
+        {
+            Error.Add(error);
+        }
+
+        public void OnNext(T value)
+        {
+            Next.Add(value);
+        }
+    }
+
+    internal class DebugObserver<T> : IObserver<T> where T : struct
+    {
+        public void OnCompleted()
+        {
+            Debug.Log("OnCompleted");
+        }
+
+        public void OnError(Exception error)
+        {
+            Debug.Log("OnError: " + error);
+        }
+
+        public void OnNext(T value)
+        {
+            Debug.Log("OnNext: " + value);
+        }
+
+        public static DebugObserver<T> Create()
+        {
+            return new DebugObserver<T>();
+        }
+    }
+    
+    internal static class ContextExtensions
+    {
+        public static void GivenStreamWithData<T>(this Context context, Usage key, params T[] values) where T : struct
+        {
+            var s = context.CreateStream(key, values[0]);
+            for (var i=1; i < values.Length; ++i)
+                s.OfferByRef(ref values[i]);
+        }
+    }
+    
+    internal class Experimental_Tests
+    {
+        private Context m_Context;
+        private int m_MoveCount;
+        private int m_JumpCount;
+        
+        [TearDown]
+        public void TearDown()
+        {
+            m_Context?.Dispose();
+        }
+        
+        private void Move(Vector2 value)
+        {
+            ++m_MoveCount;
+        }
+        
+        private void Jump(InputEvent evt)
+        {
+            ++m_JumpCount;
+        }
+        
+        [Test]
+        public void Concept()
+        {
+            m_Context = new Context();
+            
+            var data = new ListObserver<Vector2>();
+            using var subscription = Gamepad.leftStick.Subscribe(m_Context, data);
+
+            var s = m_Context.CreateStream(Usages.Gamepad.leftStick, Vector2.zero);
+            s.OfferByValue(Vector2.zero);
+            s.OfferByValue(Vector2.left);
+            s.OfferByValue(Vector2.right);
+            m_Context.Update();
+
+            Assert.That(data.Next.Count, Is.EqualTo(4));
+            Assert.That(data.Next[0], Is.EqualTo(Vector2.zero)); // initial state
+            Assert.That(data.Next[1], Is.EqualTo(Vector2.zero));
+            Assert.That(data.Next[2], Is.EqualTo(Vector2.left));
+            Assert.That(data.Next[3], Is.EqualTo(Vector2.right));
+        }
+        
+        // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
+        
+        [Test]
+        public void UseCase_DirectAccess()
+        {
+            m_Context = new Context();
+            m_Context.GivenStreamWithData(Usages.Gamepad.buttonSouth, false, true);
+
+            var data = new ListObserver<Button>();
+            Gamepad.buttonSouth.Subscribe(data);
+            
+            m_Context.Update();
+            
+            Assert.That(data.Next.Count, Is.EqualTo(2));
+        }
+        
+        [Test]
+        public void UseCase_DirectBindingsShouldBeCompileTimeTypeSafe()
+        {
+            m_Context = new Context();
+            m_Context.GivenStreamWithData(Usages.Gamepad.buttonSouth, false, true);
+            
+            using var move = new BindableInput<Vector2>(callback: Move);
+            move.Bind(Gamepad.leftStick);
+            
+            // Act
+            using BindableInput<InputEvent> jump = new(callback: Jump);
+            jump.Bind(Gamepad.buttonSouth.Pressed());
+            jump.Bind(Keyboard.space.Pressed());
+            
+            jump.OnNext(new InputEvent());
+            m_Context.Update();
+            
+            Assert.That(m_JumpCount, Is.EqualTo(1));
+        }
+        
+        /*[Test]
+        public void UseCase_ShouldBeAbleToStartFromPreset()
+        {
+            m_Context = new Context();
+            m_Context.GivenStreamWithData(Usages.Gamepad.buttonSouth, false, true);
+
+            // Act
+            using BindableInput<InputEvent> jump = new(callback: Jump, source: Presets.Jump());
+            
+            m_Context.Update();
+            Assert.That(m_JumpCount, Is.EqualTo(1));
+        }*/
+
+        public void Example()
+        {
+            // React to Gamepad button press event
+            using var subscription = Gamepad.buttonSouth.Pressed()
+                .Subscribe(DebugObserver<InputEvent>.Create());
+
+            
+            
+            
+            // TODO filter Gamepad.leftStick.filter(x => x > 0.5f); and return new binding source?
+            // TODO PoC a temporal filter in the same way, if passed type is not an interface/lambda
+            //      there is an oppertunity to avoid the indirect call.
+        }
+        
+        [Test]
+        public void Press()
+        {
+            m_Context = new Context();
+            var s= m_Context.CreateStream(Usages.Gamepad.buttonEast, false);
+            s.OfferByValue(true);
+            s.OfferByValue(false);
+            
+            // React to Gamepad button press event
+            var observer = new ListObserver<InputEvent>();
+            using var subscription = Gamepad.buttonEast.Pressed(m_Context)
+                .Subscribe(m_Context, observer);
+            
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Output_Direct()
+        {
+            m_Context = new Context();
+
+            Gamepad.rumbleHaptic.Offer(1.0f);
+        }
+        
+        [Test]
+        public void Output_Indirect()
+        {
+            m_Context = new Context();
+
+            var rumble = new BindableOutput<float>(Gamepad.rumbleHaptic);
+            rumble.Offer(1.0f);
+        }
+        
+        // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
+        // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.
+        // TODO Trigger once vs trigger once a frame, vs trigger on received value
+        // TODO Phases are related to interactions. Phases associated with data makes no sense, but how do we handle touch?
+        // TODO Disambuigitation is better solved on binding level where one can either merge or select?
+    }
+}
