@@ -1113,7 +1113,11 @@ namespace UnityEngine.InputSystem
             MarkAsStale();
 
             foreach (var inputControl in children)
+            {
                 inputControl.MarkAsStale();
+                if (inputControl is ButtonControl buttonControl)
+                    buttonControl.UpdateWasPressed();
+            }
         }
 
         #if UNITY_EDITOR

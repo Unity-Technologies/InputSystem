@@ -484,16 +484,8 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
-        if (usesReadValueCaching)
-        {
-            Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
-            Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
-        }
-        else
-        {
-            Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
-            Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
-        }
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
 
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, originalSetting);
     }

@@ -3707,7 +3707,7 @@ namespace UnityEngine.InputSystem
                 // Update the pressed/not pressed state of all buttons that have changed this update
                 foreach (var button in device.m_UpdatedButtons.Values)
                 {
-                    button.UpdateWasPressed(device.m_CurrentUpdateStepCount);
+                    button.UpdateWasPressed();
                 }
             }
 
@@ -3748,18 +3748,15 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            if (InputSettings.readValueCachingFeatureEnabled)
-            {
-                // if the buffers have just been flipped, and we're doing a full state update, then the state from the
-                // previous update is now in the back buffer, and we should be comparing to that when checking what
-                // controls have changed
-                var buffer = (byte*)frontBuffer;
-                if (flippedBuffers && deviceStateSize == stateSizeInBytes)
-                    buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
+            // if the buffers have just been flipped, and we're doing a full state update, then the state from the
+            // previous update is now in the back buffer, and we should be comparing to that when checking what
+            // controls have changed
+            var buffer = (byte*)frontBuffer;
+            if (flippedBuffers && deviceStateSize == stateSizeInBytes)
+                buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
 
-                m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
-                    stateSizeInBytes, stateOffsetInDevice);
-            }
+            m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
+                stateSizeInBytes, stateOffsetInDevice);
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);

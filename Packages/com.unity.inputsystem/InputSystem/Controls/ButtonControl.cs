@@ -17,9 +17,9 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     public class ButtonControl : AxisControl
     {
-        private uint updateCountLastPressed = uint.MaxValue;
-        private uint updateCountLastReleased = uint.MaxValue;
-        private bool lastUpdateWasPress = false;
+        private uint m_UpdateCountLastPressed = uint.MaxValue;
+        private uint m_UpdateCountLastReleased = uint.MaxValue;
+        private bool m_LastUpdateWasPress;
 
         ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        public bool isPressed => IsValueConsideredPressed(value);
+        public bool isPressed => m_LastUpdateWasPress;
 
         /// <summary>
         /// Whether the press started this frame.
@@ -122,40 +122,22 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// </remarks>
-        public bool wasPressedThisFrame
+        public bool wasPressedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
+
+        public bool wasReleasedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
+
+        internal void UpdateWasPressed()
         {
-            get
-            {
-                if (InputSettings.readValueCachingFeatureEnabled)
-                    return InputUpdate.s_UpdateStepCount == updateCountLastPressed;
+            var isNowPressed = IsValueConsideredPressed(value);
 
-                return device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
-            }
-        }
-
-        public bool wasReleasedThisFrame
-        {
-            get
-            {
-                if (InputSettings.readValueCachingFeatureEnabled)
-                    return InputUpdate.s_UpdateStepCount == updateCountLastReleased;
-
-                return device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
-            }
-        }
-
-        internal void UpdateWasPressed(uint updateStepCount)
-        {
-            var isNowPressed = isPressed;
-
-            if (lastUpdateWasPress != isNowPressed)
+            if (m_LastUpdateWasPress != isNowPressed)
             {
                 if (isNowPressed)
-                    updateCountLastPressed = updateStepCount;
+                    m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
                 else
-                    updateCountLastReleased = updateStepCount;
+                    m_UpdateCountLastReleased = device.m_CurrentUpdateStepCount;
 
-                lastUpdateWasPress = isNowPressed;
+                m_LastUpdateWasPress = isNowPressed;
             }
         }
 
