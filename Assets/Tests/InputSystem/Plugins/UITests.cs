@@ -1176,6 +1176,42 @@ internal class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    [TestCase(1.0f, ExpectedResult = -1)]
+    [TestCase(120.0f, ExpectedResult = -1)]
+    public IEnumerator UI_ReceivesNormalizedScrollWheelDelta(float scrollWheelDeltaPerTick)
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+        scene.uiModule.scrollWheel = InputActionReference.Create(actions.UI.ScrollWheel);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
+        Set(mouse.scroll, Vector2.zero);
+
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+
+        scene.leftChildReceiver.events.Clear();
+
+        // Set scroll delta with a custom range.
+        ((InputTestRuntime)InputRuntime.s_Instance).scrollWheelDeltaPerTick = scrollWheelDeltaPerTick;
+        Set(mouse.scroll, new Vector2(0, scrollWheelDeltaPerTick));
+        yield return null;
+
+        // UI should receive scroll delta in the [-1, 1] range.
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Scroll),
+                AllEvents("position", scene.From640x480ToScreen(100, 100)),
+                AllEvents("scrollDelta", Vector2.up)
+            )
+        );
+    }
+
+    [UnityTest]
+    [Category("UI")]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
