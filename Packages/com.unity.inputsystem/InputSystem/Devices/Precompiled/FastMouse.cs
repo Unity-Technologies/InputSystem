@@ -570,7 +570,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousedeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlMousedeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlMousedeltaup.Setup()
                 .At(this, 16)
                 .WithParent(parent)
@@ -592,7 +592,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousedeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlMousedeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlMousedeltadown.Setup()
                 .At(this, 17)
                 .WithParent(parent)
@@ -614,7 +614,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousedeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlMousedeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlMousedeltaleft.Setup()
                 .At(this, 18)
                 .WithParent(parent)
@@ -636,7 +636,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousedeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlMousedeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlMousedeltaright.Setup()
                 .At(this, 19)
                 .WithParent(parent)
@@ -700,7 +700,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrollup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousescrollup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlMousescrollup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlMousescrollup.Setup()
                 .At(this, 22)
                 .WithParent(parent)
@@ -722,7 +722,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrolldown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousescrolldown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlMousescrolldown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlMousescrolldown.Setup()
                 .At(this, 23)
                 .WithParent(parent)
@@ -744,7 +744,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrollleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousescrollleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlMousescrollleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlMousescrollleft.Setup()
                 .At(this, 24)
                 .WithParent(parent)
@@ -766,7 +766,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrollright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlMousescrollright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlMousescrollright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlMousescrollright.Setup()
                 .At(this, 25)
                 .WithParent(parent)

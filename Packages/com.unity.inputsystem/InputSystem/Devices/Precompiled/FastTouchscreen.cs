@@ -2158,7 +2158,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreenprimaryTouchdeltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreenprimaryTouchdeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreenprimaryTouchdeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreenprimaryTouchdeltaup.Setup()
                 .At(this, 32)
                 .WithParent(parent)
@@ -2180,7 +2180,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreenprimaryTouchdeltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreenprimaryTouchdeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreenprimaryTouchdeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreenprimaryTouchdeltadown.Setup()
                 .At(this, 33)
                 .WithParent(parent)
@@ -2202,7 +2202,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreenprimaryTouchdeltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreenprimaryTouchdeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreenprimaryTouchdeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreenprimaryTouchdeltaleft.Setup()
                 .At(this, 34)
                 .WithParent(parent)
@@ -2224,7 +2224,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreenprimaryTouchdeltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreenprimaryTouchdeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreenprimaryTouchdeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreenprimaryTouchdeltaright.Setup()
                 .At(this, 35)
                 .WithParent(parent)
@@ -2416,7 +2416,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreendeltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreendeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreendeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreendeltaup.Setup()
                 .At(this, 44)
                 .WithParent(parent)
@@ -2438,7 +2438,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreendeltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreendeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreendeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreendeltadown.Setup()
                 .At(this, 45)
                 .WithParent(parent)
@@ -2460,7 +2460,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreendeltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreendeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreendeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreendeltaleft.Setup()
                 .At(this, 46)
                 .WithParent(parent)
@@ -2482,7 +2482,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreendeltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreendeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreendeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreendeltaright.Setup()
                 .At(this, 47)
                 .WithParent(parent)
@@ -2922,7 +2922,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch0deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch0deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch0deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch0deltaup.Setup()
                 .At(this, 67)
                 .WithParent(parent)
@@ -2944,7 +2944,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch0deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch0deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch0deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch0deltadown.Setup()
                 .At(this, 68)
                 .WithParent(parent)
@@ -2966,7 +2966,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch0deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch0deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch0deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch0deltaleft.Setup()
                 .At(this, 69)
                 .WithParent(parent)
@@ -2988,7 +2988,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch0deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch0deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch0deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch0deltaright.Setup()
                 .At(this, 70)
                 .WithParent(parent)
@@ -3470,7 +3470,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch1deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch1deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch1deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch1deltaup.Setup()
                 .At(this, 92)
                 .WithParent(parent)
@@ -3492,7 +3492,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch1deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch1deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch1deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch1deltadown.Setup()
                 .At(this, 93)
                 .WithParent(parent)
@@ -3514,7 +3514,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch1deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch1deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch1deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch1deltaleft.Setup()
                 .At(this, 94)
                 .WithParent(parent)
@@ -3536,7 +3536,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch1deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch1deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch1deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch1deltaright.Setup()
                 .At(this, 95)
                 .WithParent(parent)
@@ -4018,7 +4018,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch2deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch2deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch2deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch2deltaup.Setup()
                 .At(this, 117)
                 .WithParent(parent)
@@ -4040,7 +4040,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch2deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch2deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch2deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch2deltadown.Setup()
                 .At(this, 118)
                 .WithParent(parent)
@@ -4062,7 +4062,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch2deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch2deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch2deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch2deltaleft.Setup()
                 .At(this, 119)
                 .WithParent(parent)
@@ -4084,7 +4084,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch2deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch2deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch2deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch2deltaright.Setup()
                 .At(this, 120)
                 .WithParent(parent)
@@ -4566,7 +4566,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch3deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch3deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch3deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch3deltaup.Setup()
                 .At(this, 142)
                 .WithParent(parent)
@@ -4588,7 +4588,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch3deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch3deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch3deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch3deltadown.Setup()
                 .At(this, 143)
                 .WithParent(parent)
@@ -4610,7 +4610,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch3deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch3deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch3deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch3deltaleft.Setup()
                 .At(this, 144)
                 .WithParent(parent)
@@ -4632,7 +4632,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch3deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch3deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch3deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch3deltaright.Setup()
                 .At(this, 145)
                 .WithParent(parent)
@@ -5114,7 +5114,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch4deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch4deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch4deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch4deltaup.Setup()
                 .At(this, 167)
                 .WithParent(parent)
@@ -5136,7 +5136,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch4deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch4deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch4deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch4deltadown.Setup()
                 .At(this, 168)
                 .WithParent(parent)
@@ -5158,7 +5158,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch4deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch4deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch4deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch4deltaleft.Setup()
                 .At(this, 169)
                 .WithParent(parent)
@@ -5180,7 +5180,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch4deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch4deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch4deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch4deltaright.Setup()
                 .At(this, 170)
                 .WithParent(parent)
@@ -5662,7 +5662,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch5deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch5deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch5deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch5deltaup.Setup()
                 .At(this, 192)
                 .WithParent(parent)
@@ -5684,7 +5684,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch5deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch5deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch5deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch5deltadown.Setup()
                 .At(this, 193)
                 .WithParent(parent)
@@ -5706,7 +5706,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch5deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch5deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch5deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch5deltaleft.Setup()
                 .At(this, 194)
                 .WithParent(parent)
@@ -5728,7 +5728,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch5deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch5deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch5deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch5deltaright.Setup()
                 .At(this, 195)
                 .WithParent(parent)
@@ -6210,7 +6210,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch6deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch6deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch6deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch6deltaup.Setup()
                 .At(this, 217)
                 .WithParent(parent)
@@ -6232,7 +6232,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch6deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch6deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch6deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch6deltadown.Setup()
                 .At(this, 218)
                 .WithParent(parent)
@@ -6254,7 +6254,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch6deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch6deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch6deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch6deltaleft.Setup()
                 .At(this, 219)
                 .WithParent(parent)
@@ -6276,7 +6276,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch6deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch6deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch6deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch6deltaright.Setup()
                 .At(this, 220)
                 .WithParent(parent)
@@ -6758,7 +6758,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch7deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch7deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch7deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch7deltaup.Setup()
                 .At(this, 242)
                 .WithParent(parent)
@@ -6780,7 +6780,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch7deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch7deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch7deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch7deltadown.Setup()
                 .At(this, 243)
                 .WithParent(parent)
@@ -6802,7 +6802,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch7deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch7deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch7deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch7deltaleft.Setup()
                 .At(this, 244)
                 .WithParent(parent)
@@ -6824,7 +6824,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch7deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch7deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch7deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch7deltaright.Setup()
                 .At(this, 245)
                 .WithParent(parent)
@@ -7306,7 +7306,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch8deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch8deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch8deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch8deltaup.Setup()
                 .At(this, 267)
                 .WithParent(parent)
@@ -7328,7 +7328,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch8deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch8deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch8deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch8deltadown.Setup()
                 .At(this, 268)
                 .WithParent(parent)
@@ -7350,7 +7350,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch8deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch8deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch8deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch8deltaleft.Setup()
                 .At(this, 269)
                 .WithParent(parent)
@@ -7372,7 +7372,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch8deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch8deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch8deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch8deltaright.Setup()
                 .At(this, 270)
                 .WithParent(parent)
@@ -7854,7 +7854,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch9deltaup(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch9deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch9deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch9deltaup.Setup()
                 .At(this, 292)
                 .WithParent(parent)
@@ -7876,7 +7876,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch9deltadown(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch9deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch9deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch9deltadown.Setup()
                 .At(this, 293)
                 .WithParent(parent)
@@ -7898,7 +7898,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch9deltaleft(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch9deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f };
+            var ctrlTouchscreentouch9deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clampMin = -3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, invert = true };
             ctrlTouchscreentouch9deltaleft.Setup()
                 .At(this, 294)
                 .WithParent(parent)
@@ -7920,7 +7920,7 @@ namespace UnityEngine.InputSystem
 
         private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlTouchscreentouch9deltaright(InternedString kAxisLayout, InputControl parent)
         {
-            var ctrlTouchscreentouch9deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f };
+            var ctrlTouchscreentouch9deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clampMax = 3.402823E+38f, clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize };
             ctrlTouchscreentouch9deltaright.Setup()
                 .At(this, 295)
                 .WithParent(parent)
