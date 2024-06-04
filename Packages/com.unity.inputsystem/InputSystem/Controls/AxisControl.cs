@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -78,7 +79,8 @@ namespace UnityEngine.InputSystem.Controls
             set
             {
                 m_Clamp = value;
-                ApplyParameterChanges();
+                m_OptimizedControlDataType = CalculateOptimizedControlDataType();
+                MarkAsStale();
             }
         }
 
@@ -118,7 +120,8 @@ namespace UnityEngine.InputSystem.Controls
             set
             {
                 m_Invert = value;
-                ApplyParameterChanges();
+                m_OptimizedControlDataType = CalculateOptimizedControlDataType();
+                MarkAsStale();
             }
         }
 
@@ -139,7 +142,8 @@ namespace UnityEngine.InputSystem.Controls
             set
             {
                 m_Normalize = value;
-                ApplyParameterChanges();
+                m_OptimizedControlDataType = CalculateOptimizedControlDataType();
+                MarkAsStale();
             }
         }
 
@@ -203,7 +207,8 @@ namespace UnityEngine.InputSystem.Controls
             set
             {
                 m_Scale = value;
-                ApplyParameterChanges();
+                m_OptimizedControlDataType = CalculateOptimizedControlDataType();
+                MarkAsStale();
             }
         }
         bool m_Scale;
