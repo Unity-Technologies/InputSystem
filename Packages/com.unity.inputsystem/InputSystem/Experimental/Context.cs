@@ -37,6 +37,11 @@ namespace UnityEngine.InputSystem.Experimental
             return stream;
         }
 
+        public Stream<T> CreateDefaultInitializedStream<T>(InputBindingSource<T> source) where T : struct
+        {
+            return CreateStream<T>(source.Usage, default);
+        }
+
         /*
         public void Offer<T>(Usage key, T value) where T : struct
         {
@@ -110,6 +115,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Update()
         {
+            // TODO Eliminate, this should be perspective
             // TODO Replace with filtered call based on incoming. Note that a stream context always has subscriptions.
             //      If not, it doesn't exist.
             foreach (var kvp in m_StreamContexts)

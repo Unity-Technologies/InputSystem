@@ -22,6 +22,7 @@ namespace UnityEngine.InputSystem.Experimental
             public static readonly Usage rightStick = new(3213574);
             public static readonly Usage buttonEast = new(64155486);
             public static readonly Usage buttonSouth = new(2313185468);
+            public static readonly Usage buttonNorth = new(2123123468);
             public static readonly Usage rumbleHaptic = new(2521315);
         }
     }

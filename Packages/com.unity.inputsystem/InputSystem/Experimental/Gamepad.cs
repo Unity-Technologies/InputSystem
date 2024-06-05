@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         public static InputBindingSource<Vector2> rightStick = new(Usages.Gamepad.rightStick);
         public static InputBindingSource<Button> buttonSouth => new(Usages.Gamepad.buttonSouth);
         public static InputBindingSource<bool> buttonEast = new(Usages.Gamepad.buttonEast);
+        public static InputBindingSource<bool> buttonNorth = new(Usages.Gamepad.buttonNorth);
         public static OutputBindingTarget<float> rumbleHaptic = new(Usages.Gamepad.rumbleHaptic); // TODO Move to HapticDevice
     }
 }

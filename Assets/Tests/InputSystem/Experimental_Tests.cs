@@ -155,6 +155,30 @@ namespace Tests.InputSystem
             rumble.Offer(1.0f);
         }
 
+        [Test]
+        public void Multiplex()
+        {
+            var east = m_Context.CreateDefaultInitializedStream(Gamepad.buttonEast);
+            var north = m_Context.CreateDefaultInitializedStream(Gamepad.buttonNorth);
+
+            var output = new ListObserver<bool>();
+            var mux = new Multiplexer<bool>(Gamepad.buttonEast, Gamepad.buttonNorth);
+            using var sub = mux.Subscribe(m_Context, output);
+
+            m_Context.Update();
+
+            Assert.That(output.Next.Count, Is.EqualTo(2));
+            Assert.That(output.Next[0], Is.EqualTo(false));
+            Assert.That(output.Next[1], Is.EqualTo(false));
+
+            east.OfferByValue(true);
+
+            m_Context.Update();
+
+            Assert.That(output.Next.Count, Is.EqualTo(3));
+            Assert.That(output.Next[2], Is.EqualTo(true));
+        }
+
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.
         // TODO Trigger once vs trigger once a frame, vs trigger on received value

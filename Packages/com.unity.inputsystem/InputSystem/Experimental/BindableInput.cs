@@ -71,16 +71,16 @@ namespace UnityEngine.InputSystem.Experimental
             performed?.Invoke(value);
         }
 
-        public void Bind(IInputBindingSource<T> source)
+        public void Bind<TSource>(TSource source) where TSource : IInputBindingSource<T>
         {
-            var subscription = source.Subscribe(this);
-            ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount, subscription);
+            ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount,
+                source.Subscribe(m_Context, this));
         }
 
-        public void Bind(InputBindingSource<T> source)
+        /*public void Bind(InputBindingSource<T> source)
         {
             ArrayHelpers.AppendWithCapacity(ref m_Bindings, ref m_BindingCount, source);
-        }
+        }*/
 
         // TODO Consider requiring context to be passed and instead only make IObservable<T> out of context owning objects
         public void Bind(IObservable<T> observable)
