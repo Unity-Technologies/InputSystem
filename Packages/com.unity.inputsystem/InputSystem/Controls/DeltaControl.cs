@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.Controls
         public AxisControl up { get; set; }
 
         /// <summary>
-        /// A synthetic axis representing the lower half of the Y axis value, i.e. the -1 to 1 range (inverted).
+        /// A synthetic axis representing the lower half of the Y axis value, i.e. the 0 to -1 range (inverted).
         /// </summary>
         /// <value>Control representing the control's lower half Y axis.</value>
         /// <remarks>
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Controls
         public AxisControl down { get; set; }
 
         /// <summary>
-        /// A synthetic axis representing the left half of the X axis value, i.e. the -1 to 1 range (inverted).
+        /// A synthetic axis representing the left half of the X axis value, i.e. the 0 to -1 range (inverted).
         /// </summary>
         /// <value>Control representing the control's left half X axis.</value>
         /// <remarks>
