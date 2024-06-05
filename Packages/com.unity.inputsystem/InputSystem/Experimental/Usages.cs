@@ -1,7 +1,7 @@
 namespace UnityEngine.InputSystem.Experimental
 {
     // NOTE: This is auto-generated from native code usage definitions.
-    
+
     /// <summary>
     /// Input System usages.
     /// </summary>
@@ -9,11 +9,11 @@ namespace UnityEngine.InputSystem.Experimental
     {
         public static partial class Keyboard
         {
-            public static readonly Usage w = new (54654654);
-            public static readonly Usage a = new (231321);
-            public static readonly Usage s = new (564654);
-            public static readonly Usage d = new (987897122);
-            public static readonly Usage space = new (12313747);
+            public static readonly Usage w = new(54654654);
+            public static readonly Usage a = new(231321);
+            public static readonly Usage s = new(564654);
+            public static readonly Usage d = new(987897122);
+            public static readonly Usage space = new(12313747);
         }
 
         public static partial class Gamepad

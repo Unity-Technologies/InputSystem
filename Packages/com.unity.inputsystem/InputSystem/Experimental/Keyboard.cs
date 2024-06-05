@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.Experimental.Device
+namespace UnityEngine.InputSystem.Experimental.Devices
 {
     public struct Keyboard
     {
@@ -6,6 +6,6 @@ namespace UnityEngine.InputSystem.Experimental.Device
         public static InputBindingSource<Button> a = new();
         public static InputBindingSource<Button> s = new();
         public static InputBindingSource<Button> d = new();
-        public static InputBindingSource<Button> space = new (); // TODO Extract context
+        public static InputBindingSource<Button> space = new();  // TODO Extract context
     }
 }

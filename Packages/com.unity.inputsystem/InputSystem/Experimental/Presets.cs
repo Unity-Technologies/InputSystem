@@ -12,7 +12,7 @@
         /// <param name="target">The target for which to apply bindings.</param>
         public void ApplyTo(BindableInput<T> target);
     }
-    
+
     /// <summary>
     /// Provides input binding presents.
     /// </summary>
@@ -28,7 +28,7 @@
         }
 
         /// <summary>
-        /// General purpose cross-platform input binding preset. 
+        /// General purpose cross-platform input binding preset.
         /// </summary>
         /// <returns>Binding preset.</returns>
         public static IInputBindingSource<InputEvent> Jump()

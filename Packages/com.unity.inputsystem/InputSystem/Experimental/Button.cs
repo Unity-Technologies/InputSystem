@@ -1,6 +1,7 @@
 namespace UnityEngine.InputSystem.Experimental
 {
-    public class Interaction
+    public struct Button
     {
+        public readonly int bitIndex;
     }
 }

@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Experimental
     {
         private const uint deviceIdBits = 16;
         private const int deviceIdShift = 16;
-        
+
         [FieldOffset(0)] public ulong value;
 
         public static EndPoint FromUsage(Usage usage)
@@ -37,13 +37,13 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return obj is EndPoint other && Equals(other);
         }
-        
-        public static bool operator == (EndPoint first, EndPoint second)
+
+        public static bool operator==(EndPoint first, EndPoint second)
         {
             return first.value == second.value;
         }
 
-        public static bool operator != (EndPoint first, EndPoint second)
+        public static bool operator!=(EndPoint first, EndPoint second)
         {
             return !(first == second);
         }

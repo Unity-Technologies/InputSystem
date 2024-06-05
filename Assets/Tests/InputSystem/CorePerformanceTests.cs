@@ -7,6 +7,7 @@ using Unity.PerformanceTesting;
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -62,6 +63,13 @@ internal class CorePerformanceTests : CoreTestsFixture
             .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void NEW_Performance_Update10Gamepads()
+    {
+        // TODO
     }
 
     [Test, Performance]
@@ -146,6 +154,19 @@ internal class CorePerformanceTests : CoreTestsFixture
         else
             throw new NotImplementedException();
 
+        Measure.Method(method)
+            .MeasurementCount(200)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void NEW_Performance_ReadControl()
+    {
+        using var ctx = new Context();
+        var stream = ctx.CreateStream(Usages.Gamepad.leftStick, Vector2.zero);
+        Action method = () => stream.GetLast();
         Measure.Method(method)
             .MeasurementCount(200)
             .WarmupCount(5)

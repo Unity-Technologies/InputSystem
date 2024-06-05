@@ -12,13 +12,13 @@ namespace UnityEngine.InputSystem.Experimental
         /// Called when all of the sequence have been processed.
         /// </summary>
         public void OnSequenceCompleted();
-        
+
         /// <summary>
         /// Process an unexpected error.
         /// </summary>
         /// <param name="e">The associated exception</param>
         public void OnSequenceError(Exception e);
-        
+
         /// <summary>
         /// Processes the next consecutive sequence.
         /// </summary>

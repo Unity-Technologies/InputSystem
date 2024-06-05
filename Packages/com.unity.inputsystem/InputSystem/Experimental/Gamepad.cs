@@ -1,8 +1,22 @@
 using System;
 
-namespace UnityEngine.InputSystem.Experimental.Device
+namespace UnityEngine.InputSystem.Experimental.Devices
 {
-    // Auto-generated from native header of device interface
+    // Auto-generated via code generator based off native headers.
+    [Flags]
+    enum GamepadButton
+    {
+        ButtonSouth = 1,
+        ButtonWest = 2,
+        ButtonEast = 3,
+        ButtonNorth = 4,
+        LeftPaddle = 5,
+        RightPaddle = 6,
+        LeftStickHat = 7,
+        RightStickHat = 8
+    }
+
+    // Auto-generated via code generator based off native headers.
     public struct Gamepad
     {
         public static InputBindingSource<Vector2> leftStick = new(Usages.Gamepad.leftStick);

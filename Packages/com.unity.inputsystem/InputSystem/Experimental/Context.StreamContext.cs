@@ -10,14 +10,14 @@ namespace UnityEngine.InputSystem.Experimental
             public abstract void Process();
             public abstract void Dispose();
         }
-        
+
         internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable where T : struct
         {
             private readonly Usage m_Usage;
             private IObserver<T>[] m_Observers;
             private int m_ObserverCount;
             private Stream<T> m_Stream; // not owned by this context
-            
+
             public StreamContext(Usage usage, Stream<T> stream = null)
                 : base()
             {
@@ -31,10 +31,10 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 m_Stream = stream;
             }
-            
+
             /*public void Offer(ref T value)
             {
-                m_Stream.Offer(ref value);    
+                m_Stream.Offer(ref value);
             }*/
 
             public override void Process()
@@ -49,21 +49,21 @@ namespace UnityEngine.InputSystem.Experimental
                     for (var j = 0; j < m_ObserverCount; ++j)
                     {
                         m_Observers[j].OnNext(span[i]);
-                    }    
+                    }
                 }
             }
-            
+
             private class Subscription : IDisposable
             {
                 private readonly StreamContext<T> m_Owner;
                 private readonly IObserver<T> m_Observer;
-                
+
                 public Subscription(StreamContext<T> owner, IObserver<T> observer)
                 {
                     m_Owner = owner;
                     m_Observer = observer;
                 }
-                
+
                 public void Dispose()
                 {
                     m_Owner.Unsubscribe(m_Observer);
@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem.Experimental
                 ArrayHelpers.Erase(ref m_Observers, observer);
                 --m_ObserverCount;
             }
-            
+
             public IDisposable Subscribe(IObserver<T> observer)
             {
                 ArrayHelpers.AppendWithCapacity<IObserver<T>>(ref m_Observers, ref m_ObserverCount, observer);
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Experimental
                 {
                     Debug.LogWarning("Subscription not disposed: " + m_Observers[i]);
                 }
-                
+
                 //m_Stream?.Dispose(); // TODO Should really ref count
             }
         }

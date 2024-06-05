@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Experimental
         }*/
 
         private static Context _instance;
-        
+
         public static Context instance
         {
             get => _instance ??= new Context();
@@ -30,13 +30,13 @@ namespace UnityEngine.InputSystem.Experimental
 
             var stream = new Stream<T>(key, ref initialValue);
             m_Streams.Add(key, stream);
-            
+
             if (m_StreamContexts.TryGetValue(key, out StreamContext streamContext))
                 ((StreamContext<T>)streamContext).SetStream(stream);
-            
+
             return stream;
         }
-        
+
         /*
         public void Offer<T>(Usage key, T value) where T : struct
         {
@@ -48,12 +48,12 @@ namespace UnityEngine.InputSystem.Experimental
         {
             if (!m_Streams.TryGetValue(key, out IStream stream))
                 throw new Exception("Stream do not exist");
-            
+
             ((Stream<T>)stream).Offer(ref value);
             //var streamContext = m_StreamContexts[key] as StreamContext<T>; // TODO Incorrect, should write to stream
             //streamContext?.Offer(ref value);
         }*/
-        
+
         // TODO Should not take stream
         /*public void GivenData<T>(Usage key, Stream<T> stream) where T : struct
         {
@@ -62,26 +62,26 @@ namespace UnityEngine.InputSystem.Experimental
 
             // Register stream
             m_Streams.Add(key, stream);
-            
+
             // If there is an associated stream context, associate the stream with the context
             if (m_StreamContexts.TryGetValue(key, out StreamContext streamContext))
                 ((StreamContext<T>)streamContext).SetStream(stream);
         }*/
-        
+
         internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
         {
             // Fetch existing stream context if already exists
             if (m_StreamContexts.TryGetValue(key, out StreamContext context))
             {
                 var streamContext = (StreamContext<T>)context;
-                
+
                 // Associate stream context with underlying stream if available
                 if (m_Streams.TryGetValue(key, out var stream))
                     streamContext.SetStream(stream as Stream<T>);
-                
+
                 return streamContext;
             }
-            
+
             // Create a new stream context without any associated underlying stream
             var newContext = new StreamContext<T>(key);
             m_StreamContexts.Add(key, newContext);
@@ -89,25 +89,25 @@ namespace UnityEngine.InputSystem.Experimental
                 newContext.SetStream(stream2 as Stream<T>);
             return newContext;
         }
-        
+
         /*public Stream<T> GetStream<T>(Usage key) where T : struct
         {
-            return m_Streams[key].GetStream<T>(); 
+            return m_Streams[key].GetStream<T>();
         }*/
 
         //public delegate void StreamDataReceived(IStream stream);
 
         // This map is populated when a stream is subscribed to
         private readonly Dictionary<Usage, StreamContext> m_StreamContexts = new();
-        
+
         // This map is populated based on addressable endpoints
         private readonly Dictionary<Usage, IStream> m_Streams = new();
 
         //private readonly StreamContext<Button>[] m_ButtonStreams;
-        
+
         // THis map is populated when a usage is subscribed to
         //private readonly Dictionary<Usage, List<Object>> m_Observers = new();
-        
+
         public void Update()
         {
             // TODO Replace with filtered call based on incoming. Note that a stream context always has subscriptions.

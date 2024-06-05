@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -15,8 +16,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         public Press(InputBindingSource<bool> button)
             : this(button, Context.instance)
-        { }
-        
+        {}
+
         public Press(InputBindingSource<bool> button, Context context = null)
         {
             m_Trigger = button;
@@ -29,7 +30,7 @@ namespace UnityEngine.InputSystem.Experimental
                 m_Subscription = null;
             });
         }
-        
+
         public void Process(bool value)
         {
             if (value && !m_PreviousValue)
@@ -48,7 +49,7 @@ namespace UnityEngine.InputSystem.Experimental
                 return;
             m_Subscription = m_Trigger.Subscribe(context, this);
         }
-        
+
         public IDisposable Subscribe(IObserver<InputEvent> observer)
         {
             UpdateSubscription(Context.instance); // TODO FIX, it should belong to
@@ -76,19 +77,19 @@ namespace UnityEngine.InputSystem.Experimental
             Process(value);
         }
     }
-    
+
     public static class PressInteractionExtensions
     {
         public static IInputBindingSource<InputEvent> Pressed(this InputBindingSource<bool> source, Context context)
         {
-            return new Press(source, context); 
+            return new Press(source, context);
         }
-        
+
         public static DerivedInputBindingSource<Button, InputEvent> Pressed(this InputBindingSource<Button> source, Context context)
         {
-            // TODO We need to allocate a derived observer 
+            // TODO We need to allocate a derived observer
             return new DerivedInputBindingSource<Button, InputEvent>(source, (x) => new InputEvent());
-            
+
             // TODO Here we basically want to return a source that would derive our desired data from data
             //var observer = new PressInputBindingSource();
             //data.Subscribe(context, observer);
@@ -96,15 +97,14 @@ namespace UnityEngine.InputSystem.Experimental
             //for (var i=0; i < data.)
             // TODO We want to apply press interaction here to provide a derived stream or observable
             //data.Subscribe();
-            
         }
-        
+
         // TODO Should not have 2
         public static DerivedInputBindingSource<Button, InputEvent> Pressed(this InputBindingSource<Button> data)
         {
             return Pressed(data, Context.instance);
         }
-        
+
         public static IInputBindingSource<InputEvent> Pressed(this InputBindingSource<bool> source)
         {
             return Pressed(source, Context.instance);
