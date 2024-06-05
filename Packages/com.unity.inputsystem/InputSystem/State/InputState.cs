@@ -180,7 +180,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ///         InputState.AddChangeMonitor(Mouse.current.rightButton, this, monitorIndex: 2);
         ///     }
         ///
-        ///     public void NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
+        ///     public void NotifyControlStateChanged(InputControl control, double currentTime, InputEventPtr eventPtr, long monitorIndex)
         ///     {
         ///         Debug.Log($"{control} changed");
         ///
@@ -189,10 +189,10 @@ namespace UnityEngine.InputSystem.LowLevel
         ///         // for 2 seconds. If nothing happens, we will get a call to NotifyTimerExpired.
         ///         // If, however, there is a state change, the timeout is automatically removed
         ///         // and we will see a call to NotifyControlStateChanged instead.
-        ///         InputState.AddChangeMonitorTimeout(control, this, 2);
+        ///         InputState.AddChangeMonitorTimeout(control, this, currentTime + 2);
         ///     }
         ///
-        ///     public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+        ///     public void NotifyTimerExpired(InputControl control, double currentTime, long monitorIndex, int timerIndex)
         ///     {
         ///         Debug.Log($"{control} was not changed within 2 seconds");
         ///     }
