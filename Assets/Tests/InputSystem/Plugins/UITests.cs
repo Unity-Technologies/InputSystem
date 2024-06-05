@@ -1174,6 +1174,7 @@ internal class UITests : CoreTestsFixture
         );
     }
 
+#if UNITY_6000_0_OR_NEWER
     [UnityTest]
     [Category("UI")]
     [TestCase(1.0f, ExpectedResult = -1)]
@@ -1209,6 +1210,7 @@ internal class UITests : CoreTestsFixture
             )
         );
     }
+#endif
 
     [UnityTest]
     [Category("UI")]
