@@ -187,8 +187,6 @@ namespace UnityEngine.InputSystem.LowLevel
         ///         // We can add a monitor timeout that will trigger in case the state of the
         ///         // given control is not changed within the given time. Let's watch the control
         ///         // for 2 seconds. If nothing happens, we will get a call to NotifyTimerExpired.
-        ///         // If, however, there is a state change, the timeout is automatically removed
-        ///         // and we will see a call to NotifyControlStateChanged instead.
         ///         InputState.AddChangeMonitorTimeout(control, this, currentTime + 2);
         ///     }
         ///
@@ -248,8 +246,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// If by the given <paramref name="time"/>, no state change has been registered on the control monitored
         /// by the given <paramref name="monitor">state change monitor</paramref>, <see cref="IInputStateChangeMonitor.NotifyTimerExpired"/>
-        /// will be called on <paramref name="monitor"/>. If a state change happens by the given <paramref name="time"/>,
-        /// the monitor is notified as usual and the timer is automatically removed.
+        /// will be called on <paramref name="monitor"/>. 
         /// </remarks>
         public static void AddChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
         {
