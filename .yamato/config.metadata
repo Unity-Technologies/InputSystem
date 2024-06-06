@@ -1,7 +1,7 @@
 editors:
   - version: 2021.3
   - version: 2022.3
-  - version: 2023.2
+  - version: 6000.0
   - version: trunk
     disable_tvos_run: true
 
@@ -46,6 +46,24 @@ platforms_nix:
     runtime: StandaloneOSX
     scripting-backend: Il2Cpp
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
+  - name: linux
+    type: Unity::VM
+    image: package-ci/ubuntu-20.04:v4.50.0
+    flavor: b1.large
+  - name: linux_standalone
+    type: Unity::VM
+    image: package-ci/ubuntu-20.04:v4.50.0
+    flavor: b1.large
+    runtime: StandaloneLinux64
+  - name: linux_standalone_il2cpp
+    type: Unity::VM
+    image: package-ci/ubuntu-20.04:v4.50.0
+    flavor: b1.large
+    runtime: StandaloneLinux64
+    scripting-backend: Il2Cpp
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
 scripting_backends:
   - name: mono
   - name: il2cpp
+  
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0 

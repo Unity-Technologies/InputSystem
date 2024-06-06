@@ -374,6 +374,9 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionAsset asset = null;
                 try
                 {
+                    if (!File.Exists(assetPath))
+                        return;
+
                     // Evaluate whether JSON name corresponds to desired name
                     asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
                     var desiredName = Path.GetFileNameWithoutExtension(assetPath);

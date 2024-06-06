@@ -8,7 +8,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased] - YYYY-MM-DD
+## [Unreleased] - yyyy-mm-dd
+
+### Fixed
+- Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
+- Fixed an issue where a composite binding would not be consecutively triggered after ResetDevice() has been called from the associated action handler [ISXB-746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-746).
+- Fixed resource designation for "d_InputControl" icon to address CI failure.
+- Fixed an issue where a composite binding would not be consecutively triggered after disabling actions while there are action modifiers in progress [ISXB-505](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-505).
+- Fixed prefabs and missing default control scheme used by PlayerInput component are now correctly shown in the inspector [ISXB-818](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-818).
+- Fixed error thrown when Cancelling Control Scheme creation in Input Actions Editor.
+- Fixed Scheme Name in Control Scheme editor menu that gets reset when editing devices [ISXB-763](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-763).
+- Fixed an issue where `InputActionAsset.FindAction(string, bool)` would throw `System.NullReferenceException` instead of returning `null` if searching for a non-existent action with an explicit action path and using `throwIfNotFound: false`, e.g. searching for "Map/Action" when `InputActionMap` "Map" exists but no `InputAction` named "Action" exists within that map [ISXB-895](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-895).
+
+## Added
+- Added additional device information when logging the error due to exceeding the maximum number of events processed
+  set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
+  only.
+
+## [1.8.2] - 2024-04-29
 
 ### Added
 - Documentation to clarify effects of ordering of interactions when a single action has multiple interactions [ISXB-221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-221).
@@ -22,8 +39,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed DualSense Edge's vibration and light bar not working on Windows
 - Fixed Project-wide Actions asset failing to reload properly after deleting project's Library folder.
 - Fixed an issue where `System.InvalidOperationException` is thrown when entering PlayMode after deleting an ActionMap from Project-wide actions and later resetting it.
+- Fixed OnPointerClick events not propagating to child objects unless the child also handled OnPointerDown events [ISXB-857](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-857).
 - Fixed Input Actions Editor window resource leak that could result in unexpected exceptions [ISXB-865](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-865).
 - Fixed an issue where UI integration would throw exceptions when Project-wide Input Actions asset did not contain the implicitly required `UI` action map or was missing any of the required actions. Additionally this fix now also generates warnings in the console for any divergence from expected action configuration or lack of bindings in edit-mode.
+- Fixed a minor issue when importing InputAction assets that could result in unexpected logging during internal package validation checks.
 
 ### Changed
 - For Unity 6.0 and above, when an `EventSystem` GameObject is created in the Editor it will have the
