@@ -608,15 +608,15 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var serializedInputBinding = actionBindings[i];
                     var inputBindingId = new Guid(serializedInputBinding.id);
-                    
+
                     if (serializedInputBinding.isComposite)
                     {
                         var isLastBinding = i >= actionBindings.Count - 1;
-                        var hasHiddenCompositeParts = false;   
-                        
+                        var hasHiddenCompositeParts = false;
+
                         var compositeItems = new List<TreeViewItemData<ActionOrBindingData>>();
-                        
-                        if(!isLastBinding)
+
+                        if (!isLastBinding)
                         {
                             var nextBinding = actionBindings[++i];
 
