@@ -468,7 +468,7 @@ partial class CoreTests
     [Category("State")]
     [TestCase(true)]
     [TestCase(false)]
-    public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange_WithCaching(bool usesReadValueCaching)
+    public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange(bool usesReadValueCaching)
     {
         var originalSetting = InputSettings.readValueCachingFeatureEnabled;
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, usesReadValueCaching);
@@ -478,6 +478,29 @@ partial class CoreTests
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         var secondState = new GamepadState {buttons = 0};
 
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+        
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+        
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.QueueStateEvent(gamepad, secondState);
 
