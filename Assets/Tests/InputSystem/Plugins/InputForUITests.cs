@@ -491,6 +491,7 @@ public class InputForUITests : InputTestFixture
         });
     }
 
+#if UNITY_6000_0_OR_NEWER
     [Category(kTestCategory)]
     [TestCase(1.0f)]
     [TestCase(120.0f)]
@@ -512,6 +513,7 @@ public class InputForUITests : InputTestFixture
             asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: -kScrollUGUIScaleFactor} }
         });
     }
+#endif
 
     #endregion
 
