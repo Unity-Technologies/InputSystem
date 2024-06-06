@@ -1116,7 +1116,13 @@ namespace UnityEngine.InputSystem
             {
                 inputControl.MarkAsStale();
                 if (inputControl is ButtonControl buttonControl)
+                {
+                    // If everything is becoming stale, update all press states so we can reevaluate
                     buttonControl.UpdateWasPressed();
+                    #if UNITY_EDITOR
+                    buttonControl.UpdateWasPressedEditor();
+                    #endif
+                }
             }
         }
 

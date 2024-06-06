@@ -15,7 +15,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
-using UnityEngine.Scripting;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 
@@ -476,7 +475,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
+    public void Controls_ValueCachingWorks()
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
@@ -488,29 +487,47 @@ partial class CoreTests
         InputSystem.actions?.Disable();
 #endif
 
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+        // Value caching is supported for all controls, but with changes to button press detection, ButtonControls will
+        // never (theoretically) be stale, since they are evaluated as soon as their value changes.
+
+        var mouse = InputSystem.AddDevice<Mouse>();
 
         // read all values to initially mark everything as cached
-        foreach (var control in keyboard.allControls)
+        foreach (var control in mouse.allControls)
         {
-            var v = ((ButtonControl)control).value;
-        }
+            float v = 0;
+            Vector2 v2 = new Vector2();
+            if (control is AxisControl axis)
+                v = axis.value;
+            else if (control is IntegerControl integer)
+                v = integer.value;
+            else if (control is Vector2Control vec2)
+                v2 = vec2.value;
+            else
+                Assert.Fail("Unexpected control type, please add.");
 
-        foreach (var control in keyboard.allControls)
-        {
             Assert.That(control.m_CachedValueIsStale, Is.False);
         }
 
-        var keyboardState = new KeyboardState((Key[])Enum.GetValues(typeof(Key)));
-        InputSystem.QueueStateEvent(keyboard, keyboardState);
+        var mouseState = new MouseState();
+        mouseState.scroll = new Vector2(2.0f, 3.0f);
+        mouseState.delta = new Vector2(4.0f, 5.0f);
+        mouseState.position = new Vector2(6.0f, 7.0f);
+
+        InputSystem.QueueStateEvent(mouse, mouseState);
         InputSystem.Update();
 
-        foreach (var control in keyboard.allControls)
+        foreach (var control in mouse.allControls)
         {
-            if (control == keyboard.imeSelected) // not a real key
+            // Ignore values used only by eg. touch
+            if (control.name == "pointerId" || control.name == "pressure" || control.path.Contains("radius"))
                 continue;
 
-            Assert.That(control.m_CachedValueIsStale, Is.True);
+            // Buttons won't be stale due to detecting button presses within frames; nor values only used by eg. touch.
+            if (control is ButtonControl)
+                Assert.That(control.m_CachedValueIsStale, Is.False, $"Control has unexpected stale value: {control.name}");
+            else
+                Assert.That(control.m_CachedValueIsStale, Is.True, $"Control doesn't have stale value: {control.name}");
         }
     }
 

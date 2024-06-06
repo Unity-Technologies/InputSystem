@@ -722,6 +722,92 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // These tests shows a use case where ReadValueCaching optimization will perform better than without any
+    // optimization.
+    // It shows that there's a performance improvement when the control values being read are not changing every frame.
+    //
+    // NOTE: Performance is expected to be near-identical between the two optimisation settings, since Keyboard takes
+    // the ReadValueCaching paths in UpdateState.
+    public void Performance_OptimizedControls_ReadAndUpdateKeyboard1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            InputSystem.Update();
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                InputSystem.Update();
+
+                if (i % 200 == 0)
+                {
+                    // Make sure there's a new different value every 100 frames to mark the cached value as stale.
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+                    InputSystem.Update();
+                }
+                else if ((i + 100) % 200 == 0)
+                {
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                    InputSystem.Update();
+                }
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // This shows a use case where ReadValueCaching optimization will perform worse when controls have stale cached
+    // values every frame. Meaning, when control values change in every frame.
+    //
+    // NOTE: Performance is expected to be near-identical between the two optimisation settings, since Keyboard takes
+    // the ReadValueCaching paths in UpdateState.
+    public void Performance_OptimizedControls_ReadAndUpdateKeyboardNewValuesEveryFrame1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            float val = keyboard.fKey.value;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            InputSystem.Update();
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                InputSystem.Update();
+                val = keyboard.fKey.value;
+                // Make sure there's a new different value every frames to mark the cached value as stale.
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+
+                InputSystem.Update();
+                val = keyboard.fKey.value;
+                // Make sure there's a new different value every frames to mark the cached value as stale.
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching)]

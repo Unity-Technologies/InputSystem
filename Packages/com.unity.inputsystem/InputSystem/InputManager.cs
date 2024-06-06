@@ -3705,9 +3705,34 @@ namespace UnityEngine.InputSystem
             if (makeDeviceCurrent)
             {
                 // Update the pressed/not pressed state of all buttons that have changed this update
-                foreach (var button in device.m_UpdatedButtons.Values)
+                // Keyboard has enough ButtonControls that it's faster to find out which have actually changed rather than test all.
+                if (InputSettings.readValueCachingFeatureEnabled || device is Keyboard)
                 {
-                    button.UpdateWasPressed();
+                    foreach (var button in device.m_UpdatedButtons)
+                    {
+#if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            ((ButtonControl)device.allControls[button]).UpdateWasPressedEditor();
+                        }
+                        else
+#endif
+                        ((ButtonControl)device.allControls[button]).UpdateWasPressed();
+                    }
+                }
+                else
+                {
+                    foreach (var button in device.m_ChildrenThatAreButtonControls)
+                    {
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            button.UpdateWasPressedEditor();
+                        }
+                        else
+                        #endif
+                        button.UpdateWasPressed();
+                    }
                 }
             }
 
@@ -3748,15 +3773,19 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            // if the buffers have just been flipped, and we're doing a full state update, then the state from the
-            // previous update is now in the back buffer, and we should be comparing to that when checking what
-            // controls have changed
-            var buffer = (byte*)frontBuffer;
-            if (flippedBuffers && deviceStateSize == stateSizeInBytes)
-                buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
+            // Keyboard has enough ButtonControls that it's faster to find out which have actually changed here.
+            if (InputSettings.readValueCachingFeatureEnabled || m_Devices[deviceIndex] is Keyboard)
+            {
+                // if the buffers have just been flipped, and we're doing a full state update, then the state from the
+                // previous update is now in the back buffer, and we should be comparing to that when checking what
+                // controls have changed
+                var buffer = (byte*)frontBuffer;
+                if (flippedBuffers && deviceStateSize == stateSizeInBytes)
+                    buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
 
-            m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
-                stateSizeInBytes, stateOffsetInDevice);
+                m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
+                    stateSizeInBytes, stateOffsetInDevice);
+            }
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);

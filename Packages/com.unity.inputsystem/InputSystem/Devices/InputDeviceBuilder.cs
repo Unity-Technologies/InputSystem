@@ -52,6 +52,8 @@ namespace UnityEngine.InputSystem.Layouts
             InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
+            m_Device.m_UpdatedButtons = new HashSet<int>();
+
             m_StateOffsetToControlMap.Sort();
 
             m_Device.m_Description = deviceDescription;
@@ -65,6 +67,17 @@ namespace UnityEngine.InputSystem.Layouts
         public InputDevice Finish()
         {
             var device = m_Device;
+
+            // Set up the list of just ButtonControls to quickly update press state.
+            var totalControls = device.allControls.Count;
+            device.m_ChildrenThatAreButtonControls = new ButtonControl[totalControls];
+            int i = 0;
+            foreach (var control in device.allControls)
+            {
+                if (control is ButtonControl button)
+                    device.m_ChildrenThatAreButtonControls[i++] = button;
+            }
+            Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
 
             // Kill off our state.
             Reset();
@@ -365,7 +378,6 @@ namespace UnityEngine.InputSystem.Layouts
                         ref controlLayout);
                 }
             }
-            m_Device.m_UpdatedButtons = new Dictionary<int, ButtonControl>();
         }
 
         private InputControl AddChildControl(InputControlLayout layout, InternedString variants, InputControl parent,

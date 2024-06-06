@@ -20,6 +20,12 @@ namespace UnityEngine.InputSystem.Controls
         private uint m_UpdateCountLastPressed = uint.MaxValue;
         private uint m_UpdateCountLastReleased = uint.MaxValue;
         private bool m_LastUpdateWasPress;
+        #if UNITY_EDITOR
+        // Editor input updates have a separate block of state memory, so must be checked separately
+        private uint m_UpdateCountLastPressedEditor = uint.MaxValue;
+        private uint m_UpdateCountLastReleasedEditor = uint.MaxValue;
+        private bool m_LastUpdateWasPressEditor;
+        #endif
 
         ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
@@ -97,7 +103,11 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
+        #if UNITY_EDITOR
+        public bool isPressed => InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_LastUpdateWasPressEditor : m_LastUpdateWasPress;
+        #else
         public bool isPressed => m_LastUpdateWasPress;
+        #endif
 
         /// <summary>
         /// Whether the press started this frame.
@@ -122,9 +132,17 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// </remarks>
+        #if UNITY_EDITOR
+        public bool wasPressedThisFrame => InputUpdate.s_UpdateStepCount ==
+        (InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_UpdateCountLastPressedEditor : m_UpdateCountLastPressed);
+
+        public bool wasReleasedThisFrame => InputUpdate.s_UpdateStepCount ==
+        (InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_UpdateCountLastReleasedEditor : m_UpdateCountLastReleased);
+        #else
         public bool wasPressedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
 
         public bool wasReleasedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
+        #endif
 
         internal void UpdateWasPressed()
         {
@@ -140,6 +158,24 @@ namespace UnityEngine.InputSystem.Controls
                 m_LastUpdateWasPress = isNowPressed;
             }
         }
+
+        #if UNITY_EDITOR
+        internal void UpdateWasPressedEditor()
+        {
+            var isNowPressed = IsValueConsideredPressed(value);
+
+            if (m_LastUpdateWasPressEditor != isNowPressed)
+            {
+                if (isNowPressed)
+                    m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
+                else
+                    m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
+
+                m_LastUpdateWasPressEditor = isNowPressed;
+            }
+        }
+
+        #endif // UNITY_EDITOR
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -1583,7 +1582,8 @@ namespace UnityEngine.InputSystem
             device.m_Device = device;
 
             device.m_ChildrenForEachControl = new InputControl[controlCount];
-            device.m_UpdatedButtons = new Dictionary<int, ButtonControl>();
+            device.m_UpdatedButtons = new HashSet<int>();
+
             if (usageCount > 0)
             {
                 device.m_UsagesForEachControl = new InternedString[usageCount];
@@ -1921,6 +1921,18 @@ namespace UnityEngine.InputSystem
             public void Finish()
             {
                 device.isSetupFinished = true;
+
+                // Set up the list of just ButtonControls to quickly update press state.
+                var totalControls = device.allControls.Count;
+                device.m_ChildrenThatAreButtonControls = new ButtonControl[totalControls];
+                int i = 0;
+                foreach (var control in device.allControls)
+                {
+                    if (control is ButtonControl button)
+                        device.m_ChildrenThatAreButtonControls[i++] = button;
+                }
+
+                Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
             }
         }
 

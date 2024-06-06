@@ -709,7 +709,10 @@ namespace UnityEngine.InputSystem
         internal InputControl[] m_ChildrenForEachControl;
 
         // Used with value caching so we update button press states.
-        internal Dictionary<int, ButtonControl> m_UpdatedButtons;
+        internal HashSet<int> m_UpdatedButtons;
+
+        // Used for updating button press states when we don't take the value caching path.
+        internal ButtonControl[] m_ChildrenThatAreButtonControls;
 
         // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
         // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
@@ -1013,7 +1016,7 @@ namespace UnityEngine.InputSystem
                     var control = m_ChildrenForEachControl[controlIndex];
                     control.MarkAsStale();
                     if (control is ButtonControl)
-                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                        m_UpdatedButtons.Add(controlIndex);
                 }
 
                 if (leftNode.leftChildIndex != -1)
@@ -1032,7 +1035,7 @@ namespace UnityEngine.InputSystem
                     var control = m_ChildrenForEachControl[controlIndex];
                     control.MarkAsStale();
                     if (control is ButtonControl)
-                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                        m_UpdatedButtons.Add(controlIndex);
                 }
 
                 if (rightNode.leftChildIndex != -1)
@@ -1102,7 +1105,7 @@ namespace UnityEngine.InputSystem
                     {
                         control.MarkAsStale();
                         if (control is ButtonControl)
-                            m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                            m_UpdatedButtons.Add(controlIndex);
                     }
                 }
 
@@ -1136,7 +1139,7 @@ namespace UnityEngine.InputSystem
                 {
                     control.MarkAsStale();
                     if (control is ButtonControl)
-                        m_UpdatedButtons[controlIndex] = (ButtonControl)control;
+                        m_UpdatedButtons.Add(controlIndex);
                 }
             }
 
