@@ -486,7 +486,7 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
-        
+
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.QueueStateEvent(gamepad, firstState);
@@ -496,7 +496,7 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.isPressed, Is.True);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
-        
+
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.QueueStateEvent(gamepad, firstState);
