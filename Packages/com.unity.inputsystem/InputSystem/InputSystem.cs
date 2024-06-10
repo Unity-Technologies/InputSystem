@@ -3599,7 +3599,7 @@ namespace UnityEngine.InputSystem
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !s_Manager.m_Runtime.isInBatchMode)
             {
-                const string dialogText = 
+                const string dialogText =
                     "Unity is importing the newer Input System package, but the older Input Manager is currently active. The Input System package needs to enable the newer system and and restart the Editor now.\r\n" +
                     "If you don't enable and restart now, the old input manager will remain active, and the Input System package won't work correctly.\r\n" +
                     "Note: If you were installing a different package (such as an Asset Store package) for which the Input System is a dependency, this restart will interrupt the import process. This means once the Editor has restarted, you must return to the Package Manager window and import your intended package again to finish the import process.";
