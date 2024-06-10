@@ -570,14 +570,16 @@ namespace UnityEngine.InputSystem
                             continue;
 
                         var actions = map.m_Actions;
-                        for (var n = 0; n < actions.Length; ++n)
+                        if (actions != null)
                         {
-                            var action = actions[n];
-                            if (Substring.Compare(action.name, actionName,
-                                StringComparison.InvariantCultureIgnoreCase) == 0)
-                                return action;
+                            for (var n = 0; n < actions.Length; ++n)
+                            {
+                                var action = actions[n];
+                                if (Substring.Compare(action.name, actionName,
+                                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                                    return action;
+                            }
                         }
-
                         break;
                     }
                 }
