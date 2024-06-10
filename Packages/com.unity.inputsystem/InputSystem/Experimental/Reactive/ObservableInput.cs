@@ -17,22 +17,6 @@ namespace UnityEngine.InputSystem.Experimental
 
     // TODO Multiple IObservable<T> inputs may be solved by internal instances or via custom interface providing source tracking
 
-    /// <summary>
-    /// Represents a binding source providing output of type <typeparamref name="T"/> which is associated with
-    /// a specific end-point but not with a context.
-    /// </summary>
-    /// <typeparam name="T">The output type.</typeparam>
-    public interface IInputBindingSource<out T> : IObservable<T> where T : struct
-    {
-        /// <summary>
-        /// Subscribes to the given source within context <paramref name="context"/>
-        /// </summary>
-        /// <param name="context">The associated context.</param>
-        /// <param name="observer">The observer to receive data when available.</param>
-        /// <returns>Disposable subscription object.</returns>
-        public IDisposable Subscribe([NotNull] Context context, IObserver<T> observer); // TODO If we allow the subscription type to implement IDisposable but be a specific type we could avoid indirection
-    }
-
     // TODO If we cannot obtain the flexibility we need with this struct consider making it a class and store with device
     // TODO This makes sense when usage uniquely identifies a stream.
     //      This makes less sense for a derived binding source unless cached.
@@ -42,18 +26,18 @@ namespace UnityEngine.InputSystem.Experimental
     //      Stream memory could easily be allocated from a native memory pool.
 
     // TODO Should really have key and not usage
-    // A binding source associated with a specific usage but not with a specific context.
-    public readonly struct InputBindingSource<T> : IInputBindingSource<T>
+    // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
+    public readonly struct ObservableInput<T> : IObservableInput<T>
         where T : struct
     {
         public readonly Usage Usage;
 
-        public InputBindingSource(Usage usage)
+        public ObservableInput(Usage usage)
             : this(usage, Context.instance)
         {}
 
         // TODO Remove context constructor if not needed/relevant
-        public InputBindingSource(Usage usage, [NotNull] Context context)
+        public ObservableInput(Usage usage, [NotNull] Context context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context) + " is required.");
@@ -74,11 +58,8 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return Subscribe(Context.instance, observer);
         }
-
-        /*public static IInputBindingSource operator |(InputBindingSource<T> a, InputBindingSource<T> b)
-            => Combine(a, b);*/
-
-        // TODO Delay evaluation
+        
+        // TODO Allow subscribing and return a wrapped derived endpoint instead 
     }
 
     /*public static class InputBindingSourceExtensions
@@ -89,42 +70,6 @@ namespace UnityEngine.InputSystem.Experimental
             return new MultiplexedBindingSource<T>(a, b);
         }
     }*/
-
-    internal interface ISourceObserver<in T> where T : struct
-    {
-        void OnCompleted(int source);
-        void OnError(int source, Exception error);
-        void OnNext(int source, T value);
-    }
-
-    internal readonly struct ForwardingObserver<T, TTarget> : IObserver<T>
-        where T : struct
-        where TTarget : struct, ISourceObserver<T>
-    {
-        private readonly TTarget m_Target; // Note: expecting devirtualization through constraints
-        private readonly int m_Source;
-
-        public ForwardingObserver(int source, ref TTarget target)
-        {
-            m_Source = source;
-            m_Target = target;
-        }
-
-        public void OnCompleted()
-        {
-            //m_Target.OnCompleted(m_Source);
-        }
-
-        public void OnError(Exception error)
-        {
-            //m_Target.OnError(m_Source, error);
-        }
-
-        public void OnNext(T value)
-        {
-            //m_Target.OnNext(m_Source, value);
-        }
-    }
 
     /*internal class ObserverList2<T> : List<IObservable<T>> where T : struct
     {
@@ -137,7 +82,7 @@ namespace UnityEngine.InputSystem.Experimental
     // E.g. combining two phases makes more sense since we can define mathematical definition and see it as a value
     //
     // Use case: combining two numerical values may define OR=a || b, AND=a && b
-    public struct MultiplexedBindingSource<T> : IInputBindingSource<T>
+    /*public struct MultiplexedBindingSource<T> : IInputBindingSource<T>
         where T : struct, IComparable<T>
     {
         private readonly InputBindingSource<T> m_First;
@@ -161,7 +106,7 @@ namespace UnityEngine.InputSystem.Experimental
             m_Multiplexer ??= new Multiplexer<T>(m_First, m_Second);
             return m_Multiplexer.Subscribe(context, observer);
         }
-    }
+    }*/
 
     // TODO Consider BinaryBindingSource
 }

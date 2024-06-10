@@ -9,35 +9,35 @@ namespace UnityEngine.InputSystem.Experimental
         public event Callback performed;
 
         private Context m_Context;
-        private InputBindingSource<T>[] m_Bindings;
+        private ObservableInput<T>[] m_Bindings;
         private int m_BindingCount;
         private IDisposable[] m_Subscriptions;
         private int m_SubscriptionCount;
 
-        public static BindableInput<T> Create(Callback callback, IInputBindingSource<T> source = null, Context context = null)
+        public static BindableInput<T> Create(Callback callback, IObservableInput<T> source = null, Context context = null)
         {
             return new BindableInput<T>(callback, source, context);
         }
 
-        public BindableInput(InputBindingSource<T> binding, Context context = null)
+        public BindableInput(ObservableInput<T> binding, Context context = null)
         {
             m_Context = context ?? Context.instance;
             Bind(binding);
         }
 
-        public BindableInput(IInputBindingSource<T> binding, Context context = null)
+        public BindableInput(IObservableInput<T> binding, Context context = null)
         {
             m_Context = context ?? Context.instance;
             Bind(binding);
         }
 
-        public BindableInput(Callback callback, IInputBindingSource<T> binding = null, Context context = null)
+        public BindableInput(Callback callback, IObservableInput<T> binding = null, Context context = null)
             : this(binding, context)
         {
             performed += callback; // TODO We could dispatch this down to avoid multiple levels of indirection?
         }
 
-        public BindableInput(Callback callback, InputBindingSource<T> binding, Context context = null)
+        public BindableInput(Callback callback, ObservableInput<T> binding, Context context = null)
             : this(binding, context)
         {
             performed += callback;
@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Experimental
             performed += callback;
         }
 
-        public static implicit operator BindableInput<T>(InputBindingSource<T> source)
+        public static implicit operator BindableInput<T>(ObservableInput<T> source)
         {
             return new BindableInput<T>(source);
         }
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Experimental
             performed?.Invoke(value);
         }
 
-        public void Bind<TSource>(TSource source) where TSource : IInputBindingSource<T>
+        public void Bind<TSource>(TSource source) where TSource : IObservableInput<T>
         {
             ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount,
                 source.Subscribe(m_Context, this));

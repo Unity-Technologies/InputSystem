@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.Experimental
     {
         internal abstract class StreamContext : IDisposable
         {
+            public abstract void Advance(); // TEMP
             public abstract void Process();
             public abstract void Dispose();
         }
@@ -36,6 +37,14 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 m_Stream.Offer(ref value);
             }*/
+
+            public override void Advance() // TODO Temp remove
+            {
+                if (m_Stream == null)
+                    return;
+
+                m_Stream.Advance();
+            }
 
             public override void Process()
             {

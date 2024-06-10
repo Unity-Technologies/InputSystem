@@ -20,5 +20,10 @@ namespace UnityEngine.InputSystem.Experimental
         public override int GetHashCode() => Value.GetHashCode();
         public static bool operator==(Usage lhs, Usage rhs) => lhs.Equals(rhs);
         public static bool operator!=(Usage lhs, Usage rhs) => !(lhs == rhs);
+
+        public override string ToString()
+        {
+            return $"0x{Value:x8}";
+        }
     }
 }

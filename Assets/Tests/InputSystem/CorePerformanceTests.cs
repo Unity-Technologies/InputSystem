@@ -165,7 +165,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     public void NEW_Performance_ReadControl()
     {
         using var ctx = new Context();
-        var stream = ctx.CreateStream(Usages.Gamepad.leftStick, Vector2.zero);
+        var stream = ctx.CreateStream(Usages.GamepadUsages.leftStick, Vector2.zero);
         Action method = () => stream.GetLast();
         Measure.Method(method)
             .MeasurementCount(200)

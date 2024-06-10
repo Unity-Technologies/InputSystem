@@ -1,25 +1,38 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    public interface ITransform<in TFromType, TToType>
+    {
+        public void Apply(TFromType from, out TToType to);
+    }
+
+    public interface ITransformSequence<TFromType, TToType> 
+        where TFromType : struct 
+        where TToType : struct
+    {
+        public void Apply(NativeSlice<TFromType> from, NativeSlice<TToType> to);
+    }
+    
     /// <summary>
     /// Acts as a proxy for a derived input binding source based off a lambda or other indirect System.Func.
     /// </summary>
     /// <typeparam name="TIn">The input type</typeparam>
     /// <typeparam name="TOut">The output type</typeparam>
-    public struct DerivedInputBindingSource<TIn, TOut> : IInputBindingSource<TOut>
+    public struct DerivedObservableInput<TIn, TOut> : IObservableInput<TOut>
         where TIn : struct
         where TOut : struct
     {
         private sealed class DerivedObservable : IObserver<TIn>, IObservable<TOut>
         {
-            private readonly InputBindingSource<TIn> m_Source;
+            private readonly ObservableInput<TIn> m_Source;
             private readonly Func<TIn, TOut> m_Func;
             private IDisposable m_Subscription;
             private List<IObserver<TOut>> m_Observers;
 
-            public DerivedObservable(InputBindingSource<TIn> source, Func<TIn, TOut> func)
+            public DerivedObservable(ObservableInput<TIn> source, Func<TIn, TOut> func)
             {
                 m_Source = source;
                 m_Func = func;
@@ -84,11 +97,11 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
 
-        private readonly InputBindingSource<TIn> m_Source;
+        private readonly ObservableInput<TIn> m_Source;
         private readonly Func<TIn, TOut> m_Func;
         private DerivedObservable m_DerivedObservable;
 
-        public DerivedInputBindingSource(InputBindingSource<TIn> source, Func<TIn, TOut> func)
+        public DerivedObservableInput(ObservableInput<TIn> source, Func<TIn, TOut> func)
         {
             m_Source = source;
             m_Func = func;

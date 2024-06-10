@@ -13,12 +13,12 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Offer(T value)
         {
-            throw new NotImplementedException();
+            Offer(ref value);
         }
 
         public void Offer(ref T value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("TODO Store data in stream if bound (has an associated stream)");
         }
     }
 }

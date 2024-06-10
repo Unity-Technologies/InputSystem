@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Experimental
             return stream;
         }
 
-        public Stream<T> CreateDefaultInitializedStream<T>(InputBindingSource<T> source) where T : struct
+        public Stream<T> CreateDefaultInitializedStream<T>(ObservableInput<T> source) where T : struct
         {
             return CreateStream<T>(source.Usage, default);
         }
@@ -107,6 +107,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         // This map is populated based on addressable endpoints
         private readonly Dictionary<Usage, IStream> m_Streams = new();
+        
+        //private readonly Dictionary<, IInputBindingSource<>
 
         //private readonly StreamContext<Button>[] m_ButtonStreams;
 
@@ -121,6 +123,10 @@ namespace UnityEngine.InputSystem.Experimental
             foreach (var kvp in m_StreamContexts)
             {
                 kvp.Value.Process(); // TODO Requires indirection, consider supporting built-in type explicitly?
+            }
+            foreach (var kvp in m_StreamContexts)
+            {
+                kvp.Value.Advance(); // TODO Requires indirection, consider supporting built-in type explicitly?
             }
         }
 
