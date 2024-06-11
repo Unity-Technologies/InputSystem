@@ -461,9 +461,6 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
     }
 
-    // The way we keep state does not allow observing the state change on the final
-    // state of the button, unless the readValueCaching path is enabled.
-    // However, actions will still see the change.
     [Test]
     [Category("State")]
     [TestCase(true)]

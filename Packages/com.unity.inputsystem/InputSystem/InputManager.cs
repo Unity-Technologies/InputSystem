@@ -3710,13 +3710,13 @@ namespace UnityEngine.InputSystem
                 {
                     foreach (var button in device.m_UpdatedButtons)
                     {
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         if (updateType == InputUpdateType.Editor)
                         {
                             ((ButtonControl)device.allControls[button]).UpdateWasPressedEditor();
                         }
                         else
-#endif
+                        #endif
                         ((ButtonControl)device.allControls[button]).UpdateWasPressed();
                     }
                 }

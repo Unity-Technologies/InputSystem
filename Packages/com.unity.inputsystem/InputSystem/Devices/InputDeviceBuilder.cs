@@ -52,8 +52,6 @@ namespace UnityEngine.InputSystem.Layouts
             InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
-            m_Device.m_UpdatedButtons = new HashSet<int>();
-
             m_StateOffsetToControlMap.Sort();
 
             m_Device.m_Description = deviceDescription;
@@ -78,6 +76,8 @@ namespace UnityEngine.InputSystem.Layouts
                     device.m_ChildrenThatAreButtonControls[i++] = button;
             }
             Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
+
+            device.m_UpdatedButtons = new HashSet<int>(i);
 
             // Kill off our state.
             Reset();

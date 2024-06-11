@@ -1582,7 +1582,6 @@ namespace UnityEngine.InputSystem
             device.m_Device = device;
 
             device.m_ChildrenForEachControl = new InputControl[controlCount];
-            device.m_UpdatedButtons = new HashSet<int>();
 
             if (usageCount > 0)
             {
@@ -1931,8 +1930,9 @@ namespace UnityEngine.InputSystem
                     if (control is ButtonControl button)
                         device.m_ChildrenThatAreButtonControls[i++] = button;
                 }
-
                 Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
+
+                device.m_UpdatedButtons = new HashSet<int>(i);
             }
         }
 
