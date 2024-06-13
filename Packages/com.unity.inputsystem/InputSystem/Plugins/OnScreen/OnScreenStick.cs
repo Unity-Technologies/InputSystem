@@ -440,8 +440,6 @@ namespace UnityEngine.InputSystem.OnScreen
         [CustomEditor(typeof(OnScreenStick))]
         internal class OnScreenStickEditor : UnityEditor.Editor
         {
-            private const string kWarningMessage = "OnScreenStick needs to be attached as a child to a UI Canvas and have a RectTransform component to function properly.";
-
             private AnimBool m_ShowDynamicOriginOptions;
             private AnimBool m_ShowIsolatedInputActions;
 
