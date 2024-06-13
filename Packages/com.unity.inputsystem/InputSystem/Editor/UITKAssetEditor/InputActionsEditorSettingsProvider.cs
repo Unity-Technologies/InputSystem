@@ -10,6 +10,8 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
+        private static InputActionsEditorSettingsProvider s_Provider;
+
         public static string SettingsPath => InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
@@ -83,6 +85,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnFocusOut);
             }
 
+            // Make sure any remaining changes are actually saved
+            SaveAssetOnFocusLost();
+
             // Note that OnDeactivate will also trigger when opening the Project Settings (existing instance).
             // Hence we guard against duplicate OnDeactivate() calls.
             if (m_HasEditFocus)
@@ -114,11 +119,11 @@ namespace UnityEngine.InputSystem.Editor
 
         void SaveAssetOnFocusLost()
         {
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             var asset = GetAsset();
             if (asset != null)
                 ValidateAndSaveAsset(asset);
-            #endif
+#endif
         }
 
         public static void SetIMGUIDropdownVisible(bool visible, bool optionWasSelected)
@@ -173,19 +178,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action, auto-saved on edit-focus lost
-            #else
+#else
             // Project wide input actions always auto save - don't check the asset auto save status
             var asset = GetAsset();
             if (asset != null)
                 ValidateAndSaveAsset(asset);
-            #endif
+#endif
         }
 
         private void ValidateAndSaveAsset(InputActionAsset asset)
         {
-            ProjectWideActionsAsset.Validate(asset); // Ignore validation result for save
+            ProjectWideActionsAsset.Verify(asset); // Ignore verification result for save
             EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
@@ -246,23 +251,18 @@ namespace UnityEngine.InputSystem.Editor
 
             // Remove input action editor if already present
             {
-                VisualElement element;
-                do
-                {
-                    element = m_RootVisualElement.Q("action-editor");
-                    if (element != null)
-                        m_RootVisualElement.Remove(element);
-                }
-                while (element != null);
+                VisualElement element = m_RootVisualElement.Q("action-editor");
+                if (element != null)
+                    m_RootVisualElement.Remove(element);
             }
 
             // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
+                m_StateContainer = new StateContainer(m_State);
                 m_StateContainer.StateChanged += OnStateChanged;
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
-                m_StateContainer.Initialize();
+                m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }
         }
 
@@ -286,6 +286,8 @@ namespace UnityEngine.InputSystem.Editor
                     SetObjectFieldEnabled(true);
                     break;
                 case PlayModeStateChange.ExitingEditMode:
+                    // Ensure any changes are saved to the asset; FocusLost isn't always triggered when entering PlayMode.
+                    SaveAssetOnFocusLost();
                     SetObjectFieldEnabled(false);
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
@@ -298,7 +300,10 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            return new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
+            if (s_Provider == null)
+                s_Provider = new InputActionsEditorSettingsProvider(SettingsPath, SettingsScope.Project);
+
+            return s_Provider;
         }
 
         #region Shortcuts
