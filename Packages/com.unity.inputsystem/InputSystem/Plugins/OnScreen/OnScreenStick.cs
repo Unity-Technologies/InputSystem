@@ -36,8 +36,6 @@ namespace UnityEngine.InputSystem.OnScreen
     {
         private const string kDynamicOriginClickable = "DynamicOriginClickable";
 
-        private RectTransform m_CanvasRectTransform;
-
         /// <summary>
         /// Callback to handle OnPointerDown UI events.
         /// </summary>
@@ -114,14 +112,13 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_PointerMoveAction.Enable();
             }
 
-            // Unable to setup elements according to settings if a RectTransform is not available.
+            // Unable to setup elements according to settings if a RectTransform is not available (ISXB-915, ISXB-916).
             if (!(transform is RectTransform))
                 return;
 
             m_StartPos = ((RectTransform)transform).anchoredPosition;
 
-            if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin)
-                return;
+            if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
 
             m_PointerDownPos = m_StartPos;
 
@@ -138,32 +135,26 @@ namespace UnityEngine.InputSystem.OnScreen
             image.alphaHitTestMinimumThreshold = 0.5f;
         }
 
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-
-            // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
-            m_CanvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
-            if (m_CanvasRectTransform == null)
-                Debug.LogWarning(GetWarningMessage());
-        }
-
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
         {
-            if (m_CanvasRectTransform == null)
+            var canvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
+            if (canvasRectTransform == null)
+            {
+                Debug.LogError(GetWarningMessage());
                 return;
+            }
 
             switch (m_Behaviour)
             {
                 case Behaviour.RelativePositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
                     break;
                 case Behaviour.ExactPositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
                     MoveStick(pointerPosition, uiCamera);
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasRectTransform, pointerPosition, uiCamera, out var pointerDown);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out var pointerDown);
                     m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
             }
@@ -171,10 +162,14 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void MoveStick(Vector2 pointerPosition, Camera uiCamera)
         {
-            if (m_CanvasRectTransform == null)
+            var canvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
+            if (canvasRectTransform == null)
+            {
+                Debug.LogError(GetWarningMessage());
                 return;
+            }
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasRectTransform, pointerPosition, uiCamera, out var position);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out var position);
             var delta = position - m_PointerDownPos;
 
             switch (m_Behaviour)

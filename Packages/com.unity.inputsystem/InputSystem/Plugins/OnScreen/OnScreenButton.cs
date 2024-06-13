@@ -14,15 +14,6 @@ namespace UnityEngine.InputSystem.OnScreen
     [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-buttons")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-
-            // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
-            if (UGUIOnScreenControlUtils.GetCanvasRectTransform(transform) == null)
-                Debug.LogWarning(GetWarningMessage());
-        }
-
         public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
