@@ -19,98 +19,6 @@ using Unity.Collections.LowLevel.Unsafe;
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// Represents a fixed-size segment of consecutive memory to hold values of <typeparamref name="T"/> that is
-    /// optionally part of an intrusive linked list of segments.
-    /// </summary>
-    /// <typeparam name="T">The element type.</typeparam>
-    internal unsafe struct LinkedSegment<T> where T : unmanaged
-    {
-        /// <summary>
-        /// Points to the first element of the consecutive segment buffer.
-        /// </summary>
-        public T* Ptr;
-        
-        /// <summary>
-        /// Points to the next segment in the linked list of available segments if any.
-        /// </summary>
-        public LinkedSegment<T>* Next;
-        
-        /// <summary>
-        /// The current length of the segment in number of elements currently stored.
-        /// </summary>
-        public int Length;
-        
-        /// <summary>
-        /// The maximum capacity of the segment in number of elements.
-        /// </summary>
-        public int Capacity;
-
-        /// <summary>
-        /// Allocates and initializes a new segment of the given capacity.
-        /// </summary>
-        /// <param name="capacity">The capacity of the segment in number of elements of type
-        /// <typeparam name="T"></typeparam>.</param>
-        /// <param name="allocator">The allocator to be use to allocate the segment</param>
-        /// <returns>Pointer to allocated segment.</returns>
-        public static LinkedSegment<T>* Create(int capacity, AllocatorManager.AllocatorHandle allocator)
-        {
-            if (capacity <= 0)
-                throw new ArgumentException("Capacity must be positive");
-            
-            // Co-allocate segment header and data in the same memory region.
-            // Note that we pad segment size based on alignment requirement of type T.
-            var headerSizeBytes = CollectionHelper.Align(UnsafeUtility.SizeOf<LinkedSegment<T>>(), UnsafeUtility.AlignOf<T>());
-            var itemsSizeBytes = capacity * UnsafeUtility.SizeOf<T>();
-            var totalSizeBytes = headerSizeBytes + itemsSizeBytes;
-            var ptr = allocator.Allocate(sizeOf: totalSizeBytes, alignOf: UnsafeUtility.AlignOf<LinkedSegment<T>>());
-            CheckAlignment(ptr, allocator);
-            
-            // Compute data pointer
-            var dataPtr = (T*)((ulong)ptr) + headerSizeBytes;
-            CheckAlignment(dataPtr, allocator);
-            
-            // Initialize segment 
-            var segment = (LinkedSegment<T>*)ptr;
-            segment->Ptr = dataPtr;
-            segment->Next = null;
-            segment->Length = 0;
-            segment->Capacity = capacity;
-            
-            return segment;
-        }
-
-        public static void Destroy(LinkedSegment<T>* segment, AllocatorManager.AllocatorHandle allocator)
-        {
-            AllocatorManager.Free(allocator, segment);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan()
-        {
-            return new Span<T>(Ptr, Length);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<T> AsReadOnlySpan()
-        {
-            return new ReadOnlySpan<T>(Ptr, Length);
-        }
-        
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void CheckAlignment(void* ptr, AllocatorManager.AllocatorHandle allocator)
-        {
-            if (!CollectionHelper.IsAligned(ptr, UnsafeUtility.AlignOf<LinkedSegment<T>>()))
-            {
-                AllocatorManager.Free(allocator, ptr);
-                throw new ArgumentException("Invalid memory alignment");
-            }
-            
-            //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
-        }
-    }
-    
-    /// <summary>
     /// A resizeable buffer holding elements of type <typeparamref name="T"/>.
     /// </summary>
     /// <remarks>
@@ -135,6 +43,13 @@ namespace UnityEngine.InputSystem.Experimental
             m_Tail = m_Head;
             m_Allocator = allocator;
         }
+        
+        public void Dispose()
+        {
+            CheckCreated(); 
+            m_Head = Prune(null);
+            m_Tail = null;
+        }
 
         public void Push(T value)
         {
@@ -145,26 +60,17 @@ namespace UnityEngine.InputSystem.Experimental
         {
             CheckCreated();
             
-            if (m_Tail->Length >= m_Tail->Capacity)
+            // If we run out of capacity, we allocate a new segment, link the current tail segment to the new 
+            // segment and let the newly allocated segment become the new tail segment.
+            if (m_Tail->Length == m_Tail->Capacity)
             {
                 var segment = LinkedSegment<T>.Create(m_Tail->Capacity * 2, m_Allocator); 
                 m_Tail->Next = segment;
                 m_Tail = segment;
             }   
             
+            // Finally, write the new element to the underlying memory
             UnsafeUtility.WriteArrayElement(m_Tail->Ptr, m_Tail->Length++, value);
-        }
-        
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckCreated()
-        {
-            if ((IntPtr)m_Head == IntPtr.Zero)
-                throw new Exception("Container not created");
-            if ((IntPtr)m_Tail == IntPtr.Zero)
-                throw new Exception("Container not created");
-
-            //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
         }
 
         public void Clear()
@@ -174,14 +80,6 @@ namespace UnityEngine.InputSystem.Experimental
             m_Head = Prune(m_Tail);
             m_Head->Next = null;
             m_Head->Length = 0;
-        }
-
-        public void Dispose()
-        {
-            CheckCreated();
-            
-            m_Head = Prune(null);
-            m_Tail = null;
         }
 
         private LinkedSegment<T>* Prune(LinkedSegment<T>* end)
@@ -195,17 +93,27 @@ namespace UnityEngine.InputSystem.Experimental
             return end;
         }
         
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckCreated()
+        {
+            if ((IntPtr)m_Head == IntPtr.Zero)
+                throw new Exception("Container not created");
+
+            //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
+        }
+        
         public struct Enumerator : IEnumerator<T>
         {
-            private readonly UniformBuffer<T> m_Container;
-            private LinkedSegment<T> m_Current;
+            private readonly UniformBuffer<T> m_Container;  // Note: This is a copy
+            private LinkedSegment<T> m_CurrentSegment;      // Note: This is a copy
             private int m_Index;
             private T m_Value;
             
             public Enumerator(ref UniformBuffer<T> container)
             {
                 m_Container = container;
-                m_Current = *m_Container.m_Head;
+                m_CurrentSegment = *m_Container.m_Head;
                 m_Index = -1;
                 m_Value = default;
             }
@@ -214,20 +122,20 @@ namespace UnityEngine.InputSystem.Experimental
             public bool MoveNext()
             {
                 // Attempt to move to next item in current segment
-                if (++m_Index < m_Current.Length)
+                if (++m_Index < m_CurrentSegment.Length)
                 {
                     //AtomicSafetyHandle.CheckReadAndThrow(this.m_Array.m_Safety);
-                    m_Value = UnsafeUtility.ReadArrayElement<T>(m_Current.Ptr, m_Index);
+                    m_Value = UnsafeUtility.ReadArrayElement<T>(m_CurrentSegment.Ptr, m_Index);
                     return true;
                 }
                 
                 // Move to next segment if such a segment exist 
-                if (m_Current.Next != null)
+                if (m_CurrentSegment.Next != null)
                 {
-                    m_Current = *m_Current.Next;
-                    if (m_Current.Length > 0)
+                    m_CurrentSegment = *m_CurrentSegment.Next;
+                    if (m_CurrentSegment.Length > 0)
                     {
-                        m_Value = *m_Current.Ptr;
+                        m_Value = UnsafeUtility.ReadArrayElement<T>(m_CurrentSegment.Ptr, 0);
                         m_Index = 0;
                         return true;
                     }
@@ -241,7 +149,7 @@ namespace UnityEngine.InputSystem.Experimental
             public void Reset()
             {
                 m_Index = -1;
-                m_Current = *m_Container.m_Head; // copy
+                m_CurrentSegment = *m_Container.m_Head; // copy
             }
 
             public T Current

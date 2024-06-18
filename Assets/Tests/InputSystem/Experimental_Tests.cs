@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Unity.Collections;
+using UnityEditor.Build.Reporting;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
 using Vector2 = UnityEngine.Vector2;
@@ -245,9 +246,49 @@ namespace Tests.InputSystem
             //for (var i=0; i < 100; ++i)
             //    buf.Push(5);
         }
+
+        [Test]
+        public void Uniform_Create_Dispose()
+        {
+            var sut = new UniformBuffer<int>(3, AllocatorManager.Persistent);
+            sut.Dispose();
+        }
         
+        [Test]
+        public void Uniform_ConstructorShouldThrow_IfGivenInvalidCapacity()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using var s = new UniformBuffer<int>(0, AllocatorManager.Persistent);
+            });
+        }
         
-        [Ignore("Implementation needs fixing")]
+        [Test]
+        public void Uniform_PushShouldSucceed_IfSufficientCapacity()
+        {
+            using var sut = new UniformBuffer<int>(1, AllocatorManager.Persistent);
+            sut.Push(5);
+        }
+        
+        [Test]
+        public void Uniform_PushShouldSucceed_IfInsufficientCapacity()
+        {
+            using var sut = new UniformBuffer<int>(1, AllocatorManager.Persistent);
+            sut.Push(5);
+            sut.Push(6);
+        }
+
+        [Test]
+        public void LinkedSegment()
+        {
+            unsafe
+            {
+                var segment = LinkedSegment<int>.Create(3, AllocatorManager.Temp);
+                LinkedSegment<int>.Destroy(segment, AllocatorManager.Temp);    
+            }
+        }
+        
+        //[Ignore("Implementation needs fixing")]
         [Test]
         public void Uniform()
         {
@@ -269,19 +310,19 @@ namespace Tests.InputSystem
                     Assert.That(values[j], Is.EqualTo(j+1));
             }
 
-            //uni.Clear();
-            //Assert.That(uni.ToArray().Length, Is.EqualTo(0));
+            uni.Clear();
+            Assert.That(uni.ToArray().Length, Is.EqualTo(0));
             
-            //uni.Push(1);
-            //uni.Push(2);
-            //uni.Push(3);
-            //uni.Push(4);
+            uni.Push(1);
+            uni.Push(2);
+            uni.Push(3);
+            uni.Push(4);
             
-            //Assert.That(uni.ToArray().Length, Is.EqualTo(4));
+            Assert.That(uni.ToArray().Length, Is.EqualTo(4));
 
-            //using var e = uni.GetEnumerator();
-            //Assert.That(e.MoveNext(), Is.True);
-            //Assert.That(e.Current, Is.EqualTo(1));
+            using var e = uni.GetEnumerator();
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current, Is.EqualTo(1));
         }
 
         // TODO What if all bindable operations where picked up by a code generator which made them detectable via registration?!

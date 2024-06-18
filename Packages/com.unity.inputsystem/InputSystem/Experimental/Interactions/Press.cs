@@ -1,4 +1,5 @@
 using System;
+using Unity.Jobs;
 
 // TODO See comments in header
 
@@ -91,6 +92,24 @@ namespace UnityEngine.InputSystem.Experimental
         public IDependencyGraphNode GetChild(int index) =>
             index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index));
     }
+
+    /*public struct PressJob : IJob
+    {
+        public PressJob(Stream<T>)
+        {
+            
+        }
+        
+        public void Execute()
+        {
+            
+        }
+
+        public static void Schedule()
+        {
+            var job = new PressJob();
+        }
+    }*/
     
     internal static class PressSeq
     {
