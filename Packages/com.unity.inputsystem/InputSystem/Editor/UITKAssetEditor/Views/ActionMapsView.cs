@@ -169,6 +169,7 @@ namespace UnityEngine.InputSystem.Editor
 
             if (allowUICommandExecution)
             {
+                // NB: Paste is handled in InputActionsEditorView.
                 switch (evt.commandName)
                 {
                     case CmdEvents.Rename:
@@ -187,11 +188,6 @@ namespace UnityEngine.InputSystem.Editor
                     case CmdEvents.Cut:
                         CutItems();
                         break;
-                    case CmdEvents.Paste:
-                        var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                        if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                            PasteItems(isActionCopied);
-                        break;
                     default:
                         return; // Skip StopPropagation if we didn't execute anything
                 }
@@ -205,6 +201,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnValidateCommand(ValidateCommandEvent evt)
         {
             // Mark commands as supported for Execute by stopping propagation of the event
+            // Paste is handled in InputActionsEditorView.
             switch (evt.commandName)
             {
                 case CmdEvents.Rename:
@@ -213,7 +210,6 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Duplicate:
                 case CmdEvents.Copy:
                 case CmdEvents.Cut:
-                case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
             }

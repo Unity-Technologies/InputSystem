@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,9 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarMenu m_DevicesToolbar;
         private readonly ToolbarButton m_SaveButton;
 
+        private readonly ActionMapsView m_ActionMapsView;
+        private readonly ActionsTreeView m_ActionsTreeView;
+
         private readonly Action m_SaveAction;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
@@ -36,9 +40,10 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
             mainEditorAsset.CloneTree(root);
-            var actionsTreeView = new ActionsTreeView(root, stateContainer);
-            CreateChildView(new ActionMapsView(root, stateContainer));
-            CreateChildView(actionsTreeView);
+            m_ActionMapsView = new ActionMapsView(root, stateContainer);
+            m_ActionsTreeView = new ActionsTreeView(root, stateContainer);
+            CreateChildView(m_ActionMapsView);
+            CreateChildView(m_ActionsTreeView);
             CreateChildView(new PropertiesView(root, stateContainer));
 
             m_ControlSchemesToolbar = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
@@ -102,6 +107,10 @@ namespace UnityEngine.InputSystem.Editor
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex,
                     selectedDeviceIndex = state.selectedDeviceRequirementIndex
                 });
+
+            root.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            root.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            root.focusable = true; // Required for CommandEvents to work
 
             s_OnPasteCutElements.Add(this);
         }
@@ -238,6 +247,41 @@ namespace UnityEngine.InputSystem.Editor
             public IEnumerable<InputControlScheme> controlSchemes;
             public int selectedControlSchemeIndex;
             public int selectedDeviceIndex;
+        }
+
+        void OnExecuteCommand(ExecuteCommandEvent evt)
+        {
+            if (allowUICommandExecution)
+            {
+                if (evt.commandName != CmdEvents.Paste)
+                    return;
+
+                var copiedType = CopyPasteHelper.GetCopiedClipboardType();
+
+                if (copiedType == typeof(InputActionMap))
+                {
+                    evt.StopPropagation();
+                    m_ActionMapsView.PasteItems(false);
+                    allowUICommandExecution = false;
+                }
+                else if (copiedType == typeof(InputAction) || copiedType == typeof(InputBinding))
+                {
+                    evt.StopPropagation();
+                    m_ActionsTreeView.PasteItems();
+                    allowUICommandExecution = false;
+                }
+            }
+        }
+
+        void OnValidateCommand(ValidateCommandEvent evt)
+        {
+            // Mark commands as supported for Execute by stopping propagation of the event
+            switch (evt.commandName)
+            {
+                case CmdEvents.Paste:
+                    evt.StopPropagation();
+                    break;
+            }
         }
 
         internal static List<IPasteListener> s_OnPasteCutElements = new();

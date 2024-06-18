@@ -211,9 +211,13 @@ namespace UnityEngine.InputSystem.Editor
                 : Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actionArray == null) return;
+
             var index = state.selectedActionIndex;
-            if (addLast)
+            if (addLast || index >= actionArray.arraySize)
                 index = actionArray.arraySize - 1;
+            if (index < 0)
+                index = 0;
+
             PasteData(EditorHelpers.GetSystemCopyBufferContents(), new[] {index}, actionArray);
         }
 
@@ -384,7 +388,7 @@ namespace UnityEngine.InputSystem.Editor
         private static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
         {
             var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
-            if (index < 0)
+            if (index < 0 || index > arrayProperty.arraySize)
                 index = arrayProperty.arraySize;
 
             arrayProperty.InsertArrayElementAtIndex(index);

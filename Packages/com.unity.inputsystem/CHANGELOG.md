@@ -104,6 +104,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputManager.asset file growing in size on each Reset call.
 - Fixed Opening InputDebugger throws 'Action map must have state at this point' error.
 - Fixed Cut/Paste behaviour to match Editor - Cut items will now be cleared from clipboard after pasting.
+- Fixed Pasting items between Input Action Editor windows having no effect until an item in the Action Map/Action lists was selected.
 - Improved window layout to avoid elements being hidden (both the Input Actions in Project Settings, and standalone Input Actions Editor windows).
 - Fixed InputAction asset appearing dirty after rename [ISXB-749](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749).
 - Fixed Error logged when InputActionsEditor window opened without a valid asset.
