@@ -50,10 +50,10 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         public static ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");     // Equivalent of current "Gamepad/leftStick"
         public static ObservableInput<Vector2> RightStick = new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick");   // Equivalent of current "Gamepad/rightStick"
-        public static ObservableInput<bool> buttonSouth => new(Usages.GamepadUsages.ButtonSouth, "Gamepad.buttonSouth");   // Equivalent of current "Gamepad/buttonSouth"
-        public static ObservableInput<bool> ButtonEast = new(Usages.GamepadUsages.ButtonEast, "Gamepad.buttonEast");      // Equivalent of current "Gamepad/buttonEast"
-        public static ObservableInput<bool> ButtonNorth = new(Usages.GamepadUsages.ButtonNorth, "Gamepad.buttonNorth");    // Equivalent of current "Gamepad/buttonNorth"
-        public static ObservableInput<bool> ButtonWest = new(Usages.GamepadUsages.ButtonWest, "Gamepad.buttonWest");      // Equivalent of current "Gamepad/buttonWest"
+        public static ObservableInput<bool> ButtonSouth => new(Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth");   // Equivalent of current "Gamepad/buttonSouth"
+        public static ObservableInput<bool> ButtonEast = new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast");      // Equivalent of current "Gamepad/buttonEast"
+        public static ObservableInput<bool> ButtonNorth = new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth");    // Equivalent of current "Gamepad/buttonNorth"
+        public static ObservableInput<bool> ButtonWest = new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest");      // Equivalent of current "Gamepad/buttonWest"
         
         public static OutputBindingTarget<float> RumbleHaptic = new(Usages.GamepadUsages.RumbleHaptic); // TODO Move to HapticDevice
     }

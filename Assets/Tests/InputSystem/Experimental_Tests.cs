@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing.Printing;
 using System.Linq;
 using System.Text;
@@ -286,11 +287,43 @@ namespace Tests.InputSystem
         // TODO What if all bindable operations where picked up by a code generator which made them detectable via registration?!
         // [RegisterInputBinding] private InputBinding<> binding;
         // ...and in OnEnable we use the binding.
+
+        public class TestData
+        {
+            public static object[] DisplayNameCases =
+            {
+                new object[] { Gamepad.LeftStick, "Gamepad" },
+                new object[] { 12, 2, 6 },
+                new object[] { 12, 4, 3 }
+            };
+        }
+        
+        public static object[] DivideCases =
+        {
+            new object[] { 12, 3, 4 },
+            new object[] { 12, 2, 6 },
+            new object[] { 12, 4, 3 }
+        };
+        
+        public static IEnumerable<(IDependencyGraphNode, string)> DisplayNameCases()
+        {
+            yield return (Gamepad.LeftStick, "Gamepad.LeftStick");
+            yield return (Gamepad.ButtonEast, "Gamepad.ButtonEast");
+            yield return (Gamepad.ButtonEast.Pressed(), "Press( Gamepad.ButtonEast )");
+        }
+        
+        // [TestCaseSource(nameof(DivideCases))]
         
         [Test]
-        public void Describe()
+        [TestCaseSource(nameof(DisplayNameCases))]
+        public void Describe((IDependencyGraphNode node, string expectedDisplayName) td)
         {
-            using var s1 = Gamepad.LeftStick.Subscribe();
+            Assert.That(td.node.Describe(), Is.EqualTo(td.expectedDisplayName));
+            
+            //if (node is IDisposable)
+              //  ((IDisposable)node).Dispose();
+
+            //using var s1 = Gamepad.LeftStick.Subscribe();
             // TODO Gamepad.leftStick.Subscribe();
             // TODO Gamepad.leftStick.Player(1).Subscribe();	       // Filter for gamepad assigned to player 1
             // TODO Gamepad.leftStick.Filter((x) => x >= 0.5f);	       // Convert to boolean
@@ -298,9 +331,9 @@ namespace Tests.InputSystem
             // TODO InputBinding.First( Gamepad.leftStick, Gamepad.rightStick); // Contains data form first applicable binding
             // TODO InputBinding.Max( Gamepad.buttonSouth.Pressed(), Gamepad.buttonEast.Pressed() ).Once();
 
-            Assert.That(Gamepad.buttonSouth.Describe(), Is.EqualTo("Gamepad.buttonSouth"));
-            Assert.That(Gamepad.buttonSouth.Pressed().Describe(), Is.EqualTo("Pressed( Gamepad.buttonSouth )"));
-            
+            //Assert.That(Gamepad.buttonSouth.Describe(), Is.EqualTo("Gamepad.buttonSouth"));
+            //Assert.That(Gamepad.buttonSouth.Pressed().Describe(), Is.EqualTo("Press( Gamepad.buttonSouth )"));
+
             // https://www.youtube.com/watch?v=bFHvgqLUDbE
 
             // TODO Handle the following conceptual things:
@@ -316,7 +349,7 @@ namespace Tests.InputSystem
         public void Dot()
         {
             var buffer = new StringBuilder();
-            var g = new Digraph(Gamepad.buttonSouth)
+            var g = new Digraph(Gamepad.ButtonSouth)
             {
                 name = "G",
                 title = "Title",
@@ -330,7 +363,7 @@ namespace Tests.InputSystem
    graph [fontname=""Arial"" fontsize=9]
    node [fontname=""Arial"" fontsize=9]
    edge [fontname=""Arial"" fontsize=9]
-   node0 [label=""Gamepad.buttonSouth""]
+   node0 [label=""Gamepad.ButtonSouth""]
 }"));
 
             const string commonPrefix = @"digraph {
@@ -340,13 +373,13 @@ namespace Tests.InputSystem
    node [fontname=""Source Code Pro"" fontsize=12]
    edge [fontname=""Source Code Pro"" fontsize=12]";
             
-            Assert.That(Gamepad.buttonSouth.ToDot(), Is.EqualTo(commonPrefix + @"
+            Assert.That(Gamepad.ButtonSouth.ToDot(), Is.EqualTo(commonPrefix + @"
    node0 [label=""Gamepad.buttonSouth""]
 }"));
             
-            Assert.That(Gamepad.buttonSouth.Pressed().ToDot(), Is.EqualTo(commonPrefix + @"
+            Assert.That(Gamepad.ButtonSouth.Pressed().ToDot(), Is.EqualTo(commonPrefix + @"
    node0 [label=""Pressed""]
-   node1 [label=""Gamepad.buttonSouth""]
+   node1 [label=""Gamepad.ButtonSouth""]
    node0 -> node1
 }"));
         }
@@ -375,10 +408,10 @@ namespace Tests.InputSystem
         [Test]
         public void UseCase_DirectAccess()
         {
-            var button = Gamepad.buttonSouth.Stub(m_Context, initialValue: true);
+            var button = Gamepad.ButtonSouth.Stub(m_Context, initialValue: true);
             
             var data = new ListObserver<bool>();
-            using var subscription = Gamepad.buttonSouth.Subscribe(m_Context, data);
+            using var subscription = Gamepad.ButtonSouth.Subscribe(m_Context, data);
 
             m_Context.Update();
             Assert.That(data.Next.Count, Is.EqualTo(1));
@@ -396,7 +429,7 @@ namespace Tests.InputSystem
         [Test]
         public void UseCase_DirectBindingsShouldBeCompileTimeTypeSafe()
         {
-            var button = Gamepad.buttonSouth.Stub(m_Context);
+            var button = Gamepad.ButtonSouth.Stub(m_Context);
             button.Press();
 
             using var move = new BindableInput<Vector2>(callback : Move);
@@ -404,7 +437,7 @@ namespace Tests.InputSystem
 
             // Act
             using BindableInput<InputEvent> jump = new(callback : Jump);
-            jump.Bind(Gamepad.buttonSouth.Pressed());
+            jump.Bind(Gamepad.ButtonSouth.Pressed());
             jump.Bind(Keyboard.space.Pressed());
 
             jump.OnNext(new InputEvent());
@@ -437,7 +470,7 @@ namespace Tests.InputSystem
         public void Example()
         {
             // React to Gamepad button press event
-            using var subscription = Gamepad.buttonSouth.Pressed()
+            using var subscription = Gamepad.ButtonSouth.Pressed()
                     .Subscribe(DebugObserver<InputEvent>.Create());
 
 
@@ -450,9 +483,9 @@ namespace Tests.InputSystem
         public void CombineLatest()
         {
             var button0 = Gamepad.ButtonEast.Stub(m_Context);
-            var button1 = Gamepad.buttonSouth.Stub(m_Context);
+            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
             var observer = new ListObserver<ValueTuple<bool, bool>>();
-            using var subscription = Combine.CombineLatest(Gamepad.ButtonEast, Gamepad.buttonSouth).Subscribe(m_Context, observer);
+            using var subscription = Combine.Latest(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
             
             button0.Press();
             m_Context.Update();
@@ -476,9 +509,9 @@ namespace Tests.InputSystem
         public void Chord()
         {
             var button0 = Gamepad.ButtonEast.Stub(m_Context);
-            var button1 = Gamepad.buttonSouth.Stub(m_Context);
+            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
             var observer = new ListObserver<bool>();
-            using var subscription = Combine.Chord(Gamepad.ButtonEast, Gamepad.buttonSouth).Subscribe(m_Context, observer);
+            using var subscription = Combine.Chord(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
             
             button0.Press();
             m_Context.Update();
@@ -587,37 +620,30 @@ namespace Tests.InputSystem
             Assert.That(observer.Next[1], Is.EqualTo(new Vector2(0.6f, 0.1f)));
         }
         
-        /*[Test]
-        public void Multiplex()
+        [Test]
+        public void Merge()
         {
-            var east = m_Context.CreateDefaultInitializedStream(Gamepad.ButtonEast);
-            var north = m_Context.CreateDefaultInitializedStream(Gamepad.ButtonNorth);
+            var east = Gamepad.ButtonEast.Stub(m_Context);
+            var north = Gamepad.ButtonNorth.Stub(m_Context);
             
             var output = new ListObserver<bool>();
-            var mux = new Multiplexer<bool>(Gamepad.ButtonEast, Gamepad.ButtonNorth);
-            using var sub = mux.Subscribe(m_Context, output);
+            using var mux = Combine.Merge(Gamepad.ButtonEast, Gamepad.ButtonNorth).Subscribe(m_Context, output);
 
             m_Context.Update();
 
             Assert.That(output.Next.Count, Is.EqualTo(0));
 
-            east.OfferByValue(true);
+            east.Press();
             m_Context.Update();
-
             Assert.That(output.Next.Count, Is.EqualTo(1));
             Assert.That(output.Next[0], Is.EqualTo(true));
             
-            north.OfferByValue(false);
+            north.Press();
             m_Context.Update();
-            
             Assert.That(output.Next.Count, Is.EqualTo(2));
-            Assert.That(output.Next[1], Is.EqualTo(false));
+            Assert.That(output.Next[1], Is.EqualTo(true));
             
-            east.OfferByValue(false);
-            north.OfferByValue(false);
-            east.OfferByValue(false);
-            north.OfferByValue(true);
-        }*/
+        }
 
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.

@@ -84,13 +84,12 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO Should really have key and not usage.... Not necessarily, if this represents a blue print. But makes more sense to let this be specific and let deviceId = 0 represents the set.
     // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
-    public struct ObservableInput<T> : IObservableInput<T>, IDependencyGraphNode, IEquatable<ObservableInput<T>>
+    // Note that ObservableInput is equatable based on underlying usage.
+    public struct ObservableInput<T> : IObservableInput<T>, IEquatable<ObservableInput<T>>
         where T : struct
     {
         public readonly Usage Usage;
-        private readonly string m_DisplayName;
         private int m_NodeId;
-        //private readonly Field Field;
 
         public ObservableInput(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
@@ -105,7 +104,7 @@ namespace UnityEngine.InputSystem.Experimental
                 throw new ArgumentException(nameof(usage) + " is not a valid usage.");
 
             Usage = usage;
-            m_DisplayName = displayName;
+            this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required");
             m_NodeId = Context.InvalidNodeId;
         }
 
@@ -141,7 +140,8 @@ namespace UnityEngine.InputSystem.Experimental
         #region IDependencyGraphNode
         
         /// <inheritDoc />
-        public string displayName => m_DisplayName ?? Usage.ToLiteral();
+        public string displayName { get; }
+
         /// <inheritDoc />
         public int nodeId => m_NodeId;
         /// <inheritDoc />

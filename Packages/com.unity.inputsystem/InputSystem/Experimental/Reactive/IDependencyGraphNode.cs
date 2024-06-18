@@ -32,32 +32,6 @@ namespace UnityEngine.InputSystem.Experimental
         /// <exception cref="System.ArgumentOutOfRangeException">If <paramref name="index"/> is outside interval 0, childCount).</exception>
         IDependencyGraphNode GetChild(int index);
     }
-
-    // NativeGraph?
-    /*class Graph<TNode>
-    {
-        struct NodeItem
-        {
-            public TNode Node;
-        }
-
-        private TNode[] m_Nodes;
-        private int[] m_Edges;
-        private int m_NodeCount;
-
-        public void AddNode(TNode node)
-        {
-            m_Nodes[m_NodeCount++] = node;
-        }
-
-        public int ChildCount(TNode node)
-        {
-            var index = ArrayHelpers.IndexOf(m_Nodes, node);
-            if (index < 0)
-                throw new Exception("Graph do not contain node");
-            m_Edges[index]
-        }
-    }*/
     
     /// <summary>
     /// Provides extension methods for types implementing IDependencyGraphNode. 

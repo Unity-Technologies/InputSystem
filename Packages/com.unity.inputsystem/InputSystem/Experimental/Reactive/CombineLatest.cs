@@ -2,19 +2,16 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-
+    // TODO CombineLatest Should not emit if same atomic source until all has reported for timestep t
     public struct CombineLatest<T0, T1, TSource0, TSource1> : IObservableInput<ValueTuple<T0, T1>>, IDependencyGraphNode
         where TSource0 : IObservableInput<T0>, IDependencyGraphNode
         where TSource1 : IObservableInput<T1>, IDependencyGraphNode
         where T0 : struct
         where T1 : struct
     {
-        private sealed class Impl //: IObserver<ValueTuple<T0, T1>>
+        private sealed class Impl
         {
-            private bool m_PreviousValue;
             private readonly ObserverList2<ValueTuple<T0, T1>> m_Observers;
-            private readonly FirstObserver m_FirstObserver;
-            private readonly SecondObserver m_SecondObserver;
             private ValueTuple<T0, T1> m_Value;
 
             private sealed class FirstObserver : IObserver<T0>
@@ -38,8 +35,7 @@ namespace UnityEngine.InputSystem.Experimental
 
                 public void OnNext(T0 value)
                 {
-                    // TODO Should not emit if same atomic source until all reporter
-                    m_Parent.m_Value = new ValueTuple<T0, T1>(value, m_Parent.m_Value.Item2);
+                    m_Parent.m_Value.Item1 = value;
                     m_Parent.ForwardOnNext();
                 }
             }
@@ -65,20 +61,19 @@ namespace UnityEngine.InputSystem.Experimental
 
                 public void OnNext(T1 value)
                 {
-                    // TODO Should not emit if same atomic source until all reporter
-                    m_Parent.m_Value = new ValueTuple<T0, T1>(m_Parent.m_Value.Item1, value);
+                    m_Parent.m_Value.Item2 = value;
                     m_Parent.ForwardOnNext();
                 }
             }
         
             public Impl(Context context, TSource0 source0, TSource1 source1)
             {
-                m_FirstObserver = new FirstObserver(this);
-                m_SecondObserver = new SecondObserver(this);
+                var firstObserver = new FirstObserver(this);
+                var secondObserver = new SecondObserver(this);
                 
                 m_Observers = new ObserverList2<ValueTuple<T0, T1>>( 
-                    source0.Subscribe(context, m_FirstObserver),
-                    source1.Subscribe(context, m_SecondObserver));
+                    source0.Subscribe(context, firstObserver),
+                    source1.Subscribe(context, secondObserver));
             }
 
             public IDisposable Subscribe(IObserver<ValueTuple<T0, T1>> observer) => 
@@ -87,18 +82,7 @@ namespace UnityEngine.InputSystem.Experimental
             public IDisposable Subscribe(Context context, IObserver<ValueTuple<T0, T1>> observer) =>
                 m_Observers.Subscribe(context, observer);
 
-            /*public void OnCompleted() => m_Observers.OnCompleted();
-            public void OnError(Exception error) => m_Observers.OnError(error);
-
-            public void OnNext(ValueTuple<T0, T1> value)
-            {
-                m_Observers.OnNext(m_Value);
-            }*/
-
-            private void ForwardOnNext()
-            {
-                m_Observers.OnNext(m_Value);
-            }
+            private void ForwardOnNext() => m_Observers.OnNext(m_Value);
         }
         
         private readonly TSource0 m_Source0;
@@ -118,14 +102,12 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe(Context context, IObserver<ValueTuple<T0, T1>> observer) =>
             (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
         
-        // TODO Reader end-point
-        
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
 
         public int nodeId => 0; // TODO Remove
-        public string displayName => "Press";
-        public int childCount => 1;
+        public string displayName => "CombineLatest";
+        public int childCount => 2;
 
         public IDependencyGraphNode GetChild(int index)
         {
@@ -137,17 +119,23 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
     }
-
+    
     public static class Combine
     {
-        public static CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>> CombineLatest<T0, T1>(
+        // TODO See if there is some trick we can utilize to keep decent syntax but not type-erase sources
+        public static CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>> Latest<T0, T1>(
             IObservableInput<T0> source0, IObservableInput<T1> source1)
             where T0 : struct
             where T1 : struct
         {
-            // TODO Possibility to check here for concrete instances but keep simple syntax, overload with exact
-            
             return new CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>>(source0, source1);
+        }
+        
+        public static Merge<T, IObservableInput<T>> Merge<T>(
+            IObservableInput<T> source0, IObservableInput<T> source1)
+            where T : struct
+        {
+            return new Merge<T, IObservableInput<T>>(source0, source1);
         }
         
         public static Chord<TSourceOther> Chord<TSourceOther>(TSourceOther source1, TSourceOther source2)
