@@ -26,7 +26,7 @@ however, it has to be formatted properly to pass verification tests.
   only.
 
 ### Changed
-- Changed DualSenseHIDInputReport from internal to public visibility
+- Changed `DualSenseHIDInputReport` from internal to public visibility
 
 ## [1.8.2] - 2024-04-29
 
