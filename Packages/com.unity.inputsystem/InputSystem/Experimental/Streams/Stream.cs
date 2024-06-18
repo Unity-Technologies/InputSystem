@@ -74,10 +74,11 @@ namespace UnityEngine.InputSystem.Experimental
         public readonly Usage Usage;
 
         public const int kDefaultCapacity = 2;
-        
+
         public Stream(Usage usage, T initialValue, int initialCapacity = kDefaultCapacity)
             : this(usage, ref initialValue, initialCapacity)
-        { }
+        {
+        }
         
         public Stream(Usage usage, ref T initialValue, int initialCapacity = kDefaultCapacity)
         {

@@ -3,7 +3,8 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public class BindableInput<T> : IObserver<T>, IDisposable where T : struct
+    public class BindableInput<T> : IObserver<T>, IDisposable 
+        where T : struct
     {
         public delegate void Callback(T value);
         public event Callback performed;
@@ -43,13 +44,13 @@ namespace UnityEngine.InputSystem.Experimental
             performed += callback;
         }
 
-        public BindableInput(Callback callback, IObservable<T> binding, Context context = null)
+        /*public BindableInput(Callback callback, IObservable<T> binding, Context context = null)
         {
             m_Context = context;
             Bind(binding);
 
             performed += callback;
-        }
+        }*/
 
         public static implicit operator BindableInput<T>(ObservableInput<T> source)
         {
@@ -83,7 +84,7 @@ namespace UnityEngine.InputSystem.Experimental
         }*/
 
         // TODO Consider requiring context to be passed and instead only make IObservable<T> out of context owning objects
-        public void Bind(IObservable<T> observable)
+        public void Bind(IObservableInput<T> observable)
         {
             var subscription = observable.Subscribe(this);
             ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount, subscription);

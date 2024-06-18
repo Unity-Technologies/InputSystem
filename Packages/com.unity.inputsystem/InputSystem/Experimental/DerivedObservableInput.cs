@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     /// <typeparam name="TIn">The input type</typeparam>
     /// <typeparam name="TOut">The output type</typeparam>
-    public struct DerivedObservableInput<TIn, TOut> : IObservableInput<TOut>
+    /*public struct DerivedObservableInput<TIn, TOut> : IObservableInput<TOut>
         where TIn : struct
         where TOut : struct
     {
@@ -120,5 +120,5 @@ namespace UnityEngine.InputSystem.Experimental
         }
 
         // TODO Implicit conversion to TOut possible or only for button?
-    }
+    }*/
 }

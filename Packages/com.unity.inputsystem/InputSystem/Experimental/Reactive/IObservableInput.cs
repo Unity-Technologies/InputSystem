@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// with a specific end-point but not with a context.
     /// </summary>
     /// <typeparam name="T">The observable type.</typeparam>
-    public interface IObservableInput<out T> : IObservable<T> where T : struct
+    public interface IObservableInput<out T> : IObservable<T>, IDependencyGraphNode where T : struct
     {
         /// <summary>
         /// Subscribes to the given source within context <paramref name="context"/>

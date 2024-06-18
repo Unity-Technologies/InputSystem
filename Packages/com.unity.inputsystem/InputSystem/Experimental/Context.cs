@@ -1,32 +1,91 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine.Rendering.VirtualTexturing;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    internal struct InternalEvent
+    {
+        
+    }
+
+    internal struct EventStream
+    {
+        
+    }
+    
     public partial class Context : IDisposable
     {
-        // Basically just conceptual for testing
+        public const int InvalidNodeId = 0;
 
-        /*public Stream<T> GivenStream<T>(Usage key, ref T initialValue) where T : struct
+        private const int kMaxContexts = 4;      // Maximum number of concurrent contexts
+        
+        private struct Globals
         {
-            if (m_Streams.ContainsKey(key))
-                throw new Exception("Stream already present");
-            m_Streams.Add(Usages.Gamepad.buttonSouth);
-        }*/
-
-        private static Context _instance;
-
-        public static Context instance
-        {
-            get => _instance ??= new Context();
-            internal set => _instance = value;
+            public Context Instance;             // Singleton instance for simplified API usage
+            public Context[] Contexts;           // Global instances
+            public int ContextCounter;           // Global counter for unique IDs
         }
 
+        private static Globals _globals = new Globals()
+        {
+            Instance = null,
+            Contexts = new Context[kMaxContexts],
+            ContextCounter = 0
+        };
+        
+        private readonly int m_Handle;
+        
+        private readonly Dictionary<Usage, StreamContext> m_StreamContexts = new(); // Tracks observed usages
+        private readonly Dictionary<Usage, IStream> m_Streams = new();              // Tracks available streams
+        private readonly EventStream m_Events = new();                              // MPMC queue of observable events
+        private int m_NodeId;
+        
+        public static Context instance
+        {
+            get => _globals.Instance ??= new Context();
+            internal set => _globals.Instance = value;
+        }
+        
+        public Context()
+        {
+            // Attempt to assign this context to a global slot
+            var handle = 0;
+            for (var i = 0; i < kMaxContexts; ++i)
+            {
+                if (_globals.Contexts[i] == null)
+                {
+                    _globals.Contexts[i] = this;
+                    handle = i + 1;
+                    break;
+                }
+            }
+            if (handle == 0)
+            {
+                throw new Exception(
+                    $"Maximum number of concurrently existing {nameof(Context)} instances reached ({kMaxContexts}. Did you forget to dispose previous instances?");
+            }
+            m_Handle = handle;
+        }
+        
+        public static Context GetContext(int handle)
+        {
+            if (handle <= 0 || handle > kMaxContexts)
+                throw new ArgumentException($"Invalid context handle: {handle}");
+            return _globals.Contexts[handle - 1];
+        }
+
+        public int RegisterNode()
+        {
+            var nextNodeId = ++m_NodeId;
+            return nextNodeId;
+        }
+        
         public Stream<T> CreateStream<T>(Usage key, T initialValue) where T : struct
         {
             if (m_Streams.ContainsKey(key))
-                throw new Exception("Stream already registered");
+                throw new Exception("Stream already exist");
 
             var stream = new Stream<T>(key, ref initialValue);
             m_Streams.Add(key, stream);
@@ -41,79 +100,25 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return CreateStream<T>(source.Usage, default);
         }
-
-        /*
-        public void Offer<T>(Usage key, T value) where T : struct
-        {
-            // TODO Debug assert T is small enough
-            Offer(key, ref value);
-        }
-
-        public void Offer<T>(Usage key, ref T value) where T : struct
-        {
-            if (!m_Streams.TryGetValue(key, out IStream stream))
-                throw new Exception("Stream do not exist");
-
-            ((Stream<T>)stream).Offer(ref value);
-            //var streamContext = m_StreamContexts[key] as StreamContext<T>; // TODO Incorrect, should write to stream
-            //streamContext?.Offer(ref value);
-        }*/
-
-        // TODO Should not take stream
-        /*public void GivenData<T>(Usage key, Stream<T> stream) where T : struct
-        {
-            if (m_Streams.ContainsKey(key))
-                throw new Exception("Stream already present");
-
-            // Register stream
-            m_Streams.Add(key, stream);
-
-            // If there is an associated stream context, associate the stream with the context
-            if (m_StreamContexts.TryGetValue(key, out StreamContext streamContext))
-                ((StreamContext<T>)streamContext).SetStream(stream);
-        }*/
-
+        
         internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
         {
-            // Fetch existing stream context if already exists
-            if (m_StreamContexts.TryGetValue(key, out StreamContext context))
+            // Attempt to fetch existing stream context
+            if (!m_StreamContexts.TryGetValue(key, out StreamContext context))
             {
-                var streamContext = (StreamContext<T>)context;
-
-                // Associate stream context with underlying stream if available
-                if (m_Streams.TryGetValue(key, out var stream))
-                    streamContext.SetStream(stream as Stream<T>);
-
-                return streamContext;
+                // Construct a new stream context if no context exists.
+                context = new StreamContext<T>(key);
+                m_StreamContexts.Add(key, context);
             }
 
-            // Create a new stream context without any associated underlying stream
-            var newContext = new StreamContext<T>(key);
-            m_StreamContexts.Add(key, newContext);
-            if (m_Streams.TryGetValue(key, out var stream2))
-                newContext.SetStream(stream2 as Stream<T>);
-            return newContext;
+            // Attempt to associate stream context with underlying stream if available.
+            // If no underlying stream exist we need to reattempt later when availability changes.
+            var streamContext = (StreamContext<T>)context;
+            if (m_Streams.TryGetValue(key, out var stream))
+                streamContext.SetStream(stream as Stream<T>);
+            
+            return (StreamContext<T>)context;
         }
-
-        /*public Stream<T> GetStream<T>(Usage key) where T : struct
-        {
-            return m_Streams[key].GetStream<T>();
-        }*/
-
-        //public delegate void StreamDataReceived(IStream stream);
-
-        // This map is populated when a stream is subscribed to
-        private readonly Dictionary<Usage, StreamContext> m_StreamContexts = new();
-
-        // This map is populated based on addressable endpoints
-        private readonly Dictionary<Usage, IStream> m_Streams = new();
-        
-        //private readonly Dictionary<, IInputBindingSource<>
-
-        //private readonly StreamContext<Button>[] m_ButtonStreams;
-
-        // THis map is populated when a usage is subscribed to
-        //private readonly Dictionary<Usage, List<Object>> m_Observers = new();
 
         public void Update()
         {
@@ -141,6 +146,9 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 kvp.Value.Dispose();
             }
+            
+            // Release global slot
+            _globals.Contexts[m_Handle - 1] = null;
         }
     }
 }

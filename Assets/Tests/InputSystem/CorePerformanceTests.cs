@@ -32,6 +32,23 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     [Test, Performance]
     [Category("Performance")]
+    [TestCase(1)]
+    [TestCase(1000)]
+    public void NEW_Performance_Uniform_Growth_Add_1000_floats(int initialCapacity)
+    {
+        using var uniform = new UniformBuffer<float>(initialCapacity, AllocatorManager.Persistent);
+        Measure.Method(() =>
+            {
+                for (var i=0; i < 1000; ++i)
+                    uniform.Push(i);
+            })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
     public void Performance_MakeCircles()
     {
         Measure.Method(() =>
@@ -162,16 +179,17 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     [Test, Performance]
     [Category("Performance")]
-    public void NEW_Performance_ReadControl()
+    public void NEW_Performance_ReadControl_NoStream()
     {
         using var ctx = new Context();
-        var stream = ctx.CreateStream(Usages.GamepadUsages.leftStick, Vector2.zero);
-        Action method = () => stream.GetLast();
-        Measure.Method(method)
+        using var r = UnityEngine.InputSystem.Experimental.Devices.Gamepad.LeftStick.Subscribe();
+        Measure.Method(() => r.Read())
             .MeasurementCount(200)
             .WarmupCount(5)
             .Run();
     }
+    
+    // TODO Make a performance test for read with an underlying stream
 
     [Test, Performance]
     [Category("Performance")]

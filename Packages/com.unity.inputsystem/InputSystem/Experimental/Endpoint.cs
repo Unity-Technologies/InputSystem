@@ -1,18 +1,35 @@
 using System;
 using System.Runtime.InteropServices;
 
+// TODO Make Source and Usage their own types and convert existing Usage into UnityUsage?
+
 namespace UnityEngine.InputSystem.Experimental
 {
+    /// <summary>
+    /// Represents what kind of end-point is represented.
+    /// </summary>
     public enum SourceType 
     {
+        /// <summary>
+        /// The end-point represents a device or device control.
+        /// </summary>
         Device,
+        
+        /// <summary>
+        /// The end-point represents an end-point that is derived from one or multiple other end-points.
+        /// </summary>
         Derived
     }
 
+    /// <summary>
+    /// Represents an end-point.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 8)]
     public readonly struct Endpoint : IEquatable<Endpoint>
     {
-        public const ushort kAnySource = 0;
+        public static readonly Endpoint Invalid = default;
+        
+        public const ushort AnySource = 0;
         
         private const int kUsageBits = 32;
         private const int kUsageShift = 0;
@@ -36,7 +53,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         [FieldOffset(0)] public readonly ulong value;
         
-        private Endpoint(Usage usage, byte usageProtocol = 0, ushort sourceId = kAnySource, SourceType sourceType = SourceType.Device)
+        private Endpoint(Usage usage, byte usageProtocol = 0, ushort sourceId = AnySource, SourceType sourceType = SourceType.Device)
         {
             value = ((ulong)((uint)sourceType & kSourceTypeMask) << kSourceTypeShift) |
                     ((ulong)(sourceId & kSourceIdMask) << kSourceIdShift) |
@@ -70,7 +87,16 @@ namespace UnityEngine.InputSystem.Experimental
         /// </summary>
         public ushort sourceId => (ushort)((value >> kSourceIdShift) & kSourceIdMask);
 
+        /// <summary>
+        ///  Returns the associated source type.
+        /// </summary>
+        /// <see cref="SourceType"/>
         public SourceType sourceType => (SourceType)((value >> kSourceTypeShift) & kSourceTypeMask);
+
+        /// <summary>
+        /// Returns whether this end-point represents an aggregate of all instances of a specific end-point.
+        /// </summary>
+        public bool isAggregate => sourceId == AnySource;
 
         /// <summary>
         /// Returns the usage part of this endpoint address.

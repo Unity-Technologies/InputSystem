@@ -53,6 +53,7 @@ public Subscription Subscribe(Context context, Stream<T> target)
   - Serial/Timestamp stream
 - Adapt streams on managed side to utilize Burst and Job systems.
 - Consider if there are any benefits from potential caching of derivatives and how we may safely cache them. This is essential to avoid duplicated processing.
+- There is little point in having an intermediate struct to defer subscribe if we return interface  since we introduce boxing for IObservable<T>.
 
 ```cs
 // Hard-coded bindings directly accessing specific device
@@ -66,3 +67,9 @@ Old comparison of interfaces and delegates: https://www.jacksondunstan.com/artic
 Another old comparison of interfaces and delegates: https://www.codeproject.com/Articles/468967/Interfaces-vs-Delegates
 Caching delegates: https://www.mattgibson.dev/blog/csharp-delegates-memory-summary#:~:text=You%20can%20manually%20cache%20a,time%20you%20use%20the%20delegate.&text=Having%20a%20private%20member%20(static,times%20without%20needing%20new%20allocations.
 Reactive .NET https://introtorx.com/chapters/key-types
+Directed graphs and array representation: https://www.cs.cornell.edu/courses/cs3110/2009sp/lectures/lec22.html#:~:text=Directed%20graphs%20are%20commonly%20represented,edge%20originating%20at%20vi).
+Graph representation: https://www.khanacademy.org/computing/computer-science/algorithms/graph-representation/a/representing-graphs
+Graph view example: https://forum.unity.com/threads/bare-bones-graphview-example.778706/
+Graph view tutorial: https://ktmarine1999.medium.com/using-unitys-graph-view-18b38a23dea5
+Graph view tutorial: https://www.reddit.com/r/unity/comments/13kze7v/experimental_graph_view_project/
+Graph view tutorial: https://blog.devgenius.io/using-unitys-graph-view-4cc55b704548

@@ -5,10 +5,10 @@
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// Represents a set of configured bindings.
+    /// Represents a source of input bindings.
     /// </summary>
-    /// <typeparam name="T">The associated binding type.</typeparam>
-    public interface IInputBindingConfiguration<T> where T : struct
+    /// <typeparam name="T">The associated binding value type.</typeparam>
+    public interface IInputBindingSource<T> where T : struct
     {
         /// <summary>
         /// Applies associated bindings to the given target.
@@ -22,20 +22,20 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     public static partial class Presets
     {
-        private struct MoveBindings : IInputBindingConfiguration<Vector2>
+        private struct MoveBindings : IInputBindingSource<Vector2>
         {
             public void ApplyTo(BindableInput<Vector2> target)
             {
-                target.Bind(Devices.Gamepad.leftStick);
+                target.Bind(Devices.Gamepad.LeftStick);
                 // TODO Keyboard composite
             }
         }
         
-        private struct JumpBindings : IInputBindingConfiguration<InputEvent>
+        private struct JumpBindings : IInputBindingSource<InputEvent>
         {
             public void ApplyTo(BindableInput<InputEvent> target)
             {
-                target.Bind(Devices.Gamepad.buttonEast.Pressed());
+                target.Bind(Devices.Gamepad.ButtonEast.Pressed());
                 target.Bind(Devices.Keyboard.space.Pressed());
             }
         }
@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// - Press (A) to jump on XBox controller.
         /// </remarks>
         /// <returns>Binding preset.</returns>
-        public static IInputBindingConfiguration<InputEvent> Jump()
+        public static IInputBindingSource<InputEvent> Jump()
         {
             return new JumpBindings();
         }

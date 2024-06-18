@@ -2,6 +2,8 @@ namespace UnityEngine.InputSystem.Experimental
 {
     public readonly struct Field
     {
+        public static readonly Field None = new(0, FieldEncoding.None);
+        
         public enum FieldEncoding : byte
         {
             None = 0,
@@ -13,7 +15,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// </summary>
         public readonly int ByteOffset;
         private readonly FieldEncoding Encoding;
-
+        
         private Field(int offset, FieldEncoding encoding = FieldEncoding.None)
         {
             ByteOffset = offset;

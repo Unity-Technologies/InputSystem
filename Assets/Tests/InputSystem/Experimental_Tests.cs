@@ -1,20 +1,110 @@
 using System;
-using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
-using TreeEditor;
 using Unity.Collections;
-using Unity.Jobs;
-using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
-using UnityEngine.InputSystem.Utilities;
 using Vector2 = UnityEngine.Vector2;
 
 // TODO Do we need a FixedInput type?
 
 namespace Tests.InputSystem
 {
+    public interface INode
+    {
+        public string DoIt();
+    }
+
+    public struct C<T> : INode where T : INode
+    {
+        private readonly T m_Node;
+        public C(T node) { this.m_Node = node; }
+        public string DoIt() => $"C({m_Node})";
+    }
+
+    public struct B<T> : INode where T : INode
+    {
+        private readonly T m_Node;
+        public B(T node) { this.m_Node = node; }
+        public string DoIt() => $"B({m_Node})";
+    }
+
+    public struct A : INode
+    {
+        public string DoIt() => "A";
+    }
+
+    public static class NodeExtensions
+    {
+        public static B<T> b<T>(this T obj) where T : INode
+        {
+            return new B<T>();
+        }
+        
+        public static C<T> c<T>(this T obj) where T : INode
+        {
+            return new C<T>();
+        }
+    }
+
+    // Button stub to improve readability of test code
+    internal readonly struct ButtonStub
+    {
+        private readonly Stream<bool> m_Stream;
+
+        public ButtonStub(Stream<bool> stream)
+        {
+            m_Stream = stream;
+        }
+
+        public void Press()
+        {
+            m_Stream.OfferByValue(true);
+        }
+
+        public void Release()
+        {
+            m_Stream.OfferByValue(false);
+        }
+    }
+
+    internal readonly struct Stub<T> where T : struct
+    {
+        private readonly Stream<T> m_Stream;
+
+        public Stub(Stream<T> stream)
+        {
+            m_Stream = stream;
+        }
+
+        public void Change(T value)
+        {
+            m_Stream.OfferByValue(value);
+        }
+        
+        public void Change(ref T value)
+        {
+            m_Stream.OfferByRef(ref value);
+        }
+    }
+
+    // Allows constructing a stub from an observable input
+    internal static class StubExtensions
+    {
+        public static Stub<T> Stub<T>(this ObservableInput<T> source, Context context, T initialValue = default)
+            where T : struct
+        {
+            return new Stub<T>(context.CreateStream(key: source.Usage, initialValue: initialValue));
+        }
+        
+        public static ButtonStub Stub(this ObservableInput<bool> source, Context context, bool initialValue = false)
+        {
+            return new ButtonStub(context.CreateStream(key: source.Usage, initialValue: initialValue));
+        }
+    }
+    
     internal static class ContextExtensions
     {
         public static void GivenStreamWithData<T>(this Context context, Usage key, params T[] values) where T : struct
@@ -98,8 +188,8 @@ namespace Tests.InputSystem
 
         private static readonly object[] EndpointTestCases = new object[]
         {
-            new object[]{ Endpoint.FromUsage(Usages.GamepadUsages.buttonEast), Usages.GamepadUsages.buttonEast, Endpoint.kAnySource, SourceType.Device },
-            new object[]{ Endpoint.FromDeviceAndUsage(13, Usages.GamepadUsages.buttonSouth), Usages.GamepadUsages.buttonSouth, 13, SourceType.Device }
+            new object[]{ Endpoint.FromUsage(Usages.GamepadUsages.ButtonEast), Usages.GamepadUsages.ButtonEast, Endpoint.AnySource, SourceType.Device },
+            new object[]{ Endpoint.FromDeviceAndUsage(13, Usages.GamepadUsages.ButtonSouth), Usages.GamepadUsages.ButtonSouth, 13, SourceType.Device }
         };
         
         [Test]
@@ -114,7 +204,7 @@ namespace Tests.InputSystem
         [Test]
         public void Stream()
         {
-            using var s = new Stream<int>(Usages.GamepadUsages.leftStick, 100);
+            using var s = new Stream<int>(Usages.GamepadUsages.LeftStick, 100);
 
             {
                 var values = s.ToArray();
@@ -142,21 +232,135 @@ namespace Tests.InputSystem
         [Test]
         public void Observe()
         {
-            //Gamepad.leftStick.Select(v => v.magnitude > 0.5f);
-            //Gamepad.leftStick.Sum()
-            //Gamepad.leftStick.whenPressed()
+            // Composite.Create(Keyboard.w.value, Keyboard.d.value, (w, d, v) => v = w);
+            //Gamepad.LeftStick.Map(x => x.magnitude > 0.5f).Pressed()
+        }
+
+        [Ignore("Implementation needs fixing")]
+        [Test]
+        public void Varying()
+        {
+            //using var buf = new VaryingBuffer(128, AllocatorManager.Persistent);
+            //for (var i=0; i < 100; ++i)
+            //    buf.Push(5);
+        }
+        
+        
+        [Ignore("Implementation needs fixing")]
+        [Test]
+        public void Uniform()
+        {
+            using var uni = new UniformBuffer<int>(3, AllocatorManager.Persistent);
+
+            Assert.That(uni.ToArray().Length, Is.EqualTo(0));
+            
+            const int n = 10;
+            for (var i = 0; i < n; ++i)
+            {
+                // Assert push
+                var length = i + 1;
+                uni.Push(length);
+
+                // Assert enumeration which is indirectly triggered by ToArray
+                var values = uni.ToArray();
+                Assert.That(values.Length, Is.EqualTo(length));
+                for (var j = 0; j < length; ++j)
+                    Assert.That(values[j], Is.EqualTo(j+1));
+            }
+
+            //uni.Clear();
+            //Assert.That(uni.ToArray().Length, Is.EqualTo(0));
+            
+            //uni.Push(1);
+            //uni.Push(2);
+            //uni.Push(3);
+            //uni.Push(4);
+            
+            //Assert.That(uni.ToArray().Length, Is.EqualTo(4));
+
+            //using var e = uni.GetEnumerator();
+            //Assert.That(e.MoveNext(), Is.True);
+            //Assert.That(e.Current, Is.EqualTo(1));
+        }
+
+        // TODO What if all bindable operations where picked up by a code generator which made them detectable via registration?!
+        // [RegisterInputBinding] private InputBinding<> binding;
+        // ...and in OnEnable we use the binding.
+        
+        [Test]
+        public void Describe()
+        {
+            using var s1 = Gamepad.LeftStick.Subscribe();
+            // TODO Gamepad.leftStick.Subscribe();
+            // TODO Gamepad.leftStick.Player(1).Subscribe();	       // Filter for gamepad assigned to player 1
+            // TODO Gamepad.leftStick.Filter((x) => x >= 0.5f);	       // Convert to boolean
+            // TODO InputBinding.Max( Gamepad.leftStick, Gamepad.rightStick); // Contains merged data from left or right stick
+            // TODO InputBinding.First( Gamepad.leftStick, Gamepad.rightStick); // Contains data form first applicable binding
+            // TODO InputBinding.Max( Gamepad.buttonSouth.Pressed(), Gamepad.buttonEast.Pressed() ).Once();
+
+            Assert.That(Gamepad.buttonSouth.Describe(), Is.EqualTo("Gamepad.buttonSouth"));
+            Assert.That(Gamepad.buttonSouth.Pressed().Describe(), Is.EqualTo("Pressed( Gamepad.buttonSouth )"));
+            
+            // https://www.youtube.com/watch?v=bFHvgqLUDbE
+
+            // TODO Handle the following conceptual things:
+            // - Gamepad.LeftStick.Continuous();
+            // - Gamepad.LeftStick.OncePerFrame().Subscribe((v) => MoveRelative(v * Time.deltaTime));
+            // - Gamepad.LeftStick.Value; // Direct access to value
+
+            //using var r = Gamepad.buttonSouth.Pressed().Subscribe(m_Context);
+            //r.Describe();
+        }
+
+        [Test]
+        public void Dot()
+        {
+            var buffer = new StringBuilder();
+            var g = new Digraph(Gamepad.buttonSouth)
+            {
+                name = "G",
+                title = "Title",
+                fontSize = 9,
+                font = "Arial"
+            };
+            Assert.That(g.Build(), Is.EqualTo(@"digraph G {
+   label=""Title""
+   rankdir=""LR""
+   node [shape=rect]
+   graph [fontname=""Arial"" fontsize=9]
+   node [fontname=""Arial"" fontsize=9]
+   edge [fontname=""Arial"" fontsize=9]
+   node0 [label=""Gamepad.buttonSouth""]
+}"));
+
+            const string commonPrefix = @"digraph {
+   rankdir=""LR""
+   node [shape=rect]
+   graph [fontname=""Source Code Pro"" fontsize=12]
+   node [fontname=""Source Code Pro"" fontsize=12]
+   edge [fontname=""Source Code Pro"" fontsize=12]";
+            
+            Assert.That(Gamepad.buttonSouth.ToDot(), Is.EqualTo(commonPrefix + @"
+   node0 [label=""Gamepad.buttonSouth""]
+}"));
+            
+            Assert.That(Gamepad.buttonSouth.Pressed().ToDot(), Is.EqualTo(commonPrefix + @"
+   node0 [label=""Pressed""]
+   node1 [label=""Gamepad.buttonSouth""]
+   node0 -> node1
+}"));
         }
 
         [Test]
         public void Concept()
         {
             var data = new ListObserver<Vector2>();
-            using var subscription = Gamepad.leftStick.Subscribe(m_Context, data);
+            using var subscription = Gamepad.LeftStick.Subscribe(m_Context, data);
 
-            var s = m_Context.CreateStream(Usages.GamepadUsages.leftStick, Vector2.zero);
-            s.OfferByValue(Vector2.zero);
-            s.OfferByValue(Vector2.left);
-            s.OfferByValue(Vector2.right);
+            var stick = Gamepad.LeftStick.Stub(m_Context);
+            stick.Change(Vector2.zero);
+            stick.Change(Vector2.left);
+            stick.Change(Vector2.right);
             m_Context.Update();
 
             // Note: Initial state not reported via regular stream inspection
@@ -171,19 +375,17 @@ namespace Tests.InputSystem
         [Test]
         public void UseCase_DirectAccess()
         {
-            var s = m_Context.CreateStream(Usages.GamepadUsages.buttonSouth, true);
-
+            var button = Gamepad.buttonSouth.Stub(m_Context, initialValue: true);
+            
             var data = new ListObserver<bool>();
             using var subscription = Gamepad.buttonSouth.Subscribe(m_Context, data);
-            //Gamepad.buttonSouth.Subscribe((bool x) => Debug.Log(x));
-            
-            m_Context.Update();
 
+            m_Context.Update();
             Assert.That(data.Next.Count, Is.EqualTo(1));
             Assert.That(data.Next[0], Is.EqualTo(true));
             
-            s.OfferByValue(true);
-            s.OfferByValue(false);
+            button.Press();
+            button.Release();
             m_Context.Update();
             
             Assert.That(data.Next.Count, Is.EqualTo(3));
@@ -194,10 +396,11 @@ namespace Tests.InputSystem
         [Test]
         public void UseCase_DirectBindingsShouldBeCompileTimeTypeSafe()
         {
-            m_Context.GivenStreamWithData(Usages.GamepadUsages.buttonSouth, false, true);
+            var button = Gamepad.buttonSouth.Stub(m_Context);
+            button.Press();
 
             using var move = new BindableInput<Vector2>(callback : Move);
-            move.Bind(Gamepad.leftStick);
+            move.Bind(Gamepad.LeftStick);
 
             // Act
             using BindableInput<InputEvent> jump = new(callback : Jump);
@@ -208,6 +411,14 @@ namespace Tests.InputSystem
             m_Context.Update();
 
             Assert.That(m_JumpCount, Is.EqualTo(1));
+        }
+        
+        [Test]
+        public void Pattern()
+        {
+            A a;
+            var x = a.b().c();
+            x.DoIt();
         }
 
         /*[Test]
@@ -236,17 +447,103 @@ namespace Tests.InputSystem
         }
 
         [Test]
+        public void CombineLatest()
+        {
+            var button0 = Gamepad.ButtonEast.Stub(m_Context);
+            var button1 = Gamepad.buttonSouth.Stub(m_Context);
+            var observer = new ListObserver<ValueTuple<bool, bool>>();
+            using var subscription = Combine.CombineLatest(Gamepad.ButtonEast, Gamepad.buttonSouth).Subscribe(m_Context, observer);
+            
+            button0.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+            Assert.That(observer.Next[0], Is.EqualTo(new ValueTuple<bool, bool>(true, false)));
+            
+            button1.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            Assert.That(observer.Next[1], Is.EqualTo(new ValueTuple<bool, bool>(true, true)));
+            
+            button0.Release();
+            button1.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(4));
+            Assert.That(observer.Next[2], Is.EqualTo(new ValueTuple<bool, bool>(false, true)));
+            Assert.That(observer.Next[3], Is.EqualTo(new ValueTuple<bool, bool>(false, false)));
+        }
+
+        [Test]
+        public void Chord()
+        {
+            var button0 = Gamepad.ButtonEast.Stub(m_Context);
+            var button1 = Gamepad.buttonSouth.Stub(m_Context);
+            var observer = new ListObserver<bool>();
+            using var subscription = Combine.Chord(Gamepad.ButtonEast, Gamepad.buttonSouth).Subscribe(m_Context, observer);
+            
+            button0.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(0));
+            
+            button1.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+            Assert.That(observer.Next[0], Is.EqualTo(true));
+            
+            button0.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            Assert.That(observer.Next[1], Is.EqualTo(false));
+        }
+        
+        [Test]
         public void Press()
         {
-            var s = m_Context.CreateStream(Usages.GamepadUsages.buttonEast, false);
-            s.OfferByValue(true);
-            s.OfferByValue(false);
-
-            // React to Gamepad button press event
+            var button = Gamepad.ButtonEast.Stub(m_Context);
             var observer = new ListObserver<InputEvent>();
-            using var subscription = Gamepad.buttonEast.Pressed(m_Context)
-                    .Subscribe(m_Context, observer);
+            using var subscription = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, observer);
+            
+            // Press should trigger event
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+            
+            // Press should trigger event also when released afterwards
+            button.Release();
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
 
+            // Do not expect event when unsubscribed
+            subscription.Dispose();
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Release()
+        {
+            var button = Gamepad.ButtonNorth.Stub(m_Context);
+            var observer = new ListObserver<InputEvent>();
+            using var subscription = Gamepad.ButtonNorth.Released().Subscribe(m_Context, observer);
+            
+            // Press should not trigger event
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(0));
+            
+            // Release (should trigger event)
+            button.Release();
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+
+            // Do not expect event when unsubscribed
+            subscription.Dispose();
+            button.Press();
+            button.Release();
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(1));
         }
@@ -254,30 +551,50 @@ namespace Tests.InputSystem
         [Test]
         public void Output_Direct()
         {
-            Gamepad.rumbleHaptic.Offer(1.0f);
+            Gamepad.RumbleHaptic.Offer(1.0f);
         }
 
         [Test]
         public void Output_Indirect()
         {
-            var rumble = new BindableOutput<float>(Gamepad.rumbleHaptic);
+            var rumble = new BindableOutput<float>(Gamepad.RumbleHaptic);
             rumble.Offer(1.0f);
         }
 
-        [Test]
-        public void Mux_Test()
+        /*[Test]
+        public void Press_Merge_Test()
         {
+            ObservableInput.Merge(Gamepad.LeftStick, Gamepad.RightStick);
+        }*/
+
+        [Test]
+        public void Filter_Test()
+        {
+            var stick = Gamepad.LeftStick.Stub(m_Context);
             
+            var observer = new ListObserver<Vector2>();
+            using var subscription = Gamepad.LeftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
+            
+            stick.Change(new Vector2(0.4f, 0.0f));
+            stick.Change(new Vector2(0.5f, 0.0f));
+            stick.Change(new Vector2(0.6f, 0.1f));
+            stick.Change(new Vector2(0.3f, 0.2f));
+            
+            m_Context.Update();
+            
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            Assert.That(observer.Next[0], Is.EqualTo(new Vector2(0.5f, 0.0f)));
+            Assert.That(observer.Next[1], Is.EqualTo(new Vector2(0.6f, 0.1f)));
         }
         
-        [Test]
+        /*[Test]
         public void Multiplex()
         {
-            var east = m_Context.CreateDefaultInitializedStream(Gamepad.buttonEast);
-            var north = m_Context.CreateDefaultInitializedStream(Gamepad.buttonNorth);
+            var east = m_Context.CreateDefaultInitializedStream(Gamepad.ButtonEast);
+            var north = m_Context.CreateDefaultInitializedStream(Gamepad.ButtonNorth);
             
             var output = new ListObserver<bool>();
-            var mux = new Multiplexer<bool>(Gamepad.buttonEast, Gamepad.buttonNorth);
+            var mux = new Multiplexer<bool>(Gamepad.ButtonEast, Gamepad.ButtonNorth);
             using var sub = mux.Subscribe(m_Context, output);
 
             m_Context.Update();
@@ -300,7 +617,7 @@ namespace Tests.InputSystem
             north.OfferByValue(false);
             east.OfferByValue(false);
             north.OfferByValue(true);
-        }
+        }*/
 
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.

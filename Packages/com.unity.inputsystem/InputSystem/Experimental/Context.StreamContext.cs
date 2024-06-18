@@ -12,12 +12,13 @@ namespace UnityEngine.InputSystem.Experimental
             public abstract void Dispose();
         }
 
-        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable where T : struct
+        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable 
+            where T : struct
         {
-            private readonly Usage m_Usage;
-            private IObserver<T>[] m_Observers;
-            private int m_ObserverCount;
-            private Stream<T> m_Stream; // not owned by this context
+            private readonly Usage m_Usage;         // The associated usage
+            private IObserver<T>[] m_Observers;     // The associated observers of this stream
+            private int m_ObserverCount;            // The current observer count
+            private Stream<T> m_Stream;             // Reference to associated underlying stream (if any)
 
             public StreamContext(Usage usage, Stream<T> stream = null)
                 : base()
@@ -32,6 +33,13 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 m_Stream = stream;
             }
+
+            internal Stream<T> GetStream()
+            {
+                return m_Stream;
+            }
+
+            internal Stream<T> Stream;
 
             /*public void Offer(ref T value)
             {
@@ -100,6 +108,11 @@ namespace UnityEngine.InputSystem.Experimental
                 }
 
                 //m_Stream?.Dispose(); // TODO Should really ref count
+            }
+
+            public bool Equals(IDependencyGraphNode other)
+            {
+                throw new NotImplementedException();
             }
         }
     }
