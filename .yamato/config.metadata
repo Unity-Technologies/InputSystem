@@ -48,16 +48,16 @@ platforms_nix:
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
   - name: linux
     type: Unity::VM
-    image: package-ci/ubuntu-22.04:v4
+    image: package-ci/ubuntu-20.04:v4.50.0
     flavor: b1.large
   - name: linux_standalone
     type: Unity::VM
-    image: package-ci/ubuntu-22.04:v4
+    image: package-ci/ubuntu-20.04:v4.50.0
     flavor: b1.large
     runtime: StandaloneLinux64
   - name: linux_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/ubuntu-22.04:v4
+    image: package-ci/ubuntu-20.04:v4.50.0
     flavor: b1.large
     runtime: StandaloneLinux64
     scripting-backend: Il2Cpp
@@ -65,3 +65,5 @@ platforms_nix:
 scripting_backends:
   - name: mono
   - name: il2cpp
+  
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0 

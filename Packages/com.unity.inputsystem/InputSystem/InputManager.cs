@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
@@ -3062,15 +3063,6 @@ namespace UnityEngine.InputSystem
                 // Handle events.
                 while (m_InputEventStream.remainingEventCount > 0)
                 {
-                    if (m_Settings.maxEventBytesPerUpdate > 0 &&
-                        totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
-                    {
-                        Debug.LogError(
-                            "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-                            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
-                        break;
-                    }
-
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
@@ -3382,6 +3374,8 @@ namespace UnityEngine.InputSystem
 
                             totalEventBytesProcessed += eventPtr.sizeInBytes;
 
+                            device.m_CurrentProcessedEventBytesOnUpdate += eventPtr.sizeInBytes;
+
                             // Update timestamp on device.
                             // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
                             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
@@ -3464,11 +3458,17 @@ namespace UnityEngine.InputSystem
                     }
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
+
+                    // Discard events in case the maximum event bytes per update has been exceeded
+                    if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
+                        break;
                 }
 
                 m_Metrics.totalEventProcessingTime +=
                     ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
                 m_Metrics.totalEventLagTime += totalEventLag;
+
+                ResetCurrentProcessedEventBytesForDevices();
 
                 m_InputEventStream.Close(ref eventBuffer);
             }
@@ -3491,6 +3491,58 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
+        {
+            if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+            {
+                var eventsProcessedByDeviceLog = String.Empty;
+                // Only log the events processed by devices in last update call if we are in debug mode.
+                // This is to avoid the slightest overhead in release builds of having to iterate over all devices and
+                // reset the byte count, by the end of every update call with ResetCurrentProcessedEventBytesForDevices().
+                if (Debug.isDebugBuild)
+                    eventsProcessedByDeviceLog = $"Total events processed by devices in last update call:\n{MakeStringWithEventsProcessedByDevice()}";
+
+                Debug.LogError(
+                    "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                    + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.\n"
+                    + eventsProcessedByDeviceLog);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private string MakeStringWithEventsProcessedByDevice()
+        {
+            var eventsProcessedByDeviceLog = new StringBuilder();
+            for (int i = 0; i < m_DevicesCount; i++)
+            {
+                var deviceToLog = devices[i];
+                if (deviceToLog != null && deviceToLog.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    eventsProcessedByDeviceLog.Append($" - {deviceToLog.m_CurrentProcessedEventBytesOnUpdate} bytes processed by {deviceToLog}\n");
+            }
+            return eventsProcessedByDeviceLog.ToString();
+        }
+
+        // Reset the number of bytes processed by devices in the current update, for debug builds.
+        // This is to avoid the slightest overhead in release builds of having to iterate over all devices connected.
+        private void ResetCurrentProcessedEventBytesForDevices()
+        {
+            if (Debug.isDebugBuild)
+            {
+                for (var i = 0; i < m_DevicesCount; i++)
+                {
+                    var device = m_Devices[i];
+                    if (device != null && device.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    {
+                        device.m_CurrentProcessedEventBytesOnUpdate = 0;
+                    }
+                }
+            }
         }
 
         // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.
