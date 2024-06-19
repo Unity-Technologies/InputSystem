@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Experimental.Devices;
 
-namespace UnityEngine.InputSystem.Experimental
+/*namespace UnityEngine.InputSystem.Experimental
 {
     // Simulates a platform specific (native code, e.g. C) struct.
     [StructLayout(LayoutKind.Sequential)]
@@ -61,4 +61,4 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO Write only subscribed output stream (based on registered receivers)
         }
     }
-}
+}*/

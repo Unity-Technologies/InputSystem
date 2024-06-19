@@ -2,6 +2,7 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Do we even need this?
     public class BindableOutput<T> : IObserver<T>, IDisposable where T : struct
     {
         public BindableOutput(OutputBindingTarget<T> binding)

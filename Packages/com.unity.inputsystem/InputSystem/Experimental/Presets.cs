@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Experimental
             public void ApplyTo(BindableInput<InputEvent> target)
             {
                 target.Bind(Devices.Gamepad.ButtonEast.Pressed());
-                target.Bind(Devices.Keyboard.space.Pressed());
+                target.Bind(Devices.Keyboard.Space.Pressed());
             }
         }
 

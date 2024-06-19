@@ -57,8 +57,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             throw new NotImplementedException();
         }
-
-        public int nodeId => 0; // TODO
+        
         public string displayName => "Filter";
         public int childCount => 1;
         public IDependencyGraphNode GetChild(int index)

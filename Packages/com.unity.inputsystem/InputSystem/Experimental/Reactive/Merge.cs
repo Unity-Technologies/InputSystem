@@ -98,8 +98,7 @@ namespace UnityEngine.InputSystem.Experimental
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
-
-        public int nodeId => 0; // TODO Remove
+        
         public string displayName => "Merge";
         public int childCount => 2;
 

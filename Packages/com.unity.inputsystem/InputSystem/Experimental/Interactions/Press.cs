@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Source;
         private Impl m_Impl;
         
-        internal Press(TSource source)
+        internal Press([InputPort] TSource source)
         {
             m_Source = source;
             m_Impl = null;
@@ -85,12 +85,11 @@ namespace UnityEngine.InputSystem.Experimental
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
-
-        public int nodeId => 0; // TODO Remove
-        public string displayName => "Press";
-        public int childCount => 1;
+        
+        public string displayName => "Press"; // TODO Could be optional attribute and use type name when not defined
+        public int childCount => 1; // TODO Could be detected by presence of attributes on properties
         public IDependencyGraphNode GetChild(int index) =>
-            index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index));
+            index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index)); // TODO Problematic if attribute unless defined that if there are at least one subscription attempting to change source will throw, or we can use constructor to detect IObservable inputs passed to iut, or use a factory similar to JavaFX to keep it immutable but provide a detectable interface.
     }
 
     /*public struct PressJob : IJob

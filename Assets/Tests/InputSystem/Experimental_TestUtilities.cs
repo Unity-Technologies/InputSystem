@@ -25,26 +25,14 @@ namespace Tests.InputSystem
         }
     }
 
-    internal class DebugObserver<T> : IObserver<T> where T : struct
+    /// <summary>
+    /// An observer that prints observed values to the console.
+    /// </summary>
+    /// <typeparam name="T">The observed value type.</typeparam>
+    public class DebugObserver<T> : IObserver<T> where T : struct
     {
-        public void OnCompleted()
-        {
-            Debug.Log("OnCompleted");
-        }
-
-        public void OnError(Exception error)
-        {
-            Debug.Log("OnError: " + error);
-        }
-
-        public void OnNext(T value)
-        {
-            Debug.Log("OnNext: " + value);
-        }
-
-        public static DebugObserver<T> Create()
-        {
-            return new DebugObserver<T>();
-        }
+        public void OnCompleted() => Debug.Log("OnCompleted");
+        public void OnError(Exception error) => Debug.Log("OnError: " + error);
+        public void OnNext(T value) => Debug.Log("OnNext: " + value);
     }
 }

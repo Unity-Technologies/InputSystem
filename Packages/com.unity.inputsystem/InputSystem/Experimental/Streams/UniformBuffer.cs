@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.Experimental
                 }
                 
                 // End of enumerable range reached
-                m_Value = default (T);
+                m_Value = default;
                 return false;
             }
 

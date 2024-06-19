@@ -1,35 +1,34 @@
+using System;
+using System.Runtime.InteropServices;
+
 namespace UnityEngine.InputSystem.Experimental
 {
+    /// <summary>
+    /// Represents a field of information.
+    /// </summary>
     public readonly struct Field
     {
-        public static readonly Field None = new(0, FieldEncoding.None);
+        public static readonly Field None = new();
+
+        public readonly uint ByteOffset;
+        public readonly ushort BitOffset;
+        public readonly ushort BitLength;
         
-        public enum FieldEncoding : byte
+        private Field(uint byteOffset = 0, ushort bitOffset = 0, ushort bitLength = ushort.MaxValue)
         {
-            None = 0,
-            Bit = 1
+            ByteOffset = byteOffset;
+            BitOffset = bitOffset;
+            BitLength = bitLength;
         }
-
-        /// <summary>
-        /// Describes the byte offset of this field into the stream source element type.
-        /// </summary>
-        public readonly int ByteOffset;
-        private readonly FieldEncoding Encoding;
         
-        private Field(int offset, FieldEncoding encoding = FieldEncoding.None)
+        public static Field Offset(int byteOffset)
         {
-            ByteOffset = offset;
-            Encoding = encoding;
+            return new Field(byteOffset: 0);
         }
 
-        public static Field Offset(int offset)
+        public static Field Bit(uint fieldByteOffset, ushort bitIndex)
         {
-            return new Field(offset: offset);
-        }
-
-        public static Field Bit(int offset, int bitIndex)
-        {
-            return new Field(offset: 0);
+            return new Field(byteOffset: fieldByteOffset, bitOffset: bitIndex, bitLength: 1);
         }
     }
 }

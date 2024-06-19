@@ -3,6 +3,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Do we even need this?
     public class BindableInput<T> : IObserver<T>, IDisposable 
         where T : struct
     {

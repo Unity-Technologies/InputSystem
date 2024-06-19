@@ -2,6 +2,7 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO This is basically AND, redesign as such?
     public struct Chord<TSource> : IObservableInput<bool>, IDependencyGraphNode
         where TSource : IObservableInput<bool>, IDependencyGraphNode
     {
@@ -40,7 +41,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Source1;
         private Impl m_Impl;
         
-        internal Chord(TSource source0, TSource source1)
+        internal Chord([InputPort] TSource source0, [InputPort] TSource source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;
@@ -57,9 +58,8 @@ namespace UnityEngine.InputSystem.Experimental
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
-
-        public int nodeId => 0; // TODO Remove
-        public string displayName => "Press";
+        
+        public string displayName => "Chord";
         public int childCount => 1;
 
         public IDependencyGraphNode GetChild(int index)

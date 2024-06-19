@@ -8,6 +8,8 @@ using Unity.Collections;
 using UnityEditor.Build.Reporting;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
+using UnityEngine.TestTools;
+using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 
 // TODO Do we need a FixedInput type?
@@ -443,83 +445,7 @@ namespace Tests.InputSystem
             Assert.That(data.Next[1], Is.EqualTo(Vector2.left));
             Assert.That(data.Next[2], Is.EqualTo(Vector2.right));
         }
-
-        // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
-
-        [Test]
-        public void UseCase_DirectAccess()
-        {
-            var button = Gamepad.ButtonSouth.Stub(m_Context, initialValue: true);
-            
-            var data = new ListObserver<bool>();
-            using var subscription = Gamepad.ButtonSouth.Subscribe(m_Context, data);
-
-            m_Context.Update();
-            Assert.That(data.Next.Count, Is.EqualTo(1));
-            Assert.That(data.Next[0], Is.EqualTo(true));
-            
-            button.Press();
-            button.Release();
-            m_Context.Update();
-            
-            Assert.That(data.Next.Count, Is.EqualTo(3));
-            Assert.That(data.Next[1], Is.EqualTo(true));
-            Assert.That(data.Next[2], Is.EqualTo(false));
-        }
-
-        [Test]
-        public void UseCase_DirectBindingsShouldBeCompileTimeTypeSafe()
-        {
-            var button = Gamepad.ButtonSouth.Stub(m_Context);
-            button.Press();
-
-            using var move = new BindableInput<Vector2>(callback : Move);
-            move.Bind(Gamepad.LeftStick);
-
-            // Act
-            using BindableInput<InputEvent> jump = new(callback : Jump);
-            jump.Bind(Gamepad.ButtonSouth.Pressed());
-            jump.Bind(Keyboard.space.Pressed());
-
-            jump.OnNext(new InputEvent());
-            m_Context.Update();
-
-            Assert.That(m_JumpCount, Is.EqualTo(1));
-        }
         
-        [Test]
-        public void Pattern()
-        {
-            A a;
-            var x = a.b().c();
-            x.DoIt();
-        }
-
-        /*[Test]
-        public void UseCase_ShouldBeAbleToStartFromPreset()
-        {
-            m_Context = new Context();
-            m_Context.GivenStreamWithData(Usages.Gamepad.buttonSouth, false, true);
-
-            // Act
-            using BindableInput<InputEvent> jump = new(callback: Jump, source: Presets.Jump());
-
-            m_Context.Update();
-            Assert.That(m_JumpCount, Is.EqualTo(1));
-        }*/
-
-        public void Example()
-        {
-            // React to Gamepad button press event
-            using var subscription = Gamepad.ButtonSouth.Pressed()
-                    .Subscribe(DebugObserver<InputEvent>.Create());
-
-
-            // TODO filter Gamepad.leftStick.filter(x => x > 0.5f); and return new binding source?
-            // TODO PoC a temporal filter in the same way, if passed type is not an interface/lambda
-            //      there is an oppertunity to avoid the indirect call.
-        }
-
         [Test]
         public void CombineLatest()
         {
@@ -621,11 +547,47 @@ namespace Tests.InputSystem
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(1));
         }
+        
+        // TODO Consider how we want this to work, basically should we omit initial value directly on Subscribe?
+        [Test]
+        public void UseCase_DirectAccess()
+        {
+            var button = Gamepad.ButtonSouth.Stub(m_Context, initialValue: true);
+            
+            var data = new ListObserver<bool>();
+            using var subscription = Gamepad.ButtonSouth.Subscribe(m_Context, data);
+
+            m_Context.Update();
+            Assert.That(data.Next.Count, Is.EqualTo(1));
+            Assert.That(data.Next[0], Is.EqualTo(true));
+            
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            
+            Assert.That(data.Next.Count, Is.EqualTo(3));
+            Assert.That(data.Next[1], Is.EqualTo(true));
+            Assert.That(data.Next[2], Is.EqualTo(false));
+        }
+
+        [Test]
+        public void DebugObserver()
+        {
+            var button = Gamepad.ButtonEast.Stub(m_Context);
+            using var s = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, new DebugObserver<InputEvent>());
+            
+            button.Press();
+            m_Context.Update();
+            
+            LogAssert.Expect($"OnNext: {new InputEvent().ToString()}");
+        }
 
         [Test]
         public void Output_Direct()
         {
             Gamepad.RumbleHaptic.Offer(1.0f);
+            
+            // TODO Assert from provider perspective
         }
 
         [Test]
@@ -634,12 +596,6 @@ namespace Tests.InputSystem
             var rumble = new BindableOutput<float>(Gamepad.RumbleHaptic);
             rumble.Offer(1.0f);
         }
-
-        /*[Test]
-        public void Press_Merge_Test()
-        {
-            ObservableInput.Merge(Gamepad.LeftStick, Gamepad.RightStick);
-        }*/
 
         [Test]
         public void Filter_Test()
@@ -686,6 +642,7 @@ namespace Tests.InputSystem
             
         }
 
+        // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.
         // TODO Trigger once vs trigger once a frame, vs trigger on received value

@@ -10,11 +10,6 @@ namespace UnityEngine.InputSystem.Experimental
     public interface IDependencyGraphNode : IEquatable<IDependencyGraphNode>
     {
         /// <summary>
-        /// Returns a node identifier that uniquely identifies this node.
-        /// </summary>
-        public int nodeId { get; }
-        
-        /// <summary>
         /// Returns a display name of this node.
         /// </summary>
         public string displayName { get; }

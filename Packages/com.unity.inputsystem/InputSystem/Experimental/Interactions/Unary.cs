@@ -59,8 +59,7 @@ namespace UnityEngine.InputSystem.Experimental
             (m_Impl ??= new Impl(context, m_Source, m_Func)).Subscribe(context, observer);
         
         public bool Equals(IDependencyGraphNode other) => this.CompareDependencyGraphs(other);
-
-        public int nodeId => 0; // TODO Remove
+        
         public string displayName { get; }
         public int childCount => 1;
         public IDependencyGraphNode GetChild(int index) => index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index));

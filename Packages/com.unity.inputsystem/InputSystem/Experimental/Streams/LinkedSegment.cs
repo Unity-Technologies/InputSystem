@@ -1,5 +1,4 @@
-// TODO Why cannot we coallocate memory, consult Kernel team
-#define INPUT_SYSTEM_COALLOCATE
+#define INPUT_SYSTEM_COALLOCATE // TODO Delete this later, currently exists to support comparison
 
 using System;
 using System.Diagnostics;
@@ -15,7 +14,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <remarks>
-    ///If INPUT_SYSTEM_COALLOCATE is defined, the segment will coallocate header and data region into a single
+    /// If INPUT_SYSTEM_COALLOCATE is defined, the segment will coallocate header and data region into a single
     /// allocation. If INPUT_SYSTEM_COALLOCATE is not defined, the segment will perform separate allocations for
     /// header and data.
     /// </remarks>
@@ -105,6 +104,14 @@ namespace UnityEngine.InputSystem.Experimental
 #endif // INPUT_SYSTEM_COALLOCATE
         }
         
+        /// <summary>
+        /// Destroys a range of segments and deallocates associated memory.
+        /// </summary>
+        /// <param name="first">Pointer to the first segment (inclusive) of the range to be destroyed.</param>
+        /// <param name="last">Pointer to the last segment (exclusive) of the range to be destroyed.</param>
+        /// <param name="allocator">The associated allocator (must be the same as was used to allocate segments).</param>
+        /// <returns><paramref name="last"/> effectively pointing to the new beginning of the linked list of
+        /// segments if <paramref name="first"/> was the beginning before the range was destroyed.</returns>
         public static LinkedSegment<T>* DestroyRange(LinkedSegment<T>* first, LinkedSegment<T>* last, 
             AllocatorManager.AllocatorHandle allocator)
         {
