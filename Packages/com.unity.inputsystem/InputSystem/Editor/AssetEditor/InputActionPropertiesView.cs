@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Editor
         private void BuildControlTypeList()
         {
             var types = new List<string>();
-            var allLayouts = InputSystem.s_Manager.m_Layouts;
+            var allLayouts = InputSystem.manager.m_Layouts;
             foreach (var layoutName in allLayouts.layoutTypes.Keys)
             {
                 if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)

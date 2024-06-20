@@ -60,7 +60,7 @@ public class InputForUITests : InputTestFixture
         EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
 
-        InputSystem.s_Manager.actions = storedActions;
+        InputSystem.manager.actions = storedActions;
 
 #if UNITY_EDITOR
         if (File.Exists(kAssetPath))
@@ -193,7 +193,7 @@ public class InputForUITests : InputTestFixture
             // Remove the project-wide actions asset in play mode and player.
             // It will call InputSystem.onActionChange and re-set InputSystemProvider.actionAsset
             // This the case where no project-wide actions asset is available in the project.
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -267,7 +267,7 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -304,7 +304,7 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -334,7 +334,7 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -386,7 +386,7 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -471,7 +471,7 @@ public class InputForUITests : InputTestFixture
         Update();
         if (!useProjectWideActionsAsset)
         {
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         }
         Update();
 
@@ -502,7 +502,7 @@ public class InputForUITests : InputTestFixture
     public void DefaultActions_ShouldNotGenerateAnyVerificationWarnings(bool useProjectWideActions)
     {
         if (!useProjectWideActions)
-            InputSystem.s_Manager.actions = null;
+            InputSystem.manager.actions = null;
         Update();
         LogAssert.NoUnexpectedReceived();
     }
@@ -515,7 +515,7 @@ public class InputForUITests : InputTestFixture
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
         Update();
 
         var link = EditorHelpers.GetHyperlink(kAssetPath);
@@ -551,7 +551,7 @@ public class InputForUITests : InputTestFixture
         var action = asset.FindAction(actionPath);
         action.Rename("Other");
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
         Update();
 
         //var link = AssetDatabase.GetAssetPath()//EditorHelpers.GetHyperlink(kAssetPath);
@@ -594,7 +594,7 @@ public class InputForUITests : InputTestFixture
 
         asset.AddActionMap(newMap);
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
         Update();
 
         LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" do not have any configured bindings."));
@@ -619,7 +619,7 @@ public class InputForUITests : InputTestFixture
         var expectedType = action.type;
         action.m_Type = unexpectedType; // change directly via internals for now
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
         Update();
 
         LogAssert.Expect(LogType.Warning,
@@ -645,7 +645,7 @@ public class InputForUITests : InputTestFixture
         var expectedControlType = action.expectedControlType;
         action.expectedControlType = unexpectedControlType;
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
         Update();
 
         LogAssert.Expect(LogType.Warning,

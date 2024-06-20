@@ -1120,7 +1120,7 @@ namespace UnityEngine.InputSystem
                 "Control start index out of range");
             Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
@@ -1149,7 +1149,7 @@ namespace UnityEngine.InputSystem
                 "Control start index out of range");
             Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
@@ -1225,7 +1225,7 @@ namespace UnityEngine.InputSystem
 
             if (m_OnBeforeUpdateDelegate == null)
                 m_OnBeforeUpdateDelegate = OnBeforeInitialUpdate;
-            InputSystem.s_Manager.onBeforeUpdate += m_OnBeforeUpdateDelegate;
+            InputSystem.manager.onBeforeUpdate += m_OnBeforeUpdateDelegate;
             m_OnBeforeUpdateHooked = true;
         }
 
@@ -1234,7 +1234,7 @@ namespace UnityEngine.InputSystem
             if (!m_OnBeforeUpdateHooked)
                 return;
 
-            InputSystem.s_Manager.onBeforeUpdate -= m_OnBeforeUpdateDelegate;
+            InputSystem.manager.onBeforeUpdate -= m_OnBeforeUpdateDelegate;
             m_OnBeforeUpdateHooked = false;
         }
 
@@ -1267,7 +1267,7 @@ namespace UnityEngine.InputSystem
             // Go through all binding states and for every binding that needs an initial state check,
             // go through all bound controls and for each one that isn't in its default state, pretend
             // that the control just got actuated.
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
             {
                 ref var bindingState = ref bindingStates[bindingIndex];
@@ -2102,7 +2102,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount, "Interaction index out of range");
 
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             var currentTime = trigger.time;
             var control = controls[trigger.controlIndex];
             var interactionIndex = trigger.interactionIndex;
@@ -2131,7 +2131,7 @@ namespace UnityEngine.InputSystem
 
             ref var interactionState = ref interactionStates[interactionIndex];
 
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             manager.RemoveStateChangeMonitorTimeout(this, interactionState.timerMonitorIndex, interactionIndex);
 
             // Update state.
@@ -4237,6 +4237,13 @@ namespace UnityEngine.InputSystem
 
         internal static GlobalState s_GlobalState;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeGlobalActionState()
+        {
+            ResetGlobals();
+            s_GlobalState = default;
+        }
+
         internal static ISavedState SaveAndResetState()
         {
             // Save current state
@@ -4483,36 +4490,6 @@ namespace UnityEngine.InputSystem
                         break;
                     }
                 }
-            }
-        }
-
-        internal static void DeferredResolutionOfBindings()
-        {
-            ++InputActionMap.s_DeferBindingResolution;
-            try
-            {
-                for (var i = 0; i < s_GlobalState.globalList.length; ++i)
-                {
-                    var handle = s_GlobalState.globalList[i];
-
-                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
-                    if (state == null)
-                    {
-                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                        if (handle.IsAllocated)
-                            s_GlobalState.globalList[i].Free();
-                        s_GlobalState.globalList.RemoveAtWithCapacity(i);
-                        --i;
-                        continue;
-                    }
-
-                    for (var n = 0; n < state.totalMapCount; ++n)
-                        state.maps[n].ResolveBindingsIfNecessary();
-                }
-            }
-            finally
-            {
-                --InputActionMap.s_DeferBindingResolution;
             }
         }
 

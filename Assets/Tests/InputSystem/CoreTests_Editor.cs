@@ -147,11 +147,11 @@ partial class CoreTests
         }.ToJson());
         InputSystem.Update();
 
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("layout").EqualTo("MyDevice").And.TypeOf<Gamepad>());
@@ -165,6 +165,7 @@ partial class CoreTests
         Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
+#if !ENABLE_CORECLR
     // onFindLayoutForDevice allows dynamically injecting new layouts into the system that
     // are custom-tailored at runtime for the discovered device. Make sure that our domain
     // reload can restore these.
@@ -195,12 +196,12 @@ partial class CoreTests
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
 
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         Assert.That(InputSystem.devices, Is.Empty);
 
-        var state = InputSystem.GetSavedState();
-        var manager = InputSystem.s_Manager;
+        var state = m_StateManager.GetSavedState();
+        var manager = InputSystem.manager;
 
         manager.m_SavedAvailableDevices = state.managerState.availableDevices;
         manager.m_SavedDeviceStates = state.managerState.devices;
@@ -209,7 +210,7 @@ partial class CoreTests
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
     }
 
     [Test]
@@ -219,7 +220,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -239,7 +240,7 @@ partial class CoreTests
 
         Assert.That(device.enabled, Is.False);
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -252,7 +253,7 @@ partial class CoreTests
     {
         InputSystem.AddDevice<Gamepad>();
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
@@ -289,7 +290,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(kLayout);
         InputSystem.AddDevice("CustomDevice");
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Is.Empty);
 
@@ -310,7 +311,7 @@ partial class CoreTests
         });
         InputSystem.Update();
 
-        SimulateDomainReload();
+        InputSystem.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetUnsupportedDevices()[0].interfaceName, Is.EqualTo("SomethingUnknown"));
@@ -345,12 +346,13 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
     }
+#endif // !ENABLE_CORECLR
 
     [Test]
     [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
@@ -358,7 +360,7 @@ partial class CoreTests
         InputSystem.onEvent += (e, d) => ++ receivedOnEvent;
         InputSystem.onDeviceChange += (c, d) => ++ receivedOnDeviceChange;
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
 
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.QueueStateEvent(device, new GamepadState());
@@ -375,8 +377,8 @@ partial class CoreTests
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
         InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        m_StateManager.SaveAndReset(false, null);
+        m_StateManager.Restore();
 
         var device = InputSystem.AddDevice("TestLayout");
 
@@ -2504,7 +2506,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
     [Test]
@@ -2926,15 +2928,15 @@ partial class CoreTests
         action.Enable();
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
+        Assert.That(InputSystem.manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
+        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
 
         // Exit play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
     [Test]

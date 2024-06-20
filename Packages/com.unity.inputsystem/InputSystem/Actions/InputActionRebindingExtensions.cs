@@ -2776,39 +2776,69 @@ namespace UnityEngine.InputSystem
             return rebind;
         }
 
+        internal static DeferBindingResolutionContext DeferBindingResolution()
+        {
+            return InputSystem.manager.DeferBindingResolution();
+        }
+    }
+
+    internal sealed class DeferBindingResolutionContext : IDisposable
+    {
+        public int deferredCount => m_DeferredCount;
+
+        public void Acquire()
+        {
+            ++m_DeferredCount;
+        }
+
+        public void Release()
+        {
+            if (m_DeferredCount > 0 && --m_DeferredCount == 0)
+                ExecuteDeferredResolutionOfBindings();
+        }
+
         /// <summary>
-        /// Temporarily suspend immediate re-resolution of bindings.
+        /// Allows usage within using() blocks, i.e. we need a "Release" method to match "Acquire", but we also want
+        /// to implement IDisposable so instance are automatically cleaned up when exiting a using() block.
         /// </summary>
-        /// <remarks>
-        /// When changing control setups, it may take multiple steps to get to the final setup but each individual
-        /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
-        /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
-        /// is complete and the final binding setup is in place.
-        /// </remarks>
-        internal static DeferBindingResolutionWrapper DeferBindingResolution()
+        public void Dispose()
         {
-            if (s_DeferBindingResolutionWrapper == null)
-                s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
-            s_DeferBindingResolutionWrapper.Acquire();
-            return s_DeferBindingResolutionWrapper;
+            Release();
         }
 
-        private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
-
-        internal class DeferBindingResolutionWrapper : IDisposable
+        private void ExecuteDeferredResolutionOfBindings()
         {
-            public void Acquire()
+            ++m_DeferredCount;
+            try
             {
-                ++InputActionMap.s_DeferBindingResolution;
-            }
+                ref var globalList = ref InputActionState.s_GlobalState.globalList;
 
-            public void Dispose()
+                for (var i = 0; i < globalList.length; ++i)
+                {
+                    var handle = globalList[i];
+
+                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
+                    if (state == null)
+                    {
+                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                        if (handle.IsAllocated)
+                            globalList[i].Free();
+                        globalList.RemoveAtWithCapacity(i);
+                        --i;
+                        continue;
+                    }
+
+                    for (var n = 0; n < state.totalMapCount; ++n)
+                        state.maps[n].ResolveBindingsIfNecessary();
+                }
+            }
+            finally
             {
-                if (InputActionMap.s_DeferBindingResolution > 0)
-                    --InputActionMap.s_DeferBindingResolution;
-                if (InputActionMap.s_DeferBindingResolution == 0)
-                    InputActionState.DeferredResolutionOfBindings();
+                --m_DeferredCount;
             }
         }
+
+
+        private int m_DeferredCount;
     }
 }

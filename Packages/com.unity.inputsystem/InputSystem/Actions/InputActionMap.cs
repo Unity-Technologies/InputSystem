@@ -809,8 +809,6 @@ namespace UnityEngine.InputSystem
             BindingsForEachActionInitialized = 1 << 3,
         }
 
-        internal static int s_DeferBindingResolution;
-
         internal struct DeviceArray
         {
             private bool m_HaveValue;
@@ -1206,7 +1204,7 @@ namespace UnityEngine.InputSystem
             needToResolveBindings = true;
             bindingResolutionNeedsFullReResolve |= fullResolve;
 
-            if (s_DeferBindingResolution > 0)
+            if (InputSystem.manager.areDeferredBindingsToResolve)
                 return false;
 
             // Have to do it straight away.
@@ -1225,7 +1223,7 @@ namespace UnityEngine.InputSystem
             {
                 if (m_State != null && m_State.isProcessingControlStateChange)
                 {
-                    Debug.Assert(s_DeferBindingResolution > 0, "While processing control state changes, binding resolution should be suppressed");
+                    Debug.Assert(InputSystem.manager.areDeferredBindingsToResolve, "While processing control state changes, binding resolution should be suppressed");
                     return false;
                 }
 

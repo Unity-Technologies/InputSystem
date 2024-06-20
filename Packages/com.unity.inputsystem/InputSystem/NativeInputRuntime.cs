@@ -20,7 +20,26 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     internal class NativeInputRuntime : IInputRuntime
     {
-        public static readonly NativeInputRuntime instance = new NativeInputRuntime();
+        private static NativeInputRuntime s_Instance;
+
+        // Private ctor exists to enforce Singleton pattern
+        private NativeInputRuntime() { }
+
+        /// <summary>
+        /// Employ the Singleton pattern for this class and initialize a new instance on first use.
+        /// </summary>
+        /// <remarks>
+        /// This property is typically used to initialize InputManager and isn't used afterwards, i.e. there's
+        /// no perf impact to the null check.
+        /// </remarks>
+        public static NativeInputRuntime instance
+        {
+            get
+            {
+                s_Instance ??= new NativeInputRuntime();
+                return s_Instance;
+            }
+        }
 
         public int AllocateDeviceId()
         {

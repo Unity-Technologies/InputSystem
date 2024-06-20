@@ -800,7 +800,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>
         /// <seealso cref="Instantiate(GameObject,int,string,int,InputDevice)"/>
-        public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
+        public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_GlobalState.allActivePlayers, 0, s_GlobalState.allActivePlayersCount);
 
         /// <summary>
         /// Whether PlayerInput operates in single-player mode.
@@ -814,7 +814,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="neverAutoSwitchControlSchemes"/>
         public static bool isSinglePlayer =>
-            s_AllActivePlayersCount <= 1 &&
+            s_GlobalState.allActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
         /// <summary>
@@ -996,9 +996,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PlayerInput.playerIndex"/>
         public static PlayerInput GetPlayerByIndex(int playerIndex)
         {
-            for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                if (s_AllActivePlayers[i].playerIndex == playerIndex)
-                    return s_AllActivePlayers[i];
+            for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
+                if (s_GlobalState.allActivePlayers[i].playerIndex == playerIndex)
+                    return s_GlobalState.allActivePlayers[i];
             return null;
         }
 
@@ -1022,10 +1022,10 @@ namespace UnityEngine.InputSystem
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
 
-            for (var i = 0; i < s_AllActivePlayersCount; ++i)
+            for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
             {
-                if (ReadOnlyArrayExtensions.ContainsReference(s_AllActivePlayers[i].devices, device))
-                    return s_AllActivePlayers[i];
+                if (ReadOnlyArrayExtensions.ContainsReference(s_GlobalState.allActivePlayers[i].devices, device))
+                    return s_GlobalState.allActivePlayers[i];
             }
 
             return null;
@@ -1051,11 +1051,11 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(prefab));
 
             // Set initialization data.
-            s_InitPlayerIndex = playerIndex;
-            s_InitSplitScreenIndex = splitScreenIndex;
-            s_InitControlScheme = controlScheme;
+            s_GlobalState.initPlayerIndex = playerIndex;
+            s_GlobalState.initSplitScreenIndex = splitScreenIndex;
+            s_GlobalState.initControlScheme = controlScheme;
             if (pairWithDevice != null)
-                ArrayHelpers.AppendWithCapacity(ref s_InitPairWithDevices, ref s_InitPairWithDevicesCount, pairWithDevice);
+                ArrayHelpers.AppendWithCapacity(ref s_GlobalState.initPairWithDevices, ref s_GlobalState.initPairWithDevicesCount, pairWithDevice);
 
             return DoInstantiate(prefab);
         }
@@ -1083,13 +1083,13 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(prefab));
 
             // Set initialization data.
-            s_InitPlayerIndex = playerIndex;
-            s_InitSplitScreenIndex = splitScreenIndex;
-            s_InitControlScheme = controlScheme;
+            s_GlobalState.initPlayerIndex = playerIndex;
+            s_GlobalState.initSplitScreenIndex = splitScreenIndex;
+            s_GlobalState.initControlScheme = controlScheme;
             if (pairWithDevices != null)
             {
                 for (var i = 0; i < pairWithDevices.Length; ++i)
-                    ArrayHelpers.AppendWithCapacity(ref s_InitPairWithDevices, ref s_InitPairWithDevicesCount, pairWithDevices[i]);
+                    ArrayHelpers.AppendWithCapacity(ref s_GlobalState.initPairWithDevices, ref s_GlobalState.initPairWithDevicesCount, pairWithDevices[i]);
             }
 
             return DoInstantiate(prefab);
@@ -1097,7 +1097,7 @@ namespace UnityEngine.InputSystem
 
         private static PlayerInput DoInstantiate(GameObject prefab)
         {
-            var destroyIfDeviceSetupUnsuccessful = s_DestroyIfDeviceSetupUnsuccessful;
+            var destroyIfDeviceSetupUnsuccessful = s_GlobalState.destroyIfDeviceSetupUnsuccessful;
 
             GameObject instance;
             try
@@ -1108,13 +1108,13 @@ namespace UnityEngine.InputSystem
             finally
             {
                 // Reset init data.
-                s_InitPairWithDevicesCount = 0;
-                if (s_InitPairWithDevices != null)
-                    Array.Clear(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount);
-                s_InitControlScheme = null;
-                s_InitPlayerIndex = -1;
-                s_InitSplitScreenIndex = -1;
-                s_DestroyIfDeviceSetupUnsuccessful = false;
+                s_GlobalState.initPairWithDevicesCount = 0;
+                if (s_GlobalState.initPairWithDevices != null)
+                    Array.Clear(s_GlobalState.initPairWithDevices, 0, s_GlobalState.initPairWithDevicesCount);
+                s_GlobalState.initControlScheme = null;
+                s_GlobalState.initPlayerIndex = -1;
+                s_GlobalState.initSplitScreenIndex = -1;
+                s_GlobalState.destroyIfDeviceSetupUnsuccessful = false;
             }
 
             var playerInput = instance.GetComponentInChildren<PlayerInput>();
@@ -1180,18 +1180,41 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private Action<InputDevice, InputDeviceChange> m_DeviceChangeDelegate;
         [NonSerialized] private bool m_OnDeviceChangeHooked;
 
-        internal static int s_AllActivePlayersCount;
-        internal static PlayerInput[] s_AllActivePlayers;
-        private static Action<InputUser, InputUserChange, InputDevice> s_UserChangeDelegate;
+        /// <summary>
+        /// Holds global (static) Player data
+        /// </summary>
+        internal struct GlobalState
+        {
+            public int allActivePlayersCount;
+            public PlayerInput[] allActivePlayers;
+            public Action<InputUser, InputUserChange, InputDevice> userChangeDelegate;
 
-        // The following information is used when the next PlayerInput component is enabled.
+            // The following information is used when the next PlayerInput component is enabled.
 
-        private static int s_InitPairWithDevicesCount;
-        private static InputDevice[] s_InitPairWithDevices;
-        private static int s_InitPlayerIndex = -1;
-        private static int s_InitSplitScreenIndex = -1;
-        private static string s_InitControlScheme;
-        internal static bool s_DestroyIfDeviceSetupUnsuccessful;
+            public int initPairWithDevicesCount;
+            public InputDevice[] initPairWithDevices;
+            public int initPlayerIndex;
+            public int initSplitScreenIndex;
+            public string initControlScheme;
+            public bool destroyIfDeviceSetupUnsuccessful;
+        }
+        private static GlobalState s_GlobalState;
+
+        // For sanity purposes, GlobalState is private with properties accessing specific fields
+        internal static int allActivePlayersCount => s_GlobalState.allActivePlayersCount;
+        internal static PlayerInput[] allActivePlayers => s_GlobalState.allActivePlayers;
+        internal static bool destroyIfDeviceSetupUnsuccessful { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeGlobalPlayerState()
+        {
+            // Touch GlobalState doesn't require Dispose operations
+            s_GlobalState = new PlayerInput.GlobalState
+            {
+                initPlayerIndex = -1,
+                initSplitScreenIndex = -1
+            };
+        }
 
         private void InitializeActions()
         {
@@ -1202,8 +1225,8 @@ namespace UnityEngine.InputSystem
 
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
-            for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
+            for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
+                if (s_GlobalState.allActivePlayers[i].m_Actions == m_Actions && s_GlobalState.allActivePlayers[i] != this)
                 {
                     var oldActions = m_Actions;
                     m_Actions = Instantiate(m_Actions);
@@ -1394,10 +1417,10 @@ namespace UnityEngine.InputSystem
             {
                 // If we have devices we are meant to pair with, do so.  Otherwise, don't
                 // do anything as we don't know what kind of input to look for.
-                if (s_InitPairWithDevicesCount > 0)
+                if (s_GlobalState.initPairWithDevicesCount > 0)
                 {
-                    for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
-                        m_InputUser = InputUser.PerformPairingWithDevice(s_InitPairWithDevices[i], m_InputUser);
+                    for (var i = 0; i < s_GlobalState.initPairWithDevicesCount; ++i)
+                        m_InputUser = InputUser.PerformPairingWithDevice(s_GlobalState.initPairWithDevices[i], m_InputUser);
                 }
                 else
                 {
@@ -1411,15 +1434,15 @@ namespace UnityEngine.InputSystem
             // If we have control schemes, try to find the one we should use.
             if (m_Actions.controlSchemes.Count > 0)
             {
-                if (!string.IsNullOrEmpty(s_InitControlScheme))
+                if (!string.IsNullOrEmpty(s_GlobalState.initControlScheme))
                 {
                     // We've been given a control scheme to initialize this. Try that one and
                     // that one only. Might mean we end up with missing devices.
 
-                    var controlScheme = m_Actions.FindControlScheme(s_InitControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(s_GlobalState.initControlScheme);
                     if (controlScheme == null)
                     {
-                        Debug.LogError($"No control scheme '{s_InitControlScheme}' in '{m_Actions}'", this);
+                        Debug.LogError($"No control scheme '{s_GlobalState.initControlScheme}' in '{m_Actions}'", this);
                     }
                     else
                     {
@@ -1443,13 +1466,13 @@ namespace UnityEngine.InputSystem
 
                 // If we did not end up with a usable scheme by now but we've been given devices to pair with,
                 // search for a control scheme matching the given devices.
-                if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
+                if (s_GlobalState.initPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
                 {
                     // The devices we've been given may not be all the devices required to satisfy a given control scheme so we
                     // want to pick any one control scheme that is the best match for the devices we have regardless of whether
                     // we'll need additional devices. TryToActivateControlScheme will take care of that.
                     var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
+                        new ReadOnlyArray<InputDevice>(s_GlobalState.initPairWithDevices, 0, s_GlobalState.initPairWithDevicesCount), m_Actions.controlSchemes,
                         allowUnsuccesfulMatch: true);
                     if (controlScheme != null)
                         TryToActivateControlScheme(controlScheme.Value);
@@ -1457,7 +1480,7 @@ namespace UnityEngine.InputSystem
                 // If we don't have a working control scheme by now and we haven't been instructed to use
                 // one specific control scheme, try each one in the asset one after the other until we
                 // either find one we can use or run out of options.
-                else if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_InitControlScheme))
+                else if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_GlobalState.initControlScheme))
                 {
                     using (var availableDevices = InputUser.GetUnpairedInputDevices())
                     {
@@ -1475,10 +1498,10 @@ namespace UnityEngine.InputSystem
                 // device is present that matches the binding and that isn't used by any other player, we'll
                 // pair to the player.
 
-                if (s_InitPairWithDevicesCount > 0)
+                if (s_GlobalState.initPairWithDevicesCount > 0)
                 {
-                    for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
-                        m_InputUser = InputUser.PerformPairingWithDevice(s_InitPairWithDevices[i], m_InputUser);
+                    for (var i = 0; i < s_GlobalState.initPairWithDevicesCount; ++i)
+                        m_InputUser = InputUser.PerformPairingWithDevice(s_GlobalState.initPairWithDevices[i], m_InputUser);
                 }
                 else
                 {
@@ -1531,7 +1554,7 @@ namespace UnityEngine.InputSystem
             ////FIXME: this will fall apart if account management is involved and a user needs to log in on device first
 
             // Pair any devices we may have been given.
-            if (s_InitPairWithDevicesCount > 0)
+            if (s_GlobalState.initPairWithDevicesCount > 0)
             {
                 ////REVIEW: should AndPairRemainingDevices() require that there is at least one existing
                 ////        device paired to the user that is usable with the given control scheme?
@@ -1541,17 +1564,17 @@ namespace UnityEngine.InputSystem
                 // we have the player grab all the devices in s_InitPairWithDevices along with a control
                 // scheme that fits none of them and then AndPairRemainingDevices() supplying the devices
                 // actually needed by the control scheme.
-                for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
+                for (var i = 0; i < s_GlobalState.initPairWithDevicesCount; ++i)
                 {
-                    var device = s_InitPairWithDevices[i];
+                    var device = s_GlobalState.initPairWithDevices[i];
                     if (!controlScheme.SupportsDevice(device))
                         return false;
                 }
 
                 // We're good. Give the devices to the user.
-                for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
+                for (var i = 0; i < s_GlobalState.initPairWithDevicesCount; ++i)
                 {
-                    var device = s_InitPairWithDevices[i];
+                    var device = s_GlobalState.initPairWithDevices[i];
                     m_InputUser = InputUser.PerformPairingWithDevice(device, m_InputUser);
                 }
             }
@@ -1572,16 +1595,16 @@ namespace UnityEngine.InputSystem
 
         private void AssignPlayerIndex()
         {
-            if (s_InitPlayerIndex != -1)
-                m_PlayerIndex = s_InitPlayerIndex;
+            if (s_GlobalState.initPlayerIndex != -1)
+                m_PlayerIndex = s_GlobalState.initPlayerIndex;
             else
             {
                 var minPlayerIndex = int.MaxValue;
                 var maxPlayerIndex = int.MinValue;
 
-                for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
                 {
-                    var playerIndex = s_AllActivePlayers[i].playerIndex;
+                    var playerIndex = s_GlobalState.allActivePlayers[i].playerIndex;
                     minPlayerIndex = Math.Min(minPlayerIndex, playerIndex);
                     maxPlayerIndex = Math.Max(maxPlayerIndex, playerIndex);
                 }
@@ -1611,15 +1634,14 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         void Reset()
         {
             // Set default actions to project wide actions.
             m_Actions = InputSystem.actions;
             // TODO Need to monitor changes?
         }
-
-        #endif
+#endif
 
         private void OnEnable()
         {
@@ -1634,23 +1656,23 @@ namespace UnityEngine.InputSystem
             }
 
             // Split-screen index defaults to player index.
-            if (s_InitSplitScreenIndex >= 0)
+            if (s_GlobalState.initSplitScreenIndex >= 0)
                 m_SplitScreenIndex = splitScreenIndex;
             else
                 m_SplitScreenIndex = playerIndex;
 
             // Add to global list and sort it by player index.
-            ArrayHelpers.AppendWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, this);
-            for (var i = 1; i < s_AllActivePlayersCount; ++i)
-                for (var j = i; j > 0 && s_AllActivePlayers[j - 1].playerIndex > s_AllActivePlayers[j].playerIndex; --j)
-                    s_AllActivePlayers.SwapElements(j, j - 1);
+            ArrayHelpers.AppendWithCapacity(ref s_GlobalState.allActivePlayers, ref s_GlobalState.allActivePlayersCount, this);
+            for (var i = 1; i < s_GlobalState.allActivePlayersCount; ++i)
+                for (var j = i; j > 0 && s_GlobalState.allActivePlayers[j - 1].playerIndex > s_GlobalState.allActivePlayers[j].playerIndex; --j)
+                    s_GlobalState.allActivePlayers.SwapElements(j, j - 1);
 
             // If it's the first player, hook into user change notifications.
-            if (s_AllActivePlayersCount == 1)
+            if (s_GlobalState.allActivePlayersCount == 1)
             {
-                if (s_UserChangeDelegate == null)
-                    s_UserChangeDelegate = OnUserChange;
-                InputUser.onChange += s_UserChangeDelegate;
+                if (s_GlobalState.userChangeDelegate == null)
+                    s_GlobalState.userChangeDelegate = OnUserChange;
+                InputUser.onChange += s_GlobalState.userChangeDelegate;
             }
 
             // In single player, set up for automatic device switching.
@@ -1723,13 +1745,13 @@ namespace UnityEngine.InputSystem
             m_Enabled = false;
 
             // Remove from global list.
-            var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, this, s_AllActivePlayersCount);
+            var index = ArrayHelpers.IndexOfReference(s_GlobalState.allActivePlayers, this, s_GlobalState.allActivePlayersCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(s_AllActivePlayers, ref s_AllActivePlayersCount, index);
+                ArrayHelpers.EraseAtWithCapacity(s_GlobalState.allActivePlayers, ref s_GlobalState.allActivePlayersCount, index);
 
             // Unhook from change notifications if we're the last player.
-            if (s_AllActivePlayersCount == 0 && s_UserChangeDelegate != null)
-                InputUser.onChange -= s_UserChangeDelegate;
+            if (s_GlobalState.allActivePlayersCount == 0 && s_GlobalState.userChangeDelegate != null)
+                InputUser.onChange -= s_GlobalState.userChangeDelegate;
 
             StopListeningForUnpairedDeviceActivity();
             StopListeningForDeviceChanges();
@@ -1831,9 +1853,9 @@ namespace UnityEngine.InputSystem
             {
                 case InputUserChange.DeviceLost:
                 case InputUserChange.DeviceRegained:
-                    for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                    for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
                     {
-                        var player = s_AllActivePlayers[i];
+                        var player = s_GlobalState.allActivePlayers[i];
                         if (player.m_InputUser == user)
                         {
                             if (change == InputUserChange.DeviceLost)
@@ -1845,9 +1867,9 @@ namespace UnityEngine.InputSystem
                     break;
 
                 case InputUserChange.ControlsChanged:
-                    for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                    for (var i = 0; i < s_GlobalState.allActivePlayersCount; ++i)
                     {
-                        var player = s_AllActivePlayers[i];
+                        var player = s_GlobalState.allActivePlayers[i];
                         if (player.m_InputUser == user)
                             player.HandleControlsChanged();
                     }
