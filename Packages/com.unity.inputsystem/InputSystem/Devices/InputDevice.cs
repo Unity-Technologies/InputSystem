@@ -708,11 +708,15 @@ namespace UnityEngine.InputSystem
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
 
-        // Used with value caching so we update button press states.
+        // Used with value caching to track updated button press states.
         internal HashSet<int> m_UpdatedButtons;
 
         // Used for updating button press states when we don't take the value caching path.
         internal ButtonControl[] m_ChildrenThatAreButtonControls;
+
+        // Once we hit about 45 ButtonControls being queried for wasPressedThisFrame/wasReleasedThisFrame, mark as such
+        // so that we can take the ReadValueCaching path for more efficient updating.
+        internal bool m_UseCachePathForButtonPresses = false;
 
         // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
         // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
@@ -1015,7 +1019,7 @@ namespace UnityEngine.InputSystem
                     var controlIndex = m_ControlTreeIndices[i];
                     var control = m_ChildrenForEachControl[controlIndex];
                     control.MarkAsStale();
-                    if (control is ButtonControl)
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                         m_UpdatedButtons.Add(controlIndex);
                 }
 
@@ -1034,7 +1038,7 @@ namespace UnityEngine.InputSystem
                     var controlIndex = m_ControlTreeIndices[i];
                     var control = m_ChildrenForEachControl[controlIndex];
                     control.MarkAsStale();
-                    if (control is ButtonControl)
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                         m_UpdatedButtons.Add(controlIndex);
                 }
 
@@ -1104,7 +1108,7 @@ namespace UnityEngine.InputSystem
                         (byte*)statePtr - m_StateBlock.byteOffset, null))
                     {
                         control.MarkAsStale();
-                        if (control is ButtonControl)
+                        if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                             m_UpdatedButtons.Add(controlIndex);
                     }
                 }
@@ -1138,7 +1142,7 @@ namespace UnityEngine.InputSystem
                     (byte*)statePtr - m_StateBlock.byteOffset, null))
                 {
                     control.MarkAsStale();
-                    if (control is ButtonControl)
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                         m_UpdatedButtons.Add(controlIndex);
                 }
             }

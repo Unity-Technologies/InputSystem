@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     public class ButtonControl : AxisControl
     {
+        private bool m_NeedsToCheckFramePress = false;
         private uint m_UpdateCountLastPressed = uint.MaxValue;
         private uint m_UpdateCountLastReleased = uint.MaxValue;
         private bool m_LastUpdateWasPress;
@@ -26,6 +27,8 @@ namespace UnityEngine.InputSystem.Controls
         private uint m_UpdateCountLastReleasedEditor = uint.MaxValue;
         private bool m_LastUpdateWasPressEditor;
         #endif
+
+        internal bool needsToCheckFramePress { get; private set; }
 
         ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
@@ -103,11 +106,22 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        #if UNITY_EDITOR
-        public bool isPressed => InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_LastUpdateWasPressEditor : m_LastUpdateWasPress;
-        #else
-        public bool isPressed => m_LastUpdateWasPress;
-        #endif
+        public bool isPressed
+        {
+            get
+            {
+                // Take the old path if we don't have the speed gain from already testing wasPressedThisFrame/wasReleasedThisFrame.
+                if (!needsToCheckFramePress)
+                    return IsValueConsideredPressed(value);
+
+                #if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return m_LastUpdateWasPressEditor;
+                #endif
+
+                return m_LastUpdateWasPress;
+            }
+        }
 
         /// <summary>
         /// Whether the press started this frame.
@@ -132,17 +146,43 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// </remarks>
-        #if UNITY_EDITOR
-        public bool wasPressedThisFrame => InputUpdate.s_UpdateStepCount ==
-        (InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_UpdateCountLastPressedEditor : m_UpdateCountLastPressed);
+        public bool wasPressedThisFrame
+        {
+            get
+            {
+                // Take the old path if this is the first time calling.
+                if (!needsToCheckFramePress)
+                {
+                    needsToCheckFramePress = true;
+                    return device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                }
 
-        public bool wasReleasedThisFrame => InputUpdate.s_UpdateStepCount ==
-        (InputUpdate.s_LatestUpdateType.IsEditorUpdate() ? m_UpdateCountLastReleasedEditor : m_UpdateCountLastReleased);
-        #else
-        public bool wasPressedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
+                #if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressedEditor;
+                #endif
+                return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
+            }
+        }
 
-        public bool wasReleasedThisFrame => InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
-        #endif
+        public bool wasReleasedThisFrame
+        {
+            get
+            {
+                // Take the old path if this is the first time calling.
+                if (!needsToCheckFramePress)
+                {
+                    needsToCheckFramePress = true;
+                    return device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                }
+
+#if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleasedEditor;
+                #endif
+                return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
+            }
+        }
 
         internal void UpdateWasPressed()
         {

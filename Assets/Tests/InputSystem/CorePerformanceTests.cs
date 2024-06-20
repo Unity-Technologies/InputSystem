@@ -854,6 +854,116 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     [Test, Performance]
     [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization, 1)]
+    [TestCase(OptimizationTestType.OptimizedControls, 1)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 1)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 1)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 33)]
+    [TestCase(OptimizationTestType.OptimizedControls, 33)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 33)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 33)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 66)]
+    [TestCase(OptimizationTestType.OptimizedControls, 66)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 66)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 66)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 100)]
+    [TestCase(OptimizationTestType.OptimizedControls, 100)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 100)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
+    // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
+
+    public void Performance_OptimizedControls_Gamepad_1kPressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.Update();
+
+        var buttonsToTest = Math.Max(1, gamepad.m_ChildrenThatAreButtonControls.Length * percentageOfButtonsTested / 100);
+        for (int i = 0; i < buttonsToTest; ++i)
+        {
+            // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
+            // which affects processing of future events to care about state changes so that this call is accurate.
+            var press = gamepad.m_ChildrenThatAreButtonControls[i].wasPressedThisFrame;
+        }
+
+        Measure.Method(() =>
+        {
+            CallUpdate();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Gamepad Only")
+            .WarmupCount(10)
+            .Run();
+
+        return;
+
+        void CallUpdate()
+        {
+            for (var i = 0; i < 1000; ++i) PressAndRelease(gamepad.buttonSouth);
+        }
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization, 1)]
+    [TestCase(OptimizationTestType.OptimizedControls, 1)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 1)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 1)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 33)]
+    [TestCase(OptimizationTestType.OptimizedControls, 33)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 33)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 33)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 66)]
+    [TestCase(OptimizationTestType.OptimizedControls, 66)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 66)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 66)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 100)]
+    [TestCase(OptimizationTestType.OptimizedControls, 100)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 100)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
+    // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
+
+    public void Performance_OptimizedControls_Keyboard_1kPressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.Update();
+
+        var buttonsToTest = Math.Max(1, keyboard.m_ChildrenThatAreButtonControls.Length * percentageOfButtonsTested / 100);
+        for (int i = 0; i < buttonsToTest; ++i)
+        {
+            // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
+            // which affects processing of future events to care about state changes so that this call is accurate.
+            var press = keyboard.m_ChildrenThatAreButtonControls[i].wasPressedThisFrame;
+        }
+
+        Measure.Method(() =>
+        {
+            CallUpdate();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Keyboard Only")
+            .WarmupCount(10)
+            .Run();
+
+        return;
+
+        void CallUpdate()
+        {
+            for (var i = 0; i < 1000; ++i) PressAndRelease(keyboard.fKey);
+        }
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
     // These tests show the performance of the ReadValueCaching optimization when there are state changes per frame on
