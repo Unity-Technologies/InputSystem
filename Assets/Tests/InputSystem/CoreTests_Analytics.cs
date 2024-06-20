@@ -457,7 +457,11 @@ partial class CoreTests
             Assert.That(data.featureUseWindowsGamingInputBackend, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend)));
             Assert.That(data.featureDisableUnityRemoteSupport, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.featureUseIMGUIEditorForAssets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
+#else
+            Assert.That(data.featureUseIMGUIEditorForAssets, Is.False);
+#endif
         }
         finally
         {
@@ -507,7 +511,9 @@ partial class CoreTests
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseWindowsGamingInputBackend, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
+#endif
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
 
             InputSystem.settings = customSettings;

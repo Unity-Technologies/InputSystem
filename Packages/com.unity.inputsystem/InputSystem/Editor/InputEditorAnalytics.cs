@@ -549,7 +549,11 @@ namespace UnityEngine.InputSystem.Editor
                     CompareFeatureFlag(a, b, InputFeatureNames.kUseWindowsGamingInputBackend) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
-                    CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+                        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    && CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+                        #else
+                    true;     // Improves formatting
+                        #endif
             }
 
             private InputBuildAnalyticData GatherData(InputSettings defaultSettings)
@@ -631,9 +635,13 @@ namespace UnityEngine.InputSystem.Editor
                         throw new Exception("Unsupported editor property drawer mode");
                 }
 
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 var inputSystemActions = InputSystem.actions;
                 var actionsPath = inputSystemActions == null ? null : AssetDatabase.GetAssetPath(inputSystemActions);
                 var hasActions = !string.IsNullOrEmpty(actionsPath);
+                #else
+                var hasActions = false;
+                #endif
 
                 var settingsPath = settings == null ? null : AssetDatabase.GetAssetPath(settings);
                 var hasSettings = !string.IsNullOrEmpty(settingsPath);
@@ -664,7 +672,11 @@ namespace UnityEngine.InputSystem.Editor
                     featureReadValueCachingEnabled = settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching),
                     featureParanoidReadValueCachingChecksEnabled = settings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks),
 
+                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     featureUseIMGUIEditorForAssets = settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets),
+                    #else
+                    featureUseIMGUIEditorForAssets = false,
+                    #endif
                     featureUseWindowsGamingInputBackend = settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend),
                     featureDisableUnityRemoteSupport = settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport),
                     featureRunPlayerUpdatesInEditMode = settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode),
