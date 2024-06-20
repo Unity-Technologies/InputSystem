@@ -299,5 +299,30 @@ namespace UnityEngine.InputSystem.OnScreen
         }
 
         private static InlinedArray<OnScreenDeviceInfo> s_OnScreenDevices;
+
+        internal string GetWarningMessage()
+        {
+            return $"{GetType()} needs to be attached as a child to a UI Canvas and have a RectTransform component to function properly.";
+        }
     }
+
+    internal static class UGUIOnScreenControlUtils
+    {
+        public static RectTransform GetCanvasRectTransform(Transform transform)
+        {
+            var parentTransform = transform.parent;
+            return parentTransform != null ? transform.parent.GetComponentInParent<RectTransform>() : null;
+        }
+    }
+
+#if UNITY_EDITOR
+    internal static class UGUIOnScreenControlEditorUtils
+    {
+        public static void ShowWarningIfNotPartOfCanvasHierarchy(OnScreenControl target)
+        {
+            if (UGUIOnScreenControlUtils.GetCanvasRectTransform(target.transform) == null)
+                UnityEditor.EditorGUILayout.HelpBox(target.GetWarningMessage(), UnityEditor.MessageType.Warning);
+        }
+    }
+#endif
 }
