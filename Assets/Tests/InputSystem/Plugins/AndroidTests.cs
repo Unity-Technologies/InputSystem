@@ -766,7 +766,7 @@ internal class AndroidTests : CoreTestsFixture
 #if !UNITY_6000_0_OR_NEWER
     [Ignore("Android Device is only available on Unity 6000.0 or newer")]
 #endif
-    public unsafe void Devices_CanSetBackButtonLeavesAppSetting()
+    public void Devices_CanSetBackButtonLeavesAppSetting()
     {
         var device = InputSystem.AddDevice("AndroidDevice");
         Assert.That(InputSystem.settings.android.backButtonLeavesApp, Is.EqualTo(false));
@@ -774,31 +774,34 @@ internal class AndroidTests : CoreTestsFixture
         // AndroidDevice.AndroidCustomCommand.BackButtonLeavesApp = 0;
         uint backButtonLeavesAppCommandCode = 0;
         bool backButtonLeavesApp = false;
-        runtime.SetDeviceCommandCallback(device.deviceId,
-            (id, commandPtr) =>
-            {
-                if (commandPtr->type == SetCustomCommand.Type)
+        unsafe
+        {
+            runtime.SetDeviceCommandCallback(device.deviceId,
+                (id, commandPtr) =>
                 {
-                    Assert.That(id, Is.EqualTo(device.deviceId));
-                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
-                    var setCustomCommand = ((SetCustomCommand*)commandPtr);
-                    if (setCustomCommand->code == backButtonLeavesAppCommandCode)
+                    if (commandPtr->type == SetCustomCommand.Type)
                     {
-                        backButtonLeavesApp = setCustomCommand->payload >= 1;
+                        Assert.That(id, Is.EqualTo(device.deviceId));
+                        Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
+                        var setCustomCommand = ((SetCustomCommand*)commandPtr);
+                        if (setCustomCommand->code == backButtonLeavesAppCommandCode)
+                        {
+                            backButtonLeavesApp = setCustomCommand->payload >= 1;
+                            return InputDeviceCommand.GenericSuccess;
+                        }
+                        return InputDeviceCommand.GenericFailure;
+                    }
+                    if (commandPtr->type == GetCustomCommand.Type)
+                    {
+                        Assert.That(id, Is.EqualTo(device.deviceId));
+                        Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
+                        ((GetCustomCommand*)commandPtr)->code = backButtonLeavesAppCommandCode;
+                        ((GetCustomCommand*)commandPtr)->payload = Convert.ToUInt32(backButtonLeavesApp);
                         return InputDeviceCommand.GenericSuccess;
                     }
                     return InputDeviceCommand.GenericFailure;
-                }
-                if (commandPtr->type == GetCustomCommand.Type)
-                {
-                    Assert.That(id, Is.EqualTo(device.deviceId));
-                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
-                    ((GetCustomCommand*)commandPtr)->code = backButtonLeavesAppCommandCode;
-                    ((GetCustomCommand*)commandPtr)->payload = Convert.ToUInt32(backButtonLeavesApp);
-                    return InputDeviceCommand.GenericSuccess;
-                }
-                return InputDeviceCommand.GenericFailure;
-            });
+                });
+        }
 
         Assert.That(device, Is.Not.Null);
 

@@ -3688,27 +3688,30 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_CanSetCustomCommandInDevice()
+    public void Devices_CanSetCustomCommandInDevice()
     {
         var device  = InputSystem.AddDevice<Keyboard>();
         uint customCommandCode = 0;
         var customCommandPayload = false;
-        runtime.SetDeviceCommandCallback(device.deviceId,
-            (id, commandPtr) =>
-            {
-                if (commandPtr->type == SetCustomCommand.Type)
+        unsafe
+        {
+            runtime.SetDeviceCommandCallback(device.deviceId,
+                (id, commandPtr) =>
                 {
-                    Assert.That(id, Is.EqualTo(device.deviceId));
-                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
-                    var setCustomCommand = ((SetCustomCommand*)commandPtr);
-                    if (setCustomCommand->code == customCommandCode)
+                    if (commandPtr->type == SetCustomCommand.Type)
                     {
-                        customCommandPayload = setCustomCommand->payload >= 1;
-                        return InputDeviceCommand.GenericSuccess;
+                        Assert.That(id, Is.EqualTo(device.deviceId));
+                        Assert.That(commandPtr->sizeInBytes, Is.EqualTo(SetCustomCommand.kSize));
+                        var setCustomCommand = ((SetCustomCommand*)commandPtr);
+                        if (setCustomCommand->code == customCommandCode)
+                        {
+                            customCommandPayload = setCustomCommand->payload >= 1;
+                            return InputDeviceCommand.GenericSuccess;
+                        }
                     }
-                }
-                return InputDeviceCommand.GenericFailure;
-            });
+                    return InputDeviceCommand.GenericFailure;
+                });
+        }
 
         Assert.That(device, Is.Not.Null);
 
@@ -3720,23 +3723,26 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_CanGetCustomCommandFromDevice()
+    public void Devices_CanGetCustomCommandFromDevice()
     {
         var device  = InputSystem.AddDevice<Keyboard>();
         uint customCommandCode = 0;
-        runtime.SetDeviceCommandCallback(device.deviceId,
-            (id, commandPtr) =>
-            {
-                if (commandPtr->type == GetCustomCommand.Type)
+        unsafe
+        {
+            runtime.SetDeviceCommandCallback(device.deviceId,
+                (id, commandPtr) =>
                 {
-                    Assert.That(id, Is.EqualTo(device.deviceId));
-                    Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
-                    ((GetCustomCommand*)commandPtr)->code = customCommandCode;
-                    ((GetCustomCommand*)commandPtr)->payload = 2;
-                    return InputDeviceCommand.GenericSuccess;
-                }
-                return InputDeviceCommand.GenericFailure;
-            });
+                    if (commandPtr->type == GetCustomCommand.Type)
+                    {
+                        Assert.That(id, Is.EqualTo(device.deviceId));
+                        Assert.That(commandPtr->sizeInBytes, Is.EqualTo(GetCustomCommand.kSize));
+                        ((GetCustomCommand*)commandPtr)->code = customCommandCode;
+                        ((GetCustomCommand*)commandPtr)->payload = 2;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                    return InputDeviceCommand.GenericFailure;
+                });
+        }
 
         Assert.That(device, Is.Not.Null);
 
