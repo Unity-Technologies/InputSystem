@@ -549,11 +549,11 @@ namespace UnityEngine.InputSystem.Editor
                     CompareFeatureFlag(a, b, InputFeatureNames.kUseWindowsGamingInputBackend) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
-                        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    && CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
-                        #else
+                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+                    #else
                     true;     // Improves formatting
-                        #endif
+                    #endif
             }
 
             private InputBuildAnalyticData GatherData(InputSettings defaultSettings)
