@@ -17,7 +17,15 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// On Android 13 and above, you can use this option in combination with `PlayerSettings.Android.predictiveBackSupport`
             /// to enable predictive back animations.
+            ///
+            /// By default this property is set to false, which means you're responsible for responding to Back button.
             /// </remarks>
+            /// <code>
+            /// if (!InputSystem.settings.android.backButtonLeavesApp && Keyboard.current.escapeKey.wasReleasedThisFrame)
+            /// {
+            ///     // Handle back button press
+            /// }
+            /// </code>
             public bool backButtonLeavesApp
             {
                 get
