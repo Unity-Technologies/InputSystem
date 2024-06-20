@@ -5,11 +5,14 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Unity.PerformanceTesting.Data;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using InputAnalytics = UnityEngine.InputSystem.InputAnalytics;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -393,6 +396,175 @@ partial class CoreTests
 
         TestMultipleEditorFocusSessions(session);
         TestMultipleEditorFocusSessions(session);
+    }
+
+    [Test]
+    [Category("Analytics")]
+    public void Analytics__ShouldReportBuildAnalytics_WhenNotHavingSettingsAsset()
+    {
+        CollectAnalytics(InputEditorAnalytics.InputBuildAnalytic.kEventName);
+
+        var storedSettings = InputSystem.s_Manager.settings;
+        InputSettings defaultSettings = null;
+
+        try
+        {
+            defaultSettings = ScriptableObject.CreateInstance<InputSettings>();
+            InputSystem.settings = defaultSettings;
+
+            // Simulate a build (note that we cannot create a proper build report)
+            var processor = new InputEditorAnalytics.InputBuildAnalyticsReportProcessor();
+            processor.OnPostprocessBuild(null); // Note that we cannot create a report
+
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputBuildAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputBuildAnalyticData>());
+
+            // Assert: Data content
+            var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
+#else
+            Assert.That(data.hasProjectWideInputActionAsset, Is.False);
+#endif
+            Assert.That(data.hasSettingsAsset, Is.False);
+            Assert.That(data.hasDefaultSettings, Is.True);
+
+            Assert.That(data.updateMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.UpdateMode.ProcessEventsInDynamicUpdate));
+            Assert.That(data.compensateForScreenOrientation, Is.EqualTo(defaultSettings.compensateForScreenOrientation));
+            Assert.That(data.defaultDeadzoneMin, Is.EqualTo(defaultSettings.defaultDeadzoneMin));
+            Assert.That(data.defaultDeadzoneMax, Is.EqualTo(defaultSettings.defaultDeadzoneMax));
+            Assert.That(data.defaultButtonPressPoint, Is.EqualTo(defaultSettings.defaultButtonPressPoint));
+            Assert.That(data.buttonReleaseThreshold, Is.EqualTo(defaultSettings.buttonReleaseThreshold));
+            Assert.That(data.defaultTapTime, Is.EqualTo(defaultSettings.defaultTapTime));
+            Assert.That(data.defaultSlowTapTime, Is.EqualTo(defaultSettings.defaultSlowTapTime));
+            Assert.That(data.defaultHoldTime, Is.EqualTo(defaultSettings.defaultHoldTime));
+            Assert.That(data.tapRadius, Is.EqualTo(defaultSettings.tapRadius));
+            Assert.That(data.multiTapDelayTime, Is.EqualTo(defaultSettings.multiTapDelayTime));
+            Assert.That(data.backgroundBehavior, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.BackgroundBehavior.ResetAndDisableNonBackgroundDevices));
+            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus));
+            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.InputActionPropertyDrawerMode.Compact));
+            Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(defaultSettings.maxEventBytesPerUpdate));
+            Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(defaultSettings.maxQueuedEventsPerUpdate));
+            Assert.That(data.supportedDevices, Is.EqualTo(defaultSettings.supportedDevices));
+            Assert.That(data.disableRedundantEventsMerging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
+            Assert.That(data.shortcutKeysConsumeInput, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
+
+            Assert.That(data.featureOptimizedControlsEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
+            Assert.That(data.featureReadValueCachingEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
+            Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
+            Assert.That(data.featureUseWindowsGamingInputBackend, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend)));
+            Assert.That(data.featureDisableUnityRemoteSupport, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
+            Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
+            Assert.That(data.featureUseIMGUIEditorForAssets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
+        }
+        finally
+        {
+            InputSystem.s_Manager.settings = storedSettings;
+            if (defaultSettings != null)
+                Object.DestroyImmediate(defaultSettings);
+        }
+    }
+
+    [Test]
+    [Category("Analytics")]
+    public void Analytics__ShouldReportBuildAnalytics_WheHavingSettingsAssetWithCustomSettings()
+    {
+        CollectAnalytics(InputEditorAnalytics.InputBuildAnalytic.kEventName);
+
+        var storedSettings = InputSystem.s_Manager.settings;
+        InputSettings customSettings = null;
+
+        try
+        {
+            customSettings = ScriptableObject.CreateInstance<InputSettings>();
+            customSettings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+            customSettings.compensateForScreenOrientation = true;
+            customSettings.defaultDeadzoneMin = 0.4f;
+            customSettings.defaultDeadzoneMax = 0.6f;
+            customSettings.defaultButtonPressPoint = 0.1f;
+            customSettings.buttonReleaseThreshold = 0.7f;
+            customSettings.defaultTapTime = 1.3f;
+            customSettings.defaultSlowTapTime = 2.3f;
+            customSettings.defaultHoldTime = 3.3f;
+            customSettings.tapRadius = 0.1f;
+            customSettings.multiTapDelayTime = 1.2f;
+            customSettings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            customSettings.editorInputBehaviorInPlayMode =
+                InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+
+            customSettings.inputActionPropertyDrawerMode =
+                InputSettings.InputActionPropertyDrawerMode.MultilineEffective;
+            customSettings.maxEventBytesPerUpdate = 11;
+            customSettings.maxQueuedEventsPerUpdate = 12;
+            customSettings.supportedDevices = Array.Empty<string>();
+            customSettings.disableRedundantEventsMerging = true;
+            customSettings.shortcutKeysConsumeInput = true;
+
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseWindowsGamingInputBackend, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
+
+            InputSystem.settings = customSettings;
+
+            // Simulate a build (note that we cannot create a proper build report)
+            var processor = new InputEditorAnalytics.InputBuildAnalyticsReportProcessor();
+            processor.OnPostprocessBuild(null); // Note that we cannot create a report
+
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputBuildAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputBuildAnalyticData>());
+
+            // Assert: Data content
+            var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
+#else
+            Assert.That(data.hasProjectWideInputActionAsset, Is.False);
+#endif
+            Assert.That(data.hasSettingsAsset, Is.False); // Note: We just don't write any file in this test, hence false
+            Assert.That(data.hasDefaultSettings, Is.False);
+
+            Assert.That(data.updateMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.UpdateMode.ProcessEventsInFixedUpdate));
+            Assert.That(data.compensateForScreenOrientation, Is.EqualTo(true));
+            Assert.That(data.defaultDeadzoneMin, Is.EqualTo(0.4f));
+            Assert.That(data.defaultDeadzoneMax, Is.EqualTo(0.6f));
+            Assert.That(data.defaultButtonPressPoint, Is.EqualTo(0.1f));
+            Assert.That(data.buttonReleaseThreshold, Is.EqualTo(0.7f));
+            Assert.That(data.defaultTapTime, Is.EqualTo(1.3f));
+            Assert.That(data.defaultSlowTapTime, Is.EqualTo(2.3f));
+            Assert.That(data.defaultHoldTime, Is.EqualTo(3.3f));
+            Assert.That(data.tapRadius, Is.EqualTo(customSettings.tapRadius));
+            Assert.That(data.multiTapDelayTime, Is.EqualTo(customSettings.multiTapDelayTime));
+            Assert.That(data.backgroundBehavior, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.BackgroundBehavior.IgnoreFocus));
+            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView));
+            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.InputActionPropertyDrawerMode.MultilineEffective));
+            Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(customSettings.maxEventBytesPerUpdate));
+            Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(customSettings.maxQueuedEventsPerUpdate));
+            Assert.That(data.supportedDevices, Is.EqualTo(customSettings.supportedDevices));
+            Assert.That(data.disableRedundantEventsMerging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
+            Assert.That(data.shortcutKeysConsumeInput, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
+
+            Assert.That(data.featureOptimizedControlsEnabled, Is.True);
+            Assert.That(data.featureReadValueCachingEnabled, Is.True);
+            Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.True);
+            Assert.That(data.featureUseWindowsGamingInputBackend, Is.True);
+            Assert.That(data.featureDisableUnityRemoteSupport, Is.True);
+            Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.True);
+            Assert.That(data.featureUseIMGUIEditorForAssets, Is.True);
+        }
+        finally
+        {
+            InputSystem.s_Manager.settings = storedSettings;
+            if (customSettings != null)
+                Object.DestroyImmediate(customSettings);
+        }
     }
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR

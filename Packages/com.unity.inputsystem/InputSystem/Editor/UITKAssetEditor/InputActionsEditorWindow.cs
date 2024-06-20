@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private StateContainer m_StateContainer;
         private InputActionsEditorView m_View;
-        
+
         private InputEditorAnalytics.InputActionsEditorSessionAnalytic m_Analytics;
 
         private InputEditorAnalytics.InputActionsEditorSessionAnalytic analytics =>
@@ -266,7 +266,7 @@ namespace UnityEngine.InputSystem.Editor
             #endif
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
-            
+
             if (isAutoSave)
                 analytics.RegisterAutoSave();
             else
@@ -311,7 +311,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             analytics.RegisterEditorFocusIn();
         }
-        
+
         private void OnLostFocus()
         {
             // Auto-save triggers on focus-lost instead of on every change
@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem.Editor
             // Make sure window title is up to date
             window.UpdateWindowTitle();
         }
-        
+
         private bool TryUpdateFromAsset()
         {
             Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID), "Asset GUID is empty");

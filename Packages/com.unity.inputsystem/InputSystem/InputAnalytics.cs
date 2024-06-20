@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem
             public readonly int MaxNumberOfElements;
         }
 
-        // Note: Needs to be externalized from interface depending on C# version
+        // Note: Needs to be externalized from interface depending on C# version.
         public interface IInputAnalyticData
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
             : UnityEngine.Analytics.IAnalytic.IData
@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem
 
         // Unity 2023.2+ deprecates legacy interfaces for registering and sending editor analytics and
         // replaces them with attribute annotations and required interface implementations.
-        // The IInputAnalytic interface have been introduced here to simplify supporting both variants
+        // The IInputAnalytic interface have been introduced here to support both variants
         // of analytics reporting. Notice that a difference is that data is collected lazily as part
         // of sending the analytics via the framework.
         public interface IInputAnalytic
@@ -48,6 +48,7 @@ namespace UnityEngine.InputSystem
             InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
 
 #if !UNITY_2023_2_OR_NEWER
+            // Conditionally mimic UnityEngine.Analytics.IAnalytic
             bool TryGatherData(out IInputAnalyticData data, out Exception error);
 #endif // !UNITY_2023_2_OR_NEWER
         }

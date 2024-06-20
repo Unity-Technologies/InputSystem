@@ -729,15 +729,16 @@ namespace UnityEngine.InputSystem
                     paranoidReadValueCachingChecksEnabled = enabled;
                     break;
                 default:
-                    if (m_FeatureFlags == null)
-                        m_FeatureFlags = new HashSet<string>();
-
-                    if (enabled)
-                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
-                    else
-                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
                     break;
             }
+
+            if (m_FeatureFlags == null)
+                m_FeatureFlags = new HashSet<string>();
+
+            if (enabled)
+                m_FeatureFlags.Add(featureName.ToUpperInvariant());
+            else
+                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
 
             OnChange();
         }

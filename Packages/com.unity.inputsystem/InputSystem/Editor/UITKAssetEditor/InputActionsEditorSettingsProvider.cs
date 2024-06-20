@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
         private static InputActionsEditorSettingsProvider m_ActiveSettingsProvider;
 
         private InputActionsEditorView m_View;
-        
+
         private InputEditorAnalytics.InputActionsEditorSessionAnalytic m_ActionEditorAnalytics;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
@@ -46,13 +46,13 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.focusable = true;
             m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnFocusOut);
             m_RootVisualElement.RegisterCallback<FocusInEvent>(OnFocusIn);
-            
+
             // Always begin a session when activated (note that OnActivate isn't called when navigating back
             // to editor from another setting category)
             m_ActionEditorAnalytics = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
                 InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
             m_ActionEditorAnalytics.Begin();
-            
+
             CreateUI();
 
             // Monitor any changes to InputSystem.actions for as long as this editor is active
@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onActionsChange -= BuildUI;
 
             m_IsActivated = false;
-            
+
             // Always end a session when deactivated.
             m_ActionEditorAnalytics?.End();
 
@@ -172,7 +172,7 @@ namespace UnityEngine.InputSystem.Editor
             var element = (VisualElement)@event?.relatedTarget;
 
             m_ActionEditorAnalytics.RegisterEditorFocusOut();
-            
+
             DelayFocusLost(element == null);
         }
 

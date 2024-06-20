@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 state.m_Analytics.RegisterControlSchemeEdit();
-                
+
                 var newDeviceIndex =
                     Mathf.Clamp(
                         selectedDeviceIndex <= state.selectedDeviceRequirementIndex

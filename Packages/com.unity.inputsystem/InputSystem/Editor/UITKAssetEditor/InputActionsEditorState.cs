@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.Editor
             List<CutElement> cutElements = null)
         {
             Debug.Assert(inputActionAsset != null);
-            
+
             m_Analytics = analytics;
 
             serializedObject = inputActionAsset;
@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
             m_Analytics = other.m_Analytics;
-            
+
             // Assign serialized object, not that this might be equal to other.serializedObject,
             // a slight variation of it with any kind of changes or a completely different one.
             // Hence, we do our best here to keep any selections consistent by remapping objects
