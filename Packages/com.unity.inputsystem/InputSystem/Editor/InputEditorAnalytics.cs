@@ -7,6 +7,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
@@ -456,8 +457,12 @@ namespace UnityEngine.InputSystem.Editor
             public const int kMaxEventsPerHour = 100; // default: 1000
             public const int kMaxNumberOfElements = 100; // default: 1000
 
-            public InputBuildAnalytic()
-            {}
+            private readonly BuildReport m_BuildReport;
+
+            public InputBuildAnalytic(BuildReport buildReport)
+            {
+                m_BuildReport = buildReport;
+            }
 
             public InputAnalytics.InputAnalyticInfo info { get; }
 
@@ -471,7 +476,7 @@ namespace UnityEngine.InputSystem.Editor
                 try
                 {
                     defaultSettings = ScriptableObject.CreateInstance<InputSettings>();
-                    data = GatherData(defaultSettings);
+                    data = GatherData(defaultSettings, m_BuildReport);
                     error = null;
                     return true;
                 }
@@ -556,7 +561,7 @@ namespace UnityEngine.InputSystem.Editor
                     #endif
             }
 
-            private InputBuildAnalyticData GatherData(InputSettings defaultSettings)
+            private InputBuildAnalyticData GatherData(InputSettings defaultSettings, BuildReport buildReport)
             {
                 // Fetch settings (may be default, but will never be null)
                 var settings = InputSystem.settings;
@@ -683,7 +688,9 @@ namespace UnityEngine.InputSystem.Editor
 
                     hasProjectWideInputActionAsset = hasActions,
                     hasSettingsAsset = hasSettings,
-                    hasDefaultSettings = EqualSettings(settings, defaultSettings)
+                    hasDefaultSettings = EqualSettings(settings, defaultSettings),
+
+                    buildGuid = buildReport != null ? buildReport.summary.guid.ToString() : string.Empty
                 };
             }
         }
@@ -891,6 +898,11 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public bool hasDefaultSettings;
 
+            /// <summary>
+            /// A unique GUID identifying the build.
+            /// </summary>
+            public string buildGuid;
+
             #endregion
         }
 
@@ -903,7 +915,7 @@ namespace UnityEngine.InputSystem.Editor
 
             public void OnPostprocessBuild(BuildReport report)
             {
-                InputSystem.s_Manager?.m_Runtime?.SendAnalytic(new InputBuildAnalytic());
+                InputSystem.s_Manager?.m_Runtime?.SendAnalytic(new InputBuildAnalytic(report));
             }
         }
     }

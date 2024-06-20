@@ -423,6 +423,7 @@ partial class CoreTests
 
             // Assert: Data content
             var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+            Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
 #else
@@ -529,6 +530,8 @@ partial class CoreTests
 
             // Assert: Data content
             var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+
+            Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
 #else
