@@ -287,7 +287,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
 #if UNITY_6000_0_OR_NEWER
-            m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "What value range should be used for scroll wheel delta?");
+            m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "Controls whether the value returned by the Scroll Wheel Delta is normalized (to be uniform across all platforms), or returns the non-normalized platform-specific range which can vary between platforms.");
 #endif
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
