@@ -86,9 +86,14 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Controls how platform-specific input should be converted when returning delta values for scroll wheel input actions.
-        /// By default, the range used for the delta is converted to be uniform across all platforms.
-        /// </summary>
+        /// <summary>
         /// <value>The conversion behavior.</value>
+        /// <remarks>
+        /// By default, the range used for the delta is normalized to a range of -1 to 1, to be uniform across all platforms.
+        /// The alternative is that the native platform's scroll wheel range is returned, which is -120 to 120 for windows, and
+        /// -1 to 1 for most other platforms. You should leave this value as the default uniform range unless you need to support
+        /// legacy code that relies on the native platform-specific values.
+        /// </remarks>
         public ScrollDeltaBehavior scrollDeltaBehavior
         {
             get => m_ScrollDeltaBehavior;
