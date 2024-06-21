@@ -6,9 +6,13 @@ _Please fill this section with a description what the pull request is trying to 
 
 _Please write down a short description of what changes were made._
 
-### Notes
+### Testing
 
-_Please write down any additional notes, remove the section if not applicable._
+_Please describe the testing already done by you and what testing you request/recommend QA to execute. If you used or created any testing project please link them here too for QA._
+
+### Risk
+
+_Please describe the potential risks of your changes for the reviewers._
 
 ### Checklist
 
@@ -17,8 +21,8 @@ Before review:
 - [ ] Changelog entry added.
     - Explains the change in `Changed`, `Fixed`, `Added` sections.
     - For API change contains an example snippet and/or migration example.
-    - FogBugz ticket attached, example `([case %number%](https://issuetracker.unity3d.com/issues/...))`.
-    - FogBugz is marked as "Resolved" with *next* release version correctly set.
+    - JIRA ticket linked, example ([case %<ID>%](https://issuetracker.unity3d.com/product/unity/issues/guid/<ID>)). If it is a private issue, just add the case ID without a link.	
+    - Jira port for the next release set as "Resolved".
 - [ ] Tests added/changed, if applicable.
     - Functional tests `Area_CanDoX`, `Area_CanDoX_EvenIfYIsTheCase`, `Area_WhenIDoX_AndYHappens_ThisIsTheResult`.
     - Performance tests.
