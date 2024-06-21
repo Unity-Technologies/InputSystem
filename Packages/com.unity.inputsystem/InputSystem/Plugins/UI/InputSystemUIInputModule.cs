@@ -116,6 +116,13 @@ namespace UnityEngine.InputSystem.UI
             set => m_LocalMultiPlayerRoot = value;
         }
 
+        // See ISXB-766 for a history of where the 6.0f value comes from
+        // (we used to have 120 per tick on Windows and divided it by 20.)
+        /// <summary>
+        /// The magnitude of PointerEventData.scrollDelta that corresponds to exactly one tick of the scroll wheel.
+        /// </summary>
+        public override float scrollWheelDeltaPerTick => 6.0f;
+
         /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
@@ -2062,8 +2069,6 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        internal const float kPixelPerLine = 20;
-
         private void OnScrollCallback(InputAction.CallbackContext context)
         {
             var index = GetPointerStateIndexFor(ref context);
@@ -2071,9 +2076,14 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
-            // The old input system reported scroll deltas in lines, we report pixels.
-            // Need to scale as the UI system expects lines.
-            state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
+
+            state.scrollDelta = context.ReadValue<Vector2>();
+
+#if UNITY_6000_0_OR_NEWER
+            // ISXB-704: convert input value to BaseInputModule convention.
+            state.scrollDelta *= scrollWheelDeltaPerTick / InputSystem.scrollWheelDeltaPerTick;
+#endif
+
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif

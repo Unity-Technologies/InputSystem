@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         NavigationEventRepeatHelper m_RepeatHelper = new();
         bool m_ResetSeenEventsOnUpdate;
 
-        const float kScrollUGUIScaleFactor = 3.0f;
+        const float kScrollUGUIScaleFactor = UIElements.WheelEvent.scrollDeltaPerTick;
 
         static Action<InputActionAsset> s_OnRegisterActions;
 
