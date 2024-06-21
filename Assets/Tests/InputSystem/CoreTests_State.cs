@@ -480,6 +480,17 @@ partial class CoreTests
 
         InputSystem.Update();
 
+        // We don't listen for inter-frame press/releases until we see them being requested, so the first time we try
+        // to detect it for a given device+ButtonControl, we'll miss the event.
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);

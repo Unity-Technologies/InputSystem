@@ -123,6 +123,33 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        // When we start caring about inter-frame presses, use the info we have to set up the alternate path.
+        // If we don't do this, users could call wasPressedThisFrame/wasReleasedThisFrame twice for the first time in
+        // a single frame, and the returned value may be incorrect until the next frame.
+        private void BeginTestingForFramePresses(bool currentlyPressed, bool pressedLastFrame)
+        {
+            needsToCheckFramePress = true;
+
+            #if UNITY_EDITOR
+            if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+            {
+                m_LastUpdateWasPressEditor = currentlyPressed;
+                if (currentlyPressed && !pressedLastFrame)
+                    m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
+                else if (pressedLastFrame && !currentlyPressed)
+                    m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
+            }
+            else
+            #endif
+            {
+                m_LastUpdateWasPress = currentlyPressed;
+                if (currentlyPressed && !pressedLastFrame)
+                    m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
+                else if (pressedLastFrame && !currentlyPressed)
+                    m_UpdateCountLastReleased = device.m_CurrentUpdateStepCount;
+            }
+        }
+
         /// <summary>
         /// Whether the press started this frame.
         /// </summary>
@@ -153,8 +180,11 @@ namespace UnityEngine.InputSystem.Controls
                 // Take the old path if this is the first time calling.
                 if (!needsToCheckFramePress)
                 {
-                    needsToCheckFramePress = true;
-                    return device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    var currentlyPressed = IsValueConsideredPressed(value);
+                    var pressedLastFrame = IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
+
+                    return device.wasUpdatedThisFrame && currentlyPressed && !pressedLastFrame;
                 }
 
                 #if UNITY_EDITOR
@@ -172,8 +202,11 @@ namespace UnityEngine.InputSystem.Controls
                 // Take the old path if this is the first time calling.
                 if (!needsToCheckFramePress)
                 {
-                    needsToCheckFramePress = true;
-                    return device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    var currentlyPressed = IsValueConsideredPressed(value);
+                    var pressedLastFrame = IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
+
+                    return device.wasUpdatedThisFrame && !currentlyPressed && pressedLastFrame;
                 }
 
 #if UNITY_EDITOR
