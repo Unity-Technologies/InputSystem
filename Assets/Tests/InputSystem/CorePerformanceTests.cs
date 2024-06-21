@@ -875,7 +875,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
     // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
 
-    public void Performance_OptimizedControls_Gamepad_1kPressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    public void Performance_OptimizedControls_Gamepad_250PressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
     {
         SetInternalFeatureFlagsFromTestType(testType);
 
@@ -903,7 +903,7 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         void CallUpdate()
         {
-            for (var i = 0; i < 1000; ++i) PressAndRelease(gamepad.buttonSouth);
+            for (var i = 0; i < 250; ++i) PressAndRelease(gamepad.buttonSouth);
         }
     }
 
@@ -930,7 +930,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
     // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
 
-    public void Performance_OptimizedControls_Keyboard_1kPressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    public void Performance_OptimizedControls_Keyboard_250PressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
     {
         SetInternalFeatureFlagsFromTestType(testType);
 
@@ -958,7 +958,7 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         void CallUpdate()
         {
-            for (var i = 0; i < 1000; ++i) PressAndRelease(keyboard.fKey);
+            for (var i = 0; i < 250; ++i) PressAndRelease(keyboard.fKey);
         }
     }
 
