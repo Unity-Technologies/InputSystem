@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Controls how platform-specific input should be converted when returning delta values for scroll wheel input actions.
-        /// <summary>
+        /// </summary>
         /// <value>The conversion behavior.</value>
         /// <remarks>
         /// By default, the range used for the delta is normalized to a range of -1 to 1, to be uniform across all platforms.
