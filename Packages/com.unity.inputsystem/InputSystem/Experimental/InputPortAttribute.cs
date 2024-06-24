@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -14,5 +15,10 @@ namespace UnityEngine.InputSystem.Experimental
         /// case the parameter name will be used instead. 
         /// </summary>
         public string name { get; set; }
+    }
+
+    public class InputNodeFactoryAttribute : System.Attribute
+    {
+        public Type type { get; set; }
     }
 }

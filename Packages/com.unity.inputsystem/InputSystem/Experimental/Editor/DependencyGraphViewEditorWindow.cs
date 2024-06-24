@@ -1,128 +1,45 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
-using UnityEditor.VersionControl;
 using UnityEngine.UIElements;
-using Task = System.Threading.Tasks.Task;
 
 namespace UnityEngine.InputSystem.Experimental
 {
     public class DependencyGraphViewEditorWindow : GraphViewEditorWindow
     {
         private const string ResourcePath = "Packages/com.unity.inputsystem/InputSystem/Experimental/Editor/Resources";
-
-        private class DepenendencyGraphViewNodeModel
-        {
-            public DepenendencyGraphViewNodeModel(Type type)
-            {
-                displayName = GetName(type);
-
-                /*var interfaces = type.GetInterfaces();
-                for (var i = 0; i < interfaces.Length; ++i)
-                {
-                    Debug.Log(interfaces[i]);
-                }*/
-                
-                // Identify outputs which maps to IObservableInput<T> implementations.
-                // Note that this creates a limitation of a single output per type.
-                var outputInterfaces = type.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IObservableInput<>));
-                var list = new List<string>();
-                foreach (var outputInterface in outputInterfaces)
-                    list.Add($"Output <{outputInterface.GenericTypeArguments[0].Name}>");
-                outputs = list.ToArray();
-                
-                // Identify inputs which maps to attributes arguments of constructor.
-                var genericArguments = type.GetGenericArguments();
-                bool hasNonCompliantGenericArguments = false;
-                for (var i = 0; i < genericArguments.Length; ++i)
-                {
-                    //if (generic)
-                    var genericArgument = genericArguments[i];
-                    /*if (genericArgument.GetGenericTypeDefinition() != typeof(IObservableInput<>))
-                    {
-                        hasNonCompliantGenericArguments = true;
-                        break;
-                    }*/
-                    //type.MakeGenericType(ObservableInput<>)
-                    var constraints = genericArguments[i].GetGenericParameterConstraints();
-                    for (var j = 0; j < constraints.Length; ++j)
-                    {
-                        var constraint = constraints[j];
-                        if (constraint.IsInterface)
-                        {
-                            
-                        }
-                    }
-                    
-                }
-                //var genericParameterConstraints = type.GetGenericParameterConstraints();
-                
-                list.Clear();
-                var constructors = type.GetConstructors();
-                for (var i = 0; i < constructors.Length; ++i)
-                {
-                    var parameters = constructors[i].GetParameters();
-                    for (var j = 0; j < parameters.Length; ++j)
-                    {
-                        var parameter = parameters[j];
-                        if (!parameter.IsIn)
-                            continue;
-                        list.Add(parameter.Name);
-                    }
-                }
-                inputs = list.ToArray();
-
-                // TODO Iterate over constructors and select the most specific one and its arguments.
-                //type.GetConstructors().Where(c => c.GetParameters())
-            }
-
-            private static string GetName(Type type, bool excludeNamespace = true, bool excludeGenerics = true)
-            {
-                var name = type.ToString();
-                if (excludeGenerics)
-                {
-                    var genericsIndex = name.IndexOf('`');
-                    if (genericsIndex >= 0)
-                        name = name.Substring(0, genericsIndex);    
-                }
-
-                if (excludeNamespace)
-                {
-                    var namespaceIndex = name.LastIndexOf('.');
-                    if (namespaceIndex >= 0)
-                        name = name.Substring(namespaceIndex + 1, name.Length - namespaceIndex - 1);    
-                }
-
-                return name;
-            }
-            
-            public string[] inputs { get; private set; }
-            public string[] outputs { get; private set; }
-            
-            public string displayName { get; private set; }
-        }
         
-        private class DependencyGraphView : UnityEditor.Experimental.GraphView.GraphView
+        private class GraphView : UnityEditor.Experimental.GraphView.GraphView
         {
-            private Type[] m_NodeTypes;
+            private DependencyGraphViewEditorWindow m_EditorWindow;
+            private SearchWindow m_SearchWindow;
+            private readonly DependencyNodeModel m_Model;
+            //private readonly Type[] m_NodeTypes;
+            //private readonly NodeModel[] m_NodeModels;
             //private Task<Type[]> m_BuildCaches;
             
-            public DependencyGraphView()
+            public GraphView(DependencyGraphViewEditorWindow editorWindow)
             {
                 //var assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 //m_BuildCaches = Task.Factory.StartNew(() => FindClasses<IDependencyGraphNode>().ToArray());
-                m_NodeTypes = FindNodeTypes();
+                m_Model = new DependencyNodeModel();
+                m_EditorWindow = editorWindow;
                 AddManipulators();
+                AddSearchWindow();
                 AddGridBackground();
                 AddStyles();
             }
 
-            private Type[] FindNodeTypes()
+            private void AddSearchWindow()
             {
-                return FindClasses<IDependencyGraphNode>().ToArray();
+                if (m_SearchWindow != null)
+                    return;
+
+                m_SearchWindow = ScriptableObject.CreateInstance<SearchWindow>();
+                m_SearchWindow.Initialize(this);
+
+                nodeCreationRequest = (context) =>
+                    UnityEditor.Experimental.GraphView.SearchWindow.Open(new SearchWindowContext(GetLocalMousePosition(context.screenMousePosition)), m_SearchWindow);
             }
 
             public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -144,17 +61,7 @@ namespace UnityEngine.InputSystem.Experimental
                 return compatiblePorts;
             }
 
-            // TODO Instead let this create the models we need
-            private static IEnumerable<Type> FindClasses<T>()
-            {
-                var type = typeof(T);
-                var types = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(s => s.GetTypes())
-                    .Where(p => type.IsAssignableFrom(p) && !p.IsInterface && !p.IsAbstract);
-                return types;
-            }
-
-            private DependencyGraphViewNode CreateNode(DepenendencyGraphViewNodeModel model, Vector2 position)
+            internal DependencyGraphViewNode CreateNode(Vector2 position, NodeModel model)
             {
                 // TODO Also consider Activator.CreateInstance
                 // TODO We might use attributes instead of require ChildCount and GetChild(int index)
@@ -164,29 +71,43 @@ namespace UnityEngine.InputSystem.Experimental
                 return node;
             }
 
+            internal Group CreateGroup(Vector2 position, string title = "Group")
+            {
+                var group = new Group()
+                {
+                    title = title,
+                };
+                group.SetPosition(new Rect(position, Vector2.zero));
+                return group;
+            }
+
             private void AddManipulators()
             {
                 SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
                 this.AddManipulator(new ContentDragger());
                 this.AddManipulator(new SelectionDragger()); // Note: Needs to be added before RectangleSelector
                 this.AddManipulator(new RectangleSelector());
-                this.AddManipulator(CreateContextMenuManipulator());
+                this.AddManipulator(new ContextualMenuManipulator(CreateContextualMenu));
+                this.AddManipulator(new ContextualMenuManipulator(CreateGroupContextualMenu));
             }
 
-            private IManipulator CreateContextMenuManipulator()
+            private void CreateContextualMenu(ContextualMenuPopulateEvent menuEvent)
             {
-                var manipulator = new ContextualMenuManipulator((menuEvent) =>
+                foreach (var node in m_Model)
                 {
-                    foreach (var type in m_NodeTypes)
+                    menuEvent.menu.AppendAction(actionName: $"Create {node.displayName}", action: (actionEvent) =>
                     {
-                        var model = new DepenendencyGraphViewNodeModel(type);
-                        menuEvent.menu.AppendAction(actionName: $"Create {model.displayName}", action: (actionEvent) =>
-                        {
-                            AddElement(CreateNode(model, actionEvent.eventInfo.localMousePosition));
-                        });
-                    }
+                        AddElement(CreateNode(GetLocalMousePosition(actionEvent.eventInfo.localMousePosition), node));
+                    });
+                }
+            }
+
+            private void CreateGroupContextualMenu(ContextualMenuPopulateEvent menuEvent)
+            {
+                menuEvent.menu.AppendAction(actionName: $"Create Group", action: (actionEvent) =>
+                {
+                    AddElement(CreateGroup(GetLocalMousePosition(actionEvent.eventInfo.localMousePosition)));
                 });
-                return manipulator;
             }
 
             private void AddGridBackground()
@@ -203,13 +124,24 @@ namespace UnityEngine.InputSystem.Experimental
                 var styleSheet = (StyleSheet)EditorGUIUtility.Load(ResourcePath + "/DependencyGraphView.uss");
                 styleSheets.Add(styleSheet);
             }
+
+            internal Vector2 GetLocalMousePosition(Vector2 mousePosition, bool isSearchWindow = false)
+            {
+                var worldMousePositiion = mousePosition;
+                if (isSearchWindow)
+                {
+                    worldMousePositiion -= m_EditorWindow.position.position;
+                }
+                var localMousePosition = contentViewContainer.WorldToLocal(worldMousePositiion);
+                return localMousePosition;
+            }
         }
 
         private class DependencyGraphViewNode : Node
         {
-            private DepenendencyGraphViewNodeModel m_Model;
+            private NodeModel m_Model;
 
-            public DependencyGraphViewNode(DepenendencyGraphViewNodeModel model)
+            public DependencyGraphViewNode(NodeModel model)
             {
                 m_Model = model;
                 base.title = model.displayName;
@@ -251,7 +183,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         private void AddGraphView()
         {
-            var graphView = new DependencyGraphView();
+            var graphView = new GraphView(this);
             graphView.StretchToParentSize();
             
             rootVisualElement.Add(graphView);
@@ -266,11 +198,8 @@ namespace UnityEngine.InputSystem.Experimental
         [MenuItem("Debug/Show")]
         public static void Open()
         {
-            // This method is called when the user selects the menu item in the Editor.
             var wnd = GetWindow<DependencyGraphViewEditorWindow>();
             wnd.titleContent = new GUIContent("Input Dependency Graph");
-
-            // Limit size of the window.
             wnd.minSize = new Vector2(450, 200);
             wnd.maxSize = new Vector2(1920, 720);
         }
@@ -279,10 +208,83 @@ namespace UnityEngine.InputSystem.Experimental
         {
             
         }
+        
+        private class SearchWindow : ScriptableObject, ISearchWindowProvider
+        {
+            private GraphView m_GraphView;
+            private Texture2D m_IndentationIcon;
+
+            private enum Choice
+            {
+                Invalid = 0,
+                Group
+            }
+            
+            public void Initialize(GraphView graphView)
+            {
+                m_GraphView = graphView;
+                
+                // Texture for indentation hack similar to shader graph
+                m_IndentationIcon = new Texture2D(1, 1);
+                m_IndentationIcon.SetPixel(0,0, Color.clear);
+                m_IndentationIcon.Apply();
+            }
+        
+            public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
+            {
+                var model = new DependencyNodeModel();
+                var searchListEntry = new List<SearchTreeEntry>();
+                searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Create")));
+                searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Input Node"), 1));
+                for (var i = 0; i < model.count; ++i)
+                {
+                    searchListEntry.Add(new SearchTreeEntry(new GUIContent(model[i].displayName, m_IndentationIcon))
+                    {
+                        level = 2,
+                        userData = model[i]
+                    });
+                }
+                searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Input Node Group"), 1));
+                searchListEntry.Add(new SearchTreeEntry(new GUIContent("Single Group", m_IndentationIcon))
+                {
+                    level = 2,
+                    userData = Choice.Group
+                });
+                return searchListEntry;
+            }
+
+            public bool OnSelectEntry(SearchTreeEntry SearchTreeEntry, SearchWindowContext context)
+            {
+                var localMousePosition = m_GraphView.GetLocalMousePosition(context.screenMousePosition, isSearchWindow: true);
+                var data = SearchTreeEntry.userData;
+                if (data is NodeModel)
+                {
+                    m_GraphView.AddElement(m_GraphView.CreateNode(localMousePosition, (NodeModel)data));
+                    return true; // close
+                }
+
+                if (data is Choice)
+                {
+                    m_GraphView.AddElement(m_GraphView.CreateGroup(localMousePosition));
+                }
+
+                return false; // remain open
+            }
+        }
     }
 
-    public static class DependenyGraphExtensions
+    internal static class DependencyGraphUtilities
     {
+        
+    }
+
+    public static class ObservableInputEditorExtensions
+    {
+        /// <summary>
+        /// Shows the given observable input as a graph.
+        /// </summary>
+        /// <param name="observableInput"></param>
+        /// <typeparam name="T"></typeparam>
         public static void Show<T>(this IObservableInput<T> observableInput) where T : struct
         {
             DependencyGraphViewEditorWindow.Open();

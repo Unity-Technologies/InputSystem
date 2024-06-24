@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Source1;
         private Impl m_Impl;
         
-        internal Chord([InputPort] TSource source0, [InputPort] TSource source1)
+        public Chord([InputPort] TSource source0, [InputPort] TSource source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;

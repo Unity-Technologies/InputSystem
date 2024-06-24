@@ -70,6 +70,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     // TODO Should we skip doing this and let Roslyn generate it for us?
     // Auto-generated structural binding type for simplified fluent binding syntax. Generated from C standard
     // model struct which in turn is mapped to usages. This replaces current binding syntax e.g. "Gamepad/leftStick"
+    [InputSource]
     public readonly struct Gamepad
     {
         //private Stream<GamepadState> m_Stream;

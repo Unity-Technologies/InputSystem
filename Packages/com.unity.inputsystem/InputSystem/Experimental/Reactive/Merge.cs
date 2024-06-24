@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Source1;
         private Impl m_Impl;
         
-        internal Merge(TSource source0, TSource source1)
+        public Merge(TSource source0, TSource source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;

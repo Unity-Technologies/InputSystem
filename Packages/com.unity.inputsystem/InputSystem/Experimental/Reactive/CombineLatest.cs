@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource1 m_Source1;
         private Impl m_Impl;
         
-        internal CombineLatest(TSource0 source0, TSource1 source1)
+        public CombineLatest(TSource0 source0, TSource1 source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;

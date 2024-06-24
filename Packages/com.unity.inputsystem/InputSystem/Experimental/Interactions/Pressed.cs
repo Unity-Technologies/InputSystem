@@ -2,6 +2,7 @@ using System;
 using Unity.Jobs;
 
 // TODO See comments in header
+// TODO Should we be allowed to construct a node that isn't properly connected? E.g. null source.
 
 // For a binary type, press edges (transition from 0 to 1) may be detected by comparing two adjacent numbers as such:
 // 
@@ -34,7 +35,7 @@ using Unity.Jobs;
 namespace UnityEngine.InputSystem.Experimental
 {
     // Represents a press interaction
-    public struct Press<TSource> : IObservableInput<InputEvent>, IDependencyGraphNode
+    public struct Pressed<TSource> : IObservableInput<InputEvent>, IDependencyGraphNode
         where TSource : IObservableInput<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<bool>
@@ -69,7 +70,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Source;
         private Impl m_Impl;
         
-        internal Press([InputPort] TSource source)
+        public Pressed([InputPort] TSource source)
         {
             m_Source = source;
             m_Impl = null;
@@ -86,7 +87,7 @@ namespace UnityEngine.InputSystem.Experimental
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
         
-        public string displayName => "Press"; // TODO Could be optional attribute and use type name when not defined
+        public string displayName => "Pressed"; // TODO Could be optional attribute and use type name when not defined
         public int childCount => 1; // TODO Could be detected by presence of attributes on properties
         public IDependencyGraphNode GetChild(int index) =>
             index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index)); // TODO Problematic if attribute unless defined that if there are at least one subscription attempting to change source will throw, or we can use constructor to detect IObservable inputs passed to iut, or use a factory similar to JavaFX to keep it immutable but provide a detectable interface.
@@ -130,7 +131,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// <summary>
     /// Allows applying Press interaction evaluation on an observable source.
     /// </summary>
-    public static class PressExtensionMethods
+    public static class PressedExtensionMethods
     {
         /// <summary>
         /// Returns a Press interaction operating on a source of type <typeparamref name="TSource"/>.
@@ -138,10 +139,11 @@ namespace UnityEngine.InputSystem.Experimental
         /// <param name="source">The source.</param>
         /// <typeparam name="TSource">The source type.</typeparam>
         /// <returns>Press interaction using a <typeparamref name="TSource"/> type.</returns>
-        public static Press<TSource> Pressed<TSource>(this TSource source)
+        [InputNodeFactory(type=typeof(Pressed<IObservableInput<bool>>))]
+        public static Pressed<TSource> Pressed<TSource>(this TSource source)
             where TSource : IObservableInput<bool>, IDependencyGraphNode
         {
-            return new Press<TSource>(source);
+            return new Pressed<TSource>(source);
         }
     }
 }
