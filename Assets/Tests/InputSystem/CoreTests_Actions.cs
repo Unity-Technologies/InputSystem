@@ -42,7 +42,7 @@ partial class CoreTests
     #endif
     public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
     {
-        using (var settings = Scoped.Asset(InputSettings.CreateInstance<InputSettings>()))
+        using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
         {
             InputSystem.settings = settings.value;
 
@@ -50,7 +50,7 @@ partial class CoreTests
             settings.value.SetInternalFeatureFlag(featureName, true);
             Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.True);
 
-            using (var other = Scoped.Asset(InputSettings.CreateInstance<InputSettings>()))
+            using (var other = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
             {
                 InputSystem.settings = other.value;
 
