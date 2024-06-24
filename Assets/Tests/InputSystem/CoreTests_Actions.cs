@@ -37,7 +37,9 @@ partial class CoreTests
     [TestCase(InputFeatureNames.kUseWindowsGamingInputBackend)]
     [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
     [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
     [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
+    #endif
     public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
     {
         using (var settings = Scoped.Asset(InputSettings.CreateInstance<InputSettings>()))
