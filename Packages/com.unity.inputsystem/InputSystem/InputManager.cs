@@ -2645,7 +2645,9 @@ namespace UnityEngine.InputSystem
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
 
-                // Ignore
+                // Only check Windows Gaming Input backend feature flag on Windows which is the only platform where
+                // the feature flag is applicable. This prevents generating errors when feature flag is basically
+                // not relevant.
                 #if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
                 if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
                 {
