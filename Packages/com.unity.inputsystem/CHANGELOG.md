@@ -24,6 +24,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where `InputActionAsset.FindAction(string, bool)` would throw `System.NullReferenceException` instead of returning `null` if searching for a non-existent action with an explicit action path and using `throwIfNotFound: false`, e.g. searching for "Map/Action" when `InputActionMap` "Map" exists but no `InputAction` named "Action" exists within that map [ISXB-895](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-895).
 - Fixed an issue where adding a `OnScreenButton` or `OnScreenStick` to a regular GameObject would lead to exception in editor.
 - Fixed an issue where adding a `OnScreenStick` to a regular GameObject and entering play-mode would lead to exceptions being generated.
+- Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
+- Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
+- Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
