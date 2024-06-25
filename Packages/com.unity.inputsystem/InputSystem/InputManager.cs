@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
@@ -2118,9 +2119,30 @@ namespace UnityEngine.InputSystem
         internal InputSettings m_Settings;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
-        internal bool m_OptimizedControlsFeatureEnabled;
-        internal bool m_ReadValueCachingFeatureEnabled;
-        internal bool m_ParanoidReadValueCachingChecksEnabled;
+
+        private bool m_OptimizedControlsFeatureEnabled;
+        internal bool optimizedControlsFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_OptimizedControlsFeatureEnabled;
+            set => m_OptimizedControlsFeatureEnabled = value;
+        }
+
+        private bool m_ReadValueCachingFeatureEnabled;
+        internal bool readValueCachingFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ReadValueCachingFeatureEnabled;
+            set => m_ReadValueCachingFeatureEnabled = value;
+        }
+
+        private bool m_ParanoidReadValueCachingChecksEnabled;
+        internal bool paranoidReadValueCachingChecksEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ParanoidReadValueCachingChecksEnabled;
+            set => m_ParanoidReadValueCachingChecksEnabled = value;
+        }
 
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
@@ -2649,15 +2671,6 @@ namespace UnityEngine.InputSystem
             {
                 #if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
-                #endif
-
-                #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
                 #endif
 
                 // Extract feature flags into fields since used in hot-path

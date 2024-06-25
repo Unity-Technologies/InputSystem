@@ -34,7 +34,6 @@ partial class CoreTests
     [TestCase(InputFeatureNames.kUseReadValueCaching)]
     [TestCase(InputFeatureNames.kUseOptimizedControls)]
     [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
-    [TestCase(InputFeatureNames.kUseWindowsGamingInputBackend)]
     [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
     [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
     #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
