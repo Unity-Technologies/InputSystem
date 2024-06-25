@@ -7,6 +7,7 @@ using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor;
 using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -2643,18 +2644,6 @@ namespace UnityEngine.InputSystem
             {
                 #if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
-                #endif
-
-                // Only check Windows Gaming Input backend feature flag on Windows which is the only platform where
-                // the feature flag is applicable. This prevents generating errors when feature flag is basically
-                // not relevant.
-                #if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
                 #endif
             }
 
