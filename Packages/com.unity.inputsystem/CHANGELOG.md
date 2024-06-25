@@ -34,6 +34,9 @@ however, it has to be formatted properly to pass verification tests.
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
 
+### Changed
+- Changed `DualSenseHIDInputReport` from internal to public visibility
+
 ## [1.8.2] - 2024-04-29
 
 ### Added
