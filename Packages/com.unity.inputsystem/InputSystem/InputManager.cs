@@ -7,7 +7,6 @@ using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor;
 using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
