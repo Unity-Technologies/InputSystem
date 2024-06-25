@@ -246,7 +246,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// If by the given <paramref name="time"/>, no state change has been registered on the control monitored
         /// by the given <paramref name="monitor">state change monitor</paramref>, <see cref="IInputStateChangeMonitor.NotifyTimerExpired"/>
-        /// will be called on <paramref name="monitor"/>. 
+        /// will be called on <paramref name="monitor"/>.
         /// </remarks>
         public static void AddChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
         {

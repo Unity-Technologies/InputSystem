@@ -1301,35 +1301,35 @@ namespace UnityEngine.InputSystem
         /// using TMPro;
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
-        /// 
+        ///
         /// public class RebindButton : MonoBehaviour
         /// {
-        /// 
+        ///
         ///     // A MonoBehaviour that can be hooked up to a UI.Button control.
         ///     // This example requires you to set up a Text Mesh Pro text field,
         ///     // And a UI button which calls the OnClick method in this script.
-        /// 
+        ///
         ///     public InputActionReference actionReference; // Reference to an action to rebind.
         ///     public int bindingIndex; // Index into m_Action.bindings for binding to rebind.
         ///     public TextMeshProUGUI displayText; // Text in UI that receives the binding display string.
         ///     private InputActionRebindingExtensions.RebindingOperation rebind;
-        /// 
+        ///
         ///     public void OnEnable()
         ///     {
         ///         UpdateDisplayText();
         ///     }
-        /// 
+        ///
         ///     public void OnDisable()
         ///     {
         ///         rebind?.Dispose();
         ///     }
-        /// 
+        ///
         ///     public void OnClick()
         ///     {
         ///         var rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
         ///         rebind.Start();
         ///     }
-        /// 
+        ///
         ///     private void UpdateDisplayText()
         ///     {
         ///         displayText.text = actionReference.action.GetBindingDisplayString(bindingIndex);
