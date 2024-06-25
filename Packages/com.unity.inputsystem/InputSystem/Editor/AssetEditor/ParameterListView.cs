@@ -350,6 +350,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 return;
             }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // handle by OnDrawVisualElements with UI Toolkit
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+#endif
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;
