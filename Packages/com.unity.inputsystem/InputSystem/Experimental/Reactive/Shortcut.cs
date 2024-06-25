@@ -3,17 +3,18 @@ using System;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO This is basically AND, redesign as such?
-    public struct Chord<TSource> : IObservableInput<bool>, IDependencyGraphNode
+    public struct Shortcut<TSource> : IObservableInput<bool>, IDependencyGraphNode
         where TSource : IObservableInput<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {
-            private bool m_Value;
+            private ValueTuple<bool, bool> m_Previous;
+            private bool m_PreviousResult;
             private readonly ObserverList2<bool> m_Observers;
             
             public Impl(Context context, TSource source0, TSource source1)
             {
-                // TODO This is one way to implement chord, but it might be better to use same strategy as merge to avoid copying? (But this is simpler)
+                // TODO This is one way to implement this, but it might be better to use same strategy as merge to avoid copying? (But this is simpler)
                 var combineLatest = new CombineLatest<bool, bool, TSource, TSource>(source0, source1);
                 m_Observers = new ObserverList2<bool>(combineLatest.Subscribe(context, this));
             }
@@ -29,23 +30,25 @@ namespace UnityEngine.InputSystem.Experimental
 
             public void OnNext(ValueTuple<bool, bool> value) // TODO This would be way easier if we could have a source reference
             {
-                var newValue = value is { Item1: true, Item2: true };
-                if (newValue == m_Value) 
-                    return; // No change
-                
-                m_Value = newValue;
-                m_Observers.OnNext(newValue);
+                if (value == m_Previous)
+                    return;
+                var result = m_Previous is { Item1: true, Item2: false } && value.Item2;
+                m_Previous = value;
+                if (m_PreviousResult == result) 
+                    return;
+                m_PreviousResult = result;
+                m_Observers.OnNext(result);
             }
         }
         
-        private readonly TSource m_Source0;
-        private readonly TSource m_Source1;
+        private readonly TSource m_Modifier;
+        private readonly TSource m_Trigger;
         private Impl m_Impl;
         
-        public Chord([InputPort] TSource source0, [InputPort] TSource source1)
+        public Shortcut([InputPort] TSource modifier, [InputPort] TSource trigger)
         {
-            m_Source0 = source0;
-            m_Source1 = source1;
+            m_Modifier = modifier;
+            m_Trigger = trigger;
             m_Impl = null;
         }
 
@@ -53,33 +56,34 @@ namespace UnityEngine.InputSystem.Experimental
             Subscribe(Context.instance, observer);
 
         public IDisposable Subscribe(Context context, IObserver<bool> observer) =>
-            (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+            (m_Impl ??= new Impl(context, m_Modifier, m_Trigger)).Subscribe(context, observer);
         
         // TODO Reader end-point
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);
         
-        public string displayName => "Chord";
+        public string displayName => "Shortcut";
         public int childCount => 1;
 
         public IDependencyGraphNode GetChild(int index)
         {
             switch (index)
             {
-                case 0: return m_Source0;
-                case 1: return m_Source1;
+                case 0: return m_Modifier;
+                case 1: return m_Trigger;
                 default: throw new ArgumentOutOfRangeException(nameof(index));
             }
         }
     }
-    
-    public static class ChordExtensionMethods
+
+    // Shortcut is a combining function and hence has a static factory function
+    public static class Shortcut
     {
-        public static Chord<TSource> Chord<TSource>(this TSource source1, TSource source2)
+        public static Shortcut<TSource> Create<TSource>(TSource source1, TSource source2)
             where TSource : IObservableInput<bool>, IDependencyGraphNode
         {
-            return new Chord<TSource>(source1, source2);
+            return new Shortcut<TSource>(source1, source2);
         }
     }
 }

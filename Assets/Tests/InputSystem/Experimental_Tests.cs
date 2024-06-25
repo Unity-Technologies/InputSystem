@@ -4,6 +4,7 @@ using System.Drawing.Printing;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEditor.Build.Reporting;
 using UnityEngine.InputSystem.Experimental;
@@ -352,7 +353,7 @@ namespace Tests.InputSystem
         {
             yield return (Gamepad.LeftStick, "Gamepad.LeftStick");
             yield return (Gamepad.ButtonEast, "Gamepad.ButtonEast");
-            yield return (Gamepad.ButtonEast.Pressed(), "Press( Gamepad.ButtonEast )");
+            yield return (Gamepad.ButtonEast.Pressed(), "Pressed( Gamepad.ButtonEast )");
         }
         
         // [TestCaseSource(nameof(DivideCases))]
@@ -493,6 +494,54 @@ namespace Tests.InputSystem
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(2));
             Assert.That(observer.Next[1], Is.EqualTo(false));
+        }
+
+        class CustomConstraint : Constraint
+        {
+            public override ConstraintResult ApplyTo(object actual)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /*private class Is : NUnit.Framework.Is
+        {
+            public Constraint IsObserving(IEnumerable<T> sequence)    
+        }*/
+        
+        [Test]
+        public void Shortcut_Test()
+        {
+            var button0 = Gamepad.ButtonEast.Stub(m_Context);
+            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
+            var observer = new ListObserver<bool>();
+            using var subscription = Shortcut.Create(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
+                
+            button0.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(0));
+            
+            button1.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+            Assert.That(observer.Next[0], Is.EqualTo(true));
+            
+            button0.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            Assert.That(observer.Next[1], Is.EqualTo(false));
+            
+            button1.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            
+            button1.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            
+            button0.Press(); // Should not trigger if button0 (modifier) is pressed after button1
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
         }
         
         [Test]

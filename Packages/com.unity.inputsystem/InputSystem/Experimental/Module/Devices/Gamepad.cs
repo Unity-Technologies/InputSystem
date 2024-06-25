@@ -28,8 +28,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     public struct GamepadState
     {
         // NOTE: Auto-generated from C enum with attribute type constraint since exported type depends on it.
-        [Serializable]
         [Flags]
+        [Serializable]
         public enum GamepadButton : uint
         {
             None = 0,                   // 0
@@ -68,8 +68,14 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     }
     
     // TODO Should we skip doing this and let Roslyn generate it for us?
-    // Auto-generated structural binding type for simplified fluent binding syntax. Generated from C standard
-    // model struct which in turn is mapped to usages. This replaces current binding syntax e.g. "Gamepad/leftStick"
+    
+    /// <summary>
+    /// Represents the binding surface of a standard-model Gamepad.
+    /// </summary>
+    /// <remarks>
+    /// Auto-generated from native code standard model usage definitions. This replaced current binding syntax, e.g.
+    /// "Gamepad/leftStick".
+    /// </remarks>
     [InputSource]
     public readonly struct Gamepad
     {

@@ -34,6 +34,7 @@ using Unity.Jobs;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
     public struct Pressed<TSource> : IObservableInput<InputEvent>, IDependencyGraphNode
         where TSource : IObservableInput<bool>, IDependencyGraphNode
@@ -62,7 +63,7 @@ namespace UnityEngine.InputSystem.Experimental
                 if (m_PreviousValue == value) 
                     return;
                 if (value) // TODO Let class be converted to Step and take a IComparable<T> type, then we can use for both Press and Relase
-                    m_Observers.OnNext(new InputEvent());
+                    m_Observers.OnNext(new InputEvent()); // TODO This needs to be tentative, should indirection between data observer an events or we need another stage, so its either a separate method or parameter
                 m_PreviousValue = value;
             }
         }
@@ -83,6 +84,10 @@ namespace UnityEngine.InputSystem.Experimental
             (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);
         
         // TODO Reader end-point
+        public IDisposable Subscribe2(Context context)
+        {
+            // TODO Need additional constraint on source so that we can unroll into operations
+        }
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);

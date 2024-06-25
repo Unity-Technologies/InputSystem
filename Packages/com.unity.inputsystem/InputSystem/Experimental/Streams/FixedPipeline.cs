@@ -5,6 +5,7 @@ using Unity.Jobs;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // Find a way to generate fixed operations as a dependency chain
     internal static class FixedPipeline
     {
         public enum Operation : ushort

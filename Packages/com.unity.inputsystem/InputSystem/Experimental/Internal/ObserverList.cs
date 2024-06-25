@@ -14,6 +14,21 @@ namespace UnityEngine.InputSystem.Experimental
         private List<IObserver<T>> m_Observers;
         private readonly Action m_OnUnsubscribed;
         private IDisposable[] m_Disposables;
+
+        public ObserverList2()
+        {
+            m_Observers = null;
+        }
+
+        protected void Initialize(IDisposable[] disposables)
+        {
+            m_Disposables = disposables;
+        }
+
+        protected void Initialize(IDisposable disposable1, IDisposable disposable2)
+        {
+            m_Disposables = new [] { disposable1, disposable2 };
+        }
         
         public ObserverList2(Action onUnsubscribed = null) // TODO Replace with IDisposable list
         {
