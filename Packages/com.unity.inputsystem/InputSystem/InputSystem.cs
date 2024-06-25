@@ -3662,6 +3662,9 @@ namespace UnityEngine.InputSystem
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
 
+                    // Clear the Action reference from all InputActionReference objects
+                    InputActionReference.ResetCachedAction();
+
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
                     {
