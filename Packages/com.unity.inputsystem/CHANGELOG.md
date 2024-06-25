@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where adding a `OnScreenStick` to a regular GameObject and entering play-mode would lead to exceptions being generated.
 - Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
 - Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
+- Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
 - Fixed the UI generation of enum fields when editing interactions of action properties. The new selected value was lost when saving.
 - Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 
@@ -33,6 +34,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+
+### Changed
+- Changed `DualSenseHIDInputReport` from internal to public visibility
 
 ## [1.8.2] - 2024-04-29
 
