@@ -2644,13 +2644,6 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
-
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
             }
 
             // Cache some values.
