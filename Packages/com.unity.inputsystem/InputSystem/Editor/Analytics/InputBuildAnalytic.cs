@@ -201,7 +201,7 @@ namespace UnityEngine.InputSystem.Editor
                 featureUseIMGUIEditorForAssets =
                     settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
 #else
-                featureUseIMGUIEditorForAssets = false,
+                featureUseIMGUIEditorForAssets = false;
 #endif
                 featureDisableUnityRemoteSupport =
                     settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport);
