@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Change
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
+- Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
