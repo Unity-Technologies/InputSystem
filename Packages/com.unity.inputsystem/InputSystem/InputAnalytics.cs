@@ -273,6 +273,14 @@ namespace UnityEngine.InputSystem
             }
         }
     }
+
+    internal static class AnalyticExtensions
+    {
+        internal static void Send<TSource>(this TSource analytic) where TSource : InputAnalytics.IInputAnalytic
+        {
+            InputSystem.s_Manager?.m_Runtime?.SendAnalytic(analytic);
+        }
+    }
 }
 
 #endif // UNITY_ANALYTICS || UNITY_EDITOR

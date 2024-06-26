@@ -226,11 +226,11 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalytics__IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
     {
-        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
-            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
+        var session = new InputActionsEditorSessionAnalytic(
+            InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -254,12 +254,12 @@ partial class CoreTests
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputActionsEditorSessionAnalytic.Data>());
 
         // Assert: Data content
-        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
+        var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(5.0));
@@ -272,9 +272,9 @@ partial class CoreTests
         Assert.That(data.resetCount, Is.EqualTo(0));
     }
 
-    private void TestMultipleEditorFocusSessions(InputEditorAnalytics.InputActionsEditorSessionAnalytic session = null)
+    private void TestMultipleEditorFocusSessions(InputActionsEditorSessionAnalytic session = null)
     {
-        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputActionsEditorSessionAnalytic.kEventName);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -306,12 +306,12 @@ partial class CoreTests
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputActionsEditorSessionAnalytic.Data>());
 
         // Assert: Data content
-        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
+        var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(2));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(37.0));
@@ -329,18 +329,18 @@ partial class CoreTests
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfHavingMultipleFocusSessionsWithinSession()
     {
         TestMultipleEditorFocusSessions(
-            new InputEditorAnalytics.InputActionsEditorSessionAnalytic(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
+            new InputActionsEditorSessionAnalytic(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
     }
 
     [Test]
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__WhenActionsDriveImplicitConditions()
     {
-        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
-            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
+        var session = new InputActionsEditorSessionAnalytic(
+            InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         // session.RegisterEditorFocusIn(); // assumes we fail to capture focus-in event due to UI framework malfunction
@@ -366,12 +366,12 @@ partial class CoreTests
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputActionsEditorSessionAnalytic.Data>());
 
         // Assert: Data content
-        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
+        var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(1));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(30.0));
@@ -391,8 +391,8 @@ partial class CoreTests
         // We reuse an existing test case to prove that the object is reset properly and can be reused after
         // ending the session. We currently let CollectAnalytics reset test harness state which is fine for
         // the targeted verification aspect since only affecting test harness data.
-        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
-            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
+        var session = new InputActionsEditorSessionAnalytic(
+            InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings);
 
         TestMultipleEditorFocusSessions(session);
         TestMultipleEditorFocusSessions(session);
@@ -402,7 +402,7 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics__ShouldReportBuildAnalytics_WhenNotHavingSettingsAsset()
     {
-        CollectAnalytics(InputEditorAnalytics.InputBuildAnalytic.kEventName);
+        CollectAnalytics(InputBuildAnalytic.kEventName);
 
         var storedSettings = InputSystem.s_Manager.settings;
         InputSettings defaultSettings = null;
@@ -413,16 +413,16 @@ partial class CoreTests
             InputSystem.settings = defaultSettings;
 
             // Simulate a build (note that we cannot create a proper build report)
-            var processor = new InputEditorAnalytics.InputBuildAnalyticsReportProcessor();
+            var processor = new InputBuildAnalytic.ReportProcessor();
             processor.OnPostprocessBuild(null); // Note that we cannot create a report
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputBuildAnalytic.kEventName));
-            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputBuildAnalyticData>());
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputBuildAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputBuildAnalytic.InputBuildAnalyticData>());
 
             // Assert: Data content
-            var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+            var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
             Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
@@ -432,7 +432,7 @@ partial class CoreTests
             Assert.That(data.hasSettingsAsset, Is.False);
             Assert.That(data.hasDefaultSettings, Is.True);
 
-            Assert.That(data.updateMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.UpdateMode.ProcessEventsInDynamicUpdate));
+            Assert.That(data.updateMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInDynamicUpdate));
             Assert.That(data.compensateForScreenOrientation, Is.EqualTo(defaultSettings.compensateForScreenOrientation));
             Assert.That(data.defaultDeadzoneMin, Is.EqualTo(defaultSettings.defaultDeadzoneMin));
             Assert.That(data.defaultDeadzoneMax, Is.EqualTo(defaultSettings.defaultDeadzoneMax));
@@ -443,9 +443,9 @@ partial class CoreTests
             Assert.That(data.defaultHoldTime, Is.EqualTo(defaultSettings.defaultHoldTime));
             Assert.That(data.tapRadius, Is.EqualTo(defaultSettings.tapRadius));
             Assert.That(data.multiTapDelayTime, Is.EqualTo(defaultSettings.multiTapDelayTime));
-            Assert.That(data.backgroundBehavior, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.BackgroundBehavior.ResetAndDisableNonBackgroundDevices));
-            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus));
-            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.InputActionPropertyDrawerMode.Compact));
+            Assert.That(data.backgroundBehavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.ResetAndDisableNonBackgroundDevices));
+            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus));
+            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.Compact));
             Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(defaultSettings.maxEventBytesPerUpdate));
             Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(defaultSettings.maxQueuedEventsPerUpdate));
             Assert.That(data.supportedDevices, Is.EqualTo(defaultSettings.supportedDevices));
@@ -476,7 +476,7 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics__ShouldReportBuildAnalytics_WheHavingSettingsAssetWithCustomSettings()
     {
-        CollectAnalytics(InputEditorAnalytics.InputBuildAnalytic.kEventName);
+        CollectAnalytics(InputBuildAnalytic.kEventName);
 
         var storedSettings = InputSystem.s_Manager.settings;
         InputSettings customSettings = null;
@@ -520,16 +520,16 @@ partial class CoreTests
             InputSystem.settings = customSettings;
 
             // Simulate a build (note that we cannot create a proper build report)
-            var processor = new InputEditorAnalytics.InputBuildAnalyticsReportProcessor();
+            var processor = new InputBuildAnalytic.ReportProcessor();
             processor.OnPostprocessBuild(null); // Note that we cannot create a report
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputBuildAnalytic.kEventName));
-            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputBuildAnalyticData>());
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputBuildAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputBuildAnalytic.InputBuildAnalyticData>());
 
             // Assert: Data content
-            var data = (InputEditorAnalytics.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
+            var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
 
             Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -540,7 +540,7 @@ partial class CoreTests
             Assert.That(data.hasSettingsAsset, Is.False); // Note: We just don't write any file in this test, hence false
             Assert.That(data.hasDefaultSettings, Is.False);
 
-            Assert.That(data.updateMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.UpdateMode.ProcessEventsInFixedUpdate));
+            Assert.That(data.updateMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInFixedUpdate));
             Assert.That(data.compensateForScreenOrientation, Is.EqualTo(true));
             Assert.That(data.defaultDeadzoneMin, Is.EqualTo(0.4f));
             Assert.That(data.defaultDeadzoneMax, Is.EqualTo(0.6f));
@@ -551,9 +551,9 @@ partial class CoreTests
             Assert.That(data.defaultHoldTime, Is.EqualTo(3.3f));
             Assert.That(data.tapRadius, Is.EqualTo(customSettings.tapRadius));
             Assert.That(data.multiTapDelayTime, Is.EqualTo(customSettings.multiTapDelayTime));
-            Assert.That(data.backgroundBehavior, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.BackgroundBehavior.IgnoreFocus));
-            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView));
-            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputEditorAnalytics.InputBuildAnalyticData.InputActionPropertyDrawerMode.MultilineEffective));
+            Assert.That(data.backgroundBehavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.IgnoreFocus));
+            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView));
+            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.MultilineEffective));
             Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(customSettings.maxEventBytesPerUpdate));
             Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(customSettings.maxQueuedEventsPerUpdate));
             Assert.That(data.supportedDevices, Is.EqualTo(customSettings.supportedDevices));

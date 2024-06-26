@@ -381,6 +381,15 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
+            // TODO Remove this, temporary code during development
+            if (true)
+            {
+                if (analytic.TryGatherData(out IAnalytic.IData data, out Exception ex))
+                    Debug.Log(analytic.info.Name + ": " + JsonUtility.ToJson(data));
+                else
+                    Debug.Log(analytic.info.Name + ": " + JsonUtility.ToJson(ex));
+            }
+
             #if (UNITY_EDITOR)
             #if (UNITY_2023_2_OR_NEWER)
             EditorAnalytics.SendAnalytic(analytic);

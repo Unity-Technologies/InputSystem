@@ -46,20 +46,22 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             m_UIInputModuleProperty = serializedObject.FindProperty(nameof(PlayerInput.m_UIInputModule));
             #endif
+
+            m_Data = new PlayerInputEditorAnalytics.Data(target as PlayerInput);
         }
 
-        public void OnValidate()
+        public void OnDisable()
         {
-            ++m_AnalyticsData.onValidateCount;
+            new InputComponentEditorAnalytic(InputSystemComponent.PlayerInput).Send();
+            var data = new PlayerInputEditorAnalytics.Data(target as PlayerInput);
+            if (!data.Equals(m_Data))
+                new PlayerInputEditorAnalytics(ref m_Data).Send();
         }
 
         public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
             InputUser.onChange -= OnUserChange;
-
-            ++m_AnalyticsData.onDestroyCount;
-            InputSystem.s_Manager.m_Runtime.SendAnalytic(new InputEditorAnalytics.PlayerInputEditorUserEngagementAnalytic(this));
         }
 
         private void Refresh()
@@ -627,7 +629,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private bool m_ActionAssetInitialized;
         [NonSerialized] private int m_ActionAssetInstanceID;
 
-        [NonSerialized] internal InputEditorAnalytics.PlayerInputInspectorEditorUserEngagementData m_AnalyticsData;
+        [NonSerialized] PlayerInputEditorAnalytics.Data m_Data;
     }
 }
 #endif // UNITY_EDITOR

@@ -10,6 +10,7 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.AnimatedValues;
+using UnityEngine.InputSystem.Editor;
 #endif
 ////TODO: custom icon for OnScreenStick component
 
@@ -451,8 +452,13 @@ namespace UnityEngine.InputSystem.OnScreen
             private SerializedProperty m_PointerDownAction;
             private SerializedProperty m_PointerMoveAction;
 
+            private OnScreenStickEditorAnalytic.Data m_AnalyticsData;
+
             public void OnEnable()
             {
+                // Store initial state to report analytics for relevant changed properties
+                m_AnalyticsData = new OnScreenStickEditorAnalytic.Data(target as OnScreenStick);
+
                 m_ShowDynamicOriginOptions = new AnimBool(false);
                 m_ShowIsolatedInputActions = new AnimBool(false);
 
@@ -464,6 +470,15 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
                 m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
+            }
+
+            public void OnDisable()
+            {
+                // Report analytics
+                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenStick).Send();
+                var data = new OnScreenStickEditorAnalytic.Data(target as OnScreenStick);
+                if (!data.Equals(m_AnalyticsData))
+                    new OnScreenStickEditorAnalytic(ref data).Send();
             }
 
             public override void OnInspectorGUI()

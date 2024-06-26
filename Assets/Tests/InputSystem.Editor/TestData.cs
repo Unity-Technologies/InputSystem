@@ -35,7 +35,7 @@ public static class TestData
 
     internal static Generator<InputActionsEditorState> editorState =
         new(() => new InputActionsEditorState(
-            new InputEditorAnalytics.InputActionsEditorSessionAnalytic(InputEditorAnalytics.InputActionsEditorSessionData.Kind.FreeFloatingEditorWindow),
+            new InputActionsEditorSessionAnalytic(InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow),
             new SerializedObject(ScriptableObject.CreateInstance<InputActionAsset>())));
 
     internal static Generator<InputActionsEditorState> EditorStateWithAsset(ScriptableObject asset)

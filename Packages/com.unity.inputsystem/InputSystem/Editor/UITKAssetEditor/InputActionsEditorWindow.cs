@@ -41,12 +41,11 @@ namespace UnityEngine.InputSystem.Editor
         private StateContainer m_StateContainer;
         private InputActionsEditorView m_View;
 
-        private InputEditorAnalytics.InputActionsEditorSessionAnalytic m_Analytics;
+        private InputActionsEditorSessionAnalytic m_Analytics;
 
-        private InputEditorAnalytics.InputActionsEditorSessionAnalytic analytics =>
-            m_Analytics ??= new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
-                InputEditorAnalytics
-                    .InputActionsEditorSessionData.Kind.FreeFloatingEditorWindow);
+        private InputActionsEditorSessionAnalytic analytics =>
+            m_Analytics ??= new InputActionsEditorSessionAnalytic(
+                InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow);
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
