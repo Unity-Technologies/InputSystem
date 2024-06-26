@@ -382,13 +382,17 @@ namespace UnityEngine.InputSystem.LowLevel
         public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
             // TODO Remove this, temporary code during development
+            #if UNITY_EDITOR
             if (true)
             {
+                // Note that this drives an additional gathering of data which might have side-effects.
+                // This is intended purely for development purposes.
                 if (analytic.TryGatherData(out IAnalytic.IData data, out Exception ex))
                     Debug.Log(analytic.info.Name + ": " + JsonUtility.ToJson(data));
                 else
                     Debug.Log(analytic.info.Name + ": " + JsonUtility.ToJson(ex));
             }
+            #endif
 
             #if (UNITY_EDITOR)
             #if (UNITY_2023_2_OR_NEWER)

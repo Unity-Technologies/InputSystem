@@ -473,7 +473,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportBuildAnalytics_WheHavingSettingsAssetWithCustomSettings()
+    public void Analytics__ShouldReportBuildAnalytics_WhenHavingSettingsAssetWithCustomSettings()
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
@@ -572,5 +572,33 @@ partial class CoreTests
                 Object.DestroyImmediate(customSettings);
         }
     }
+
+    [TestCase(InputSystemComponent.PlayerInput)]
+    [TestCase(InputSystemComponent.PlayerInputManager)]
+    [TestCase(InputSystemComponent.InputSystemUIInputModule)]
+    [TestCase(InputSystemComponent.StandaloneInputModule)]
+    [TestCase(InputSystemComponent.VirtualMouseInput)]
+    [TestCase(InputSystemComponent.TouchSimulation)]
+    [TestCase(InputSystemComponent.OnScreenButton)]
+    [TestCase(InputSystemComponent.OnScreenStick)]
+    [Category("Analytics")]
+    public void Analytics__ShouldReportComponentAnalytics_WhenEditorIsCreatedAndDestroyed(InputSystemComponent component)
+    {
+        CollectAnalytics(InputComponentEditorAnalytic.kEventName);
+
+        new InputComponentEditorAnalytic(component).Send();
+
+        // Assert: Data received
+        Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputComponentEditorAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputComponentEditorAnalytic.Data>());
+
+        // Assert: Data content
+        var data = (InputComponentEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+        Assert.That(data.component, Is.EqualTo(component));
+    }
+
+    // Note: Currently not testing proper analytics reporting when editor is enabled/disabled since unclear how
+    //       to achieve this with test framework. This would be a good future improvement.
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR
