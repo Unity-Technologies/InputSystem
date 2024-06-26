@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Change
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
+- Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
@@ -27,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
 - Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
 - Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
+- Fixed an issue where changing `InputSettings` instance would not affect associated feature flags.
 - Fixed the UI generation of enum fields when editing interactions of action properties. The new selected value was lost when saving.
 - Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 
