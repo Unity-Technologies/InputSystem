@@ -318,21 +318,6 @@ namespace UnityEngine.InputSystem.Editor
             public int resetCount;
 
             public bool isValid => kind != Kind.Invalid && sessionDurationSeconds >= 0;
-
-            public override string ToString()
-            {
-                return $"{nameof(kind)}: {kind}, " +
-                    $"{nameof(sessionDurationSeconds)}: {sessionDurationSeconds} seconds, " +
-                    $"{nameof(sessionFocusDurationSeconds)}: {sessionFocusDurationSeconds} seconds, " +
-                    $"{nameof(sessionFocusSwitchCount)}: {sessionFocusSwitchCount}, " +
-                    $"{nameof(actionMapModificationCount)}: {actionMapModificationCount}, " +
-                    $"{nameof(actionModificationCount)}: {actionModificationCount}, " +
-                    $"{nameof(bindingModificationCount)}: {bindingModificationCount}, " +
-                    $"{nameof(controlSchemeModificationCount)}: {controlSchemeModificationCount}, " +
-                    $"{nameof(explicitSaveCount)}: {explicitSaveCount}, " +
-                    $"{nameof(autoSaveCount)}: {autoSaveCount}" +
-                    $"{nameof(resetCount)}: {resetCount}";
-            }
         }
     }
 }
