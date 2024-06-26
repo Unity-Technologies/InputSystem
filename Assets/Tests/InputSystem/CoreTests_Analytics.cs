@@ -455,7 +455,6 @@ partial class CoreTests
             Assert.That(data.featureOptimizedControlsEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
             Assert.That(data.featureReadValueCachingEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
             Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
-            Assert.That(data.featureUseWindowsGamingInputBackend, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend)));
             Assert.That(data.featureDisableUnityRemoteSupport, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -509,7 +508,6 @@ partial class CoreTests
 
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
-            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseWindowsGamingInputBackend, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -563,7 +561,6 @@ partial class CoreTests
             Assert.That(data.featureOptimizedControlsEnabled, Is.True);
             Assert.That(data.featureReadValueCachingEnabled, Is.True);
             Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.True);
-            Assert.That(data.featureUseWindowsGamingInputBackend, Is.True);
             Assert.That(data.featureDisableUnityRemoteSupport, Is.True);
             Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.True);
             Assert.That(data.featureUseIMGUIEditorForAssets, Is.True);
