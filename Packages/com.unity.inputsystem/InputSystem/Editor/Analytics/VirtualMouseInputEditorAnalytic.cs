@@ -14,12 +14,12 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class VirtualMouseInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "virtualMouseInputEditorAnalytic";
+        public const string kEventName = "virtualMouseInputEditor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
         [Serializable]
-        internal struct Data : IEquatable<Data>, IAnalytic.IData
+        internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             public CursorMode cursorMode;
             public float cursorSpeed;

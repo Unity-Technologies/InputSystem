@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputBuildAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputSystemBuildInsights";
+        public const string kEventName = "inputBuild";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -203,8 +203,6 @@ namespace UnityEngine.InputSystem.Editor
 #else
                 featureUseIMGUIEditorForAssets = false,
 #endif
-                featureUseWindowsGamingInputBackend =
-                    settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend);
                 featureDisableUnityRemoteSupport =
                     settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport);
                 featureRunPlayerUpdatesInEditMode =
@@ -276,7 +274,6 @@ namespace UnityEngine.InputSystem.Editor
                     CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
-                    CompareFeatureFlag(a, b, InputFeatureNames.kUseWindowsGamingInputBackend) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
                     CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -409,12 +406,6 @@ namespace UnityEngine.InputSystem.Editor
             /// as defined in InputSystem 1.8.x.
             /// </summary>
             public readonly bool featureUseIMGUIEditorForAssets;
-
-            /// <summary>
-            /// Represents internal feature flag <see cref="InputFeatureNames.kUseWindowsGamingInputBackend" />
-            /// as defined in InputSystem 1.8.x.
-            /// </summary>
-            public readonly bool featureUseWindowsGamingInputBackend;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kDisableUnityRemoteSupport" />
