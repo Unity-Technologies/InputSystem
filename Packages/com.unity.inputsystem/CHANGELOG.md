@@ -28,11 +28,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
 - Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
 - Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
+- Fixed an issue related to Visualizers sample where exceptions would be thrown by InputActionVisualizer and InputControlVisualizer when entering play-mode if added as components to a new `GameObject`.
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+- Expanded editor and build insight analytics to cover ``.inputactions` asset editor usage, `InputSettings` and common component configurations.
 
 ### Changed
 - Changed `DualSenseHIDInputReport` from internal to public visibility
