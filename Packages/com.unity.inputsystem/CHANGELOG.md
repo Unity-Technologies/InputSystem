@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Change
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
+- Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
@@ -25,11 +26,16 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where adding a `OnScreenButton` or `OnScreenStick` to a regular GameObject would lead to exception in editor.
 - Fixed an issue where adding a `OnScreenStick` to a regular GameObject and entering play-mode would lead to exceptions being generated.
 - Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
+- Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
+- Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+
+### Changed
+- Changed `DualSenseHIDInputReport` from internal to public visibility
 
 ## [1.8.2] - 2024-04-29
 
