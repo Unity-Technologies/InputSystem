@@ -828,7 +828,7 @@ internal class CorePerformanceTests : CoreTestsFixture
 #endif
         return;
 
-        void MethodToMeasure(Gamepad gamepad)
+        void MethodToMeasure(Gamepad g)
         {
             var value2d = Vector2.zero;
 
@@ -836,7 +836,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             {
                 // Make sure state changes are different from previous state so that we mark the controls as
                 // stale.
-                InputSystem.QueueStateEvent(gamepad,
+                InputSystem.QueueStateEvent(g,
                     new GamepadState
                     {
                         leftStick = new Vector2(i / 1000f, i / 1000f),
