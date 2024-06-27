@@ -659,6 +659,7 @@ partial class CoreTests
         }
     }
 
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportOnScreenStickData()
@@ -686,7 +687,6 @@ partial class CoreTests
         }
     }
 
-    #if UNITY_INPUT_SYSTEM_ENABLE_UI
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportVirtualMouseInputData()
@@ -713,7 +713,7 @@ partial class CoreTests
         }
     }
 
-    #endif
+#endif // #if UNITY_INPUT_SYSTEM_ENABLE_UI
 
     // Note: Currently not testing proper analytics reporting when editor is enabled/disabled since unclear how
     //       to achieve this with test framework. This would be a good future improvement.

@@ -1,7 +1,6 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
 using UnityEngine.InputSystem.OnScreen;
-using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
 {
