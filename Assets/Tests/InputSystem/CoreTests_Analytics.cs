@@ -427,7 +427,7 @@ partial class CoreTests
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
+            Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
 #else
             Assert.That(data.has_projectwide_input_action_asset, Is.False);
 #endif
@@ -460,7 +460,7 @@ partial class CoreTests
             Assert.That(data.feature_disable_unity_remote_support, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.feature_run_player_updates_in_editmode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            Assert.That(data.featureUseIMGUIEditorForAssets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
 #else
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.False);
 #endif
@@ -566,7 +566,7 @@ partial class CoreTests
             Assert.That(data.feature_disable_unity_remote_support, Is.True);
             Assert.That(data.feature_run_player_updates_in_editmode, Is.True);
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            Assert.That(data.featureUseIMGUIEditorForAssets, Is.True);
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.True);
 #else
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.False); // No impact
 #endif
