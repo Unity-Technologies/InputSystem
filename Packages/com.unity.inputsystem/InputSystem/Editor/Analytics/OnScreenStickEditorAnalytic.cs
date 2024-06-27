@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                 useIsolatedInputActions = value.useIsolatedInputActions;
             }
 
-            [FormerlySerializedAs("behaviour")] public OnScreenStickBehaviour behavior;
+            public OnScreenStickBehaviour behavior;
             public float movementRange;
             public float dynamicOriginRange;
             public bool useIsolatedInputActions;
