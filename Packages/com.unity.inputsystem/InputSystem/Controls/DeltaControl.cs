@@ -4,12 +4,10 @@ using UnityEngine.Scripting;
 namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
-    /// A control representing a two-dimensional motion vector that accumulates within a frame
-    /// and resets at the beginning of a frame.
+    /// Delta controls are a two-dimensional motion vector that accumulate within a frame
+    /// and reset at the beginning of a frame. You can read the values from a delta control
+    /// using the inherited members from Vector2Control or InputControl.
     /// </summary>
-    /// <remarks>
-    /// Delta controls are
-    /// </remarks>
     /// <see cref="Pointer.delta"/>
     /// <seealso cref="Mouse.scroll"/>
     [Preserve]
@@ -27,7 +25,7 @@ namespace UnityEngine.InputSystem.Controls
         public AxisControl up { get; set; }
 
         /// <summary>
-        /// A synthetic axis representing the lower half of the Y axis value, i.e. the -1 to 1 range (inverted).
+        /// A synthetic axis representing the lower half of the Y axis value, i.e. the 0 to -1 range (inverted).
         /// </summary>
         /// <value>Control representing the control's lower half Y axis.</value>
         /// <remarks>
@@ -38,7 +36,7 @@ namespace UnityEngine.InputSystem.Controls
         public AxisControl down { get; set; }
 
         /// <summary>
-        /// A synthetic axis representing the left half of the X axis value, i.e. the -1 to 1 range (inverted).
+        /// A synthetic axis representing the left half of the X axis value, i.e. the 0 to -1 range (inverted).
         /// </summary>
         /// <value>Control representing the control's left half X axis.</value>
         /// <remarks>
