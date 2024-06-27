@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.Editor
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 var inputSystemActions = InputSystem.actions;
                 var actionsPath = inputSystemActions == null ? null : AssetDatabase.GetAssetPath(inputSystemActions);
-                hasProjectWideInputActionAsset = !string.IsNullOrEmpty(actionsPath);
+                has_projectwide_input_action_asset = !string.IsNullOrEmpty(actionsPath);
 #else
                 has_projectwide_input_action_asset = false;
 #endif

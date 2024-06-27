@@ -50,7 +50,11 @@ namespace UnityEngine.InputSystem.Editor
                 behavior = InputEditorAnalytics.ToNotificationBehavior(playerInput.notificationBehavior);
                 has_actions = playerInput.actions != null;
                 has_default_map = playerInput.defaultActionMap != null;
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
                 has_ui_input_module = playerInput.uiInputModule != null;
+#else
+                has_ui_input_module = false;
+#endif
                 has_camera = playerInput.camera != null;
             }
 
