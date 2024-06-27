@@ -533,7 +533,7 @@ partial class CoreTests
 
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
+            Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
 #else
             Assert.That(data.has_projectwide_input_action_asset, Is.False);
 #endif
