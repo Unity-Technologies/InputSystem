@@ -686,6 +686,7 @@ partial class CoreTests
         }
     }
 
+    #if UNITY_INPUT_SYSTEM_ENABLE_UI
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportVirtualMouseInputData()
@@ -711,6 +712,8 @@ partial class CoreTests
             Assert.That(data.scroll_speed, Is.EqualTo(45.0f));
         }
     }
+
+    #endif
 
     // Note: Currently not testing proper analytics reporting when editor is enabled/disabled since unclear how
     //       to achieve this with test framework. This would be a good future improvement.
