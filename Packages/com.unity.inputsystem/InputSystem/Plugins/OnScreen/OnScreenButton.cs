@@ -1,8 +1,10 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
-using System;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Layouts;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 ////TODO: custom icon for OnScreenButton component
 

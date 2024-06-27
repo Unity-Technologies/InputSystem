@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
                 return state.With(selectedControlScheme: new InputControlScheme(
                     MakeUniqueControlSchemeName(state, kNewControlSchemeName)));
             };
@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
                 return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
                     state.selectedControlScheme.deviceRequirements.Append(requirement)));
             };
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
 
                 var newDeviceIndex =
                     Mathf.Clamp(
@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
 
                 return state.With(selectedControlScheme: new InputControlScheme(
                     MakeUniqueControlSchemeName(state, state.selectedControlScheme.name),
@@ -212,7 +212,7 @@ namespace UnityEngine.InputSystem.Editor
                         selectedControlSchemeIndex: serializedArray.arraySize - 1,
                         selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)), selectedDeviceRequirementIndex: -1);
 
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
 
                 return state.With(
                     selectedControlSchemeIndex: indexOfArrayElement,
@@ -241,7 +241,7 @@ namespace UnityEngine.InputSystem.Editor
                 requirement.isOptional = !isRequired;
                 deviceRequirements[deviceRequirementIndex] = requirement;
 
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
 
                 return state.With(selectedControlScheme: new InputControlScheme(
                     state.selectedControlScheme.name,
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
                 deviceRequirements.RemoveAt(oldPosition);
                 deviceRequirements.Insert(newPosition, requirement);
 
-                state.m_Analytics.RegisterControlSchemeEdit();
+                state.m_Analytics?.RegisterControlSchemeEdit();
 
                 return state.With(selectedControlScheme: new InputControlScheme(
                     state.selectedControlScheme.name,
@@ -293,7 +293,7 @@ namespace UnityEngine.InputSystem.Editor
                         .Where(s => s != controlScheme)
                         .Join(InputBinding.kSeparatorString);
 
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
 
                 state.serializedObject.ApplyModifiedProperties();
                 return state;

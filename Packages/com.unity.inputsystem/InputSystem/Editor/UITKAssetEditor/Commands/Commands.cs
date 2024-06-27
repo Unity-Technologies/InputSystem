@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionProperty = InputActionSerializationHelpers.AddAction(newMap);
                 InputActionSerializationHelpers.AddBinding(actionProperty, newMap);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionMapEdit();
+                state.m_Analytics?.RegisterActionMapEdit();
                 return state.SelectActionMap(newMap);
             };
         }
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                 var newAction = InputActionSerializationHelpers.AddAction(actionMap);
                 InputActionSerializationHelpers.AddBinding(newAction, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state.SelectAction(newAction);
             };
         }
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Editor
                 var binding = InputActionSerializationHelpers.AddBinding(action, map);
                 var bindingIndex = new SerializedInputBinding(binding).indexOfBinding;
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
                 return state.With(selectedBindingIndex: bindingIndex, selectionType: SelectionType.Binding);
             };
         }
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
                 var composite = InputActionSerializationHelpers.AddCompositeBinding(action, map, compositeName, compositeType);
                 var index = new SerializedInputBinding(composite).indexOfBinding;
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state.With(selectedBindingIndex: index, selectionType: SelectionType.Binding);
             };
         }
@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
                 var isCut = state.IsActionMapCut(actionMapIndex);
                 InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionMapEdit();
+                state.m_Analytics?.RegisterActionMapEdit();
                 if (state.selectedActionMapIndex == actionMapIndex)
                     return isCut ? SelectPrevActionMap(state).ClearCutElements() : SelectPrevActionMap(state);
                 if (isCut)
@@ -291,7 +291,7 @@ namespace UnityEngine.InputSystem.Editor
                 var name = actionMap?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
                 var newMap = CopyPasteHelper.DuplicateElement(actionMapArray, actionMap, name, actionMap.GetIndexOfArrayElement() + 1);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionMapEdit();
+                state.m_Analytics?.RegisterActionMapEdit();
                 return state.SelectActionMap(newMap.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
             };
         }
@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
                 CopyPasteHelper.DuplicateAction(actionArray, action, actionMap, state);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state.SelectAction(state.selectedActionIndex + 1);
             };
         }
@@ -320,7 +320,7 @@ namespace UnityEngine.InputSystem.Editor
                 var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
                 var newIndex = CopyPasteHelper.DuplicateBinding(bindingsArray, binding, actionName, binding.GetIndexOfArrayElement() + 1);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
                 return state.SelectBinding(newIndex);
             };
         }
@@ -456,7 +456,7 @@ namespace UnityEngine.InputSystem.Editor
                 var isCut = state.IsActionCut(actionMapIndex, actionIndex);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
 
                 if (isCut)
                     return state.With(selectedActionIndex: -1, selectionType: SelectionType.Action).ClearCutElements();
@@ -473,7 +473,7 @@ namespace UnityEngine.InputSystem.Editor
                 var isCut = state.IsBindingCut(actionMapIndex, bindingIndex);
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
 
                 if (isCut)
                     return state.With(selectedBindingIndex: -1, selectionType: SelectionType.Binding).ClearCutElements();
@@ -497,7 +497,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 pathProperty.stringValue = nameAndParameters.ToString();
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
                 return state;
             };
         }
@@ -514,7 +514,7 @@ namespace UnityEngine.InputSystem.Editor
                 };
                 InputActionSerializationHelpers.ChangeCompositeBindingType(bindingProperty.wrappedProperty, nameAndParameters);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit(); // Questionable if action or binding edit?
+                state.m_Analytics?.RegisterBindingEdit(); // Questionable if action or binding edit?
                 return state;
             };
         }
@@ -525,7 +525,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 InputActionSerializationHelpers.SetBindingPartName(bindingProperty.wrappedProperty, partName);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterBindingEdit();
+                state.m_Analytics?.RegisterBindingEdit();
                 return state;
             };
         }
@@ -536,7 +536,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue = (int)newValue;
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state;
             };
         }
@@ -551,7 +551,7 @@ namespace UnityEngine.InputSystem.Editor
                 else
                     property.intValue &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state;
             };
         }
@@ -566,7 +566,7 @@ namespace UnityEngine.InputSystem.Editor
                 var controlType = (controlTypeIndex == 0) ? string.Empty : controlTypes[controlTypeIndex];
                 inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlType;
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics.RegisterActionEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state;
             };
         }
@@ -592,7 +592,7 @@ namespace UnityEngine.InputSystem.Editor
                 // TODO It makes more sense to call back to editor since editor owns target object?
                 //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
-                state.m_Analytics.RegisterExplicitSave();
+                state.m_Analytics?.RegisterExplicitSave();
                 return state;
             };
         }
@@ -608,7 +608,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                         postSaveAction?.Invoke();
-                        state.m_Analytics.RegisterAutoSave();
+                        state.m_Analytics?.RegisterAutoSave();
                     }
 
                     InputEditorUserSettings.autoSaveInputActionAssets = newValue;

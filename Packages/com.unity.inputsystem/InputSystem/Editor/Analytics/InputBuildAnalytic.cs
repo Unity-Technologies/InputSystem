@@ -246,67 +246,67 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// Represents <see cref="InputSettings.buttonReleaseThreshold"/>
             /// </summary>
-            public readonly float buttonReleaseThreshold;
+            public float buttonReleaseThreshold;
 
             /// <summary>
             /// Represents <see cref="InputSettings.defaultSlowTapTime"/>
             /// </summary>
-            public readonly float defaultTapTime;
+            public float defaultTapTime;
 
             /// <summary>
             /// Represents <see cref="InputSettings.defaultSlowTapTime"/>
             /// </summary>
-            public readonly float defaultSlowTapTime;
+            public float defaultSlowTapTime;
 
             /// <summary>
             /// Represents <see cref="InputSettings.defaultHoldTime"/>
             /// </summary>
-            public readonly float defaultHoldTime;
+            public float defaultHoldTime;
 
             /// <summary>
             /// Represents <see cref="InputSettings.tapRadius"/>
             /// </summary>
-            public readonly float tapRadius;
+            public float tapRadius;
 
             /// <summary>
             /// Represents <see cref="InputSettings.multiTapDelayTime"/>
             /// </summary>
-            public readonly float multiTapDelayTime;
+            public float multiTapDelayTime;
 
             /// <summary>
             /// Represents <see cref="InputSettings.editorInputBehaviorInPlayMode"/>
             /// </summary>
-            public readonly EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode;
+            public EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode;
 
             /// <summary>
             /// Represents <see cref="InputSettings.inputActionPropertyDrawerMode"/>
             /// </summary>
-            public readonly InputActionPropertyDrawerMode inputActionPropertyDrawerMode;
+            public InputActionPropertyDrawerMode inputActionPropertyDrawerMode;
 
             /// <summary>
             /// Represents <see cref="InputSettings.maxEventBytesPerUpdate"/>
             /// </summary>
-            public readonly int maxEventBytesPerUpdate;
+            public int maxEventBytesPerUpdate;
 
             /// <summary>
             /// Represents <see cref="InputSettings.maxQueuedEventsPerUpdate"/>
             /// </summary>
-            public readonly int maxQueuedEventsPerUpdate;
+            public int maxQueuedEventsPerUpdate;
 
             /// <summary>
             /// Represents <see cref="InputSettings.supportedDevices"/>
             /// </summary>
-            public readonly string[] supportedDevices;
+            public string[] supportedDevices;
 
             /// <summary>
             /// Represents <see cref="InputSettings.disableRedundantEventsMerging"/>
             /// </summary>
-            public readonly bool disableRedundantEventsMerging;
+            public bool disableRedundantEventsMerging;
 
             /// <summary>
             /// Represents <see cref="InputSettings.shortcutKeysConsumeInput"/>
             /// </summary>
-            public readonly bool shortcutKeysConsumeInput;
+            public bool shortcutKeysConsumeInput;
 
             #endregion
 
@@ -316,37 +316,37 @@ namespace UnityEngine.InputSystem.Editor
             /// Represents internal feature flag <see cref="InputFeatureNames.kUseOptimizedControls"/> as defined
             /// in Input System 1.8.x.
             /// </summary>
-            public readonly bool featureOptimizedControlsEnabled;
+            public bool featureOptimizedControlsEnabled;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kUseReadValueCaching" /> as defined
             /// in Input System 1.8.x.
             /// </summary>
-            public readonly bool featureReadValueCachingEnabled;
+            public bool featureReadValueCachingEnabled;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kParanoidReadValueCachingChecks" />
             /// as defined in InputSystem 1.8.x.
             /// </summary>
-            public readonly bool featureParanoidReadValueCachingChecksEnabled;
+            public bool featureParanoidReadValueCachingChecksEnabled;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kUseIMGUIEditorForAssets" />
             /// as defined in InputSystem 1.8.x.
             /// </summary>
-            public readonly bool featureUseIMGUIEditorForAssets;
+            public bool featureUseIMGUIEditorForAssets;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kDisableUnityRemoteSupport" />
             /// as defined in InputSystem 1.8.x.
             /// </summary>
-            public readonly bool featureDisableUnityRemoteSupport;
+            public bool featureDisableUnityRemoteSupport;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kRunPlayerUpdatesInEditMode" />
             /// as defined in InputSystem 1.8.x.
             /// </summary>
-            public readonly bool featureRunPlayerUpdatesInEditMode;
+            public bool featureRunPlayerUpdatesInEditMode;
 
             #endregion
 
@@ -355,23 +355,23 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// Specifies whether the project is using a project-wide input actions asset or not.
             /// </summary>
-            public readonly bool hasProjectWideInputActionAsset;
+            public bool hasProjectWideInputActionAsset;
 
             /// <summary>
             /// Specifies whether the project is using a user-provided settings asset or not.
             /// </summary>
-            public readonly bool hasSettingsAsset;
+            public bool hasSettingsAsset;
 
             /// <summary>
             /// Specifies whether the settings asset (if present) of the built project is equal to default settings
             /// or not. In case of no settings asset this is also true since implicitly using default settings.
             /// </summary>
-            public readonly bool hasDefaultSettings;
+            public bool hasDefaultSettings;
 
             /// <summary>
             /// A unique GUID identifying the build.
             /// </summary>
-            public readonly string buildGuid;
+            public string buildGuid;
 
             #endregion
         }

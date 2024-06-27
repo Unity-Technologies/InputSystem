@@ -1,8 +1,11 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 ////TODO: respect cursor lock mode
 
