@@ -262,16 +262,16 @@ partial class CoreTests
         // Assert: Data content
         var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
         Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
-        Assert.That(data.explicitSaveCount, Is.EqualTo(0));
-        Assert.That(data.autoSaveCount, Is.EqualTo(0));
-        Assert.That(data.sessionDurationSeconds, Is.EqualTo(5.0));
-        Assert.That(data.sessionFocusDurationSeconds, Is.EqualTo(5.0));
-        Assert.That(data.sessionFocusSwitchCount, Is.EqualTo(1)); // TODO Unclear name
-        Assert.That(data.actionMapModificationCount, Is.EqualTo(1));
-        Assert.That(data.actionModificationCount, Is.EqualTo(1));
-        Assert.That(data.bindingModificationCount, Is.EqualTo(1));
-        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(0));
-        Assert.That(data.resetCount, Is.EqualTo(0));
+        Assert.That(data.explicit_save_count, Is.EqualTo(0));
+        Assert.That(data.auto_save_count, Is.EqualTo(0));
+        Assert.That(data.session_duration_seconds, Is.EqualTo(5.0));
+        Assert.That(data.session_focus_duration_seconds, Is.EqualTo(5.0));
+        Assert.That(data.session_focus_switch_count, Is.EqualTo(1)); // TODO Unclear name
+        Assert.That(data.action_map_modification_count, Is.EqualTo(1));
+        Assert.That(data.action_modification_count, Is.EqualTo(1));
+        Assert.That(data.binding_modification_count, Is.EqualTo(1));
+        Assert.That(data.control_scheme_modification_count, Is.EqualTo(0));
+        Assert.That(data.reset_count, Is.EqualTo(0));
     }
 
     private void TestMultipleEditorFocusSessions(InputActionsEditorSessionAnalytic session = null)
@@ -314,16 +314,16 @@ partial class CoreTests
         // Assert: Data content
         var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
         Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
-        Assert.That(data.explicitSaveCount, Is.EqualTo(0));
-        Assert.That(data.autoSaveCount, Is.EqualTo(2));
-        Assert.That(data.sessionDurationSeconds, Is.EqualTo(37.0));
-        Assert.That(data.sessionFocusDurationSeconds, Is.EqualTo(7.0));
-        Assert.That(data.sessionFocusSwitchCount, Is.EqualTo(2)); // TODO Unclear name
-        Assert.That(data.actionMapModificationCount, Is.EqualTo(1));
-        Assert.That(data.actionModificationCount, Is.EqualTo(1));
-        Assert.That(data.bindingModificationCount, Is.EqualTo(2));
-        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(1));
-        Assert.That(data.resetCount, Is.EqualTo(0));
+        Assert.That(data.explicit_save_count, Is.EqualTo(0));
+        Assert.That(data.auto_save_count, Is.EqualTo(2));
+        Assert.That(data.session_duration_seconds, Is.EqualTo(37.0));
+        Assert.That(data.session_focus_duration_seconds, Is.EqualTo(7.0));
+        Assert.That(data.session_focus_switch_count, Is.EqualTo(2)); // TODO Unclear name
+        Assert.That(data.action_map_modification_count, Is.EqualTo(1));
+        Assert.That(data.action_modification_count, Is.EqualTo(1));
+        Assert.That(data.binding_modification_count, Is.EqualTo(2));
+        Assert.That(data.control_scheme_modification_count, Is.EqualTo(1));
+        Assert.That(data.reset_count, Is.EqualTo(0));
     }
 
     [Test]
@@ -374,16 +374,16 @@ partial class CoreTests
         // Assert: Data content
         var data = (InputActionsEditorSessionAnalytic.Data)sentAnalyticsEvents[0].data;
         Assert.That(data.kind, Is.EqualTo(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
-        Assert.That(data.explicitSaveCount, Is.EqualTo(1));
-        Assert.That(data.autoSaveCount, Is.EqualTo(0));
-        Assert.That(data.sessionDurationSeconds, Is.EqualTo(30.0));
-        Assert.That(data.sessionFocusDurationSeconds, Is.EqualTo(25.0));
-        Assert.That(data.sessionFocusSwitchCount, Is.EqualTo(1)); // TODO Unclear name
-        Assert.That(data.actionMapModificationCount, Is.EqualTo(2));
-        Assert.That(data.actionModificationCount, Is.EqualTo(0));
-        Assert.That(data.bindingModificationCount, Is.EqualTo(1));
-        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(0));
-        Assert.That(data.resetCount, Is.EqualTo(0));
+        Assert.That(data.explicit_save_count, Is.EqualTo(1));
+        Assert.That(data.auto_save_count, Is.EqualTo(0));
+        Assert.That(data.session_duration_seconds, Is.EqualTo(30.0));
+        Assert.That(data.session_focus_duration_seconds, Is.EqualTo(25.0));
+        Assert.That(data.session_focus_switch_count, Is.EqualTo(1)); // TODO Unclear name
+        Assert.That(data.action_map_modification_count, Is.EqualTo(2));
+        Assert.That(data.action_modification_count, Is.EqualTo(0));
+        Assert.That(data.binding_modification_count, Is.EqualTo(1));
+        Assert.That(data.control_scheme_modification_count, Is.EqualTo(0));
+        Assert.That(data.reset_count, Is.EqualTo(0));
     }
 
     [Test]
@@ -425,44 +425,44 @@ partial class CoreTests
 
             // Assert: Data content
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
-            Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
+            Assert.That(data.build_guid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
 #else
-            Assert.That(data.hasProjectWideInputActionAsset, Is.False);
+            Assert.That(data.has_projectwide_input_action_asset, Is.False);
 #endif
-            Assert.That(data.hasSettingsAsset, Is.False);
-            Assert.That(data.hasDefaultSettings, Is.True);
+            Assert.That(data.has_settings_asset, Is.False);
+            Assert.That(data.has_default_settings, Is.True);
 
-            Assert.That(data.updateMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInDynamicUpdate));
-            Assert.That(data.compensateForScreenOrientation, Is.EqualTo(defaultSettings.compensateForScreenOrientation));
-            Assert.That(data.defaultDeadzoneMin, Is.EqualTo(defaultSettings.defaultDeadzoneMin));
-            Assert.That(data.defaultDeadzoneMax, Is.EqualTo(defaultSettings.defaultDeadzoneMax));
-            Assert.That(data.defaultButtonPressPoint, Is.EqualTo(defaultSettings.defaultButtonPressPoint));
-            Assert.That(data.buttonReleaseThreshold, Is.EqualTo(defaultSettings.buttonReleaseThreshold));
-            Assert.That(data.defaultTapTime, Is.EqualTo(defaultSettings.defaultTapTime));
-            Assert.That(data.defaultSlowTapTime, Is.EqualTo(defaultSettings.defaultSlowTapTime));
-            Assert.That(data.defaultHoldTime, Is.EqualTo(defaultSettings.defaultHoldTime));
-            Assert.That(data.tapRadius, Is.EqualTo(defaultSettings.tapRadius));
-            Assert.That(data.multiTapDelayTime, Is.EqualTo(defaultSettings.multiTapDelayTime));
-            Assert.That(data.backgroundBehavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.ResetAndDisableNonBackgroundDevices));
-            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus));
-            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.Compact));
-            Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(defaultSettings.maxEventBytesPerUpdate));
-            Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(defaultSettings.maxQueuedEventsPerUpdate));
-            Assert.That(data.supportedDevices, Is.EqualTo(defaultSettings.supportedDevices));
-            Assert.That(data.disableRedundantEventsMerging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
-            Assert.That(data.shortcutKeysConsumeInput, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
+            Assert.That(data.update_mode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInDynamicUpdate));
+            Assert.That(data.compensate_for_screen_orientation, Is.EqualTo(defaultSettings.compensateForScreenOrientation));
+            Assert.That(data.default_deadzone_min, Is.EqualTo(defaultSettings.defaultDeadzoneMin));
+            Assert.That(data.default_deadzone_max, Is.EqualTo(defaultSettings.defaultDeadzoneMax));
+            Assert.That(data.default_button_press_point, Is.EqualTo(defaultSettings.defaultButtonPressPoint));
+            Assert.That(data.button_release_threshold, Is.EqualTo(defaultSettings.buttonReleaseThreshold));
+            Assert.That(data.default_tap_time, Is.EqualTo(defaultSettings.defaultTapTime));
+            Assert.That(data.default_slow_tap_time, Is.EqualTo(defaultSettings.defaultSlowTapTime));
+            Assert.That(data.default_hold_time, Is.EqualTo(defaultSettings.defaultHoldTime));
+            Assert.That(data.tap_radius, Is.EqualTo(defaultSettings.tapRadius));
+            Assert.That(data.multi_tap_delay_time, Is.EqualTo(defaultSettings.multiTapDelayTime));
+            Assert.That(data.background_behavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.ResetAndDisableNonBackgroundDevices));
+            Assert.That(data.editor_input_behavior_in_playmode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus));
+            Assert.That(data.input_action_property_drawer_mode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.Compact));
+            Assert.That(data.max_event_bytes_per_update, Is.EqualTo(defaultSettings.maxEventBytesPerUpdate));
+            Assert.That(data.max_queued_events_per_update, Is.EqualTo(defaultSettings.maxQueuedEventsPerUpdate));
+            Assert.That(data.supported_devices, Is.EqualTo(defaultSettings.supportedDevices));
+            Assert.That(data.disable_redundant_events_merging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
+            Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
 
-            Assert.That(data.featureOptimizedControlsEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
-            Assert.That(data.featureReadValueCachingEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
-            Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
-            Assert.That(data.featureDisableUnityRemoteSupport, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
-            Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
+            Assert.That(data.feature_optimized_controls_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
+            Assert.That(data.feature_read_value_caching_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
+            Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
+            Assert.That(data.feature_disable_unity_remote_support, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
+            Assert.That(data.feature_run_player_updates_in_editmode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.featureUseIMGUIEditorForAssets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
 #else
-            Assert.That(data.featureUseIMGUIEditorForAssets, Is.False);
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False);
 #endif
         }
         finally
@@ -531,44 +531,44 @@ partial class CoreTests
             // Assert: Data content
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
 
-            Assert.That(data.buildGuid, Is.EqualTo(string.Empty));
+            Assert.That(data.build_guid, Is.EqualTo(string.Empty));
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.hasProjectWideInputActionAsset, Is.EqualTo(InputSystem.actions != null));
 #else
-            Assert.That(data.hasProjectWideInputActionAsset, Is.False);
+            Assert.That(data.has_projectwide_input_action_asset, Is.False);
 #endif
-            Assert.That(data.hasSettingsAsset, Is.False); // Note: We just don't write any file in this test, hence false
-            Assert.That(data.hasDefaultSettings, Is.False);
+            Assert.That(data.has_settings_asset, Is.False); // Note: We just don't write any file in this test, hence false
+            Assert.That(data.has_default_settings, Is.False);
 
-            Assert.That(data.updateMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInFixedUpdate));
-            Assert.That(data.compensateForScreenOrientation, Is.EqualTo(true));
-            Assert.That(data.defaultDeadzoneMin, Is.EqualTo(0.4f));
-            Assert.That(data.defaultDeadzoneMax, Is.EqualTo(0.6f));
-            Assert.That(data.defaultButtonPressPoint, Is.EqualTo(0.1f));
-            Assert.That(data.buttonReleaseThreshold, Is.EqualTo(0.7f));
-            Assert.That(data.defaultTapTime, Is.EqualTo(1.3f));
-            Assert.That(data.defaultSlowTapTime, Is.EqualTo(2.3f));
-            Assert.That(data.defaultHoldTime, Is.EqualTo(3.3f));
-            Assert.That(data.tapRadius, Is.EqualTo(customSettings.tapRadius));
-            Assert.That(data.multiTapDelayTime, Is.EqualTo(customSettings.multiTapDelayTime));
-            Assert.That(data.backgroundBehavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.IgnoreFocus));
-            Assert.That(data.editorInputBehaviorInPlayMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView));
-            Assert.That(data.inputActionPropertyDrawerMode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.MultilineEffective));
-            Assert.That(data.maxEventBytesPerUpdate, Is.EqualTo(customSettings.maxEventBytesPerUpdate));
-            Assert.That(data.maxQueuedEventsPerUpdate, Is.EqualTo(customSettings.maxQueuedEventsPerUpdate));
-            Assert.That(data.supportedDevices, Is.EqualTo(customSettings.supportedDevices));
-            Assert.That(data.disableRedundantEventsMerging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
-            Assert.That(data.shortcutKeysConsumeInput, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
+            Assert.That(data.update_mode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.UpdateMode.ProcessEventsInFixedUpdate));
+            Assert.That(data.compensate_for_screen_orientation, Is.EqualTo(true));
+            Assert.That(data.default_deadzone_min, Is.EqualTo(0.4f));
+            Assert.That(data.default_deadzone_max, Is.EqualTo(0.6f));
+            Assert.That(data.default_button_press_point, Is.EqualTo(0.1f));
+            Assert.That(data.button_release_threshold, Is.EqualTo(0.7f));
+            Assert.That(data.default_tap_time, Is.EqualTo(1.3f));
+            Assert.That(data.default_slow_tap_time, Is.EqualTo(2.3f));
+            Assert.That(data.default_hold_time, Is.EqualTo(3.3f));
+            Assert.That(data.tap_radius, Is.EqualTo(customSettings.tapRadius));
+            Assert.That(data.multi_tap_delay_time, Is.EqualTo(customSettings.multiTapDelayTime));
+            Assert.That(data.background_behavior, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.BackgroundBehavior.IgnoreFocus));
+            Assert.That(data.editor_input_behavior_in_playmode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView));
+            Assert.That(data.input_action_property_drawer_mode, Is.EqualTo(InputBuildAnalytic.InputBuildAnalyticData.InputActionPropertyDrawerMode.MultilineEffective));
+            Assert.That(data.max_event_bytes_per_update, Is.EqualTo(customSettings.maxEventBytesPerUpdate));
+            Assert.That(data.max_queued_events_per_update, Is.EqualTo(customSettings.maxQueuedEventsPerUpdate));
+            Assert.That(data.supported_devices, Is.EqualTo(customSettings.supportedDevices));
+            Assert.That(data.disable_redundant_events_merging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
+            Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
 
-            Assert.That(data.featureOptimizedControlsEnabled, Is.True);
-            Assert.That(data.featureReadValueCachingEnabled, Is.True);
-            Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.True);
-            Assert.That(data.featureDisableUnityRemoteSupport, Is.True);
-            Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.True);
+            Assert.That(data.feature_optimized_controls_enabled, Is.True);
+            Assert.That(data.feature_read_value_caching_enabled, Is.True);
+            Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.True);
+            Assert.That(data.feature_disable_unity_remote_support, Is.True);
+            Assert.That(data.feature_run_player_updates_in_editmode, Is.True);
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.featureUseIMGUIEditorForAssets, Is.True);
 #else
-            Assert.That(data.featureUseIMGUIEditorForAssets, Is.False); // No impact
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False); // No impact
 #endif
         }
         finally
@@ -625,10 +625,10 @@ partial class CoreTests
             // Assert: Data content
             var data = (PlayerInputEditorAnalytic.Data)sentAnalyticsEvents[0].data;
             Assert.That(data.behavior, Is.EqualTo(InputEditorAnalytics.PlayerNotificationBehavior.SendMessages));
-            Assert.That(data.hasActions, Is.False);
-            Assert.That(data.hasDefaultMap, Is.False);
-            Assert.That(data.hasUIInputModule, Is.False);
-            Assert.That(data.hasCamera, Is.False);
+            Assert.That(data.has_actions, Is.False);
+            Assert.That(data.has_default_map, Is.False);
+            Assert.That(data.has_ui_input_module, Is.False);
+            Assert.That(data.has_camera, Is.False);
         }
     }
 
@@ -653,9 +653,9 @@ partial class CoreTests
             // Assert: Data content
             var data = (PlayerInputManagerEditorAnalytic.Data)sentAnalyticsEvents[0].data;
             Assert.That(data.behavior, Is.EqualTo(InputEditorAnalytics.PlayerNotificationBehavior.SendMessages));
-            Assert.That(data.joinBehavior, Is.EqualTo(PlayerInputManagerEditorAnalytic.Data.PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed));
-            Assert.That(data.joiningEnabledByDefault, Is.True);
-            Assert.That(data.maxPlayerCount, Is.EqualTo(-1));
+            Assert.That(data.join_behavior, Is.EqualTo(PlayerInputManagerEditorAnalytic.Data.PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed));
+            Assert.That(data.joining_enabled_by_default, Is.True);
+            Assert.That(data.max_player_count, Is.EqualTo(-1));
         }
     }
 
@@ -680,9 +680,9 @@ partial class CoreTests
             // Assert: Data content
             var data = (OnScreenStickEditorAnalytic.Data)sentAnalyticsEvents[0].data;
             Assert.That(data.behavior, Is.EqualTo(OnScreenStickEditorAnalytic.Data.OnScreenStickBehaviour.RelativePositionWithStaticOrigin));
-            Assert.That(data.movementRange, Is.EqualTo(50.0f));
-            Assert.That(data.dynamicOriginRange, Is.EqualTo(100.0f));
-            Assert.That(data.useIsolatedInputActions, Is.False);
+            Assert.That(data.movement_range, Is.EqualTo(50.0f));
+            Assert.That(data.dynamic_origin_range, Is.EqualTo(100.0f));
+            Assert.That(data.use_isolated_input_actions, Is.False);
         }
     }
 
@@ -706,9 +706,9 @@ partial class CoreTests
 
             // Assert: Data content
             var data = (VirtualMouseInputEditorAnalytic.Data)sentAnalyticsEvents[0].data;
-            Assert.That(data.cursorMode, Is.EqualTo(VirtualMouseInputEditorAnalytic.Data.CursorMode.SoftwareCursor));
-            Assert.That(data.cursorSpeed, Is.EqualTo(400.0f));
-            Assert.That(data.scrollSpeed, Is.EqualTo(45.0f));
+            Assert.That(data.cursor_mode, Is.EqualTo(VirtualMouseInputEditorAnalytic.Data.CursorMode.SoftwareCursor));
+            Assert.That(data.cursor_speed, Is.EqualTo(400.0f));
+            Assert.That(data.scroll_speed, Is.EqualTo(45.0f));
         }
     }
 

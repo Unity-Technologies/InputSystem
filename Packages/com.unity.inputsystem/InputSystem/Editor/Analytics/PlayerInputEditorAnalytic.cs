@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class PlayerInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputPlayerInputEditor";
+        public const string kEventName = "input_playerinput_editor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -40,27 +40,27 @@ namespace UnityEngine.InputSystem.Editor
         internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             public InputEditorAnalytics.PlayerNotificationBehavior behavior;
-            public bool hasActions;
-            public bool hasDefaultMap;
-            public bool hasUIInputModule;
-            public bool hasCamera;
+            public bool has_actions;
+            public bool has_default_map;
+            public bool has_ui_input_module;
+            public bool has_camera;
 
             public Data(PlayerInput playerInput)
             {
                 behavior = InputEditorAnalytics.ToNotificationBehavior(playerInput.notificationBehavior);
-                hasActions = playerInput.actions != null;
-                hasDefaultMap = playerInput.defaultActionMap != null;
-                hasUIInputModule = playerInput.uiInputModule != null;
-                hasCamera = playerInput.camera != null;
+                has_actions = playerInput.actions != null;
+                has_default_map = playerInput.defaultActionMap != null;
+                has_ui_input_module = playerInput.uiInputModule != null;
+                has_camera = playerInput.camera != null;
             }
 
             public bool Equals(Data other)
             {
                 return behavior == other.behavior &&
-                    hasActions == other.hasActions &&
-                    hasDefaultMap == other.hasDefaultMap &&
-                    hasUIInputModule == other.hasUIInputModule &&
-                    hasCamera == other.hasCamera;
+                    has_actions == other.has_actions &&
+                    has_default_map == other.has_default_map &&
+                    has_ui_input_module == other.has_ui_input_module &&
+                    has_camera == other.has_camera;
             }
 
             public override bool Equals(object obj)
@@ -72,10 +72,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Note: Not using HashCode.Combine since not available in older C# versions
                 var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ hasActions.GetHashCode();
-                hashCode = (hashCode * 397) ^ hasDefaultMap.GetHashCode();
-                hashCode = (hashCode * 397) ^ hasUIInputModule.GetHashCode();
-                hashCode = (hashCode * 397) ^ hasCamera.GetHashCode();
+                hashCode = (hashCode * 397) ^ has_actions.GetHashCode();
+                hashCode = (hashCode * 397) ^ has_default_map.GetHashCode();
+                hashCode = (hashCode * 397) ^ has_ui_input_module.GetHashCode();
+                hashCode = (hashCode * 397) ^ has_camera.GetHashCode();
                 return hashCode;
             }
         }

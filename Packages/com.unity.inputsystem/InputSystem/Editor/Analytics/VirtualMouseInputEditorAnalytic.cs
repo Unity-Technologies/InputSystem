@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -13,16 +14,16 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class VirtualMouseInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputVirtualMouseInputEditor";
+        public const string kEventName = "input_virtualmouseinput_editor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
         [Serializable]
         internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
-            public CursorMode cursorMode;
-            public float cursorSpeed;
-            public float scrollSpeed;
+            public CursorMode cursor_mode;
+            public float cursor_speed;
+            public float scroll_speed;
 
             public enum CursorMode
             {
@@ -45,14 +46,14 @@ namespace UnityEngine.InputSystem.Editor
 
             public Data(VirtualMouseInput value)
             {
-                cursorMode = ToCursorMode(value.cursorMode);
-                cursorSpeed = value.cursorSpeed;
-                scrollSpeed = value.scrollSpeed;
+                cursor_mode = ToCursorMode(value.cursorMode);
+                cursor_speed = value.cursorSpeed;
+                scroll_speed = value.scrollSpeed;
             }
 
             public bool Equals(Data other)
             {
-                return cursorMode == other.cursorMode && cursorSpeed.Equals(other.cursorSpeed) && scrollSpeed.Equals(other.scrollSpeed);
+                return cursor_mode == other.cursor_mode && cursor_speed.Equals(other.cursor_speed) && scroll_speed.Equals(other.scroll_speed);
             }
 
             public override bool Equals(object obj)
@@ -63,9 +64,9 @@ namespace UnityEngine.InputSystem.Editor
             public override int GetHashCode()
             {
                 // Note: Not using HashCode.Combine since not available in older C# versions
-                var hashCode = cursorMode.GetHashCode();
-                hashCode = (hashCode * 397) ^ cursorSpeed.GetHashCode();
-                hashCode = (hashCode * 397) ^ scrollSpeed.GetHashCode();
+                var hashCode = cursor_mode.GetHashCode();
+                hashCode = (hashCode * 397) ^ cursor_speed.GetHashCode();
+                hashCode = (hashCode * 397) ^ scroll_speed.GetHashCode();
                 return hashCode;
             }
         }

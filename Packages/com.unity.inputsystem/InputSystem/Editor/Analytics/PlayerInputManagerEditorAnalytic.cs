@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class PlayerInputManagerEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputPlayerInputManagerEditor";
+        public const string kEventName = "input_playerinputmanager_editor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -45,16 +45,16 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             public InputEditorAnalytics.PlayerNotificationBehavior behavior;
-            public PlayerJoinBehavior joinBehavior;
-            public bool joiningEnabledByDefault;
-            public int maxPlayerCount;
+            public PlayerJoinBehavior join_behavior;
+            public bool joining_enabled_by_default;
+            public int max_player_count;
 
             public Data(PlayerInputManager value)
             {
                 behavior = InputEditorAnalytics.ToNotificationBehavior(value.notificationBehavior);
-                joinBehavior = ToPlayerJoinBehavior(value.joinBehavior);
-                joiningEnabledByDefault = value.joiningEnabled;
-                maxPlayerCount = value.maxPlayerCount;
+                join_behavior = ToPlayerJoinBehavior(value.joinBehavior);
+                joining_enabled_by_default = value.joiningEnabled;
+                max_player_count = value.maxPlayerCount;
             }
 
             private static PlayerJoinBehavior ToPlayerJoinBehavior(UnityEngine.InputSystem.PlayerJoinBehavior value)
@@ -75,9 +75,9 @@ namespace UnityEngine.InputSystem.Editor
             public bool Equals(Data other)
             {
                 return behavior == other.behavior &&
-                    joinBehavior == other.joinBehavior &&
-                    joiningEnabledByDefault == other.joiningEnabledByDefault &&
-                    maxPlayerCount == other.maxPlayerCount;
+                    join_behavior == other.join_behavior &&
+                    joining_enabled_by_default == other.joining_enabled_by_default &&
+                    max_player_count == other.max_player_count;
             }
 
             public override bool Equals(object obj)
@@ -89,9 +89,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Note: Not using HashCode.Combine since not available in older C# versions
                 var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ joinBehavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ joiningEnabledByDefault.GetHashCode();
-                hashCode = (hashCode * 397) ^ maxPlayerCount.GetHashCode();
+                hashCode = (hashCode * 397) ^ join_behavior.GetHashCode();
+                hashCode = (hashCode * 397) ^ joining_enabled_by_default.GetHashCode();
+                hashCode = (hashCode * 397) ^ max_player_count.GetHashCode();
                 return hashCode;
             }
         }

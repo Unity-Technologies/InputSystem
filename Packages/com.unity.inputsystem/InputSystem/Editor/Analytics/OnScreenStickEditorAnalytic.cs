@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.OnScreen;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -13,7 +14,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class OnScreenStickEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputOnScreenStickEditor";
+        public const string kEventName = "input_onscreenstick_editor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -48,22 +49,22 @@ namespace UnityEngine.InputSystem.Editor
             public Data(OnScreenStick value)
             {
                 behavior = ToBehaviour(value.behaviour);
-                movementRange = value.movementRange;
-                dynamicOriginRange = value.dynamicOriginRange;
-                useIsolatedInputActions = value.useIsolatedInputActions;
+                movement_range = value.movementRange;
+                dynamic_origin_range = value.dynamicOriginRange;
+                use_isolated_input_actions = value.useIsolatedInputActions;
             }
 
             public OnScreenStickBehaviour behavior;
-            public float movementRange;
-            public float dynamicOriginRange;
-            public bool useIsolatedInputActions;
+            public float movement_range;
+            public float dynamic_origin_range;
+            public bool use_isolated_input_actions;
 
             public bool Equals(Data other)
             {
                 return behavior == other.behavior &&
-                    movementRange.Equals(other.movementRange) &&
-                    dynamicOriginRange.Equals(other.dynamicOriginRange) &&
-                    useIsolatedInputActions == other.useIsolatedInputActions;
+                    movement_range.Equals(other.movement_range) &&
+                    dynamic_origin_range.Equals(other.dynamic_origin_range) &&
+                    use_isolated_input_actions == other.use_isolated_input_actions;
             }
 
             public override bool Equals(object obj)
@@ -75,9 +76,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Note: Not using HashCode.Combine since not available in older C# versions
                 var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ movementRange.GetHashCode();
-                hashCode = (hashCode * 397) ^ dynamicOriginRange.GetHashCode();
-                hashCode = (hashCode * 397) ^ useIsolatedInputActions.GetHashCode();
+                hashCode = (hashCode * 397) ^ movement_range.GetHashCode();
+                hashCode = (hashCode * 397) ^ dynamic_origin_range.GetHashCode();
+                hashCode = (hashCode * 397) ^ use_isolated_input_actions.GetHashCode();
                 return hashCode;
             }
         }

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -13,7 +14,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputActionsEditorSessionAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "inputActionEditorWindowSession";
+        public const string kEventName = "input_action_editor_window_session";
         public const int kMaxEventsPerHour = 100;     // default: 1000
         public const int kMaxNumberOfElements = 100;     // default: 1000
 
@@ -35,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
         public void RegisterActionMapEdit()
         {
             if (ImplicitFocus())
-                ++m_Data.actionMapModificationCount;
+                ++m_Data.action_map_modification_count;
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         public void RegisterActionEdit()
         {
             if (ImplicitFocus())
-                ++m_Data.actionModificationCount;
+                ++m_Data.action_modification_count;
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
         public void RegisterBindingEdit()
         {
             if (ImplicitFocus())
-                ++m_Data.bindingModificationCount;
+                ++m_Data.binding_modification_count;
         }
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
         public void RegisterControlSchemeEdit()
         {
             if (ImplicitFocus())
-                ++m_Data.controlSchemeModificationCount;
+                ++m_Data.control_scheme_modification_count;
         }
 
         /// <summary>
@@ -91,8 +92,8 @@ namespace UnityEngine.InputSystem.Editor
 
             var duration = currentTime - m_FocusStart;
             m_FocusStart = float.NaN;
-            m_Data.sessionFocusDurationSeconds += (float)duration;
-            ++m_Data.sessionFocusSwitchCount;
+            m_Data.session_focus_duration_seconds += (float)duration;
+            ++m_Data.session_focus_switch_count;
         }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!hasSession)
                 return;     // No pending session
 
-            ++m_Data.explicitSaveCount;
+            ++m_Data.explicit_save_count;
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!hasSession)
                 return;     // No pending session
 
-            ++m_Data.autoSaveCount;
+            ++m_Data.auto_save_count;
         }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!hasSession)
                 return;     // No pending session
 
-            ++m_Data.resetCount;
+            ++m_Data.reset_count;
         }
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Compute and record total session duration
             var duration = currentTime - m_SessionStart;
-            m_Data.sessionDurationSeconds += (float)duration;
+            m_Data.session_duration_seconds += (float)duration;
 
             // Send analytics event
             runtime.SendAnalytic(this);
@@ -223,7 +224,7 @@ namespace UnityEngine.InputSystem.Editor
         // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
         // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
         private double currentTime => runtime.currentTime;
-        private bool isValid => m_Data.sessionDurationSeconds >= 0;
+        private bool isValid => m_Data.session_duration_seconds >= 0;
 
         [Serializable]
         public struct Data : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
@@ -249,17 +250,17 @@ namespace UnityEngine.InputSystem.Editor
             public Data(Kind kind)
             {
                 this.kind = kind;
-                sessionDurationSeconds = 0;
-                sessionFocusDurationSeconds = 0;
-                sessionFocusDurationSeconds = 0;
-                sessionFocusSwitchCount = 0;
-                actionMapModificationCount = 0;
-                actionModificationCount = 0;
-                bindingModificationCount = 0;
-                explicitSaveCount = 0;
-                autoSaveCount = 0;
-                resetCount = 0;
-                controlSchemeModificationCount = 0;
+                session_duration_seconds = 0;
+                session_focus_duration_seconds = 0;
+                session_focus_duration_seconds = 0;
+                session_focus_switch_count = 0;
+                action_map_modification_count = 0;
+                action_modification_count = 0;
+                binding_modification_count = 0;
+                explicit_save_count = 0;
+                auto_save_count = 0;
+                reset_count = 0;
+                control_scheme_modification_count = 0;
             }
 
             /// <summary>
@@ -270,54 +271,54 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// The total duration for the session, i.e. the duration during which the editor window was open.
             /// </summary>
-            public float sessionDurationSeconds;
+            public float session_duration_seconds;
 
             /// <summary>
             /// The total duration for which the editor window was open and had focus.
             /// </summary>
-            public float sessionFocusDurationSeconds;
+            public float session_focus_duration_seconds;
 
             /// <summary>
             /// Specifies the number of times the window has transitioned from not having focus to having focus in a single session.
             /// </summary>
-            public int sessionFocusSwitchCount;
+            public int session_focus_switch_count;
 
             /// <summary>
             /// The total number of action map modifications during the session.
             /// </summary>
-            public int actionMapModificationCount;
+            public int action_map_modification_count;
 
             /// <summary>
             /// The total number of action modifications during the session.
             /// </summary>
-            public int actionModificationCount;
+            public int action_modification_count;
 
             /// <summary>
             /// The total number of binding modifications during the session.
             /// </summary>
-            public int bindingModificationCount;
+            public int binding_modification_count;
 
             /// <summary>
             /// The total number of controls scheme modifications during the session.
             /// </summary>
-            public int controlSchemeModificationCount;
+            public int control_scheme_modification_count;
 
             /// <summary>
             /// The total number of explicit saves during the session, i.e. as in user-initiated save.
             /// </summary>
-            public int explicitSaveCount;
+            public int explicit_save_count;
 
             /// <summary>
             /// The total number of automatic saves during the session, i.e. as in auto-save on close or focus-lost.
             /// </summary>
-            public int autoSaveCount;
+            public int auto_save_count;
 
             /// <summary>
             /// The total number of user-initiated resets during the session, i.e. as in using Reset option in menu.
             /// </summary>
-            public int resetCount;
+            public int reset_count;
 
-            public bool isValid => kind != Kind.Invalid && sessionDurationSeconds >= 0;
+            public bool isValid => kind != Kind.Invalid && session_duration_seconds >= 0;
         }
     }
 }
