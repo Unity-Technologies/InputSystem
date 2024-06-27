@@ -27,8 +27,7 @@ namespace UnityEngine.InputSystem
         /// are involved. While initial engagement required by <see cref="JoinPlayersWhenButtonIsPressed"/> or
         /// <see cref="JoinPlayersWhenJoinActionIsTriggered"/> allows pairing a single device reliably to a player,
         /// additional devices that may be required by a control scheme will still get paired automatically out of the
-        /// pool of available devices. This means that, for example, if a given player joins by clicking a mouse button
-        /// ...
+        /// pool of available devices.
         /// </remarks>
         JoinPlayersManually,
     }
