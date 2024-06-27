@@ -194,7 +194,7 @@ namespace UnityEngine.InputSystem
     /// Input device representing a gyroscope sensor.
     /// </summary>
     /// <remarks>
-    /// A gyroscope let's you measure the angular velocity of a device, and can be useful to control content by rotating a device.
+    /// A gyroscope lets you measure the angular velocity of a device, and can be useful to control content by rotating a device.
     /// </remarks>
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
