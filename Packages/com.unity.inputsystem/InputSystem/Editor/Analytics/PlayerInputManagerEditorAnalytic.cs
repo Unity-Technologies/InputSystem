@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class PlayerInputManagerEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "playerInputManagerEditor";
+        public const string kEventName = "inputPlayerInputManagerEditor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 

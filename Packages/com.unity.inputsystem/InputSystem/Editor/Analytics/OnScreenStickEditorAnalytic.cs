@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class OnScreenStickEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "onScreenStickEditor";
+        public const string kEventName = "inputOnScreenStickEditor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -47,20 +47,20 @@ namespace UnityEngine.InputSystem.Editor
 
             public Data(OnScreenStick value)
             {
-                behaviour = ToBehaviour(value.behaviour);
+                behavior = ToBehaviour(value.behaviour);
                 movementRange = value.movementRange;
                 dynamicOriginRange = value.dynamicOriginRange;
                 useIsolatedInputActions = value.useIsolatedInputActions;
             }
 
-            public OnScreenStickBehaviour behaviour;
+            [FormerlySerializedAs("behaviour")] public OnScreenStickBehaviour behavior;
             public float movementRange;
             public float dynamicOriginRange;
             public bool useIsolatedInputActions;
 
             public bool Equals(Data other)
             {
-                return behaviour == other.behaviour &&
+                return behavior == other.behavior &&
                     movementRange.Equals(other.movementRange) &&
                     dynamicOriginRange.Equals(other.dynamicOriginRange) &&
                     useIsolatedInputActions == other.useIsolatedInputActions;
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Editor
 
             public override int GetHashCode()
             {
-                return HashCode.Combine((int)behaviour, movementRange, dynamicOriginRange, useIsolatedInputActions);
+                return HashCode.Combine((int)behavior, movementRange, dynamicOriginRange, useIsolatedInputActions);
             }
         }
 

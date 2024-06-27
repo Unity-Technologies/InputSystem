@@ -10,15 +10,15 @@ namespace UnityEngine.InputSystem.Editor
     [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
         maxNumberOfElements: kMaxNumberOfElements, vendorKey: UnityEngine.InputSystem.InputAnalytics.kVendorKey)]
 #endif // UNITY_2023_2_OR_NEWER
-    internal class PlayerInputEditorAnalytics : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
+    internal class PlayerInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "playerInputEditor";
+        public const string kEventName = "inputPlayerInputEditor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
         private readonly Data m_Data;
 
-        public PlayerInputEditorAnalytics(ref Data data)
+        public PlayerInputEditorAnalytic(ref Data data)
         {
             m_Data = data;
         }

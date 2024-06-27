@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using UnityEngine.Analytics;
 using UnityEngine.InputSystem.UI;
 
 namespace UnityEngine.InputSystem.Editor
@@ -14,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class VirtualMouseInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "virtualMouseInputEditor";
+        public const string kEventName = "inputVirtualMouseInputEditor";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -72,7 +71,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private readonly Data m_Data;
 
-        public VirtualMouseInputEditorAnalytic(Data data)
+        public VirtualMouseInputEditorAnalytic(ref Data data)
         {
             m_Data = data;
         }

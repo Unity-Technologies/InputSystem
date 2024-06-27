@@ -11,6 +11,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.OnScreen;
+using UnityEngine.InputSystem.UI;
 using InputAnalytics = UnityEngine.InputSystem.InputAnalytics;
 using Object = UnityEngine.Object;
 
@@ -224,7 +226,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalytics__IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
+    public void Analytics_ShouldReportEditorSessionAnalytics_IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
     {
         CollectAnalytics(InputActionsEditorSessionAnalytic.kEventName);
 
@@ -326,7 +328,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfHavingMultipleFocusSessionsWithinSession()
+    public void Analytics_ShouldReportEditorSessionAnalyticsWithFocusTime_IfHavingMultipleFocusSessionsWithinSession()
     {
         TestMultipleEditorFocusSessions(
             new InputActionsEditorSessionAnalytic(InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings));
@@ -334,7 +336,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__WhenActionsDriveImplicitConditions()
+    public void Analytics_ShouldReportEditorSessionAnalyticsWithFocusTime_WhenActionsDriveImplicitConditions()
     {
         CollectAnalytics(InputActionsEditorSessionAnalytic.kEventName);
 
@@ -386,7 +388,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalytics__IfMultipleSessionsAreReportedUsingTheSameInstance()
+    public void Analytics_ShouldReportEditorSessionAnalytics_IfMultipleSessionsAreReportedUsingTheSameInstance()
     {
         // We reuse an existing test case to prove that the object is reset properly and can be reused after
         // ending the session. We currently let CollectAnalytics reset test harness state which is fine for
@@ -400,7 +402,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportBuildAnalytics_WhenNotHavingSettingsAsset()
+    public void Analytics_ShouldReportBuildAnalytics_WhenNotHavingSettingsAsset()
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
@@ -473,7 +475,7 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportBuildAnalytics_WhenHavingSettingsAssetWithCustomSettings()
+    public void Analytics_ShouldReportBuildAnalytics_WhenHavingSettingsAssetWithCustomSettings()
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
@@ -582,7 +584,7 @@ partial class CoreTests
     [TestCase(InputSystemComponent.OnScreenButton)]
     [TestCase(InputSystemComponent.OnScreenStick)]
     [Category("Analytics")]
-    public void Analytics__ShouldReportComponentAnalytics_WhenEditorIsCreatedAndDestroyed(InputSystemComponent component)
+    public void Analytics_ShouldReportComponentAnalytics_WhenEditorIsCreatedAndDestroyed(InputSystemComponent component)
     {
         CollectAnalytics(InputComponentEditorAnalytic.kEventName);
 
@@ -597,6 +599,114 @@ partial class CoreTests
         var data = (InputComponentEditorAnalytic.Data)sentAnalyticsEvents[0].data;
         Assert.That(data.component, Is.EqualTo(component));
     }
+
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportPlayerInputData()
+    {
+        CollectAnalytics(PlayerInputEditorAnalytic.kEventName);
+
+        using (var gameObject = Scoped.Object(new GameObject()))
+        {
+            var playerInput = gameObject.value.AddComponent<PlayerInput>();
+        
+            var analyticData = new PlayerInputEditorAnalytic.Data(playerInput);
+            new PlayerInputEditorAnalytic(ref analyticData).Send();
+        
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(PlayerInputEditorAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<PlayerInputEditorAnalytic.Data>());
+
+            // Assert: Data content
+            var data = (PlayerInputEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+            Assert.That(data.behavior, Is.EqualTo(InputEditorAnalytics.PlayerNotificationBehavior.SendMessages));
+            Assert.That(data.hasActions, Is.False);
+            Assert.That(data.hasDefaultMap, Is.False);
+            Assert.That(data.hasUIInputModule, Is.False);
+            Assert.That(data.hasCamera, Is.False);    
+        }
+    }
+    
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportPlayerInputManagerData()
+    {
+        CollectAnalytics(PlayerInputManagerEditorAnalytic.kEventName);
+
+        using (var gameObject = Scoped.Object(new GameObject()))
+        {
+            var playerInputManager = gameObject.value.AddComponent<PlayerInputManager>();
+        
+            var analyticData = new PlayerInputManagerEditorAnalytic.Data(playerInputManager);
+            new PlayerInputManagerEditorAnalytic(ref analyticData).Send();
+        
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(PlayerInputManagerEditorAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<PlayerInputManagerEditorAnalytic.Data>());
+
+            // Assert: Data content
+            var data = (PlayerInputManagerEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+            Assert.That(data.behavior, Is.EqualTo(InputEditorAnalytics.PlayerNotificationBehavior.SendMessages));
+            Assert.That(data.joinBehavior, Is.EqualTo(PlayerInputManagerEditorAnalytic.Data.PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed));
+            Assert.That(data.joiningEnabledByDefault, Is.True);
+            Assert.That(data.maxPlayerCount, Is.EqualTo(-1));
+        }
+    }
+    
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportOnScreenStickData()
+    {
+        CollectAnalytics(OnScreenStickEditorAnalytic.kEventName);
+
+        using (var gameObject = Scoped.Object(new GameObject()))
+        {
+            var onScreenStick = gameObject.value.AddComponent<OnScreenStick>();
+        
+            var analyticData = new OnScreenStickEditorAnalytic.Data(onScreenStick);
+            new OnScreenStickEditorAnalytic(ref analyticData).Send();
+        
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(OnScreenStickEditorAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<OnScreenStickEditorAnalytic.Data>());
+
+            // Assert: Data content
+            var data = (OnScreenStickEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+            Assert.That(data.behavior, Is.EqualTo(OnScreenStickEditorAnalytic.Data.OnScreenStickBehaviour.RelativePositionWithStaticOrigin));
+            Assert.That(data.movementRange, Is.EqualTo(50.0f));
+            Assert.That(data.dynamicOriginRange, Is.EqualTo(100.0f));
+            Assert.That(data.useIsolatedInputActions, Is.False);
+        }
+    }    
+    
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportVirtualMouseInputData()
+    {
+        CollectAnalytics(VirtualMouseInputEditorAnalytic.kEventName);
+
+        using (var gameObject = Scoped.Object(new GameObject()))
+        {
+            var virtualMouseInput = gameObject.value.AddComponent<VirtualMouseInput>();
+        
+            var analyticData = new VirtualMouseInputEditorAnalytic.Data(virtualMouseInput);
+            new VirtualMouseInputEditorAnalytic(ref analyticData).Send();
+        
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(VirtualMouseInputEditorAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<VirtualMouseInputEditorAnalytic.Data>());
+
+            // Assert: Data content
+            var data = (VirtualMouseInputEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+            Assert.That(data.cursorMode, Is.EqualTo(VirtualMouseInputEditorAnalytic.Data.CursorMode.SoftwareCursor));
+            Assert.That(data.cursorSpeed, Is.EqualTo(400.0f));
+            Assert.That(data.scrollSpeed, Is.EqualTo(45.0f));
+        }
+    }    
 
     // Note: Currently not testing proper analytics reporting when editor is enabled/disabled since unclear how
     //       to achieve this with test framework. This would be a good future improvement.

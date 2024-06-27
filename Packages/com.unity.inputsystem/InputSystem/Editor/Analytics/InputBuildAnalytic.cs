@@ -3,7 +3,6 @@ using System;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
-using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -60,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
         /// Input system build analytics data structure.
         /// </summary>
         [Serializable]
-        internal readonly struct InputBuildAnalyticData : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        internal struct InputBuildAnalyticData : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             #region InputSettings
 
@@ -216,33 +215,33 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// Represents <see cref="InputSettings.updateMode"/> and indicates how the project handles updates.
             /// </summary>
-            public readonly UpdateMode updateMode;
+            public UpdateMode updateMode;
 
             /// <summary>
             /// Represents <see cref="InputSettings.compensateForScreenOrientation"/> and if true automatically
             /// adjust rotations when the screen orientation changes.
             /// </summary>
-            public readonly  bool compensateForScreenOrientation;
+            public bool compensateForScreenOrientation;
 
             /// <summary>
             /// Represents <see cref="InputSettings.backgroundBehavior"/> which determines what happens when application
             /// focus changes and how the system handle input while running in the background.
             /// </summary>
-            public readonly BackgroundBehavior backgroundBehavior;
+            public BackgroundBehavior backgroundBehavior;
 
             // Note: InputSettings.filterNoiseOnCurrent not present since already deprecated when these analytics
             //       where added.
-            public readonly float defaultDeadzoneMin;
+            public float defaultDeadzoneMin;
 
             /// <summary>
             /// Represents <see cref="InputSettings.defaultDeadzoneMax"/>
             /// </summary>
-            public readonly float defaultDeadzoneMax;
+            public float defaultDeadzoneMax;
 
             /// <summary>
             /// Represents <see cref="InputSettings.defaultButtonPressPoint"/>
             /// </summary>
-            public readonly float defaultButtonPressPoint;
+            public float defaultButtonPressPoint;
 
             /// <summary>
             /// Represents <see cref="InputSettings.buttonReleaseThreshold"/>

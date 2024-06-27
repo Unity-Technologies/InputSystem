@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using UnityEngine.Analytics;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -38,6 +37,9 @@ namespace UnityEngine.InputSystem.Editor
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
+        /// <summary>
+        /// The associated component type.
+        /// </summary>
         private readonly InputSystemComponent m_Component;
 
         /// <summary>

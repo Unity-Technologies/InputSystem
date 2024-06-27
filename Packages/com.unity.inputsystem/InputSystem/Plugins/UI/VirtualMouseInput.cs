@@ -626,7 +626,7 @@ namespace UnityEngine.InputSystem.UI
                 new InputComponentEditorAnalytic(InputSystemComponent.VirtualMouseInput).Send();
                 var data = new VirtualMouseInputEditorAnalytic.Data(target as VirtualMouseInput);
                 if (!data.Equals(m_Analytics))
-                    new VirtualMouseInputEditorAnalytic(data).Send();
+                    new VirtualMouseInputEditorAnalytic(ref data).Send();
             }
         }
         #endif
