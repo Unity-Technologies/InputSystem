@@ -199,7 +199,7 @@ namespace UnityEngine.InputSystem.Editor
                     settings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks);
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                featureUseIMGUIEditorForAssets =
+                feature_use_imgui_editor_for_assets =
                     settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
 #else
                 feature_use_imgui_editor_for_assets = false;
