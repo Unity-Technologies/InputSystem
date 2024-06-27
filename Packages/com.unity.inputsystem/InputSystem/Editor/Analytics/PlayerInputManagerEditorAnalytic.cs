@@ -87,7 +87,12 @@ namespace UnityEngine.InputSystem.Editor
 
             public override int GetHashCode()
             {
-                return HashCode.Combine((int)behavior, (int)joinBehavior, joiningEnabledByDefault, maxPlayerCount);
+                // Note: Not using HashCode.Combine since not available in older C# versions
+                var hashCode = behavior.GetHashCode();
+                hashCode = (hashCode * 397) ^ joinBehavior.GetHashCode();
+                hashCode = (hashCode * 397) ^ joiningEnabledByDefault.GetHashCode();
+                hashCode = (hashCode * 397) ^ maxPlayerCount.GetHashCode();
+                return hashCode;
             }
         }
     }

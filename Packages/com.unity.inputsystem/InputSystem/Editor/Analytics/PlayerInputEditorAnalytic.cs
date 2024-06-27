@@ -70,7 +70,13 @@ namespace UnityEngine.InputSystem.Editor
 
             public override int GetHashCode()
             {
-                return HashCode.Combine((int)behavior, hasActions, hasDefaultMap, hasUIInputModule, hasCamera);
+                // Note: Not using HashCode.Combine since not available in older C# versions
+                var hashCode = behavior.GetHashCode();
+                hashCode = (hashCode * 397) ^ hasActions.GetHashCode();
+                hashCode = (hashCode * 397) ^ hasDefaultMap.GetHashCode();
+                hashCode = (hashCode * 397) ^ hasUIInputModule.GetHashCode();
+                hashCode = (hashCode * 397) ^ hasCamera.GetHashCode();
+                return hashCode;
             }
         }
     }

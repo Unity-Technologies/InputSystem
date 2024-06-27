@@ -26,7 +26,8 @@ namespace UnityEngine.InputSystem.Editor
             m_BuildReport = buildReport;
         }
 
-        public InputAnalytics.InputAnalyticInfo info { get; }
+        public InputAnalytics.InputAnalyticInfo info =>
+            new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
         public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
@@ -169,7 +170,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionsPath = inputSystemActions == null ? null : AssetDatabase.GetAssetPath(inputSystemActions);
                 hasProjectWideInputActionAsset = !string.IsNullOrEmpty(actionsPath);
 #else
-                hasActions = false;
+                hasProjectWideInputActionAsset = false;
 #endif
 
                 var settingsPath = settings == null ? null : AssetDatabase.GetAssetPath(settings);

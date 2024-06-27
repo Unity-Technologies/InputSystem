@@ -62,7 +62,11 @@ namespace UnityEngine.InputSystem.Editor
 
             public override int GetHashCode()
             {
-                return HashCode.Combine((int)cursorMode, cursorSpeed, scrollSpeed);
+                // Note: Not using HashCode.Combine since not available in older C# versions
+                var hashCode = cursorMode.GetHashCode();
+                hashCode = (hashCode * 397) ^ cursorSpeed.GetHashCode();
+                hashCode = (hashCode * 397) ^ scrollSpeed.GetHashCode();
+                return hashCode;
             }
         }
 

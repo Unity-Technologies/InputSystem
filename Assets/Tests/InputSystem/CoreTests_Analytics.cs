@@ -249,9 +249,9 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
@@ -301,9 +301,9 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
@@ -361,9 +361,9 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
         #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
         #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
@@ -565,7 +565,11 @@ partial class CoreTests
             Assert.That(data.featureParanoidReadValueCachingChecksEnabled, Is.True);
             Assert.That(data.featureDisableUnityRemoteSupport, Is.True);
             Assert.That(data.featureRunPlayerUpdatesInEditMode, Is.True);
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.featureUseIMGUIEditorForAssets, Is.True);
+#else
+            Assert.That(data.featureUseIMGUIEditorForAssets, Is.False); // No impact
+#endif
         }
         finally
         {
@@ -609,10 +613,10 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var playerInput = gameObject.value.AddComponent<PlayerInput>();
-        
+
             var analyticData = new PlayerInputEditorAnalytic.Data(playerInput);
             new PlayerInputEditorAnalytic(ref analyticData).Send();
-        
+
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
             Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(PlayerInputEditorAnalytic.kEventName));
@@ -624,10 +628,10 @@ partial class CoreTests
             Assert.That(data.hasActions, Is.False);
             Assert.That(data.hasDefaultMap, Is.False);
             Assert.That(data.hasUIInputModule, Is.False);
-            Assert.That(data.hasCamera, Is.False);    
+            Assert.That(data.hasCamera, Is.False);
         }
     }
-    
+
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportPlayerInputManagerData()
@@ -637,10 +641,10 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var playerInputManager = gameObject.value.AddComponent<PlayerInputManager>();
-        
+
             var analyticData = new PlayerInputManagerEditorAnalytic.Data(playerInputManager);
             new PlayerInputManagerEditorAnalytic(ref analyticData).Send();
-        
+
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
             Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(PlayerInputManagerEditorAnalytic.kEventName));
@@ -654,7 +658,7 @@ partial class CoreTests
             Assert.That(data.maxPlayerCount, Is.EqualTo(-1));
         }
     }
-    
+
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportOnScreenStickData()
@@ -664,10 +668,10 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var onScreenStick = gameObject.value.AddComponent<OnScreenStick>();
-        
+
             var analyticData = new OnScreenStickEditorAnalytic.Data(onScreenStick);
             new OnScreenStickEditorAnalytic(ref analyticData).Send();
-        
+
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
             Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(OnScreenStickEditorAnalytic.kEventName));
@@ -680,8 +684,8 @@ partial class CoreTests
             Assert.That(data.dynamicOriginRange, Is.EqualTo(100.0f));
             Assert.That(data.useIsolatedInputActions, Is.False);
         }
-    }    
-    
+    }
+
     [Test]
     [Category("Analytics")]
     public void Analytics_ShouldReportVirtualMouseInputData()
@@ -691,10 +695,10 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var virtualMouseInput = gameObject.value.AddComponent<VirtualMouseInput>();
-        
+
             var analyticData = new VirtualMouseInputEditorAnalytic.Data(virtualMouseInput);
             new VirtualMouseInputEditorAnalytic(ref analyticData).Send();
-        
+
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
             Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(VirtualMouseInputEditorAnalytic.kEventName));
@@ -706,7 +710,7 @@ partial class CoreTests
             Assert.That(data.cursorSpeed, Is.EqualTo(400.0f));
             Assert.That(data.scrollSpeed, Is.EqualTo(45.0f));
         }
-    }    
+    }
 
     // Note: Currently not testing proper analytics reporting when editor is enabled/disabled since unclear how
     //       to achieve this with test framework. This would be a good future improvement.

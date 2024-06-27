@@ -73,7 +73,12 @@ namespace UnityEngine.InputSystem.Editor
 
             public override int GetHashCode()
             {
-                return HashCode.Combine((int)behavior, movementRange, dynamicOriginRange, useIsolatedInputActions);
+                // Note: Not using HashCode.Combine since not available in older C# versions
+                var hashCode = behavior.GetHashCode();
+                hashCode = (hashCode * 397) ^ movementRange.GetHashCode();
+                hashCode = (hashCode * 397) ^ dynamicOriginRange.GetHashCode();
+                hashCode = (hashCode * 397) ^ useIsolatedInputActions.GetHashCode();
+                return hashCode;
             }
         }
 
