@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
-        /// 
+        ///
         /// You can also check through all numbered buttons on the mouse: (this example does not cause allocations)
         /// <example>
         /// <code>
@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
-        /// 
+        ///
         /// Or you can look up controls by name, like this:
         /// <example>
         /// <code>

@@ -41,7 +41,7 @@ There are scripting symbols defined which allow you to use conditional compilati
 
 ## Comparison of API in the old Input Manager and the new Input System package
 
-Below is a list comparing the API from the old Input Manager with the corresponding API for the new Input System package. 
+Below is a list comparing the API from the old Input Manager with the corresponding API for the new Input System package.
 All of the new Input System package APIs listed below are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity.
 
 ### Action-based input
