@@ -2,6 +2,7 @@
 using System;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.Build.Content;
 using UnityEditor.Build.Reporting;
 using UnityEngine.Serialization;
 
@@ -16,7 +17,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputBuildAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "input_build";
+        public const string kEventName = "input_build_completed";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 

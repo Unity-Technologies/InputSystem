@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using UnityEditor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Serialization;
 
@@ -14,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputActionsEditorSessionAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "input_action_editor_window_session";
+        public const string kEventName = "input_actionasset_editor_closed";
         public const int kMaxEventsPerHour = 100;     // default: 1000
         public const int kMaxNumberOfElements = 100;     // default: 1000
 
@@ -252,7 +253,6 @@ namespace UnityEngine.InputSystem.Editor
                 this.kind = kind;
                 session_duration_seconds = 0;
                 session_focus_duration_seconds = 0;
-                session_focus_duration_seconds = 0;
                 session_focus_switch_count = 0;
                 action_map_modification_count = 0;
                 action_modification_count = 0;
@@ -271,12 +271,12 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// The total duration for the session, i.e. the duration during which the editor window was open.
             /// </summary>
-            public float session_duration_seconds;
+            public double session_duration_seconds;
 
             /// <summary>
             /// The total duration for which the editor window was open and had focus.
             /// </summary>
-            public float session_focus_duration_seconds;
+            public double session_focus_duration_seconds;
 
             /// <summary>
             /// Specifies the number of times the window has transitioned from not having focus to having focus in a single session.

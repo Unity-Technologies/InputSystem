@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class VirtualMouseInputEditorAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "input_virtualmouseinput_editor";
+        public const string kEventName = "input_virtualmouseinput_editor_destroyed";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
