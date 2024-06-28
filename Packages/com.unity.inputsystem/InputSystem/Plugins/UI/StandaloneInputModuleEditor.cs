@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.UI.Editor
 
         public void OnDisable()
         {
-            new InputComponentEditorAnalytic(InputSystemComponent.StandaloneInputModule);
+            new InputComponentEditorAnalytic(InputSystemComponent.StandaloneInputModule).Send();
         }
     }
 }

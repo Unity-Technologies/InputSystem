@@ -8,11 +8,14 @@ using Unity.PerformanceTesting.Data;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.InputSystem.UI;
+using Editor = UnityEditor.Editor;
 using InputAnalytics = UnityEngine.InputSystem.InputAnalytics;
 using Object = UnityEngine.Object;
 
@@ -579,29 +582,34 @@ partial class CoreTests
         }
     }
 
-    [TestCase(InputSystemComponent.PlayerInput)]
-    [TestCase(InputSystemComponent.PlayerInputManager)]
-    [TestCase(InputSystemComponent.InputSystemUIInputModule)]
-    [TestCase(InputSystemComponent.StandaloneInputModule)]
-    [TestCase(InputSystemComponent.VirtualMouseInput)]
-    [TestCase(InputSystemComponent.TouchSimulation)]
-    [TestCase(InputSystemComponent.OnScreenButton)]
-    [TestCase(InputSystemComponent.OnScreenStick)]
+    [TestCase(InputSystemComponent.PlayerInput, typeof(PlayerInput))]
+    [TestCase(InputSystemComponent.PlayerInputManager, typeof(PlayerInputManager))]
+    [TestCase(InputSystemComponent.InputSystemUIInputModule, typeof(InputSystemUIInputModule))]
+    [TestCase(InputSystemComponent.StandaloneInputModule, typeof(StandaloneInputModule))]
+    [TestCase(InputSystemComponent.VirtualMouseInput, typeof(VirtualMouseInput))]
+    [TestCase(InputSystemComponent.TouchSimulation, typeof(TouchSimulation))]
+    [TestCase(InputSystemComponent.OnScreenButton, typeof(OnScreenButton))]
+    [TestCase(InputSystemComponent.OnScreenStick, typeof(OnScreenStick))]
     [Category("Analytics")]
-    public void Analytics_ShouldReportComponentAnalytics_WhenEditorIsCreatedAndDestroyed(InputSystemComponent component)
+    public void Analytics_ShouldReportComponentAnalytics_WhenEditorIsCreatedAndDestroyed(
+        InputSystemComponent componentEnum, Type componentType)
     {
         CollectAnalytics(InputComponentEditorAnalytic.kEventName);
 
-        new InputComponentEditorAnalytic(component).Send();
+        using (var gameObject = Scoped.Object(new GameObject()))
+        {
+            var component = gameObject.value.AddComponent(componentType);
+            Object.DestroyImmediate(Editor.CreateEditor(component));
 
-        // Assert: Data received
-        Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputComponentEditorAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputComponentEditorAnalytic.Data>());
+            // Assert: Data received
+            Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+            Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputComponentEditorAnalytic.kEventName));
+            Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputComponentEditorAnalytic.Data>());
 
-        // Assert: Data content
-        var data = (InputComponentEditorAnalytic.Data)sentAnalyticsEvents[0].data;
-        Assert.That(data.component, Is.EqualTo(component));
+            // Assert: Data content
+            var data = (InputComponentEditorAnalytic.Data)sentAnalyticsEvents[0].data;
+            Assert.That(data.component, Is.EqualTo(componentEnum));
+        }
     }
 
     [Test]
@@ -613,9 +621,7 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var playerInput = gameObject.value.AddComponent<PlayerInput>();
-
-            var analyticData = new PlayerInputEditorAnalytic.Data(playerInput);
-            new PlayerInputEditorAnalytic(ref analyticData).Send();
+            Object.DestroyImmediate(Editor.CreateEditor(playerInput));
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
@@ -641,9 +647,7 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var playerInputManager = gameObject.value.AddComponent<PlayerInputManager>();
-
-            var analyticData = new PlayerInputManagerEditorAnalytic.Data(playerInputManager);
-            new PlayerInputManagerEditorAnalytic(ref analyticData).Send();
+            Object.DestroyImmediate(Editor.CreateEditor(playerInputManager));
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
@@ -669,9 +673,7 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var onScreenStick = gameObject.value.AddComponent<OnScreenStick>();
-
-            var analyticData = new OnScreenStickEditorAnalytic.Data(onScreenStick);
-            new OnScreenStickEditorAnalytic(ref analyticData).Send();
+            Object.DestroyImmediate(Editor.CreateEditor(onScreenStick));
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
@@ -696,9 +698,7 @@ partial class CoreTests
         using (var gameObject = Scoped.Object(new GameObject()))
         {
             var virtualMouseInput = gameObject.value.AddComponent<VirtualMouseInput>();
-
-            var analyticData = new VirtualMouseInputEditorAnalytic.Data(virtualMouseInput);
-            new VirtualMouseInputEditorAnalytic(ref analyticData).Send();
+            Object.DestroyImmediate(Editor.CreateEditor(virtualMouseInput));
 
             // Assert: Data received
             Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
