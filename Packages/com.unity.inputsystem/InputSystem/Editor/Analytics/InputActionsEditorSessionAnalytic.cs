@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Compute and record total session duration
             var duration = currentTime - m_SessionStart;
-            m_Data.session_duration_seconds += (float)duration;
+            m_Data.session_duration_seconds += duration;
 
             // Send analytics event
             runtime.SendAnalytic(this);
