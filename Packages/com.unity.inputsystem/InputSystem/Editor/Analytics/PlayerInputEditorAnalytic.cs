@@ -16,11 +16,11 @@ namespace UnityEngine.InputSystem.Editor
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
-        private readonly Data m_Data;
+        private readonly UnityEditor.Editor m_Editor;
 
-        public PlayerInputEditorAnalytic(ref Data data)
+        public PlayerInputEditorAnalytic(UnityEditor.Editor editor)
         {
-            m_Data = data;
+            m_Editor = editor;
         }
 
         public InputAnalytics.InputAnalyticInfo info =>
@@ -32,8 +32,16 @@ namespace UnityEngine.InputSystem.Editor
         public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
 #endif
         {
-            data = m_Data;
-            error = null;
+            try
+            {
+                data = new Data(m_Editor.target as PlayerInput);
+                error = null;
+            }
+            catch (Exception e)
+            {
+                data = null;
+                error = e;
+            }
             return true;
         }
 

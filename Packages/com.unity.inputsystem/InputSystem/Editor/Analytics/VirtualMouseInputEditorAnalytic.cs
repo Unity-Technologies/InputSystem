@@ -20,8 +20,19 @@ namespace UnityEngine.InputSystem.Editor
         [Serializable]
         internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
+            /// <summary>
+            /// Maps to <see cref="VirtualMouseInput.cursorMode"/>. Determines which cursor representation to use.
+            /// </summary>
             public CursorMode cursor_mode;
+
+            /// <summary>
+            /// Maps to <see cref="VirtualMouseInput.cursorSpeed" />. Speed in pixels per second with which to move the cursor.
+            /// </summary>
             public float cursor_speed;
+
+            /// <summary>
+            /// Maps to <see cref="VirtualMouseInput.cursorMode"/>. Multiplier for values received from <see cref="VirtualMouseInput.scrollWheelAction"/>.
+            /// </summary>
             public float scroll_speed;
 
             public enum CursorMode
@@ -73,11 +84,11 @@ namespace UnityEngine.InputSystem.Editor
         public InputAnalytics.InputAnalyticInfo info =>
             new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
-        private readonly Data m_Data;
+        private readonly UnityEditor.Editor m_Editor;
 
-        public VirtualMouseInputEditorAnalytic(ref Data data)
+        public VirtualMouseInputEditorAnalytic(UnityEditor.Editor editor)
         {
-            m_Data = data;
+            m_Editor = editor;
         }
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
@@ -86,8 +97,16 @@ namespace UnityEngine.InputSystem.Editor
         public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
 #endif
         {
-            data = m_Data;
-            error = null;
+            try
+            {
+                data = new Data(m_Editor.target as VirtualMouseInput);
+                error = null;
+            }
+            catch (Exception e)
+            {
+                data = null;
+                error = e;
+            }
             return true;
         }
     }

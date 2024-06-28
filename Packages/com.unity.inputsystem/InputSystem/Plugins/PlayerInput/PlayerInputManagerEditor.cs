@@ -15,16 +15,12 @@ namespace UnityEngine.InputSystem.Editor
         public void OnEnable()
         {
             InputUser.onChange += OnUserChange;
-
-            m_AnalyticData = new PlayerInputManagerEditorAnalytic.Data(target as PlayerInputManager);
         }
 
         public void OnDisable()
         {
             new InputComponentEditorAnalytic(InputSystemComponent.PlayerInputManager).Send();
-            var data = new PlayerInputManagerEditorAnalytic.Data(target as PlayerInputManager);
-            if (!data.Equals(m_AnalyticData))
-                new PlayerInputManagerEditorAnalytic(ref data).Send();
+            new PlayerInputManagerEditorAnalytic(this).Send();
         }
 
         public void OnDestroy()
@@ -268,8 +264,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_FixedNumberOfSplitScreensLabel;
         [NonSerialized] private GUIContent m_EnableMaxPlayerCountLabel;
         [NonSerialized] private GUIContent m_EnableFixedNumberOfSplitScreensLabel;
-
-        [NonSerialized] private PlayerInputManagerEditorAnalytic.Data m_AnalyticData;
     }
 }
 #endif // UNITY_EDITOR

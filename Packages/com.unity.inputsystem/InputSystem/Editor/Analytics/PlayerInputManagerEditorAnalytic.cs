@@ -16,11 +16,11 @@ namespace UnityEngine.InputSystem.Editor
         public InputAnalytics.InputAnalyticInfo info =>
             new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
-        private readonly Data m_Data;
+        private readonly UnityEditor.Editor m_Editor;
 
-        public PlayerInputManagerEditorAnalytic(ref Data data)
+        public PlayerInputManagerEditorAnalytic(UnityEditor.Editor editor)
         {
-            m_Data = data;
+            m_Editor = editor;
         }
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
@@ -29,8 +29,16 @@ namespace UnityEngine.InputSystem.Editor
         public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
 #endif
         {
-            data = m_Data;
-            error = null;
+            try
+            {
+                data = new Data(m_Editor.target as PlayerInputManager);
+                error = null;
+            }
+            catch (Exception e)
+            {
+                data = null;
+                error = e;
+            }
             return true;
         }
 

@@ -617,19 +617,10 @@ namespace UnityEngine.InputSystem.UI
         [UnityEditor.CustomEditor(typeof(VirtualMouseInput))]
         private class VirtualMouseInputEditor : UnityEditor.Editor
         {
-            private VirtualMouseInputEditorAnalytic.Data m_Analytics;
-
-            public void OnEnable()
-            {
-                m_Analytics = new VirtualMouseInputEditorAnalytic.Data(target as VirtualMouseInput);
-            }
-
             public void OnDisable()
             {
                 new InputComponentEditorAnalytic(InputSystemComponent.VirtualMouseInput).Send();
-                var data = new VirtualMouseInputEditorAnalytic.Data(target as VirtualMouseInput);
-                if (!data.Equals(m_Analytics))
-                    new VirtualMouseInputEditorAnalytic(ref data).Send();
+                new VirtualMouseInputEditorAnalytic(this).Send();
             }
         }
         #endif

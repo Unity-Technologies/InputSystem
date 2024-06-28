@@ -452,13 +452,8 @@ namespace UnityEngine.InputSystem.OnScreen
             private SerializedProperty m_PointerDownAction;
             private SerializedProperty m_PointerMoveAction;
 
-            private OnScreenStickEditorAnalytic.Data m_AnalyticsData;
-
             public void OnEnable()
             {
-                // Store initial state to report analytics for relevant changed properties
-                m_AnalyticsData = new OnScreenStickEditorAnalytic.Data(target as OnScreenStick);
-
                 m_ShowDynamicOriginOptions = new AnimBool(false);
                 m_ShowIsolatedInputActions = new AnimBool(false);
 
@@ -476,9 +471,7 @@ namespace UnityEngine.InputSystem.OnScreen
             {
                 // Report analytics
                 new InputComponentEditorAnalytic(InputSystemComponent.OnScreenStick).Send();
-                var data = new OnScreenStickEditorAnalytic.Data(target as OnScreenStick);
-                if (!data.Equals(m_AnalyticsData))
-                    new OnScreenStickEditorAnalytic(ref data).Send();
+                new OnScreenStickEditorAnalytic(this).Send();
             }
 
             public override void OnInspectorGUI()
