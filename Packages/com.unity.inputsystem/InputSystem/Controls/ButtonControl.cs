@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Controls
         /// ((KeyControl)Keyboard.current["space"]).isPressed
         /// </code>
         /// </example>
-        /// Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         ///
         /// You can also use this to read mouse buttons, as shown in the following examples:
         /// <example>
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
-        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         ///
         /// You can also use this property to read mouse buttons. For example:
         ///
@@ -207,7 +207,7 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
-        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="KeyControl.displayName"/>.
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         /// </remarks>
         public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
