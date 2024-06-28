@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
         /// Represents select configuration data of interest related to an <see cref="OnScreenStick"/> component.
         /// </summary>
         [Serializable]
-        internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        internal struct Data : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             public enum OnScreenStickBehaviour
             {
@@ -57,29 +57,6 @@ namespace UnityEngine.InputSystem.Editor
             public float movement_range;
             public float dynamic_origin_range;
             public bool use_isolated_input_actions;
-
-            public bool Equals(Data other)
-            {
-                return behavior == other.behavior &&
-                    movement_range.Equals(other.movement_range) &&
-                    dynamic_origin_range.Equals(other.dynamic_origin_range) &&
-                    use_isolated_input_actions == other.use_isolated_input_actions;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Data other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                // Note: Not using HashCode.Combine since not available in older C# versions
-                var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ movement_range.GetHashCode();
-                hashCode = (hashCode * 397) ^ dynamic_origin_range.GetHashCode();
-                hashCode = (hashCode * 397) ^ use_isolated_input_actions.GetHashCode();
-                return hashCode;
-            }
         }
 
         private readonly UnityEditor.Editor m_Editor;

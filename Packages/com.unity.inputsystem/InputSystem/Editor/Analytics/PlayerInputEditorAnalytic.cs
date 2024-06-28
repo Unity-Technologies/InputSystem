@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        internal struct Data : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             public InputEditorAnalytics.PlayerNotificationBehavior behavior;
             public bool has_actions;
@@ -64,31 +64,6 @@ namespace UnityEngine.InputSystem.Editor
                 has_ui_input_module = false;
 #endif
                 has_camera = playerInput.camera != null;
-            }
-
-            public bool Equals(Data other)
-            {
-                return behavior == other.behavior &&
-                    has_actions == other.has_actions &&
-                    has_default_map == other.has_default_map &&
-                    has_ui_input_module == other.has_ui_input_module &&
-                    has_camera == other.has_camera;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Data other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                // Note: Not using HashCode.Combine since not available in older C# versions
-                var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ has_actions.GetHashCode();
-                hashCode = (hashCode * 397) ^ has_default_map.GetHashCode();
-                hashCode = (hashCode * 397) ^ has_ui_input_module.GetHashCode();
-                hashCode = (hashCode * 397) ^ has_camera.GetHashCode();
-                return hashCode;
             }
         }
     }

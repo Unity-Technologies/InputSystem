@@ -42,8 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             return true;
         }
 
-        internal struct Data : IEquatable<Data>,
-                               UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        internal struct Data : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             public enum PlayerJoinBehavior
             {
@@ -78,29 +77,6 @@ namespace UnityEngine.InputSystem.Editor
                     default:
                         throw new ArgumentOutOfRangeException(nameof(value));
                 }
-            }
-
-            public bool Equals(Data other)
-            {
-                return behavior == other.behavior &&
-                    join_behavior == other.join_behavior &&
-                    joining_enabled_by_default == other.joining_enabled_by_default &&
-                    max_player_count == other.max_player_count;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Data other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                // Note: Not using HashCode.Combine since not available in older C# versions
-                var hashCode = behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ join_behavior.GetHashCode();
-                hashCode = (hashCode * 397) ^ joining_enabled_by_default.GetHashCode();
-                hashCode = (hashCode * 397) ^ max_player_count.GetHashCode();
-                return hashCode;
             }
         }
     }

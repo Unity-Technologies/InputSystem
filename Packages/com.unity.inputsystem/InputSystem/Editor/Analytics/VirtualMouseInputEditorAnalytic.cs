@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         public const int kMaxNumberOfElements = 100; // default: 1000
 
         [Serializable]
-        internal struct Data : IEquatable<Data>, UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
+        internal struct Data : UnityEngine.InputSystem.InputAnalytics.IInputAnalyticData
         {
             /// <summary>
             /// Maps to <see cref="VirtualMouseInput.cursorMode"/>. Determines which cursor representation to use.
@@ -59,25 +59,6 @@ namespace UnityEngine.InputSystem.Editor
                 cursor_mode = ToCursorMode(value.cursorMode);
                 cursor_speed = value.cursorSpeed;
                 scroll_speed = value.scrollSpeed;
-            }
-
-            public bool Equals(Data other)
-            {
-                return cursor_mode == other.cursor_mode && cursor_speed.Equals(other.cursor_speed) && scroll_speed.Equals(other.scroll_speed);
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Data other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                // Note: Not using HashCode.Combine since not available in older C# versions
-                var hashCode = cursor_mode.GetHashCode();
-                hashCode = (hashCode * 397) ^ cursor_speed.GetHashCode();
-                hashCode = (hashCode * 397) ^ scroll_speed.GetHashCode();
-                return hashCode;
             }
         }
 
