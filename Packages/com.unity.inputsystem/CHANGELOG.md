@@ -47,6 +47,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Documentation to clarify effects of ordering of interactions when a single action has multiple interactions [ISXB-221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-221).
 - Additional tests for UI Input default actions (Navigate, Submit, Scroll etc.)
+- Documented behaviour of InputSystemUIInputModule automatically enabling the UI action map. [ISXB-621](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-621)
 
 ### Fixed
 - Fixed an issue where UI interactions would not function without setting up a project-wide actions asset in Project Settings. Default UI actions are now created on the fly, if no asset for project-wide actions has been set. [ISXB-811](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-811).
