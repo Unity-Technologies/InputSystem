@@ -30,6 +30,34 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    // ISXB-925: Feature flag values should live with containing settings instance.
+    [TestCase(InputFeatureNames.kUseReadValueCaching)]
+    [TestCase(InputFeatureNames.kUseOptimizedControls)]
+    [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
+    [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
+    [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
+    #endif
+    public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
+    {
+        using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+        {
+            InputSystem.settings = settings.value;
+
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            settings.value.SetInternalFeatureFlag(featureName, true);
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.True);
+
+            using (var other = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+            {
+                InputSystem.settings = other.value;
+
+                Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            }
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
