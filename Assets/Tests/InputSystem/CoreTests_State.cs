@@ -467,7 +467,7 @@ partial class CoreTests
     [TestCase(false)]
     public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange(bool usesReadValueCaching)
     {
-        var originalSetting = InputSettings.readValueCachingFeatureEnabled;
+        var originalSetting = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, usesReadValueCaching);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();

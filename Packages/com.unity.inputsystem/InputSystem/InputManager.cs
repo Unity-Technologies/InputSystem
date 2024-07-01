@@ -3732,7 +3732,7 @@ namespace UnityEngine.InputSystem
             {
                 // Update the pressed/not pressed state of all buttons that have changed this update
                 // With enough ButtonControls being checked, it's faster to find out which have actually changed rather than test all.
-                if (InputSettings.readValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
+                if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
                 {
                     foreach (var button in device.m_UpdatedButtons)
                     {
