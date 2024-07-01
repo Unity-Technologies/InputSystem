@@ -38,6 +38,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+- Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
 
 ### Changed
 - Changed `DualSenseHIDInputReport` from internal to public visibility
