@@ -29,8 +29,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
 - Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
 - Fixed an issue where changing `InputSettings` instance would not affect associated feature flags.
+- Submit and Cancel UI actions will now respect configured interactions. [ISXB-841](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-841).
 - Fixed the UI generation of enum fields when editing interactions of action properties. The new selected value was lost when saving.
 - Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
+
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
