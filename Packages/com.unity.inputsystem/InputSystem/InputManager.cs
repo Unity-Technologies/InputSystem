@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
@@ -2116,6 +2117,33 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
+
+        // Extract as booleans (from m_Settings) because feature check is in the hot path
+
+        private bool m_OptimizedControlsFeatureEnabled;
+        internal bool optimizedControlsFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_OptimizedControlsFeatureEnabled;
+            set => m_OptimizedControlsFeatureEnabled = value;
+        }
+
+        private bool m_ReadValueCachingFeatureEnabled;
+        internal bool readValueCachingFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ReadValueCachingFeatureEnabled;
+            set => m_ReadValueCachingFeatureEnabled = value;
+        }
+
+        private bool m_ParanoidReadValueCachingChecksEnabled;
+        internal bool paranoidReadValueCachingChecksEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ParanoidReadValueCachingChecksEnabled;
+            set => m_ParanoidReadValueCachingChecksEnabled = value;
+        }
+
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
         #endif
@@ -2645,12 +2673,10 @@ namespace UnityEngine.InputSystem
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
 
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
+                // Extract feature flags into fields since used in hot-path
+                m_ReadValueCachingFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseReadValueCaching));
+                m_OptimizedControlsFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseOptimizedControls));
+                m_ParanoidReadValueCachingChecksEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kParanoidReadValueCachingChecks));
             }
 
             // Cache some values.
@@ -3549,7 +3575,7 @@ namespace UnityEngine.InputSystem
         [Conditional("UNITY_EDITOR")]
         void CheckAllDevicesOptimizedControlsHaveValidState()
         {
-            if (!InputSettings.optimizedControlsFeatureEnabled)
+            if (!InputSystem.s_Manager.m_OptimizedControlsFeatureEnabled)
                 return;
 
             foreach (var device in devices)
@@ -3739,7 +3765,7 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            if (InputSettings.readValueCachingFeatureEnabled)
+            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what
