@@ -29,6 +29,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
 - Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
 - Fixed an issue where changing `InputSettings` instance would not affect associated feature flags.
+- Submit and Cancel UI actions will now respect configured interactions. [ISXB-841](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-841).
+- Fixed the UI generation of enum fields when editing interactions of action properties. The new selected value was lost when saving.
+- Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 - Fixed an issue related to Visualizers sample where exceptions would be thrown by InputActionVisualizer and InputControlVisualizer when entering play-mode if added as components to a new `GameObject`.
 
 ### Added
@@ -43,7 +46,9 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.8.2] - 2024-04-29
 
 ### Added
+- Documentation to clarify effects of ordering of interactions when a single action has multiple interactions [ISXB-221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-221).
 - Additional tests for UI Input default actions (Navigate, Submit, Scroll etc.)
+- Documented behaviour of InputSystemUIInputModule automatically enabling the UI action map. [ISXB-621](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-621)
 
 ### Fixed
 - Fixed an issue where UI interactions would not function without setting up a project-wide actions asset in Project Settings. Default UI actions are now created on the fly, if no asset for project-wide actions has been set. [ISXB-811](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-811).
