@@ -67,16 +67,14 @@ namespace UnityEngine.InputSystem.Layouts
             var device = m_Device;
 
             // Set up the list of just ButtonControls to quickly update press state.
-            var totalControls = device.allControls.Count;
-            device.m_ChildrenThatAreButtonControls = new ButtonControl[totalControls];
-            int i = 0;
+            var i = 0;
             foreach (var control in device.allControls)
             {
-                if (control is ButtonControl button)
-                    device.m_ChildrenThatAreButtonControls[i++] = button;
+                if (control.isButton)
+                    ++i;
             }
-            Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
 
+            device.m_ButtonControlsCheckingPressState = new List<ButtonControl>(i);
             #if UNITY_2020_1_OR_NEWER
             device.m_UpdatedButtons = new HashSet<int>(i);
             #else

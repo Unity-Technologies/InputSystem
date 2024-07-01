@@ -3723,11 +3723,8 @@ namespace UnityEngine.InputSystem
                 else
                 {
                     int buttonCount = 0;
-                    foreach (var button in device.m_ChildrenThatAreButtonControls)
+                    foreach (var button in device.m_ButtonControlsCheckingPressState)
                     {
-                        if (!button.needsToCheckFramePress)
-                            continue;
-
                         #if UNITY_EDITOR
                         if (updateType == InputUpdateType.Editor)
                         {

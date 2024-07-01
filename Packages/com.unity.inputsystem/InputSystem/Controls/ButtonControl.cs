@@ -129,6 +129,7 @@ namespace UnityEngine.InputSystem.Controls
         private void BeginTestingForFramePresses(bool currentlyPressed, bool pressedLastFrame)
         {
             needsToCheckFramePress = true;
+            device.m_ButtonControlsCheckingPressState.Add(this);
 
             #if UNITY_EDITOR
             if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
@@ -155,6 +156,10 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>True if the current press of the button started this frame.</value>
         /// <remarks>
+        /// The first time this function - or wasReleasedThisFrame - are called, it's possible that extremely fast
+        /// inputs (or very slow frame update times) will result in presses/releases being missed.
+        /// Following the next input system update after either have been called, and from then on until the device is
+        /// destroyed, this ceases to be an issue.
         /// <example>
         /// <code>
         /// // An example showing the use of this property on a gamepad button and a keyboard key.

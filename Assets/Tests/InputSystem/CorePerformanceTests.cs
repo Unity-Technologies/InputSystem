@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
@@ -10,6 +11,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 
 ////TODO: add test for domain reload logic
 
@@ -852,7 +854,8 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
-    [Test, Performance]
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization, 1)]
     [TestCase(OptimizationTestType.OptimizedControls, 1)]
@@ -882,12 +885,19 @@ internal class CorePerformanceTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.Update();
 
-        var buttonsToTest = Math.Max(1, gamepad.m_ChildrenThatAreButtonControls.Length * percentageOfButtonsTested / 100);
+        var childrenThatAreButtons = new List<ButtonControl>();
+        foreach (var child in gamepad.m_ChildrenForEachControl)
+        {
+            if (child.isButton)
+                childrenThatAreButtons.Add((ButtonControl)child);
+        }
+
+        var buttonsToTest = Math.Max(1, childrenThatAreButtons.Count * percentageOfButtonsTested / 100);
         for (int i = 0; i < buttonsToTest; ++i)
         {
             // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
             // which affects processing of future events to care about state changes so that this call is accurate.
-            var press = gamepad.m_ChildrenThatAreButtonControls[i].wasPressedThisFrame;
+            var press = childrenThatAreButtons[i].wasPressedThisFrame;
         }
 
         Measure.Method(() =>
@@ -907,7 +917,8 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
-    [Test, Performance]
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization, 1)]
     [TestCase(OptimizationTestType.OptimizedControls, 1)]
@@ -937,12 +948,19 @@ internal class CorePerformanceTests : CoreTestsFixture
         var keyboard = InputSystem.AddDevice<Keyboard>();
         InputSystem.Update();
 
-        var buttonsToTest = Math.Max(1, keyboard.m_ChildrenThatAreButtonControls.Length * percentageOfButtonsTested / 100);
+        var childrenThatAreButtons = new List<ButtonControl>();
+        foreach (var child in keyboard.m_ChildrenForEachControl)
+        {
+            if (child.isButton)
+                childrenThatAreButtons.Add((ButtonControl)child);
+        }
+
+        var buttonsToTest = Math.Max(1, childrenThatAreButtons.Count * percentageOfButtonsTested / 100);
         for (int i = 0; i < buttonsToTest; ++i)
         {
             // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
             // which affects processing of future events to care about state changes so that this call is accurate.
-            var press = keyboard.m_ChildrenThatAreButtonControls[i].wasPressedThisFrame;
+            var press = childrenThatAreButtons[i].wasPressedThisFrame;
         }
 
         Measure.Method(() =>

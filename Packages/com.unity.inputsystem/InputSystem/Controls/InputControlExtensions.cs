@@ -1919,25 +1919,24 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Finish()
             {
-                device.isSetupFinished = true;
-
                 // Set up the list of just ButtonControls to quickly update press state.
-                var totalControls = device.allControls.Count;
-                device.m_ChildrenThatAreButtonControls = new ButtonControl[totalControls];
-                int i = 0;
+                var i = 0;
                 foreach (var control in device.allControls)
                 {
-                    if (control is ButtonControl button)
-                        device.m_ChildrenThatAreButtonControls[i++] = button;
+                    // Don't use .isButton here, since this can be called from tests with NULL controls
+                    if (control is ButtonControl)
+                        ++i;
                 }
-                Array.Resize(ref device.m_ChildrenThatAreButtonControls, i);
 
+                device.m_ButtonControlsCheckingPressState = new List<ButtonControl>(i);
                 #if UNITY_2020_1_OR_NEWER
                 device.m_UpdatedButtons = new HashSet<int>(i);
                 #else
                 // 2019 is too old to support setting HashSet capacity
                 device.m_UpdatedButtons = new HashSet<int>();
                 #endif
+
+                device.isSetupFinished = true;
             }
         }
 

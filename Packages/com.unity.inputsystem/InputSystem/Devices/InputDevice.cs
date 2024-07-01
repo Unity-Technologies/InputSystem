@@ -712,7 +712,7 @@ namespace UnityEngine.InputSystem
         internal HashSet<int> m_UpdatedButtons;
 
         // Used for updating button press states when we don't take the value caching path.
-        internal ButtonControl[] m_ChildrenThatAreButtonControls;
+        internal List<ButtonControl> m_ButtonControlsCheckingPressState;
 
         // Once we hit about 45 ButtonControls being queried for wasPressedThisFrame/wasReleasedThisFrame, mark as such
         // so that we can take the ReadValueCaching path for more efficient updating.
