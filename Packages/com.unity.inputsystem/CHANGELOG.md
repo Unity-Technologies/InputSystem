@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Change
+- Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
+- Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
+
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
 - Fixed cases where `wasPressedThisFrame` would not return true if a press and release happened within the same frame before being queried (and vice versa for `wasReleasedThisFrame`).
@@ -20,16 +24,32 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed error thrown when Cancelling Control Scheme creation in Input Actions Editor.
 - Fixed Scheme Name in Control Scheme editor menu that gets reset when editing devices [ISXB-763](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-763).
 - Fixed an issue where `InputActionAsset.FindAction(string, bool)` would throw `System.NullReferenceException` instead of returning `null` if searching for a non-existent action with an explicit action path and using `throwIfNotFound: false`, e.g. searching for "Map/Action" when `InputActionMap` "Map" exists but no `InputAction` named "Action" exists within that map [ISXB-895](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-895).
+- Fixed an issue where adding a `OnScreenButton` or `OnScreenStick` to a regular GameObject would lead to exception in editor.
+- Fixed an issue where adding a `OnScreenStick` to a regular GameObject and entering play-mode would lead to exceptions being generated.
+- Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
+- Fixed a performance issue with many objects using multiple action maps [ISXB-573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-573).
+- Fixed an variable scope shadowing issue causing compilation to fail on Unity 2019 LTS.
+- Fixed an issue where changing `InputSettings` instance would not affect associated feature flags.
+- Submit and Cancel UI actions will now respect configured interactions. [ISXB-841](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-841).
+- Fixed the UI generation of enum fields when editing interactions of action properties. The new selected value was lost when saving.
+- Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 
-## Added
+
+### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+- Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
+
+### Changed
+- Changed `DualSenseHIDInputReport` from internal to public visibility
 
 ## [1.8.2] - 2024-04-29
 
 ### Added
+- Documentation to clarify effects of ordering of interactions when a single action has multiple interactions [ISXB-221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-221).
 - Additional tests for UI Input default actions (Navigate, Submit, Scroll etc.)
+- Documented behaviour of InputSystemUIInputModule automatically enabling the UI action map. [ISXB-621](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-621)
 
 ### Fixed
 - Fixed an issue where UI interactions would not function without setting up a project-wide actions asset in Project Settings. Default UI actions are now created on the fly, if no asset for project-wide actions has been set. [ISXB-811](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-811).
