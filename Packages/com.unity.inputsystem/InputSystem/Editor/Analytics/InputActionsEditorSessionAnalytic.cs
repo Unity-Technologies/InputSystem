@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public void RegisterActionEdit()
         {
-            if (ImplicitFocus())
+            if (ImplicitFocus() && ComputeDuration() > 0.5) // Avoid logging actions triggered via UI initialization
                 ++m_Data.action_modification_count;
         }
 
@@ -164,11 +164,13 @@ namespace UnityEngine.InputSystem.Editor
                 RegisterEditorFocusOut();
 
             // Compute and record total session duration
-            var duration = currentTime - m_SessionStart;
+            var duration = ComputeDuration();
             m_Data.session_duration_seconds += duration;
 
+            // Sanity check data, if less than a second its likely a glitch so avoid sending incorrect data
             // Send analytics event
-            runtime.SendAnalytic(this);
+            if (duration >= 1.0)
+                runtime.SendAnalytic(this);
 
             // Reset to allow instance to be reused
             Initialize(m_Data.kind);
@@ -197,6 +199,8 @@ namespace UnityEngine.InputSystem.Editor
         public InputAnalytics.InputAnalyticInfo info => new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
         #endregion
+
+        private double ComputeDuration() => hasSession ? currentTime - m_SessionStart : 0.0;
 
         private void Initialize(Data.Kind kind)
         {
@@ -293,7 +297,6 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public int action_modification_count;
 
-            /// <summary>
             /// The total number of binding modifications during the session.
             /// </summary>
             public int binding_modification_count;

@@ -187,6 +187,8 @@ namespace UnityEngine.InputSystem.Editor
                     if (m_AssetObjectForEditing == null)
                     {
                         workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
+                        if (m_State.m_Analytics == null)
+                            m_State.m_Analytics = analytics;
                         m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
                         m_AssetObjectForEditing = workingCopy;
                     }
@@ -219,6 +221,9 @@ namespace UnityEngine.InputSystem.Editor
         private void BuildUI()
         {
             CleanupStateContainer();
+
+            if (m_State.m_Analytics == null)
+                m_State.m_Analytics = m_Analytics;
 
             m_StateContainer = new StateContainer(m_State);
             m_StateContainer.StateChanged += OnStateChanged;

@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme; // TODO Bad this either po
 
-        public InputActionsEditorSessionAnalytic m_Analytics;
+        internal InputActionsEditorSessionAnalytic m_Analytics;
 
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
