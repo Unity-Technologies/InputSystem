@@ -128,8 +128,12 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)|No corresponding API yet.
 [`Input.touchSupported`](https://docs.unity3d.com/ScriptReference/Input-touchSupported.html)|[`Touchscreen.current != null`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_current)
 [`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|No corresponding API yet.
+[`GetPenEvent`](https://docs.unity3d.com/ScriptReference/Input.GetPenEvent.html)<br/>[`GetLastPenContactEvent`](https://docs.unity3d.com/ScriptReference/Input.GetLastPenContactEvent.html)<br/>[`ResetPenEvents`](https://docs.unity3d.com/ScriptReference/Input.ResetPenEvents.html)<br/>[`ClearLastPenContactEvent`](https://docs.unity3d.com/ScriptReference/Input.ClearLastPenContactEvent.html)|Use: [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current)<br/>See the [Pen, tablet and stylus support](Pen.md) docs for more information.
+<hr/>
 
-Note: [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html) is not part of the old Input Manager, so you can continue to use it when migrating to the new Input System package.
+
+
+Note: [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html) is not part of the old Input Manager API, so you can continue to use it when migrating to the new Input System package.
 
 ### Sensors
 |Input Manager (Old)|Input System (New)|
