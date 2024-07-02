@@ -143,7 +143,7 @@ run_tvos_{{ editor.version }}:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+    - ./utr --suite=playmode --platform=tvOS --timeout=1800 --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
   artifacts:
     logs:
         paths:
