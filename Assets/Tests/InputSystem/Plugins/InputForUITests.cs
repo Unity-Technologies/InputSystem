@@ -491,7 +491,7 @@ public class InputForUITests : InputTestFixture
         });
     }
 
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
     [Category(kTestCategory)]
     [TestCase(1.0f)]
     [TestCase(120.0f)]

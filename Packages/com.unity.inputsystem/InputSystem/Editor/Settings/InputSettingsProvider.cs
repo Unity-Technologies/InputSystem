@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!runInBackground)
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
                 EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
 #endif
 
@@ -286,7 +286,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
             m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "What value range should be used for scroll wheel delta?");
 #endif
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
@@ -436,7 +436,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
         private GUIContent m_ScrollDeltaBehaviorContent;
 #endif
         private GUIContent m_CompensateForScreenOrientationContent;

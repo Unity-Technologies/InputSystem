@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
         bool normalizeScrollWheelDelta { get; set; }
         float scrollWheelDeltaPerTick { get; }
 #endif
