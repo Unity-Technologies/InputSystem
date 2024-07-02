@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem
 
                 m_ScrollDeltaBehavior = value;
 
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
                 InputRuntime.s_Instance.normalizeScrollWheelDelta =
                     m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 #endif

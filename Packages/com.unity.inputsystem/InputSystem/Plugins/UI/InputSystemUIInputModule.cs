@@ -2079,10 +2079,8 @@ namespace UnityEngine.InputSystem.UI
 
             state.scrollDelta = context.ReadValue<Vector2>();
 
-#if UNITY_6000_0_OR_NEWER
             // ISXB-704: convert input value to BaseInputModule convention.
             state.scrollDelta *= scrollWheelDeltaPerTick / InputSystem.scrollWheelDeltaPerTick;
-#endif
 
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
