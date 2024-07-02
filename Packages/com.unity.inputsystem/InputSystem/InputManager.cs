@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
@@ -1965,6 +1966,48 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
+
+            // Register custom types by reflection
+            RegisterCustomTypes();
+        }
+
+        void RegisterCustomTypes()
+        {
+            var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    // exclude InputSystem assembly which should be loaded first
+                    if (assembly == inputSystemAssembly) continue;
+
+                    var types = assembly.GetTypes();
+                    foreach (Type type in types)
+                    {
+                        if (!type.IsClass
+                            || type.IsAbstract
+                            || type.IsGenericType)
+                            continue;
+
+                        if (typeof(InputProcessor).IsAssignableFrom(type))
+                        {
+                            InputSystem.RegisterProcessor(type);
+                        }
+                        else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                        {
+                            InputSystem.RegisterInteraction(type);
+                        }
+                        else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                        {
+                            InputSystem.RegisterBindingComposite(type, null);
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                }
+            }
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
