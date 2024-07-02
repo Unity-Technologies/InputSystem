@@ -175,6 +175,11 @@ namespace UnityEngine.InputSystem.LowLevel
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
+#if UNITY_6000_0_OR_NEWER
+        bool normalizeScrollWheelDelta { get; set; }
+        float scrollWheelDeltaPerTick { get; }
+#endif
+
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
         #if UNITY_ANALYTICS || UNITY_EDITOR

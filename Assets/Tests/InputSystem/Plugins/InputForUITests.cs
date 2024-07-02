@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -462,6 +463,8 @@ public class InputForUITests : InputTestFixture
         Assert.AreEqual(10, m_InputForUIEvents.Count);
     }
 
+    const float kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
+
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
@@ -475,7 +478,6 @@ public class InputForUITests : InputTestFixture
         }
         Update();
 
-        var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
         var mouse = InputSystem.AddDevice<Mouse>();
         Update();
         // Make the minimum step of scroll delta to be ±1.0f
@@ -488,6 +490,30 @@ public class InputForUITests : InputTestFixture
             asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: 1} }
         });
     }
+
+#if UNITY_6000_0_OR_NEWER
+    [Category(kTestCategory)]
+    [TestCase(1.0f)]
+    [TestCase(120.0f)]
+    public void UIActionScroll_ReceivesNormalizedScrollWheelDelta(float scrollWheelDeltaPerTick)
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Update();
+
+        // Set scroll delta with a custom range.
+        ((InputTestRuntime)InputRuntime.s_Instance).scrollWheelDeltaPerTick = scrollWheelDeltaPerTick;
+        Set(mouse.scroll, new Vector2(0, scrollWheelDeltaPerTick));
+        Update();
+
+        // UI should receive scroll delta in its expected range.
+        Assert.AreEqual(1, m_InputForUIEvents.Count);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: -kScrollUGUIScaleFactor} }
+        });
+    }
+#endif
 
     #endregion
 

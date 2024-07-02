@@ -25,11 +25,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where adding a `OnScreenButton` or `OnScreenStick` to a regular GameObject would lead to exception in editor.
 - Fixed an issue where adding a `OnScreenStick` to a regular GameObject and entering play-mode would lead to exceptions being generated.
 - Fixed InputActionReference issues when domain reloads are disabled [ISXB-601](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-601), [ISXB-718](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-718), [ISXB-900](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-900)
+- Fixed scroll speed being slower when using InputSystemUIInputModule instead of StandaloneInputModule. (https://jira.unity3d.com/browse/ISXB-771)
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
+- Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
 ## [1.8.2] - 2024-04-29
 
