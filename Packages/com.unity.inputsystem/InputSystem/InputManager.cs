@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
@@ -2115,6 +2117,33 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
+
+        // Extract as booleans (from m_Settings) because feature check is in the hot path
+
+        private bool m_OptimizedControlsFeatureEnabled;
+        internal bool optimizedControlsFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_OptimizedControlsFeatureEnabled;
+            set => m_OptimizedControlsFeatureEnabled = value;
+        }
+
+        private bool m_ReadValueCachingFeatureEnabled;
+        internal bool readValueCachingFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ReadValueCachingFeatureEnabled;
+            set => m_ReadValueCachingFeatureEnabled = value;
+        }
+
+        private bool m_ParanoidReadValueCachingChecksEnabled;
+        internal bool paranoidReadValueCachingChecksEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ParanoidReadValueCachingChecksEnabled;
+            set => m_ParanoidReadValueCachingChecksEnabled = value;
+        }
+
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
         #endif
@@ -2644,12 +2673,10 @@ namespace UnityEngine.InputSystem
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
 
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
+                // Extract feature flags into fields since used in hot-path
+                m_ReadValueCachingFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseReadValueCaching));
+                m_OptimizedControlsFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseOptimizedControls));
+                m_ParanoidReadValueCachingChecksEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kParanoidReadValueCachingChecks));
             }
 
             // Cache some values.
@@ -2972,8 +2999,7 @@ namespace UnityEngine.InputSystem
             InputUpdate.OnUpdate(updateType);
 
             // Ensure optimized controls are in valid state
-            foreach (var device in devices)
-                device.EnsureOptimizationTypeHasNotChanged();
+            CheckAllDevicesOptimizedControlsHaveValidState();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
@@ -3063,15 +3089,6 @@ namespace UnityEngine.InputSystem
                 // Handle events.
                 while (m_InputEventStream.remainingEventCount > 0)
                 {
-                    if (m_Settings.maxEventBytesPerUpdate > 0 &&
-                        totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
-                    {
-                        Debug.LogError(
-                            "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-                            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
-                        break;
-                    }
-
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
@@ -3383,6 +3400,8 @@ namespace UnityEngine.InputSystem
 
                             totalEventBytesProcessed += eventPtr.sizeInBytes;
 
+                            device.m_CurrentProcessedEventBytesOnUpdate += eventPtr.sizeInBytes;
+
                             // Update timestamp on device.
                             // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
                             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
@@ -3465,11 +3484,17 @@ namespace UnityEngine.InputSystem
                     }
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
+
+                    // Discard events in case the maximum event bytes per update has been exceeded
+                    if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
+                        break;
                 }
 
                 m_Metrics.totalEventProcessingTime +=
                     ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
                 m_Metrics.totalEventLagTime += totalEventLag;
+
+                ResetCurrentProcessedEventBytesForDevices();
 
                 m_InputEventStream.Close(ref eventBuffer);
             }
@@ -3492,6 +3517,69 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
+        {
+            if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+            {
+                var eventsProcessedByDeviceLog = String.Empty;
+                // Only log the events processed by devices in last update call if we are in debug mode.
+                // This is to avoid the slightest overhead in release builds of having to iterate over all devices and
+                // reset the byte count, by the end of every update call with ResetCurrentProcessedEventBytesForDevices().
+                if (Debug.isDebugBuild)
+                    eventsProcessedByDeviceLog = $"Total events processed by devices in last update call:\n{MakeStringWithEventsProcessedByDevice()}";
+
+                Debug.LogError(
+                    "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                    + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.\n"
+                    + eventsProcessedByDeviceLog);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private string MakeStringWithEventsProcessedByDevice()
+        {
+            var eventsProcessedByDeviceLog = new StringBuilder();
+            for (int i = 0; i < m_DevicesCount; i++)
+            {
+                var deviceToLog = devices[i];
+                if (deviceToLog != null && deviceToLog.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    eventsProcessedByDeviceLog.Append($" - {deviceToLog.m_CurrentProcessedEventBytesOnUpdate} bytes processed by {deviceToLog}\n");
+            }
+            return eventsProcessedByDeviceLog.ToString();
+        }
+
+        // Reset the number of bytes processed by devices in the current update, for debug builds.
+        // This is to avoid the slightest overhead in release builds of having to iterate over all devices connected.
+        private void ResetCurrentProcessedEventBytesForDevices()
+        {
+            if (Debug.isDebugBuild)
+            {
+                for (var i = 0; i < m_DevicesCount; i++)
+                {
+                    var device = m_Devices[i];
+                    if (device != null && device.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    {
+                        device.m_CurrentProcessedEventBytesOnUpdate = 0;
+                    }
+                }
+            }
+        }
+
+        // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.
+        [Conditional("UNITY_EDITOR")]
+        void CheckAllDevicesOptimizedControlsHaveValidState()
+        {
+            if (!InputSystem.s_Manager.m_OptimizedControlsFeatureEnabled)
+                return;
+
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
@@ -3677,7 +3765,7 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            if (InputSettings.readValueCachingFeatureEnabled)
+            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what

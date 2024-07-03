@@ -929,7 +929,7 @@ namespace UnityEngine.InputSystem
         private void SetOptimizedControlDataType()
         {
             // setting check need to be inline so we clear optimizations if setting is disabled after the fact
-            m_OptimizedControlDataType = InputSettings.optimizedControlsFeatureEnabled
+            m_OptimizedControlDataType = InputSystem.s_Manager.optimizedControlsFeatureEnabled
                 ? CalculateOptimizedControlDataType()
                 : (FourCC)InputStateBlock.kFormatInvalid;
         }
@@ -952,11 +952,12 @@ namespace UnityEngine.InputSystem
         // This is mainly to AxisControl fields being public and capable of changing at any time even if we were not anticipated such a usage pattern.
         // Also it's not clear if InputControl.stateBlock.format can potentially change at any time, likely not.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // Only do this check in development builds and editor in hope that it will be sufficient to catch any misuse during development.
-        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        // Only do this check in and editor in hope that it will be sufficient to catch any misuse during development.
+        // It is not done in debug builds because it has a performance cost and it will show up when profiled.
+        [Conditional("UNITY_EDITOR")]
         internal void EnsureOptimizationTypeHasNotChanged()
         {
-            if (!InputSettings.optimizedControlsFeatureEnabled)
+            if (!InputSystem.s_Manager.optimizedControlsFeatureEnabled)
                 return;
 
             var currentOptimizedControlDataType = CalculateOptimizedControlDataType();
@@ -969,7 +970,7 @@ namespace UnityEngine.InputSystem
                     "after the changes to the control to fix this error.");
 
                 // Automatically fix the issue
-                // Note this function is only executed in editor and development builds
+                // Note this function is only executed in the editor
                 m_OptimizedControlDataType = currentOptimizedControlDataType;
             }
 
@@ -1171,7 +1172,7 @@ namespace UnityEngine.InputSystem
 
                 if (
                     // if feature is disabled we re-evaluate every call
-                    !InputSettings.readValueCachingFeatureEnabled
+                    !InputSystem.s_Manager.readValueCachingFeatureEnabled
                     // if cached value is stale we re-evaluate and clear the flag
                     || m_CachedValueIsStale
                     // if a processor in stack needs to be re-evaluated, but unprocessedValue is still can be cached
@@ -1182,7 +1183,7 @@ namespace UnityEngine.InputSystem
                     m_CachedValueIsStale = false;
                 }
 #if DEBUG
-                else if (InputSettings.paranoidReadValueCachingChecksEnabled)
+                else if (InputSystem.s_Manager.paranoidReadValueCachingChecksEnabled)
                 {
                     var oldUnprocessedValue = m_UnprocessedCachedValue;
                     var newUnprocessedValue = unprocessedValue;
@@ -1224,7 +1225,7 @@ namespace UnityEngine.InputSystem
 
                 if (
                     // if feature is disabled we re-evaluate every call
-                    !InputSettings.readValueCachingFeatureEnabled
+                    !InputSystem.s_Manager.readValueCachingFeatureEnabled
                     // if cached value is stale we re-evaluate and clear the flag
                     || m_UnprocessedCachedValueIsStale
                 )
@@ -1233,7 +1234,7 @@ namespace UnityEngine.InputSystem
                     m_UnprocessedCachedValueIsStale = false;
                 }
 #if DEBUG
-                else if (InputSettings.paranoidReadValueCachingChecksEnabled)
+                else if (InputSystem.s_Manager.paranoidReadValueCachingChecksEnabled)
                 {
                     var currentUnprocessedValue = ReadUnprocessedValueFromState(currentStatePtr);
                     if (CompareValue(ref currentUnprocessedValue, ref m_UnprocessedCachedValue))
