@@ -1210,6 +1210,7 @@ internal class UITests : CoreTestsFixture
             )
         );
     }
+
 #endif
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
