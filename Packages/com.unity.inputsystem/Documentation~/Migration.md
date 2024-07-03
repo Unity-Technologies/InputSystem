@@ -112,8 +112,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
 [`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
 [`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html)<br/>Example: `Vector2 position = Mouse.current.position.ReadValue();`<br/>__Note__: Mouse simulation from touch isn't implemented yet.
-[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Check whether [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current) is null.<br/>Example: `bool isMousePresent = Mouse.current != null;`
-
+[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|No corresponding API yet.
 
 ### Touch and Pen
 
