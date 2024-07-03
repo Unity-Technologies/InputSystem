@@ -1210,6 +1210,7 @@ internal class UITests : CoreTestsFixture
             )
         );
     }
+
 #endif
 
     [UnityTest]

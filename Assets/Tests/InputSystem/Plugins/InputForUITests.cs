@@ -513,6 +513,7 @@ public class InputForUITests : InputTestFixture
             asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: -kScrollUGUIScaleFactor} }
         });
     }
+
 #endif
 
     #endregion
