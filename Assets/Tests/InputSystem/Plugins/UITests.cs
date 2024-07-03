@@ -1037,7 +1037,7 @@ internal class UITests : CoreTestsFixture
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.scrollDelta, Is.EqualTo(Vector2.one).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.rightChildReceiver.events[0].pointerData.scrollDelta, Is.EqualTo(Vector2.one * scene.uiModule.scrollDeltaPerTick).Using(Vector2EqualityComparer.Instance));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.Null);
@@ -1201,14 +1201,31 @@ internal class UITests : CoreTestsFixture
         Set(mouse.scroll, new Vector2(0, scrollWheelDeltaPerTick));
         yield return null;
 
-        // UI should receive scroll delta in the [-1, 1] range.
+        // UI should receive scroll delta in the range defined by InputSystemUIInputModule.
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Scroll),
                 AllEvents("position", scene.From640x480ToScreen(100, 100)),
-                AllEvents("scrollDelta", Vector2.up)
+                AllEvents("scrollDelta", Vector2.up * scene.uiModule.scrollDeltaPerTick)
             )
         );
+    }
+#endif
+
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
+    [Test]
+    [Category("UI")]
+    public void UI_ConvertPointerEventScrollDeltaToTicks_AppliesScrollWheelMultiplier()
+    {
+        var scene = CreateTestUI();
+
+        scene.uiModule.scrollDeltaPerTick = 1;
+        var ticks = scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one);
+        Assert.That(ticks, Is.EqualTo(Vector2.one).Within(0.001f));
+
+        scene.uiModule.scrollDeltaPerTick = 42;
+        ticks = scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one * 42);
+        Assert.That(ticks, Is.EqualTo(Vector2.one).Within(0.001f));
     }
 #endif
 

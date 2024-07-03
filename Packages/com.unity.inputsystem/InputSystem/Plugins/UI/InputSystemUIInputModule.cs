@@ -116,12 +116,14 @@ namespace UnityEngine.InputSystem.UI
             set => m_LocalMultiPlayerRoot = value;
         }
 
-        // See ISXB-766 for a history of where the 6.0f value comes from
-        // (we used to have 120 per tick on Windows and divided it by 20.)
         /// <summary>
         /// The magnitude of PointerEventData.scrollDelta that corresponds to exactly one tick of the scroll wheel.
         /// </summary>
-        public override float scrollWheelDeltaPerTick => 6.0f;
+        public float scrollDeltaPerTick
+        {
+            get => m_ScrollDeltaPerTick;
+            set => m_ScrollDeltaPerTick = value;
+        }
 
         /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
@@ -2077,10 +2079,10 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
 
-            state.scrollDelta = context.ReadValue<Vector2>();
+            var scrollDelta = context.ReadValue<Vector2>();
 
             // ISXB-704: convert input value to BaseInputModule convention.
-            state.scrollDelta *= scrollWheelDeltaPerTick / InputSystem.scrollWheelDeltaPerTick;
+            state.scrollDelta = (scrollDelta / InputSystem.scrollWheelDeltaPerTick) * scrollDeltaPerTick;
 
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
@@ -2226,6 +2228,13 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
+        public override Vector2 ConvertPointerEventScrollDeltaToTicks(Vector2 scrollDelta)
+        {
+            return scrollDelta / scrollDeltaPerTick;
+        }
+#endif
+
         private void HookActions()
         {
             if (m_ActionsHooked)
@@ -2358,6 +2367,10 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
         [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
+
+        // See ISXB-766 for a history of where the 6.0f value comes from
+        // (we used to have 120 per tick on Windows and divided it by 20.)
+        [SerializeField] private float m_ScrollDeltaPerTick = 6.0f;
 
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
 
