@@ -161,6 +161,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public InputSettings.ScrollDeltaBehavior scrollDeltaBehavior
+        {
+            get => m_ScrollDeltaBehavior;
+            set
+            {
+                if (m_ScrollDeltaBehavior == value)
+                    return;
+
+                m_ScrollDeltaBehavior = value;
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+                InputRuntime.s_Instance.normalizeScrollWheelDelta =
+                    m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
+#endif
+            }
+        }
+
         public float pollingFrequency
         {
             get => m_PollingFrequency;
@@ -1853,6 +1870,8 @@ namespace UnityEngine.InputSystem
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
 
+            m_ScrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
+
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
 
@@ -2068,6 +2087,8 @@ namespace UnityEngine.InputSystem
         internal InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
+
+        private InputSettings.ScrollDeltaBehavior m_ScrollDeltaBehavior;
 
         #if UNITY_EDITOR
         // remember time offset to correctly restore it after editor mode is done
@@ -2624,6 +2645,8 @@ namespace UnityEngine.InputSystem
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
+
+            scrollDeltaBehavior = m_Settings.scrollDeltaBehavior;
 
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
@@ -3879,6 +3902,7 @@ namespace UnityEngine.InputSystem
             public InputStateBuffers buffers;
             public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
+            public InputSettings.ScrollDeltaBehavior scrollDeltaBehavior;
             public InputMetrics metrics;
             public InputSettings settings;
             public InputActionAsset actions;
@@ -3923,6 +3947,7 @@ namespace UnityEngine.InputSystem
                 buffers = m_StateBuffers,
                 updateState = InputUpdate.Save(),
                 updateMask = m_UpdateMask,
+                scrollDeltaBehavior = m_ScrollDeltaBehavior,
                 metrics = m_Metrics,
                 settings = m_Settings,
                 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -3940,6 +3965,7 @@ namespace UnityEngine.InputSystem
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             updateMask = state.updateMask;
+            scrollDeltaBehavior = state.scrollDeltaBehavior;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 

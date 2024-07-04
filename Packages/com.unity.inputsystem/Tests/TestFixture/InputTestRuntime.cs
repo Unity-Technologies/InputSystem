@@ -371,6 +371,8 @@ namespace UnityEngine.InputSystem
 
         public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+        public bool normalizeScrollWheelDelta { get; set; } = true;
+        public float scrollWheelDeltaPerTick { get; set; } = 1.0f;
 
         public List<PairedUser> userAccountPairings
         {
