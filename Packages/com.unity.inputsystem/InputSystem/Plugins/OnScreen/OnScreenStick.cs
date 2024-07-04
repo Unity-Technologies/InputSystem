@@ -135,6 +135,15 @@ namespace UnityEngine.InputSystem.OnScreen
             image.alphaHitTestMinimumThreshold = 0.5f;
         }
 
+        private void OnDestroy()
+        {
+            if (m_UseIsolatedInputActions)
+            {
+                m_PointerDownAction.started -= OnPointerDown;
+                m_PointerDownAction.canceled -= OnPointerUp;
+            }
+        }
+
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
         {
             var canvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
