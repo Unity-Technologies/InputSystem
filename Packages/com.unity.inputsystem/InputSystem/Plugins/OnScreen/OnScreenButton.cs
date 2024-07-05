@@ -2,6 +2,10 @@
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
+
 ////TODO: custom icon for OnScreenButton component
 
 namespace UnityEngine.InputSystem.OnScreen
@@ -54,6 +58,11 @@ namespace UnityEngine.InputSystem.OnScreen
             public void OnEnable()
             {
                 m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenButton.m_ControlPath));
+            }
+
+            public void OnDisable()
+            {
+                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenButton).Send();
             }
 
             public override void OnInspectorGUI()

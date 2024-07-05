@@ -977,5 +977,82 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             MultilineBoth,
         }
+
+        private static bool CompareFloats(float a, float b)
+        {
+            return (a - b) <= float.Epsilon;
+        }
+
+        private static bool CompareSets<T>(ReadOnlyArray<T> a, ReadOnlyArray<T> b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            for (var i = 0; i < a.Count; ++i)
+            {
+                bool existsInB = false;
+                for (var j = 0; j < b.Count; ++j)
+                {
+                    if (a[i].Equals(b[j]))
+                    {
+                        existsInB = true;
+                        break;
+                    }
+                }
+
+                if (!existsInB)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool CompareFeatureFlag(InputSettings a, InputSettings b, string featureName)
+        {
+            return a.IsFeatureEnabled(featureName) == b.IsFeatureEnabled(featureName);
+        }
+
+        internal static bool AreEqual(InputSettings a, InputSettings b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.updateMode == b.updateMode) &&
+                (a.compensateForScreenOrientation == b.compensateForScreenOrientation) &&
+                // Ignoring filterNoiseOnCurrent since deprecated
+                CompareFloats(a.defaultDeadzoneMin, b.defaultDeadzoneMin) &&
+                CompareFloats(a.defaultDeadzoneMax, b.defaultDeadzoneMax) &&
+                CompareFloats(a.defaultButtonPressPoint, b.defaultButtonPressPoint) &&
+                CompareFloats(a.buttonReleaseThreshold, b.buttonReleaseThreshold) &&
+                CompareFloats(a.defaultTapTime, b.defaultTapTime) &&
+                CompareFloats(a.defaultSlowTapTime, b.defaultSlowTapTime) &&
+                CompareFloats(a.defaultHoldTime, b.defaultHoldTime) &&
+                CompareFloats(a.tapRadius, b.tapRadius) &&
+                CompareFloats(a.multiTapDelayTime, b.multiTapDelayTime) &&
+                a.backgroundBehavior == b.backgroundBehavior &&
+                a.editorInputBehaviorInPlayMode == b.editorInputBehaviorInPlayMode &&
+                a.inputActionPropertyDrawerMode == b.inputActionPropertyDrawerMode &&
+                a.maxEventBytesPerUpdate == b.maxEventBytesPerUpdate &&
+                a.maxQueuedEventsPerUpdate == b.maxQueuedEventsPerUpdate &&
+                CompareSets(a.supportedDevices, b.supportedDevices) &&
+                a.disableRedundantEventsMerging == b.disableRedundantEventsMerging &&
+                a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
+
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+#else
+                true;     // Improves formatting
+#endif
+        }
     }
 }
