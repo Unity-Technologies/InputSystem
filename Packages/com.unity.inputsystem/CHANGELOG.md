@@ -41,6 +41,7 @@ however, it has to be formatted properly to pass verification tests.
   set by `InputSystem.settings.maxEventsBytesPerUpdate`. This additional information is available in development builds
   only.
 - Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
+- Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
 
 ## [1.8.2] - 2024-04-29
 
