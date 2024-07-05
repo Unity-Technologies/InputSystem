@@ -89,7 +89,7 @@
         },
         {
             "name": "Unity",
-            "expression": "6000.0.10",
+            "expression": "6000.0.11",
             "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA"
         }
     ],
