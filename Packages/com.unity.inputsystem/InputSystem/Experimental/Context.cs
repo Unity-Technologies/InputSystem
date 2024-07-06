@@ -37,10 +37,10 @@ namespace UnityEngine.InputSystem.Experimental
         
         private readonly int m_Handle;
         
-        private readonly Dictionary<Usage, StreamContext> m_StreamContexts = new(); // Tracks observed usages
-        private readonly Dictionary<Usage, IStream> m_Streams = new();              // Tracks available streams
-        private readonly EventStream m_Events = new();                              // MPMC queue of observable events
-        private int m_NodeId;
+        private readonly Dictionary<Usage, StreamContext> m_StreamContexts; // Tracks observed usages/streams.
+        private readonly Dictionary<Usage, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
+        private readonly EventStream m_Events;                              // Shared system queue of observable events.
+        private int m_NodeId;                                               // Context specific node ID counter.
         
         public static Context instance
         {
@@ -50,7 +50,8 @@ namespace UnityEngine.InputSystem.Experimental
         
         public Context()
         {
-            // Attempt to assign this context to a global slot
+            // Attempt to assign this context to a global slot. This allows referencing the context with
+            // a handle (non reference type) when necessary.
             var handle = 0;
             for (var i = 0; i < kMaxContexts; ++i)
             {
@@ -62,10 +63,11 @@ namespace UnityEngine.InputSystem.Experimental
                 }
             }
             if (handle == 0)
-            {
-                throw new Exception(
-                    $"Maximum number of concurrently existing {nameof(Context)} instances reached ({kMaxContexts}. Did you forget to dispose previous instances?");
-            }
+                throw new Exception($"Maximum number of concurrently existing {nameof(Context)} instances reached ({kMaxContexts}. Did you forget to dispose previous instances?");
+
+            m_StreamContexts = new();
+            m_Streams = new();
+            m_Events = new EventStream();
             m_Handle = handle;
         }
         

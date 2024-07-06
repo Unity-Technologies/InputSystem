@@ -14,10 +14,22 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         {
             public static readonly Usage LeftStick = new(436321321);
             public static readonly Usage RightStick = new(3213574);
+            
+            public static readonly Usage LeftTrigger = new(699321321);
+            public static readonly Usage RightTrigger = new(921359974);
+            
             public static readonly Usage ButtonEast = new(64155486);
             public static readonly Usage ButtonSouth = new(2313185468);
             public static readonly Usage ButtonWest = new(12312312);
             public static readonly Usage ButtonNorth = new(2123123468);
+            public static readonly Usage Select = new(852255456);
+            public static readonly Usage Start = new(678345453);
+            public static readonly Usage Up = new(674442313);
+            public static readonly Usage Down = new(91911556);
+            public static readonly Usage Left = new(8217333);
+            public static readonly Usage Right = new(9511593);
+            public static readonly Usage LeftShoulder = new(9511593);
+            public static readonly Usage RightShoulder = new(9511593);
             public static readonly Usage RumbleHaptic = new(2521315);
         }
     }
@@ -41,6 +53,10 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             RightPaddle = 1 << 5,       // 32
             LeftStickHat = 1 << 6,      // 64
             RightStickHat = 1 << 7,     // 128
+            LeftShoulder = 1 << 8,      // 256
+            RightShoulder = 1 << 9,     // 512
+            Start = 1 << 10,            // 1024
+            Select = 1 << 11,           // 2048
         }
         
         [FieldOffset(0)] public GamepadButton value;    // Byte 0-3
@@ -68,6 +84,19 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     }
     
     // TODO Should we skip doing this and let Roslyn generate it for us?
+
+    /*struct IndexedDevice<T>
+    {
+        private readonly ushort m_DeviceID;
+        
+        public T this[int instance]
+        {
+            get
+            {
+                
+            }
+        }
+    }*/
     
     /// <summary>
     /// Represents the binding surface of a standard-model Gamepad.
@@ -79,16 +108,34 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     [InputSource]
     public readonly struct Gamepad
     {
+        // Gamepad.LeftStick.Subscribe(...)
+        
+        public static Gamepad any => new Gamepad();
         //private Stream<GamepadState> m_Stream;
         // TODO Add API to fetch Gamepad instances via Context as well as instance specific getters for actual control representations
         
+        //public readonly ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
+
+        
         //public readonly ref GamepadState => 
-        public static readonly ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
+        public static ObservableInput<Vector2> LeftStick => new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
         public static readonly ObservableInput<Vector2> RightStick = new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick");
+        
+        public static readonly ObservableInput<float> LeftTrigger = new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger");
+        public static readonly ObservableInput<float> RightTrigger = new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger");
+        
         public static readonly ObservableInput<bool> ButtonSouth = new(Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth");
         public static readonly ObservableInput<bool> ButtonEast = new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast");
         public static readonly ObservableInput<bool> ButtonNorth = new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth");
         public static readonly ObservableInput<bool> ButtonWest = new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest");
+        public static readonly ObservableInput<bool> LeftShoulder = new(Usages.GamepadUsages.LeftShoulder, "Gamepad.LeftShoulder");
+        public static readonly ObservableInput<bool> RightShoulder = new(Usages.GamepadUsages.RightShoulder, "Gamepad.RightShoulder");
+        public static readonly ObservableInput<bool> Select = new(Usages.GamepadUsages.Select, "Gamepad.Select");
+        public static readonly ObservableInput<bool> Start = new(Usages.GamepadUsages.Start, "Gamepad.Start");
+        public static readonly ObservableInput<bool> Up = new(Usages.GamepadUsages.Up, "Gamepad.Up");
+        public static readonly ObservableInput<bool> Left = new(Usages.GamepadUsages.Left, "Gamepad.Left");
+        public static readonly ObservableInput<bool> Right = new(Usages.GamepadUsages.Right, "Gamepad.Right");
+        public static readonly ObservableInput<bool> Down = new(Usages.GamepadUsages.Down, "Gamepad.Down");
         
         public static OutputBindingTarget<float> RumbleHaptic = new(Usages.GamepadUsages.RumbleHaptic); // TODO Move to HapticDevice
     }

@@ -52,7 +52,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe(Context context, IObserver<T> observer) =>
             (m_Impl ??= new Impl(context, m_Source, m_Predicate)).Subscribe(context, observer);
-
+        
         public bool Equals(IDependencyGraphNode other)
         {
             throw new NotImplementedException();

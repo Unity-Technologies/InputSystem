@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -7,9 +8,9 @@ namespace UnityEngine.InputSystem.Experimental
     public struct SubscriptionReader<T> : IDisposable 
         where T : struct
     {
-        private Context.StreamContext<T> m_StreamContext;
+        private readonly Context.StreamContext<T> m_StreamContext;
 
-        internal SubscriptionReader(Context.StreamContext<T> streamContext)
+        internal SubscriptionReader([NotNull] Context.StreamContext<T> streamContext)
         {
             m_StreamContext = streamContext;
         }

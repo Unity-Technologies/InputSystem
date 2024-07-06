@@ -143,8 +143,13 @@ namespace UnityEngine.InputSystem.Experimental
         {
             m_Values.Dispose();
         }
+
+        public NativeSlice<T>.Enumerator GetEnumerator()
+        {
+            return m_Values.Slice(1, m_Count - 1).GetEnumerator();
+        }
         
-        public IEnumerator<T> GetEnumerator()
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
             return m_Values.Slice(1, m_Count - 1).GetEnumerator();
         }

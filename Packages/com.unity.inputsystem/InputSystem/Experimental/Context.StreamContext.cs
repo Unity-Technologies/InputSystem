@@ -5,10 +5,10 @@ namespace UnityEngine.InputSystem.Experimental
 {
     public partial class Context
     {
-        internal abstract class StreamContext : IDisposable
+        internal abstract class StreamContext : IDisposable // TODO Non-ideal since virtual calls, try to eliminate
         {
             public abstract void Advance(); // TEMP
-            public abstract void Process();
+            public abstract void Process(); // TEMP
             public abstract void Dispose();
         }
 
@@ -60,6 +60,7 @@ namespace UnityEngine.InputSystem.Experimental
                     return;
 
                 // TODO Consider order here, complete for one observer vs in-order (still partial)
+                // Drive update by propagating this data through the dependency tree (callbacks)
                 var span = m_Stream.AsSpan();
                 for (var i = 0; i < span.Length; ++i)
                 {

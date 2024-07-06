@@ -1,5 +1,9 @@
 using System;
 
+// TODO Evaluate if we could also make Impl a struct. Some Impl requires to track state and hence we should support
+//      allocating such state. If state is native memory we can avoid GC. However, we need to also keep a list
+//      of managed objects mapping to IDisposable subscriptions and IObservable<T> representing callbacks in chain.
+
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO CombineLatest Should not emit if same atomic source until all has reported for timestep t
@@ -9,12 +13,12 @@ namespace UnityEngine.InputSystem.Experimental
         where T0 : struct
         where T1 : struct
     {
-        private sealed class Impl
+        private sealed class Impl 
         {
             private readonly ObserverList2<ValueTuple<T0, T1>> m_Observers;
             private ValueTuple<T0, T1> m_Value;
 
-            private sealed class FirstObserver : IObserver<T0>
+            private readonly struct FirstObserver : IObserver<T0> // TODO Should we use struct or class?!
             {
                 private readonly Impl m_Parent;
                 
@@ -40,7 +44,7 @@ namespace UnityEngine.InputSystem.Experimental
                 }
             }
 
-            private sealed class SecondObserver : IObserver<T1>
+            private readonly struct SecondObserver : IObserver<T1>
             {
                 private readonly Impl m_Parent;
                 
@@ -71,6 +75,7 @@ namespace UnityEngine.InputSystem.Experimental
                 var firstObserver = new FirstObserver(this);
                 var secondObserver = new SecondObserver(this);
                 
+                // Note that first and second observers are copied and hence should not contain state
                 m_Observers = new ObserverList2<ValueTuple<T0, T1>>( 
                     source0.Subscribe(context, firstObserver),
                     source1.Subscribe(context, secondObserver));
@@ -81,7 +86,7 @@ namespace UnityEngine.InputSystem.Experimental
 
             public IDisposable Subscribe(Context context, IObserver<ValueTuple<T0, T1>> observer) =>
                 m_Observers.Subscribe(context, observer);
-
+            
             private void ForwardOnNext() => m_Observers.OnNext(m_Value);
         }
         

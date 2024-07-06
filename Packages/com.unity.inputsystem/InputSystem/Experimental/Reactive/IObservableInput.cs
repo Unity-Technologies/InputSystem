@@ -12,13 +12,13 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         /// <summary>
-        /// Subscribes to the given source within context <paramref name="context"/>
+        /// Subscribes to the given opaque source within context <paramref name="context"/>
         /// </summary>
         /// <param name="context">The associated context.</param>
         /// <param name="observer">The observer to receive data when available.</param>
-        /// <returns>Disposable subscription object.</returns>
+        /// <returns>Opaque disposable subscription object.</returns>
         public IDisposable Subscribe([NotNull] Context context, IObserver<T> observer); // TODO If we allow the subscription type to implement IDisposable but be a specific type we could avoid indirection
-     
+        
         // TODO Consider an alternative API for which we can do jobs without indirection overhead for selected use-cases. 
         // TODO public StreamSubscription<T> Subscribe([NotNull] context, ObservableInput<T> source)
     }

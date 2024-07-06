@@ -20,6 +20,13 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return observable.Subscribe(new SimpleObserverDelegateWrapper<T>(action));
         }
+        
+        public static IDisposable Do<T, TSource>(this TSource observable, Action<T> action) 
+            where T : struct 
+            where TSource : IObservableInput<T>
+        {
+            return observable.Subscribe(new SimpleObserverDelegateWrapper<T>(action));
+        }
 
         // Internal helper class that wraps an Actions as an IObserver
         private sealed class ObserverDelegateWrapper<T> : IObserver<T>

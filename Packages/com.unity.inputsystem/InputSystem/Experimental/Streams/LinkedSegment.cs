@@ -5,9 +5,65 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    internal unsafe struct LinkedSegment
+    {
+        public void* Ptr;
+        public LinkedSegment* Next;
+        public int Length;
+        public int Capacity;
+
+        public bool Push(void* data, int sizeBytes, int alignOf)
+        {
+            var dst = UnsafeUtils.OffsetAndAlignUp(Ptr, sizeBytes, alignOf);
+            var next = UnsafeUtils.Offset(dst, sizeBytes);
+            if (next > Ptr) 
+                return false;
+            UnsafeUtility.MemCpy(dst, data, sizeBytes);
+            return true;
+        }
+        
+        public static LinkedSegment* Create(int capacity, AllocatorManager.AllocatorHandle allocator)
+        {
+            if (capacity <= 0)
+                throw new ArgumentOutOfRangeException($"Capacity must be positive, but was {capacity}.");
+
+            var segment = UnsafeUtils.AllocateHeaderAndData<LinkedSegment, byte>(allocator, capacity, out var data);
+            segment->Ptr = data;
+            segment->Next = null;
+            segment->Length = 0;
+            segment->Capacity = capacity;
+            
+            return segment;
+        }
+        
+        public static void Destroy(LinkedSegment* segment, AllocatorManager.AllocatorHandle allocator)
+        {
+#if INPUT_SYSTEM_COALLOCATE
+            AllocatorManager.Free(allocator, segment);
+#else
+            AllocatorManager.Free(allocator, segment->Ptr);
+            AllocatorManager.Free(allocator, segment);
+#endif // INPUT_SYSTEM_COALLOCATE
+        }
+        
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void CheckAlignment(LinkedSegment* ptr, AllocatorManager.AllocatorHandle allocator)
+        {
+            if (!CollectionHelper.IsAligned(ptr, UnsafeUtility.AlignOf<LinkedSegment>()))
+            {
+                Destroy(ptr, allocator);
+                throw new ArgumentException("Invalid segment memory alignment");
+            }
+            
+            //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
+        }
+    }
+    
     /// <summary>
     /// Represents a fixed-size segment of consecutive memory to hold values of <typeparamref name="T"/> that is
     /// optionally part of an intrusive linked list of segments.
@@ -53,40 +109,14 @@ namespace UnityEngine.InputSystem.Experimental
             if (capacity <= 0)
                 throw new ArgumentOutOfRangeException($"Capacity must be positive, but was {capacity}.");
             
-#if INPUT_SYSTEM_COALLOCATE
-            // Co-allocate segment header and data in the same memory region.
-            // Note that we pad segment size based on alignment requirement of type T.
-            var headerSizeBytes = UnsafeUtility.SizeOf<LinkedSegment<T>>();
-            var itemsSizeBytes = capacity * UnsafeUtility.SizeOf<T>();
-            var itemAlignment = UnsafeUtility.AlignOf<T>();
-            var totalSizeBytes = headerSizeBytes + itemsSizeBytes + itemAlignment;
-            var ptr = allocator.Allocate(sizeOf: totalSizeBytes, alignOf: UnsafeUtility.AlignOf<LinkedSegment<T>>());
-            
-            // Initialize segment with pointer offset into allocated memory block to match alignment.
-            var segment = (LinkedSegment<T>*)ptr;
-            segment->Ptr = (T*)AlignUp(Offset(ptr, headerSizeBytes), UnsafeUtility.AlignOf<T>()); //(T*)((ulong)ptr) + headerSizeBytes;
-#else
-            // Perform separate allocations for segment header and data
-            var segment = (LinkedSegment<T>*)allocator.Allocate(sizeof(LinkedSegment<T>), UnsafeUtility.AlignOf<LinkedSegment<T>>());
-            segment->Ptr = (T*)allocator.Allocate(sizeof(T), UnsafeUtility.AlignOf<T>(), capacity);
-#endif // INPUT_SYSTEM_COALLOCATE
+            var segment = UnsafeUtils.AllocateHeaderAndData<LinkedSegment<T>, T>(
+                allocator, capacity, out var data);
+            segment->Ptr = data;
             segment->Next = null;
             segment->Length = 0;
             segment->Capacity = capacity;
             
-            CheckAlignment(segment, allocator);
-            
             return segment;
-        }
-
-        private static void* Offset(void* ptr, int offset)
-        {
-            return (void*)(((ulong)ptr) + (ulong)offset);
-        }
-        
-        private static void* AlignUp(void* ptr, int alignment)
-        {
-            return (void*)CollectionHelper.Align(((ulong)ptr), (ulong)alignment);
         }
 
         /// <summary>

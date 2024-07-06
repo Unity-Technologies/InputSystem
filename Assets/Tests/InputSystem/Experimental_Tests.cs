@@ -26,14 +26,14 @@ namespace Tests.InputSystem
     {
         private readonly T m_Node;
         public C(T node) { this.m_Node = node; }
-        public string DoIt() => $"C({m_Node})";
+        public string DoIt() => $"C({m_Node.DoIt()})";
     }
 
     public struct B<T> : INode where T : INode
     {
         private readonly T m_Node;
         public B(T node) { this.m_Node = node; }
-        public string DoIt() => $"B({m_Node})";
+        public string DoIt() => $"B({m_Node.DoIt()})";
     }
 
     public struct A : INode
@@ -51,62 +51,6 @@ namespace Tests.InputSystem
         public static C<T> c<T>(this T obj) where T : INode
         {
             return new C<T>();
-        }
-    }
-
-    // Button stub to improve readability of test code
-    internal readonly struct ButtonStub
-    {
-        private readonly Stream<bool> m_Stream;
-
-        public ButtonStub(Stream<bool> stream)
-        {
-            m_Stream = stream;
-        }
-
-        public void Press()
-        {
-            m_Stream.OfferByValue(true);
-        }
-
-        public void Release()
-        {
-            m_Stream.OfferByValue(false);
-        }
-    }
-
-    internal readonly struct Stub<T> where T : struct
-    {
-        private readonly Stream<T> m_Stream;
-
-        public Stub(Stream<T> stream)
-        {
-            m_Stream = stream;
-        }
-
-        public void Change(T value)
-        {
-            m_Stream.OfferByValue(value);
-        }
-        
-        public void Change(ref T value)
-        {
-            m_Stream.OfferByRef(ref value);
-        }
-    }
-
-    // Allows constructing a stub from an observable input
-    internal static class StubExtensions
-    {
-        public static Stub<T> Stub<T>(this ObservableInput<T> source, Context context, T initialValue = default)
-            where T : struct
-        {
-            return new Stub<T>(context.CreateStream(key: source.Usage, initialValue: initialValue));
-        }
-        
-        public static ButtonStub Stub(this ObservableInput<bool> source, Context context, bool initialValue = false)
-        {
-            return new ButtonStub(context.CreateStream(key: source.Usage, initialValue: initialValue));
         }
     }
     
@@ -205,12 +149,23 @@ namespace Tests.InputSystem
             Assert.That(endPoint.sourceId, Is.EqualTo(expectedSourceId));
             Assert.That(endPoint.sourceType, Is.EqualTo(expectedSourceType));
         }
+
+        [Test]
+        public void Chain()
+        {
+            C<B<A>> chain1;
+            A a;
+            var chain2 = a.b().c();
+            Assert.That(chain1.DoIt(), Is.EqualTo("C(B(A))"));
+            Assert.That(chain2.DoIt(), Is.EqualTo("C(B(A))"));
+        }
         
         [Test]
         public void Stream()
         {
             using var s = new Stream<int>(Usages.GamepadUsages.LeftStick, 100);
 
+            // Even though stream is initialized with an initial value this value should not be part of changed values
             {
                 var values = s.ToArray();
                 Assert.That(values.Length, Is.EqualTo(0));
@@ -218,10 +173,14 @@ namespace Tests.InputSystem
                 
                 s.Advance();
             }
+            
+            // Still no new values
             {
                 var values = s.ToArray();
                 Assert.That(values.Length, Is.EqualTo(0));
             }
+            
+            // Offer some values resulting in changes
             {
                 s.OfferByValue(1);
                 s.OfferByValue(2);
@@ -647,12 +606,31 @@ namespace Tests.InputSystem
         }
 
         [Test]
+        public void Action_Test()
+        {
+            var subscription = Gamepad.ButtonSouth.Pressed().Subscribe((InputEvent evt) => { /* Jump */  });
+            subscription.Dispose();
+        }
+        
+        // See https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/function-pointers&ved=2ahUKEwiTqPXjhZCHAxWjT6QEHYuMCzoQFnoECBQQAQ&usg=AOvVaw1KAsN4qvHk0_AnbLat7S6M
+        /*[Test]
+        public void UnsafeFp()
+        {
+            unsafe
+            {
+                // NOT possible in current C# version
+                delegate*<void> a1 = &Function();
+            }
+        }*/
+
+        [Test]
         public void Filter_Test()
         {
             var stick = Gamepad.LeftStick.Stub(m_Context);
             
             var observer = new ListObserver<Vector2>();
-            using var subscription = Gamepad.LeftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
+            using var opaqueSubscription = Gamepad.LeftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
+            //using var subscription = Gamepad.LeftStick.Filter<Vector2>(v => v.x >= 0.5f).Subscribe(m_Context, observer);
             
             stick.Change(new Vector2(0.4f, 0.0f));
             stick.Change(new Vector2(0.5f, 0.0f));
@@ -664,6 +642,26 @@ namespace Tests.InputSystem
             Assert.That(observer.Next.Count, Is.EqualTo(2));
             Assert.That(observer.Next[0], Is.EqualTo(new Vector2(0.5f, 0.0f)));
             Assert.That(observer.Next[1], Is.EqualTo(new Vector2(0.6f, 0.1f)));
+        }
+        
+        [Test]
+        public void ValueFilter_Test()
+        {
+            var stick = Gamepad.LeftTrigger.Stub(m_Context);
+            
+            var observer = new ListObserver<float>();
+            using var subscription = Gamepad.LeftTrigger.LowPassFilter().Subscribe(m_Context, observer);
+            
+            stick.Change(0.0f);
+            stick.Change(0.1f);
+            stick.Change(0.2f);
+            stick.Change(0.9f);
+            stick.Change(0.5f);
+            
+            m_Context.Update();
+            
+            Assert.That(observer.Next.Count, Is.EqualTo(5));
+            Assert.That(observer.Next[0], Is.EqualTo(0.0f));
         }
         
         [Test]

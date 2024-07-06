@@ -2,6 +2,7 @@ using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
+using Tests.InputSystem;
 using Unity.Collections;
 using Unity.PerformanceTesting;
 using UnityEngine;
@@ -11,6 +12,8 @@ using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+using X = UnityEngine.InputSystem.Experimental;
 
 ////TODO: add test for domain reload logic
 
@@ -28,6 +31,13 @@ internal class CorePerformanceTests : CoreTestsFixture
         // stack traces make each native container allocation extremely expensive. For our
         // performance tests, turn this off entirely.
         NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
+    }
+
+    [Test, Performance]
+    [Category("Experimental")]
+    public void Press()
+    {
+        
     }
 
     [Test, Performance]

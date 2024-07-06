@@ -103,6 +103,7 @@ namespace UnityEngine.InputSystem.Experimental
             //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
         }
         
+        // TODO Measure performance, it might be non-ideal to keep a copy of current segment if elements are added while iterating.
         public struct Enumerator : IEnumerator<T>
         {
             private readonly UniformBuffer<T> m_Container;  // Note: This is a copy

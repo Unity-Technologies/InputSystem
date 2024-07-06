@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Jobs;
 
 // TODO See comments in header
@@ -36,10 +38,10 @@ namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
-    public struct Pressed<TSource> : IObservableInput<InputEvent>, IDependencyGraphNode
+    public struct Pressed<TSource> : IObservableInput<InputEvent>
         where TSource : IObservableInput<bool>, IDependencyGraphNode
     {
-        private sealed class Impl : IObserver<bool>
+        internal sealed class Impl : IObserver<bool>
         {
             private bool m_PreviousValue;
             private readonly ObserverList2<InputEvent> m_Observers;
@@ -50,7 +52,7 @@ namespace UnityEngine.InputSystem.Experimental
             }
 
             public IDisposable Subscribe(IObserver<InputEvent> observer) => 
-                Subscribe(Context.instance, observer); // TODO Unnecessary must
+                Subscribe(Context.instance, observer); // TODO Unnecessary must unless we use a base
 
             public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
                 m_Observers.Subscribe(context, observer);
@@ -77,16 +79,44 @@ namespace UnityEngine.InputSystem.Experimental
             m_Impl = null;
         }
 
+        private Impl GetImplementation(Context context) => (m_Impl ??= new Impl(context, m_Source));
+        
         public IDisposable Subscribe(IObserver<InputEvent> observer) =>
             Subscribe(Context.instance, observer);
-
+        
         public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
-            (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);
+            GetImplementation(context).Subscribe(context, observer);
         
         // TODO Reader end-point
-        public IDisposable Subscribe2(Context context)
+        // TODO Provide a non-abstract enumerator or let reader implement IEnumerable
+        public IEnumerable<InputEvent> Subscribe2(Context context)
         {
+            // TODO m_Source.GetEnumerator();
+            
             // TODO Need additional constraint on source so that we can unroll into operations
+            return new Reader(m_Source);
+            //return new Reader<InputEvent, Impl>(GetImplementation(context));
+        }
+
+        public readonly struct Reader : IReader<InputEvent>
+        {
+            //private readonly Impl m_Impl;
+            private readonly TSource m_Source;
+            
+            internal Reader(TSource source)
+            {
+                m_Source = source; // Source could also be enumerable
+            }
+            
+            public IEnumerator<InputEvent> GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
         
         public bool Equals(IDependencyGraphNode other) =>
