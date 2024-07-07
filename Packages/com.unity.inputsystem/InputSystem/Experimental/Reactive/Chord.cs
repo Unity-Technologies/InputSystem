@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
     
-    public static class ChordExtensionMethods
+    public static partial class Combine
     {
         public static Chord<TSource> Chord<TSource>(this TSource source1, TSource source2)
             where TSource : IObservableInput<bool>, IDependencyGraphNode

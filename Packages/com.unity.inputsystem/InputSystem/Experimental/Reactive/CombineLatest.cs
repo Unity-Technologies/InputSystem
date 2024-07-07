@@ -124,12 +124,18 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
 
-    /// <summary>
-    /// Allows applying Press interaction evaluation on an observable source.
-    /// </summary>
-    public static class CombineLatestExtensionMethods
+    public static partial class Combine
     {
-        public static CombineLatest<T0, T1, TSource0, TSource1> CombineLatest<T0, T1, TSource0, TSource1>(
+        // TODO See if there is some trick we can utilize to keep decent syntax but not type-erase sources
+        public static CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>> Latest<T0, T1>(
+            IObservableInput<T0> source0, IObservableInput<T1> source1)
+            where T0 : struct
+            where T1 : struct
+        {
+            return new CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>>(source0, source1);
+        }
+        
+        public static CombineLatest<T0, T1, TSource0, TSource1> Latest<T0, T1, TSource0, TSource1>(
             this TSource0 source0, TSource1 source1)
             where TSource0 : IObservableInput<T0>, IDependencyGraphNode
             where TSource1 : IObservableInput<T1>, IDependencyGraphNode
@@ -138,6 +144,5 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return new CombineLatest<T0, T1, TSource0, TSource1>(source0, source1);
         }
-    }    
-    
+    }
 }

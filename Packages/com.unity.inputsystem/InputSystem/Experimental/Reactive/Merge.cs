@@ -112,4 +112,14 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
     }
+
+    public static partial class Combine
+    {
+        public static Merge<T, IObservableInput<T>> Merge<T>(
+            IObservableInput<T> source0, IObservableInput<T> source1)
+            where T : struct
+        {
+            return new Merge<T, IObservableInput<T>>(source0, source1);
+        }
+    }
 }

@@ -1,11 +1,15 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Unity.Collections;
 
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Implement a dependency graph walker
     
-    public struct SubscriptionReader<T> : IDisposable 
+    // This is a reader associated with an underlying stream
+    public readonly struct SubscriptionReader<T> : IDisposable, IEnumerable<T> 
         where T : struct
     {
         private readonly Context.StreamContext<T> m_StreamContext;
@@ -15,22 +19,9 @@ namespace UnityEngine.InputSystem.Experimental
             m_StreamContext = streamContext;
         }
 
-        internal SubscriptionReader(Context context, Usage usage)
-        {
-            // TODO We need to handle here somehow whether there is only a single subscription to our data, or react/adapt based on it being a shared evaluation dependency chain.
-            //      We should likely have a node representation which all implements comparable so we can construct this dependency tree.
-            m_StreamContext = context.GetOrCreateStreamContext<T>(usage);
-            
-            // TODO We need to monitor changes to stream context stream
-            // TODO Keep a reference to currently associated stream
-            
-            
-        }
-
-        // Dependency chain:
-        // Press(Gamepad.buttonSouth)
-        
-        //internal IDependencyGraphNode Node => m_StreamContext;
+        internal SubscriptionReader([NotNull] Context context, Usage usage)
+            : this(context.GetOrCreateStreamContext<T>(usage))
+        { }
 
         public T Read()
         {
@@ -46,5 +37,9 @@ namespace UnityEngine.InputSystem.Experimental
         {
             // TODO Fix
         }
+
+        public NativeSlice<T>.Enumerator GetEnumerator() => m_StreamContext.GetEnumerator(); // TODO If consistent type we may use interface constraint 
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

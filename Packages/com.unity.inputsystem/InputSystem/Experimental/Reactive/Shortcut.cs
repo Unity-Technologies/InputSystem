@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -45,8 +46,15 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource m_Trigger;
         private Impl m_Impl;
         
-        public Shortcut([InputPort] TSource modifier, [InputPort] TSource trigger)
+        public Shortcut([InputPort] [NotNull] TSource modifier, [InputPort] [NotNull] TSource trigger)
         {
+            if (modifier == null)
+                throw new ArgumentNullException(nameof(modifier));
+            if (trigger == null)
+                throw new ArgumentNullException(nameof(trigger));
+            if (modifier.Equals(trigger))
+                throw new ArgumentException($"{nameof(modifier)} may not be the same as {nameof(trigger)}");
+                
             m_Modifier = modifier;
             m_Trigger = trigger;
             m_Impl = null;
@@ -78,9 +86,9 @@ namespace UnityEngine.InputSystem.Experimental
     }
 
     // Shortcut is a combining function and hence has a static factory function
-    public static class Shortcut
+    public static partial class Combine
     {
-        public static Shortcut<TSource> Create<TSource>(TSource source1, TSource source2)
+        public static Shortcut<TSource> Shortcut<TSource>(TSource source1, TSource source2)
             where TSource : IObservableInput<bool>, IDependencyGraphNode
         {
             return new Shortcut<TSource>(source1, source2);

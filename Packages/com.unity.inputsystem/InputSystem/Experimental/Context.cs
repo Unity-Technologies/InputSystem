@@ -98,11 +98,6 @@ namespace UnityEngine.InputSystem.Experimental
             return stream;
         }
 
-        public Stream<T> CreateDefaultInitializedStream<T>(ObservableInput<T> source) where T : struct
-        {
-            return CreateStream<T>(source.Usage, default);
-        }
-        
         internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
         {
             // Attempt to fetch existing stream context
@@ -118,8 +113,8 @@ namespace UnityEngine.InputSystem.Experimental
             var streamContext = (StreamContext<T>)context;
             if (m_Streams.TryGetValue(key, out var stream))
                 streamContext.SetStream(stream as Stream<T>);
-            
-            return (StreamContext<T>)context;
+
+            return streamContext;
         }
 
         public void Update()
@@ -128,26 +123,17 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO Replace with filtered call based on incoming. Note that a stream context always has subscriptions.
             //      If not, it doesn't exist.
             foreach (var kvp in m_StreamContexts)
-            {
                 kvp.Value.Process(); // TODO Requires indirection, consider supporting built-in type explicitly?
-            }
             foreach (var kvp in m_StreamContexts)
-            {
                 kvp.Value.Advance(); // TODO Requires indirection, consider supporting built-in type explicitly?
-            }
         }
 
         public void Dispose()
         {
             foreach (var kvp in m_StreamContexts)
-            {
                 kvp.Value.Dispose();
-            }
-
             foreach (var kvp in m_Streams)
-            {
                 kvp.Value.Dispose();
-            }
             
             // Release global slot
             _globals.Contexts[m_Handle - 1] = null;

@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
@@ -131,11 +133,10 @@ namespace UnityEngine.InputSystem.Experimental
             return Subscribe(Context.instance);
         }
         
-        public SubscriptionReader<T> Subscribe(Context context)
+        public readonly SubscriptionReader<T> Subscribe(Context context)
         {
-            m_NodeId = context.RegisterNode();
-            var streamContext = context.GetOrCreateStreamContext<T>(Usage);
-            return new SubscriptionReader<T>(streamContext);
+            //m_NodeId = context.RegisterNode();
+            return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(Usage)); // Subscription reader need to 
         }
         
         #region IDependencyGraphNode
@@ -164,11 +165,12 @@ namespace UnityEngine.InputSystem.Experimental
         
         /// <inheritDoc />
         public bool Equals(ObservableInput<T> other) => Usage.Equals(other.Usage);
+
         /// <inheritDoc />
         public override bool Equals(object obj) => obj is ObservableInput<T> other && Equals(other);
         /// <inheritDoc />
         public override int GetHashCode() => Usage.GetHashCode();
-        
+
         #endregion
     }
 }

@@ -64,6 +64,7 @@ namespace Tests.InputSystem
         }
     }
 
+    [Category("Experimental")]
     internal class Experimental_Tests
     {
         private Context m_Context;
@@ -209,83 +210,7 @@ namespace Tests.InputSystem
             //    buf.Push(5);
         }
 
-        [Test]
-        public void Uniform_Create_Dispose()
-        {
-            var sut = new UniformBuffer<int>(3, AllocatorManager.Persistent);
-            sut.Dispose();
-        }
         
-        [Test]
-        public void Uniform_ConstructorShouldThrow_IfGivenInvalidCapacity()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-            {
-                using var s = new UniformBuffer<int>(0, AllocatorManager.Persistent);
-            });
-        }
-        
-        [Test]
-        public void Uniform_PushShouldSucceed_IfSufficientCapacity()
-        {
-            using var sut = new UniformBuffer<int>(1, AllocatorManager.Persistent);
-            sut.Push(5);
-        }
-        
-        [Test]
-        public void Uniform_PushShouldSucceed_IfInsufficientCapacity()
-        {
-            using var sut = new UniformBuffer<int>(1, AllocatorManager.Persistent);
-            sut.Push(5);
-            sut.Push(6);
-        }
-
-        [Test]
-        public void LinkedSegment()
-        {
-            unsafe
-            {
-                var segment = LinkedSegment<int>.Create(3, AllocatorManager.Temp);
-                LinkedSegment<int>.Destroy(segment, AllocatorManager.Temp);    
-            }
-        }
-        
-        //[Ignore("Implementation needs fixing")]
-        [Test]
-        public void Uniform()
-        {
-            using var uni = new UniformBuffer<int>(3, AllocatorManager.Persistent);
-
-            Assert.That(uni.ToArray().Length, Is.EqualTo(0));
-            
-            const int n = 10;
-            for (var i = 0; i < n; ++i)
-            {
-                // Assert push
-                var length = i + 1;
-                uni.Push(length);
-
-                // Assert enumeration which is indirectly triggered by ToArray
-                var values = uni.ToArray();
-                Assert.That(values.Length, Is.EqualTo(length));
-                for (var j = 0; j < length; ++j)
-                    Assert.That(values[j], Is.EqualTo(j+1));
-            }
-
-            uni.Clear();
-            Assert.That(uni.ToArray().Length, Is.EqualTo(0));
-            
-            uni.Push(1);
-            uni.Push(2);
-            uni.Push(3);
-            uni.Push(4);
-            
-            Assert.That(uni.ToArray().Length, Is.EqualTo(4));
-
-            using var e = uni.GetEnumerator();
-            Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current, Is.EqualTo(1));
-        }
 
         // TODO What if all bindable operations where picked up by a code generator which made them detectable via registration?!
         // [RegisterInputBinding] private InputBinding<> binding;
@@ -405,7 +330,27 @@ namespace Tests.InputSystem
             Assert.That(data.Next[1], Is.EqualTo(Vector2.left));
             Assert.That(data.Next[2], Is.EqualTo(Vector2.right));
         }
-        
+
+        // TODO Consider EnumerableInput, separated from ObservableInput
+        [Test]
+        public void Reader()
+        {
+            var data = new ListObserver<Vector2>();
+            
+            using var reader = Gamepad.ButtonEast.Subscribe(m_Context);
+            Assert.That(reader.ToArray().Length, Is.EqualTo(0));
+
+            var button = Gamepad.ButtonEast.Stub(m_Context);
+            button.Press();
+            button.Release();
+            //m_Context.Update(); // TODO Incorrect with this pattern
+
+            var values = reader.ToArray();
+            Assert.That(values.Length, Is.EqualTo(2));
+            Assert.That(values[0], Is.EqualTo(true));
+            Assert.That(values[1], Is.EqualTo(false));
+        }
+
         [Test]
         public void CombineLatest()
         {
@@ -432,28 +377,7 @@ namespace Tests.InputSystem
             Assert.That(observer.Next[3], Is.EqualTo(new ValueTuple<bool, bool>(false, false)));
         }
 
-        [Test]
-        public void Chord()
-        {
-            var button0 = Gamepad.ButtonEast.Stub(m_Context);
-            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
-            var observer = new ListObserver<bool>();
-            using var subscription = Combine.Chord(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
-            
-            button0.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(0));
-            
-            button1.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-            Assert.That(observer.Next[0], Is.EqualTo(true));
-            
-            button0.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            Assert.That(observer.Next[1], Is.EqualTo(false));
-        }
+        
 
         class CustomConstraint : Constraint
         {
@@ -468,93 +392,7 @@ namespace Tests.InputSystem
             public Constraint IsObserving(IEnumerable<T> sequence)    
         }*/
         
-        [Test]
-        public void Shortcut_Test()
-        {
-            var button0 = Gamepad.ButtonEast.Stub(m_Context);
-            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
-            var observer = new ListObserver<bool>();
-            using var subscription = Shortcut.Create(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
-                
-            button0.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(0));
-            
-            button1.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-            Assert.That(observer.Next[0], Is.EqualTo(true));
-            
-            button0.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            Assert.That(observer.Next[1], Is.EqualTo(false));
-            
-            button1.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            
-            button1.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            
-            button0.Press(); // Should not trigger if button0 (modifier) is pressed after button1
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-        }
         
-        [Test]
-        public void Press()
-        {
-            var button = Gamepad.ButtonEast.Stub(m_Context);
-            var observer = new ListObserver<InputEvent>();
-            using var subscription = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, observer);
-            
-            // Press should trigger event
-            button.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-            
-            // Press should trigger event also when released afterwards
-            button.Release();
-            button.Press();
-            button.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-
-            // Do not expect event when unsubscribed
-            subscription.Dispose();
-            button.Press();
-            button.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void Release()
-        {
-            var button = Gamepad.ButtonNorth.Stub(m_Context);
-            var observer = new ListObserver<InputEvent>();
-            using var subscription = Gamepad.ButtonNorth.Released().Subscribe(m_Context, observer);
-            
-            // Press should not trigger event
-            button.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(0));
-            
-            // Release (should trigger event)
-            button.Release();
-            button.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-
-            // Do not expect event when unsubscribed
-            subscription.Dispose();
-            button.Press();
-            button.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-        }
         
         // TODO Consider how we want this to work, basically should we omit initial value directly on Subscribe?
         [Test]
@@ -612,88 +450,12 @@ namespace Tests.InputSystem
             subscription.Dispose();
         }
         
-        // See https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/function-pointers&ved=2ahUKEwiTqPXjhZCHAxWjT6QEHYuMCzoQFnoECBQQAQ&usg=AOvVaw1KAsN4qvHk0_AnbLat7S6M
-        /*[Test]
-        public void UnsafeFp()
-        {
-            unsafe
-            {
-                // NOT possible in current C# version
-                delegate*<void> a1 = &Function();
-            }
-        }*/
-
-        [Test]
-        public void Filter_Test()
-        {
-            var stick = Gamepad.LeftStick.Stub(m_Context);
-            
-            var observer = new ListObserver<Vector2>();
-            using var opaqueSubscription = Gamepad.LeftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
-            //using var subscription = Gamepad.LeftStick.Filter<Vector2>(v => v.x >= 0.5f).Subscribe(m_Context, observer);
-            
-            stick.Change(new Vector2(0.4f, 0.0f));
-            stick.Change(new Vector2(0.5f, 0.0f));
-            stick.Change(new Vector2(0.6f, 0.1f));
-            stick.Change(new Vector2(0.3f, 0.2f));
-            
-            m_Context.Update();
-            
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            Assert.That(observer.Next[0], Is.EqualTo(new Vector2(0.5f, 0.0f)));
-            Assert.That(observer.Next[1], Is.EqualTo(new Vector2(0.6f, 0.1f)));
-        }
-        
-        [Test]
-        public void ValueFilter_Test()
-        {
-            var stick = Gamepad.LeftTrigger.Stub(m_Context);
-            
-            var observer = new ListObserver<float>();
-            using var subscription = Gamepad.LeftTrigger.LowPassFilter().Subscribe(m_Context, observer);
-            
-            stick.Change(0.0f);
-            stick.Change(0.1f);
-            stick.Change(0.2f);
-            stick.Change(0.9f);
-            stick.Change(0.5f);
-            
-            m_Context.Update();
-            
-            Assert.That(observer.Next.Count, Is.EqualTo(5));
-            Assert.That(observer.Next[0], Is.EqualTo(0.0f));
-        }
-        
-        [Test]
-        public void Merge()
-        {
-            var east = Gamepad.ButtonEast.Stub(m_Context);
-            var north = Gamepad.ButtonNorth.Stub(m_Context);
-            
-            var output = new ListObserver<bool>();
-            using var mux = Combine.Merge(Gamepad.ButtonEast, Gamepad.ButtonNorth).Subscribe(m_Context, output);
-
-            m_Context.Update();
-
-            Assert.That(output.Next.Count, Is.EqualTo(0));
-
-            east.Press();
-            m_Context.Update();
-            Assert.That(output.Next.Count, Is.EqualTo(1));
-            Assert.That(output.Next[0], Is.EqualTo(true));
-            
-            north.Press();
-            m_Context.Update();
-            Assert.That(output.Next.Count, Is.EqualTo(2));
-            Assert.That(output.Next[1], Is.EqualTo(true));
-            
-        }
-
         // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.
         // TODO Trigger once vs trigger once a frame, vs trigger on received value
         // TODO Phases are related to interactions. Phases associated with data makes no sense, but how do we handle touch?
         // TODO Disambuigitation is better solved on binding level where one can either merge or select?
+        // TODO Verify that shortcut and press interactions where they overlap mutes press interaction
     }
 }

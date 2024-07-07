@@ -1,4 +1,7 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
@@ -12,7 +15,7 @@ namespace UnityEngine.InputSystem.Experimental
             public abstract void Dispose();
         }
 
-        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable 
+        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T> 
             where T : struct
         {
             private readonly Usage m_Usage;         // The associated usage
@@ -29,6 +32,8 @@ namespace UnityEngine.InputSystem.Experimental
 
             //public Stream<T> stream => Stream as Stream<T>;
 
+            public bool hasStream => m_Stream != null;
+            
             public void SetStream(Stream<T> stream)
             {
                 m_Stream = stream;
@@ -114,6 +119,21 @@ namespace UnityEngine.InputSystem.Experimental
             public bool Equals(IDependencyGraphNode other)
             {
                 throw new NotImplementedException();
+            }
+            
+            public NativeSlice<T>.Enumerator GetEnumerator()
+            {
+                return m_Stream?.GetEnumerator() ?? new NativeSlice<T>.Enumerator();
+            }
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
             }
         }
     }

@@ -70,8 +70,8 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
         
-        private readonly TSource m_Source;
-        private Impl m_Impl;
+        private readonly TSource m_Source;  // The source to observe for press events
+        private Impl m_Impl;                // Implementation, lazily constructed
         
         public Pressed([InputPort] TSource source)
         {
@@ -79,13 +79,11 @@ namespace UnityEngine.InputSystem.Experimental
             m_Impl = null;
         }
 
-        private Impl GetImplementation(Context context) => (m_Impl ??= new Impl(context, m_Source));
-        
         public IDisposable Subscribe(IObserver<InputEvent> observer) =>
             Subscribe(Context.instance, observer);
         
         public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
-            GetImplementation(context).Subscribe(context, observer);
+            (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);
         
         // TODO Reader end-point
         // TODO Provide a non-abstract enumerator or let reader implement IEnumerable
@@ -105,7 +103,7 @@ namespace UnityEngine.InputSystem.Experimental
             
             internal Reader(TSource source)
             {
-                m_Source = source; // Source could also be enumerable
+                m_Source = source; // Source should also be enumerable
             }
             
             public IEnumerator<InputEvent> GetEnumerator()
