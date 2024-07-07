@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             public void ApplyTo(BindableInput<Vector2> target)
             {
-                target.Bind(Devices.Gamepad.LeftStick);
+                target.Bind(Devices.Gamepad.LeftStick); // Allows explicit type
                 // TODO Keyboard composite
             }
         }
