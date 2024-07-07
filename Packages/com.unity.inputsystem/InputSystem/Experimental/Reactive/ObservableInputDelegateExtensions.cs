@@ -14,14 +14,15 @@ namespace UnityEngine.InputSystem.Experimental
             public void OnNext(T value) => m_Action(value);
         }
         
+        /// <summary>
+        /// Subscribe to an observable but invoke a delegate instead of an IObservable.
+        /// </summary>
+        /// <param name="observable">The observable to subscribe to.</param>
+        /// <param name="action">The delegate to be invoked upon data received.</param>
+        /// <typeparam name="T">The data type.</typeparam>
+        /// <typeparam name="TSource">The observable type.</typeparam>
+        /// <returns>Disposable subscription.</returns>
         public static IDisposable Subscribe<T, TSource>(this TSource observable, Action<T> action) 
-            where T : struct 
-            where TSource : IObservableInput<T>
-        {
-            return observable.Subscribe(new SimpleObserverDelegateWrapper<T>(action));
-        }
-        
-        public static IDisposable Do<T, TSource>(this TSource observable, Action<T> action) 
             where T : struct 
             where TSource : IObservableInput<T>
         {
