@@ -1977,7 +1977,7 @@ namespace UnityEngine.InputSystem
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
-                Debug.Log("Assembly: " + assembly.FullName);
+               // Debug.Log("Assembly: " + assembly.FullName);
                 try
                 {
                     // exclude InputSystem assembly which should be loaded first
@@ -1990,20 +1990,19 @@ namespace UnityEngine.InputSystem
                             || type.IsAbstract
                             || type.IsGenericType)
                             continue;
-                        Debug.Log("Instantiating type: " + type.FullName);
+                        //Debug.Log("Instantiating type: " + type.FullName);
                         if (typeof(InputProcessor).IsAssignableFrom(type))
                         {
                             InputSystem.RegisterProcessor(type);
                         }
-                        // test ci
-                        //else if (typeof(IInputInteraction).IsAssignableFrom(type))
-                        //{
-                        //    InputSystem.RegisterInteraction(type);
-                        //}
-                        //else if (typeof(InputBindingComposite).IsAssignableFrom(type))
-                        //{
-                        //    InputSystem.RegisterBindingComposite(type, null);
-                        //}
+                        else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                        {
+                            InputSystem.RegisterInteraction(type);
+                        }
+                        else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                        {
+                            InputSystem.RegisterBindingComposite(type, null);
+                        }
                     }
                 }
                 catch (ReflectionTypeLoadException)
