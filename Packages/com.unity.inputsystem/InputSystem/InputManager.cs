@@ -1968,7 +1968,7 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
 
             // Register custom types by reflection
-            // temp test ci RegisterCustomTypes();
+            RegisterCustomTypes();
         }
 
         void RegisterCustomTypes()
@@ -1994,14 +1994,15 @@ namespace UnityEngine.InputSystem
                         {
                             InputSystem.RegisterProcessor(type);
                         }
-                        else if (typeof(IInputInteraction).IsAssignableFrom(type))
-                        {
-                            InputSystem.RegisterInteraction(type);
-                        }
-                        else if (typeof(InputBindingComposite).IsAssignableFrom(type))
-                        {
-                            InputSystem.RegisterBindingComposite(type, null);
-                        }
+                        // test ci
+                        //else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                        //{
+                        //    InputSystem.RegisterInteraction(type);
+                        //}
+                        //else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                        //{
+                        //    InputSystem.RegisterBindingComposite(type, null);
+                        //}
                     }
                 }
                 catch (ReflectionTypeLoadException)
