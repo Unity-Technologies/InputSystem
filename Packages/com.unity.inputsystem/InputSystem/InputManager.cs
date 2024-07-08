@@ -1968,7 +1968,7 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
 
             // Register custom types by reflection
-            RegisterCustomTypes();
+            // temp test ci RegisterCustomTypes();
         }
 
         void RegisterCustomTypes()
