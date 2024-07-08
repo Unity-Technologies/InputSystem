@@ -721,7 +721,8 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
-    [Test, Performance]
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
@@ -766,7 +767,8 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
-    [Test, Performance]
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
