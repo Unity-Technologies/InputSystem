@@ -1971,9 +1971,35 @@ namespace UnityEngine.InputSystem
             RegisterCustomTypes();
         }
 
+        void RegisterCustomTypes(Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                if (!type.IsClass
+                    || type.IsAbstract
+                    || type.IsGenericType)
+                    continue;
+                //Debug.Log("Instantiating type: " + type.FullName);
+                if (typeof(InputProcessor).IsAssignableFrom(type))
+                {
+                    Debug.Log("InputProcessor register type: " + type.FullName);
+                    InputSystem.RegisterProcessor(type);
+                }
+                else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterInteraction(type);
+                }
+                else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterBindingComposite(type, null);
+                }
+            }
+        }
+
         void RegisterCustomTypes()
         {
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var inputSystemName = inputSystemAssembly.GetName().Name;
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
@@ -1983,35 +2009,24 @@ namespace UnityEngine.InputSystem
                     // exclude InputSystem assembly which should be loaded first
                     if (assembly == inputSystemAssembly) continue;
 
-                    var types = assembly.GetTypes();
-                    foreach (Type type in types)
+                    // Only register types from assemblies that reference InputSystem
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
                     {
-                        if (!type.IsClass
-                            || type.IsAbstract
-                            || type.IsGenericType)
-                            continue;
-                        //Debug.Log("Instantiating type: " + type.FullName);
-                        if (typeof(InputProcessor).IsAssignableFrom(type))
+                        if (referencedAssembly.Name == inputSystemName)
                         {
-                            InputSystem.RegisterProcessor(type);
+                            
+                            RegisterCustomTypes(assembly.GetTypes());
+                            break;
                         }
-                        else if (typeof(IInputInteraction).IsAssignableFrom(type))
-                        {
-                            InputSystem.RegisterInteraction(type);
-                        }
-                        else if (typeof(InputBindingComposite).IsAssignableFrom(type))
-                        {
-                            InputSystem.RegisterBindingComposite(type, null);
-                        }
-                    }
+                    }                  
                 }
                 catch (ReflectionTypeLoadException)
                 {
-                    Debug.Log("Failed getting types in assembly: " + assembly.FullName);
+                    //Debug.Log("Failed getting types in assembly: " + assembly.FullName);
                 }
                 catch (System.Exception)
                 {
-                    Debug.Log("Failed getting types in assembly generic: " + assembly.FullName);
+                    //Debug.Log("Failed getting types in assembly generic: " + assembly.FullName);
                 }
             }
         }
