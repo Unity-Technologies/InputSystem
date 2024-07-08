@@ -1982,18 +1982,18 @@ namespace UnityEngine.InputSystem
                 //Debug.Log("Instantiating type: " + type.FullName);
                 if (typeof(InputProcessor).IsAssignableFrom(type))
                 {
-                    //Debug.Log("InputProcessor register type: " + type.FullName);
-                    InputSystem.RegisterProcessor(type);
+                    Debug.Log("InputProcessor register type: " + type.FullName);
+                    //InputSystem.RegisterProcessor(type);
                 }
                 else if (typeof(IInputInteraction).IsAssignableFrom(type))
                 {
-                    //Debug.Log("IInputInteraction register type: " + type.FullName);
-                    InputSystem.RegisterInteraction(type);
+                    Debug.Log("IInputInteraction register type: " + type.FullName);
+                    //InputSystem.RegisterInteraction(type);
                 }
                 else if (typeof(InputBindingComposite).IsAssignableFrom(type))
                 {
-                    //Debug.Log("InputBindingComposite register type: " + type.FullName);
-                    InputSystem.RegisterBindingComposite(type, null);
+                    Debug.Log("InputBindingComposite register type: " + type.FullName);
+                    //InputSystem.RegisterBindingComposite(type, null);
                 }
             }
         }
