@@ -1977,6 +1977,7 @@ namespace UnityEngine.InputSystem
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
+                Debug.Log("Assembly: " + assembly.FullName);
                 try
                 {
                     // exclude InputSystem assembly which should be loaded first
@@ -1989,11 +1990,11 @@ namespace UnityEngine.InputSystem
                             || type.IsAbstract
                             || type.IsGenericType)
                             continue;
-
-                        if (typeof(InputProcessor).IsAssignableFrom(type))
-                        {
-                            InputSystem.RegisterProcessor(type);
-                        }
+                        Debug.Log("Instantiating type: " + type.FullName);
+                        //if (typeof(InputProcessor).IsAssignableFrom(type))
+                        //{
+                        //    InputSystem.RegisterProcessor(type);
+                        //}
                         // test ci
                         //else if (typeof(IInputInteraction).IsAssignableFrom(type))
                         //{
@@ -2007,6 +2008,11 @@ namespace UnityEngine.InputSystem
                 }
                 catch (ReflectionTypeLoadException)
                 {
+                    Debug.Log("Failed getting types in assembly: " + assembly.FullName);
+                }
+                catch (System.Exception)
+                {
+                    Debug.Log("Failed getting types in assembly generic: " + assembly.FullName);
                 }
             }
         }
