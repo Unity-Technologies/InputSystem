@@ -3751,6 +3751,48 @@ namespace UnityEngine.InputSystem
                     stateOffsetInDevice, statePtr, stateSize, flipped);
             }
 
+            if (makeDeviceCurrent)
+            {
+                // Update the pressed/not pressed state of all buttons that have changed this update
+                // With enough ButtonControls being checked, it's faster to find out which have actually changed rather than test all.
+                if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
+                {
+                    foreach (var button in device.m_UpdatedButtons)
+                    {
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            ((ButtonControl)device.allControls[button]).UpdateWasPressedEditor();
+                        }
+                        else
+                        #endif
+                        ((ButtonControl)device.allControls[button]).UpdateWasPressed();
+                    }
+                }
+                else
+                {
+                    int buttonCount = 0;
+                    foreach (var button in device.m_ButtonControlsCheckingPressState)
+                    {
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            button.UpdateWasPressedEditor();
+                        }
+                        else
+                        #endif
+                        button.UpdateWasPressed();
+
+                        ++buttonCount;
+                    }
+
+                    // From testing, this is the point at which it becomes more efficient to use the same path as
+                    // ReadValueCaching to work out which ButtonControls have updated, rather than querying all.
+                    if (buttonCount > 45)
+                        device.m_UseCachePathForButtonPresses = true;
+                }
+            }
+
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
                 device, eventPtr, "InputSystem.onDeviceStateChange");
@@ -3788,7 +3830,9 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled)
+            // If we have enough ButtonControls being checked for wasPressedThisFrame/wasReleasedThisFrame,
+            // use this path to find out which have actually changed here.
+            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what
