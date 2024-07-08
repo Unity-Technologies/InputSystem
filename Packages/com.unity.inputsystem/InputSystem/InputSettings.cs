@@ -85,6 +85,28 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Controls how platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// </summary>
+        /// <value>The conversion behavior.</value>
+        /// <remarks>
+        /// By default, the range used for the delta is normalized to a range of -1 to 1, to be uniform across all platforms.
+        /// The alternative is that the native platform's scroll wheel range is returned, which is -120 to 120 for windows, and
+        /// -1 to 1 for most other platforms. You should leave this value as the default uniform range unless you need to support
+        /// legacy code that relies on the native platform-specific values.
+        /// </remarks>
+        public ScrollDeltaBehavior scrollDeltaBehavior
+        {
+            get => m_ScrollDeltaBehavior;
+            set
+            {
+                if (m_ScrollDeltaBehavior == value)
+                    return;
+                m_ScrollDeltaBehavior = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// If true, sensors that deliver rotation values on handheld devices will automatically adjust
         /// rotations when the screen orientation changes.
         /// </summary>
@@ -734,6 +756,7 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private ScrollDeltaBehavior m_ScrollDeltaBehavior = ScrollDeltaBehavior.UniformAcrossAllPlatforms;
         [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
@@ -824,6 +847,29 @@ namespace UnityEngine.InputSystem
             /// accumulating or some input getting lost.
             /// </summary>
             ProcessEventsManually,
+        }
+
+        /// <summary>
+        /// How platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// </summary>
+        public enum ScrollDeltaBehavior
+        {
+            /// <summary>
+            /// The range used for the delta is converted to be uniform across all platforms.
+            /// </summary>
+            /// <remarks>
+            /// The resulting range will be [-1, 1] regardless of the platform used.
+            /// </remarks>
+            UniformAcrossAllPlatforms = 0,
+
+            /// <summary>
+            /// The range used for the delta is the same as returned by the platform input.
+            /// </summary>
+            /// <remarks>
+            /// The range will typically be [-120, 120] on Windows and [-1, 1] on MacOS and Linux.
+            /// Other platforms may have different ranges.
+            /// </remarks>
+            KeepPlatformSpecificInputRange = 1
         }
 
         /// <summary>
@@ -930,6 +976,83 @@ namespace UnityEngine.InputSystem
             /// This mode could be useful if you want to see both values of the property without needing to toggle Use Reference.
             /// </remarks>
             MultilineBoth,
+        }
+
+        private static bool CompareFloats(float a, float b)
+        {
+            return (a - b) <= float.Epsilon;
+        }
+
+        private static bool CompareSets<T>(ReadOnlyArray<T> a, ReadOnlyArray<T> b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            for (var i = 0; i < a.Count; ++i)
+            {
+                bool existsInB = false;
+                for (var j = 0; j < b.Count; ++j)
+                {
+                    if (a[i].Equals(b[j]))
+                    {
+                        existsInB = true;
+                        break;
+                    }
+                }
+
+                if (!existsInB)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool CompareFeatureFlag(InputSettings a, InputSettings b, string featureName)
+        {
+            return a.IsFeatureEnabled(featureName) == b.IsFeatureEnabled(featureName);
+        }
+
+        internal static bool AreEqual(InputSettings a, InputSettings b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.updateMode == b.updateMode) &&
+                (a.compensateForScreenOrientation == b.compensateForScreenOrientation) &&
+                // Ignoring filterNoiseOnCurrent since deprecated
+                CompareFloats(a.defaultDeadzoneMin, b.defaultDeadzoneMin) &&
+                CompareFloats(a.defaultDeadzoneMax, b.defaultDeadzoneMax) &&
+                CompareFloats(a.defaultButtonPressPoint, b.defaultButtonPressPoint) &&
+                CompareFloats(a.buttonReleaseThreshold, b.buttonReleaseThreshold) &&
+                CompareFloats(a.defaultTapTime, b.defaultTapTime) &&
+                CompareFloats(a.defaultSlowTapTime, b.defaultSlowTapTime) &&
+                CompareFloats(a.defaultHoldTime, b.defaultHoldTime) &&
+                CompareFloats(a.tapRadius, b.tapRadius) &&
+                CompareFloats(a.multiTapDelayTime, b.multiTapDelayTime) &&
+                a.backgroundBehavior == b.backgroundBehavior &&
+                a.editorInputBehaviorInPlayMode == b.editorInputBehaviorInPlayMode &&
+                a.inputActionPropertyDrawerMode == b.inputActionPropertyDrawerMode &&
+                a.maxEventBytesPerUpdate == b.maxEventBytesPerUpdate &&
+                a.maxQueuedEventsPerUpdate == b.maxQueuedEventsPerUpdate &&
+                CompareSets(a.supportedDevices, b.supportedDevices) &&
+                a.disableRedundantEventsMerging == b.disableRedundantEventsMerging &&
+                a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
+
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+#else
+                true;     // Improves formatting
+#endif
         }
     }
 }

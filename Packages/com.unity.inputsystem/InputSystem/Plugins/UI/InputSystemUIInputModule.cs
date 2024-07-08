@@ -2062,8 +2062,6 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        internal const float kPixelPerLine = 20;
-
         private void OnScrollCallback(InputAction.CallbackContext context)
         {
             var index = GetPointerStateIndexFor(ref context);
@@ -2071,9 +2069,12 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
-            // The old input system reported scroll deltas in lines, we report pixels.
-            // Need to scale as the UI system expects lines.
-            state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
+
+            state.scrollDelta = context.ReadValue<Vector2>();
+
+            // ISXB-704: convert input value to BaseInputModule convention.
+            state.scrollDelta *= (1.0f / InputSystem.scrollWheelDeltaPerTick);
+
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif

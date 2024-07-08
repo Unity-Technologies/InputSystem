@@ -102,11 +102,14 @@ namespace UnityEngine.InputSystem.Samples
             if (m_Visualization == Mode.None)
                 return;
 
-            s_EnabledInstances.Remove(this);
-            if (s_EnabledInstances.Count == 0)
+            if (s_EnabledInstances != null)
             {
-                InputSystem.onDeviceChange -= OnDeviceChange;
-                InputSystem.onEvent -= OnEvent;
+                s_EnabledInstances.Remove(this);
+                if (s_EnabledInstances.Count == 0)
+                {
+                    InputSystem.onDeviceChange -= OnDeviceChange;
+                    InputSystem.onEvent -= OnEvent;
+                }
             }
 
             m_Control = null;
