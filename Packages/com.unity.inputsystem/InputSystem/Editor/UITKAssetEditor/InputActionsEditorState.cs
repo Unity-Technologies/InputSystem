@@ -74,6 +74,8 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedDeviceRequirementIndex { get  {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme; // TODO Bad this either po
 
+        internal InputActionsEditorSessionAnalytic m_Analytics;
+
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
         [SerializeField] int m_selectedBindingIndex;
@@ -84,6 +86,7 @@ namespace UnityEngine.InputSystem.Editor
         internal bool hasCutElements => m_CutElements != null && m_CutElements.Count > 0;
 
         public InputActionsEditorState(
+            InputActionsEditorSessionAnalytic analytics,
             SerializedObject inputActionAsset,
             int selectedActionMapIndex = 0,
             int selectedActionIndex = 0,
@@ -96,6 +99,8 @@ namespace UnityEngine.InputSystem.Editor
             List<CutElement> cutElements = null)
         {
             Debug.Assert(inputActionAsset != null);
+
+            m_Analytics = analytics;
 
             serializedObject = inputActionAsset;
 
@@ -115,6 +120,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
+            m_Analytics = other.m_Analytics;
+
             // Assign serialized object, not that this might be equal to other.serializedObject,
             // a slight variation of it with any kind of changes or a completely different one.
             // Hence, we do our best here to keep any selections consistent by remapping objects
@@ -215,6 +222,7 @@ namespace UnityEngine.InputSystem.Editor
             List<CutElement> cutElements = null)
         {
             return new InputActionsEditorState(
+                m_Analytics,
                 serializedObject,
                 selectedActionMapIndex ?? this.selectedActionMapIndex,
                 selectedActionIndex ?? this.selectedActionIndex,
@@ -234,6 +242,7 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionsEditorState ClearCutElements()
         {
             return new InputActionsEditorState(
+                m_Analytics,
                 serializedObject,
                 selectedActionMapIndex,
                 selectedActionIndex,

@@ -48,6 +48,12 @@ namespace UnityEngine.InputSystem.Editor
             #endif
         }
 
+        public void OnDisable()
+        {
+            new InputComponentEditorAnalytic(InputSystemComponent.PlayerInput).Send();
+            new PlayerInputEditorAnalytic(this).Send();
+        }
+
         public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
