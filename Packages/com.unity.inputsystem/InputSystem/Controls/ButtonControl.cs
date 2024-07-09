@@ -17,6 +17,19 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     public class ButtonControl : AxisControl
     {
+        private bool m_NeedsToCheckFramePress = false;
+        private uint m_UpdateCountLastPressed = uint.MaxValue;
+        private uint m_UpdateCountLastReleased = uint.MaxValue;
+        private bool m_LastUpdateWasPress;
+        #if UNITY_EDITOR
+        // Editor input updates have a separate block of state memory, so must be checked separately
+        private uint m_UpdateCountLastPressedEditor = uint.MaxValue;
+        private uint m_UpdateCountLastReleasedEditor = uint.MaxValue;
+        private bool m_LastUpdateWasPressEditor;
+        #endif
+
+        internal bool needsToCheckFramePress { get; private set; }
+
         ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
         /// The minimum value the button has to reach for it to be considered pressed.
@@ -145,13 +158,60 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        public bool isPressed => IsValueConsideredPressed(value);
+        public bool isPressed
+        {
+            get
+            {
+                // Take the old path if we don't have the speed gain from already testing wasPressedThisFrame/wasReleasedThisFrame.
+                if (!needsToCheckFramePress)
+                    return IsValueConsideredPressed(value);
+
+                #if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return m_LastUpdateWasPressEditor;
+                #endif
+
+                return m_LastUpdateWasPress;
+            }
+        }
+
+        // When we start caring about inter-frame presses, use the info we have to set up the alternate path.
+        // If we don't do this, users could call wasPressedThisFrame/wasReleasedThisFrame twice for the first time in
+        // a single frame, and the returned value may be incorrect until the next frame.
+        private void BeginTestingForFramePresses(bool currentlyPressed, bool pressedLastFrame)
+        {
+            needsToCheckFramePress = true;
+            device.m_ButtonControlsCheckingPressState.Add(this);
+
+            #if UNITY_EDITOR
+            if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+            {
+                m_LastUpdateWasPressEditor = currentlyPressed;
+                if (currentlyPressed && !pressedLastFrame)
+                    m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
+                else if (pressedLastFrame && !currentlyPressed)
+                    m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
+            }
+            else
+            #endif
+            {
+                m_LastUpdateWasPress = currentlyPressed;
+                if (currentlyPressed && !pressedLastFrame)
+                    m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
+                else if (pressedLastFrame && !currentlyPressed)
+                    m_UpdateCountLastReleased = device.m_CurrentUpdateStepCount;
+            }
+        }
 
         /// <summary>
         /// Whether the press started this frame.
         /// </summary>
         /// <value>True if the current press of the button started this frame.</value>
         /// <remarks>
+        /// The first time this function - or wasReleasedThisFrame - are called, it's possible that extremely fast
+        /// inputs (or very slow frame update times) will result in presses/releases being missed.
+        /// Following the next input system update after either have been called, and from then on until the device is
+        /// destroyed, this ceases to be an issue.
         /// <example>
         /// <code>
         /// // An example showing the use of this property on a gamepad button and a keyboard key.
@@ -183,7 +243,27 @@ namespace UnityEngine.InputSystem.Controls
         ///
         ///
         /// </remarks>
-        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasPressedThisFrame
+        {
+            get
+            {
+                // Take the old path if this is the first time calling.
+                if (!needsToCheckFramePress)
+                {
+                    var currentlyPressed = IsValueConsideredPressed(value);
+                    var pressedLastFrame = IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
+
+                    return device.wasUpdatedThisFrame && currentlyPressed && !pressedLastFrame;
+                }
+
+                #if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressedEditor;
+                #endif
+                return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
+            }
+        }
 
         /// <summary>
         /// Whether the press ended this frame.
@@ -209,7 +289,59 @@ namespace UnityEngine.InputSystem.Controls
         /// </example>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         /// </remarks>
-        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasReleasedThisFrame
+        {
+            get
+            {
+                // Take the old path if this is the first time calling.
+                if (!needsToCheckFramePress)
+                {
+                    var currentlyPressed = IsValueConsideredPressed(value);
+                    var pressedLastFrame = IsValueConsideredPressed(ReadValueFromPreviousFrame());
+                    BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
+
+                    return device.wasUpdatedThisFrame && !currentlyPressed && pressedLastFrame;
+                }
+
+                #if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleasedEditor;
+                #endif
+                return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
+            }
+        }
+
+        internal void UpdateWasPressed()
+        {
+            var isNowPressed = IsValueConsideredPressed(value);
+
+            if (m_LastUpdateWasPress != isNowPressed)
+            {
+                if (isNowPressed)
+                    m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
+                else
+                    m_UpdateCountLastReleased = device.m_CurrentUpdateStepCount;
+
+                m_LastUpdateWasPress = isNowPressed;
+            }
+        }
+
+        #if UNITY_EDITOR
+        internal void UpdateWasPressedEditor()
+        {
+            var isNowPressed = IsValueConsideredPressed(value);
+
+            if (m_LastUpdateWasPressEditor != isNowPressed)
+            {
+                if (isNowPressed)
+                    m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
+                else
+                    m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
+
+                m_LastUpdateWasPressEditor = isNowPressed;
+            }
+        }
+        #endif // UNITY_EDITOR
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
