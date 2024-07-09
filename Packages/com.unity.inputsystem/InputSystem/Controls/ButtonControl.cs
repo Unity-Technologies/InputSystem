@@ -341,6 +341,7 @@ namespace UnityEngine.InputSystem.Controls
                 m_LastUpdateWasPressEditor = isNowPressed;
             }
         }
+
         #endif // UNITY_EDITOR
 
         // We make the current global default button press point available as a static so that we don't have to
