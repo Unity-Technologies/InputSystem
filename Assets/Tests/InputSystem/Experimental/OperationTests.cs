@@ -133,6 +133,22 @@ namespace Tests.InputSystem.Experimental
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(2));
         }
+
+        [Test]
+        public void Shortcut_ShouldSuppressPressEvent_IfOverlappingAnotherDependencyGraphAndHavingPriority()
+        {
+            // TODO Solutions include marking certain observableinput as modifier or blindly relying on priority
+            //      unless 0 in which case its unaffected
+            
+            // TODO Simple scenario with e.g. L1+X and X configured, also add Stick into mix for suppression
+            throw new NotImplementedException();
+        }
+
+        [Test]
+        public void Shortcut_ShouldSuppressComposite_IfButtonIsPartOfComposite()
+        {
+            throw new NotImplementedException();
+        }
         
         [Test]
         public void Filter()
