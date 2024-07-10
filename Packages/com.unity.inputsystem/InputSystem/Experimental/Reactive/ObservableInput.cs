@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.Experimental
             m_NodeId = Context.InvalidNodeId;
         }
 
-        public IDisposable Subscribe([NotNull] Context ctx, IObserver<T> observer)
+        public readonly IDisposable Subscribe([NotNull] Context ctx, IObserver<T> observer)
         {
             // Subscribe to source by subscribing to a stream context. Note that the stream context 
             // is consistent throughout the life-time of any existing associated subscriptions but
