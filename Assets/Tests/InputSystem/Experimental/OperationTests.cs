@@ -1,9 +1,10 @@
+using System;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
 
-namespace Tests.InputSystem
+namespace Tests.InputSystem.Experimental
 {
     [Category("Experimental")]
     public class OperationTests
@@ -196,6 +197,32 @@ namespace Tests.InputSystem
             m_Context.Update();
             Assert.That(output.Next.Count, Is.EqualTo(2));
             Assert.That(output.Next[1], Is.EqualTo(true));
+        }
+        
+        [Test]
+        public void CombineLatest()
+        {
+            var button0 = Gamepad.ButtonEast.Stub(m_Context);
+            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
+            var observer = new ListObserver<ValueTuple<bool, bool>>();
+            using var subscription = Combine.Latest(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
+            
+            button0.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+            Assert.That(observer.Next[0], Is.EqualTo(new ValueTuple<bool, bool>(true, false)));
+            
+            button1.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(2));
+            Assert.That(observer.Next[1], Is.EqualTo(new ValueTuple<bool, bool>(true, true)));
+            
+            button0.Release();
+            button1.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(4));
+            Assert.That(observer.Next[2], Is.EqualTo(new ValueTuple<bool, bool>(false, true)));
+            Assert.That(observer.Next[3], Is.EqualTo(new ValueTuple<bool, bool>(false, false)));
         }
     }
 }

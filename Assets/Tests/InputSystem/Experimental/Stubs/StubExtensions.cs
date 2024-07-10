@@ -1,5 +1,7 @@
 using UnityEngine.InputSystem.Experimental;
 
+// TODO Consider if stubs are really needed if anyway have to support writers.
+
 namespace Tests.InputSystem
 {
     // Extensions that simplify creating a stub from a given source.

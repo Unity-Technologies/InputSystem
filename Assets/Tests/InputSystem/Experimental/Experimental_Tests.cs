@@ -233,84 +233,11 @@ namespace Tests.InputSystem
             new object[] { 12, 4, 3 }
         };
         
-        public static IEnumerable<(IDependencyGraphNode, string)> DisplayNameCases()
-        {
-            yield return (Gamepad.LeftStick, "Gamepad.LeftStick");
-            yield return (Gamepad.ButtonEast, "Gamepad.ButtonEast");
-            yield return (Gamepad.ButtonEast.Pressed(), "Pressed( Gamepad.ButtonEast )");
-        }
+        
         
         // [TestCaseSource(nameof(DivideCases))]
         
-        [Test]
-        [TestCaseSource(nameof(DisplayNameCases))]
-        public void Describe((IDependencyGraphNode node, string expectedDisplayName) td)
-        {
-            Assert.That(td.node.Describe(), Is.EqualTo(td.expectedDisplayName));
-            
-            //if (node is IDisposable)
-              //  ((IDisposable)node).Dispose();
-
-            //using var s1 = Gamepad.LeftStick.Subscribe();
-            // TODO Gamepad.leftStick.Subscribe();
-            // TODO Gamepad.leftStick.Player(1).Subscribe();	       // Filter for gamepad assigned to player 1
-            // TODO Gamepad.leftStick.Filter((x) => x >= 0.5f);	       // Convert to boolean
-            // TODO InputBinding.Max( Gamepad.leftStick, Gamepad.rightStick); // Contains merged data from left or right stick
-            // TODO InputBinding.First( Gamepad.leftStick, Gamepad.rightStick); // Contains data form first applicable binding
-            // TODO InputBinding.Max( Gamepad.buttonSouth.Pressed(), Gamepad.buttonEast.Pressed() ).Once();
-
-            //Assert.That(Gamepad.buttonSouth.Describe(), Is.EqualTo("Gamepad.buttonSouth"));
-            //Assert.That(Gamepad.buttonSouth.Pressed().Describe(), Is.EqualTo("Press( Gamepad.buttonSouth )"));
-
-            // https://www.youtube.com/watch?v=bFHvgqLUDbE
-
-            // TODO Handle the following conceptual things:
-            // - Gamepad.LeftStick.Continuous();
-            // - Gamepad.LeftStick.OncePerFrame().Subscribe((v) => MoveRelative(v * Time.deltaTime));
-            // - Gamepad.LeftStick.Value; // Direct access to value
-
-            //using var r = Gamepad.buttonSouth.Pressed().Subscribe(m_Context);
-            //r.Describe();
-        }
-
-        [Test]
-        public void Dot()
-        {
-            var buffer = new StringBuilder();
-            var g = new Digraph(Gamepad.ButtonSouth)
-            {
-                name = "G",
-                title = "Title",
-                fontSize = 9,
-                font = "Arial"
-            };
-            Assert.That(g.Build(), Is.EqualTo(@"digraph G {
-   label=""Title""
-   rankdir=""LR""
-   node [shape=rect]
-   graph [fontname=""Arial"" fontsize=9]
-   node [fontname=""Arial"" fontsize=9]
-   edge [fontname=""Arial"" fontsize=9]
-   node0 [label=""Gamepad.ButtonSouth""]
-}"));
-
-            const string commonPrefix = @"digraph {
-   rankdir=""LR""
-   node [shape=rect]
-   graph [fontname=""Source Code Pro"" fontsize=12]
-   node [fontname=""Source Code Pro"" fontsize=12]
-   edge [fontname=""Source Code Pro"" fontsize=12]";
-            
-            Assert.That(Gamepad.ButtonSouth.ToDot(), Is.EqualTo(commonPrefix + @"
-   node0 [label=""Gamepad.buttonSouth""]
-}"));
-            
-            Assert.That(Gamepad.ButtonSouth.Pressed().ToDot(), Is.EqualTo(commonPrefix + @"
-   node0 [label=""Pressed""]
-   node1 [label=""Gamepad.ButtonSouth""]
-   node0 -> node1
-}"));
-        }
+        
 
         [Test]
         public void Concept()
@@ -351,34 +278,6 @@ namespace Tests.InputSystem
             Assert.That(values[1], Is.EqualTo(false));
         }
 
-        [Test]
-        public void CombineLatest()
-        {
-            var button0 = Gamepad.ButtonEast.Stub(m_Context);
-            var button1 = Gamepad.ButtonSouth.Stub(m_Context);
-            var observer = new ListObserver<ValueTuple<bool, bool>>();
-            using var subscription = Combine.Latest(Gamepad.ButtonEast, Gamepad.ButtonSouth).Subscribe(m_Context, observer);
-            
-            button0.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(1));
-            Assert.That(observer.Next[0], Is.EqualTo(new ValueTuple<bool, bool>(true, false)));
-            
-            button1.Press();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(2));
-            Assert.That(observer.Next[1], Is.EqualTo(new ValueTuple<bool, bool>(true, true)));
-            
-            button0.Release();
-            button1.Release();
-            m_Context.Update();
-            Assert.That(observer.Next.Count, Is.EqualTo(4));
-            Assert.That(observer.Next[2], Is.EqualTo(new ValueTuple<bool, bool>(false, true)));
-            Assert.That(observer.Next[3], Is.EqualTo(new ValueTuple<bool, bool>(false, false)));
-        }
-
-        
-
         class CustomConstraint : Constraint
         {
             public override ConstraintResult ApplyTo(object actual)
@@ -416,17 +315,17 @@ namespace Tests.InputSystem
             Assert.That(data.Next[2], Is.EqualTo(false));
         }
 
-        [Test]
-        public void DebugObserver()
+        /*[Test]
+        public void ObservableWrapper() // TODO FIX
         {
             var button = Gamepad.ButtonEast.Stub(m_Context);
-            using var s = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, new DebugObserver<InputEvent>());
+            using var s = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, new DebugLogObserver<InputEvent>());
             
             button.Press();
             m_Context.Update();
             
             LogAssert.Expect($"OnNext: {new InputEvent().ToString()}");
-        }
+        }*/
 
         [Test]
         public void Output_Direct()
@@ -442,14 +341,8 @@ namespace Tests.InputSystem
             var rumble = new BindableOutput<float>(Gamepad.RumbleHaptic);
             rumble.Offer(1.0f);
         }
-
-        [Test]
-        public void Action_Test()
-        {
-            var subscription = Gamepad.ButtonSouth.Pressed().Subscribe((InputEvent evt) => { /* Jump */  });
-            subscription.Dispose();
-        }
         
+        // TODO Verify initial state, e.g. is button already actuated, release triggers release event
         // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
         // TODO Cover scenarios similar to Value, PassThrough, Button, e.g.

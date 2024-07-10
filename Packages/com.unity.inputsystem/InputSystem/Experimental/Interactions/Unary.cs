@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Experimental
     {
         private sealed class Impl : IObserver<TIn>
         {
-            private readonly TFunc m_Func;
+            private TFunc m_Func; // Note, must be mutable since may be stateful
             private readonly ObserverList2<TOut> m_Observers;
         
             public Impl(Context context, TSource source, TFunc func)

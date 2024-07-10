@@ -4,7 +4,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine.InputSystem.Experimental;
 
-namespace Tests.InputSystem
+namespace Tests.InputSystem.Experimental
 {
     [Category("Experimental")]
     public class UniformBufferTests
