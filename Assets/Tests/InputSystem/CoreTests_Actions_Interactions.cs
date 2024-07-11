@@ -253,7 +253,7 @@ internal partial class CoreTests
             InputSystem.Update();
             Assert.That(trace,
                 Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 0)
-                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration:2))
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
                     .AndThen(Started<MultiTapInteraction>(action, gamepad.buttonSouth))
                     .AndThen(Performed<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 0.2)));
 
