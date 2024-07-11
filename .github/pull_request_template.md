@@ -21,7 +21,7 @@ Before review:
 - [ ] Changelog entry added.
     - Explains the change in `Changed`, `Fixed`, `Added` sections.
     - For API change contains an example snippet and/or migration example.
-    - JIRA ticket linked, example ([case %<ID>%](https://issuetracker.unity3d.com/product/unity/issues/guid/<ID>)). If it is a private issue, just add the case ID without a link.	
+    - JIRA ticket linked, example ([case %<ID>%](https://issuetracker.unity3d.com/product/unity/issues/guid/<ID>)). If it is a private issue, just add the case ID without a link.
     - Jira port for the next release set as "Resolved".
 - [ ] Tests added/changed, if applicable.
     - Functional tests `Area_CanDoX`, `Area_CanDoX_EvenIfYIsTheCase`, `Area_WhenIDoX_AndYHappens_ThisIsTheResult`.
@@ -44,4 +44,4 @@ During merge:
 
 After merge:
 
-- [ ] Create forward/backward port if needed. If you are blocked from creating a forward port now please add a task to ISX-1444. 
+- [ ] Create forward/backward port if needed. If you are blocked from creating a forward port now please add a task to ISX-1444.

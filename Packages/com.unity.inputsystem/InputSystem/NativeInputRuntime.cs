@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -389,27 +390,28 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if UNITY_ANALYTICS
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            #if (UNITY_EDITOR)
+            #if (UNITY_2023_2_OR_NEWER)
+            EditorAnalytics.SendAnalytic(analytic);
             #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+            #endif // UNITY_2023_2_OR_NEWER
+            #elif UNITY_ANALYTICS // Implicitly: !UNITY_EDITOR
+            var info = analytic.info;
+            Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            if (analytic.TryGatherData(out var data, out var error))
+                Analytics.Analytics.SendEvent(info.Name, data);
+            else
+                Debug.Log(error); // Non fatal
             #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
         }
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            #if UNITY_ANALYTICS
-            #if UNITY_EDITOR
-            EditorAnalytics.SendEventWithLimit(name, data);
-            #else
-            Analytics.Analytics.SendEvent(name, data);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
-        }
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }
