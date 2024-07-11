@@ -1214,19 +1214,25 @@ internal class UITests : CoreTestsFixture
 #endif
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
-    [Test]
+    [TestCase(1)]
+    [TestCase(2)]
     [Category("UI")]
-    public void UI_ConvertPointerEventScrollDeltaToTicks_AppliesScrollWheelMultiplier()
+    public void UI_ConvertPointerEventScrollDeltaToTicks_AppliesScrollWheelMultiplier(float multiplier)
     {
         var scene = CreateTestUI();
-
-        scene.uiModule.scrollDeltaPerTick = 1;
+        scene.uiModule.scrollDeltaPerTick = multiplier;
         var ticks = scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one);
-        Assert.That(ticks, Is.EqualTo(Vector2.one).Within(0.001f));
+        Assert.That(ticks, Is.EqualTo(Vector2.one / multiplier).Within(0.001f));
+    }
 
-        scene.uiModule.scrollDeltaPerTick = 42;
-        ticks = scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one * 42);
-        Assert.That(ticks, Is.EqualTo(Vector2.one).Within(0.001f));
+    [TestCase(0)]
+    [TestCase(1)]
+    [Category("UI")]
+    public void UI_ConvertPointerEventScrollDeltaToTicks_ReturnsZeroIfScrollDeltaPerTickIsZero(float delta)
+    {
+        var scene = CreateTestUI();
+        scene.uiModule.scrollDeltaPerTick = 0;
+        Assert.That(scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one * delta), Is.EqualTo(Vector2.zero));
     }
 #endif
 
