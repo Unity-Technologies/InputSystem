@@ -1983,7 +1983,7 @@ namespace UnityEngine.InputSystem
                 if (typeof(InputProcessor).IsAssignableFrom(type))
                 {
                     //Debug.Log("InputProcessor register type: " + type.FullName);
-                    InputSystem.RegisterProcessor(type);
+                    //InputSystem.RegisterProcessor(type);
                 }
                 else if (typeof(IInputInteraction).IsAssignableFrom(type))
                 {
