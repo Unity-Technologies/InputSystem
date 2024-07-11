@@ -231,6 +231,48 @@ internal partial class CoreTests
         }
     }
 
+    // https://jira.unity3d.com/browse/ISXB-310
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenTransitioningFromOneInteractionToNextAlreadyPerformed_GetCallbacksAndResetOtherInteractions()
+    {
+        ResetTime();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+            interactions: "multiTap(tapCount=3),multiTap,Tap");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Trigger the second interaction with a double tap which also internally performs a tap on the third one.
+            PressAndRelease(gamepad.buttonSouth);
+            PressAndRelease(gamepad.buttonSouth, 0.2);
+            currentTime = 2;
+            InputSystem.Update();
+            Assert.That(trace,
+                Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 0)
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration:2))
+                    .AndThen(Started<MultiTapInteraction>(action, gamepad.buttonSouth))
+                    .AndThen(Performed<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 0.2)));
+
+            trace.Clear();
+
+            // Trigger the third interaction with a tap and ensure that doesn't come from the previous one.
+            PressAndRelease(gamepad.buttonSouth, time: 4);
+            currentTime = 6;
+            InputSystem.Update();
+            Assert.That(trace,
+                Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 4)
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
+                    .AndThen(Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 4))
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
+                    .AndThen(Started<TapInteraction>(action, gamepad.buttonSouth, time: 4))
+                    .AndThen(Performed<TapInteraction>(action, gamepad.buttonSouth, time: 4)));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformPressInteraction()
