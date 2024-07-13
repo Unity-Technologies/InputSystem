@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         public readonly Usage Usage;
-        private int m_NodeId;
+        private int m_NodeId; // TODO Remove
 
         public ObservableInput(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
@@ -162,9 +162,12 @@ namespace UnityEngine.InputSystem.Experimental
                 return Equals(otherObservableInput);
             return false;
         }
-        
+
         /// <inheritDoc />
-        public bool Equals(ObservableInput<T> other) => Usage.Equals(other.Usage);
+        public bool Equals(ObservableInput<T> other)
+        {
+            return Usage.Equals(other.Usage);   
+        }
 
         /// <inheritDoc />
         public override bool Equals(object obj) => obj is ObservableInput<T> other && Equals(other);

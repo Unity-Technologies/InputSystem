@@ -1,7 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.InputSystem.Experimental;
-
+using UnityEngine.InputSystem.Experimental.Devices;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 
@@ -159,6 +159,29 @@ namespace Tests.InputSystem
                 Assert.That(s.AsSpan().Length, Is.EqualTo(5));
                 Assert.That(s.AsExtendedSpan().Length, Is.EqualTo(6));
             }
+        }
+
+        [Test]
+        public void CachedNode()
+        {
+            using var s0 = Gamepad.LeftStick.Subscribe(action: (Vector2 _) => { }, context: m_Context);
+            using var s1 = Gamepad.RightStick.Subscribe(action: (Vector2 _) => { }, context: m_Context);
+            //Assert.Equals(m_Context.RegisteredNodeCount, Is.EqualTo(1));
+        }
+
+        // TODO Each operation should have equality and inequality and has tests
+        [Test]
+        public void NodeEquality()
+        {
+            Assert.That(Gamepad.LeftStick.Equals(null), Is.False);
+            Assert.That(Gamepad.LeftStick.Equals(Gamepad.RightStick), Is.False);
+            
+            Assert.That(Gamepad.LeftStick.Equals(Gamepad.LeftStick), Is.True);
+            Assert.That(Gamepad.RightStick.Equals(Gamepad.RightStick), Is.True);
+            
+            Assert.That(Gamepad.ButtonEast.Pressed().Equals(null), Is.False);
+            Assert.That(Gamepad.ButtonEast.Pressed().Equals(Gamepad.ButtonEast.Pressed()), Is.True);
+            Assert.That(Gamepad.ButtonEast.Pressed().Equals(Gamepad.ButtonSouth.Pressed()), Is.False);
         }
 
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event

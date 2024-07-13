@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Experimental
         where TOut : struct
         where TFunc : IUnaryFunc<TIn, TOut>
     {
-        private sealed class Impl : IObserver<TIn>
+        private sealed class Impl : IObserver<TIn> // TODO Why not let this object we subscription? Ref count could sit in state
         {
             private TFunc m_Func; // Note, must be mutable since may be stateful
             private readonly ObserverList2<TOut> m_Observers;
@@ -28,10 +28,25 @@ namespace UnityEngine.InputSystem.Experimental
                 m_Func = func;
             }
 
-            public IDisposable Subscribe(IObserver<TOut> observer) => Subscribe(Context.instance, observer); 
-            public IDisposable Subscribe(Context context, IObserver<TOut> observer) => m_Observers.Subscribe(context, observer);
-            public void OnCompleted() => m_Observers.OnCompleted();
-            public void OnError(Exception error) => m_Observers.OnError(error);
+            public IDisposable Subscribe(IObserver<TOut> observer)
+            {
+                return Subscribe(Context.instance, observer);
+            }
+
+            public IDisposable Subscribe(Context context, IObserver<TOut> observer)
+            {
+                return m_Observers.Subscribe(context, observer);
+            }
+
+            public void OnCompleted()
+            {
+                m_Observers.OnCompleted();   
+            }
+
+            public void OnError(Exception error)
+            {
+                m_Observers.OnError(error);   
+            }
 
             public void OnNext(TIn value)
             {
@@ -84,7 +99,6 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
 
-    // TODO Revisit, currently Release state is removed due to some hidden copy, fail to see why at the moment
     public static class UnaryExtensions
     {
         public static Unary<bool, TSource, InputEvent, ReleaseFn> Released<TSource>(this TSource source)

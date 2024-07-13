@@ -102,10 +102,19 @@ namespace UnityEngine.InputSystem.Experimental
 
         public static bool CompareDependencyGraphs(this IDependencyGraphNode first, IDependencyGraphNode second)
         {
-            if (ReferenceEquals(null, first) || ReferenceEquals(null, second))
+            // If either is null they cannot be equal by definition
+            if (ReferenceEquals(null, first))
+                return ReferenceEquals(null, second);
+
+            // If different types, they cannot be equal by definition
+            var firstType = first.GetType();
+            var secondType = second.GetType();
+            if (firstType != secondType)
                 return false;
+            
             // TODO Implement
-            return false;
+            
+            return true;
         }
     }
 }

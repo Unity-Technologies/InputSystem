@@ -1,6 +1,8 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Rendering.VirtualTexturing;
 
 namespace UnityEngine.InputSystem.Experimental
@@ -42,6 +44,69 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly EventStream m_Events;                              // Shared system queue of observable events.
         private int m_NodeId;                                               // Context specific node ID counter.
         
+        /*private readonly List<Type> m_RegisteredNodeTypes;
+        private readonly List<RegisteredNode> m_RegisteredNodes;
+        private int m_RegisteredNodeCount;
+
+        internal void RegisterNode<T>(T node)
+        {
+            var type = typeof(T);
+            var n = m_RegisteredNodes.Count;
+            var index = IndexOfNodeObject(node);
+            if (index == -1)
+                throw new Exception($"Node {node} has already been registered.");
+            
+            m_RegisteredNodes.Add(new RegisteredNode{ node = node, refCount = 1 });
+        }
+
+        internal void UnregisterNode<T>(T node)
+        {
+            var index = IndexOfNodeObject(node);
+            if (index == -1)
+                throw new Exception($"Node {node} has not been previously registered.");
+
+            m_RegisteredNodes[index].refCount;
+            m_RegisteredNodes.RemoveAt(index);
+        }
+
+        internal int IndexOfNodeObject(object node)
+        {
+            var n = m_RegisteredNodes.Count;
+            for (var i = 0; i < n; ++i)
+            {
+                if (ReferenceEquals(m_RegisteredNodes[i], node))
+                    return i;
+            }
+            return -1;
+        }*/
+
+        private struct RegisteredNode
+        {
+            public object node;
+            public int refCount;
+        }
+        
+        private readonly Dictionary<IDependencyGraphNode, RegisteredNode> m_Nodes;
+
+        internal int NodeCount => m_Nodes.Count;
+
+        // TODO We probably do not gain anything by keeping this centralized, consider distributing it for type safety
+        internal T GetNodeImpl<T>(IDependencyGraphNode source)
+            where T : class
+        {
+            return (m_Nodes.TryGetValue(source, out RegisteredNode reg) && reg.node is T impl) ? impl : default;
+        }
+
+        internal void RegisterNodeImpl(IDependencyGraphNode node, object impl)
+        {
+            m_Nodes.Add(node, new RegisteredNode{node = node, refCount = 1});
+        }
+
+        internal void RemoveNodeImpl(IDependencyGraphNode node)
+        {
+            m_Nodes.Remove(node);
+        }
+
         public static Context instance
         {
             get => _globals.Instance ??= new Context();
@@ -50,6 +115,8 @@ namespace UnityEngine.InputSystem.Experimental
         
         public Context()
         {
+            m_Nodes = new(32);
+                
             // Attempt to assign this context to a global slot. This allows referencing the context with
             // a handle (non reference type) when necessary.
             var handle = 0;

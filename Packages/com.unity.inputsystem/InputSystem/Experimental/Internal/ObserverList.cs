@@ -101,8 +101,10 @@ namespace UnityEngine.InputSystem.Experimental
        private ArrayPool<IObserver<T>> observerPool;
        private IObserver<T>[] m_Observers;
        private int m_ObserverCount;
+       
        private ArrayPool<IDisposable> disposablePool;
        private IDisposable[] disposables;
+       private int m_DisposableCount;
 
        private ObserverList3(ArrayPool<IObserver<T>> observerPool, ArrayPool<IDisposable> disposablePool, 
            int disposableLength)
@@ -116,6 +118,10 @@ namespace UnityEngine.InputSystem.Experimental
            while (_observerListLookup.ContainsKey(id))
                id = _observerListId++;
            _observerListLookup.Add(id, null);
+           
+           m_Observers = null;
+           m_ObserverCount = 0;
+           m_DisposableCount = 0;
        }
        
        public ObserverList3(ArrayPool<IObserver<T>> observerPool, ArrayPool<IDisposable> disposablePool, 
@@ -263,8 +269,8 @@ namespace UnityEngine.InputSystem.Experimental
         // TODO Could basically be index to observer list and index to observer within that list, or only global observer. Note that if we apply defragmentation we might need to to store subscriptions as well which might be desirable from debugging perspective.
         private sealed class Subscription : IDisposable
         {
-            private ObserverList2<T> m_Owner;
-            private IObserver<T> m_Observer;
+            private ObserverList2<T> m_Owner;   // TODO This could be sub array or pooled array or simply context ref
+            private IObserver<T> m_Observer;    // TODO This could be index
 
             public Subscription(ObserverList2<T> owner, IObserver<T> observer)
             {

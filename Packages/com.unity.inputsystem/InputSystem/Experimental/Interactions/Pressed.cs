@@ -41,6 +41,12 @@ namespace UnityEngine.InputSystem.Experimental
     public struct Pressed<TSource> : IObservableInput<InputEvent>
         where TSource : IObservableInput<bool>, IDependencyGraphNode
     {
+        // ObservableInput<InputEvent>
+        // TODO State could be unmanaged from pool
+        // TODO ObserverList could be from pool
+        // TODO Impl could be pooled (need interface)
+        //
+        // TODO Should register itself to avoid duplicate nodes
         internal sealed class Impl : IObserver<bool>
         {
             private bool m_PreviousValue;
@@ -56,7 +62,7 @@ namespace UnityEngine.InputSystem.Experimental
 
             public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
                 m_Observers.Subscribe(context, observer);
-
+            
             public void OnCompleted() => m_Observers.OnCompleted();
             public void OnError(Exception error) => m_Observers.OnError(error);
 
@@ -79,12 +85,30 @@ namespace UnityEngine.InputSystem.Experimental
             m_Impl = null;
         }
 
-        public IDisposable Subscribe(IObserver<InputEvent> observer) =>
-            Subscribe(Context.instance, observer);
-        
-        public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
-            (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);
-        
+        public IDisposable Subscribe(IObserver<InputEvent> observer)
+        {
+            return Subscribe(Context.instance, observer);
+        }
+
+        public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
+        {
+            // TODO When subscribing we want to check if key (proxy) has a registered instance
+            //      within context and reuse this instance if it exists.
+            // Do we want to compare this to impl?!
+            
+            // TODO Attempt to get impl for source, if found subscribe to that node. If not found, create and subscribe.
+            var impl = context.GetNodeImpl<Impl>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
+            if (impl == null)
+            {
+                impl = new Impl(context, m_Source);
+                context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
+            }
+
+            return impl.Subscribe(context, observer);
+            
+            // return (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);
+        }
+            
         // TODO Reader end-point
         // TODO Provide a non-abstract enumerator or let reader implement IEnumerable
         public IEnumerable<InputEvent> Subscribe2(Context context)
@@ -116,9 +140,16 @@ namespace UnityEngine.InputSystem.Experimental
                 return GetEnumerator();
             }
         }
-        
-        public bool Equals(IDependencyGraphNode other) =>
-            this.CompareDependencyGraphs(other);
+
+        public bool Equals(IDependencyGraphNode other)
+        {
+            return other is Pressed<TSource> pressed && Equals(pressed);
+        }
+
+        public bool Equals(Pressed<TSource> other)
+        {   
+            return m_Source.Equals(other.m_Source);
+        }
         
         public string displayName => "Pressed"; // TODO Could be optional attribute and use type name when not defined
         public int childCount => 1; // TODO Could be detected by presence of attributes on properties

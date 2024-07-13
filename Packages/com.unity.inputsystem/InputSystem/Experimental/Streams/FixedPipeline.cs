@@ -5,6 +5,12 @@ using Unity.Jobs;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    
+    // Fixed:
+    // Field:     field reader
+    // Filter:    lt, le, gt, ge, eq, neq      3 bits + sizeof(T)
+    // Transform: affine transform for dimension
+    
     // Find a way to generate fixed operations as a dependency chain
     internal static class FixedPipeline
     {
