@@ -1,7 +1,10 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
-using System;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 ////TODO: custom icon for OnScreenButton component
 
@@ -45,6 +48,34 @@ namespace UnityEngine.InputSystem.OnScreen
             get => m_ControlPath;
             set => m_ControlPath = value;
         }
+
+#if UNITY_EDITOR
+        [UnityEditor.CustomEditor(typeof(OnScreenButton))]
+        internal class OnScreenButtonEditor : UnityEditor.Editor
+        {
+            private UnityEditor.SerializedProperty m_ControlPathInternal;
+
+            public void OnEnable()
+            {
+                m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenButton.m_ControlPath));
+            }
+
+            public void OnDisable()
+            {
+                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenButton).Send();
+            }
+
+            public override void OnInspectorGUI()
+            {
+                // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
+                UGUIOnScreenControlEditorUtils.ShowWarningIfNotPartOfCanvasHierarchy((OnScreenButton)target);
+
+                UnityEditor.EditorGUILayout.PropertyField(m_ControlPathInternal);
+
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+#endif
     }
 }
 #endif

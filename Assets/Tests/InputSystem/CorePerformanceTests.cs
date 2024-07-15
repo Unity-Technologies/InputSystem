@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
@@ -10,6 +11,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 
 ////TODO: add test for domain reload logic
 
@@ -719,6 +721,94 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // These tests shows a use case where ReadValueCaching optimization will perform better than without any
+    // optimization.
+    // It shows that there's a performance improvement when the control values being read are not changing every frame.
+    //
+    // NOTE: Performance is expected to be near-identical between the two optimisation settings, since Keyboard takes
+    // the ReadValueCaching paths in UpdateState.
+    public void Performance_OptimizedControls_ReadAndUpdateKeyboard1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            InputSystem.Update();
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                InputSystem.Update();
+
+                if (i % 200 == 0)
+                {
+                    // Make sure there's a new different value every 100 frames to mark the cached value as stale.
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+                    InputSystem.Update();
+                }
+                else if ((i + 100) % 200 == 0)
+                {
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                    InputSystem.Update();
+                }
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // This shows a use case where ReadValueCaching optimization will perform worse when controls have stale cached
+    // values every frame. Meaning, when control values change in every frame.
+    //
+    // NOTE: Performance is expected to be near-identical between the two optimisation settings, since Keyboard takes
+    // the ReadValueCaching paths in UpdateState.
+    public void Performance_OptimizedControls_ReadAndUpdateKeyboardNewValuesEveryFrame1kTimes(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.Update();
+
+        Measure.Method(() =>
+        {
+            float val = keyboard.fKey.value;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            InputSystem.Update();
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                InputSystem.Update();
+                val = keyboard.fKey.value;
+                // Make sure there's a new different value every frames to mark the cached value as stale.
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+
+                InputSystem.Update();
+                val = keyboard.fKey.value;
+                // Make sure there's a new different value every frames to mark the cached value as stale.
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
+            }
+        })
+            .MeasurementCount(100)
+            .WarmupCount(10)
+            .Run();
+    }
+
     [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
@@ -763,6 +853,215 @@ internal class CorePerformanceTests : CoreTestsFixture
         void CallUpdate()
         {
             for (var i = 0; i < 1000; ++i) InputSystem.Update();
+        }
+    }
+
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization, 1)]
+    [TestCase(OptimizationTestType.OptimizedControls, 1)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 1)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 1)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 33)]
+    [TestCase(OptimizationTestType.OptimizedControls, 33)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 33)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 33)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 66)]
+    [TestCase(OptimizationTestType.OptimizedControls, 66)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 66)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 66)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 100)]
+    [TestCase(OptimizationTestType.OptimizedControls, 100)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 100)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
+    // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
+
+    public void Performance_OptimizedControls_Gamepad_250PressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.Update();
+
+        var childrenThatAreButtons = new List<ButtonControl>();
+        foreach (var child in gamepad.m_ChildrenForEachControl)
+        {
+            if (child.isButton)
+                childrenThatAreButtons.Add((ButtonControl)child);
+        }
+
+        var buttonsToTest = Math.Max(1, childrenThatAreButtons.Count * percentageOfButtonsTested / 100);
+        for (int i = 0; i < buttonsToTest; ++i)
+        {
+            // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
+            // which affects processing of future events to care about state changes so that this call is accurate.
+            var press = childrenThatAreButtons[i].wasPressedThisFrame;
+        }
+
+        Measure.Method(() =>
+        {
+            CallUpdate();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Gamepad Only")
+            .WarmupCount(10)
+            .Run();
+
+        return;
+
+        void CallUpdate()
+        {
+            for (var i = 0; i < 250; ++i) PressAndRelease(gamepad.buttonSouth);
+        }
+    }
+
+    // tvOS builders are way too slow for this and regularly time out, so skip there.
+    [Test, Performance, UnityPlatform(exclude = new[] { RuntimePlatform.tvOS })]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization, 1)]
+    [TestCase(OptimizationTestType.OptimizedControls, 1)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 1)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 1)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 33)]
+    [TestCase(OptimizationTestType.OptimizedControls, 33)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 33)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 33)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 66)]
+    [TestCase(OptimizationTestType.OptimizedControls, 66)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 66)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 66)]
+
+    [TestCase(OptimizationTestType.NoOptimization, 100)]
+    [TestCase(OptimizationTestType.OptimizedControls, 100)]
+    [TestCase(OptimizationTestType.ReadValueCaching, 100)]
+    [TestCase(OptimizationTestType.OptimizedControlsAndReadValueCaching, 100)]
+    // Test the effect on performance that occurs when we check more and more buttons of the controller for their press/release within the frame.
+
+    public void Performance_OptimizedControls_Keyboard_250PressAndUpdate_WasPressedThisFrame_PercentButtonsTested(OptimizationTestType testType, float percentageOfButtonsTested)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.Update();
+
+        var childrenThatAreButtons = new List<ButtonControl>();
+        foreach (var child in keyboard.m_ChildrenForEachControl)
+        {
+            if (child.isButton)
+                childrenThatAreButtons.Add((ButtonControl)child);
+        }
+
+        var buttonsToTest = Math.Max(1, childrenThatAreButtons.Count * percentageOfButtonsTested / 100);
+        for (int i = 0; i < buttonsToTest; ++i)
+        {
+            // Calling wasPressedThisFrame/wasReleasedThisFrame marks the button to care about the value,
+            // which affects processing of future events to care about state changes so that this call is accurate.
+            var press = childrenThatAreButtons[i].wasPressedThisFrame;
+        }
+
+        Measure.Method(() =>
+        {
+            CallUpdate();
+        })
+            .MeasurementCount(100)
+            .SampleGroup("Keyboard Only")
+            .WarmupCount(10)
+            .Run();
+
+        return;
+
+        void CallUpdate()
+        {
+            for (var i = 0; i < 250; ++i) PressAndRelease(keyboard.fKey);
+        }
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(OptimizationTestType.NoOptimization)]
+    [TestCase(OptimizationTestType.ReadValueCaching)]
+    // These tests show the performance of the ReadValueCaching optimization when there are state changes per frame on
+    // gamepad controls and there are composite actions that read from controls.
+    // Currently, there is a positive performance impact by using ReadValueCaching when reading from controls which have
+    // composite bindings.
+    public void Performance_OptimizedControls_EvaluateStaleControlReadsWhenGamepadStateChanges(OptimizationTestType testType)
+    {
+        SetInternalFeatureFlagsFromTestType(testType);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Disable the project wide actions actions to avoid performance impact.
+        InputSystem.actions?.Disable();
+#endif
+
+        Measure.Method(() =>
+        {
+            MethodToMeasure(gamepad);
+        }).SampleGroup("ReadValueCaching Expected With WORSE Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+
+        // Create composite actions to show the performance improvement when using ReadValueCaching.
+
+        var leftStickCompositeAction = new InputAction("LeftStickComposite", InputActionType.Value);
+        leftStickCompositeAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+
+
+        var rightStickCompositeAction = new InputAction("RightStickComposite", InputActionType.Value);
+        rightStickCompositeAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Gamepad>/rightStick/up")
+            .With("Down", "<Gamepad>/rightStick/down")
+            .With("Left", "<Gamepad>/rightStick/left")
+            .With("Right", "<Gamepad>/rightStick/right");
+
+        leftStickCompositeAction.Enable();
+        rightStickCompositeAction.Enable();
+
+        Measure.Method(() =>
+        {
+            MethodToMeasure(gamepad);
+        }).SampleGroup("ReadValueCaching Expected With BETTER Performance")
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Re-enable the project wide actions actions.
+        InputSystem.actions?.Enable();
+#endif
+        return;
+
+        void MethodToMeasure(Gamepad g)
+        {
+            var value2d = Vector2.zero;
+
+            for (var i = 0; i < 1000; ++i)
+            {
+                // Make sure state changes are different from previous state so that we mark the controls as
+                // stale.
+                InputSystem.QueueStateEvent(g,
+                    new GamepadState
+                    {
+                        leftStick = new Vector2(i / 1000f, i / 1000f),
+                        rightStick = new Vector2(i / 1000f, i / 1200f)
+                    });
+                InputSystem.Update();
+
+                value2d = gamepad.leftStick.value;
+            }
         }
     }
 

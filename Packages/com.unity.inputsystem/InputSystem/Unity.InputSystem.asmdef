@@ -81,6 +81,11 @@
             "name": "Unity",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.9",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA"
         }
     ],
     "noEngineReferences": false
