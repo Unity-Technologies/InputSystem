@@ -101,10 +101,12 @@ namespace UnityEngine.InputSystem.Experimental
 
     public static class UnaryExtensions
     {
+        private const string kReleaseDisplayName = "Release";
+        
         public static Unary<bool, TSource, InputEvent, ReleaseFn> Released<TSource>(this TSource source)
             where TSource : IObservableInput<bool>, IDependencyGraphNode
         {
-            return new Unary<bool, TSource, InputEvent, ReleaseFn>("Release", source, new ReleaseFn());
+            return new Unary<bool, TSource, InputEvent, ReleaseFn>(kReleaseDisplayName, source, new ReleaseFn());
         }
     }
 }

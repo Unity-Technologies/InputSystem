@@ -8,6 +8,12 @@ namespace UnityEngine.InputSystem.Experimental
 {
     internal unsafe static class UnsafeUtils
     {
+        internal static long Distance(void* first, void* last)
+        {
+            var diff = ((ulong)last) - ((ulong)first);
+            return (long)diff;
+        }
+        
         internal static void* Offset(void* ptr, int offset)
         {
             return (void*)(((ulong)ptr) + (ulong)offset);

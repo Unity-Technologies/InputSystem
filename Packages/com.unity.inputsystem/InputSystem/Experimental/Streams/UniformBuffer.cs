@@ -15,6 +15,7 @@ using Unity.Collections.LowLevel.Unsafe;
 // TODO Test with TypeEncoded
 
 // TODO FIX Some kind of access violation currently happening
+// TODO Consider renaming UnsafeUniformBuffer or UnsafeBuffer
 
 namespace UnityEngine.InputSystem.Experimental
 {

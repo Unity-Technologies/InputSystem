@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Mono.Collections.Generic;
 using NUnit.Framework;
@@ -11,70 +12,75 @@ namespace Tests.InputSystem.Experimental
     internal struct UnsafeArray<T> : IDisposable 
         where T : unmanaged
     {
-        public unsafe T* data;
-        public int capacity;
-        public int length;
-        private AllocatorManager.AllocatorHandle m_Allocator;
+        private unsafe T* m_Data;
+        private int m_Capacity;
+        private int m_Length;
+        private readonly AllocatorManager.AllocatorHandle m_Allocator;
 
         public unsafe UnsafeArray(AllocatorManager.AllocatorHandle allocator)
         {
-            data = null;
-            capacity = 0;
-            length = 0;
+            m_Data = null;
+            m_Capacity = 0;
+            m_Length = 0;
             m_Allocator = allocator;
         }
         
-        public unsafe UnsafeArray(int capacity, AllocatorManager.AllocatorHandle allocator)
+        public unsafe UnsafeArray(int initialCapacity, AllocatorManager.AllocatorHandle allocator)
         {
-            this.data = (T*)AllocatorManager.Allocate<T>(allocator, capacity);
-            this.capacity = capacity;
-            this.length = 0;
+            m_Data = AllocatorManager.Allocate<T>(allocator, initialCapacity);
+            m_Capacity = initialCapacity;
+            m_Length = 0;
             m_Allocator = allocator;
         }
         
         public unsafe void Dispose()
         {
-            if (data == null) return;
-            AllocatorManager.Free(m_Allocator, data);
-            data = null;
+            if (m_Data == null) return;
+            AllocatorManager.Free(m_Allocator, m_Data);
+            m_Data = null;
         }
+
+        public unsafe T* data => m_Data;
+        public int capacity => m_Capacity;
+        public int length => m_Length;
         
         public unsafe ref T this[int key]
         {
-            get => ref *(data + key);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref *(m_Data + key);
         }
 
         public unsafe void EraseAt(int index)
         {
-            var dst = data + index;
-            UnsafeUtility.MemMove(dst, dst + 1, length - index);
-            --length;
+            var dst = m_Data + index;
+            UnsafeUtility.MemMove(dst, dst + 1, m_Length - index);
+            --m_Length;
         }
 
         public unsafe void Resize(int newSize)
         {
-            if (newSize > length)
+            if (newSize > m_Length)
             {
                 Reserve(newSize);
-                length = newSize;
+                m_Length = newSize;
             }
-            else if (newSize < length)
+            else if (newSize < m_Length)
             {
-                length = newSize;
+                m_Length = newSize;
             }
         }
         
         public unsafe void Reserve(int newCapacity)
         {
             var newPtr = AllocatorManager.Allocate<T>(m_Allocator, newCapacity);
-            if (data != null)
+            if (m_Data != null)
             {
-                var newSize = Math.Min(length, newCapacity);
-                UnsafeUtility.MemCpy(newPtr, data, newSize);
-                AllocatorManager.Free(m_Allocator, data);
+                var newSize = Math.Min(m_Length, newCapacity);
+                UnsafeUtility.MemCpy(newPtr, m_Data, newSize);
+                AllocatorManager.Free(m_Allocator, m_Data);
             }
-            data = newPtr;
-            capacity = newCapacity;
+            m_Data = newPtr;
+            m_Capacity = newCapacity;
         }
     }
     

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
@@ -18,8 +19,27 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct Header
+    {
+        public readonly ushort m_Type;
+        public ushort sizeBytes;
+        public ushort payloadOffset;
+        private ushort reserved;
+
+        public unsafe T GetValueAs<T>() where T : unmanaged
+        {
+            return *GetPointerAs<T>();
+        }
+
+        public unsafe T* GetPointerAs<T>() where T : unmanaged
+        {
+            return (T*)(((byte*)UnsafeUtility.AddressOf(ref this)) + payloadOffset);
+        }
+    }
+
     /// <summary>
-    /// A resizeable buffer holding elements of type <typeparamref name="T"/>.
+    /// A resizeable buffer holding elements of varying type and alignment.
     /// </summary>
     /// <remarks>
     /// The buffer utilizes a greedy allocation scheme where data is organized into linked segments in memory.
@@ -29,7 +49,6 @@ namespace UnityEngine.InputSystem.Experimental
     /// out of capacity but do not deallocate until Clear() is called, in which case all but the last segment
     /// are dropped and deallocated. 
     /// </remarks>
-    /// <typeparam name="T">The element type.</typeparam>
     public unsafe struct VaryingBuffer : IDisposable //, IEnumerable<byte>
     {
         private LinkedSegment* m_Head;

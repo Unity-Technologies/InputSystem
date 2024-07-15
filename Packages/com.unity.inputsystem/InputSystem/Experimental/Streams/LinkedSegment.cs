@@ -1,11 +1,12 @@
 #define INPUT_SYSTEM_COALLOCATE // TODO Delete this later, currently exists to support comparison
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -74,7 +75,8 @@ namespace UnityEngine.InputSystem.Experimental
     /// allocation. If INPUT_SYSTEM_COALLOCATE is not defined, the segment will perform separate allocations for
     /// header and data.
     /// </remarks>
-    internal unsafe struct LinkedSegment<T> where T : unmanaged
+    internal unsafe struct LinkedSegment<T> : IEnumerable<T>
+        where T : unmanaged
     {
         /// <summary>
         /// Points to the first element of the consecutive segment buffer data region.
@@ -190,5 +192,58 @@ namespace UnityEngine.InputSystem.Experimental
 
             //AtomicSafetyHandle.CheckReadAndThrow(this.m_Safety);
         }
+        
+        public struct Enumerator : IEnumerator<T>
+        {
+            private readonly LinkedSegment<T> m_ContainerPtr;
+            private int m_Index;
+            private T m_Value;
+            
+            public Enumerator(in LinkedSegment<T> segment)
+            {
+                m_ContainerPtr = segment;
+                m_Index = -1;
+                m_Value = default;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (++m_Index < m_ContainerPtr.Length)
+                {
+                    //AtomicSafetyHandle.CheckReadAndThrow(this.m_Array.m_Safety);
+                    m_Value = UnsafeUtility.ReadArrayElement<T>(m_ContainerPtr.Ptr, m_Index);
+                    return true;
+                }
+
+                m_Value = default(T);
+                return false;
+            }
+
+            public void Reset()
+            {
+                m_Index = -1;
+            }
+            
+            public T Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)] get => m_Value;
+            }
+
+            object IEnumerator.Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)] get => (object) Current;
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
+        public LinkedSegment<T>.Enumerator GetEnumerator() => new LinkedSegment<T>.Enumerator(in this);
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => (IEnumerator<T>) this.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => (IEnumerator) this.GetEnumerator();
     }
 }
