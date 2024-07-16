@@ -2229,7 +2229,7 @@ namespace UnityEngine.InputSystem.UI
 #endif
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
-        const float kSmallestScrollDeltaPerTick = 0.001f;
+        const float kSmallestScrollDeltaPerTick = 0.00001f;
         public override Vector2 ConvertPointerEventScrollDeltaToTicks(Vector2 scrollDelta)
         {
             if (Mathf.Abs(scrollDeltaPerTick) < kSmallestScrollDeltaPerTick)
