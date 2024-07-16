@@ -240,6 +240,7 @@ publish{% cycle "", "_dryrun" %}:
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
+    XRAY_PROFILE: gold rme
   commands:
     - {{ upm_ci_install }}
     - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
