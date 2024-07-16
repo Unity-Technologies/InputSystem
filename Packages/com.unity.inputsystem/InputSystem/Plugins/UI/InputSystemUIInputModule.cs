@@ -2237,6 +2237,7 @@ namespace UnityEngine.InputSystem.UI
 
             return scrollDelta / scrollDeltaPerTick;
         }
+
 #endif
 
         private void HookActions()

@@ -1234,6 +1234,7 @@ internal class UITests : CoreTestsFixture
         scene.uiModule.scrollDeltaPerTick = 0;
         Assert.That(scene.uiModule.ConvertPointerEventScrollDeltaToTicks(Vector2.one * delta), Is.EqualTo(Vector2.zero));
     }
+
 #endif
 
     [UnityTest]
