@@ -240,7 +240,6 @@ publish{% cycle "", "_dryrun" %}:
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
-    XRAY_PROFILE: gold rme
   commands:
     - {{ upm_ci_install }}
     - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
@@ -249,7 +248,7 @@ publish{% cycle "", "_dryrun" %}:
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
     - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
-    - upm-pvp require "$XRAY_PROFILE" --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
+    - upm-pvp require "gold rme" --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
   artifacts:
     artifacts:
       paths:
