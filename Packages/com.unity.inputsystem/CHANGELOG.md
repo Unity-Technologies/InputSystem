@@ -10,6 +10,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
+
+## [1.9.0] - 2024-07-15
+
 ### Changed
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
 - Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
@@ -37,7 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 - Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
 - Fixed an issue related to Visualizers sample where exceptions would be thrown by InputActionVisualizer and InputControlVisualizer when entering play-mode if added as components to a new `GameObject`.
-- Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
+- Fixed an issue with InputAction Asset editor where invalid ControlScheme names with only spaces could be entered. [ISXB-547](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-547).
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
