@@ -10,6 +10,7 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.AnimatedValues;
+using UnityEngine.InputSystem.Editor;
 #endif
 ////TODO: custom icon for OnScreenStick component
 
@@ -464,6 +465,13 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
                 m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
+            }
+
+            public void OnDisable()
+            {
+                // Report analytics
+                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenStick).Send();
+                new OnScreenStickEditorAnalytic(this).Send();
             }
 
             public override void OnInspectorGUI()
