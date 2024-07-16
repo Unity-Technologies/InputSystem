@@ -249,6 +249,7 @@ publish{% cycle "", "_dryrun" %}:
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
     - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
     - upm-pvp require "supported rme" --allow-missing --results upm-ci~/xray
+    - upm-pvp require "$XRAY_PROFILE" --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
   artifacts:
     artifacts:
       paths:
