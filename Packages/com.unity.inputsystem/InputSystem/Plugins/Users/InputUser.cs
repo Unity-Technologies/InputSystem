@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
@@ -36,6 +37,9 @@ namespace UnityEngine.InputSystem.Users
     public struct InputUser : IEquatable<InputUser>
     {
         public const uint InvalidId = 0;
+
+        static readonly ProfilerMarker s_InputUserOnChangeMarker = new ProfilerMarker(ProfilerCategory.Input, "InputUser.onChange");
+        static readonly ProfilerMarker s_InputCheckForUnpairMarker = new ProfilerMarker(ProfilerCategory.Input, "InputCheckForUnpairedDeviceActivity");
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -1017,7 +1021,7 @@ namespace UnityEngine.InputSystem.Users
 
             if (s_GlobalState.onChange.length == 0)
                 return;
-            Profiler.BeginSample("InputUser.onChange");
+            s_InputUserOnChangeMarker.Begin();
             s_GlobalState.onChange.LockForChanges();
             for (var i = 0; i < s_GlobalState.onChange.length; ++i)
             {
@@ -1032,7 +1036,7 @@ namespace UnityEngine.InputSystem.Users
                 }
             }
             s_GlobalState.onChange.UnlockForChanges();
-            Profiler.EndSample();
+            s_InputUserOnChangeMarker.End();
         }
 
         private static int TryFindUserIndex(uint userId)
@@ -1652,14 +1656,14 @@ namespace UnityEngine.InputSystem.Users
                 return;
             }
 
-            Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
+            s_InputCheckForUnpairMarker.Begin();
 
             // Apply the pre-filter. If there's callbacks and none of them return true,
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
             {
-                Profiler.EndSample();
+                s_InputCheckForUnpairMarker.End();
                 return;
             }
 
@@ -1698,7 +1702,7 @@ namespace UnityEngine.InputSystem.Users
                     break;
             }
 
-            Profiler.EndSample();
+            s_InputCheckForUnpairMarker.End();
         }
 
         /// <summary>

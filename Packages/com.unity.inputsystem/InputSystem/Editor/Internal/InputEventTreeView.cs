@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Profiling;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
@@ -23,6 +24,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly InputEventTrace m_EventTrace;
         private readonly InputControl m_RootControl;
+        private static readonly ProfilerMarker s_InputEventTreeBuildRootMarker = new ProfilerMarker(ProfilerCategory.Input, "InputEventTreeView.BuildRoot");
 
         private enum ColumnId
         {
@@ -177,7 +179,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            Profiler.BeginSample("InputEventTreeView.BuildRoot");
+            s_InputEventTreeBuildRootMarker.Begin();
 
             var root = new TreeViewItem
             {
@@ -217,7 +219,7 @@ namespace UnityEngine.InputSystem.Editor
                 root.children.Reverse();
             }
 
-            Profiler.EndSample();
+            s_InputEventTreeBuildRootMarker.End();
             return root;
         }
 

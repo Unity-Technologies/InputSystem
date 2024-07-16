@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Profiling;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Profiling;
@@ -22,6 +23,8 @@ namespace UnityEngine.InputSystem.Editor
         public byte[] stateBuffer;
         public byte[][] multipleStateBuffers;
         public bool showDifferentOnly;
+
+        static readonly ProfilerMarker s_InputBuildControlTreeMarker = new ProfilerMarker(ProfilerCategory.Input, "BuildControlTree");
 
         public static InputControlTreeView Create(InputControl rootControl, int numValueColumns, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
         {
@@ -136,14 +139,14 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            Profiler.BeginSample("BuildControlTree");
+            s_InputBuildControlTreeMarker.Begin();
 
             var id = 1;
 
             // Build tree from control down the control hierarchy.
             var rootItem = BuildControlTreeRecursive(m_RootControl, 0, ref id);
 
-            Profiler.EndSample();
+            s_InputBuildControlTreeMarker.End();
 
             // Wrap root control in invisible item required by TreeView.
             return new TreeViewItem

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -83,6 +84,11 @@ namespace UnityEngine.InputSystem
 
     public static partial class InputSystem
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker s_InputInitializeInEditorMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.InitializeInEditor");
+#endif
+        static readonly ProfilerMarker s_InputRestMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.Reset");
+
         #region Layouts
 
         /// <summary>
@@ -3403,6 +3409,7 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
+
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3532,7 +3539,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.InitializeInEditor");
+            s_InputInitializeInEditorMarker.Begin();
 
             Reset(runtime: runtime);
 
@@ -3625,7 +3632,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
-            Profiler.EndSample();
+            s_InputInitializeInEditorMarker.End();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3851,7 +3858,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            s_InputRestMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3911,7 +3918,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
 
-            Profiler.EndSample();
+            s_InputRestMarker.End();
         }
 
         /// <summary>

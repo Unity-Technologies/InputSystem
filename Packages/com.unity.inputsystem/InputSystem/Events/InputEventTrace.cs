@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Profiling;
 
@@ -27,6 +28,7 @@ namespace UnityEngine.InputSystem.LowLevel
     public sealed unsafe class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
         private const int kDefaultBufferSize = 1024 * 1024;
+        private static readonly ProfilerMarker s_InputEvenTraceMarker = new ProfilerMarker(ProfilerCategory.Input, "InputEventTrace");
 
         /// <summary>
         /// If <see name="recordFrameMarkers"/> is enabled, an <see cref="InputEvent"/> with this <see cref="FourCC"/>
@@ -811,7 +813,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (bytesNeeded > m_MaxEventBufferSize)
                 return;
 
-            Profiler.BeginSample("InputEventTrace");
+            s_InputEvenTraceMarker.Begin();
 
             if (m_EventBufferTail == default)
             {
@@ -837,7 +839,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                     if (newBufferSize < bytesNeeded)
                     {
-                        Profiler.EndSample();
+                        s_InputEvenTraceMarker.End();
                         return;
                     }
 
@@ -936,7 +938,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners, new InputEventPtr((InputEvent*)buffer),
                     "InputEventTrace.onEvent");
 
-            Profiler.EndSample();
+            s_InputEvenTraceMarker.End();
         }
 
         private class Enumerator : IEnumerator<InputEventPtr>
