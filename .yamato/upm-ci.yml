@@ -236,14 +236,14 @@ publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
-    image: package-ci/ubuntu-22.04:v4
+    image: package-ci/win10:default
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
   commands:
     - {{ upm_ci_install }}
-    - mv .\Assets\Samples .\Packages\com.unity.inputsystem
-    - mv .\Assets\Samples.meta .\Packages\com.unity.inputsystem
+    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
+    - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
