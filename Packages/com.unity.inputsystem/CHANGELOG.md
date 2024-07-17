@@ -9,6 +9,7 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
+- Fixed ArgumentNullException thrown when accessing Action's bindings after changing Composite part. [ISXB-494](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-494).
 
 ### Fixed
 - Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
