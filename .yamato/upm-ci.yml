@@ -236,8 +236,8 @@ publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
-    image: package-ci/ubuntu-22.04:v4
-    flavor: b1.small
+    image: package-ci/win10:default
+    flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
     XRAY_PROFILE: supported rme
