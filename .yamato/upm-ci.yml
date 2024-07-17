@@ -236,21 +236,20 @@ publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
-    XRAY_PROFILE: supported rme
   commands:
     - {{ upm_ci_install }}
-    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
-    - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
+    - mv .\Assets\Samples .\Packages\com.unity.inputsystem
+    - mv .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
     - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
-    - upm-pvp require "$XRAY_PROFILE" --no-report --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
-    - upm-pvp require "$XRAY_PROFILE ./.yamato/PVPexemptions.json" --allow-missing --results upm-ci~/xray    
+    - upm-pvp require "supported rme" --no-report --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
+    - upm-pvp require "supported rme ./.yamato/PVPexemptions.json" --allow-missing --results upm-ci~/xray    
   artifacts:
     artifacts:
       paths:
