@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
 - Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 - Changed `DualSenseHIDInputReport` from internal to public visibility
+- Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
@@ -47,10 +48,6 @@ however, it has to be formatted properly to pass verification tests.
   only.
 - Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
 - Expanded editor and build insight analytics to cover ``.inputactions` asset editor usage, `InputSettings` and common component configurations.
-
-### Changed
-- Changed `DualSenseHIDInputReport` from internal to public visibility
-- Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
 ## [1.8.2] - 2024-04-29
 
