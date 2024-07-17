@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
     
-    internal struct ObserverList<T> : IObserver<T>
+    /*internal struct ObserverList<T> : IObserver<T>
     {
         private List<IObserver<T>> m_Observers;
         private readonly Action m_OnUnsubscribed;
@@ -412,5 +412,5 @@ namespace UnityEngine.InputSystem.Experimental
             m_Observers.Add(observer);
             return new Subscription(this, observer);
         }
-    }
+    }*/
 }

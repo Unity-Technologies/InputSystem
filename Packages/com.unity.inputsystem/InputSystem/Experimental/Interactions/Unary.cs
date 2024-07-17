@@ -79,34 +79,4 @@ namespace UnityEngine.InputSystem.Experimental
         public int childCount => 1;
         public IDependencyGraphNode GetChild(int index) => index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index));
     }
-
-    public struct ReleaseFn : IUnaryFunc<bool, InputEvent>
-    {
-        private bool m_PreviousValue;
-        
-        public bool Process(bool arg0, ref InputEvent result)
-        {
-            if (m_PreviousValue != arg0)
-            {
-                m_PreviousValue = arg0;
-                if (!arg0)
-                {
-                    result = new InputEvent();
-                    return true;    
-                }
-            }
-            return false;
-        }
-    }
-
-    public static class UnaryExtensions
-    {
-        private const string kReleaseDisplayName = "Release";
-        
-        public static Unary<bool, TSource, InputEvent, ReleaseFn> Released<TSource>(this TSource source)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
-        {
-            return new Unary<bool, TSource, InputEvent, ReleaseFn>(kReleaseDisplayName, source, new ReleaseFn());
-        }
-    }
 }

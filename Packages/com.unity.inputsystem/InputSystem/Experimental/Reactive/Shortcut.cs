@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem.Experimental
             public Impl(Context context, TSource source0, TSource source1)
             {
                 // TODO This is one way to implement this, but it might be better to use same strategy as merge to avoid copying? (But this is simpler)
+                // TODO Consider doing something like Trigger.Pressed.When(Modifier) or When(Modifier).and(Trigger.Pressed)
                 var combineLatest = new CombineLatest<bool, bool, TSource, TSource>(source0, source1);
                 m_Observers = new ObserverList2<bool>(combineLatest.Subscribe(context, this));
             }

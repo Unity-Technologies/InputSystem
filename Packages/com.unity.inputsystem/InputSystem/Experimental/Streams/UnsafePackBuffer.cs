@@ -26,12 +26,14 @@ namespace UnityEngine.InputSystem.Experimental
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
+            if (length < 0)
+                throw new ArgumentException($"Argument {nameof(length)}");
             
             m_Data = data;
             m_Length = length;
             m_Offset = 0;
         }
-
+        
         public int position
         {
             get => m_Offset;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
@@ -15,7 +16,8 @@ namespace UnityEngine.InputSystem.Experimental
             public abstract void Dispose();
         }
 
-        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T> 
+        // TODO Implement IAsyncEnumerable<T>?
+        internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T>
             where T : struct
         {
             private readonly Usage m_Usage;         // The associated usage
