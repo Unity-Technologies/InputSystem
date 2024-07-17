@@ -10,6 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
+
+### Added
+- Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
+
 ## [1.9.0] - 2024-07-15
 
 ### Changed
@@ -41,7 +47,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue related to Visualizers sample where exceptions would be thrown by InputActionVisualizer and InputControlVisualizer when entering play-mode if added as components to a new `GameObject`.
 - Fixed an issue with InputAction Asset editor where invalid ControlScheme names with only spaces could be entered. [ISXB-547](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-547).
 - Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
-- Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
@@ -49,7 +54,6 @@ however, it has to be formatted properly to pass verification tests.
   only.
 - Expanded editor and build insight analytics to cover ``.inputactions` asset editor usage, `InputSettings` and common component configurations.
 - Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
-- Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
 
 ## [1.8.2] - 2024-04-29
 
