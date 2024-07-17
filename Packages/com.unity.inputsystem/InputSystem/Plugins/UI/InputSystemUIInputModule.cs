@@ -117,8 +117,17 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// The magnitude of PointerEventData.scrollDelta that corresponds to exactly one tick of the scroll wheel.
+        /// A multiplier value that allows you adjust the scroll wheel speed sent to uGUI (Unity UI) components.
         /// </summary>
+        /// <remarks>
+        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value, and behaves the same as the legacy Standalone Input Module.
+        /// 
+        /// A value larger than one increases the scrolling speed per tick, and a value less than one decreases the speed.
+        /// 
+        /// You can set this to a negative value to invert the scroll direction. A value of zero prevents mousewheel scrolling from working at all.
+        /// 
+        /// Note: this has no effect on UI Toolkit content, only uGUI components. 
+        /// </remarks>
         public float scrollDeltaPerTick
         {
             get => m_ScrollDeltaPerTick;
