@@ -117,10 +117,10 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// A multiplier value that allows you adjust the scroll wheel speed sent to uGUI (Unity UI) components.
+        /// A multiplier value that allows you to adjust the scroll wheel speed sent to uGUI (Unity UI) components.
         /// </summary>
         /// <remarks>
-        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value, and behaves the same as the legacy Standalone Input Module.
+        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value and behaves the same as the legacy Standalone Input Module.
         /// 
         /// A value larger than one increases the scrolling speed per tick, and a value less than one decreases the speed.
         /// 
