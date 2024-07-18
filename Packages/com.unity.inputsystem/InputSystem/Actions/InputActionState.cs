@@ -2266,6 +2266,14 @@ namespace UnityEngine.InputSystem
                                 };
                                 if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction, phaseAfterPerformedOrCanceled))
                                     return;
+
+                                // We performed the action,
+                                // so reset remaining interaction to waiting state.
+                                for (; i < numInteractions; ++i)
+                                {
+                                    index = interactionStartIndex + i;
+                                    ResetInteractionState(index);
+                                }
                             }
                             break;
                         }
