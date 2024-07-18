@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.LowLevel
     public sealed unsafe class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
         private const int kDefaultBufferSize = 1024 * 1024;
-        private static readonly InputProfilerMarker s_InputEvenTraceMarker = new InputProfilerMarker("InputEventTrace");
+        private static readonly InputProfilerMarker k_InputEvenTraceMarker = new InputProfilerMarker("InputEventTrace");
 
         /// <summary>
         /// If <see name="recordFrameMarkers"/> is enabled, an <see cref="InputEvent"/> with this <see cref="FourCC"/>
@@ -812,7 +812,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (bytesNeeded > m_MaxEventBufferSize)
                 return;
 
-            s_InputEvenTraceMarker.Begin();
+            k_InputEvenTraceMarker.Begin();
 
             if (m_EventBufferTail == default)
             {
@@ -838,7 +838,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                     if (newBufferSize < bytesNeeded)
                     {
-                        s_InputEvenTraceMarker.End();
+                        k_InputEvenTraceMarker.End();
                         return;
                     }
 
@@ -937,7 +937,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners, new InputEventPtr((InputEvent*)buffer),
                     "InputEventTrace.onEvent");
 
-            s_InputEvenTraceMarker.End();
+            k_InputEvenTraceMarker.End();
         }
 
         private class Enumerator : IEnumerator<InputEventPtr>

@@ -522,8 +522,8 @@ namespace UnityEngine.InputSystem
         public ReadOnlyArray<TouchControl> touches { get; protected set; }
 
 
-        static readonly InputProfilerMarker s_TouchscreenUpdateMarker = new InputProfilerMarker("Touchscreen.OnNextUpdate");
-        static readonly InputProfilerMarker s_TouchAllocateMarker = new InputProfilerMarker("TouchAllocate");
+        static readonly InputProfilerMarker k_TouchscreenUpdateMarker = new InputProfilerMarker("Touchscreen.OnNextUpdate");
+        static readonly InputProfilerMarker k_TouchAllocateMarker = new InputProfilerMarker("TouchAllocate");
 
         protected TouchControl[] touchControlArray
         {
@@ -611,7 +611,7 @@ namespace UnityEngine.InputSystem
 
         protected new unsafe void OnNextUpdate()
         {
-            s_TouchscreenUpdateMarker.Begin();
+            k_TouchscreenUpdateMarker.Begin();
 
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
             ////      (also obsoletes the need for the if() check below)
@@ -638,7 +638,7 @@ namespace UnityEngine.InputSystem
             if (primaryTouchState->tapCount > 0 && InputState.currentTime >= primaryTouchState->startTime + s_TapTime + s_TapDelayTime)
                 InputState.Change(primaryTouch.tapCount, (byte)0);
 
-            s_TouchscreenUpdateMarker.End();
+            k_TouchscreenUpdateMarker.End();
         }
 
         /// <summary>
@@ -661,7 +661,7 @@ namespace UnityEngine.InputSystem
                 return;
             }
 
-            s_TouchAllocateMarker.Begin();
+            k_TouchAllocateMarker.Begin();
 
             // For performance reasons, we read memory here directly rather than going through
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
@@ -824,7 +824,7 @@ namespace UnityEngine.InputSystem
                             InputState.Change(touches[i], ref newTouchState, eventPtr: eventPtr);
                         }
 
-                        s_TouchAllocateMarker.End();
+                        k_TouchAllocateMarker.End();
                         return;
                     }
                 }
@@ -832,7 +832,7 @@ namespace UnityEngine.InputSystem
                 // Couldn't find an entry. Either it was a touch that we previously ran out of available
                 // entries for or it's an event sent out of sequence. Ignore the touch to be consistent.
 
-                s_TouchAllocateMarker.End();
+                k_TouchAllocateMarker.End();
                 return;
             }
 
@@ -867,7 +867,7 @@ namespace UnityEngine.InputSystem
 
                     InputState.Change(touches[i], ref newTouchState, eventPtr: eventPtr);
 
-                    s_TouchAllocateMarker.End();
+                    k_TouchAllocateMarker.End();
                     return;
                 }
             }
@@ -877,7 +877,7 @@ namespace UnityEngine.InputSystem
             // NOTE: Getting here means we're having fewer touch entries than the number of concurrent touches supported
             //       by the backend (or someone is simply sending us nonsense data).
 
-            s_TouchAllocateMarker.End();
+            k_TouchAllocateMarker.End();
         }
 
         void IInputStateCallbackReceiver.OnNextUpdate()

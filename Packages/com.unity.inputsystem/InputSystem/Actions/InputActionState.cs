@@ -124,9 +124,9 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
-        private static readonly InputProfilerMarker s_InputInitialActionStateCheckMarker = new InputProfilerMarker("InitialActionStateCheck");
-        private static readonly InputProfilerMarker s_InputActionResolveConflictMarker = new InputProfilerMarker("InputActionResolveConflict");
-        private static readonly InputProfilerMarker s_InputActionCallbackMarker = new InputProfilerMarker("InputActionCallback");
+        private static readonly InputProfilerMarker k_InputInitialActionStateCheckMarker = new InputProfilerMarker("InitialActionStateCheck");
+        private static readonly InputProfilerMarker k_InputActionResolveConflictMarker = new InputProfilerMarker("InputActionResolveConflict");
+        private static readonly InputProfilerMarker k_InputActionCallbackMarker = new InputProfilerMarker("InputActionCallback");
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -1262,7 +1262,7 @@ namespace UnityEngine.InputSystem
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
 
-            s_InputInitialActionStateCheckMarker.Begin();
+            k_InputInitialActionStateCheckMarker.Begin();
 
             // Use current time as time of control state change.
             var time = InputState.currentTime;
@@ -1320,7 +1320,7 @@ namespace UnityEngine.InputSystem
             }
             manager.FireStateChangeNotifications();
 
-            s_InputInitialActionStateCheckMarker.End();
+            k_InputInitialActionStateCheckMarker.End();
         }
 
         // Called from InputManager when one of our state change monitors has fired.
@@ -1662,7 +1662,7 @@ namespace UnityEngine.InputSystem
             // Anything below here we want to avoid executing whenever we can.
             Debug.Assert(actionState->mayNeedConflictResolution);
 
-            s_InputActionResolveConflictMarker.Begin();
+            k_InputActionResolveConflictMarker.Begin();
 
             // We take a local copy of this value, so we can change it to use the starting control of composites
             // for simpler conflict resolution (so composites always use the same value), but still report the actually
@@ -1696,7 +1696,7 @@ namespace UnityEngine.InputSystem
             if (actionStateControlIndex == kInvalidIndex)
             {
                 actionState->magnitude = trigger.magnitude;
-                s_InputActionResolveConflictMarker.End();
+                k_InputActionResolveConflictMarker.End();
                 return false;
             }
 
@@ -1725,7 +1725,7 @@ namespace UnityEngine.InputSystem
 
                 // Keep recorded magnitude in action state up to date.
                 actionState->magnitude = trigger.magnitude;
-                s_InputActionResolveConflictMarker.End();
+                k_InputActionResolveConflictMarker.End();
                 return false;
             }
 
@@ -1739,7 +1739,7 @@ namespace UnityEngine.InputSystem
                 // actuation as we didn't have the highest actuation anyway.
                 if (!isControlCurrentlyDrivingTheAction)
                 {
-                    s_InputActionResolveConflictMarker.End();
+                    k_InputActionResolveConflictMarker.End();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
                     ////        first actuates; the current solution will occasionally run conflict resolution when it doesn't have to
                     ////        but won't require the extra bookkeeping)
@@ -1754,7 +1754,7 @@ namespace UnityEngine.InputSystem
                 {
                     // Keep recorded magnitude in action state up to date.
                     actionState->magnitude = trigger.magnitude;
-                    s_InputActionResolveConflictMarker.End();
+                    k_InputActionResolveConflictMarker.End();
                     return false;
                 }
 
@@ -1873,12 +1873,12 @@ namespace UnityEngine.InputSystem
                     actionState->bindingIndex = bindingWithHighestActuation;
                     actionState->magnitude = highestActuationLevel;
 
-                    s_InputActionResolveConflictMarker.End();
+                    k_InputActionResolveConflictMarker.End();
                     return false;
                 }
             }
 
-            s_InputActionResolveConflictMarker.End();
+            k_InputActionResolveConflictMarker.End();
 
             // If we're not really effecting any change on the action, ignore the control state change.
             // NOTE: We may be looking at a control here that points in a completely direction, for example, even
@@ -2525,7 +2525,7 @@ namespace UnityEngine.InputSystem
                 m_ActionIndex = actionIndex,
             };
 
-            s_InputActionCallbackMarker.Begin();
+            k_InputActionCallbackMarker.Begin();
 
             // Global callback goes first.
             var action = context.action;
@@ -2557,7 +2557,7 @@ namespace UnityEngine.InputSystem
             // Run callbacks (if any) on action map.
             DelegateHelpers.InvokeCallbacksSafe(ref callbacksOnMap, context, callbackName, actionMap);
 
-            s_InputActionCallbackMarker.End();
+            k_InputActionCallbackMarker.End();
         }
 
         private object GetActionOrNoneString(ref TriggerState trigger)

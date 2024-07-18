@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         public byte[][] multipleStateBuffers;
         public bool showDifferentOnly;
 
-        static readonly InputProfilerMarker s_InputBuildControlTreeMarker = new InputProfilerMarker("BuildControlTree");
+        static readonly InputProfilerMarker k_InputBuildControlTreeMarker = new InputProfilerMarker("BuildControlTree");
 
         public static InputControlTreeView Create(InputControl rootControl, int numValueColumns, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
         {
@@ -138,14 +138,14 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            s_InputBuildControlTreeMarker.Begin();
+            k_InputBuildControlTreeMarker.Begin();
 
             var id = 1;
 
             // Build tree from control down the control hierarchy.
             var rootItem = BuildControlTreeRecursive(m_RootControl, 0, ref id);
 
-            s_InputBuildControlTreeMarker.End();
+            k_InputBuildControlTreeMarker.End();
 
             // Wrap root control in invisible item required by TreeView.
             return new TreeViewItem

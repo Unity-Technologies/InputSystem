@@ -37,8 +37,8 @@ namespace UnityEngine.InputSystem.Users
     {
         public const uint InvalidId = 0;
 
-        static readonly InputProfilerMarker s_InputUserOnChangeMarker = new InputProfilerMarker("InputUser.onChange");
-        static readonly InputProfilerMarker s_InputCheckForUnpairMarker = new InputProfilerMarker("InputCheckForUnpairedDeviceActivity");
+        static readonly InputProfilerMarker k_InputUserOnChangeMarker = new InputProfilerMarker("InputUser.onChange");
+        static readonly InputProfilerMarker k_InputCheckForUnpairMarker = new InputProfilerMarker("InputCheckForUnpairedDeviceActivity");
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -1020,7 +1020,7 @@ namespace UnityEngine.InputSystem.Users
 
             if (s_GlobalState.onChange.length == 0)
                 return;
-            s_InputUserOnChangeMarker.Begin();
+            k_InputUserOnChangeMarker.Begin();
             s_GlobalState.onChange.LockForChanges();
             for (var i = 0; i < s_GlobalState.onChange.length; ++i)
             {
@@ -1035,7 +1035,7 @@ namespace UnityEngine.InputSystem.Users
                 }
             }
             s_GlobalState.onChange.UnlockForChanges();
-            s_InputUserOnChangeMarker.End();
+            k_InputUserOnChangeMarker.End();
         }
 
         private static int TryFindUserIndex(uint userId)
@@ -1655,14 +1655,14 @@ namespace UnityEngine.InputSystem.Users
                 return;
             }
 
-            s_InputCheckForUnpairMarker.Begin();
+            k_InputCheckForUnpairMarker.Begin();
 
             // Apply the pre-filter. If there's callbacks and none of them return true,
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
             {
-                s_InputCheckForUnpairMarker.End();
+                k_InputCheckForUnpairMarker.End();
                 return;
             }
 
@@ -1701,7 +1701,7 @@ namespace UnityEngine.InputSystem.Users
                     break;
             }
 
-            s_InputCheckForUnpairMarker.End();
+            k_InputCheckForUnpairMarker.End();
         }
 
         /// <summary>

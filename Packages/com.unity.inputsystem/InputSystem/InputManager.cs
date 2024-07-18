@@ -64,10 +64,10 @@ namespace UnityEngine.InputSystem
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
 
-        static readonly InputProfilerMarker s_InputUpdateProfilerMarker = new InputProfilerMarker("InputUpdate");
-        static readonly InputProfilerMarker s_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
-        static readonly InputProfilerMarker s_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
-        static readonly InputProfilerMarker s_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly InputProfilerMarker k_InputUpdateProfilerMarker = new InputProfilerMarker("InputUpdate");
+        static readonly InputProfilerMarker k_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly InputProfilerMarker k_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
+        static readonly InputProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
 
         public InputMetrics metrics
         {
@@ -896,7 +896,7 @@ namespace UnityEngine.InputSystem
             InternedString layoutName = new InternedString(string.Empty);
             try
             {
-                s_InputTryFindMatchingControllerMarker.Begin();
+                k_InputTryFindMatchingControllerMarker.Begin();
                 ////TODO: this will want to take overrides into account
 
                 // See if we can match by description.
@@ -960,7 +960,7 @@ namespace UnityEngine.InputSystem
             }
             finally
             {
-                s_InputTryFindMatchingControllerMarker.End();
+                k_InputTryFindMatchingControllerMarker.End();
             }
             return layoutName;
         }
@@ -1305,7 +1305,7 @@ namespace UnityEngine.InputSystem
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            s_InputAddDeviceMarker.Begin();
+            k_InputAddDeviceMarker.Begin();
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1314,7 +1314,7 @@ namespace UnityEngine.InputSystem
             {
                 if (throwIfNoLayoutFound)
                 {
-                    s_InputAddDeviceMarker.End();
+                    k_InputAddDeviceMarker.End();
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
                 }
 
@@ -1325,13 +1325,13 @@ namespace UnityEngine.InputSystem
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
-                s_InputAddDeviceMarker.End();
+                k_InputAddDeviceMarker.End();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
             device.m_Description = description;
-            s_InputAddDeviceMarker.End();
+            k_InputAddDeviceMarker.End();
             return device;
         }
 
@@ -1340,14 +1340,14 @@ namespace UnityEngine.InputSystem
         {
             try
             {
-                s_InputAddDeviceMarker.Begin();
+                k_InputAddDeviceMarker.Begin();
                 var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
                 device.m_Description = description;
                 return device;
             }
             finally
             {
-                s_InputAddDeviceMarker.End();
+                k_InputAddDeviceMarker.End();
             }
         }
 
@@ -2972,11 +2972,11 @@ namespace UnityEngine.InputSystem
         {
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
-            s_InputUpdateProfilerMarker.Begin();
+            k_InputUpdateProfilerMarker.Begin();
 
             if (m_InputEventStream.isOpen)
             {
-                s_InputUpdateProfilerMarker.End();
+                k_InputUpdateProfilerMarker.End();
                 throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
             }
 
@@ -2990,7 +2990,7 @@ namespace UnityEngine.InputSystem
 
             if ((updateType & m_UpdateMask) == 0)
             {
-                s_InputUpdateProfilerMarker.End();
+                k_InputUpdateProfilerMarker.End();
                 return;
             }
 
@@ -3090,7 +3090,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
-                s_InputUpdateProfilerMarker.End();
+                k_InputUpdateProfilerMarker.End();
                 InvokeAfterUpdateCallback(updateType);
                 if (canFlushBuffer)
                     eventBuffer.Reset();
@@ -3329,7 +3329,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
-                            s_InputUpdateProfilerMarker.End();
+                            k_InputUpdateProfilerMarker.End();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
 #endif
@@ -3528,7 +3528,7 @@ namespace UnityEngine.InputSystem
             {
                 // We need to restore m_InputEventStream to a sound state
                 // to avoid failing recursive OnUpdate check next frame.
-                s_InputUpdateProfilerMarker.End();
+                k_InputUpdateProfilerMarker.End();
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }
@@ -3536,7 +3536,7 @@ namespace UnityEngine.InputSystem
             if (shouldProcessActionTimeouts)
                 ProcessStateChangeMonitorTimeouts();
 
-            s_InputUpdateProfilerMarker.End();
+            k_InputUpdateProfilerMarker.End();
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
@@ -4052,7 +4052,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
-            s_InputRestoreDevicesAfterReloadMarker.Begin();
+            k_InputRestoreDevicesAfterReloadMarker.Begin();
 
             using (InputDeviceBuilder.Ref())
             {
@@ -4119,7 +4119,7 @@ namespace UnityEngine.InputSystem
                 m_SavedAvailableDevices = null;
             }
 
-            s_InputRestoreDevicesAfterReloadMarker.End();
+            k_InputRestoreDevicesAfterReloadMarker.End();
         }
 
         // We have two general types of devices we need to care about when recreating devices

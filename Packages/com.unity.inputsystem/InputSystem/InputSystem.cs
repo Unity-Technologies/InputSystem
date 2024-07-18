@@ -84,9 +84,9 @@ namespace UnityEngine.InputSystem
     public static partial class InputSystem
     {
 #if UNITY_EDITOR
-        static readonly InputProfilerMarker s_InputInitializeInEditorMarker = new InputProfilerMarker("InputSystem.InitializeInEditor");
+        static readonly InputProfilerMarker k_InputInitializeInEditorMarker = new InputProfilerMarker("InputSystem.InitializeInEditor");
 #endif
-        static readonly InputProfilerMarker s_InputRestMarker = new InputProfilerMarker("InputSystem.Reset");
+        static readonly InputProfilerMarker k_InputRestMarker = new InputProfilerMarker("InputSystem.Reset");
 
         #region Layouts
 
@@ -3538,7 +3538,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            s_InputInitializeInEditorMarker.Begin();
+            k_InputInitializeInEditorMarker.Begin();
 
             Reset(runtime: runtime);
 
@@ -3631,7 +3631,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
-            s_InputInitializeInEditorMarker.End();
+            k_InputInitializeInEditorMarker.End();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3857,7 +3857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            s_InputRestMarker.Begin();
+            k_InputRestMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3917,7 +3917,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
 
-            s_InputRestMarker.End();
+            k_InputRestMarker.End();
         }
 
         /// <summary>

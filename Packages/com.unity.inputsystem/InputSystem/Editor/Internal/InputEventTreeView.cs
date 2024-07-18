@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly InputEventTrace m_EventTrace;
         private readonly InputControl m_RootControl;
-        private static readonly InputProfilerMarker s_InputEventTreeBuildRootMarker = new InputProfilerMarker("InputEventTreeView.BuildRoot");
+        private static readonly InputProfilerMarker k_InputEventTreeBuildRootMarker = new InputProfilerMarker("InputEventTreeView.BuildRoot");
 
         private enum ColumnId
         {
@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            s_InputEventTreeBuildRootMarker.Begin();
+            k_InputEventTreeBuildRootMarker.Begin();
 
             var root = new TreeViewItem
             {
@@ -218,7 +218,7 @@ namespace UnityEngine.InputSystem.Editor
                 root.children.Reverse();
             }
 
-            s_InputEventTreeBuildRootMarker.End();
+            k_InputEventTreeBuildRootMarker.End();
             return root;
         }
 
