@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Profiler
     /// Wrapper class to encapsulate the use of Profiler and ProfilerMarker in the Input System based
     /// on the Unity version and the presence of the com.unity.profiling.core package in a project.
     /// </summary>
-    internal class InputProfilerMarker
+    class InputProfilerMarker
     {
         readonly string m_Name;
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Profiler
         {
             m_Name = name;
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
-            m_ProfilerMarker = new ProfilerMarker(name);
+            m_ProfilerMarker = new ProfilerMarker(m_Name);
 #endif
         }
 
