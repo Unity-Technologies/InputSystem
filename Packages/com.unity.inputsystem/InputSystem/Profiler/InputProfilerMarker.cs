@@ -5,7 +5,11 @@ using Unity.Profiling;
 
 namespace UnityEngine.InputSystem.Profiler
 {
-    public class InputProfilerMarker
+    /// <summary>
+    /// Wrapper class to encapsulate the use of Profiler and ProfilerMarker in the Input System based
+    /// on the Unity version and the presence of the com.unity.profiling.core package in a project.
+    /// </summary>
+    internal class InputProfilerMarker
     {
         readonly string m_Name;
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
@@ -20,6 +24,9 @@ namespace UnityEngine.InputSystem.Profiler
 #endif
         }
 
+        /// <summary>
+        /// Begin tracking time for the profiler marker.
+        /// </summary>
         public void Begin()
         {
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
@@ -29,6 +36,9 @@ namespace UnityEngine.InputSystem.Profiler
 #endif
         }
 
+        /// <summary>
+        /// End tracking time for the profiler marker.
+        /// </summary>
         public void End()
         {
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
