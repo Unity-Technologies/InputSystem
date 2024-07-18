@@ -1,4 +1,3 @@
-
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
 using Unity.Profiling;
 #endif
