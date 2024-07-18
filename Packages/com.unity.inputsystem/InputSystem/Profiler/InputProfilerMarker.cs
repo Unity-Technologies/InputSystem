@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Profiler
         {
             m_Name = name;
 #if UNITY_2020_3_OR_NEWER && UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS
-            m_ProfilerMarker = new ProfilerMarker(m_Name);
+            m_ProfilerMarker = new ProfilerMarker(ProfilerCategory.Input, m_Name);
 #endif
         }
 
