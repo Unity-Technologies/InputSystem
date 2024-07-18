@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
 - Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 - Changed `DualSenseHIDInputReport` from internal to public visibility
+- Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.
