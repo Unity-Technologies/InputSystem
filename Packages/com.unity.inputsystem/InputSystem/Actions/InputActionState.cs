@@ -7,8 +7,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Profiling;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Profiler;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+
+using ProfilerMarker = Unity.Profiling.ProfilerMarker;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
 
@@ -123,9 +125,9 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
-        private static readonly ProfilerMarker s_InputInitialActionStateCheckMarker = new ProfilerMarker(ProfilerCategory.Input, "InitialActionStateCheck");
-        private static readonly ProfilerMarker s_InputActionResolveConflictMarker = new ProfilerMarker(ProfilerCategory.Input, "InputActionResolveConflict");
-        private static readonly ProfilerMarker s_InputActionCallbackMarker = new ProfilerMarker(ProfilerCategory.Input, "InputActionCallback");
+        private static readonly InputProfilerMarker s_InputInitialActionStateCheckMarker = new InputProfilerMarker("InitialActionStateCheck");
+        private static readonly InputProfilerMarker s_InputActionResolveConflictMarker = new InputProfilerMarker("InputActionResolveConflict");
+        private static readonly InputProfilerMarker s_InputActionCallbackMarker = new InputProfilerMarker("InputActionCallback");
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.

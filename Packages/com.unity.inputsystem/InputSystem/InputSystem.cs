@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Profiling;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -14,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using UnityEngine.InputSystem.Profiler;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -85,9 +84,9 @@ namespace UnityEngine.InputSystem
     public static partial class InputSystem
     {
 #if UNITY_EDITOR
-        static readonly ProfilerMarker s_InputInitializeInEditorMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.InitializeInEditor");
+        static readonly InputProfilerMarker s_InputInitializeInEditorMarker = new InputProfilerMarker("InputSystem.InitializeInEditor");
 #endif
-        static readonly ProfilerMarker s_InputRestMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.Reset");
+        static readonly InputProfilerMarker s_InputRestMarker = new InputProfilerMarker("InputSystem.Reset");
 
         #region Layouts
 

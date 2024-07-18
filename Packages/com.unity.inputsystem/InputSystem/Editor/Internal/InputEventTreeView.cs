@@ -1,11 +1,10 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Profiling;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.Profiling;
+using UnityEngine.InputSystem.Profiler;
 
 ////FIXME: this performs horribly; the constant rebuilding on every single event makes the debug view super slow when device is noisy
 
@@ -24,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly InputEventTrace m_EventTrace;
         private readonly InputControl m_RootControl;
-        private static readonly ProfilerMarker s_InputEventTreeBuildRootMarker = new ProfilerMarker(ProfilerCategory.Input, "InputEventTreeView.BuildRoot");
+        private static readonly InputProfilerMarker s_InputEventTreeBuildRootMarker = new InputProfilerMarker("InputEventTreeView.BuildRoot");
 
         private enum ColumnId
         {

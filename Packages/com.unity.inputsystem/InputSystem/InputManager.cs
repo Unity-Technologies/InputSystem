@@ -9,12 +9,12 @@ using Unity.Profiling;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Profiler;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -65,10 +65,10 @@ namespace UnityEngine.InputSystem
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
 
-        static readonly ProfilerMarker s_InputUpdateProfilerMarker = new ProfilerMarker(ProfilerCategory.Input, "InputUpdate");
-        static readonly ProfilerMarker s_InputTryFindMatchingControllerMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.TryFindMatchingControlLayout");
-        static readonly ProfilerMarker s_InputAddDeviceMarker = new ProfilerMarker(ProfilerCategory.Input, "InputSystem.AddDevice");
-        static readonly ProfilerMarker s_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker(ProfilerCategory.Input, "InputManager.RestoreDevicesAfterDomainReload");
+        static readonly InputProfilerMarker s_InputUpdateProfilerMarker = new InputProfilerMarker("InputUpdate");
+        static readonly InputProfilerMarker s_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly InputProfilerMarker s_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
+        static readonly InputProfilerMarker s_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
 
         public InputMetrics metrics
         {

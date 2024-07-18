@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Profiling;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Profiling;
+using UnityEngine.InputSystem.Profiler;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
@@ -24,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         public byte[][] multipleStateBuffers;
         public bool showDifferentOnly;
 
-        static readonly ProfilerMarker s_InputBuildControlTreeMarker = new ProfilerMarker(ProfilerCategory.Input, "BuildControlTree");
+        static readonly InputProfilerMarker s_InputBuildControlTreeMarker = new InputProfilerMarker("BuildControlTree");
 
         public static InputControlTreeView Create(InputControl rootControl, int numValueColumns, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
         {

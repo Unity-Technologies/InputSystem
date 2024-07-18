@@ -92,6 +92,11 @@
             "name": "Unity",
             "expression": "6000.0.11",
             "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA"
+        },
+        {
+            "name": "com.unity.profiling.core",
+            "expression": "1.0.2",
+            "define": "UNITY_INPUT_SYSTEM_USE_PROFILER_MARKERS"
         }
     ],
     "noEngineReferences": false
