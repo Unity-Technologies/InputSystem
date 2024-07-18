@@ -14,7 +14,7 @@ code_analyser:
     - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2020.1
+    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.4
   triggers:
     cancel_old_ci: true
     pull_requests:
