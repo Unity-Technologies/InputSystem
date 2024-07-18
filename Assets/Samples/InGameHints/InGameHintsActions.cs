@@ -14,7 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine;
 
 namespace UnityEngine.InputSystem.Samples.InGameHints
 {
@@ -275,7 +274,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
 
         ~@InGameHintsActions()
         {
-            Debug.Assert(!m_Gameplay.enabled, "This will cause a leak and performance issues, InGameHintsActions.Gameplay.Disable() has not been called.");
+            UnityEngine.Debug.Assert(!m_Gameplay.enabled, "This will cause a leak and performance issues, InGameHintsActions.Gameplay.Disable() has not been called.");
         }
 
         public void Dispose()

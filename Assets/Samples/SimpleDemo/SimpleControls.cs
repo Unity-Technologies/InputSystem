@@ -14,7 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine;
 
 public partial class @SimpleControls: IInputActionCollection2, IDisposable
 {
@@ -170,7 +169,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
 
     ~@SimpleControls()
     {
-        Debug.Assert(!m_gameplay.enabled, "This will cause a leak and performance issues, SimpleControls.gameplay.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_gameplay.enabled, "This will cause a leak and performance issues, SimpleControls.gameplay.Disable() has not been called.");
     }
 
     public void Dispose()
