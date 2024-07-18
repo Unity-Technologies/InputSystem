@@ -9,12 +9,12 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
-- Fixed ArgumentNullException thrown when accessing Action's bindings after changing Composite part. [ISXB-494](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-494).
 
 ### Fixed
 - Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
 - Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
 - Fixed an issue when generating C# class of Input Actions that contain an action map named `Debug` [ISXB-851](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-851).
+- Fixed ArgumentNullException thrown when accessing Action's bindings after changing Composite part. [ISXB-494](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-494).
 
 ### Added
 - Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
