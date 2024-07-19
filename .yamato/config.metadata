@@ -66,4 +66,4 @@ scripting_backends:
   - name: mono
   - name: il2cpp
   
-ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0 
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.58.0 
