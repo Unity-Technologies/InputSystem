@@ -4,7 +4,7 @@ namespace UnityEngine.InputSystem.Experimental
 {
     public readonly struct Device : IEquatable<Device>
     {
-        public readonly ushort m_Id;
+        private readonly ushort m_Id;
 
         internal Device(ushort deviceId)
         {

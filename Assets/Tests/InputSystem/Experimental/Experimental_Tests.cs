@@ -184,6 +184,30 @@ namespace Tests.InputSystem
             Assert.That(Gamepad.ButtonEast.Pressed().Equals(Gamepad.ButtonSouth.Pressed()), Is.False);
         }
 
+        private enum MessageType
+        {
+            Invalid,
+        }
+
+        private struct Message
+        {
+            public MessageType type;
+            public Usage usage;
+        }
+        
+        [Test]
+        public void MessageBufferConcept()
+        {
+            using var q = new UniformBuffer<Message>();
+
+            var msg = new Message
+            {
+                type = MessageType.Invalid
+            };
+            
+            q.Push(ref msg);
+        }
+
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event
         // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.

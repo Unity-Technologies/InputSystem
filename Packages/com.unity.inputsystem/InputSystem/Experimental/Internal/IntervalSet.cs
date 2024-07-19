@@ -1,18 +1,19 @@
 using System;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace Tests.InputSystem.Experimental
 {
     internal struct IntervalSet
     {
-        private UnsafeArray<Interval> m_Buffer;
+        private NativeList<Interval> m_Buffer;
 
         public unsafe IntervalSet(int capacity, AllocatorManager.AllocatorHandle allocator)
         {
-            m_Buffer = new UnsafeArray<Interval>(capacity, allocator);
+            m_Buffer = new NativeList<Interval>(capacity, allocator);
         }
 
-        public int count => m_Buffer.length;
+        public int count => m_Buffer.Length;
         
         public void Add(Interval interval)
         {
@@ -22,36 +23,36 @@ namespace Tests.InputSystem.Experimental
         public unsafe void Subtract(Interval interval)
         {
             // Return immediately if set is empty.
-            if (m_Buffer.length == 0)
+            var n = m_Buffer.Length;
+            if (n == 0)
                 return; 
 
             // Ensure capacity is sufficient to utilize tail of container as temporary buffer.
-            var remainingCapacity = m_Buffer.capacity - m_Buffer.length;
-            if (remainingCapacity < 2)
-                m_Buffer.Reserve(Math.Max(m_Buffer.capacity + 4, m_Buffer.length * 2));
+            var remainder = stackalloc Interval[2];
 
             // Subtract interval from this set by piecewise subtraction with intersecting elements.
-            var n = m_Buffer.length;
             for (var i = 0; i < n;)
             {
-                int result = m_Buffer[i].Subtract(interval, m_Buffer.data + m_Buffer.length);
-                if (result == 0)
+                var result = Subtract(m_Buffer[i], interval, (int*)remainder);
+                switch (result)
                 {
-                    // Remove element since eliminated when subtracting interval
-                    m_Buffer.RemoveAt(i);
-                    --n;
-                    continue;
+                    case 0:
+                        // Remove element since eliminated when subtracting interval
+                        m_Buffer.RemoveAt(i);
+                        --n;
+                        continue;
+
+                    case > 0:
+                        // If greater than zero elements we copy remaining elements to buffer
+                        m_Buffer.AddRange(remainder, 2);
+                        break;
                 }
-                
-                // If greater than zero elements have already been copied to buffer
-                if (result > 0)
-                    m_Buffer.Resize(m_Buffer.length + result);
-                
+
                 ++i;
             }
         }
 
-        private unsafe static int Subtract(Interval a, Interval b, int* dst)
+        private static unsafe int Subtract(Interval a, Interval b, int* dst)
         {
             if (b.upperBound <= a.lowerBound || b.lowerBound >= a.upperBound)
                 return 0; // not intersecting

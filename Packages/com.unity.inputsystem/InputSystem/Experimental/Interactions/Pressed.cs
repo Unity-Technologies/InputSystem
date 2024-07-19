@@ -49,8 +49,8 @@ namespace UnityEngine.InputSystem.Experimental
         // TODO Should register itself to avoid duplicate nodes
         internal sealed class Impl : IObserver<bool>
         {
-            private bool m_PreviousValue;
-            private readonly ObserverList2<InputEvent> m_Observers;
+            private bool m_PreviousValue;                           // TODO This is state
+            private readonly ObserverList2<InputEvent> m_Observers; // TODO This is effectively actions
         
             public Impl(Context context, TSource source)
             {
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return Subscribe(Context.instance, observer);
         }
-
+        
         public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
         {
             // TODO When subscribing we want to check if key (proxy) has a registered instance
@@ -155,41 +155,6 @@ namespace UnityEngine.InputSystem.Experimental
         public int childCount => 1; // TODO Could be detected by presence of attributes on properties
         public IDependencyGraphNode GetChild(int index) =>
             index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index)); // TODO Problematic if attribute unless defined that if there are at least one subscription attempting to change source will throw, or we can use constructor to detect IObservable inputs passed to iut, or use a factory similar to JavaFX to keep it immutable but provide a detectable interface.
-    }
-
-    /*public struct PressJob : IJob
-    {
-        public PressJob(Stream<T>)
-        {
-            
-        }
-        
-        public void Execute()
-        {
-            
-        }
-
-        public static void Schedule()
-        {
-            var job = new PressJob();
-        }
-    }*/
-    
-    internal static class PressSeq
-    {
-        public static unsafe void Press(bool* first, bool* last, Stream<InputEvent> result)
-        {
-            if (first == last) 
-                return;
-            var prev = *first++;
-            for (; first != last; ++first)
-            {
-                var current = *first;
-                if (current != prev && current)
-                    result.OfferByValue(new InputEvent());
-                prev = current;
-            }
-        }
     }
     
     /// <summary>
