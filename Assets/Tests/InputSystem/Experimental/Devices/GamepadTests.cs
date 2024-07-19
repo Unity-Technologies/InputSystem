@@ -1,14 +1,92 @@
 using System;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
+using Usages = UnityEngine.InputSystem.Experimental.Usages;
 
 namespace Tests.InputSystem.Experimental
 {
     internal class GamepadTests : ContextTestFixture
     {
+        [Test]
+        public void GamepadState()
+        {
+            GamepadState state = default;
+            
+            Assert.That(state.buttonEast, Is.False);
+            state.buttonEast = true;
+            Assert.That(state.buttonEast, Is.True);
+            state.buttonEast = false;
+            Assert.That(state.buttonEast, Is.False);
+            
+            Assert.That(state.buttonNorth, Is.False);
+            state.buttonNorth = true;
+            Assert.That(state.buttonNorth, Is.True);
+            state.buttonNorth = false;
+            Assert.That(state.buttonNorth, Is.False);
+
+            state.leftStick = new Vector2(1, 2);
+            Assert.That(state.leftStick, Is.EqualTo(new Vector2(1,2)));
+            Assert.That(state.leftStick.x, Is.EqualTo(1));
+            Assert.That(state.leftStick.y, Is.EqualTo(2));
+            
+            // TODO Test remaining
+        }
+
+        
+        
+        private struct GamepadWriter : IDisposable
+        {
+            private readonly Endpoint m_Endpoint;
+            private Stream<GamepadState> m_Stream;
+            public GamepadState Value;
+            
+            public GamepadWriter(ushort deviceId)
+            {
+                m_Endpoint = Endpoint.FromDeviceAndUsage(deviceId, Usages.Devices.Gamepad);
+                m_Stream = null;
+                Value = default;
+            }
+
+            public void SetStream(Stream<GamepadState> stream)
+            {
+                // TODO Should reduce ref count on existing stream, should increase ref count on new stream
+                m_Stream = stream; // TODO Needs to be CAS
+            }
+            
+            public void Dispose()
+            {
+                // TODO Should reduce ref count on stream
+            }
+
+            public bool hasStream => m_Stream != null;
+            
+            public void Publish()
+            {
+                if (m_Stream == null)
+                    return;
+                
+                m_Stream.OfferByRef(ref Value);
+            }
+        }
+        
+        [Test]
+        public void GamepadProducer()
+        {
+            using var stream = context.CreateStream<GamepadState>(Usages.Devices.Gamepad, default);
+            
+            var writer = new GamepadWriter(100);
+            writer.SetStream(stream);
+            writer.Value.buttonEast = true;
+            writer.Publish();
+
+            Assert.That(stream.AsSpan().Length, Is.EqualTo(1));
+            Assert.That(stream.AsSpan()[0].buttonEast, Is.EqualTo(true));
+        }
+        
         [Test]
         public void Push_Read_ButtonSouth()
         {

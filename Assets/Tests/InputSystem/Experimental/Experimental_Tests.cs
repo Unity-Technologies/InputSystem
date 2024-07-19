@@ -187,13 +187,35 @@ namespace Tests.InputSystem
         private enum MessageType
         {
             Invalid,
+            DeviceArrival,
+            DeviceRemoval
         }
 
         private struct Message
         {
             public MessageType type;
-            public Usage usage;
+            public Endpoint endpoint;
         }
+
+        private struct EventQueue
+        {
+            private UniformBuffer<Message> m_Messages;
+
+            public void Enqueue(ref Message msg)
+            {
+                
+            }
+        }
+
+        /*public struct GamepadWriter
+        {
+            public 
+            
+            public void Publish()
+            {
+                
+            }
+        }*/
         
         [Test]
         public void MessageBufferConcept()

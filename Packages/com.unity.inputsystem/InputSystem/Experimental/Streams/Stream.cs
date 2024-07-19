@@ -59,7 +59,8 @@ namespace UnityEngine.InputSystem.Experimental
     /// - A stream offers a reference to the last sampled or received value of the stream even if the span is empty.
     /// - The last sampled value is stored at index -1.
     /// </remarks>
-    public class Stream<T> : IStream, IEnumerable<T> where T : struct
+    public class Stream<T> : IStream, IEnumerable<T> 
+        where T : struct
     {
         // TODO Rewrite properly, currently just to provide higher level concepts
         
@@ -71,8 +72,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public Stream(Usage usage, T initialValue, int initialCapacity = kDefaultCapacity)
             : this(usage, ref initialValue, initialCapacity)
-        {
-        }
+        { }
         
         public Stream(Usage usage, ref T initialValue, int initialCapacity = kDefaultCapacity)
         {
@@ -135,7 +135,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Dispose()
         {
-            m_Values.Dispose();
+            if (m_Values.IsCreated)
+                m_Values.Dispose();
         }
 
         public NativeSlice<T>.Enumerator GetEnumerator()

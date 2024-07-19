@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
 
     // NOTE: Auto-generated from C struct definition. Aliased controls are basically C# counterpart of union.
     [Serializable]
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    [StructLayout(LayoutKind.Explicit, Size = 16, Pack=1)]
     public struct GamepadState
     {
         // NOTE: Auto-generated from C enum with attribute type constraint since exported type depends on it.
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             Select = 1 << 11,           // 2048
         }
         
-        [FieldOffset(0)] public GamepadButton value;    // Byte 0-3
+        [FieldOffset(0)] public GamepadButton buttons;  // Byte 0-3
         [FieldOffset(4)] public float leftStickX;       // Byte 4-5
         [FieldOffset(6)] public float leftStickY;       // Byte 6-7
         [FieldOffset(4)] public Vector2 leftStick;      // Byte 4-7 (Aliased)
@@ -71,14 +71,101 @@ namespace UnityEngine.InputSystem.Experimental.Devices
 
         // Convenience accessors for individual buttons for this device model generated based on enum being
         // flagged for bit-flag access.
-        public bool buttonSouth => 0 != (value & GamepadButton.ButtonSouth);
-        public bool buttonWest => 0 != (value & GamepadButton.ButtonWest);
-        public bool buttonEast => 0 != (value & GamepadButton.ButtonEast);
-        public bool buttonNorth => 0 != (value & GamepadButton.ButtonNorth);
-        public bool leftPaddle => 0 != (value & GamepadButton.LeftPaddle);
-        public bool rightPaddle => 0 != (value & GamepadButton.RightPaddle);
-        public bool leftStickHat => 0 != (value & GamepadButton.LeftStickHat);
-        public bool rightStickHat => 0 != (value & GamepadButton.RightStickHat);
+        public bool buttonSouth
+        {
+            get => 0 != (buttons & GamepadButton.ButtonSouth);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.ButtonSouth;
+                else
+                    buttons &= ~GamepadButton.ButtonSouth;
+            } 
+        }
+
+        public bool buttonWest
+        {
+            get => 0 != (buttons & GamepadButton.ButtonWest);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.ButtonWest;
+                else
+                    buttons &= ~GamepadButton.ButtonWest;
+            }
+        }
+        
+        public bool buttonEast 
+        {
+            get => 0 != (buttons & GamepadButton.ButtonEast);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.ButtonEast;
+                else
+                    buttons &= ~GamepadButton.ButtonEast;
+            }
+        }
+        
+        public bool buttonNorth 
+        {
+            get => 0 != (buttons & GamepadButton.ButtonNorth);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.ButtonNorth;
+                else
+                    buttons &= ~GamepadButton.ButtonNorth;
+            }
+        }
+        
+        public bool leftPaddle 
+        {
+            get => 0 != (buttons & GamepadButton.ButtonNorth);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.ButtonNorth;
+                else
+                    buttons &= ~GamepadButton.ButtonNorth;
+            }
+        }
+        
+        public bool rightPaddle 
+        {
+            get => 0 != (buttons & GamepadButton.RightPaddle);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.RightPaddle;
+                else
+                    buttons &= ~GamepadButton.RightPaddle;
+            }
+        }
+        
+        public bool leftStickHat 
+        {
+            get => 0 != (buttons & GamepadButton.LeftStickHat);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.LeftStickHat;
+                else
+                    buttons &= ~GamepadButton.LeftStickHat;
+            }
+        }
+        
+        public bool rightStickHat 
+        {
+            get => 0 != (buttons & GamepadButton.RightStickHat);
+            set
+            {
+                if (value)
+                    buttons |= GamepadButton.RightStickHat;
+                else
+                    buttons &= ~GamepadButton.RightStickHat;
+            }
+        }
         
         // Convenience accessors for value type fields
     }
