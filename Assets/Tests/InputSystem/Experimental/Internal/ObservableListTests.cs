@@ -11,10 +11,9 @@ namespace Tests.InputSystem.Experimental
     internal class ObservableListTests : ContextTestFixture
     {
         [Test]
-        public void Test()
+        public void Subscribe_ShouldNotAllocate()
         {
-            ObserverList2<int> x;
-            var observer = new ObserverList<Vector2>();
+            var observer = new ListObserver<Vector2>();
             
             Assert.That(() =>
             {

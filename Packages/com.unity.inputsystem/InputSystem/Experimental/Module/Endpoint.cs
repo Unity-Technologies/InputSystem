@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Experimental
     }
 
     /// <summary>
-    /// Represents an end-point.
+    /// Represents a stream end-point.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 8)]
     public readonly struct Endpoint : IEquatable<Endpoint>
@@ -53,7 +53,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         [FieldOffset(0)] public readonly ulong value;
         
-        private Endpoint(Usage usage, byte usageProtocol = 0, ushort sourceId = AnySource, SourceType sourceType = SourceType.Device)
+        private Endpoint(Usage usage, byte usageProtocol = 0, ushort sourceId = AnySource, 
+            SourceType sourceType = SourceType.Device)
         {
             value = ((ulong)((uint)sourceType & kSourceTypeMask) << kSourceTypeShift) |
                     ((ulong)(sourceId & kSourceIdMask) << kSourceIdShift) |

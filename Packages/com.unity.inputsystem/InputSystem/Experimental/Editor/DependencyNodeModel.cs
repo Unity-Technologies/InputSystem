@@ -19,13 +19,13 @@ namespace UnityEngine.InputSystem.Experimental
         {
             // Construct underlying model asynchronously if not already created.
             // Note that since we cache it in a static field its automatically recreated if there is a domain
-            // reload which should be the only trigger for invalidating the model.
+            // reload which should be the only reason for invalidating the model.
             lock (Lock)
             {
                 // Avoid spawning task if already spawned
                 if (_nodeModelsTask == null)
                 {
-                    // Schedule task to compute model
+                    // Construct task to compute model
                     _nodeModelsTask = new Task<List<NodeModel>>(() =>
                     {
                         var nodeTypes = FindClasses(typeof(IDependencyGraphNode)).ToArray();
@@ -34,6 +34,8 @@ namespace UnityEngine.InputSystem.Experimental
                             models.Add(new NodeModel(nodeTypes[i]));
                         return models;
                     });
+                    
+                    // Schedule the task for execution
                     _nodeModelsTask.Start();    
                 }    
             }
@@ -60,34 +62,35 @@ namespace UnityEngine.InputSystem.Experimental
                 .Where(p =>
                 {
                     // Only accept type p if:
-                    // 1. Type is assignable from p and its a concrete type O, or
-                    // 2. Type has been tagged as an input source.
+                    // 1. Type is assignable from p and its a concrete type, or
+                    // 2. Type has been explicitly tagged as an input source.
                     if (type.IsAssignableFrom(p) && !p.IsInterface && !p.IsAbstract)
                         return true;
-                    if (type.GetCustomAttributes(typeof(InputSourceAttribute), inherit: false).Length > 0)
-                        return true;
-                    return false;
+                    return type.GetCustomAttributes(typeof(InputSourceAttribute), inherit: false).Length > 0;
                 });
         }
         
         private List<NodeModel> GetList()
         {
-            if (m_NodeModels == null)
+            // Return cached list if available
+            if (m_NodeModels != null) 
+                return m_NodeModels;
+            
+            // Extract from concurrent task if needed by waiting for completion
+            lock (Lock)
             {
-                lock (Lock)
+                if (_nodeModels == null)
                 {
-                    if (_nodeModels == null)
-                    {
-                        if (!_nodeModelsTask.IsCompleted)
-                            _nodeModelsTask.Wait();
-                        _nodeModels = _nodeModelsTask.Result;
-                        _nodeModelsTask.Dispose();
-                        _nodeModelsTask = null;
-                    }
-
-                    m_NodeModels = _nodeModels;
+                    if (!_nodeModelsTask.IsCompleted)
+                        _nodeModelsTask.Wait();
+                    _nodeModels = _nodeModelsTask.Result;
+                    _nodeModelsTask.Dispose();
+                    _nodeModelsTask = null;
                 }
+
+                m_NodeModels = _nodeModels;
             }
+            
             return m_NodeModels;
         }
     }

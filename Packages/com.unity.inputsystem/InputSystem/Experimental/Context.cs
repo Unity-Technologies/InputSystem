@@ -43,6 +43,7 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly Dictionary<Usage, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
         private readonly EventStream m_Events;                              // Shared system queue of observable events.
         private int m_NodeId;                                               // Context specific node ID counter.
+        private readonly TimerManager m_TimerManager;
         
         /*private readonly List<Type> m_RegisteredNodeTypes;
         private readonly List<RegisteredNode> m_RegisteredNodes;
@@ -118,7 +119,7 @@ namespace UnityEngine.InputSystem.Experimental
             m_Nodes = new(32);
                 
             // Attempt to assign this context to a global slot. This allows referencing the context with
-            // a handle (non reference type) when necessary.
+            // a handle (non reference type) when necessary via lookup.
             var handle = 0;
             for (var i = 0; i < kMaxContexts; ++i)
             {
@@ -136,6 +137,7 @@ namespace UnityEngine.InputSystem.Experimental
             m_Streams = new();
             m_Events = new EventStream();
             m_Handle = handle;
+            m_TimerManager = new TimerManager();
         }
         
         public static Context GetContext(int handle)
@@ -144,6 +146,8 @@ namespace UnityEngine.InputSystem.Experimental
                 throw new ArgumentException($"Invalid context handle: {handle}");
             return _globals.Contexts[handle - 1];
         }
+
+        internal TimerManager timerManager => m_TimerManager;
 
         public int RegisterNode()
         {
@@ -189,6 +193,7 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO Eliminate, this should be perspective
             // TODO Replace with filtered call based on incoming. Note that a stream context always has subscriptions.
             //      If not, it doesn't exist.
+            // TODO Make this properly order from inter-stream perspective
             foreach (var kvp in m_StreamContexts)
                 kvp.Value.Process(); // TODO Requires indirection, consider supporting built-in type explicitly?
             foreach (var kvp in m_StreamContexts)

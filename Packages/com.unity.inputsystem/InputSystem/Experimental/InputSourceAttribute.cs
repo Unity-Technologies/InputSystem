@@ -2,6 +2,10 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    /// <summary>
+    /// Attribute used to decorate a class to be included as an input source in editors and other parts where
+    /// a meaningful display name is required.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class InputSourceAttribute : System.Attribute
     {

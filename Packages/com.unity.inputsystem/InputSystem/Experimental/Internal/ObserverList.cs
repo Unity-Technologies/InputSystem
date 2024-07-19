@@ -264,35 +264,6 @@ namespace UnityEngine.InputSystem.Experimental
             m_Disposables = disposables;
         }
 
-        // TODO Consider caching subscriptions globally.
-        // TODO Additionally, if always returning this subscription type we might as well avoid IDisposable.
-        // TODO Could basically be index to observer list and index to observer within that list, or only global observer. Note that if we apply defragmentation we might need to to store subscriptions as well which might be desirable from debugging perspective.
-        private sealed class Subscription : IDisposable
-        {
-            private ObserverList2<T> m_Owner;   // TODO This could be sub array or pooled array or simply context ref
-            private IObserver<T> m_Observer;    // TODO This could be index
-
-            public Subscription(ObserverList2<T> owner, IObserver<T> observer)
-            {
-                m_Owner = owner;
-                m_Observer = observer;
-            }
-
-            public void Dispose()
-            {
-                // Abort if already disposed
-                if (m_Owner == null)
-                    return;
-                
-                // Remove observer
-                m_Owner.Remove(m_Observer);
-                
-                // Allow owner and observer to be collected
-                m_Owner = null;
-                m_Observer = null;
-            }
-        }
-
         private void Remove(IObserver<T> observer)
         {
             if (!m_Observers.Remove(observer))
@@ -308,6 +279,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         public int count => m_Observers?.Count ?? 0;
 
+        #region IObserver<T>
+        
         public void OnCompleted()
         {
             for (var i = 0; i < m_Observers.Count; ++i)
@@ -325,32 +298,25 @@ namespace UnityEngine.InputSystem.Experimental
             for (var i = 0; i < m_Observers.Count; ++i)
                 m_Observers[i].OnNext(value);
         }
+        
+        #endregion
 
-        public IDisposable Subscribe(Context context, IObserver<T> observer)
+        public Subscription Subscribe(Context context, IObserver<T> observer)
         {
             m_Observers ??= new List<IObserver<T>>(1); // TODO Opportunity to cache observers in context-specific array
             m_Observers.Add(observer);
             return new Subscription(this, observer);
         }
-    }
-    
-    /*internal struct ObserverList<T> : IObserver<T>
-    {
-        private List<IObserver<T>> m_Observers;
-        private readonly Action m_OnUnsubscribed;
-
-        public ObserverList(Action onUnsubscribed = null)
+        
+        // TODO Consider caching subscriptions globally.
+        // TODO Additionally, if always returning this subscription type we might as well avoid IDisposable.
+        // TODO Could basically be index to observer list and index to observer within that list, or only global observer. Note that if we apply defragmentation we might need to to store subscriptions as well which might be desirable from debugging perspective.
+        internal sealed class Subscription : IDisposable
         {
-            m_Observers = null;
-            m_OnUnsubscribed = onUnsubscribed;
-        }
+            private ObserverList2<T> m_Owner;   // TODO This could be sub array or pooled array or simply context ref
+            private IObserver<T> m_Observer;    // TODO This could be id since this is anyway O(N)
 
-        private sealed class Subscription : IDisposable
-        {
-            private ObserverList<T> m_Owner; // TODO This doesn't work, its a copy
-            private IObserver<T> m_Observer;
-
-            public Subscription([NotNull] ObserverList<T> owner, [NotNull] IObserver<T> observer)
+            public Subscription(ObserverList2<T> owner, IObserver<T> observer)
             {
                 m_Owner = owner;
                 m_Observer = observer;
@@ -358,59 +324,14 @@ namespace UnityEngine.InputSystem.Experimental
 
             public void Dispose()
             {
+                if (m_Owner == null)
+                    return; // Already disposed
+                
                 m_Owner.Remove(m_Observer);
-                //m_Owner = null;
+                
+                m_Owner = null;
                 m_Observer = null;
             }
         }
-
-        private readonly void Remove(IObserver<T> observer)
-        {
-            if (!m_Observers.Remove(observer))
-                throw new Exception("Unexpected error");
-            if (m_Observers.Count == 0 && m_OnUnsubscribed != null)
-                m_OnUnsubscribed.Invoke();
-        }
-
-        public bool empty => m_Observers == null || m_Observers.Count == 0;
-
-        public int count => m_Observers?.Count ?? 0;
-
-        public void Clear()
-        {
-            m_Observers = null;
-            m_OnUnsubscribed?.Invoke();
-        }
-        
-        public void OnCompleted()
-        {
-            if (m_Observers == null)
-                return;
-            for (var i = 0; i < m_Observers.Count; ++i)
-                m_Observers[i].OnCompleted();
-        }
-
-        public void OnError(Exception e)
-        {
-            if (m_Observers == null)
-                return;
-            for (var i = 0; i < m_Observers.Count; ++i)
-                m_Observers[i].OnCompleted();
-        }
-
-        public void OnNext(T value)
-        {
-            if (m_Observers == null)
-                return;
-            for (var i = 0; i < m_Observers.Count; ++i)
-                m_Observers[i].OnNext(value);
-        }
-
-        public IDisposable Add(IObserver<T> observer)
-        {
-            m_Observers ??= new List<IObserver<T>>(1);
-            m_Observers.Add(observer);
-            return new Subscription(this, observer);
-        }
-    }*/
+    }
 }

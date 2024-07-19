@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
@@ -71,6 +70,7 @@ namespace UnityEngine.InputSystem.Experimental
                 var span = m_Stream.AsSpan();
                 for (var i = 0; i < span.Length; ++i)
                 {
+                    // Call all observers of this stream
                     for (var j = 0; j < m_ObserverCount; ++j)
                     {
                         m_Observers[j].OnNext(span[i]);

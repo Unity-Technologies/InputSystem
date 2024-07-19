@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Experimental
     }
 
     /// <summary>
-    /// Represents an input event that carry data of type <typeparamref name="TData"/>. 
+    /// Represents an input event that carry data of type <typeparamref name="TEventArg"/>. 
     /// </summary>
     /// <typeparam name="TEventArg"></typeparam>
     public readonly struct InputEvent<TEventArg> where TEventArg : struct

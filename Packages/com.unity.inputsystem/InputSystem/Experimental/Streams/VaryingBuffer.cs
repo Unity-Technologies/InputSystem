@@ -68,6 +68,10 @@ namespace UnityEngine.InputSystem.Experimental
             m_Head = Prune(null);
             m_Tail = null;
         }
+
+        public void Push()
+        {
+        }
         
         /*public void Push(void* data, uint size)
         {

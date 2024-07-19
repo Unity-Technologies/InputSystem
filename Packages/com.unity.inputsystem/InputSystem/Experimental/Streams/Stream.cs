@@ -1,13 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using UnityEngine.InputSystem.Utilities;
 
 // TODO This PoC doesn't contain any native stream at the moment which would exist with a real backend.
 

@@ -1,19 +1,24 @@
 using System;
+using System.Threading;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public struct Held<TSource> : IObservableInput<InputEvent>
-        where TSource : IObservableInput<bool>, IDependencyGraphNode
+    // TODO We need want a timer callback when sufficient time has passed.
+    //      This is either driven by processing an event with timestamp passed or timer event if no callback.
+    //      The best implementation is likely native timer output.
+    public readonly struct Held<TSource> : IObservableInput<InputEvent>
+        where TSource : IObservableInput<bool>
     {
         internal sealed class Impl : IObserver<bool>
         {
             private bool m_PreviousValue;
             private uint m_Timestamp;
             private readonly ObserverList2<InputEvent> m_Observers;
-        
+            
             public Impl(Context context, TSource source)
             {
                 m_Observers = new ObserverList2<InputEvent>(source.Subscribe(context, this));
+                //context.CreateTimer();
             }
 
             public IDisposable Subscribe(IObserver<InputEvent> observer) => 
@@ -28,22 +33,31 @@ namespace UnityEngine.InputSystem.Experimental
             public void OnNext(bool value)
             {
                 if (m_PreviousValue == value) 
-                    return;
-                if (value) // TODO Let class be converted to Step and take a IComparable<T> type, then we can use for both Press and Relase
-                    m_Observers.OnNext(new InputEvent()); // TODO This needs to be tentative, should indirection between data observer an events or we need another stage, so its either a separate method or parameter
+                    return; // No change
                 m_PreviousValue = value;
+                if (value) // TODO Let class be converted to Step and take a IComparable<T> type, then we can use for both Press and Relase
+                {
+                    // TODO Start timer with dueTime matching press event timestamp
+                }
+                else
+                {
+                    // TODO Stop timer
+                }
+            }
+
+            public void ForwardOnNext(uint timestamp)
+            {
+                m_Observers.OnNext(new InputEvent()); // TODO This needs to be tentative, should indirection between data observer an events or we need another stage, so its either a separate method or parameter
             }
         }
 
         private readonly TSource m_Source;    // The source to observe for press events
         private readonly TimeSpan m_Duration; // The duration for which trigger must be happy.
-        private Impl m_Impl;                  // Implementation, lazily constructed
         
         public Held([InputPort] TSource source, TimeSpan duration)
         {
             m_Source = source;
             m_Duration = duration;
-            m_Impl = null;
         }
         
         public IDisposable Subscribe(IObserver<InputEvent> observer)
@@ -51,6 +65,14 @@ namespace UnityEngine.InputSystem.Experimental
             return Subscribe(Context.instance, observer);
         }
 
+        //internal delegate Impl Factory(Context context, in TSource source);
+        //private static Func<Held, out Impl> factory = Create;
+
+        /*private static Impl Create(Context context, Held<TSource> prototype)
+        {
+            return new Impl(context, prototype.m_Source);
+        }*/
+        
         public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
         {
             var impl = context.GetNodeImpl<Impl>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
@@ -81,8 +103,23 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
 
-    public static class HeldExtensions
+    /// <summary>
+    /// Allows applying Hold interaction evaluation on an observable source.
+    /// </summary>
+    public static class HeldExtensionMethods
     {
-        
+        /// <summary>
+        /// Returns a Held interaction operating on a source of type <typeparamref name="TSource"/>.
+        /// </summary>
+        /// <param name="source">The trigger source.</param>
+        /// <param name="duration">The duration for which the trigger must be kept active before the event fires.</param>
+        /// <typeparam name="TSource">The trigger source type.</typeparam>
+        /// <returns>Hold interaction using a <typeparamref name="TSource"/> type.</returns>
+        [InputNodeFactory(type=typeof(Held<IObservableInput<bool>>))]
+        public static Held<TSource> Held<TSource>(this TSource source, TimeSpan duration)
+            where TSource : IObservableInput<bool>, IDependencyGraphNode
+        {
+            return new Held<TSource>(source, duration);
+        }
     }
 }

@@ -192,5 +192,7 @@ namespace Tests.InputSystem
         // TODO Phases are related to interactions. Phases associated with data makes no sense, but how do we handle touch?
         // TODO Disambuigitation is better solved on binding level where one can either merge or select?
         // TODO Verify that shortcut and press interactions where they overlap mutes press interaction
+        
+        // TODO Verify that we may extract underlying ObservableInput instances in a dependency graph to support rebinding them.
     }
 }

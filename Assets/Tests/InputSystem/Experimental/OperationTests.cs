@@ -75,6 +75,34 @@ namespace Tests.InputSystem.Experimental
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(1));
         }
+
+        [Test]
+        public void Held()
+        {
+            var button = Gamepad.ButtonSouth.Stub(m_Context);
+            var observer = new ListObserver<InputEvent>();
+            using var subscription = Gamepad.ButtonNorth.Held(TimeSpan.FromMilliseconds(1)).Subscribe(m_Context, observer);
+
+            // Press should not trigger event
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(0));
+            
+            // Release (should not trigger event)
+            button.Release();
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(0));
+
+            // TODO Press and hold should trigger event
+            
+            // Do not expect event when unsubscribed
+            subscription.Dispose();
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            Assert.That(observer.Next.Count, Is.EqualTo(1));
+        }
         
         [Test]
         public void Chord()

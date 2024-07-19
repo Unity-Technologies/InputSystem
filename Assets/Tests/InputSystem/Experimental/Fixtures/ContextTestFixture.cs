@@ -3,6 +3,10 @@ using UnityEngine.InputSystem.Experimental;
 
 namespace Tests.InputSystem.Experimental
 {
+    /// <summary>
+    /// Base class fixture for tests relying on a specific
+    /// <seealso cref="UnityEngine.InputSystem.Experimental.Context"/> instance.
+    /// </summary>
     [Category("Experimental")]
     internal class ContextTestFixture
     {
@@ -15,11 +19,11 @@ namespace Tests.InputSystem.Experimental
         [TearDown]
         public void TearDown()
         {
-            if (context != null)
-            {
-                context.Dispose();
-                context = null;    
-            }
+            if (context == null) 
+                return;
+            
+            context.Dispose();
+            context = null;
         }
 
         protected Context context { get; private set; }

@@ -84,6 +84,7 @@ namespace UnityEngine.InputSystem.Experimental
 
     }
     
+    // TODO This is the proxy for stream context, hence we should follow the same pattern?!
     // TODO Should really have key and not usage.... Not necessarily, if this represents a blue print. But makes more sense to let this be specific and let deviceId = 0 represents the set.
     // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
@@ -92,8 +93,7 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         public readonly Usage Usage;
-        private int m_NodeId; // TODO Remove
-
+        
         public ObservableInput(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
         {}
@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem.Experimental
 
             Usage = usage;
             this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required");
-            m_NodeId = Context.InvalidNodeId;
+            //m_NodeId = Context.InvalidNodeId;
         }
 
         public readonly IDisposable Subscribe([NotNull] Context ctx, IObserver<T> observer)
@@ -145,7 +145,7 @@ namespace UnityEngine.InputSystem.Experimental
         public string displayName { get; }
 
         /// <inheritDoc />
-        public int nodeId => m_NodeId;
+        //public int nodeId => m_NodeId;
         /// <inheritDoc />
         public int childCount => 0;
         /// <inheritDoc />
