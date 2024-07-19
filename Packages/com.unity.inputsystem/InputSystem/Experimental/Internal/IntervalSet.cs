@@ -1,10 +1,13 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace Tests.InputSystem.Experimental
 {
-    internal struct IntervalSet
+    internal struct IntervalSet : IDisposable, IEnumerable<Interval>
     {
         private NativeList<Interval> m_Buffer;
 
@@ -17,7 +20,16 @@ namespace Tests.InputSystem.Experimental
         
         public void Add(Interval interval)
         {
-            
+            var n = m_Buffer.Length;
+            if (n == 0)
+                m_Buffer.Add(interval);
+
+            // We only need to handle adjacent or intersecting intervals
+            for (var i = 0; i != n; ++i)
+            {
+                if (m_Buffer[i].lowerBound == interval.upperBound)
+                    m_Buffer[i] = new Interval(interval.lowerBound, m_Buffer[i].upperBound);
+            }
         }
 
         public unsafe void Subtract(Interval interval)
@@ -65,6 +77,34 @@ namespace Tests.InputSystem.Experimental
                 dst[n++] = b.upperBound; // interval1.lower or interval0.upper
             dst[n] = a.upperBound;
             return n;
+        }
+
+        public void Dispose()
+        {
+            if (m_Buffer.IsCreated)
+                m_Buffer.Dispose();
+        }
+
+        public int Count => m_Buffer.Length;
+        
+        public Interval this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => m_Buffer[index];
+        }
+
+        public NativeArray<Interval>.Enumerator GetEnumerator()
+        {
+            return m_Buffer.GetEnumerator();
+        }
+
+        IEnumerator<Interval> IEnumerable<Interval>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

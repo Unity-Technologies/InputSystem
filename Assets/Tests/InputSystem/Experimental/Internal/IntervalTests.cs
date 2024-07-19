@@ -1,5 +1,6 @@
 using Mono.Collections.Generic;
 using NUnit.Framework;
+using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
 namespace Tests.InputSystem.Experimental
@@ -43,6 +44,15 @@ namespace Tests.InputSystem.Experimental
         public void contains_ShouldReturnTrue_IfIntervalContainsPoint(int lower, int upper, int p, bool expected)
         {
             Assert.That(new Interval(lower, upper).Contains(p), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void IntervalSet()
+        {
+            using var set = new IntervalSet(1, AllocatorManager.Temp);
+            set.Add(new Interval(-50, 100));
+            Assert.That(set.Count, Is.EqualTo(1));
+            Assert.That(set[0], Is.EqualTo(new Interval(-50, 100)));
         }
     }
 }

@@ -1,7 +1,13 @@
+using System;
+using System.Buffers;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Tests.InputSystem.Experimental;
+using Unity.Collections;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
+using UnityEngine.InputSystem.Utilities;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 
@@ -216,6 +222,206 @@ namespace Tests.InputSystem
                 
             }
         }*/
+        
+        /// <summary>
+        /// A naively implemented fixed size pool with first-fit search and free-list defragmentation.
+        /// </summary>
+        /// <typeparam name="T">The element type.</typeparam>
+        public struct FixedPool<T>
+        {
+            private struct Chunk
+            {
+                public int Offset;
+                public int Length;
+            }
+            
+            private T[] m_Array;
+            private Chunk[] m_FreeList;
+            private int m_Count;
+            
+            public FixedPool(int size)
+            {
+                m_Array = new T[size];
+                m_FreeList = new Chunk[size];
+                m_FreeList[0] = new Chunk { Offset = 0, Length = size };
+                m_Count = 1;
+            }
+
+            public ArraySegment<T> Rent(int count)
+            {
+                return RentFirstFit(count);
+                //return RentOrderedBestFit(count);
+            }
+
+            public void Return(ArraySegment<T> segment)
+            {
+                ReturnFirstFit(segment);
+            }
+
+            private ArraySegment<T> RentFirstFit(int count)
+            {
+                for (var i = 0; i < m_Count; ++i)
+                {
+                    if (m_FreeList[i].Length >= count)
+                    {
+                        var offset = m_FreeList[i].Offset;
+                        m_FreeList[i].Offset += count;
+                        m_FreeList[i].Length -= count;
+                        return new ArraySegment<T>(m_Array, offset, count);
+                    }
+                }
+
+                throw new Exception();
+            }
+
+            public void ReturnFirstFit(ArraySegment<T> segment)
+            {
+                if (segment.Array != m_Array)
+                    throw new ArgumentException($"{nameof(segment)} is not part of this pool");
+
+                var upperBound = segment.Offset + segment.Count;
+                for (var i = 0; i < m_Count; ++i)
+                {
+                    // Continue scanning for insertion point
+                    if (m_FreeList[i].Offset <= segment.Offset) 
+                        continue;
+
+                    // Merge left
+                    var merged = false;
+                    var prevIndex = i - 1;
+                    if (prevIndex >= 0)
+                    {
+                        ref var prev = ref m_FreeList[prevIndex];
+                        if (prev.Offset + prev.Length == segment.Offset)
+                        {
+                            prev.Length += segment.Count;
+                            merged = true;
+                        }
+                    }
+
+                    // Merge right
+                    ref var next = ref m_FreeList[i];
+                    if (segment.Offset + segment.Count == next.Offset)
+                    {
+                        if (merged)
+                        {
+                            m_FreeList[prevIndex].Length += next.Length;
+                        }
+                        else
+                        {
+                            next.Length += segment.Count;
+                            next.Offset = segment.Offset;    
+                        }
+                        return;
+                    }
+                    
+                    // No merge so insert instead
+                    if (merged) 
+                        return;
+                    
+                    Array.Copy(m_FreeList, i, m_FreeList, i + 1, m_Count - i);
+                    m_FreeList[i] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
+                    ++m_Count;
+                    return;
+                }
+
+                // Insert at end
+                m_FreeList[m_Count++] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
+            }
+
+            public ArraySegment<T> RentOrderedBestFit(int count)
+            {
+                // Search free-list for best-fit element
+                int index = -1;
+                for (var i = 0; i < m_Count; ++i)
+                {
+                    if (m_FreeList[i].Length >= count)
+                    {
+                        index = i;
+                        continue;
+                    }
+                    break;
+                }
+
+                if (index < 0)
+                    throw new Exception();                
+                
+                ref var item = ref m_FreeList[index];
+                var offset = item.Offset;
+                if (item.Length > count)
+                {
+                    item.Offset += count;
+                    item.Length -= count;
+                }
+                else
+                {
+                    Array.Copy(m_FreeList, index + 1, m_FreeList, index, m_Count - index - 1);
+                    --m_Count;
+                }
+
+                return new ArraySegment<T>(m_Array, offset, count);
+            }
+
+            public void ReturnBestFit(ArraySegment<T> segment)
+            {
+                if (segment.Array != m_Array)
+                    throw new ArgumentException($"{nameof(segment)} is not part of this pool");
+
+                // Reinsert based on size constraint
+                for (var i = 0; i < m_Count; ++i)
+                {
+                    if (m_FreeList[i].Length <= segment.Count)
+                    {
+                        Array.Copy(m_FreeList, i, m_FreeList, i + 1, m_Count - i);
+                        m_FreeList[i] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
+                        ++m_Count;
+                        return;
+                    }
+                }
+
+                m_FreeList[m_Count++] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
+            }
+        }
+        
+        [Test]
+        public void PoolTest()
+        {
+            var pool = new FixedPool<IDisposable>(10);
+            
+            var a0 = pool.Rent(3);
+            Assert.That(a0, Is.Not.Null);
+            Assert.That(a0.Count, Is.EqualTo(3));
+            
+            var a1 = pool.Rent(1);
+            Assert.That(a1, Is.Not.Null);
+            Assert.That(a1.Count, Is.EqualTo(1));
+            
+            var a2 = pool.Rent(2);
+            Assert.That(a2, Is.Not.Null);
+            Assert.That(a2.Count, Is.EqualTo(2));
+            
+            var a3 = pool.Rent(3);
+            Assert.That(a3, Is.Not.Null);
+            Assert.That(a3.Count, Is.EqualTo(3));
+            
+            Assert.Throws<Exception>(() => pool.Rent(2));
+            
+            pool.Return(a0);
+            pool.Return(a1); // Except a0 and a1 to be merged (left)
+
+            // Note: This wouldn't be possible without defragmentation
+            var a4 = pool.Rent(4);
+            Assert.That(a4, Is.Not.Null);
+            Assert.That(a4.Count, Is.EqualTo(4));
+            
+            pool.Return(a3);
+
+            pool.Return(a4);
+            pool.Return(a2);
+
+            var a5 = pool.Rent(10);
+            Assert.That(a5, Is.Not.Null);
+        }
         
         [Test]
         public void MessageBufferConcept()
