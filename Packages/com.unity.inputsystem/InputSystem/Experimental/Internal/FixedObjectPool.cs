@@ -116,4 +116,5 @@ namespace UnityEngine.InputSystem.Experimental
             m_FreeList[m_Count++] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
         }
     }
+    
 }

@@ -222,8 +222,14 @@ namespace Tests.InputSystem
                 
             }
         }*/
-        
 
+        //static void Forward<T>(Action<T> action, T state) => action(state);
+        
+        [Test]
+        public void ActionCast()
+        {
+            
+        }
         
         [Test]
         public void MessageBufferConcept()

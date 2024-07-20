@@ -47,6 +47,7 @@ namespace UnityEngine.InputSystem.Experimental
         // TODO Impl could be pooled (need interface)
         //
         // TODO Should register itself to avoid duplicate nodes
+        // TODO An alternative would be to subscribe to underlying stream with an action that would operate on cast state
         internal sealed class Impl : IObserver<bool>
         {
             private bool m_PreviousValue;                           // TODO This is state

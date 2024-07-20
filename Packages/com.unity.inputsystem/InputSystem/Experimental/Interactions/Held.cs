@@ -9,10 +9,14 @@ namespace UnityEngine.InputSystem.Experimental
     public readonly struct Held<TSource> : IObservableInput<InputEvent>
         where TSource : IObservableInput<bool>
     {
+        // TODO This is a class only to be able to receive callbacks via IObserver<bool>
+        // TODO This could be different with a delegate
         internal sealed class Impl : IObserver<bool>
         {
+            // State
             private bool m_PreviousValue;
             private uint m_Timestamp;
+            
             private readonly ObserverList2<InputEvent> m_Observers;
             
             public Impl(Context context, TSource source)

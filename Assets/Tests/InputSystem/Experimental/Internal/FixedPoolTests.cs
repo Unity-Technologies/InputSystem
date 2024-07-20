@@ -8,7 +8,7 @@ namespace Tests.InputSystem.Experimental
     public class FixedPoolTests
     {
         [Test]
-        public void ShouldReuseRanges()
+        public void RentAndReturn_ShouldAllowReusingMemory_IfSufficientCapacity()
         {
             var pool = new FixedObjectPool<IDisposable>(10);
             
