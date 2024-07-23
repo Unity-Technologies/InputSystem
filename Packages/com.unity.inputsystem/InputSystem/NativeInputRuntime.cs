@@ -9,7 +9,6 @@ using UnityEngineInternal.Input;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -394,7 +393,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if (UNITY_EDITOR)
+        #if (UNITY_EDITOR && ENABLE_CLOUD_SERVICES_ANALYTICS)
             #if (UNITY_2023_2_OR_NEWER)
             EditorAnalytics.SendAnalytic(analytic);
             #else
@@ -402,14 +401,14 @@ namespace UnityEngine.InputSystem.LowLevel
             EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
             EditorAnalytics.SendEventWithLimit(info.Name, analytic);
             #endif // UNITY_2023_2_OR_NEWER
-            #elif UNITY_ANALYTICS // Implicitly: !UNITY_EDITOR
+        #elif (!UNITY_EDITOR && ENABLE_CLOUD_SERVICES_ANALYTICS) // Implicitly: !UNITY_EDITOR
             var info = analytic.info;
             Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
             if (analytic.TryGatherData(out var data, out var error))
                 Analytics.Analytics.SendEvent(info.Name, data);
             else
                 Debug.Log(error); // Non fatal
-            #endif // UNITY_EDITOR
+        #endif //UNITY_EDITOR && ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
