@@ -117,6 +117,24 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
+        /// A multiplier value that allows you to adjust the scroll wheel speed sent to uGUI (Unity UI) components.
+        /// </summary>
+        /// <remarks>
+        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value and behaves the same as the legacy Standalone Input Module.
+        ///
+        /// A value larger than one increases the scrolling speed per tick, and a value less than one decreases the speed.
+        ///
+        /// You can set this to a negative value to invert the scroll direction. A value of zero prevents mousewheel scrolling from working at all.
+        ///
+        /// Note: this has no effect on UI Toolkit content, only uGUI components.
+        /// </remarks>
+        public float scrollDeltaPerTick
+        {
+            get => m_ScrollDeltaPerTick;
+            set => m_ScrollDeltaPerTick = value;
+        }
+
+        /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
         public override void ActivateModule()
@@ -2070,10 +2088,10 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
 
-            state.scrollDelta = context.ReadValue<Vector2>();
+            var scrollDelta = context.ReadValue<Vector2>();
 
             // ISXB-704: convert input value to BaseInputModule convention.
-            state.scrollDelta *= (1.0f / InputSystem.scrollWheelDeltaPerTick);
+            state.scrollDelta = (scrollDelta / InputSystem.scrollWheelDeltaPerTick) * scrollDeltaPerTick;
 
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
@@ -2219,6 +2237,18 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
+        const float kSmallestScrollDeltaPerTick = 0.00001f;
+        public override Vector2 ConvertPointerEventScrollDeltaToTicks(Vector2 scrollDelta)
+        {
+            if (Mathf.Abs(scrollDeltaPerTick) < kSmallestScrollDeltaPerTick)
+                return Vector2.zero;
+
+            return scrollDelta / scrollDeltaPerTick;
+        }
+
+#endif
+
         private void HookActions()
         {
             if (m_ActionsHooked)
@@ -2351,6 +2381,10 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
         [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
+
+        // See ISXB-766 for a history of where the 6.0f value comes from
+        // (we used to have 120 per tick on Windows and divided it by 20.)
+        [SerializeField] private float m_ScrollDeltaPerTick = 6.0f;
 
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
 
