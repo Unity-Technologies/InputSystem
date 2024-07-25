@@ -104,7 +104,9 @@ namespace UnityEngine.InputSystem.Experimental
                 impl = new Impl(context, m_Source);
                 context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
             }
-
+            
+            // Note that subscription is done on the actual implementation node where we register observer
+            // to be invoked when impl has a new value.
             return impl.Subscribe(context, observer);
             
             // return (m_Impl ??= new Impl(context, m_Source)).Subscribe(context, observer);

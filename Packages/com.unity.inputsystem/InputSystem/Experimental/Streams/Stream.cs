@@ -68,13 +68,13 @@ namespace UnityEngine.InputSystem.Experimental
         private int m_Count;
         public readonly Usage Usage;
 
-        public const int kDefaultCapacity = 2;
+        public const int DefaultCapacity = 2;
 
-        public Stream(Usage usage, T initialValue, int initialCapacity = kDefaultCapacity)
+        public Stream(Usage usage, T initialValue, int initialCapacity = DefaultCapacity)
             : this(usage, ref initialValue, initialCapacity)
         { }
         
-        public Stream(Usage usage, ref T initialValue, int initialCapacity = kDefaultCapacity)
+        public Stream(Usage usage, ref T initialValue, int initialCapacity = DefaultCapacity)
         {
             Usage = usage;
             m_Values = new NativeArray<T>(initialCapacity, Allocator.Persistent);
@@ -118,16 +118,6 @@ namespace UnityEngine.InputSystem.Experimental
             m_Values[m_Count++] = value;
         }
 
-        private void Reallocate(int newCapacity)
-        {
-            // TODO Check newCapacity is greater
-            var newArray = new NativeArray<T>(newCapacity, Allocator.Persistent);
-            for (var i = 0; i < m_Count; ++i)
-                newArray[i] = m_Values[i];
-            m_Values.Dispose();
-            m_Values = newArray;
-        }
-
         public T Previous => m_Values[0];
         public T GetLast() => m_Values[m_Count - 1];
 
@@ -152,6 +142,16 @@ namespace UnityEngine.InputSystem.Experimental
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+        
+        private void Reallocate(int newCapacity)
+        {
+            // TODO Check newCapacity is greater
+            var newArray = new NativeArray<T>(newCapacity, Allocator.Persistent);
+            for (var i = 0; i < m_Count; ++i)
+                newArray[i] = m_Values[i];
+            m_Values.Dispose();
+            m_Values = newArray;
         }
     }
 }

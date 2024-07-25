@@ -10,6 +10,7 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // Review: https://github.com/StephenCleary/Deque
     internal unsafe struct LinkedSegment
     {
         public void* Ptr;
