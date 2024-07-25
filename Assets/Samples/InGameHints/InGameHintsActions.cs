@@ -378,6 +378,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
 
             private void UnregisterCallbacks(IGameplayActions instance)
             {
+                if (instance == null) return;
                 @Move.started -= instance.OnMove;
                 @Move.performed -= instance.OnMove;
                 @Move.canceled -= instance.OnMove;

@@ -270,6 +270,8 @@ namespace UnityEngine.InputSystem.Editor
                 // UnregisterCallbacks method.
                 writer.WriteLine($"private void UnregisterCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
+
+                writer.WriteLine($"if (instance == null) return;");
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);

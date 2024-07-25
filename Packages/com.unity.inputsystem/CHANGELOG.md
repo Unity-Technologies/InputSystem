@@ -276,6 +276,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed BindingPath String-Comparison to be culture and case insensitive (case ISXB-449).
 - Fixed custom processor display in the input action asset UI after entering/exiting play mode (previously they got hidden) ([case ISXB-445](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-445)).
 
+### Fixed
+- Fixed potential `NullReferenceException` when setting callbacks from the generated `InputActions` C# file.
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed

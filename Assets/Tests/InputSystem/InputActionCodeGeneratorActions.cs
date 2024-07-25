@@ -171,6 +171,7 @@ public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, 
 
         private void UnregisterCallbacks(IGameplayActions instance)
         {
+            if (instance == null) return;
             @action1.started -= instance.OnAction1;
             @action1.performed -= instance.OnAction1;
             @action1.canceled -= instance.OnAction1;
