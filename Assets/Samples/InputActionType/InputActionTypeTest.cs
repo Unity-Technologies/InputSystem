@@ -25,18 +25,28 @@ public class InputActionTypeTest : MonoBehaviour
         // Handle input by responding to callbacks
         if (colorChange != null)
         {
+            colorChange.started += OnColorChangeStarted;
             colorChange.performed += OnColorChangePerformed;
             colorChange.canceled += OnColorChangeCanceled;
         }
     }
 
+    private void OnColorChangeStarted(InputAction.CallbackContext ctx)
+    {
+        Debug.Log("Action type started: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType);
+        cube.GetComponent<Renderer>().material.color = Color.blue;
+    }
+
     private void OnColorChangePerformed(InputAction.CallbackContext ctx)
     {
+        Debug.Log("Action type performed: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType);
         cube.GetComponent<Renderer>().material.color = Color.red;
     }
 
     private void OnColorChangeCanceled(InputAction.CallbackContext ctx)
     {
+        Debug.Log("Action type canceled: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType);
+
         cube.GetComponent<Renderer>().material.color = Color.green;
     }
 
@@ -44,6 +54,7 @@ public class InputActionTypeTest : MonoBehaviour
     {
         if (colorChange != null)
         {
+            colorChange.started -= OnColorChangeStarted;
             colorChange.performed -= OnColorChangePerformed;
             colorChange.canceled -= OnColorChangeCanceled;
         }
