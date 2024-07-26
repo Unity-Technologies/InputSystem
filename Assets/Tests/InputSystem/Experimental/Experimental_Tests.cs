@@ -218,6 +218,14 @@ namespace Tests.InputSystem
             }
         }
 
+        private unsafe struct UnsafeDelegatePool
+        {
+            public delegate*<void*, void>* Rent(int n)
+            {
+                return null;
+            }
+        }
+        
         // https://stackoverflow.com/questions/3522361/add-delegate-to-event-thread-safety
         // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/function-pointers
         // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code
@@ -234,20 +242,18 @@ namespace Tests.InputSystem
 
             public unsafe void Dispose()
             {
-                if (m_Delegates == IntPtr.Zero) return;
+                if (m_Delegates == IntPtr.Zero) 
+                    return;
+                
                 AllocatorManager.Free(m_Allocator, m_Delegates.ToPointer());
                 m_Delegates = IntPtr.Zero;
             }
-
+/*
             private static unsafe delegate*<void*, void>* Allocate(int capacity, AllocatorManager.AllocatorHandle allocator)
             {
                 return (delegate*<void*, void>*)allocator.Allocate(sizeof(delegate*<void*, void>), 8, capacity);
             }
-
-            private static unsafe void Free(delegate*<void*, void>* ptr, AllocatorManager.AllocatorHandle allocator)
-            {
-                AllocatorManager.Free(allocator, ptr);
-            }
+*/
 
             /*private static IntPtr Create(ref AllocatorManager.AllocatorHandle allocator)
             {
@@ -288,68 +294,74 @@ namespace Tests.InputSystem
                 }    
             }*/
 
-            
-            
-            private unsafe IntPtr Create(delegate*<void*, void> callback)
-            {
-                m_Allocator.Allocate(sizeof(delegate*<void*, void>), 8, 2);
-                var ptr = Allocate(2, m_Allocator);
-                *((int*)ptr) = 1;
-                ptr[1] = callback;
-                return (IntPtr)ptr;
-            }
-
             private unsafe IntPtr Combine(IntPtr existing, delegate*<void*, void> callback)
             {
-                if (existing == IntPtr.Zero)
-                    return Create(callback);
-                
-                var oldPtr = (delegate*<void*, void>*)existing;
-                var oldSize = (int)oldPtr![0];
                 var sizeOf = sizeof(delegate*<void*, void>);
-                var ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, oldSize + 1);
-                UnsafeUtility.MemCpy(ptr + 1, oldPtr + 2, sizeOf * oldSize);
-                *((int*)ptr) = oldSize + 1;
-                return (IntPtr)ptr;
+                delegate*<void*, void>* ptr;
+                
+                if (existing == IntPtr.Zero)
+                {
+                    ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, 2);
+                    ptr[1] = callback;
+
+                    void* raw = callback;
+                    
+                    var p = (ushort*)ptr;
+                    p[0] = 1;
+                    
+                    return (IntPtr)ptr;
+                }
+                else
+                {
+                    var oldPtr = (delegate*<void*, void>*)existing;
+                    var oldSize = *(ushort*)existing!;
+                    var newSize = oldSize + 1;
+                    
+                    ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, newSize + 1);
+                    UnsafeUtility.MemCpy(ptr + 1, oldPtr + 2, sizeOf * oldSize);
+                    ptr[newSize] = callback;
+                    
+                    var p = (ushort*)ptr;
+                    p[0] = (ushort)newSize;
+                    
+                    return (IntPtr)ptr;    
+                }
             }
             
             public unsafe void Add(delegate*<void*, void> callback)
             {;
-                IntPtr temp;
                 IntPtr handler = m_Delegates;
                 for(;;)
                 {
                     var handler2 = handler;
-                    temp = handler != IntPtr.Zero ? Combine(handler, callback) : Create(callback);
+                    var temp = Combine(handler, callback);
                     handler = Interlocked.CompareExchange(ref m_Delegates, temp, handler2);
                     if (handler == handler2)
                     {
-                        // Successfully replaced delegate array, we may delete previous but only if not referenced by another thread
                         AllocatorManager.Free(m_Allocator, (void*)handler);
                         break;
                     }
-                    else
-                    {
-                        // Failed CAS, we need to reattempt so we undo the previous allocation and start over
-                        AllocatorManager.Free(m_Allocator, (void*)temp);
-                    }
+                    AllocatorManager.Free(m_Allocator, (void*)temp);
                         
                      // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
                 }
             }
 
-            public unsafe void Remove(delegate*<void*>* callback)
+            public unsafe void Remove(delegate*<void*, void>* callback)
             {
-                
+                // TODO Implement    
             }
 
             public unsafe void Invoke(void* arg)
             {
+                void* raw = (void*)m_Delegates;
                 var handlers = (delegate*<void*, void>*)m_Delegates;
                 if (handlers == null)
                     return;
 
-                int n = *(int*)handlers;
+                // TODO If we encode handlers into the unused bits of the pointer itself up to max point we can avoid
+                //      the null check since n will be zero for null pointer if converted to number
+                int n = *(ushort*)handlers;
                 for (var i=0; i < n; ++i)
                 {
                     handlers[i+1](arg);
@@ -357,13 +369,25 @@ namespace Tests.InputSystem
             }
         }
 
+        private static int m_Counter;
+        
         static unsafe void AddFn(void* p)
         {
-            //Debug.Log("Hello");
+            ++m_Counter;
         }
 
         [Test]
-        public void CustomDelegate()
+        public void MulticastDelegate_NoDelegate()
+        {
+            unsafe
+            {
+                using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
+                x.Invoke(null);
+            }
+        }
+        
+        [Test]
+        public void MulticastDelegate_SingleDelegate()
         {
             
             unsafe
@@ -376,10 +400,16 @@ namespace Tests.InputSystem
                 //Assert.That(() => { x.Dummy(); }, NUnit.Framework.Is.Not.AllocatingGCMemory());
 
                 x.Add(&AddFn);
-                Assert.That(() => { x.Add(&AddFn); }, Is.Not.AllocatingGCMemory());
+                //x.Remove(&AddFn);
+                
+                //Assert.That(() => { x.Add(&AddFn); }, Is.Not.AllocatingGCMemory());
                 
                 //x.Add(&Add);
-                //x.Invoke(null);
+                x.Invoke(null);
+                
+                Assert.That(m_Counter, Is.EqualTo(1));
+                
+                
             }
         }
         
