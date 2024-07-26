@@ -46,7 +46,6 @@ public class InputActionTypeTest : MonoBehaviour
     private void OnColorChangeCanceled(InputAction.CallbackContext ctx)
     {
         Debug.Log("Action type canceled: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType);
-
         cube.GetComponent<Renderer>().material.color = Color.green;
     }
 

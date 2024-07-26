@@ -1,5 +1,5 @@
 {
-    "name": "ActionTypeActions",
+    "name": "ActionsUsingButtonAndValue",
     "maps": [
         {
             "name": "Player",
@@ -16,7 +16,7 @@
                 },
                 {
                     "name": "ColorChange",
-                    "type": "Value",
+                    "type": "Button",
                     "id": "6c2ab1b8-8984-453a-af3d-a3c78ae1679a",
                     "expectedControlType": "",
                     "processors": "",
@@ -208,6 +208,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "XR",
+                    "action": "ColorChange",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e24fbac1-96ee-418b-a37c-4aca73f01952",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
                     "action": "ColorChange",
                     "isComposite": false,
                     "isPartOfComposite": false
