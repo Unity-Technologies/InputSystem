@@ -85,6 +85,18 @@ namespace UnityEngine.InputSystem.Experimental
             m_Count = 1;
         }
 
+        private int m_RefCount;
+        
+        public void AddRef()
+        {
+            ++m_RefCount;
+        }
+
+        public void Release()
+        {
+            --m_RefCount;
+        }
+
         public ReadOnlySpan<T> AsSpan()
         {
             return m_Values.GetSubArray(1, m_Count - 1).AsReadOnlySpan();

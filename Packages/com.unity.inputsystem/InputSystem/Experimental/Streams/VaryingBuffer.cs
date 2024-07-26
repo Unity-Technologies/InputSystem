@@ -64,13 +64,15 @@ namespace UnityEngine.InputSystem.Experimental
         
         public void Dispose()
         {
-            CheckCreated(); 
+            CheckCreated();
+            
             m_Head = Prune(null);
             m_Tail = null;
         }
 
-        public void Push()
+        public void Push(void* data, int sizeOf, int alignOf)
         {
+            m_Head->Push(data, sizeOf, alignOf);
         }
         
         /*public void Push(void* data, uint size)

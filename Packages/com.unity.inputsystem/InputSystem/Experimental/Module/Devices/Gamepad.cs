@@ -198,6 +198,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         // Gamepad.LeftStick.Subscribe(...)
         
         public static Gamepad any => new Gamepad();
+        
         //private Stream<GamepadState> m_Stream;
         // TODO Add API to fetch Gamepad instances via Context as well as instance specific getters for actual control representations
         

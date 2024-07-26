@@ -2,14 +2,20 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 using NUnit.Framework;
 using Tests.InputSystem.Experimental;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools.Constraints;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 // TODO Do we need a FixedInput type?
 
@@ -194,54 +200,217 @@ namespace Tests.InputSystem
         {
             Invalid,
             DeviceArrival,
-            DeviceRemoval
-        }
-
-        private struct Message
-        {
-            public MessageType type;
-            public Endpoint endpoint;
-        }
-
-        private struct EventQueue
-        {
-            private UniformBuffer<Message> m_Messages;
-
-            public void Enqueue(ref Message msg)
-            {
-                
-            }
-        }
-
-        /*public struct GamepadWriter
-        {
-            public 
+            DeviceRemoval,
             
-            public void Publish()
+            Keyboard,
+            Gamepad
+        }
+
+        [StructLayout(LayoutKind.Explicit, Size = 16, Pack = 1)]
+        private unsafe struct Message
+        {
+            [FieldOffset(0)] public MessageType type;
+            [FieldOffset(4)] public ulong endpoint;
+
+            public static Message CreateDeviceArrivalMessage()
+            {
+                return new Message() { type = MessageType.DeviceArrival, endpoint = 0 };
+            }
+        }
+
+        // https://stackoverflow.com/questions/3522361/add-delegate-to-event-thread-safety
+        // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/function-pointers
+        // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code
+        private struct UnsafeMulticastDelegate : IDisposable
+        {
+            private AllocatorManager.AllocatorHandle m_Allocator;
+            private IntPtr m_Delegates;
+
+            public UnsafeMulticastDelegate(AllocatorManager.AllocatorHandle allocator)
+            {
+                m_Delegates = IntPtr.Zero;
+                m_Allocator = allocator;
+            }
+
+            public unsafe void Dispose()
+            {
+                if (m_Delegates == IntPtr.Zero) return;
+                AllocatorManager.Free(m_Allocator, m_Delegates.ToPointer());
+                m_Delegates = IntPtr.Zero;
+            }
+
+            private static unsafe delegate*<void*, void>* Allocate(int capacity, AllocatorManager.AllocatorHandle allocator)
+            {
+                return (delegate*<void*, void>*)allocator.Allocate(sizeof(delegate*<void*, void>), 8, capacity);
+            }
+
+            private static unsafe void Free(delegate*<void*, void>* ptr, AllocatorManager.AllocatorHandle allocator)
+            {
+                AllocatorManager.Free(allocator, ptr);
+            }
+
+            /*private static IntPtr Create(ref AllocatorManager.AllocatorHandle allocator)
+            {
+                var ptr = Allocate(2, allocator);
+                *((int*)ptr) = 1;
+                ptr[1] = callback;
+                temp = (IntPtr)ptr;
+            }*/
+
+            /*private unsafe struct Delegate
+            {
+                private delegate*<void*, void>* m_Ptr;
+
+                public static Delegate Combine(ref Delegate existing, delegate*<void*, void> callback, AllocatorManager.AllocatorHandle allocator)
+                {
+                    var sizeOf = sizeof(delegate*<void*, void>);
+
+                    delegate*<void*, void>* ptr;
+                    if (existing.m_Ptr == null)
+                    {
+                        ptr = (delegate*<void*, void>*)allocator.Allocate(sizeOf, sizeOf, 2);
+                        var p = (uint*)ptr;
+                        p[0]
+                        ptr[1] = callback;
+                    }
+                    else
+                    {
+                        var oldCount = (int)existing.m_Ptr[0];
+                        var newSize = oldCount + 1;
+                        ptr = (delegate*<void*, void>*)allocator.Allocate(sizeOf, sizeOf, newSize + 1);
+                        var p = (ushort*)ptr;
+                        p[0] = newSize;
+                        UnsafeUtility.MemCpy(ptr + 1, existing.m_Ptr + 2, sizeOf * oldCount);
+                        ptr[newSize] = callback;
+                    }
+                    
+                    return new Delegate() { m_Ptr = ptr };
+                }    
+            }*/
+
+            
+            
+            private unsafe IntPtr Create(delegate*<void*, void> callback)
+            {
+                m_Allocator.Allocate(sizeof(delegate*<void*, void>), 8, 2);
+                var ptr = Allocate(2, m_Allocator);
+                *((int*)ptr) = 1;
+                ptr[1] = callback;
+                return (IntPtr)ptr;
+            }
+
+            private unsafe IntPtr Combine(IntPtr existing, delegate*<void*, void> callback)
+            {
+                if (existing == IntPtr.Zero)
+                    return Create(callback);
+                
+                var oldPtr = (delegate*<void*, void>*)existing;
+                var oldSize = (int)oldPtr![0];
+                var sizeOf = sizeof(delegate*<void*, void>);
+                var ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, oldSize + 1);
+                UnsafeUtility.MemCpy(ptr + 1, oldPtr + 2, sizeOf * oldSize);
+                *((int*)ptr) = oldSize + 1;
+                return (IntPtr)ptr;
+            }
+            
+            public unsafe void Add(delegate*<void*, void> callback)
+            {;
+                IntPtr temp;
+                IntPtr handler = m_Delegates;
+                for(;;)
+                {
+                    var handler2 = handler;
+                    temp = handler != IntPtr.Zero ? Combine(handler, callback) : Create(callback);
+                    handler = Interlocked.CompareExchange(ref m_Delegates, temp, handler2);
+                    if (handler == handler2)
+                    {
+                        // Successfully replaced delegate array, we may delete previous but only if not referenced by another thread
+                        AllocatorManager.Free(m_Allocator, (void*)handler);
+                        break;
+                    }
+                    else
+                    {
+                        // Failed CAS, we need to reattempt so we undo the previous allocation and start over
+                        AllocatorManager.Free(m_Allocator, (void*)temp);
+                    }
+                        
+                     // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
+                }
+            }
+
+            public unsafe void Remove(delegate*<void*>* callback)
             {
                 
             }
-        }*/
 
-        //static void Forward<T>(Action<T> action, T state) => action(state);
-        
+            public unsafe void Invoke(void* arg)
+            {
+                var handlers = (delegate*<void*, void>*)m_Delegates;
+                if (handlers == null)
+                    return;
+
+                int n = *(int*)handlers;
+                for (var i=0; i < n; ++i)
+                {
+                    handlers[i+1](arg);
+                }
+            }
+        }
+
+        static unsafe void AddFn(void* p)
+        {
+            //Debug.Log("Hello");
+        }
+
         [Test]
-        public void ActionCast()
+        public void CustomDelegate()
         {
             
+            unsafe
+            {
+                Assert.That(sizeof(delegate*<void*, void>), Is.EqualTo(8));
+                Assert.That(sizeof(delegate*<void*, int, int, int, void>), Is.EqualTo(8));
+                
+                using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
+                //x.Dummy();
+                //Assert.That(() => { x.Dummy(); }, NUnit.Framework.Is.Not.AllocatingGCMemory());
+
+                x.Add(&AddFn);
+                Assert.That(() => { x.Add(&AddFn); }, Is.Not.AllocatingGCMemory());
+                
+                //x.Add(&Add);
+                //x.Invoke(null);
+            }
         }
         
         [Test]
         public void MessageBufferConcept()
         {
-            using var q = new UniformBuffer<Message>();
+            var demux = new Dictionary<ulong, MulticastDelegate>();
+            using var messageQueue = new UnsafeRingQueue<Message>(100, AllocatorManager.Temp);
+            messageQueue.Enqueue(new Message(){ });
 
-            var msg = new Message
+            while (messageQueue.TryDequeue(out Message message))
             {
-                type = MessageType.Invalid
-            };
-            
-            q.Push(ref msg);
+                switch (message.type)
+                {
+                    case MessageType.DeviceArrival:
+                        break;
+                    case MessageType.DeviceRemoval:
+                        break;
+                    case MessageType.Keyboard:
+                        break;
+                    case MessageType.Gamepad:
+                        if (demux.TryGetValue(message.endpoint, out MulticastDelegate handler))
+                        {
+                            
+                        }
+                        break;
+                    default:
+                        // TODO Handle custom messages
+                        break;
+                }
+            }
         }
 
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event

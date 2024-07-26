@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
@@ -37,35 +38,67 @@ namespace Tests.InputSystem.Experimental
         }
 
         
-        
+
+        // A producer perspective of a gamepad
         private struct GamepadWriter : IDisposable
         {
             private readonly Endpoint m_Endpoint;
             private Stream<GamepadState> m_Stream;
             public GamepadState Value;
+            private long m_Flags;
+
+            private const long LockBit = 1;
+            private const long LockMask = ~LockBit;
             
-            public GamepadWriter(ushort deviceId)
+            public GamepadWriter(ushort deviceId, GamepadState initialValue = default)
             {
                 m_Endpoint = Endpoint.FromDeviceAndUsage(deviceId, Usages.Devices.Gamepad);
                 m_Stream = null;
-                Value = default;
+                Value = initialValue;
+                m_Flags = 0;
+            }
+
+            public void BeginTransaction()
+            {
+                for (;;)
+                {
+                    var previous = Interlocked.CompareExchange(ref m_Flags, m_Flags | LockBit, m_Flags & LockMask);
+                    if ((previous & LockBit) != 0)
+                        break; // successfully locked
+                }
+                
+                Debug.Assert((m_Flags & LockBit) != 0);
+            }
+
+            public void EndTransaction()
+            {
+                Debug.Assert((m_Flags & LockBit) != 0);
+                
+                while ((Interlocked.CompareExchange(ref m_Flags, m_Flags | LockBit, m_Flags & LockMask) & LockBit) != 0)
+                {
+                    // Busy-wait since we are not expecting any concurrent writers
+                }
             }
 
             public void SetStream(Stream<GamepadState> stream)
             {
                 // TODO Should reduce ref count on existing stream, should increase ref count on new stream
                 m_Stream = stream; // TODO Needs to be CAS
+                stream.AddRef();
             }
             
             public void Dispose()
             {
-                // TODO Should reduce ref count on stream
+                m_Stream.Release();
+                m_Stream = null;
             }
 
             public bool hasStream => m_Stream != null;
             
             public void Publish()
             {
+                Debug.Assert((m_Flags & LockBit) != 0, "Cannot publish without pending transaction");
+                
                 if (m_Stream == null)
                     return;
                 
@@ -80,11 +113,15 @@ namespace Tests.InputSystem.Experimental
             
             var writer = new GamepadWriter(100);
             writer.SetStream(stream);
+            
             writer.Value.buttonEast = true;
+            writer.Value.leftStick = Vector2.left;
+            
             writer.Publish();
 
             Assert.That(stream.AsSpan().Length, Is.EqualTo(1));
             Assert.That(stream.AsSpan()[0].buttonEast, Is.EqualTo(true));
+            Assert.That(stream.AsSpan()[0].leftStick, Is.EqualTo(Vector2.left));
         }
         
         [Test]
