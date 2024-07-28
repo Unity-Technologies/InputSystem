@@ -13,6 +13,8 @@ using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
+using UnityEngine.UIElements;
+using InputEvent = UnityEngine.InputSystem.Experimental.InputEvent;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -69,6 +71,7 @@ namespace Tests.InputSystem
         public void SetUp()
         {
             m_Context = new Context();
+            m_Counter = 0;
         }
 
         [TearDown]
@@ -248,6 +251,16 @@ namespace Tests.InputSystem
                 AllocatorManager.Free(m_Allocator, m_Delegates.ToPointer());
                 m_Delegates = IntPtr.Zero;
             }
+
+            public unsafe int length
+            {
+                get
+                {
+                    if (m_Delegates == IntPtr.Zero)
+                        return 0;
+                    return *(ushort*)m_Delegates;
+                }
+            }
 /*
             private static unsafe delegate*<void*, void>* Allocate(int capacity, AllocatorManager.AllocatorHandle allocator)
             {
@@ -294,80 +307,165 @@ namespace Tests.InputSystem
                 }    
             }*/
 
-            private unsafe IntPtr Combine(IntPtr existing, delegate*<void*, void> callback)
+            private unsafe void Release(delegate*<void*, void>* d)
+            {
+                ushort* p = (ushort*)d;
+                --p[1]; // TODO If interlocked it need to be a valid adress
+            }
+
+            private unsafe uint GetLength(delegate*<void*, void>* d)
+            {
+                // For small N, the length is encoded into LSB bits of the pointer itself.
+                // For large N, the length is encoded into dynamically allocated memory.
+                var n = ((uint)d) & 0x07;
+                if (n < 0x07)
+                    return n;
+                return *(ushort*)d;
+            }
+
+            private unsafe delegate*<void*, void>* Encode(delegate*<void*, void>* d, int length)
+            {
+                var p = (ushort*)d;
+                p[0] = (ushort)length;
+                return d;
+            }
+
+            private unsafe int Decode(out delegate*<void*, void>* handlers)
+            {
+                if (m_Delegates == IntPtr.Zero)
+                {
+                    handlers = null;
+                    return 0;
+                }
+                var p = (ushort*)m_Delegates;
+                handlers = (delegate*<void*, void>*)m_Delegates + 1;
+                return p![0];
+            }
+
+            private static unsafe int IndexOf(delegate*<void*, void>* haystack, int n, delegate*<void*, void> needle)
+            {
+                while (--n >= 0 && haystack[n] != needle) { }
+                return n;
+            }
+            
+            private unsafe delegate*<void*, void>* Remove(delegate*<void*, void>* existing, 
+                delegate*<void*, void> callback)
+            {
+                var oldSize = Decode(out var existingHandlers);
+                
+                
+                //var p = (ushort*)existing;
+                //var oldSize = p[0];
+                var index = IndexOf(existingHandlers, oldSize, callback);
+                if (index >= oldSize)
+                    return existing; // Not found
+                if (oldSize == 1)
+                    return null;     // Eliminating item results in empty array
+                
+                var sizeOf = sizeof(delegate*<void*, void>);
+                var ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, oldSize);
+                UnsafeUtility.MemCpy(ptr + 1, existingHandlers, index * sizeOf);
+                UnsafeUtility.MemCpy(ptr + 1 + index * sizeOf, existingHandlers + index, oldSize - index - 1);
+                return Encode(ptr, oldSize - 1);
+            }
+            
+            private unsafe delegate*<void*, void>* Combine(delegate*<void*, void>* existing, 
+                delegate*<void*, void> callback)
             {
                 var sizeOf = sizeof(delegate*<void*, void>);
                 delegate*<void*, void>* ptr;
                 
-                if (existing == IntPtr.Zero)
+                if (existing == null)
                 {
                     ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, 2);
-                    ptr[1] = callback;
-
-                    void* raw = callback;
-                    
-                    var p = (ushort*)ptr;
-                    p[0] = 1;
-                    
-                    return (IntPtr)ptr;
+                    ptr[1] = callback; // oldSize + 1
+                    return Encode(ptr, 1);
                 }
                 else
                 {
-                    var oldPtr = (delegate*<void*, void>*)existing;
                     var oldSize = *(ushort*)existing!;
                     var newSize = oldSize + 1;
                     
                     ptr = (delegate*<void*, void>*)m_Allocator.Allocate(sizeOf, 8, newSize + 1);
-                    UnsafeUtility.MemCpy(ptr + 1, oldPtr + 2, sizeOf * oldSize);
+                    UnsafeUtility.MemCpy(ptr + 1, existing + 1, sizeOf * oldSize);
                     ptr[newSize] = callback;
-                    
-                    var p = (ushort*)ptr;
-                    p[0] = (ushort)newSize;
-                    
-                    return (IntPtr)ptr;    
+                    return Encode(ptr, newSize);
                 }
             }
             
             public unsafe void Add(delegate*<void*, void> callback)
             {;
-                IntPtr handler = m_Delegates;
+                var previous = m_Delegates; // Increase ref count of handler
                 for(;;)
                 {
-                    var handler2 = handler;
-                    var temp = Combine(handler, callback);
-                    handler = Interlocked.CompareExchange(ref m_Delegates, temp, handler2);
-                    if (handler == handler2)
+                    var before = previous;
+                    var ptr = (IntPtr)Combine((delegate*<void*, void>*)previous, callback);
+                    previous = Interlocked.CompareExchange(ref m_Delegates, ptr, before);
+                    if (previous == before)
                     {
-                        AllocatorManager.Free(m_Allocator, (void*)handler);
+                        // If we reach this point previous is no longer stored in m_Delegates, but other threads
+                        // may still reference it.
+                        // TODO Release handler
+                        AllocatorManager.Free(m_Allocator, (void*)previous);
                         break;
                     }
-                    AllocatorManager.Free(m_Allocator, (void*)temp);
+                    
+                    // Decrease ref count of handler2
+                    AllocatorManager.Free(m_Allocator, (void*)ptr);
                         
                      // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
                 }
             }
 
-            public unsafe void Remove(delegate*<void*, void>* callback)
+            /// <summary>
+            /// Removes a callback from this multi-cast delegate. 
+            /// </summary>
+            /// <remarks>This function may only be used when the delegate is only accessed on a single thread.</remarks>
+            /// <param name="callback">The callback to be removed</param>
+            public unsafe void RemoveFast(delegate*<void*, void> callback)
             {
-                // TODO Implement    
+                var previous = m_Delegates;
+                m_Delegates = (IntPtr)Remove((delegate*<void*, void>*)previous, callback);
+                if (m_Delegates == previous)
+                    return; // callback not found
+                AllocatorManager.Free(m_Allocator, (void*)previous);
+            }
+            
+            public unsafe void Remove(delegate*<void*, void> callback)
+            {;
+                var previous = m_Delegates; // Increase ref count of handler
+                for(;;)
+                {
+                    var before = previous;
+                    var ptr = (IntPtr)Remove((delegate*<void*, void>*)previous, callback);
+                    if (ptr == before)
+                        return; // Not found
+                    previous = Interlocked.CompareExchange(ref m_Delegates, ptr, before);
+                    if (previous == before)
+                    {
+                        AllocatorManager.Free(m_Allocator, (void*)previous);
+                        break;
+                    }
+                    
+                    // Decrease ref count of handler2
+                    AllocatorManager.Free(m_Allocator, (void*)ptr);
+                        
+                    // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
+                }
             }
 
             public unsafe void Invoke(void* arg)
             {
-                void* raw = (void*)m_Delegates;
-                var handlers = (delegate*<void*, void>*)m_Delegates;
-                if (handlers == null)
-                    return;
-
-                // TODO If we encode handlers into the unused bits of the pointer itself up to max point we can avoid
-                //      the null check since n will be zero for null pointer if converted to number
-                int n = *(ushort*)handlers;
-                for (var i=0; i < n; ++i)
-                {
-                    handlers[i+1](arg);
-                }
+                // TODO Would need to increase ref count here
+                var n = Decode(out delegate*<void*, void>* handlers);
+                for (var i = 0; i < n; ++i)
+                    handlers[i](arg);
+                // TODO Would need to decrease ref count here
             }
         }
+
+        // Shared pointer is 2 pointers in size which is why it cannot be atomic
+        // Hence, for thread safe implementation we need to lock. What if we fetch add pointer, then 
 
         private static int m_Counter;
         
@@ -387,29 +485,65 @@ namespace Tests.InputSystem
         }
         
         [Test]
-        public void MulticastDelegate_SingleDelegate()
+        public void MulticastDelegate_RemoveSingle()
         {
-            
+            unsafe
+            {
+                using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
+                x.Add(&AddFn);
+                x.Remove(&AddFn);
+                x.Invoke(null);
+                
+                Assert.That(m_Counter, Is.EqualTo(0));
+            }
+        }
+        
+        [Test]
+        public void MulticastDelegate_RemoveMultiple()
+        {
+            unsafe
+            {
+                using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
+                x.Add(&AddFn);
+                x.Add(&AddFn);
+                x.Remove(&AddFn);
+                x.Remove(&AddFn);
+                x.Invoke(null);
+                
+                Assert.That(m_Counter, Is.EqualTo(0));
+            }
+        }
+        
+        [Test]
+        public void MulticastDelegate_AddOne()
+        {
             unsafe
             {
                 Assert.That(sizeof(delegate*<void*, void>), Is.EqualTo(8));
                 Assert.That(sizeof(delegate*<void*, int, int, int, void>), Is.EqualTo(8));
                 
                 using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
-                //x.Dummy();
-                //Assert.That(() => { x.Dummy(); }, NUnit.Framework.Is.Not.AllocatingGCMemory());
-
                 x.Add(&AddFn);
-                //x.Remove(&AddFn);
-                
-                //Assert.That(() => { x.Add(&AddFn); }, Is.Not.AllocatingGCMemory());
-                
-                //x.Add(&Add);
                 x.Invoke(null);
                 
                 Assert.That(m_Counter, Is.EqualTo(1));
+            }
+        }
+        
+        [Test]
+        public void MulticastDelegate_AddTwo()
+        {
+            unsafe
+            {
+                Assert.That(sizeof(delegate*<void*, void>), Is.EqualTo(8));
+                Assert.That(sizeof(delegate*<void*, int, int, int, void>), Is.EqualTo(8));
                 
+                using var x = new UnsafeMulticastDelegate(AllocatorManager.Persistent);
+                x.Add(&AddFn);
+                x.Add(&AddFn);
+                x.Invoke(null);
                 
+                Assert.That(m_Counter, Is.EqualTo(2));
             }
         }
         
