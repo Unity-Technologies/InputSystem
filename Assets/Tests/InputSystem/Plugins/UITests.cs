@@ -3570,19 +3570,10 @@ internal class UITests : CoreTestsFixture
 #if UNITY_2021_2_OR_NEWER
     [UnityTest]
     [Category("UI")]
-    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1
-#if TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN)
-        , Ignore = "Currently fails on MacOS, MacOS standalone, MacOS standalone IL2CPP player on Unity version 2022.2 CI"
-#endif
-     )]
-    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1
-#if TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX)
-            // temporarily disable this test case on OSX player for 2021.2. It only intermittently works and I don't know why!
-        , Ignore = "Currently fails on OSX IL2CPP player on Unity version 2021.2"
-#endif
-     )]
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS) || (TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN))
+#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
 #endif
 #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
