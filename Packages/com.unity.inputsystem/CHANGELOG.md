@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
+
 ## [1.10.0] - 2024-07-24
 
 ### Fixed
