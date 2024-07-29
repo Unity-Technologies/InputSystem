@@ -30,7 +30,8 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
-
+        // For UI testing purpose
+        internal InputActionAsset currentAssetInEdition => m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;

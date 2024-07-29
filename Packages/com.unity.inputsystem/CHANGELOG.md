@@ -12,9 +12,13 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
+- Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
+
+### Added
+-  Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
 
 ## [1.10.0] - 2024-07-24
 
