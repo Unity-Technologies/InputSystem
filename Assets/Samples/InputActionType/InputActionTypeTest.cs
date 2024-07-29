@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,6 +8,8 @@ public class InputActionTypeTest : MonoBehaviour
 
     InputAction move;
     InputAction colorChange;
+    InputAction moveWithEvents;
+    Vector2 moveValueFromEvent;
 
     // Start is called before the first frame update
     void Start()
@@ -15,6 +18,12 @@ public class InputActionTypeTest : MonoBehaviour
         if (InputSystem.actions)
         {
             move = InputSystem.actions.FindAction("Player/Move");
+            if (move == null)
+            {
+                Debug.Log("Move action not found. Looking for MoveWithEvents");
+                moveWithEvents = InputSystem.actions.FindAction("Player/MoveWithEvents");
+            }
+
             colorChange = InputSystem.actions.FindAction("Player/ColorChange");
         }
         else
@@ -29,6 +38,24 @@ public class InputActionTypeTest : MonoBehaviour
             colorChange.performed += OnColorChangePerformed;
             colorChange.canceled += OnColorChangeCanceled;
         }
+
+        if (moveWithEvents != null)
+        {
+            moveWithEvents.performed += OnMoveWithEventsPerformed;
+            moveWithEvents.canceled += OnMoveWithEventsCanceled;
+        }
+    }
+
+    private void OnMoveWithEventsPerformed(InputAction.CallbackContext ctx)
+    {
+        moveValueFromEvent = ctx.ReadValue<Vector2>();
+        Debug.Log("Device: " + ctx.action.activeControl.device.name + " Move action type performed: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType + " value: " + moveValueFromEvent);
+    }
+
+    private void OnMoveWithEventsCanceled(InputAction.CallbackContext ctx)
+    {
+        moveValueFromEvent = Vector2.zero;
+        Debug.Log("Device: " + ctx.action.activeControl.device.name + " Move action type canceled: " + ctx.action.type + " ctrl type: " + ctx.action.expectedControlType + " value: " + moveValueFromEvent);
     }
 
     private void OnColorChangeStarted(InputAction.CallbackContext ctx)
@@ -57,16 +84,30 @@ public class InputActionTypeTest : MonoBehaviour
             colorChange.performed -= OnColorChangePerformed;
             colorChange.canceled -= OnColorChangeCanceled;
         }
+
+        if (moveWithEvents != null)
+        {
+            moveWithEvents.performed -= OnMoveWithEventsPerformed;
+            moveWithEvents.canceled -= OnMoveWithEventsCanceled;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        // Handle input by polling each frame
+        var moveVal = Vector2.zero;
         if (move != null)
         {
-            var moveVal = move.ReadValue<Vector2>() * 10.0f * Time.deltaTime;
-            cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
+            // Handle input by polling each frame
+            moveVal = move.ReadValue<Vector2>();
         }
+        else if (moveWithEvents != null)
+        {
+            // Handle input by responding to events
+            moveVal = moveValueFromEvent;
+        }
+
+        moveVal *= 10.0f * Time.deltaTime;
+        cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
     }
 }
