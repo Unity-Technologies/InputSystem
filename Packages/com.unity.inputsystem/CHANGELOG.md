@@ -13,6 +13,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
 
+## [1.10.0] - 2024-07-24
+
 ### Fixed
 - Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
 - Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
