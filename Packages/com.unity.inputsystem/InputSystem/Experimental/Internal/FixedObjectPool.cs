@@ -6,6 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// A trivial fixed size pool with best-fit search and free-list defragmentation.
     /// </summary>
     /// <typeparam name="T">The element type.</typeparam>
+    /// <remarks>This class is not thread-safe.</remarks>
     public struct FixedObjectPool<T> 
     {
         private struct Chunk
@@ -102,13 +103,13 @@ namespace UnityEngine.InputSystem.Experimental
                     return;
                 }
                 
-                if (merged) 
-                    return;
-
-                // Insert since left and right is not adjacent
-                Array.Copy(m_FreeList, i, m_FreeList, i + 1, m_Count - i);
-                m_FreeList[i] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
-                ++m_Count;
+                // If not adjacent we insert with insertion sort instead
+                if (!merged)
+                {
+                    Array.Copy(m_FreeList, i, m_FreeList, i + 1, m_Count - i);
+                    m_FreeList[i] = new Chunk() { Offset = segment.Offset, Length = segment.Count };
+                    ++m_Count;    
+                }
                 return;
             }
 
