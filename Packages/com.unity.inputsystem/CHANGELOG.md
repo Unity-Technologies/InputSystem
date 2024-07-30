@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
+
 ## [1.10.0] - 2024-07-24
 
 ### Fixed
