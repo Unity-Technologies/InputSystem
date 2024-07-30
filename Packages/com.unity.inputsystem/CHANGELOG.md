@@ -10,9 +10,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.10.0] - 2024-07-24
+
 ### Fixed
 - Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
 - Fixed selection state preserving after a save operation. [ISXB-966](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-966)
+- Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
+- Fixed an issue when generating C# class of Input Actions that contain an action map named `Debug` [ISXB-851](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-851).
+- Fixed ArgumentNullException thrown when accessing Action's bindings after changing Composite part. [ISXB-494](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-494).
 
 ### Added
 - Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
@@ -23,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added warning messages to both `OnScreenStick` and `OnScreenButton` Inspector editors that would display a warning message in case on-screen control components are added to a `GameObject` not part of a valid UI hierarchy.
 - Changed behavior for internal feature flag relating to Windows Gaming Input to be ignored on non-supported platforms.
 - Changed `DualSenseHIDInputReport` from internal to public visibility
+- Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
 ### Fixed
 - Avoid potential crashes from `NullReferenceException` in `FireStateChangeNotifications`.

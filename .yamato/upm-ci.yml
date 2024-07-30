@@ -247,6 +247,9 @@ publish{% cycle "", "_dryrun" %}:
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
+    - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
+    - upm-pvp require "supported rme" --no-report --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
+    - upm-pvp require "supported rme ./.yamato/PVPexemptions.json" --allow-missing --results upm-ci~/xray    
   artifacts:
     artifacts:
       paths:
