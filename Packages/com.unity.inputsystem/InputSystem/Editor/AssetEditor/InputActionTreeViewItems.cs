@@ -174,10 +174,10 @@ namespace UnityEngine.InputSystem.Editor
             return false;
         }
 
-        public static ActionMapTreeItem AddTo(TreeViewItem parent, SerializedProperty actionMapProperty, int id)
+        public static ActionMapTreeItem AddTo(TreeViewItem parent, SerializedProperty actionMapProperty)
         {
             var item = new ActionMapTreeItem(actionMapProperty);
-            item.id = id;
+
             item.depth = parent.depth + 1;
             item.displayName = item.name;
             parent.AddChild(item);
@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
             for (var i = 0; i < mapCount; ++i)
             {
                 var mapProperty = actionMapsArrayProperty.GetArrayElementAtIndex(i);
-                AddTo(parent, mapProperty, i);
+                AddTo(parent, mapProperty);
             }
         }
     }
