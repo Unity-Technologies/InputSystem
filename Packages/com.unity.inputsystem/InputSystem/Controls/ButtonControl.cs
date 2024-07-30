@@ -103,6 +103,7 @@ namespace UnityEngine.InputSystem.Controls
         /// A button is considered pressed if its value is equal to or greater
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
         /// You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
+        /// </remarks>
         /// <example>
         /// <code>
         /// // Using KeyControl property directly.
@@ -116,9 +117,11 @@ namespace UnityEngine.InputSystem.Controls
         /// ((KeyControl)Keyboard.current["space"]).isPressed
         /// </code>
         /// </example>
+        /// <remarks>
         /// Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         ///
         /// You can also use this to read mouse buttons, as shown in the following examples:
+        /// </remarks>
         /// <example>
         /// <code>
         /// <![CDATA[
@@ -128,8 +131,10 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
+        /// <remarks>
         ///
         /// You can also check through all numbered buttons on the mouse: (this example does not cause allocations)
+        /// </remarks>
         /// <example>
         /// <code>
         /// <![CDATA[
@@ -145,8 +150,10 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
+        /// <remarks>
         ///
         /// Or you can look up controls by name, like this:
+        /// </remarks>
         /// <example>
         /// <code>
         /// <![CDATA[
@@ -154,7 +161,6 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
