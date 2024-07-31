@@ -969,9 +969,11 @@ namespace UnityEngine.InputSystem
         ///
         /// Many IMEs cause this event to fire with a blank string when the composition is submitted or reset, however it is best
         /// not to rely on this behaviour since it is IME dependent.
-        ///
-        /// To subscribe to the onIMECompositionChange event, use the following sample code:
+        /// 
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
+        /// </remarks>
         /// <example>
+        /// To subscribe to the onIMECompositionChange event, use the following sample code:
         /// <code>
         /// var compositionString = "";
         /// Keyboard.current.onIMECompositionChange += composition =>
@@ -980,9 +982,6 @@ namespace UnityEngine.InputSystem
         /// };
         /// </code>
         /// </example>
-        ///
-        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
-        /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
             add

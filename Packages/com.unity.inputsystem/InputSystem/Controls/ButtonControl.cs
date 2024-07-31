@@ -102,9 +102,11 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// A button is considered pressed if its value is equal to or greater
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
-        /// You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
+        /// </remarks>
         /// <example>
+        /// You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:
         /// <code>
+        /// <![CDATA[
         /// // Using KeyControl property directly.
         /// Keyboard.current.spaceKey.isPressed
         /// Keyboard.current.aKey.isPressed // etc.
@@ -114,12 +116,11 @@ namespace UnityEngine.InputSystem.Controls
         ///
         /// // Using key name.
         /// ((KeyControl)Keyboard.current["space"]).isPressed
+        /// ]]>
         /// </code>
-        /// </example>
         /// Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         ///
         /// You can also use this to read mouse buttons, as shown in the following examples:
-        /// <example>
         /// <code>
         /// <![CDATA[
         /// bool leftPressed = Mouse.current.leftButton.isPressed;
@@ -127,10 +128,8 @@ namespace UnityEngine.InputSystem.Controls
         /// bool middlePressed = Mouse.current.middleButton.isPressed;
         /// ]]>
         /// </code>
-        /// </example>
         ///
         /// You can also check through all numbered buttons on the mouse: (this example does not cause allocations)
-        /// <example>
         /// <code>
         /// <![CDATA[
         /// var controls = Mouse.current.allControls;
@@ -144,17 +143,14 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// ]]>
         /// </code>
-        /// </example>
         ///
         /// Or you can look up controls by name, like this:
-        /// <example>
         /// <code>
         /// <![CDATA[
         /// bool leftPressed = ((ButtonControl)Mouse.current["leftButton"]).isPressed;
         /// ]]>
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
@@ -270,10 +266,11 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>True if the current press of the button ended this frame.</value>
         /// <remarks>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
+        /// </remarks>
         /// <example>
+        /// An example showing the use of this property on a gamepad button and a keyboard key:
         /// <code>
-        /// // An example showing the use of this property on a gamepad button and a keyboard key.
-        ///
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
         ///
@@ -287,8 +284,6 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
-        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
-        /// </remarks>
         public bool wasReleasedThisFrame
         {
             get
