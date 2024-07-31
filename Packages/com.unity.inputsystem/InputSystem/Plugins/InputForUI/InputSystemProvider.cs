@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             // This is necessary to ensure that events are dispatched in the correct order.
             // If all events are of the PointerEvents type, sorting is based on reverse order of the EventSource enum.
             // Touch -> Pen -> Mouse.
-            m_Events.Sort(SortEvents);
+            m_Events.Sort((a, b) => SortEvents(a, b));
 
             var currentTime = (DiscreteTime)Time.timeAsRational;
 
