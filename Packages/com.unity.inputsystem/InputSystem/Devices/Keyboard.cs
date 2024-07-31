@@ -969,7 +969,7 @@ namespace UnityEngine.InputSystem
         ///
         /// Many IMEs cause this event to fire with a blank string when the composition is submitted or reset, however it is best
         /// not to rely on this behaviour since it is IME dependent.
-        /// 
+        ///
         /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         /// <example>
