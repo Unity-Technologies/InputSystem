@@ -973,7 +973,7 @@ namespace UnityEngine.InputSystem
         /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         /// <example>
-        /// To subscribe to the onIMECompositionChange event, use the following sample code:
+        /// <para>To subscribe to the onIMECompositionChange event, use the following sample code:</para>
         /// <code>
         /// var compositionString = "";
         /// Keyboard.current.onIMECompositionChange += composition =>
