@@ -435,32 +435,74 @@ namespace UnityEngine.InputSystem.UI
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
                 return;
 
-            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
+            Transform commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
+            Transform pointerParent = ((Component)currentPointerTarget.GetComponentInParent<IPointerExitHandler>())?.transform;
 
             // We walk up the tree until a common root and the last entered and current entered object is found.
             // Then send exit and enter events up to, but not including, the common root.
+            // ** or when !m_SendPointerEnterToParent, stop when meeting a gameobject with an exit event handler
             if (eventData.pointerEnter != null)
             {
-                for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
+                var current = eventData.pointerEnter.transform;
+                while (current != null)
                 {
+                    // if we reach the common root break out!
+                    if (sendPointerHoverToParent && current == commonRoot)
+                        break;
+
+                    // if we reach a PointerExitEvent break out!
+                    if (!sendPointerHoverToParent && current == pointerParent)
+                        break;
+
+                    eventData.fullyExited = current != commonRoot && eventData.pointerEnter != currentPointerTarget;
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
+
+                    if (sendPointerHoverToParent)
+                        current = current.parent;
+
+                    // if we reach the common root break out!
+                    if (current == commonRoot)
+                        break;
+
+                    if (!sendPointerHoverToParent)
+                        current = current.parent;
                 }
             }
 
+            // now issue the enter call up to but not including the common root
+            Transform oldPointerEnter = eventData.pointerEnter?.transform;
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
-                for (var current = currentPointerTarget.transform;
-                     current != null && current != commonRoot && !PointerShouldIgnoreTransform(current);
-                     current = current.parent)
+                Transform current = currentPointerTarget.transform;
+                while (current != null && !PointerShouldIgnoreTransform(current))
                 {
+                    eventData.reentered = current == commonRoot && current != oldPointerEnter;
+                    // if we are sending the event to parent, they are already in hover mode at that point. No need to bubble up the event.
+                    if (sendPointerHoverToParent && eventData.reentered)
+                        break;
+
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
                     #if UNITY_2021_1_OR_NEWER
                     if (wasMoved)
                         ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
                     #endif
                     eventData.hovered.Add(current.gameObject);
+
+                    // stop when encountering an object with the pointerEnterHandler
+                    if (!sendPointerHoverToParent && current.GetComponent<IPointerEnterHandler>() != null)
+                        break;
+
+                    if (sendPointerHoverToParent)
+                        current = current.parent;
+
+                    // if we reach the common root break out!
+                    if (current == commonRoot)
+                        break;
+
+                    if (!sendPointerHoverToParent)
+                        current = current.parent;
                 }
             }
         }
@@ -2419,6 +2461,15 @@ namespace UnityEngine.InputSystem.UI
         private NavigationModel m_NavigationState;
 
         [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
+
+#if UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT
+        // Needed for testing.
+        internal new bool sendPointerHoverToParent
+        {
+            get => base.sendPointerHoverToParent;
+            set => base.sendPointerHoverToParent = value;
+        }
+#endif
 
         /// <summary>
         /// Controls the origin point of raycasts when the cursor is locked.
