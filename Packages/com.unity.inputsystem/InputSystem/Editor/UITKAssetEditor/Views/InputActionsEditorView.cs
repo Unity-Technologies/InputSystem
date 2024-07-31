@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.PackagePath +
                 InputActionsEditorConstants.ResourcesPath +
                 InputActionsEditorConstants.MainEditorViewNameUxml);
-
+    
             mainEditorAsset.CloneTree(root);
             var actionsTreeView = new ActionsTreeView(root, stateContainer);
             CreateChildView(new ActionMapsView(root, stateContainer));

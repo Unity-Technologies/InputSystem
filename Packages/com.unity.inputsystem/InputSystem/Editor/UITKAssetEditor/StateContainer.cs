@@ -13,10 +13,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private VisualElement m_RootVisualElement;
         private InputActionsEditorState m_State;
+        public readonly string assetGUID;
 
-        public StateContainer(InputActionsEditorState initialState)
+        public StateContainer(InputActionsEditorState initialState, string assetGUID)
         {
             m_State = initialState;
+            this.assetGUID = assetGUID;
         }
 
         public void Dispatch(Command command)

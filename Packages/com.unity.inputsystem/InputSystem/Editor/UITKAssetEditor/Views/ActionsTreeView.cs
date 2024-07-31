@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
             m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
-            m_ActionsTreeView.viewDataKey = "InputActionTreeView";
+            m_ActionsTreeView.viewDataKey = $"InputActionTreeView_{stateContainer.assetGUID}";
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
             m_ActionsTreeView.selectionType = UIElements.SelectionType.Single;
             m_ActionsTreeView.makeItem = () => new InputActionsTreeViewItem();

@@ -225,7 +225,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_State.m_Analytics == null)
                 m_State.m_Analytics = m_Analytics;
 
-            m_StateContainer = new StateContainer(m_State);
+            m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();
