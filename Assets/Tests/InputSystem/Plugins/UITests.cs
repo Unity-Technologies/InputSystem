@@ -117,6 +117,7 @@ internal class UITests : CoreTestsFixture
     public override void Setup()
     {
         base.Setup();
+        Screen.SetResolution(640, 480, FullScreenMode.Windowed);
     }
 
     private static TestObjects CreateUIScene()
@@ -3589,6 +3590,7 @@ internal class UITests : CoreTestsFixture
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
         Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+        AsyncOperation sceneUnloadOperation;
 
         try
         {
@@ -3675,7 +3677,7 @@ internal class UITests : CoreTestsFixture
             // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
             BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
-            Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 0");
+            Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
             Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
             Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
 
@@ -3706,8 +3708,9 @@ internal class UITests : CoreTestsFixture
         }
         finally
         {
-            SceneManager.UnloadSceneAsync(scene);
+            sceneUnloadOperation = SceneManager.UnloadSceneAsync(scene);
         }
+        yield return sceneUnloadOperation;
 
         // Wait for unload to complete.
         yield return null;
