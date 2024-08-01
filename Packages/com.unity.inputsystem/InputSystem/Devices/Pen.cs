@@ -98,8 +98,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(32)]
         public ushort buttons;
 
-        // Not currently used, but still needed in this struct for padding,
-        // as il2cpp does not implement FieldOffset.
+        /// <summary>
+        /// The index of the display that was touched.
+        /// </summary>
+        [InputControl(name = "displayIndex", displayName = "Display Index", layout = "Integer")]
         [FieldOffset(34)]
         ushort displayIndex;
 
@@ -379,6 +381,7 @@ namespace UnityEngine.InputSystem
             inRange = GetChildControl<ButtonControl>("inRange");
             tilt = GetChildControl<Vector2Control>("tilt");
             twist = GetChildControl<AxisControl>("twist");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             base.FinishSetup();
         }
     }
