@@ -20,7 +20,7 @@
                     "id": "6c2ab1b8-8984-453a-af3d-a3c78ae1679a",
                     "expectedControlType": "Analog",
                     "processors": "",
-                    "interactions": "",
+                    "interactions": "Change",
                     "initialStateCheck": true
                 },
                 {
@@ -225,7 +225,7 @@
                     "name": "",
                     "id": "0ccc5c94-6bd8-428d-ac4d-c46d769dec16",
                     "path": "<Gamepad>/leftTrigger",
-                    "interactions": "",
+                    "interactions": "Change",
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Jump",

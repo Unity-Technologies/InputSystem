@@ -64,6 +64,7 @@ public class InputActionTypeTest : MonoBehaviour
 
     void JumpReset(InputAction.CallbackContext obj)
     {
+        Debug.Log("Reset Jump");
         m_previousPressedValue = 0.0f;
 
         m_pressDescent = false;
@@ -85,7 +86,7 @@ public class InputActionTypeTest : MonoBehaviour
                 Debug.Log("Press Interaction performed. Press point: " + pressInteraction.pressPoint);
                 m_CubeRigidbody.AddForce(Vector3.up * forceJump, ForceMode.Impulse);
                 break;
-            default:
+            case ChangeInteraction:
                 var pressedValue = ctx.ReadValue<float>();
                 Debug.Log("Pressed Value: " + pressedValue + " Previous Pressed Value: " + m_previousPressedValue);
 
