@@ -9,18 +9,27 @@
                     "name": "Move",
                     "type": "Value",
                     "id": "351f2ccd-1f9f-44bf-9bec-d62ac5c5f408",
-                    "expectedControlType": "Vector2",
+                    "expectedControlType": "Analog",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
                 },
                 {
                     "name": "ColorChange",
-                    "type": "PassThrough",
+                    "type": "Value",
                     "id": "6c2ab1b8-8984-453a-af3d-a3c78ae1679a",
                     "expectedControlType": "Analog",
                     "processors": "",
-                    "interactions": "Press",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Jump",
+                    "type": "Value",
+                    "id": "87d6c5be-122d-4f9e-9ee1-66e4efba2005",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
                     "initialStateCheck": true
                 }
             ],
@@ -214,12 +223,23 @@
                 },
                 {
                     "name": "",
-                    "id": "24c418e8-be3f-4a1d-bfb2-81ee96af9a3a",
+                    "id": "0ccc5c94-6bd8-428d-ac4d-c46d769dec16",
                     "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e45bcf69-b5fc-416d-b63b-b749d6ce852b",
+                    "path": "<Keyboard>/space",
+                    "interactions": "Tap,SlowTap",
+                    "processors": "",
                     "groups": "",
-                    "action": "ColorChange",
+                    "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

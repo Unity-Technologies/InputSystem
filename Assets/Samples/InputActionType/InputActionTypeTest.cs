@@ -1,19 +1,27 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
 public class InputActionTypeTest : MonoBehaviour
 {
     [SerializeField] public GameObject cube;
+    public int forceJump = 5;
+
+    Rigidbody m_CubeRigidbody;
+    float m_previousPressedValue = 0.0f;
+    bool  m_pressDescent = false;
 
     InputAction move;
     InputAction colorChange;
     InputAction moveWithEvents;
+    InputAction jump;
     Vector2 moveValueFromEvent;
 
     // Start is called before the first frame update
     void Start()
     {
+        m_CubeRigidbody = cube.GetComponent<Rigidbody>();
         // Project-Wide Actions
         if (InputSystem.actions)
         {
@@ -25,6 +33,7 @@ public class InputActionTypeTest : MonoBehaviour
             }
 
             colorChange = InputSystem.actions.FindAction("Player/ColorChange");
+            jump = InputSystem.actions.FindAction("Player/Jump");
         }
         else
         {
@@ -43,6 +52,62 @@ public class InputActionTypeTest : MonoBehaviour
         {
             moveWithEvents.performed += OnMoveWithEventsPerformed;
             moveWithEvents.canceled += OnMoveWithEventsCanceled;
+        }
+
+        if (jump != null)
+        {
+            jump.started += JumpReset;
+            jump.canceled += JumpReset;
+            jump.performed += JumpProcess;
+        }
+    }
+
+    void JumpReset(InputAction.CallbackContext obj)
+    {
+        m_previousPressedValue = 0.0f;
+
+        m_pressDescent = false;
+    }
+
+    void JumpProcess(InputAction.CallbackContext ctx)
+    {
+        switch (ctx.interaction)
+        {
+            case TapInteraction:
+                Debug.Log("Tap Interaction performed. Jumping...");
+                m_CubeRigidbody.AddForce(Vector3.up * forceJump, ForceMode.Impulse);
+                break;
+            case SlowTapInteraction:
+                Debug.Log("Slow Tap Interaction performed. Jumping HIGHER...");
+                m_CubeRigidbody.AddForce(Vector3.up * forceJump * 2, ForceMode.Impulse);
+                break;
+            case PressInteraction pressInteraction:
+                Debug.Log("Press Interaction performed. Press point: " + pressInteraction.pressPoint);
+                m_CubeRigidbody.AddForce(Vector3.up * forceJump, ForceMode.Impulse);
+                break;
+            default:
+                var pressedValue = ctx.ReadValue<float>();
+                Debug.Log("Pressed Value: " + pressedValue + " Previous Pressed Value: " + m_previousPressedValue);
+
+                if (m_previousPressedValue >= pressedValue && m_pressDescent == false)
+                {
+                    m_pressDescent = true;
+                    Debug.Log("Previous is bigger: " + m_previousPressedValue + " Current: " + pressedValue);
+                    if (m_previousPressedValue >= 0.9f)
+                    {
+                        m_CubeRigidbody.AddForce(Vector3.up * forceJump * 2, ForceMode.Impulse);
+                        Debug.Log("Stronger Press Interaction performed . Jumping HIGHER...");
+                    }
+                    else if (m_previousPressedValue >= 0.2f)
+                    {
+                        m_CubeRigidbody.AddForce(Vector3.up * forceJump, ForceMode.Impulse);
+                        Debug.Log("Medium Press Interaction performed. Jumping...");
+                    }
+                }
+                // Debug.Log("Update previous and descent is: " + m_pressDescent);
+                m_previousPressedValue = pressedValue;
+
+                break;
         }
     }
 
@@ -89,6 +154,13 @@ public class InputActionTypeTest : MonoBehaviour
         {
             moveWithEvents.performed -= OnMoveWithEventsPerformed;
             moveWithEvents.canceled -= OnMoveWithEventsCanceled;
+        }
+
+        if (jump != null)
+        {
+            jump.performed -= JumpProcess;
+            jump.started -= JumpReset;
+            jump.canceled -= JumpReset;
         }
     }
 
