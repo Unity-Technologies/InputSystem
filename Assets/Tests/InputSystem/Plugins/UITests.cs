@@ -3590,7 +3590,6 @@ internal class UITests : CoreTestsFixture
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
         Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
-        AsyncOperation sceneUnloadOperation;
 
         try
         {
@@ -3708,9 +3707,8 @@ internal class UITests : CoreTestsFixture
         }
         finally
         {
-            sceneUnloadOperation = SceneManager.UnloadSceneAsync(scene);
+            SceneManager.UnloadSceneAsync(scene);
         }
-        yield return sceneUnloadOperation;
 
         // Wait for unload to complete.
         yield return null;
