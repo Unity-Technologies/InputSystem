@@ -540,7 +540,6 @@ namespace UnityEngine.InputSystem
                     // Otherwise, if we have more than one bound control or have several bindings and one of them
                     // is a composite, we enable it.
                     var isPassThroughAction = action.type == InputActionType.PassThrough;
-                    var isButtonAction = action.type == InputActionType.Button;
                     var mayNeedConflictResolution = !isPassThroughAction && numPossibleConcurrentActuations > 1;
 
                     // Initialize initial trigger state.
@@ -552,7 +551,6 @@ namespace UnityEngine.InputSystem
                         controlIndex = InputActionState.kInvalidIndex,
                         interactionIndex = InputActionState.kInvalidIndex,
                         isPassThrough = isPassThroughAction,
-                        isButton = isButtonAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
                         bindingIndex = firstBindingIndexForAction
                     };

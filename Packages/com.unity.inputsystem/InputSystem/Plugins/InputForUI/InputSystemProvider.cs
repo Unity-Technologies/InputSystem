@@ -586,7 +586,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void RegisterNextPreviousAction()
         {
-            m_NextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
+            m_NextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Value);
             // TODO add more default bindings, or make them configurable
             m_NextPreviousAction.AddBinding("<Keyboard>/tab");
             m_NextPreviousAction.Enable();

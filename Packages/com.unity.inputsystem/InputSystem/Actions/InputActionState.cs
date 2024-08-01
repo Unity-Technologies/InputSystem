@@ -1441,7 +1441,6 @@ namespace UnityEngine.InputSystem
                         time = time,
                         startTime = time,
                         isPassThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].isPassThrough,
-                        isButton = actionIndex != kInvalidIndex && actionStates[actionIndex].isButton,
                     };
 
                     // If we have pending initial state checks that will run in the next update,
@@ -1552,9 +1551,7 @@ namespace UnityEngine.InputSystem
         private void ProcessButtonState(ref TriggerState trigger, int actionIndex, BindingState* bindingStatePtr)
         {
             var control = controls[trigger.controlIndex];
-            var pressPoint = control.isButton
-                ? ((ButtonControl)control).pressPointOrDefault
-                : ButtonControl.s_GlobalDefaultButtonPressPoint;
+            var pressPoint = ButtonControl.s_GlobalDefaultButtonPressPoint;
 
             // NOTE: This method relies on conflict resolution happening *first*. Otherwise, we may inadvertently
             //       detect a "release" from a control that is not actually driving the action.
@@ -1929,32 +1926,17 @@ namespace UnityEngine.InputSystem
                             phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
                         break;
                     }
-                    // Button actions need to cross the button-press threshold.
-                    if (trigger.isButton)
-                    {
-                        var actuation = trigger.magnitude;
-                        if (actuation > 0)
-                            ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
-                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
-                        if (actuation >= threshold)
-                        {
-                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                                phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
-                        }
-                    }
-                    else
-                    {
-                        // Value-type action.
-                        // Ignore if the control has not crossed its actuation threshold.
-                        if (IsActuated(ref trigger))
-                        {
-                            ////REVIEW: Why is it we don't stay in performed but rather go back to started all the time?
 
-                            // Go into started, then perform and then go back to started.
-                            ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
-                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                                phaseAfterPerformedOrCanceled: InputActionPhase.Started);
-                        }
+                    // Value-type action.
+                    // Ignore if the control has not crossed its actuation threshold.
+                    if (IsActuated(ref trigger))
+                    {
+                        ////REVIEW: Why is it we don't stay in performed but rather go back to started all the time?
+
+                        // Go into started, then perform and then go back to started.
+                        ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
+                        ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
                     }
 
                     break;
@@ -1962,61 +1944,23 @@ namespace UnityEngine.InputSystem
 
                 case InputActionPhase.Started:
                 {
-                    if (actionState->isButton)
+                    if (!IsActuated(ref trigger))
                     {
-                        var actuation = trigger.magnitude;
-                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
-                        if (actuation >= threshold)
-                        {
-                            // Button crossed press threshold. Perform.
-                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                                phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
-                        }
-                        else if (Mathf.Approximately(actuation, 0))
-                        {
-                            // Button is no longer actuated. Never reached threshold to perform.
-                            // Cancel.
-                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
-                        }
+                        // Control went back to below actuation threshold. Cancel interaction.
+                        ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
                     }
                     else
                     {
-                        if (!IsActuated(ref trigger))
-                        {
-                            // Control went back to below actuation threshold. Cancel interaction.
-                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
-                        }
-                        else
-                        {
-                            // Control changed value above magnitude threshold. Perform and remain started.
-                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                                phaseAfterPerformedOrCanceled: InputActionPhase.Started);
-                        }
+                        // Control changed value above magnitude threshold. Perform and remain started.
+                        ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
                     }
                     break;
                 }
 
                 case InputActionPhase.Performed:
                 {
-                    if (actionState->isButton)
-                    {
-                        var actuation = trigger.magnitude;
-                        var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
-                        if (Mathf.Approximately(0f, actuation))
-                        {
-                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
-                        }
-                        else
-                        {
-                            var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
-                            if (actuation <= threshold)
-                            {
-                                // Button released to below threshold but not fully released.
-                                ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
-                            }
-                        }
-                    }
-                    else if (actionState->isPassThrough)
+                    if (actionState->isPassThrough)
                     {
                         ////REVIEW: even for pass-through actions, shouldn't we cancel when seeing a default value?
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
@@ -3841,21 +3785,6 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            /// <summary>
-            /// Whether the action associated with the trigger state is a button-type action.
-            /// </summary>
-            /// <seealso cref="InputActionType.Button"/>
-            public bool isButton
-            {
-                get => (flags & Flags.Button) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.Button;
-                    else
-                        flags &= ~Flags.Button;
-                }
-            }
 
             public bool isPressed
             {

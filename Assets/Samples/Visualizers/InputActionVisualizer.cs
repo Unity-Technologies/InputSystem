@@ -169,13 +169,6 @@ namespace UnityEngine.InputSystem.Samples
                 case Visualization.Value:
                     switch (m_Action.type)
                     {
-                        case InputActionType.Button:
-                            m_Visualizer = new VisualizationHelpers.ScalarVisualizer<float>
-                            {
-                                limitMax = 1
-                            };
-                            break;
-
                         case InputActionType.Value:
                         case InputActionType.PassThrough:
                             if (!string.IsNullOrEmpty(m_Action.expectedControlType))

@@ -126,8 +126,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var context = new Context(asset, reporter, DefaultReportPolicy);
             context.Verify(actionNameOrId: config.PointAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
             context.Verify(actionNameOrId: config.MoveAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
-            context.Verify(actionNameOrId: config.SubmitAction, actionType: InputActionType.Button, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.CancelAction, actionType: InputActionType.Button, expectedControlType: "Button");
             context.Verify(actionNameOrId: config.LeftClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
             context.Verify(actionNameOrId: config.MiddleClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
             context.Verify(actionNameOrId: config.RightClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");

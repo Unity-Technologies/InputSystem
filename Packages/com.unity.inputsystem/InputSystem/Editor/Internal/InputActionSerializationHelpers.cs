@@ -224,9 +224,9 @@ namespace UnityEngine.InputSystem.Editor
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
-            actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Button;  // Default to creating button actions.
+            actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Value;  // Default to creating Value actions.
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-            actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = "Button";
+            actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = "Any";
             actionProperty.FindPropertyRelative("m_Flags").intValue = 0;
             actionProperty.FindPropertyRelative("m_Interactions").stringValue = "";
             actionProperty.FindPropertyRelative("m_Processors").stringValue = "";

@@ -1577,18 +1577,6 @@ namespace UnityEngine.InputSystem
                 InputActionType actionType = default;
                 if (!string.IsNullOrEmpty(type))
                     actionType = (InputActionType)Enum.Parse(typeof(InputActionType), type, true);
-                else
-                {
-                    // Old format that doesn't have type. Try to infer from settings.
-
-                    if (passThrough)
-                        actionType = InputActionType.PassThrough;
-                    else if (initialStateCheck)
-                        actionType = InputActionType.Value;
-                    else if (!string.IsNullOrEmpty(expectedControlType) &&
-                             (expectedControlType == "Button" || expectedControlType == "Key"))
-                        actionType = InputActionType.Button;
-                }
 
                 return new InputAction(actionName ?? name, actionType)
                 {

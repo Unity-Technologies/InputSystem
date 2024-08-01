@@ -38,10 +38,14 @@ namespace UnityEngine.InputSystem.Editor
 
             rootElement.Clear();
 
-            var actionType = new EnumField("Action Type", inputAction.type)
+            var actionType = new Toggle("Passthrough")
             {
-                tooltip = inputAction.actionTypeTooltip
+                tooltip = "If enabled, the action will process events from all action bindings. If disabled, the action will only process events from the first action binding that matches the current control scheme."
             };
+
+            actionType.SetValueWithoutNotify(inputAction.type == InputActionType.PassThrough);
+
+            //TODO: fix this, workaround to remove the "Button" option from the dropdown
 
             // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
             var actionLabel = actionType.Q<Label>();
@@ -50,58 +54,38 @@ namespace UnityEngine.InputSystem.Editor
 
             actionType.RegisterValueChangedCallback(evt =>
             {
-                Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
+                var actionTypeValue = evt.newValue ? InputActionType.PassThrough : InputActionType.Value;
+
+                Dispatch(Commands.ChangeActionType(inputAction, actionTypeValue));
             });
             rootElement.Add(actionType);
 
-            if (inputAction.type != InputActionType.Button)
+            var controlTypes = viewState.Item2;
+            var controlType = new DropdownField("Control Type");
+
+            // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
+            var controlLabel = controlType.Q<Label>();
+            controlLabel.style.minWidth = m_DropdownLabelWidth;
+            controlLabel.style.width = m_DropdownLabelWidth;
+
+            controlType.choices.Clear();
+            controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
+            var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
+            //if type changed and index is -1 clamp to 0, prevent overflowing indices
+            controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
+            controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
+            controlType.tooltip = inputAction.expectedControlTypeTooltip;
+
+            controlType.RegisterValueChangedCallback(evt =>
             {
-                var controlTypes = viewState.Item2;
-                var controlType = new DropdownField("Control Type");
-
-                // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
-                var controlLabel = controlType.Q<Label>();
-                controlLabel.style.minWidth = m_DropdownLabelWidth;
-                controlLabel.style.width = m_DropdownLabelWidth;
-
-                controlType.choices.Clear();
-                controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
-                var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
-                //if type changed and index is -1 clamp to 0, prevent overflowing indices
-                controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
-                controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
-                controlType.tooltip = inputAction.expectedControlTypeTooltip;
-
-                controlType.RegisterValueChangedCallback(evt =>
-                {
-                    Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
-                });
-
-                // ISX-1916 - When changing ActionType to a non-Button type, we must also update the ControlType
-                // to the currently selected value; the ValueChangedCallback is not fired in this scenario.
                 Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
+            });
 
-                rootElement.Add(controlType);
-            }
-            else
-            {
-                // ISX-1916 - When changing ActionType to a Button, we must also reset the ControlType
-                Dispatch(Commands.ChangeActionControlType(inputAction, 0));
-            }
+            // ISX-1916 - When changing ActionType to a non-Button type, we must also update the ControlType
+            // to the currently selected value; the ValueChangedCallback is not fired in this scenario.
+            Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
 
-            if (inputAction.type != InputActionType.Value)
-            {
-                var initialStateCheck = new Toggle("Initial State Check")
-                {
-                    tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
-                };
-                initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
-                initialStateCheck.RegisterValueChangedCallback(evt =>
-                {
-                    Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
-                });
-                rootElement.Add(initialStateCheck);
-            }
+            rootElement.Add(controlType);
         }
     }
 }

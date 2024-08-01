@@ -1540,8 +1540,6 @@ namespace UnityEngine.InputSystem
                 //       of derived layouts may share the same control type.
                 if (!string.IsNullOrEmpty(action.expectedControlType))
                     WithExpectedControlType(action.expectedControlType);
-                else if (action.type == InputActionType.Button)
-                    WithExpectedControlType("Button");
 
                 return this;
             }

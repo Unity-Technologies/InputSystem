@@ -249,10 +249,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (!string.IsNullOrEmpty(expectedControlType))
                     return expectedControlType;
 
-                var type = property.FindPropertyRelative("m_Type").intValue;
-                if (type == (int)InputActionType.Button)
-                    return "Button";
-
                 return null;
             }
         }

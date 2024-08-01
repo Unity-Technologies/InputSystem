@@ -42,8 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(controlType))
                 return controlType;
 
-            var actionType = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
-            return actionType == (int)InputActionType.Button ? "Button" : null;
+            return null;
         }
 
         private static bool ReadInitialStateCheck(SerializedProperty serializedProperty)
