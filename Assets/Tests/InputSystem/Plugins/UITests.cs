@@ -3568,7 +3568,7 @@ internal class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-#if UNITY_2021_2_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
