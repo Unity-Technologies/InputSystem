@@ -49,17 +49,14 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginChangeCheck();
 
             m_SelectedActionType = EditorGUILayout.EnumPopup(s_ActionTypeLabel, m_SelectedActionType);
-            if ((InputActionType)m_SelectedActionType != InputActionType.Button)
-                m_SelectedControlType = EditorGUILayout.Popup(s_ControlTypeLabel, m_SelectedControlType, m_ControlTypeOptions);
+
 
             if ((InputActionType)m_SelectedActionType != InputActionType.Value)
                 m_WantsInitialStateCheck = EditorGUILayout.Toggle(s_WantsInitialStateCheckLabel, m_WantsInitialStateCheck);
 
             if (EditorGUI.EndChangeCheck())
             {
-                if ((InputActionType)m_SelectedActionType == InputActionType.Button)
-                    m_ExpectedControlTypeProperty.stringValue = "Button";
-                else if (m_SelectedControlType == 0)
+                if (m_SelectedControlType == 0)
                     m_ExpectedControlTypeProperty.stringValue = string.Empty;
                 else
                     m_ExpectedControlTypeProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
