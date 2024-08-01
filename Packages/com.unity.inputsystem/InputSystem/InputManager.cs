@@ -1945,11 +1945,12 @@ namespace UnityEngine.InputSystem
             #endif
 
             // Register interactions.
+            interactions.AddTypeRegistration("Change", typeof(ChangeInteraction));
+            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
             interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
-            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
