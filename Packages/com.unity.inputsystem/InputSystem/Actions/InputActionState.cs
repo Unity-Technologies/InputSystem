@@ -1531,7 +1531,12 @@ namespace UnityEngine.InputSystem
                     // essentially bypasses the default phase progression logic of an action.
                     // Interactions are skipped if compositeAlreadyTriggered is set.
                     var interactionCount = bindingStatePtr->interactionCount;
-                    if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite && !compositeAlreadyTriggered)
+                    // else if (!haveInteractionsOnComposite && !isConflictingInput && !compositeAlreadyTriggered)
+                    //TODO: Needs revision now that ProcessDefaultInteractions doesn't exist
+                    if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite
+                        && !haveInteractionsOnComposite
+                        && !isConflictingInput &&
+                        !compositeAlreadyTriggered)
                     {
                         ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
                     }
