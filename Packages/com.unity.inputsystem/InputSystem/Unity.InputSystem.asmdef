@@ -100,7 +100,7 @@
         },
         {
             "name": "Unity",
-            "expression": "6000.0.16",
+            "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         }
     ],
