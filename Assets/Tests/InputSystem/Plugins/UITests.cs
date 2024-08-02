@@ -3574,12 +3574,6 @@ internal class UITests : CoreTestsFixture
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-    [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-#endif
-#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-    [Ignore("Disabled to make test suite pass on Linux")]
-#endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
     {
