@@ -94,6 +94,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Started"/>
         public bool isStarted => phase == InputActionPhase.Started;
 
+
+        public bool isPerformed => phase == InputActionPhase.Performed;
+
         /// <summary>
         /// Compute the current level of control actuation.
         /// </summary>

@@ -16,12 +16,20 @@ namespace UnityEngine.InputSystem.Interactions
 
         public void Process(ref InputInteractionContext context)
         {
+            if (context.action.type == InputActionType.PassThrough)
+            {
+                // Don't check for actuation on pass-through actions and perform for every value changed
+                context.PerformedAndStayStarted();
+                return;
+            }
+
             var magnitude = context.ComputeMagnitude();
             if (IsActuated(magnitude))
             {
                 if (context.isWaiting)
                 {
                     context.Started();
+                    context.PerformedAndStayPerformed();
                 }
                 else
                 {
@@ -30,7 +38,11 @@ namespace UnityEngine.InputSystem.Interactions
             }
             else
             {
-                context.Canceled();
+                if (context.isStarted || context.isPerformed)
+                {
+                    // Cancel the action if it was started/performed and put it back to Waiting
+                    context.Canceled();
+                }
             }
         }
 
