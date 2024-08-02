@@ -10,7 +10,7 @@ public class InputActionTypeTest : MonoBehaviour
 
     Rigidbody m_CubeRigidbody;
     float m_previousPressedValue = 0.0f;
-    bool  m_pressDescent = false;
+    bool  m_ControlReleased = false;
 
     InputAction move;
     InputAction colorChange;
@@ -67,7 +67,7 @@ public class InputActionTypeTest : MonoBehaviour
         Debug.Log("Reset Jump");
         m_previousPressedValue = 0.0f;
 
-        m_pressDescent = false;
+        m_ControlReleased = false;
     }
 
     void JumpProcess(InputAction.CallbackContext ctx)
@@ -87,12 +87,17 @@ public class InputActionTypeTest : MonoBehaviour
                 m_CubeRigidbody.AddForce(Vector3.up * forceJump, ForceMode.Impulse);
                 break;
             case ChangeInteraction:
+                // Demo of how ChangeInteraction can be used to process specific logic
+                // I didn't find a way to have this logic just with an existing interaction so decided
+                // to build one
                 var pressedValue = ctx.ReadValue<float>();
                 Debug.Log("Pressed Value: " + pressedValue + " Previous Pressed Value: " + m_previousPressedValue);
 
-                if (m_previousPressedValue >= pressedValue && m_pressDescent == false)
+                // Only perform the jump on a release of the trigger
+                // This means the previous value was higher than the current value
+                if (m_previousPressedValue >= pressedValue && m_ControlReleased == false)
                 {
-                    m_pressDescent = true;
+                    m_ControlReleased = true;
                     Debug.Log("Previous is bigger: " + m_previousPressedValue + " Current: " + pressedValue);
                     if (m_previousPressedValue >= 0.9f)
                     {
@@ -105,7 +110,6 @@ public class InputActionTypeTest : MonoBehaviour
                         Debug.Log("Medium Press Interaction performed. Jumping...");
                     }
                 }
-                // Debug.Log("Update previous and descent is: " + m_pressDescent);
                 m_previousPressedValue = pressedValue;
 
                 break;
