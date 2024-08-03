@@ -36,12 +36,15 @@ namespace Tests.InputSystem.Experimental
         {
             unsafe
             {
-                //using var x = new UnsafeMulticastDelegate();
-                //x.Invoke(null);
-
-                using var sut = new UnsafeEventHandler<int>();
-                sut.Invoke(5);
+                using var x = new UnsafeMulticastDelegate();
+                x.Invoke(null);
             }
+        }
+
+        [Test]
+        public void Callback()
+        {
+            UnsafeDelegate<int> d = new UnsafeDelegate<int>();
         }
         
         // TODO Reports leak
@@ -144,6 +147,15 @@ namespace Tests.InputSystem.Experimental
                 Assert.That(s.value.counter, Is.EqualTo(1));
                 
                 s.value.d.Dispose();
+            }
+        }
+
+        [Test]
+        public void Xxxx()
+        {
+            unsafe
+            {
+                //using var d = new UnsafeDelegate()
             }
         }
     }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using UnityEngine.InputSystem.Utilities;
 
 // TODO See comments in header
 // TODO Should we be allowed to construct a node that isn't properly connected? E.g. null source.
@@ -127,65 +128,33 @@ namespace UnityEngine.InputSystem.Experimental
 
         private unsafe struct State
         {
-            public UnsafeEventHandler<bool> onNext;
+            public UnsafeEventHandler<InputEvent> onNext;
             public bool previousValue;
 
-            /*public static IntPtr Create(Context context, bool previousValue, UnsafeDelegate<bool> onNext)
-            {
-                var state = context.Allocate<State>();
-                state->onNext.Add(onNext);
-                state->previousValue = previousValue;
-                return (IntPtr)state;
-            }*/
+            public static delegate*<bool, void*, void> Next = &OnNext;
             
-            public void OnNext(bool value)
+            public static void OnNext(bool value, void* state)
             {
-                onNext.Invoke(value);
+                var s = (State*)state;
+                if (s->previousValue == value)
+                    return;
+                if (value)
+                    s->onNext.Invoke(new InputEvent());
+                s->previousValue = value;
             }
-        }
-
-        public struct UnsafeSubscription : IDisposable
-        {
-            private IntPtr m_EventHandler; // TODO Consider if this should be a pointer to event handler to modify state?!
-            private readonly IntPtr m_Callback;
-            
-            internal UnsafeSubscription(IntPtr eventHandler, IntPtr callback) 
-            {
-                m_EventHandler = eventHandler;
-                m_Callback = callback;
-            }
-            
-            public void Dispose()
-            {
-                UnsafeDelegate.Remove(ref m_EventHandler, m_Callback);
-            }
-        }
-
-        private static unsafe void Process(bool value, ref State state)
-        {
-            if (state.previousValue == value)
-                return;
-            if (value)
-                state.OnNext(value);
-            state.previousValue = value;
         }
         
-        private static unsafe void Process(bool value, void* state)
-        {
-            Process(value, (State*)state);
-        }
-        
-        public unsafe UnsafeSubscription Subscribe(Context context, delegate*<bool, void*> observer, void* observerState) // TODO Should take observer (receiver)?
+        public unsafe UnsafeSubscription Subscribe(Context context, delegate*<InputEvent, void> observer, void* observerState) // TODO Should take observer (receiver)?
         {
             // Initialize state
             var state = context.Allocate<State>();
             state->previousValue = false;
             
-            // Subscribe to dependencies
-            // m_Source.Subscribe(context, &Process, state);
+            // Subscribe to dependencies and make them invoke OnNext
+            // m_Source.Subscribe(context, &OnNext, state); // TODO We cannot put this into an interface and keep type safety, need type erasure on value, we can its IUnsafeObservable<T>
             
             // Add observer to callback list
-            //state->onNext.Add(onNext); // TODO Capture observer state with this callback
+            state->onNext.Add(new UnsafeDelegate<InputEvent>(observer, observerState)); // TODO Capture observer state with this callback
             
             //delegate*<bool, void*, void> next = &Process;
             //return new UnsafeSubscription(, onNext.ToIntPtr()); // TODO Need to be able unregister onNext from state
