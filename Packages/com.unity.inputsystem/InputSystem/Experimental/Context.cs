@@ -2,6 +2,8 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Rendering.VirtualTexturing;
 
@@ -39,6 +41,7 @@ namespace UnityEngine.InputSystem.Experimental
         
         private readonly int m_Handle;
         
+        private AllocatorManager.AllocatorHandle m_Allocator;
         private readonly Dictionary<Usage, StreamContext> m_StreamContexts; // Tracks observed usages/streams.
         private readonly Dictionary<Usage, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
         private readonly EventStream m_Events;                              // Shared system queue of observable events.
@@ -80,6 +83,30 @@ namespace UnityEngine.InputSystem.Experimental
             }
             return -1;
         }*/
+
+        // TODO Consider exposing only allocator or only allocation functions
+        
+        public ref AllocatorManager.AllocatorHandle allocator => ref m_Allocator;
+
+        public unsafe void* Allocate(int sizeOf, int alignOf, int items = 1)
+        {
+            return m_Allocator.Allocate(sizeOf, alignOf, items);
+        }
+
+        public unsafe T* Allocate<T>() where T : unmanaged
+        {
+            return (T*)Allocate(sizeof(T), UnsafeUtility.AlignOf<T>());
+        }
+            
+        public unsafe void Free(void* ptr, int sizeOf, int alignOf, int items)
+        {
+            AllocatorManager.Free(m_Allocator, ptr, sizeOf, alignOf, items);
+        }
+
+        public unsafe void Free<T>(T* ptr) where T : unmanaged
+        {
+            Free(ptr, sizeof(T), UnsafeUtility.AlignOf<T>(), 1);
+        }
 
         private struct RegisteredNode
         {
@@ -133,6 +160,7 @@ namespace UnityEngine.InputSystem.Experimental
             if (handle == 0)
                 throw new Exception($"Maximum number of concurrently existing {nameof(Context)} instances reached ({kMaxContexts}. Did you forget to dispose previous instances?");
 
+            allocator = AllocatorManager.Persistent;
             m_StreamContexts = new();
             m_Streams = new();
             m_Events = new EventStream();

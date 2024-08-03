@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 // TODO See comments in header
@@ -121,6 +123,78 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO Need additional constraint on source so that we can unroll into operations
             return new Reader(m_Source);
             //return new Reader<InputEvent, Impl>(GetImplementation(context));
+        }
+
+        private unsafe struct State
+        {
+            public UnsafeEventHandler<bool> onNext;
+            public bool previousValue;
+
+            /*public static IntPtr Create(Context context, bool previousValue, UnsafeDelegate<bool> onNext)
+            {
+                var state = context.Allocate<State>();
+                state->onNext.Add(onNext);
+                state->previousValue = previousValue;
+                return (IntPtr)state;
+            }*/
+            
+            public void OnNext(bool value)
+            {
+                onNext.Invoke(value);
+            }
+        }
+
+        public struct UnsafeSubscription : IDisposable
+        {
+            private IntPtr m_EventHandler; // TODO Consider if this should be a pointer to event handler to modify state?!
+            private readonly IntPtr m_Callback;
+            
+            internal UnsafeSubscription(IntPtr eventHandler, IntPtr callback) 
+            {
+                m_EventHandler = eventHandler;
+                m_Callback = callback;
+            }
+            
+            public void Dispose()
+            {
+                UnsafeDelegate.Remove(ref m_EventHandler, m_Callback);
+            }
+        }
+
+        private static unsafe void Process(bool value, ref State state)
+        {
+            if (state.previousValue == value)
+                return;
+            if (value)
+                state.OnNext(value);
+            state.previousValue = value;
+        }
+        
+        private static unsafe void Process(bool value, void* state)
+        {
+            Process(value, (State*)state);
+        }
+        
+        public unsafe UnsafeSubscription Subscribe(Context context, delegate*<bool, void*> observer, void* observerState) // TODO Should take observer (receiver)?
+        {
+            // Initialize state
+            var state = context.Allocate<State>();
+            state->previousValue = false;
+            
+            // Subscribe to dependencies
+            // m_Source.Subscribe(context, &Process, state);
+            
+            // Add observer to callback list
+            //state->onNext.Add(onNext); // TODO Capture observer state with this callback
+            
+            //delegate*<bool, void*, void> next = &Process;
+            //return new UnsafeSubscription(, onNext.ToIntPtr()); // TODO Need to be able unregister onNext from state
+
+            return new();
+            //State state{ onNext = onNext, previousValue = false } ;
+            // TODO Allocate state, e.g. 
+            // var state = (State*)allocator.Allocate(sizeof(State));
+            // TODO Register
         }
 
         public readonly struct Reader : IReader<InputEvent>

@@ -108,6 +108,38 @@ namespace UnityEngine.InputSystem.Experimental
                 return new Subscription(this, observer);
             }
 
+            #region Unsafe subscription support
+            
+            public unsafe struct UnsafeCallback
+            {
+                private delegate*<T, void*, void> m_Target;
+                private void* m_State;
+
+                public UnsafeCallback(delegate*<T, void*, void> target, void* state)
+                {
+                    m_Target = target;
+                    m_State = state;
+                }
+            }
+
+            public unsafe struct UnsafeSubscription : IDisposable
+            {
+                public void Dispose()
+                {
+                    // Need to dispose callback    
+                }
+            }
+            
+            // TODO This might be hidden by using a generic function with constraint and e.g. construct subscription
+            // TODO indirectly via e.g. IUnsafeObserver.CreateForwardingCallback()
+            public unsafe UnsafeSubscription Subscribe(delegate*<T, void*, void> observer, void* state = null)
+            {
+                var cb = new UnsafeCallback(observer, state);
+                return new UnsafeSubscription();
+            }
+            
+            #endregion
+
             public override void Dispose()
             {
                 for (var i = 0; i < m_ObserverCount; ++i)

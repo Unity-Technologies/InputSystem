@@ -14,6 +14,11 @@ namespace Tests.InputSystem.Experimental
                 ++(*(int*)p);
         }
         
+        static unsafe void CounterFn2(ref int p)
+        {
+            ++p;
+        }
+        
         static unsafe void RemoveFn(void* p)
         {
             if (p != null)
@@ -21,7 +26,7 @@ namespace Tests.InputSystem.Experimental
                 var s = (State*)p;
                 ++s->counter;
                 
-                s->d.Remove(&RemoveFn);
+                s->d.Remove(RemoveDelegate);
                 //s->d.Remove(RemoveDelegate);
             }
         }
@@ -31,8 +36,11 @@ namespace Tests.InputSystem.Experimental
         {
             unsafe
             {
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
-                x.Invoke(null);
+                //using var x = new UnsafeMulticastDelegate();
+                //x.Invoke(null);
+
+                using var sut = new UnsafeEventHandler<int>();
+                sut.Invoke(5);
             }
         }
         
@@ -43,7 +51,8 @@ namespace Tests.InputSystem.Experimental
             unsafe
             {
                 int counter = 0;
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
+                using var x = new UnsafeMulticastDelegate();
+                //using var x = new UnsafeEventHandler<ref int>();
                 x.Add(&CounterFn);
                 x.Remove(&CounterFn);
                 x.Invoke(&counter);
@@ -58,7 +67,7 @@ namespace Tests.InputSystem.Experimental
             unsafe
             {
                 int counter = 0;
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
+                using var x = new UnsafeMulticastDelegate();
                 x.Add(&CounterFn);
                 x.Add(&CounterFn);
                 x.Remove(&CounterFn);
@@ -74,7 +83,7 @@ namespace Tests.InputSystem.Experimental
         {
             unsafe
             {
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
+                using var x = new UnsafeMulticastDelegate();
                 x.Remove(&CounterFn);
             }
         }
@@ -85,7 +94,7 @@ namespace Tests.InputSystem.Experimental
             unsafe
             {
                 int counter = 0;
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
+                using var x = new UnsafeMulticastDelegate();
                 x.Add(&CounterFn);
                 x.Invoke(&counter);
                 
@@ -99,7 +108,7 @@ namespace Tests.InputSystem.Experimental
             unsafe
             {
                 int counter = 0;
-                using var x = new UnsafeDelegate(AllocatorManager.Persistent);
+                using var x = new UnsafeMulticastDelegate();
                 x.Add(&CounterFn);
                 x.Add(&CounterFn);
                 x.Invoke(&counter);
@@ -110,7 +119,7 @@ namespace Tests.InputSystem.Experimental
 
         struct State : IDisposable
         {
-            public UnsafeDelegate d;
+            public UnsafeMulticastDelegate d;
             public int counter;
 
             public void Dispose()
@@ -127,9 +136,9 @@ namespace Tests.InputSystem.Experimental
             unsafe
             {
                 using var s = TempPointer<State>.Create();
-                s.value.d = new UnsafeDelegate(AllocatorManager.Persistent);
+                s.value.d = new UnsafeMulticastDelegate();
                 s.value.counter = 0;
-                s.value.d.Add(&RemoveFn); // TODO Requires static cached callback, it seems, sort out
+                s.value.d.Add(RemoveDelegate); // TODO Requires static cached callback, it seems, sort out
                 s.value.d.Invoke(s.pointer); // Note: Callback unregisters itself
                 s.value.d.Invoke(s.pointer); // Note: No callback since removed from first callback
                 Assert.That(s.value.counter, Is.EqualTo(1));

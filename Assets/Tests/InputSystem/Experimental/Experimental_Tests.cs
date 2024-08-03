@@ -234,30 +234,21 @@ namespace Tests.InputSystem
         [Test]
         public void MessageBufferConcept()
         {
-            var demux = new Dictionary<ulong, MulticastDelegate>();
+            // What we want is to register delegates to be invoked for a certain
+            
+            var map = new NativeHashMap<ulong, UnsafeMulticastDelegate>(100, AllocatorManager.Persistent);
             using var messageQueue = new UnsafeRingQueue<Message>(100, AllocatorManager.Temp);
-            messageQueue.Enqueue(new Message(){ });
+            messageQueue.Enqueue(new Message{ type = MessageType.Gamepad, endpoint = 12 });
 
-            while (messageQueue.TryDequeue(out Message message))
+            unsafe
             {
-                switch (message.type)
+                while (messageQueue.TryDequeue(out var message))
                 {
-                    case MessageType.DeviceArrival:
-                        break;
-                    case MessageType.DeviceRemoval:
-                        break;
-                    case MessageType.Keyboard:
-                        break;
-                    case MessageType.Gamepad:
-                        if (demux.TryGetValue(message.endpoint, out MulticastDelegate handler))
-                        {
-                            
-                        }
-                        break;
-                    default:
-                        // TODO Handle custom messages
-                        break;
-                }
+                    if (map.TryGetValue(message.endpoint, out var handlers))
+                    {
+                        handlers.Invoke(null);
+                    }
+                }    
             }
         }
 
