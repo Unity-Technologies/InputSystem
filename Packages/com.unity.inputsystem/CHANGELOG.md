@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added `InputSystemUIInputModule.scrollDeltaPerTick` property, a customizable multiplicative factor applied to the scroll wheel speed before it is sent to UI components. Note that this has no effect on UI Toolkit content, only uGUI.
+- Added automatic loading of custom extensions of InputProcessor, InputInteraction and InputBindingComposite [ISXB-856]](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-856).
 
 ## [1.9.0] - 2024-07-15
 

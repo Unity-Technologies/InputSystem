@@ -2011,7 +2011,6 @@ namespace UnityEngine.InputSystem
                     {
                         if (referencedAssembly.Name == inputSystemName)
                         {
-                            Debug.Log("Assembly: " + assembly.FullName);
                             RegisterCustomTypes(assembly.GetTypes());
                             break;
                         }
@@ -2019,12 +2018,8 @@ namespace UnityEngine.InputSystem
                 }
                 catch (ReflectionTypeLoadException)
                 {
-                    //Debug.Log("Failed getting types in assembly: " + assembly.FullName);
+                    continue;
                 }
-                //catch (System.Exception)
-                //{
-                //    //Debug.Log("Failed getting types in assembly generic: " + assembly.FullName);
-                //}
             }
         }
 
