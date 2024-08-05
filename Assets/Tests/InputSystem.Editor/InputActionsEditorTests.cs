@@ -155,9 +155,9 @@ public class InputActionsEditorTests
         var actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
         Assert.That(actionMapItem, Is.Not.Null);
         Assert.That(actionMapItem.Count, Is.EqualTo(3));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[0].name, Is.EqualTo("First Name"));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[1].name, Is.EqualTo("Second Name"));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[2].name, Is.EqualTo("Third Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[0].name, Is.EqualTo("First Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[1].name, Is.EqualTo("Second Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[2].name, Is.EqualTo("Third Name"));
     }
 
     [UnityTest]
@@ -184,8 +184,8 @@ public class InputActionsEditorTests
         Assert.That(actionMapItem[3].Q<Label>("name").text, Is.EqualTo("New Name"));
 
         // Check on the asset side
-        Assert.That(m_Window.currentAssetInEdition.actionMaps.Count, Is.EqualTo(4));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[3].name, Is.EqualTo("New Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps.Count, Is.EqualTo(4));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[3].name, Is.EqualTo("New Name"));
     }
 
     [UnityTest]
@@ -226,8 +226,8 @@ public class InputActionsEditorTests
         Assert.That(actionMapItem[1].Q<Label>("name").text, Is.EqualTo("New Name"));
 
         // Check on the asset side
-        Assert.That(m_Window.currentAssetInEdition.actionMaps.Count, Is.EqualTo(3));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[1].name, Is.EqualTo("New Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps.Count, Is.EqualTo(3));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[1].name, Is.EqualTo("New Name"));
     }
 
     [UnityTest]
@@ -253,9 +253,9 @@ public class InputActionsEditorTests
         Assert.That(actionMapItem[1].Q<Label>("name").text, Is.EqualTo("Third Name"));
 
         // Check on the asset side
-        Assert.That(m_Window.currentAssetInEdition.actionMaps.Count, Is.EqualTo(2));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[0].name, Is.EqualTo("First Name"));
-        Assert.That(m_Window.currentAssetInEdition.actionMaps[1].name, Is.EqualTo("Third Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps.Count, Is.EqualTo(2));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[0].name, Is.EqualTo("First Name"));
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[1].name, Is.EqualTo("Third Name"));
     }
 }
 #endif
