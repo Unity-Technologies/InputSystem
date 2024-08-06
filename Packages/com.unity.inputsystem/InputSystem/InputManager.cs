@@ -69,6 +69,7 @@ namespace UnityEngine.InputSystem
         static readonly InputProfilerMarker k_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
         static readonly InputProfilerMarker k_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
         static readonly InputProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly InputProfilerMarker k_InputRegisterCustomTypesMarker = new InputProfilerMarker("InputManager.RegisterCustomTypes");
 
         public InputMetrics metrics
         {
@@ -1996,6 +1997,8 @@ namespace UnityEngine.InputSystem
 
         void RegisterCustomTypes()
         {
+            k_InputRegisterCustomTypesMarker.Begin();
+
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
             var inputSystemName = inputSystemAssembly.GetName().Name;
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -2021,6 +2024,8 @@ namespace UnityEngine.InputSystem
                     continue;
                 }
             }
+
+            k_InputRegisterCustomTypesMarker.End();
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
