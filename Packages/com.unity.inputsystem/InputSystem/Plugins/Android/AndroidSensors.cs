@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Controls;
 
 ////TODO: make all the sensor class types internal
 
@@ -42,6 +43,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         HeartBeat = 31,
         LowLatencyOffBodyDetect = 34,
         AccelerometerUncalibrated = 35,
+        HingeAngle = 36
     }
 
     [Serializable]
@@ -105,6 +107,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "stepCounter", layout = "Integer", variants = "StepCounter")]
         [InputControl(name = "rotation", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Axis", variants = "HeartRate")]
+        [InputControl(name = "angle", layout = "Axis", variants = nameof(AndroidSensorType.HingeAngle))]
         public fixed float data[16];
 
         public AndroidSensorState WithData(params float[] data)
@@ -275,6 +278,48 @@ namespace UnityEngine.InputSystem.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
     public class AndroidStepCounter : StepCounter
     {
+    }
+
+    /// <summary>
+    /// Hinge angle sensor device on Android.
+    /// This sensor is usually available on foldable devices.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_HINGE_ANGLE/>
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = nameof(AndroidSensorType.HingeAngle), hideInUI = true)]
+    public class AndroidHingeAngle : Sensor
+    {
+        /// <summary>
+        /// The angle in degrees on how much the phone is unfolded
+        /// </summary>
+        /// <value>0 means fully folded, 180 means fully unfolded.</value>
+        public AxisControl angle { get; protected set; }
+
+        /// <summary>
+        /// The hinge angle sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current hinge angle sensor or <c>null</c>.</value>
+        public static AndroidHingeAngle current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup()
+        {
+            angle = GetChildControl<AxisControl>("angle");
+            base.FinishSetup();
+        }
     }
 }
 
