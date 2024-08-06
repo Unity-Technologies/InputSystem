@@ -3,19 +3,19 @@ uid: input-system-sensors
 ---
 # Sensor support
 
-* [Sampling Frequency](#sampling-frequency)
-* [Accelerometer](#accelerometer)
-* [Gyroscope](#gyroscope)
-* [GravitySensor](#gravitysensor)
-* [AttitudeSensor](#attitudesensor)
-* [LinearAccelerationSensor](#linearaccelerationsensor)
-* [MagneticFieldSensor](#magneticfieldsensor)
-* [LightSensor](#lightsensor)
-* [PressureSensor](#pressuresensor)
-* [ProximitySensor](#proximitysensor)
-* [HumiditySensor](#humiditysensor)
-* [AmbientTemperatureSensor](#ambienttemperaturesensor)
-* [StepCounter](#stepcounter)
+- [Sampling frequency](#sampling-frequency)
+- [`Accelerometer`](#accelerometer)
+- [`Gyroscope`](#gyroscope)
+- [`GravitySensor`](#gravitysensor)
+- [`AttitudeSensor`](#attitudesensor)
+- [`LinearAccelerationSensor`](#linearaccelerationsensor)
+- [`MagneticFieldSensor`](#magneticfieldsensor)
+- [`LightSensor`](#lightsensor)
+- [`PressureSensor`](#pressuresensor)
+- [`ProximitySensor`](#proximitysensor)
+- [`HumiditySensor`](#humiditysensor)
+- [`AmbientTemperatureSensor`](#ambienttemperaturesensor)
+- [`StepCounter`](#stepcounter)
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
@@ -83,6 +83,28 @@ Gyroscope.current.samplingFrequency = 16;
 ## <a name="accelerometer"></a>[`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html)
 
 Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. It reports the acceleration measured on a device both due to moving the device around, and due to gravity pulling the device down. You can use `GravitySensor` and `LinearAccelerationSensor` to get separate values for these. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
+
+ The following code traces all input events on the [`Accelerometer.current`](../api/UnityEngine.InputSystem.Accelerometer.html) device.
+```CSharp
+    private InputEventTrace trace;
+
+    void StartTrace()
+    {
+        InputSystem.EnableDevice(Accelerometer.current);
+
+        trace = new InputEventTrace(Accelerometer.current);
+        trace.Enable();
+    }
+
+    void Update()
+    {
+        foreach (var e in trace)
+        {
+            //...
+        }
+        trace.Clear();
+    }
+```
 
 ## <a name="gyroscope"></a>[`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html)
 
