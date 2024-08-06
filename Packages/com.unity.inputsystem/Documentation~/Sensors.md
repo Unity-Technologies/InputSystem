@@ -16,6 +16,7 @@ uid: input-system-sensors
 - [`HumiditySensor`](#humiditysensor)
 - [`AmbientTemperatureSensor`](#ambienttemperaturesensor)
 - [`StepCounter`](#stepcounter)
+- [`AndroidHingeAngle`](#androidhingeangle)
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
