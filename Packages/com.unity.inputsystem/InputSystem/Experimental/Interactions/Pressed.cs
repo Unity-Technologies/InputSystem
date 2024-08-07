@@ -41,8 +41,8 @@ namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
-    public struct Pressed<TSource> : IObservableInput<InputEvent>
-        where TSource : IObservableInput<bool>, IDependencyGraphNode
+    public struct Pressed<TSource> : IObservableInput<InputEvent>, IUnsafeObservable<InputEvent>
+        where TSource : IObservableInput<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
     {
         // ObservableInput<InputEvent>
         // TODO State could be unmanaged from pool
@@ -126,45 +126,17 @@ namespace UnityEngine.InputSystem.Experimental
             //return new Reader<InputEvent, Impl>(GetImplementation(context));
         }
 
-        private unsafe struct State
-        {
-            public UnsafeEventHandler<InputEvent> onNext;
-            public bool previousValue;
-
-            public static delegate*<bool, void*, void> Next = &OnNext;
-            
-            public static void OnNext(bool value, void* state)
-            {
-                var s = (State*)state;
-                if (s->previousValue == value)
-                    return;
-                if (value)
-                    s->onNext.Invoke(new InputEvent());
-                s->previousValue = value;
-            }
-        }
-        
-        public unsafe UnsafeSubscription Subscribe(Context context, delegate*<InputEvent, void> observer, void* observerState) // TODO Should take observer (receiver)?
+        public unsafe UnsafeSubscription Subscribe(Context context, UnsafeDelegate<InputEvent> observer) // TODO Should take observer (receiver)?
         {
             // Initialize state
-            var state = context.Allocate<State>();
-            state->previousValue = false;
-            
-            // Subscribe to dependencies and make them invoke OnNext
-            // m_Source.Subscribe(context, &OnNext, state); // TODO We cannot put this into an interface and keep type safety, need type erasure on value, we can its IUnsafeObservable<T>
-            
-            // Add observer to callback list
-            state->onNext.Add(new UnsafeDelegate<InputEvent>(observer, observerState)); // TODO Capture observer state with this callback
-            
-            //delegate*<bool, void*, void> next = &Process;
-            //return new UnsafeSubscription(, onNext.ToIntPtr()); // TODO Need to be able unregister onNext from state
-
-            return new();
-            //State state{ onNext = onNext, previousValue = false } ;
-            // TODO Allocate state, e.g. 
-            // var state = (State*)allocator.Allocate(sizeof(State));
-            // TODO Register
+            var pressed = UnsafePressed.Create(context, m_Source, false); // TODO GetorCreate?
+            return UnsafePressed.Subscribe(pressed, observer);
         }
+        
+        // TODO Yet another alternative would be to register cached delegate and pass state by ref
+        // This way we avoid action/lambda overhead by using a single cached static Action and pass state via reference
+        // E.g. delegate void Observer(T, ref State)
+        // State would then need to contain other handlers which limits its usefulness since we cannot store them in unmanaged struct.
 
         public readonly struct Reader : IReader<InputEvent>
         {
@@ -214,11 +186,68 @@ namespace UnityEngine.InputSystem.Experimental
         /// <param name="source">The source.</param>
         /// <typeparam name="TSource">The source type.</typeparam>
         /// <returns>Press interaction using a <typeparamref name="TSource"/> type.</returns>
-        [InputNodeFactory(type=typeof(Pressed<IObservableInput<bool>>))]
+        //[InputNodeFactory(type=typeof(Pressed<IObservableInput<bool>>))]
         public static Pressed<TSource> Pressed<TSource>(this TSource source)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
+            where TSource : IObservableInput<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
         {
             return new Pressed<TSource>(source);
+        }
+    }
+    
+    // TODO Need to expose a subscription of its own. Could simply be a delegate
+    internal unsafe struct UnsafePressed
+    {
+        private static readonly delegate*<bool, void*, void> Next = &OnNext;
+        
+        private UnsafeEventHandler<InputEvent> m_OnNext;
+        private bool m_PreviousValue;
+        private AllocatorManager.AllocatorHandle m_Allocator;
+        private UnsafeSubscription m_TriggerSubscription; 
+
+        public static UnsafePressed* Create<TSource>(Context context, TSource source, bool previousValue = false)
+            where TSource : IUnsafeObservable<bool>
+        {
+            var ptr = context.Allocate<UnsafePressed>();
+            ptr->m_Allocator = context.allocator;
+            ptr->m_PreviousValue = previousValue;
+            ptr->m_TriggerSubscription = source.Subscribe(context, new UnsafeDelegate<bool>(Next, ptr));
+            return ptr;
+        }
+
+        // TODO If we instead pass context to this function we can hide create inside and also handle registration/allocation
+        public static unsafe UnsafeSubscription Subscribe(UnsafePressed* pressed, UnsafeDelegate<InputEvent> d)
+        {
+            pressed->m_OnNext.Add(d);
+            return new UnsafeSubscription(
+                new UnsafeDelegate<UnsafeDelegateHelper.Callback>(&Unsubscribe, pressed), 
+                d.ToCallback());
+        }
+
+        private static void Unsubscribe(UnsafeDelegateHelper.Callback callback, void* state)
+        {
+            var s = (UnsafePressed*)state;
+            ; // TODO Need to return boolean or expose length (not thread safe)
+            s->m_OnNext.Remove(callback);
+            if (s->m_OnNext.GetInvocationList().Length == 0) // TODO This can never be thread safe and exposes undesirable API
+                Destroy(s);
+        }
+
+        private static void Destroy(void* state)
+        {
+            var s = (UnsafePressed*)state;
+            s->m_TriggerSubscription.Dispose();
+            AllocatorManager.Free(s->m_Allocator, state, sizeof(UnsafePressed), 
+                UnsafeUtility.AlignOf<UnsafePressed>());
+        }
+        
+        private static void OnNext(bool value, void* state)
+        {
+            var s = (UnsafePressed*)state;
+            if (s->m_PreviousValue == value)
+                return;
+            if (value)
+                s->m_OnNext.Invoke(new InputEvent());
+            s->m_PreviousValue = value;
         }
     }
 }

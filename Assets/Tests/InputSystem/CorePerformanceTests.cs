@@ -3,7 +3,9 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
 using Tests.InputSystem;
+using Tests.InputSystem.Experimental;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.PerformanceTesting;
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;
@@ -39,7 +41,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         
     }
-
+    
     [Test, Performance]
     [Category("Performance")]
     [TestCase(1)]

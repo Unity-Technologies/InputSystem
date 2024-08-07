@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
     // Note that ObservableInput is equatable based on underlying usage.
-    public struct ObservableInput<T> : IObservableInput<T>, IEquatable<ObservableInput<T>>
+    public struct ObservableInput<T> : IObservableInput<T>, IEquatable<ObservableInput<T>>, IUnsafeObservable<T>
         where T : struct
     {
         public readonly Usage Usage;
@@ -138,6 +138,15 @@ namespace UnityEngine.InputSystem.Experimental
             //m_NodeId = context.RegisterNode();
             return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(Usage)); // Subscription reader need to 
         }
+        
+        #region IUnsafeObservable
+        
+        public UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
+        {
+            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(observer);
+        }
+        
+        #endregion
         
         #region IDependencyGraphNode
         

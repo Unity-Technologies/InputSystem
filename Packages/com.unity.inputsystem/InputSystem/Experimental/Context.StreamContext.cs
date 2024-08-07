@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
 
@@ -109,33 +110,12 @@ namespace UnityEngine.InputSystem.Experimental
             }
 
             #region Unsafe subscription support
-            
-            public unsafe struct UnsafeCallback
-            {
-                private delegate*<T, void*, void> m_Target;
-                private void* m_State;
 
-                public UnsafeCallback(delegate*<T, void*, void> target, void* state)
-                {
-                    m_Target = target;
-                    m_State = state;
-                }
-            }
-
-            public unsafe struct UnsafeSubscription : IDisposable
-            {
-                public void Dispose()
-                {
-                    // Need to dispose callback    
-                }
-            }
+            private UnsafeEventHandler<T> m_UnsafeObservers;
             
-            // TODO This might be hidden by using a generic function with constraint and e.g. construct subscription
-            // TODO indirectly via e.g. IUnsafeObserver.CreateForwardingCallback()
-            public unsafe UnsafeSubscription Subscribe(delegate*<T, void*, void> observer, void* state = null)
+            public UnsafeSubscription Subscribe(UnsafeDelegate<T> observer)
             {
-                var cb = new UnsafeCallback(observer, state);
-                return new UnsafeSubscription();
+                throw new NotImplementedException();
             }
             
             #endregion

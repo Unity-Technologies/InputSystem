@@ -49,6 +49,33 @@ namespace Tests.InputSystem.Experimental
             m_Context.Update();
             Assert.That(observer.Next.Count, Is.EqualTo(2));
         }
+
+        [Test]
+        public void PressUnsafe()
+        {
+            var button = Gamepad.ButtonEast.Stub(m_Context);
+            var observer = new UnsafeListObserver<InputEvent>();
+            using var subscription = Gamepad.ButtonEast.Pressed().Subscribe(m_Context, observer.ToDelegate());
+            
+            // Press should trigger event
+            button.Press();
+            m_Context.Update();
+            Assert.That(observer.values.Length, Is.EqualTo(1));
+            
+            // Press should trigger event also when released afterwards
+            button.Release();
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            Assert.That(observer.values.Length, Is.EqualTo(2));
+
+            // Do not expect event when unsubscribed
+            subscription.Dispose();
+            button.Press();
+            button.Release();
+            m_Context.Update();
+            Assert.That(observer.values.Length, Is.EqualTo(2));
+        }
         
         [Test]
         public void Release()
