@@ -1570,6 +1570,11 @@ namespace UnityEngine.InputSystem
             {
                 actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
                 actionState->isPressed = true;
+
+                // Update action state here, in case there's no interactions set
+                // This makes sure that we can read values when action is pressed.s
+                actionState->controlIndex = trigger.controlIndex;
+                actionState->bindingIndex = trigger.bindingIndex;
             }
             else if (actionState->isPressed)
             {

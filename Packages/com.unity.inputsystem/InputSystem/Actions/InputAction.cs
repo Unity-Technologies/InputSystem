@@ -1035,7 +1035,8 @@ namespace UnityEngine.InputSystem
                 return default(TValue);
 
             var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-            return actionStatePtr->phase.IsInProgress()
+            // Apply processors whenever the action is read.
+            return (actionStatePtr->phase.IsInProgress() || actionStatePtr->isPressed)
                 ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
                 : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
