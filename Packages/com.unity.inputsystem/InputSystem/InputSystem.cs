@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -84,9 +84,9 @@ namespace UnityEngine.InputSystem
     public static partial class InputSystem
     {
 #if UNITY_EDITOR
-        static readonly InputProfilerMarker k_InputInitializeInEditorMarker = new InputProfilerMarker("InputSystem.InitializeInEditor");
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
 #endif
-        static readonly InputProfilerMarker k_InputRestMarker = new InputProfilerMarker("InputSystem.Reset");
+        static readonly ProfilerMarker k_InputRestMarker = new ProfilerMarker("InputSystem.Reset");
 
         #region Layouts
 
