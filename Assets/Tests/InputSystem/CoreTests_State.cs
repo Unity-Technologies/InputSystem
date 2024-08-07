@@ -424,7 +424,7 @@ partial class CoreTests
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
 
-        var newState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
+        var newState = new GamepadState {buttons = 1 << (int)GamepadButton.East};
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
@@ -440,7 +440,7 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.East};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
@@ -472,7 +472,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.East};
         var secondState = new GamepadState {buttons = 0};
 
         InputSystem.QueueStateEvent(gamepad, firstState);

@@ -255,7 +255,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The upper action button on a gamepad.
         /// </summary>
         /// <remarks>
-        /// Identical to <see cref="Y"/> and <see cref="Triangle"/> which are the Xbox and PlayStation controller names for this button.
+        /// Identical to <see cref="North"/> and <see cref="North"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
         North = 4,
 
@@ -263,7 +263,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The right action button on a gamepad.
         /// </summary>
         /// <remarks>
-        /// Identical to <see cref="B"/> and <see cref="Circle"/> which are the Xbox and PlayStation controller names for this button.
+        /// Identical to <see cref="East"/> and <see cref="East"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
         East = 5,
 
@@ -271,7 +271,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The lower action button on a gamepad.
         /// </summary>
         /// <remarks>
-        /// Identical to <see cref="A"/> and <see cref="Cross"/> which are the Xbox and PlayStation controller names for this button.
+        /// Identical to <see cref="South"/> and <see cref="South"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
         South = 6,
 
@@ -279,7 +279,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The left action button on a gamepad.
         /// </summary>
         /// <remarks>
-        /// Identical to <see cref="X"/> and <see cref="Square"/> which are the Xbox and PlayStation controller names for this button.
+        /// Identical to <see cref="West"/> and <see cref="West"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
         West = 7,
 
@@ -326,64 +326,6 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The right trigger button on a gamepad.
         /// </summary>
         RightTrigger = 33,
-
-        /// <summary>
-        /// The X button on an Xbox controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="West"/>, which is the generic name of this button.
-        /// </remarks>
-        X = West,
-        /// <summary>
-        /// The Y button on an Xbox controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="North"/>, which is the generic name of this button.
-        /// </remarks>
-        Y = North,
-        /// <summary>
-        /// The A button on an Xbox controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="South"/>, which is the generic name of this button.
-        /// </remarks>
-        A = South,
-        /// <summary>
-        /// The B button on an Xbox controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="East"/>, which is the generic name of this button.
-        /// </remarks>
-        B = East,
-
-        /// <summary>
-        /// The cross button on a PlayStation controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="South"/>, which is the generic name of this button.
-        /// </remarks>
-        Cross = South,
-        /// <summary>
-        /// The square button on a PlayStation controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="West"/>, which is the generic name of this button.
-        /// </remarks>
-        Square = West,
-        /// <summary>
-        /// The triangle button on a PlayStation controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="North"/>, which is the generic name of this button.
-        /// </remarks>
-        Triangle = North,
-        /// <summary>
-        /// The circle button on a PlayStation controller.
-        /// </summary>
-        /// <remarks>
-        /// Identical to <see cref="East"/>, which is the generic name of this button.
-        /// </remarks>
-        Circle = East,
     }
 }
 
