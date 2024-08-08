@@ -41,6 +41,7 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     {
         m_Window?.Close();
     }
+
     #endregion
 
     #region Helper methods

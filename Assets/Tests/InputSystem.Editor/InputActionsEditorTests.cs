@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
 
-internal class InputActionsEditorTests :  UIToolkitBaseTestWindow<InputActionsEditorWindow>
+internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEditorWindow>
 {
     #region setup and teardown
     InputActionAsset m_Asset;
@@ -54,7 +54,6 @@ internal class InputActionsEditorTests :  UIToolkitBaseTestWindow<InputActionsEd
             return false;
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
-
 
     #endregion
 
