@@ -3,8 +3,8 @@ using System;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO This is basically AND, redesign as such?
-    public struct Chord<TSource> : IObservableInput<bool>, IDependencyGraphNode
-        where TSource : IObservableInput<bool>, IDependencyGraphNode
+    public struct Chord<TSource> : IObservableInputNode<bool>, IDependencyGraphNode
+        where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Experimental
     public static partial class Combine
     {
         public static Chord<TSource> Chord<TSource>(this TSource source1, TSource source2)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Chord<TSource>(source1, source2);
         }

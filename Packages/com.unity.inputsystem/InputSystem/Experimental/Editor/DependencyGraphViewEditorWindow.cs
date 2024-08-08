@@ -285,9 +285,9 @@ namespace UnityEngine.InputSystem.Experimental
         /// <summary>
         /// Shows the given observable input as a graph.
         /// </summary>
-        /// <param name="observableInput"></param>
+        /// <param name="observableInputNode"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Show<T>(this IObservableInput<T> observableInput) where T : struct
+        public static void Show<T>(this IObservableInputNode<T> observableInputNode) where T : struct
         {
             DependencyGraphViewEditorWindow.Open();
         }

@@ -2,8 +2,8 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public struct Merge<T, TSource> : IObservableInput<T>, IDependencyGraphNode
-        where TSource : IObservableInput<T>, IDependencyGraphNode
+    public struct Merge<T, TSource> : IObservableInputNode<T>, IDependencyGraphNode
+        where TSource : IObservableInputNode<T>, IDependencyGraphNode
         where T : struct
     {
         private sealed class Impl
@@ -115,11 +115,11 @@ namespace UnityEngine.InputSystem.Experimental
 
     public static partial class Combine
     {
-        public static Merge<T, IObservableInput<T>> Merge<T>(
-            IObservableInput<T> source0, IObservableInput<T> source1)
+        public static Merge<T, IObservableInputNode<T>> Merge<T>(
+            IObservableInputNode<T> source0, IObservableInputNode<T> source1)
             where T : struct
         {
-            return new Merge<T, IObservableInput<T>>(source0, source1);
+            return new Merge<T, IObservableInputNode<T>>(source0, source1);
         }
     }
 }

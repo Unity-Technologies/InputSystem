@@ -11,8 +11,8 @@ namespace UnityEngine.InputSystem.Experimental
         bool Process(TIn arg0, ref TOut result);
     }
     
-    public struct Unary<TIn, TSource, TOut, TFunc> : IObservableInput<TOut>, IDependencyGraphNode
-        where TSource : IObservableInput<TIn>, IDependencyGraphNode 
+    public struct Unary<TIn, TSource, TOut, TFunc> : IObservableInputNode<TOut>, IDependencyGraphNode
+        where TSource : IObservableInputNode<TIn>, IDependencyGraphNode 
         where TIn : struct
         where TOut : struct
         where TFunc : IUnaryFunc<TIn, TOut>

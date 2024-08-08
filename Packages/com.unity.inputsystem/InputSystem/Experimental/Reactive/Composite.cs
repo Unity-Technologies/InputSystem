@@ -7,8 +7,8 @@ namespace UnityEngine.InputSystem.Experimental
     // float y = positiveY - negativeY;
     
     // TODO This is basically AND, redesign as such?
-    public struct Composite<TSource> : IObservableInput<bool>, IDependencyGraphNode
-        where TSource : IObservableInput<bool>, IDependencyGraphNode
+    public struct Composite<TSource> : IObservableInputNode<bool>, IDependencyGraphNode
+        where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {

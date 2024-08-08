@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Experimental
         private const string kReleaseDisplayName = "Release";
         
         public static Unary<bool, TSource, InputEvent, Released> Released<TSource>(this TSource source)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Unary<bool, TSource, InputEvent, Released>(kReleaseDisplayName, source, new Released());
         }

@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.Experimental
             for (var i = 0; i < interfaces.Length; ++i)
             {
                 var x = interfaces[i];
-                if (x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IObservableInput<>))
+                if (x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IObservableInputNode<>))
                     return x.GenericTypeArguments[0];
             }
 
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 var constraint = constraints[j];
                 if (constraint.IsInterface && constraint.IsGenericType &&
-                    constraint.GetGenericTypeDefinition() == typeof(IObservableInput<>))
+                    constraint.GetGenericTypeDefinition() == typeof(IObservableInputNode<>))
                 {
                     index = j;
                     break;
@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Experimental
                 if (interfaceTypes.Length == 1)
                 {
                     valueType = interfaceTypes[0];
-                    concreteType = typeof(ObservableInput<>).MakeGenericType(valueType);
+                    concreteType = typeof(ObservableInputNode<>).MakeGenericType(valueType);
                         
                     // TODO Should only evaluate for constructor arguments? Or should we use this only to attempt makeing a concerete type
                     // We have determined that the current generic argument is a constraint on an input type. Make sure our concrete type fulfills all other constraints
@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem.Experimental
             // Identify outputs which maps to IObservableInput<T> implementations.
             // Note that this creates a limitation of a single output per type.
             var outputInterfaces = type.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IObservableInput<>));
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IObservableInputNode<>));
             var list = new List<string>();
             foreach (var outputInterface in outputInterfaces)
                 list.Add($"Output <{outputInterface.GenericTypeArguments[0].Name}>");

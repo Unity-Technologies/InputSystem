@@ -239,8 +239,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             m_Observers = null;
         }
-
-        protected void Initialize(IDisposable[] disposables)
+        public void Initialize(IDisposable[] disposables)
         {
             m_Disposables = disposables;
         }
@@ -249,7 +248,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             m_Disposables = new [] { disposable1, disposable2 };
         }
-
+        
         public ObserverList2(IDisposable disposable)
             : this(new [] { disposable })
         { }

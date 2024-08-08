@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// <returns>Disposable subscription.</returns>
         public static IDisposable Subscribe<T, TSource>(this TSource observable, Action<T> action, Context context = null) 
             where T : struct 
-            where TSource : IObservableInput<T>
+            where TSource : IObservableInputNode<T>
         {
             return observable.Subscribe(context, new NextObserverDelegateWrapper<T>(action));
         }
@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.Experimental
             Action onCompleted = null, Action<Exception> onError = null, Action<T> onNext = null,
             Context context = null)
             where T : struct 
-            where TSource : IObservableInput<T>
+            where TSource : IObservableInputNode<T>
         {
             return observable.Subscribe(context, new ObserverDelegateWrapper<T>(onCompleted, onError, onNext));
         }

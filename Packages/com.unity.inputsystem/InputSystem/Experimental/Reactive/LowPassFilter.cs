@@ -43,9 +43,9 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
     
-    public struct LowPassFilter<T, TSource, TFilter> : IObservableInput<T>
+    public struct LowPassFilter<T, TSource, TFilter> : IObservableInputNode<T>
         where T : struct
-        where TSource : IObservableInput<T>
+        where TSource : IObservableInputNode<T>
         where TFilter : IFilterFunc<T>
     {
         private class Impl : IObserver<T>
@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Experimental
         }*/
         
         public static LowPassFilter<float, TSource, FloatOneEuroFilter> LowPassFilter<TSource>(this TSource source) 
-            where TSource : IObservableInput<float>
+            where TSource : IObservableInputNode<float>
         {
             return new LowPassFilter<float, TSource, FloatOneEuroFilter>(source, new FloatOneEuroFilter());
         }

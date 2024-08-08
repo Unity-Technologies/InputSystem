@@ -7,9 +7,9 @@ using System;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO CombineLatest Should not emit if same atomic source until all has reported for timestep t
-    public struct CombineLatest<T0, T1, TSource0, TSource1> : IObservableInput<ValueTuple<T0, T1>>, IDependencyGraphNode
-        where TSource0 : IObservableInput<T0>, IDependencyGraphNode
-        where TSource1 : IObservableInput<T1>, IDependencyGraphNode
+    public struct CombineLatest<T0, T1, TSource0, TSource1> : IObservableInputNode<ValueTuple<T0, T1>>, IDependencyGraphNode
+        where TSource0 : IObservableInputNode<T0>, IDependencyGraphNode
+        where TSource1 : IObservableInputNode<T1>, IDependencyGraphNode
         where T0 : struct
         where T1 : struct
     {
@@ -127,18 +127,18 @@ namespace UnityEngine.InputSystem.Experimental
     public static partial class Combine
     {
         // TODO See if there is some trick we can utilize to keep decent syntax but not type-erase sources
-        public static CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>> Latest<T0, T1>(
-            IObservableInput<T0> source0, IObservableInput<T1> source1)
+        public static CombineLatest<T0, T1, IObservableInputNode<T0>, IObservableInputNode<T1>> Latest<T0, T1>(
+            IObservableInputNode<T0> source0, IObservableInputNode<T1> source1)
             where T0 : struct
             where T1 : struct
         {
-            return new CombineLatest<T0, T1, IObservableInput<T0>, IObservableInput<T1>>(source0, source1);
+            return new CombineLatest<T0, T1, IObservableInputNode<T0>, IObservableInputNode<T1>>(source0, source1);
         }
         
         public static CombineLatest<T0, T1, TSource0, TSource1> Latest<T0, T1, TSource0, TSource1>(
             this TSource0 source0, TSource1 source1)
-            where TSource0 : IObservableInput<T0>, IDependencyGraphNode
-            where TSource1 : IObservableInput<T1>, IDependencyGraphNode
+            where TSource0 : IObservableInputNode<T0>, IDependencyGraphNode
+            where TSource1 : IObservableInputNode<T1>, IDependencyGraphNode
             where T0 : struct
             where T1 : struct
         {

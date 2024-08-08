@@ -1,4 +1,0 @@
-namespace UnityEngine.InputSystem.Experimental
-{
-    
-}

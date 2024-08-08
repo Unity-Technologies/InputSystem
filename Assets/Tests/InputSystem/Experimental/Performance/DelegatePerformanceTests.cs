@@ -43,7 +43,7 @@ namespace Tests.InputSystem.Experimental.Performance
         {
             Measure.Method(action)
                 .MeasurementCount(measurementCount)
-                .SampleGroup(new SampleGroup("Time", SampleUnit.Nanosecond))
+                .SampleGroup(new SampleGroup("Time", SampleUnit.Microsecond))
                 .WarmupCount(5)
                 .Run();
         }

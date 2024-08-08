@@ -206,24 +206,24 @@ namespace UnityEngine.InputSystem.Experimental.Devices
 
         
         //public readonly ref GamepadState => 
-        public static ObservableInput<Vector2> LeftStick => new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
-        public static readonly ObservableInput<Vector2> RightStick = new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick");
+        public static ObservableInputNode<Vector2> LeftStick => new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
+        public static readonly ObservableInputNode<Vector2> RightStick = new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick");
         
-        public static readonly ObservableInput<float> LeftTrigger = new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger");
-        public static readonly ObservableInput<float> RightTrigger = new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger");
+        public static readonly ObservableInputNode<float> LeftTrigger = new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger");
+        public static readonly ObservableInputNode<float> RightTrigger = new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger");
         
-        public static readonly ObservableInput<bool> ButtonSouth = new(Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth");
-        public static readonly ObservableInput<bool> ButtonEast = new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast");
-        public static readonly ObservableInput<bool> ButtonNorth = new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth");
-        public static readonly ObservableInput<bool> ButtonWest = new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest");
-        public static readonly ObservableInput<bool> LeftShoulder = new(Usages.GamepadUsages.LeftShoulder, "Gamepad.LeftShoulder");
-        public static readonly ObservableInput<bool> RightShoulder = new(Usages.GamepadUsages.RightShoulder, "Gamepad.RightShoulder");
-        public static readonly ObservableInput<bool> Select = new(Usages.GamepadUsages.Select, "Gamepad.Select");
-        public static readonly ObservableInput<bool> Start = new(Usages.GamepadUsages.Start, "Gamepad.Start");
-        public static readonly ObservableInput<bool> Up = new(Usages.GamepadUsages.Up, "Gamepad.Up");
-        public static readonly ObservableInput<bool> Left = new(Usages.GamepadUsages.Left, "Gamepad.Left");
-        public static readonly ObservableInput<bool> Right = new(Usages.GamepadUsages.Right, "Gamepad.Right");
-        public static readonly ObservableInput<bool> Down = new(Usages.GamepadUsages.Down, "Gamepad.Down");
+        public static readonly ObservableInputNode<bool> ButtonSouth = new(Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth");
+        public static readonly ObservableInputNode<bool> ButtonEast = new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast");
+        public static readonly ObservableInputNode<bool> ButtonNorth = new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth");
+        public static readonly ObservableInputNode<bool> ButtonWest = new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest");
+        public static readonly ObservableInputNode<bool> LeftShoulder = new(Usages.GamepadUsages.LeftShoulder, "Gamepad.LeftShoulder");
+        public static readonly ObservableInputNode<bool> RightShoulder = new(Usages.GamepadUsages.RightShoulder, "Gamepad.RightShoulder");
+        public static readonly ObservableInputNode<bool> Select = new(Usages.GamepadUsages.Select, "Gamepad.Select");
+        public static readonly ObservableInputNode<bool> Start = new(Usages.GamepadUsages.Start, "Gamepad.Start");
+        public static readonly ObservableInputNode<bool> Up = new(Usages.GamepadUsages.Up, "Gamepad.Up");
+        public static readonly ObservableInputNode<bool> Left = new(Usages.GamepadUsages.Left, "Gamepad.Left");
+        public static readonly ObservableInputNode<bool> Right = new(Usages.GamepadUsages.Right, "Gamepad.Right");
+        public static readonly ObservableInputNode<bool> Down = new(Usages.GamepadUsages.Down, "Gamepad.Down");
         
         public static OutputBindingTarget<float> RumbleHaptic = new(Usages.GamepadUsages.RumbleHaptic); // TODO Move to HapticDevice
     }

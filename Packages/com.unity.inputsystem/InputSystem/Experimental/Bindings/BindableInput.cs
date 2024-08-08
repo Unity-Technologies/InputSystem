@@ -11,35 +11,35 @@ namespace UnityEngine.InputSystem.Experimental
         public event Callback performed;
 
         private Context m_Context;
-        private ObservableInput<T>[] m_Bindings;
+        private ObservableInputNode<T>[] m_Bindings;
         private int m_BindingCount;
         private IDisposable[] m_Subscriptions;
         private int m_SubscriptionCount;
 
-        public static BindableInput<T> Create(Callback callback, IObservableInput<T> source = null, Context context = null)
+        public static BindableInput<T> Create(Callback callback, IObservableInputNode<T> source = null, Context context = null)
         {
             return new BindableInput<T>(callback, source, context);
         }
 
-        public BindableInput(ObservableInput<T> binding, Context context = null)
+        public BindableInput(ObservableInputNode<T> binding, Context context = null)
         {
             m_Context = context ?? Context.instance;
             Bind(binding);
         }
 
-        public BindableInput(IObservableInput<T> binding, Context context = null)
+        public BindableInput(IObservableInputNode<T> binding, Context context = null)
         {
             m_Context = context ?? Context.instance;
             Bind(binding);
         }
 
-        public BindableInput(Callback callback, IObservableInput<T> binding = null, Context context = null)
+        public BindableInput(Callback callback, IObservableInputNode<T> binding = null, Context context = null)
             : this(binding, context)
         {
             performed += callback; // TODO We could dispatch this down to avoid multiple levels of indirection?
         }
 
-        public BindableInput(Callback callback, ObservableInput<T> binding, Context context = null)
+        public BindableInput(Callback callback, ObservableInputNode<T> binding, Context context = null)
             : this(binding, context)
         {
             performed += callback;
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Experimental
             performed += callback;
         }*/
 
-        public static implicit operator BindableInput<T>(ObservableInput<T> source)
+        public static implicit operator BindableInput<T>(ObservableInputNode<T> source)
         {
             return new BindableInput<T>(source);
         }
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Experimental
             performed?.Invoke(value);
         }
 
-        public void Bind<TSource>(TSource source) where TSource : IObservableInput<T>
+        public void Bind<TSource>(TSource source) where TSource : IObservableInputNode<T>
         {
             ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount,
                 source.Subscribe(m_Context, this));
@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Experimental
         }*/
 
         // TODO Consider requiring context to be passed and instead only make IObservable<T> out of context owning objects
-        public void Bind(IObservableInput<T> observable)
+        public void Bind(IObservableInputNode<T> observable)
         {
             var subscription = observable.Subscribe(this);
             ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount, subscription);

@@ -89,17 +89,17 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
     // Note that ObservableInput is equatable based on underlying usage.
-    public struct ObservableInput<T> : IObservableInput<T>, IEquatable<ObservableInput<T>>, IUnsafeObservable<T>
+    public struct ObservableInputNode<T> : IObservableInputNode<T>, IEquatable<ObservableInputNode<T>>, IUnsafeObservable<T>
         where T : struct
     {
         public readonly Usage Usage;
         
-        public ObservableInput(Usage usage, string displayName = null)
+        public ObservableInputNode(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
         {}
 
         // TODO Remove context constructor if not needed/relevant
-        public ObservableInput(Usage usage, [NotNull] Context context, Field field, string displayName)
+        public ObservableInputNode(Usage usage, [NotNull] Context context, Field field, string displayName)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context) + " is required.");
@@ -167,19 +167,19 @@ namespace UnityEngine.InputSystem.Experimental
         /// <inheritDoc />
         public bool Equals(IDependencyGraphNode other)
         {
-            if (other is ObservableInput<T> otherObservableInput)
+            if (other is ObservableInputNode<T> otherObservableInput)
                 return Equals(otherObservableInput);
             return false;
         }
 
         /// <inheritDoc />
-        public bool Equals(ObservableInput<T> other)
+        public bool Equals(ObservableInputNode<T> other)
         {
             return Usage.Equals(other.Usage);   
         }
 
         /// <inheritDoc />
-        public override bool Equals(object obj) => obj is ObservableInput<T> other && Equals(other);
+        public override bool Equals(object obj) => obj is ObservableInputNode<T> other && Equals(other);
         /// <inheritDoc />
         public override int GetHashCode() => Usage.GetHashCode();
 

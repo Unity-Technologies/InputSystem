@@ -35,7 +35,7 @@ namespace Tests.InputSystem
         /// <param name="context">The associated context.</param>
         /// <typeparam name="T">The associated data type.</typeparam>
         /// <returns><c>IDisposable</c> that cancels the subscription.</returns>
-        public static IDisposable DebugLog<T>(this IObservableInput<T> source, Context context = null)
+        public static IDisposable DebugLog<T>(this IObservableInputNode<T> source, Context context = null)
             where T : struct
         {
             return source.Subscribe(context, new DebugLogObserver<T>(source.displayName));            

@@ -43,22 +43,22 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         // NOTE: This is just a limited hand-crafted set for proof-of-concept for something that should
         //       be auto-generated from native definitions.
         
-        public static ObservableInput<bool> W = new(Usages.Keyboard.w, "W");
-        public static ObservableInput<bool> A = new(Usages.Keyboard.a, "A");
-        public static ObservableInput<bool> S = new(Usages.Keyboard.s, "S");
-        public static ObservableInput<bool> D = new(Usages.Keyboard.d, "D");
-        public static ObservableInput<bool> Q = new(Usages.Keyboard.q, "Q");
-        public static ObservableInput<bool> E = new(Usages.Keyboard.e, "E");
-        public static ObservableInput<bool> UpArrow = new(Usages.Keyboard.upArrow, "Up Arrow");
-        public static ObservableInput<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
-        public static ObservableInput<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
-        public static ObservableInput<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
-        public static ObservableInput<bool> Escape = new(Usages.Keyboard.escape, "Escape");
-        public static ObservableInput<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
-        public static ObservableInput<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
-        public static ObservableInput<bool> Shift = new(Usages.Keyboard.shift, "Shift");
-        public static ObservableInput<bool> Control = new(Usages.Keyboard.control, "Control");
-        public static ObservableInput<bool> Alt = new(Usages.Keyboard.alt, "Alt");
-        public static ObservableInput<bool> Space = new(Usages.Keyboard.space, "Space");
+        public static ObservableInputNode<bool> W = new(Usages.Keyboard.w, "W");
+        public static ObservableInputNode<bool> A = new(Usages.Keyboard.a, "A");
+        public static ObservableInputNode<bool> S = new(Usages.Keyboard.s, "S");
+        public static ObservableInputNode<bool> D = new(Usages.Keyboard.d, "D");
+        public static ObservableInputNode<bool> Q = new(Usages.Keyboard.q, "Q");
+        public static ObservableInputNode<bool> E = new(Usages.Keyboard.e, "E");
+        public static ObservableInputNode<bool> UpArrow = new(Usages.Keyboard.upArrow, "Up Arrow");
+        public static ObservableInputNode<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
+        public static ObservableInputNode<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
+        public static ObservableInputNode<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
+        public static ObservableInputNode<bool> Escape = new(Usages.Keyboard.escape, "Escape");
+        public static ObservableInputNode<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
+        public static ObservableInputNode<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
+        public static ObservableInputNode<bool> Shift = new(Usages.Keyboard.shift, "Shift");
+        public static ObservableInputNode<bool> Control = new(Usages.Keyboard.control, "Control");
+        public static ObservableInputNode<bool> Alt = new(Usages.Keyboard.alt, "Alt");
+        public static ObservableInputNode<bool> Space = new(Usages.Keyboard.space, "Space");
     }
 }

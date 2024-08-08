@@ -4,7 +4,7 @@ namespace UnityEngine.InputSystem.Experimental
 {
     // TODO LIttle value of this base?!
     internal class MuxBase<T, TSource, TReceiver> : ObserverList2<T>, IForwardReceiver<T>
-        where TSource : IObservableInput<T>
+        where TSource : IObservableInputNode<T>
         where TReceiver : IForwardReceiver<T> 
         where T : struct
     {
@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Experimental
     }
     
     internal abstract class IndexedMuxBase<T, TSource> : ObserverList2<T>, IIndexedForwardReceiver<T>
-        where TSource : IObservableInput<T>
+        where TSource : IObservableInputNode<T>
         where T : struct
     {
         private readonly ObserverList2<T> m_Observers;

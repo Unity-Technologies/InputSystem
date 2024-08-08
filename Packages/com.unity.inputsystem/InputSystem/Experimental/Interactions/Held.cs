@@ -6,8 +6,8 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO We need want a timer callback when sufficient time has passed.
     //      This is either driven by processing an event with timestamp passed or timer event if no callback.
     //      The best implementation is likely native timer output.
-    public readonly struct Held<TSource> : IObservableInput<InputEvent>
-        where TSource : IObservableInput<bool>
+    public readonly struct Held<TSource> : IObservableInputNode<InputEvent>
+        where TSource : IObservableInputNode<bool>
     {
         // TODO This is a class only to be able to receive callbacks via IObserver<bool>
         // TODO This could be different with a delegate
@@ -119,9 +119,9 @@ namespace UnityEngine.InputSystem.Experimental
         /// <param name="duration">The duration for which the trigger must be kept active before the event fires.</param>
         /// <typeparam name="TSource">The trigger source type.</typeparam>
         /// <returns>Hold interaction using a <typeparamref name="TSource"/> type.</returns>
-        [InputNodeFactory(type=typeof(Held<IObservableInput<bool>>))]
+        [InputNodeFactory(type=typeof(Held<IObservableInputNode<bool>>))]
         public static Held<TSource> Held<TSource>(this TSource source, TimeSpan duration)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Held<TSource>(source, duration);
         }

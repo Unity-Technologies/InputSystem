@@ -2,9 +2,9 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public struct Filter<T, TSource> : IObservableInput<T>
+    public struct Filter<T, TSource> : IObservableInputNode<T>
         where T : struct
-        where TSource : IObservableInput<T>
+        where TSource : IObservableInputNode<T>
     {
         private class Impl : IObserver<T>
         {
@@ -75,15 +75,15 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     public static class FilterExtensionMethods
     {
-        public static Filter<T, IObservableInput<T>> Filter<T>(this IObservableInput<T> source, Predicate<T> predicate) 
+        public static Filter<T, IObservableInputNode<T>> Filter<T>(this IObservableInputNode<T> source, Predicate<T> predicate) 
             where T : struct 
         {
-            return new Filter<T, IObservableInput<T>>(source, predicate);
+            return new Filter<T, IObservableInputNode<T>>(source, predicate);
         }
         
         public static Filter<T, TSource> Filter<T, TSource>(this TSource source, Predicate<T> predicate) 
             where T : struct 
-            where TSource : IObservableInput<T>
+            where TSource : IObservableInputNode<T>
         {
             return new Filter<T, TSource>(source, predicate);
         }

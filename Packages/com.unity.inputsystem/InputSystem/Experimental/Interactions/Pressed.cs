@@ -41,58 +41,17 @@ namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
-    public struct Pressed<TSource> : IObservableInput<InputEvent>, IUnsafeObservable<InputEvent>
-        where TSource : IObservableInput<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
+    public readonly struct Pressed<TSource> : IObservableInputNode<InputEvent>, IUnsafeObservable<InputEvent>
+        where TSource : IObservableInputNode<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
     {
-        // ObservableInput<InputEvent>
-        // TODO State could be unmanaged from pool
-        // TODO ObserverList could be from pool
-        // TODO Impl could be pooled (need interface)
-        //
-        // TODO Should register itself to avoid duplicate nodes
-        // TODO An alternative would be to subscribe to underlying stream with an action that would operate on cast state
-        internal sealed class Impl : IObserver<bool>
-        {
-            private bool m_PreviousValue;                           // TODO This is state
-            private readonly ObserverList2<InputEvent> m_Observers; // TODO This is effectively actions
-        
-            public Impl(Context context, TSource source)
-            {
-                m_Observers = new ObserverList2<InputEvent>(source.Subscribe(context, this));
-            }
-
-            public IDisposable Subscribe(IObserver<InputEvent> observer) => 
-                Subscribe(Context.instance, observer); // TODO Unnecessary must unless we use a base
-
-            public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
-                m_Observers.Subscribe(context, observer);
-            
-            public void OnCompleted() => m_Observers.OnCompleted();
-            public void OnError(Exception error) => m_Observers.OnError(error);
-
-            public void OnNext(bool value)
-            {
-                if (m_PreviousValue == value) 
-                    return;
-                if (value) // TODO Let class be converted to Step and take a IComparable<T> type, then we can use for both Press and Relase
-                    m_Observers.OnNext(new InputEvent()); // TODO This needs to be tentative, should indirection between data observer an events or we need another stage, so its either a separate method or parameter
-                m_PreviousValue = value;
-            }
-        }
-        
-        private readonly TSource m_Source;  // The source to observe for press events
-        private Impl m_Impl;                // Implementation, lazily constructed
+        private readonly TSource m_Source;
         
         public Pressed([InputPort] TSource source)
         {
             m_Source = source;
-            m_Impl = null;
         }
 
-        public IDisposable Subscribe(IObserver<InputEvent> observer)
-        {
-            return Subscribe(Context.instance, observer);
-        }
+        public IDisposable Subscribe(IObserver<InputEvent> observer) => Subscribe(Context.instance, observer);
         
         public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
         {
@@ -101,10 +60,11 @@ namespace UnityEngine.InputSystem.Experimental
             // Do we want to compare this to impl?!
             
             // TODO Attempt to get impl for source, if found subscribe to that node. If not found, create and subscribe.
-            var impl = context.GetNodeImpl<Impl>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
+            var impl = context.GetNodeImpl<PressedObserver>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
             if (impl == null)
             {
-                impl = new Impl(context, m_Source);
+                impl = new PressedObserver();
+                impl.Initialize(m_Source.Subscribe(context, impl));
                 context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
             }
             
@@ -148,26 +108,12 @@ namespace UnityEngine.InputSystem.Experimental
                 m_Source = source; // Source should also be enumerable
             }
             
-            public IEnumerator<InputEvent> GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
+            public IEnumerator<InputEvent> GetEnumerator() => throw new NotImplementedException();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        public bool Equals(IDependencyGraphNode other)
-        {
-            return other is Pressed<TSource> pressed && Equals(pressed);
-        }
-
-        public bool Equals(Pressed<TSource> other)
-        {   
-            return m_Source.Equals(other.m_Source);
-        }
+        public bool Equals(IDependencyGraphNode other) => other is Pressed<TSource> pressed && Equals(pressed);
+        public bool Equals(Pressed<TSource> other) => m_Source.Equals(other.m_Source);
         
         public string displayName => "Pressed"; // TODO Could be optional attribute and use type name when not defined
         public int childCount => 1; // TODO Could be detected by presence of attributes on properties
@@ -188,13 +134,47 @@ namespace UnityEngine.InputSystem.Experimental
         /// <returns>Press interaction using a <typeparamref name="TSource"/> type.</returns>
         //[InputNodeFactory(type=typeof(Pressed<IObservableInput<bool>>))]
         public static Pressed<TSource> Pressed<TSource>(this TSource source)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
         {
             return new Pressed<TSource>(source);
         }
     }
     
-    // TODO Need to expose a subscription of its own. Could simply be a delegate
+        // ObservableInput<InputEvent>
+    // TODO State could be unmanaged from pool
+    // TODO ObserverList could be from pool
+    // TODO Impl could be pooled (need interface)
+    //
+    // TODO Should register itself to avoid duplicate nodes
+    // TODO An alternative would be to subscribe to underlying stream with an action that would operate on cast state
+    // TODO Consider using an object handle to context and observers. We may use a bit to signify managed vs unmanageed.
+    internal sealed class PressedObserver : IObserver<bool>
+    {
+        private bool m_PreviousValue;                  // TODO This is state
+        private ObserverList2<InputEvent> m_Observers; // TODO This is effectively actions in state, we cannot store managed in unmanaged, this may cause problems. Hence we might need object handle and keep this in managed.
+    
+        public void Initialize(IDisposable sourceSubscription)
+        {
+            m_Observers = new ObserverList2<InputEvent>(sourceSubscription);
+        }
+
+        public IDisposable Subscribe(Context context, IObserver<InputEvent> observer) =>
+            m_Observers.Subscribe(context, observer);
+        
+        public void OnCompleted() => m_Observers.OnCompleted();
+        public void OnError(Exception error) => m_Observers.OnError(error);
+
+        public void OnNext(bool value)
+        {
+            if (m_PreviousValue == value) 
+                return;
+            if (value) // TODO Let class be converted to Step and take a IComparable<T> type, then we can use for both Press and Relase
+                m_Observers.OnNext(new InputEvent()); // TODO This needs to be tentative, should indirection between data observer an events or we need another stage, so its either a separate method or parameter
+            m_PreviousValue = value;
+        }
+    }    
+    
+        // TODO Need to expose a subscription of its own. Could simply be a delegate
     internal unsafe struct UnsafePressed
     {
         private static readonly delegate*<bool, void*, void> Next = &OnNext;
@@ -215,7 +195,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
 
         // TODO If we instead pass context to this function we can hide create inside and also handle registration/allocation
-        public static unsafe UnsafeSubscription Subscribe(UnsafePressed* pressed, UnsafeDelegate<InputEvent> d)
+        public static UnsafeSubscription Subscribe(UnsafePressed* pressed, UnsafeDelegate<InputEvent> d)
         {
             pressed->m_OnNext.Add(d);
             return new UnsafeSubscription(

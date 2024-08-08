@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO This is basically AND, redesign as such?
-    public struct Shortcut<TSource> : IObservableInput<bool>, IDependencyGraphNode
-        where TSource : IObservableInput<bool>, IDependencyGraphNode
+    public struct Shortcut<TSource> : IObservableInputNode<bool>, IDependencyGraphNode
+        where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {
@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Experimental
     public static partial class Combine
     {
         public static Shortcut<TSource> Shortcut<TSource>(TSource source1, TSource source2)
-            where TSource : IObservableInput<bool>, IDependencyGraphNode
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Shortcut<TSource>(source1, source2);
         }

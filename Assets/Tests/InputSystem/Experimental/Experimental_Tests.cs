@@ -252,6 +252,48 @@ namespace Tests.InputSystem
             }
         }
 
+        public interface IObservableThing<T>
+        {
+            public void Subscribe<TObserver>(TObserver observer) where TObserver : IObserver<T>;
+        }
+
+        public struct Thing : IObservableThing<int>
+        {
+            public void Subscribe<TObserver>(TObserver observer) where TObserver : IObserver<int>
+            {
+                
+            }
+        }
+
+        public struct Curious : IObserver<int>
+        {
+            public void OnCompleted()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnError(Exception error)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnNext(int value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        
+        [Test]
+        public void WillItWork()
+        {
+            Assert.That(() =>
+            {
+                Curious y;     
+                Thing x;       
+                x.Subscribe(y);
+            }, Is.Not.AllocatingGCMemory());
+        }
+
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event
         // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.
