@@ -7,7 +7,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
-using UnityEngine.InputSystem.Controls;
 
 ////TODO: make all the sensor class types internal
 
