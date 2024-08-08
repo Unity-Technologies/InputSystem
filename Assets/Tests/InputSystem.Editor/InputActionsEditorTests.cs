@@ -12,112 +12,35 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
 
-public class InputActionsEditorTests
+internal class InputActionsEditorTests :  UIToolkitBaseTestWindow<InputActionsEditorWindow>
 {
     #region setup and teardown
-    InputActionsEditorWindow m_Window;
     InputActionAsset m_Asset;
 
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
+    public override void OneTimeSetUp()
     {
-        TestUtils.MockDialogs();
+        base.OneTimeSetUp();
         m_Asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
         m_Asset.AddActionMap("First Name");
         m_Asset.AddActionMap("Second Name");
         m_Asset.AddActionMap("Third Name");
     }
 
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
+    public override void OneTimeTearDown()
     {
         AssetDatabaseUtils.Restore();
-        TestUtils.RestoreDialogs();
+        base.OneTimeTearDown();
     }
 
-    [UnitySetUp]
-    public IEnumerator UnitySetup()
+    public override IEnumerator UnitySetup()
     {
-        var editor = InputActionsEditorWindow.OpenEditor(m_Asset);
-        m_Window = editor;
-        yield return WaitForNotDirty(editor.rootVisualElement);
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        m_Window?.Close();
+        m_Window = InputActionsEditorWindow.OpenEditor(m_Asset);
+        yield return base.UnitySetup();
     }
 
     #endregion
 
     #region Helper methods
-
-    void Click(VisualElement ve)
-    {
-        Event evtd = new Event();
-        evtd.type = EventType.MouseDown;
-        evtd.mousePosition = ve.worldBound.center;
-        evtd.clickCount = 1;
-        using var pde = PointerDownEvent.GetPooled(evtd);
-        ve.SendEvent(pde);
-
-        Event evtu = new Event();
-        evtu.type = EventType.MouseUp;
-        evtu.mousePosition = ve.worldBound.center;
-        evtu.clickCount = 1;
-        using var pue = PointerUpEvent.GetPooled(evtu);
-        ve.SendEvent(pue);
-    }
-
-    void SendText(VisualElement ve, string text, bool sendReturn = true)
-    {
-        foreach (var character in text)
-        {
-            var evtd = new Event() { type = EventType.KeyDown, keyCode = KeyCode.None, character = character };
-            using var kde = KeyDownEvent.GetPooled(evtd);
-            ve.SendEvent(kde);
-
-            var evtu = new Event() { type = EventType.KeyUp, keyCode = KeyCode.None, character = character };
-            using var kue = KeyUpEvent.GetPooled(evtu);
-            ve.SendEvent(kue);
-        }
-        if (sendReturn)
-        {
-            SendReturn(ve);
-        }
-    }
-
-    void SendReturn(VisualElement ve)
-    {
-        var evtd = new Event() { type = EventType.KeyDown, keyCode = KeyCode.Return };
-        using var kde = KeyDownEvent.GetPooled(evtd);
-        var evtd2 = new Event() { type = EventType.KeyDown, keyCode = KeyCode.None, character = '\n' };
-        using var kde2 = KeyDownEvent.GetPooled(evtd2);
-        ve.SendEvent(kde);
-        ve.SendEvent(kde2);
-
-        var evtu = new Event() { type = EventType.KeyUp, keyCode = KeyCode.Return };
-        using var kue = KeyUpEvent.GetPooled(evtu);
-        ve.SendEvent(kue);
-    }
-
-    void SendDeleteCommand(VisualElement ve)
-    {
-        var evt = new Event() { type = EventType.ExecuteCommand, commandName = "Delete" };
-        using var ce = ExecuteCommandEvent.GetPooled(evt);
-        ve.SendEvent(ce);
-    }
-
-    IEnumerator WaitForFocus(VisualElement ve, double timeoutSecs = 5.0)
-    {
-        return WaitUntil(() => ve.focusController.focusedElement == ve, "WaitForFocus", timeoutSecs);
-    }
-
-    IEnumerator WaitForNotDirty(VisualElement ve, double timeoutSecs = 5.0)
-    {
-        return WaitUntil(() => ve.panel.isDirty == false, "WaitForNotDirty", timeoutSecs);
-    }
 
     IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 5.0)
     {
@@ -132,18 +55,6 @@ public class InputActionsEditorTests
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    // Wait until the action is true or the timeout is reached
-    IEnumerator WaitUntil(Func<bool> action, string assertMessage, double timeoutSecs = 5.0)
-    {
-        var endTime = EditorApplication.timeSinceStartup + timeoutSecs;
-        do
-        {
-            if (action()) yield break;
-            yield return null;
-        }
-        while (endTime > EditorApplication.timeSinceStartup);
-        Assert.That(action(), assertMessage);
-    }
 
     #endregion
 
@@ -165,13 +76,13 @@ public class InputActionsEditorTests
     {
         var button = m_Window.rootVisualElement.Q<Button>("add-new-action-map-button");
         Assume.That(button, Is.Not.Null);
-        Click(button);
+        SimulateClickOn(button);
 
         // Wait for the focus to move out the button and start new ActionMaps editon
         yield return WaitForActionMapRename(3, isActive: true);
 
         // Rename the new action map
-        SendText(m_Window.rootVisualElement, "New Name");
+        SimulateTypingText("New Name");
 
         // wait for the edition to end
         yield return WaitForActionMapRename(3, isActive: false);
@@ -199,20 +110,20 @@ public class InputActionsEditorTests
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").Focus();
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").selectedIndex = 1;
 
-        yield return WaitForNotDirty(actionMapsContainer);
+        yield return WaitForNotDirty();
         yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"));
 
         // refetch the action map item since the ui may have refreshed.
         actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
 
         // clic twice to start the rename
-        Click(actionMapItem[1]);
-        Click(actionMapItem[1]);
+        SimulateClickOn(actionMapItem[1]);
+        SimulateClickOn(actionMapItem[1]);
 
         yield return WaitForActionMapRename(1, isActive: true);
 
         // Rename the new action map
-        SendText(actionMapItem[1], "New Name");// .Q<TextField>())
+        SimulateTypingText("New Name");
 
         // wait for the edition to end
         yield return WaitForActionMapRename(1, isActive: false);
@@ -238,11 +149,11 @@ public class InputActionsEditorTests
         Assume.That(actionMapItem[1].Q<Label>("name").text, Is.EqualTo("Second Name"));
 
         // Select the second element
-        Click(actionMapItem[1]);
+        SimulateClickOn(actionMapItem[1]);
 
         yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"));
 
-        SendDeleteCommand(m_Window.rootVisualElement);
+        SimulateDeleteCommand();
 
         yield return WaitUntil(() => actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList().Count == 2, "wait for element to be deleted");
 
