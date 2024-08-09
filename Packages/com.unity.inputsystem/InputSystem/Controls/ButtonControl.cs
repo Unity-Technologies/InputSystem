@@ -100,9 +100,55 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>True if button is currently pressed.</value>
         /// <remarks>
-        /// A button is considered press if it's value is equal to or greater
+        /// A button is considered pressed if its value is equal to or greater
         /// than its button press threshold (<see cref="pressPointOrDefault"/>).
         /// </remarks>
+        /// <example>
+        /// <para>You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:</para>
+        /// <code>
+        /// <![CDATA[
+        /// // Using KeyControl property directly.
+        /// Keyboard.current.spaceKey.isPressed
+        /// Keyboard.current.aKey.isPressed // etc.
+        ///
+        /// // Using Key enum.
+        /// Keyboard.current[Key.Space].isPressed
+        ///
+        /// // Using key name.
+        /// ((KeyControl)Keyboard.current["space"]).isPressed
+        /// ]]>
+        /// </code>
+        /// <para>Note: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
+        ///
+        /// You can also use this to read mouse buttons, as shown in the following examples:</para>
+        /// <code>
+        /// <![CDATA[
+        /// bool leftPressed = Mouse.current.leftButton.isPressed;
+        /// bool rightPressed = Mouse.current.rightButton.isPressed;
+        /// bool middlePressed = Mouse.current.middleButton.isPressed;
+        /// ]]>
+        /// </code>
+        /// <para>You can also check through all numbered buttons on the mouse: (this example does not cause allocations)</para>
+        /// <code>
+        /// <![CDATA[
+        /// var controls = Mouse.current.allControls;
+        /// for (var i = 0; i < controls.Count; ++i)
+        /// {
+        ///     var button = controls[i] as ButtonControl;
+        ///     if (button != null && button.isPressed)
+        ///     {
+        ///         // respond to mouse button press here...
+        ///     }
+        /// }
+        /// ]]>
+        /// </code>
+        /// <para>Or you can look up controls by name, like this:</para>
+        /// <code>
+        /// <![CDATA[
+        /// bool leftPressed = ((ButtonControl)Mouse.current["leftButton"]).isPressed;
+        /// ]]>
+        /// </code>
+        /// </example>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
@@ -177,6 +223,19 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
+        ///
+        /// You can also use this property to read mouse buttons. For example:
+        ///
+        /// <example>
+        /// <code>
+        /// Mouse.current.leftButton.wasPressedThisFrame
+        /// Mouse.current.rightButton.wasPressedThisFrame
+        /// Mouse.current.middleButton.wasPressedThisFrame
+        /// </code>
+        /// </example>
+        ///
+        ///
         /// </remarks>
         public bool wasPressedThisFrame
         {
@@ -200,6 +259,29 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        /// <summary>
+        /// Whether the press ended this frame.
+        /// </summary>
+        /// <value>True if the current press of the button ended this frame.</value>
+        /// <remarks>
+        /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
+        /// </remarks>
+        /// <example>
+        /// <para>An example showing the use of this property on a gamepad button and a keyboard key:</para>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class ExampleScript : MonoBehaviour
+        /// {
+        ///     void Update()
+        ///     {
+        ///         bool buttonPressed = Gamepad.current.aButton.wasReleasedThisFrame;
+        ///         bool spaceKeyPressed = Keyboard.current.spaceKey.wasReleasedThisFrame;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public bool wasReleasedThisFrame
         {
             get
@@ -214,7 +296,7 @@ namespace UnityEngine.InputSystem.Controls
                     return device.wasUpdatedThisFrame && !currentlyPressed && pressedLastFrame;
                 }
 
-#if UNITY_EDITOR
+                #if UNITY_EDITOR
                 if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
                     return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleasedEditor;
                 #endif
