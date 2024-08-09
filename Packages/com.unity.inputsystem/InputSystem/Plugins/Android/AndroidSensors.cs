@@ -283,7 +283,7 @@ namespace UnityEngine.InputSystem.Android
     /// Hinge angle sensor device on Android.
     /// This sensor is usually available on foldable devices.
     /// </summary>
-    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_HINGE_ANGLE/>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_HINGE_ANGLE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = nameof(AndroidSensorType.HingeAngle), hideInUI = true)]
     public class AndroidHingeAngle : HingeAngle
     {
