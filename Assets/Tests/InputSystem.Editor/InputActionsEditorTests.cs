@@ -117,7 +117,11 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // clic twice to start the rename
         SimulateClickOn(actionMapItem[1]);
-        SimulateClickOn(actionMapItem[1]);
+        // in case of the item is already focused, don't click again
+        if (!actionMapItem[1].IsFocused)
+        {
+            SimulateClickOn(actionMapItem[1]);
+        }
 
         yield return WaitForActionMapRename(1, isActive: true);
 
