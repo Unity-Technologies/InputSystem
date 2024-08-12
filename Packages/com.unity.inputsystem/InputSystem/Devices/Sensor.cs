@@ -655,12 +655,13 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Hinge angle sensor.
     /// This sensor is usually available on foldable devices.
+    ///  Note: The step resolution for angle is device dependentent, on Android you can query the sensor resolution by querying device capabilities.
     /// </summary>
     [InputControlLayout(displayName = "Hinge Angle")]
     public class HingeAngle : Sensor
     {
         /// <summary>
-        /// The angle in degrees on how much the device is unfolded
+        /// The angle in degrees on how much the device is unfolded.
         /// </summary>
         /// <value>0 means fully folded, 180 means fully unfolded.</value>
         public AxisControl angle { get; protected set; }
