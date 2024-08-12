@@ -1897,6 +1897,13 @@ namespace UnityEngine.InputSystem.UI
         {
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
+            // We don't want to release touch pointers on the same frame they are released. They get cleaned up one frame later in Process() 
+            ref var state = ref GetPointerStateForIndex(index);
+            if (state.pointerType == UIPointerType.Touch && (state.leftButton.isPressed || state.leftButton.wasReleasedThisFrame))
+            {
+                return;
+            }
+
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
             var eventData = m_PointerStates[index].eventData;
             Debug.Assert(eventData != null, "Pointer state should have an event instance!");
