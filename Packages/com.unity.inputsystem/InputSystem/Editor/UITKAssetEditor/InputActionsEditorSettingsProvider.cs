@@ -265,7 +265,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }
         }
-        
+
         private InputActionAsset GetAsset()
         {
             return m_State.serializedObject?.targetObject as InputActionAsset;
