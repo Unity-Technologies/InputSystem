@@ -687,6 +687,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             angle = GetChildControl<AxisControl>("angle");
