@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (actionMapData.HasValue)
                     m_ListView.SetSelection(viewState.actionMapData.IndexOf(actionMapData.Value));
             }
-            m_ListView.Rebuild();
+            m_ListView.RefreshItems();
             RenameNewActionMaps();
         }
 
