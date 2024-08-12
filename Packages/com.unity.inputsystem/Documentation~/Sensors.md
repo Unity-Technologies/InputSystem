@@ -176,10 +176,22 @@ This Input Device represents the user's footstep count as measured by the device
 This Input Device represents hinge angle for foldable devices. For ex., Google Fold Android phone.
 
 ```CSharp
+    [Serializable]
+    class SensorCapabilities
+    {
+        public int sensorType;
+        public float resolution;
+        public int minDelay;
+    }
+
     void Start()
     {
         if (HingeAngle.current != null)
+        {
             InputSystem.EnableDevice(HingeAngle.current);
+            var caps = JsonUtility.FromJson<SensorCapabilities>(HingeAngle.current.description.capabilities);
+            Debug.Log($"HingeAngle Capabilities: resolution = {caps.resolution}, minDelay = {caps.minDelay}");
+        }
     }
 
     void Update()
