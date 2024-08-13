@@ -14,7 +14,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -65,11 +65,11 @@ namespace UnityEngine.InputSystem
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
 
-        static readonly InputProfilerMarker k_InputUpdateProfilerMarker = new InputProfilerMarker("InputUpdate");
-        static readonly InputProfilerMarker k_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
-        static readonly InputProfilerMarker k_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
-        static readonly InputProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
-        static readonly InputProfilerMarker k_InputRegisterCustomTypesMarker = new InputProfilerMarker("InputManager.RegisterCustomTypes");
+        static readonly ProfilerMarker k_InputUpdateProfilerMarker = new ProfilerMarker("InputUpdate");
+        static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly ProfilerMarker k_InputAddDeviceMarker = new ProfilerMarker("InputSystem.AddDevice");
+        static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
 
         public InputMetrics metrics
         {

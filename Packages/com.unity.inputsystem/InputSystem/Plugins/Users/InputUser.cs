@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 ////REVIEW: remove users automatically when exiting play mode?
 
@@ -37,8 +37,8 @@ namespace UnityEngine.InputSystem.Users
     {
         public const uint InvalidId = 0;
 
-        static readonly InputProfilerMarker k_InputUserOnChangeMarker = new InputProfilerMarker("InputUser.onChange");
-        static readonly InputProfilerMarker k_InputCheckForUnpairMarker = new InputProfilerMarker("InputCheckForUnpairedDeviceActivity");
+        static readonly ProfilerMarker k_InputUserOnChangeMarker = new ProfilerMarker("InputUser.onChange");
+        static readonly ProfilerMarker k_InputCheckForUnpairMarker = new ProfilerMarker("InputCheckForUnpairedDeviceActivity");
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
