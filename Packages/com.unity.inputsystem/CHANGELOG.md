@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
 - Fixed touch pointers being released twice causing an index out of bounds error. 
 
+### Added
+- Added Hinge Angle sensor support for foldable devices.
+
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
 
