@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -84,9 +84,9 @@ namespace UnityEngine.InputSystem
     public static partial class InputSystem
     {
 #if UNITY_EDITOR
-        static readonly InputProfilerMarker k_InputInitializeInEditorMarker = new InputProfilerMarker("InputSystem.InitializeInEditor");
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
 #endif
-        static readonly InputProfilerMarker k_InputRestMarker = new InputProfilerMarker("InputSystem.Reset");
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
 
         #region Layouts
 
@@ -3857,7 +3857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            k_InputRestMarker.Begin();
+            k_InputResetMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3917,7 +3917,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
 
-            k_InputRestMarker.End();
+            k_InputResetMarker.End();
         }
 
         /// <summary>
