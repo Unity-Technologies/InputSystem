@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
+- Removed aliased values in GamepadButton enum. 
 
 ## [1.10.0] - 2024-07-24
 
