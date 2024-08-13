@@ -135,11 +135,6 @@ namespace UnityEngine.InputSystem.Editor
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
                     Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
                 }
-                else
-                {
-                    Dispatch(Commands.SelectAction(null));
-                    Dispatch(Commands.SelectBinding(-1));
-                }
             };
 
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
