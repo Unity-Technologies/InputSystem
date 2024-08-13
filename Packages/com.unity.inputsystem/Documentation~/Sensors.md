@@ -16,6 +16,7 @@ uid: input-system-sensors
 - [`HumiditySensor`](#humiditysensor)
 - [`AmbientTemperatureSensor`](#ambienttemperaturesensor)
 - [`StepCounter`](#stepcounter)
+- [`HingeAngle`](#hingeangle)
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
@@ -64,6 +65,7 @@ Each sensor Device implements a single Control which represents the data read by
 |[`HumiditySensor`](#humiditysensor)|Yes|No|No|[`relativeHumidity`](../api/UnityEngine.InputSystem.HumiditySensor.html#UnityEngine_InputSystem_HumiditySensor_relativeHumidity)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 |[`AmbientTemperatureSensor`](#ambienttemperaturesensor)|Yes|No|No|[`ambientTemperature`](../api/UnityEngine.InputSystem.AmbientTemperatureSensor.html#UnityEngine_InputSystem_AmbientTemperatureSensor_ambientTemperature)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 |[`StepCounter`](#stepcounter)|Yes|Yes|No|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
+|[`HingeAngle`](#hingeangle)|Yes|No|No|[`angle`](../api/UnityEngine.InputSystem.HingeAngle.html#UnityEngine_InputSystem_HingeAngle_angle)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 
 >__Notes__:
 >1. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
@@ -168,3 +170,33 @@ This Input Device represents the ambient air temperature measured by the device 
 This Input Device represents the user's footstep count as measured by the device which is running the content.
 
 >NOTE: To access the pedometer on iOS/tvOS devices, you need to enable the [__Motion Usage__ setting](Settings.md#iostvos) in the [Input Settings](Settings.md).
+
+## <a name="hingeangle"></a>[`HingeAngle`](../api/UnityEngine.InputSystem.HingeAngle.html)
+
+This Input Device represents hinge angle for foldable devices. For ex., Google Fold Android phone.
+
+```CSharp
+    [Serializable]
+    class SensorCapabilities
+    {
+        public int sensorType;
+        public float resolution;
+        public int minDelay;
+    }
+
+    void Start()
+    {
+        if (HingeAngle.current != null)
+        {
+            InputSystem.EnableDevice(HingeAngle.current);
+            var caps = JsonUtility.FromJson<SensorCapabilities>(HingeAngle.current.description.capabilities);
+            Debug.Log($"HingeAngle Capabilities: resolution = {caps.resolution}, minDelay = {caps.minDelay}");
+        }
+    }
+
+    void Update()
+    {
+        if (HingeAngle.current != null)
+            Debug.Log($"HingeAngle={HingeAngle.current.angle.ReadValue()}");
+    }
+```

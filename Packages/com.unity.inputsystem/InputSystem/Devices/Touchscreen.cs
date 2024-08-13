@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 ////TODO: property that tells whether a Touchscreen is multi-touch capable
 
@@ -522,8 +522,8 @@ namespace UnityEngine.InputSystem
         public ReadOnlyArray<TouchControl> touches { get; protected set; }
 
 
-        static readonly InputProfilerMarker k_TouchscreenUpdateMarker = new InputProfilerMarker("Touchscreen.OnNextUpdate");
-        static readonly InputProfilerMarker k_TouchAllocateMarker = new InputProfilerMarker("TouchAllocate");
+        static readonly ProfilerMarker k_TouchscreenUpdateMarker = new ProfilerMarker("Touchscreen.OnNextUpdate");
+        static readonly ProfilerMarker k_TouchAllocateMarker = new ProfilerMarker("TouchAllocate");
 
         protected TouchControl[] touchControlArray
         {
