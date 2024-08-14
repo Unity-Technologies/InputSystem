@@ -651,4 +651,47 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
     }
+
+    /// <summary>
+    /// Hinge angle sensor.
+    /// This sensor is usually available on foldable devices.
+    ///  Note: The step resolution for angle is device dependentent, on Android you can query the sensor resolution by querying device capabilities.
+    /// </summary>
+    [InputControlLayout(displayName = "Hinge Angle")]
+    public class HingeAngle : Sensor
+    {
+        /// <summary>
+        /// The angle in degrees on how much the device is unfolded.
+        /// </summary>
+        /// <value>0 means fully folded, 180 means fully unfolded.</value>
+        public AxisControl angle { get; protected set; }
+
+        /// <summary>
+        /// The hinge angle sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current hinge angle sensor or <c>null</c>.</value>
+        public static HingeAngle current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        /// <inheritdoc />
+        protected override void FinishSetup()
+        {
+            angle = GetChildControl<AxisControl>("angle");
+            base.FinishSetup();
+        }
+    }
 }

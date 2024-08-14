@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 using ProfilerMarker = Unity.Profiling.ProfilerMarker;
@@ -124,9 +124,9 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
-        private static readonly InputProfilerMarker k_InputInitialActionStateCheckMarker = new InputProfilerMarker("InitialActionStateCheck");
-        private static readonly InputProfilerMarker k_InputActionResolveConflictMarker = new InputProfilerMarker("InputActionResolveConflict");
-        private static readonly InputProfilerMarker k_InputActionCallbackMarker = new InputProfilerMarker("InputActionCallback");
+        private static readonly ProfilerMarker k_InputInitialActionStateCheckMarker = new ProfilerMarker("InitialActionStateCheck");
+        private static readonly ProfilerMarker k_InputActionResolveConflictMarker = new ProfilerMarker("InputActionResolveConflict");
+        private static readonly ProfilerMarker k_InputActionCallbackMarker = new ProfilerMarker("InputActionCallback");
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
