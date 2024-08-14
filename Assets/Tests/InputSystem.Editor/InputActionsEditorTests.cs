@@ -109,6 +109,8 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").Focus();
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").selectedIndex = 1;
 
+        // changing the selection triggers a state change, wait for the scheduler to process the frame
+        yield return WaitForSchedulerLoop();
         yield return WaitForNotDirty();
         yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"));
 
