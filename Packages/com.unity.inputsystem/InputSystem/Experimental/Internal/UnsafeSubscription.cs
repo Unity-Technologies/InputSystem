@@ -11,10 +11,10 @@ namespace UnityEngine.InputSystem.Experimental
         // private delegate*<void*, void> m_Unsubscribe;
         
         //private IntPtr m_EventHandler; // TODO Consider if this should be a pointer to event handler to modify state?!
-        private UnsafeDelegate<UnsafeDelegateHelper.Callback> m_Unsubscribe;    // 1 pointer
-        private readonly UnsafeDelegateHelper.Callback m_Callback;              // 2 pointers
+        private UnsafeDelegate<UnsafeCallback> m_Unsubscribe;    // 1 pointer
+        private readonly UnsafeCallback m_Callback;              // 2 pointers
           
-        internal UnsafeSubscription(UnsafeDelegate<UnsafeDelegateHelper.Callback> unsubscribe, UnsafeDelegateHelper.Callback callback) 
+        internal UnsafeSubscription(UnsafeDelegate<UnsafeCallback> unsubscribe, UnsafeCallback callback) 
         {
             m_Unsubscribe = unsubscribe;
             m_Callback = callback;

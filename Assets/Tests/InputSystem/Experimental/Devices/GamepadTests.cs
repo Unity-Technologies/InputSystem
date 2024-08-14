@@ -1,12 +1,16 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using NUnit.Framework;
 using Unity.Collections;
-using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Devices;
+using Debug = UnityEngine.Debug;
 using Usages = UnityEngine.InputSystem.Experimental.Usages;
+using Vector2 = UnityEngine.Vector2;
 
 namespace Tests.InputSystem.Experimental
 {
@@ -37,14 +41,12 @@ namespace Tests.InputSystem.Experimental
             // TODO Test remaining
         }
 
-        
-
-        // A producer perspective of a gamepad
-        private struct GamepadWriter : IDisposable
+        // A producer perspective of a single gamepad stream
+        private struct GamepadWriter : IDisposable // TODO Should writer be an observer?
         {
             private readonly Endpoint m_Endpoint;
             private Stream<GamepadState> m_Stream;
-            public GamepadState Value;
+            private GamepadState m_Value;                  // Last sample
             private long m_Flags;
 
             private const long LockBit = 1;
@@ -54,12 +56,15 @@ namespace Tests.InputSystem.Experimental
             {
                 m_Endpoint = Endpoint.FromDeviceAndUsage(deviceId, Usages.Devices.Gamepad);
                 m_Stream = null;
-                Value = initialValue;
+                m_Value = initialValue; // TODO Could be last value in output stream buffer
                 m_Flags = 0;
             }
 
-            public void BeginTransaction()
+            public bool BeginTransaction()
             {
+                if (m_Stream == null)
+                    return false;
+                
                 for (;;)
                 {
                     var previous = Interlocked.CompareExchange(ref m_Flags, m_Flags | LockBit, m_Flags & LockMask);
@@ -68,20 +73,65 @@ namespace Tests.InputSystem.Experimental
                 }
                 
                 Debug.Assert((m_Flags & LockBit) != 0);
-            }
 
+                // TODO Copy last sample into new stream slot if absolute, if relative we need to initialize to zero
+                
+                return true;
+            }
+            
             public void EndTransaction()
             {
-                Debug.Assert((m_Flags & LockBit) != 0);
+                Debug.Assert((m_Flags & LockBit) != 0, "Cannot publish without pending transaction");
+
+                // TODO Increment write position
+                
+                // TODO if (UnsafeUtility.MemCmp(previous, current) == 0)
+                //    return; // no change
                 
                 while ((Interlocked.CompareExchange(ref m_Flags, m_Flags | LockBit, m_Flags & LockMask) & LockBit) != 0)
                 {
-                    // Busy-wait since we are not expecting any concurrent writers
+                    // Busy-wait since we are not expecting any concurrent writers, consider generating a warning
+                }
+            }
+            
+            // TODO If we have C# 11 ref fields we can do this as a transaction proxy instead
+            
+            #region Mutable interface
+            
+            public bool buttonEast 
+            {
+                set
+                {
+                    if (value)
+                        m_Value.buttons |= UnityEngine.InputSystem.Experimental.Devices.GamepadState.GamepadButton.ButtonEast;
+                    else
+                        m_Value.buttons &= ~UnityEngine.InputSystem.Experimental.Devices.GamepadState.GamepadButton.ButtonEast;
                 }
             }
 
+            public Vector2 leftStick
+            {
+                set
+                {
+                    CheckStickValue(value);
+                    m_Value.leftStick = value;
+                }
+            }
+
+            [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+            private void CheckStickValue(Vector2 value)
+            {
+                if (value.x < -1.0f || value.x > 1.0f)
+                    throw new ArgumentOutOfRangeException(nameof(value.x));
+                if (value.y < -1.0f || value.y > 1.0f)
+                    throw new ArgumentOutOfRangeException(nameof(value.y));
+            }
+            
+            #endregion
+
             public void SetStream(Stream<GamepadState> stream)
             {
+                // TODO Is this the point when we should set/add initial state?
                 // TODO Should reduce ref count on existing stream, should increase ref count on new stream
                 m_Stream = stream; // TODO Needs to be CAS
                 stream.AddRef();
@@ -94,16 +144,6 @@ namespace Tests.InputSystem.Experimental
             }
 
             public bool hasStream => m_Stream != null;
-            
-            public void Publish()
-            {
-                Debug.Assert((m_Flags & LockBit) != 0, "Cannot publish without pending transaction");
-                
-                if (m_Stream == null)
-                    return;
-                
-                m_Stream.OfferByRef(ref Value);
-            }
         }
         
         [Test]
@@ -113,15 +153,28 @@ namespace Tests.InputSystem.Experimental
             
             var writer = new GamepadWriter(100);
             writer.SetStream(stream);
-            
-            writer.Value.buttonEast = true;
-            writer.Value.leftStick = Vector2.left;
-            
-            writer.Publish();
+
+            if (writer.BeginTransaction())
+            {
+                writer.buttonEast = true;
+                writer.leftStick = Vector2.left;
+                writer.EndTransaction();
+            }
 
             Assert.That(stream.AsSpan().Length, Is.EqualTo(1));
             Assert.That(stream.AsSpan()[0].buttonEast, Is.EqualTo(true));
             Assert.That(stream.AsSpan()[0].leftStick, Is.EqualTo(Vector2.left));
+        }
+
+        [Test]
+        public void Unsafe() // TODO Leak reported
+        {
+            var buttonSouthStub = Gamepad.ButtonSouth.Stub(context, initialValue: true);
+            using var values = new UnsafeListObserver<bool>(10, AllocatorManager.Temp);
+            using var subscription = Gamepad.ButtonSouth.Subscribe(context, values.ToDelegate());
+            
+            context.Update();
+            Assert.That(values.next.Length, Is.EqualTo(0));
         }
         
         [Test]

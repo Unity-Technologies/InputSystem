@@ -35,6 +35,9 @@ namespace Tests.InputSystem
         
         public UnsafeDelegate<T> ToDelegate()
         {
+            if (m_Ptr == null)
+                throw new Exception("Not created");
+            
             return new UnsafeDelegate<T>(&OnNext, m_Ptr);
         }
 
@@ -44,6 +47,6 @@ namespace Tests.InputSystem
             ptr->List.Add(value);
         }
 
-        public ReadOnlySpan<T> values => m_Ptr->List.AsReadOnly().AsReadOnlySpan();
+        public ReadOnlySpan<T> next => m_Ptr->List.AsReadOnly().AsReadOnlySpan();
     }
 }

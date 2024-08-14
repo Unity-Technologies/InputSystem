@@ -77,7 +77,8 @@ namespace UnityEngine.InputSystem.Experimental
             return new Impl(context, prototype.m_Source);
         }*/
         
-        public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
+            where TObserver : IObserver<InputEvent>
         {
             var impl = context.GetNodeImpl<Impl>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
             if (impl == null)

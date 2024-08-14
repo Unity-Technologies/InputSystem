@@ -236,7 +236,7 @@ namespace Tests.InputSystem
         {
             // What we want is to register delegates to be invoked for a certain
             
-            var map = new NativeHashMap<ulong, UnsafeMulticastDelegate>(100, AllocatorManager.Persistent);
+            var map = new NativeHashMap<ulong, UnsafeEventHandler>(100, AllocatorManager.Persistent);
             using var messageQueue = new UnsafeRingQueue<Message>(100, AllocatorManager.Temp);
             messageQueue.Enqueue(new Message{ type = MessageType.Gamepad, endpoint = 12 });
 
@@ -246,7 +246,7 @@ namespace Tests.InputSystem
                 {
                     if (map.TryGetValue(message.endpoint, out var handlers))
                     {
-                        handlers.Invoke(null);
+                        handlers.Invoke();
                     }
                 }    
             }
@@ -292,6 +292,8 @@ namespace Tests.InputSystem
                 Thing x;       
                 x.Subscribe(y);
             }, Is.Not.AllocatingGCMemory());
+            
+            // TODO Transform a trigger into a button
         }
 
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event

@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(delegate*<ref TState, T1, void> d, TState* state = null) =>
-            UnsafeDelegateHelper.Add(ref m_Ptr, new UnsafeDelegateHelper.Callback(d, state));
+            UnsafeDelegateHelper.Add(ref m_Ptr, new UnsafeCallback(d, state));
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(UnsafeStatefulDelegate<TState, T1> d) => UnsafeDelegateHelper.Remove(ref m_Ptr, d.ToCallback());
@@ -66,15 +66,18 @@ namespace UnityEngine.InputSystem.Experimental
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(T1 arg1)
         {
-            if (m_Ptr == IntPtr.Zero)
+            var ptr = m_Ptr;
+            if (ptr == IntPtr.Zero)
                 return;
             
-            var header = (UnsafeDelegateHelper.Item*)m_Ptr;
+            UnsafeDelegateHelper.AddRef(ptr);
+            var header = (UnsafeDelegateHelper.Item*)ptr;
             var handlers = (UnsafeStatefulDelegate<TState, T1>*)(header + 1);
             for (var end = handlers + header->Length; handlers != end; ++handlers)
             {
                 handlers->Invoke(arg1);
             }
+            UnsafeDelegateHelper.Release(ref ptr);
         }
     }
 }

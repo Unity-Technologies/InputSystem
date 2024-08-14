@@ -60,21 +60,21 @@ namespace Tests.InputSystem.Experimental
             // Press should trigger event
             button.Press();
             m_Context.Update();
-            Assert.That(observer.values.Length, Is.EqualTo(1));
+            Assert.That(observer.next.Length, Is.EqualTo(1));
             
             // Press should trigger event also when released afterwards
             button.Release();
             button.Press();
             button.Release();
             m_Context.Update();
-            Assert.That(observer.values.Length, Is.EqualTo(2));
+            Assert.That(observer.next.Length, Is.EqualTo(2));
 
             // Do not expect event when unsubscribed
             subscription.Dispose();
             button.Press();
             button.Release();
             m_Context.Update();
-            Assert.That(observer.values.Length, Is.EqualTo(2));
+            Assert.That(observer.next.Length, Is.EqualTo(2));
         }
         
         [Test]

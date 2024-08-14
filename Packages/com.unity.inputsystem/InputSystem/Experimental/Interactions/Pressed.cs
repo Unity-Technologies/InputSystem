@@ -35,7 +35,8 @@ using UnityEngine.InputSystem.Utilities;
 // 2     1100      1110     0010    0010     0000
 // 3     1110      1100     0010    0000     0010
 //
-// Combining this with SIMD operations (or auto-vectorization) allows for a high degree of parallelization
+// Combining this with SIMD operations (or auto-vectorization) allows for a high degree of parallelization where
+// e.g. SSE2 would allow evaluation of 128 buttons in parallel using a single instruction.
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -53,7 +54,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe(IObserver<InputEvent> observer) => Subscribe(Context.instance, observer);
         
-        public IDisposable Subscribe(Context context, IObserver<InputEvent> observer)
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
+            where TObserver : IObserver<InputEvent>
         {
             // TODO When subscribing we want to check if key (proxy) has a registered instance
             //      within context and reuse this instance if it exists.
@@ -64,7 +66,7 @@ namespace UnityEngine.InputSystem.Experimental
             if (impl == null)
             {
                 impl = new PressedObserver();
-                impl.Initialize(m_Source.Subscribe(context, impl));
+                impl.Initialize(m_Source.Subscribe(context, impl)); // TODO An alternative here would be to utilize unsafe subscription
                 context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
             }
             
@@ -187,8 +189,8 @@ namespace UnityEngine.InputSystem.Experimental
         public static UnsafePressed* Create<TSource>(Context context, TSource source, bool previousValue = false)
             where TSource : IUnsafeObservable<bool>
         {
-            var ptr = context.Allocate<UnsafePressed>();
-            ptr->m_Allocator = context.allocator;
+            var ptr = context.unsafeContext.Allocate<UnsafePressed>();
+            ptr->m_Allocator = context.unsafeContext.allocator;
             ptr->m_PreviousValue = previousValue;
             ptr->m_TriggerSubscription = source.Subscribe(context, new UnsafeDelegate<bool>(Next, ptr));
             return ptr;
@@ -199,11 +201,10 @@ namespace UnityEngine.InputSystem.Experimental
         {
             pressed->m_OnNext.Add(d);
             return new UnsafeSubscription(
-                new UnsafeDelegate<UnsafeDelegateHelper.Callback>(&Unsubscribe, pressed), 
-                d.ToCallback());
+                new UnsafeDelegate<UnsafeCallback>(&Unsubscribe, pressed), d.ToCallback());
         }
 
-        private static void Unsubscribe(UnsafeDelegateHelper.Callback callback, void* state)
+        private static void Unsubscribe(UnsafeCallback callback, void* state)
         {
             var s = (UnsafePressed*)state;
             ; // TODO Need to return boolean or expose length (not thread safe)
@@ -212,22 +213,24 @@ namespace UnityEngine.InputSystem.Experimental
                 Destroy(s);
         }
 
-        private static void Destroy(void* state)
+        private static void Destroy(UnsafePressed* state)
         {
-            var s = (UnsafePressed*)state;
-            s->m_TriggerSubscription.Dispose();
-            AllocatorManager.Free(s->m_Allocator, state, sizeof(UnsafePressed), 
-                UnsafeUtility.AlignOf<UnsafePressed>());
+            state->m_TriggerSubscription.Dispose();
+            AllocatorManager.Free(state->m_Allocator, state, sizeof(UnsafePressed), UnsafeUtility.AlignOf<UnsafePressed>());
         }
-        
+
         private static void OnNext(bool value, void* state)
         {
-            var s = (UnsafePressed*)state;
-            if (s->m_PreviousValue == value)
+            OnNext(value, ref *(UnsafePressed*)state);
+        }
+        
+        private static void OnNext(bool value, ref UnsafePressed state)
+        {
+            if (state.m_PreviousValue == value)
                 return;
             if (value)
-                s->m_OnNext.Invoke(new InputEvent());
-            s->m_PreviousValue = value;
+                state.m_OnNext.Invoke(new InputEvent());
+            state.m_PreviousValue = value;
         }
     }
 }

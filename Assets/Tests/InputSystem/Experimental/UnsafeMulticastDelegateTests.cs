@@ -1,6 +1,5 @@
 using System;
 using NUnit.Framework;
-using Unity.Collections;
 using UnityEngine.InputSystem.Experimental;
 
 namespace Tests.InputSystem.Experimental
@@ -8,184 +7,53 @@ namespace Tests.InputSystem.Experimental
     [Category("Experimental")]
     public class UnsafeMulticastDelegateTests
     {
-        static unsafe void CounterFn(void* p)
+        private struct Self : IDisposable
         {
-            if (p != null)
-                ++(*(int*)p);
-        }
-        
-        static unsafe void CounterFn2(ref int p)
-        {
-            ++p;
-        }
-        
-        static unsafe void RemoveFn(void* p)
-        {
-            if (p != null)
-            {
-                var s = (State*)p;
-                ++s->counter;
-                
-                s->d.Remove(RemoveDelegate);
-                //s->d.Remove(RemoveDelegate);
-            }
+            public UnsafeEventHandler Handler;
+            public UnsafeDelegate Callback;
+            public int Counter;
+            
+            public void Dispose() => Handler.Dispose();
         }
 
-        [Test]
-        public void Invoke_ShouldDoNothing_IfNoCallbackHaveBeenRegistered()
+        private static unsafe void DoRemoveSelf(void* state)
         {
-            unsafe
-            {
-                /*using var x = new UnsafeMulticastDelegate();
-                x.Invoke(null);*/
-
-                using var x = new UnsafeEventHandler();
-                x.Invoke();
-                
-                using var y = new UnsafeEventHandler<int>();
-                y.Invoke(5);
-
-                using var z = new UnsafeEventHandler<int, float>();
-                z.Invoke(1, 3.14f);
-            }
-        }
-
-        [Test]
-        public void Callback()
-        {
-            UnsafeDelegate<int> d = new UnsafeDelegate<int>();
+            var remove = (Self*)state;
+            ++remove->Counter;
+            remove->Handler.Remove(remove->Callback);
         }
         
-        // TODO Reports leak
-        [Test]
-        public void Remove_ShouldRemoveCallback_IfPreviouslyAdded()
+        private static unsafe void DoAddSelf(void* state)
         {
-            unsafe
-            {
-                int counter = 0;
-                using var x = new UnsafeMulticastDelegate();
-                //using var x = new UnsafeEventHandler<ref int>();
-                x.Add(&CounterFn);
-                x.Remove(&CounterFn);
-                x.Invoke(&counter);
-                
-                Assert.That(counter, Is.EqualTo(0));
-            }
+            var add = (Self*)state;
+            ++add->Counter;
+            add->Handler.Add(add->Callback);
         }
-        
-        [Test]
-        public void Remove_ShouldRemoveSingleCallback_IfPreviouslyAddedTwice()
-        {
-            unsafe
-            {
-                int counter = 0;
-                using var x = new UnsafeMulticastDelegate();
-                x.Add(&CounterFn);
-                x.Add(&CounterFn);
-                x.Remove(&CounterFn);
-                x.Remove(&CounterFn);
-                x.Invoke(&counter);
-                
-                Assert.That(counter, Is.EqualTo(0));
-            }
-        }
-        
-        [Test]
-        public void Remove_ShouldDoNothing_IfNotPreviouslyAdded()
-        {
-            unsafe
-            {
-                using var x = new UnsafeMulticastDelegate();
-                x.Remove(&CounterFn);
-            }
-        }
-        
-        [Test]
-        public void Add_ShouldRegisterCallback_IfAddedOnce()
-        {
-            unsafe
-            {
-                int counter = 0;
-                using var x = new UnsafeMulticastDelegate();
-                x.Add(&CounterFn);
-                x.Invoke(&counter);
-                
-                Assert.That(counter, Is.EqualTo(1));
-            }
-        }
-        
-        [Test]
-        public void Add_ShouldRegisterCallback_IfAddedTwice()
-        {
-            unsafe
-            {
-                int counter = 0;
-                using var x = new UnsafeMulticastDelegate();
-                x.Add(&CounterFn);
-                x.Add(&CounterFn);
-                x.Invoke(&counter);
-                
-                Assert.That(counter, Is.EqualTo(2));
-            }
-        }
-
-        struct State : IDisposable
-        {
-            public UnsafeMulticastDelegate d;
-            public int counter;
-
-            public void Dispose()
-            {
-                d.Dispose();
-            }
-        }
-
-        private static readonly unsafe delegate*<void*, void> RemoveDelegate = &RemoveFn;
-        
-        [Test]
-        public void Remove_ShouldRemoveCallback_IfCalledFromCallback()
-        {
-            unsafe
-            {
-                using var s = TempPointer<State>.Create();
-                s.value.d = new UnsafeMulticastDelegate();
-                s.value.counter = 0;
-                s.value.d.Add(RemoveDelegate); // TODO Requires static cached callback, it seems, sort out
-                s.value.d.Invoke(s.pointer); // Note: Callback unregisters itself
-                s.value.d.Invoke(s.pointer); // Note: No callback since removed from first callback
-                Assert.That(s.value.counter, Is.EqualTo(1));
-                
-                s.value.d.Dispose();
-            }
-        }
-
-        private static void DoCount(int x, ref int y)
-        {
-            y += x;
-        }
-        
-        private static readonly unsafe delegate*<int, ref int, void> Count = &DoCount;
 
         private static void DoCount0(ref int x) => ++x;
         private static readonly unsafe delegate*<ref int, void> Count0 = &DoCount0;
+        
         private static void DoSum(ref int x, int y) => x += y;
         private static readonly unsafe delegate*<ref int, int, void> Sum = &DoSum;
+        
         private static unsafe void DoUnsafeSum(int x, void* s) => *((int*)s) += x;
         private static readonly unsafe delegate*<int, void*, void> UnsafeSum = &DoUnsafeSum;
+        
         private static unsafe void DoUnsafeSum2(int x, int y, void* s) => *((int*)s) += (x+y);
         private static readonly unsafe delegate*<int, int, void*, void> UnsafeSum2 = &DoUnsafeSum2;
-        /*[Test]
-        public void Xxxx()
+        
+        [Test]
+        public void Invoke_ShouldDoNothing_IfNoCallbackHaveBeenRegistered()
         {
-            unsafe
-            {
-                int counter = 0;
-                var d = UnsafeStatefulDelegate.Create(Count0, &counter);
-                d.Invoke(5);
-                d.Invoke(2);
-                Assert.That(counter, Is.EqualTo(7));
-            }
-        }*/
+            using var x = new UnsafeEventHandler();
+            x.Invoke();
+                
+            using var y = new UnsafeEventHandler<int>();
+            y.Invoke(5);
+
+            using var z = new UnsafeEventHandler<int, float>();
+            z.Invoke(1, 3.14f);
+        }
         
         [Test]
         public void UnsafeStatefulEventHandler_ShouldInvokeCallback_IfTakingZeroArguments()
@@ -310,6 +178,82 @@ namespace Tests.InputSystem.Experimental
                 sut.Invoke(8, 9);
                 Assert.That(sum, Is.EqualTo(22));
             }
+        }
+        
+        [Test]
+        public void UnsafeEventHandler_Add_ShouldAddCallback_IfInvokedFromCallback()
+        {
+            unsafe
+            {
+                var self = new Self();
+                
+                try
+                {
+                    self.Callback = UnsafeDelegate.Create(&DoAddSelf, &self);
+                    self.Handler.Add(self.Callback);
+                
+                    self.Handler.Invoke();
+                    Assert.That(self.Counter, Is.EqualTo(1));
+                
+                    self.Handler.Invoke();
+                    Assert.That(self.Counter, Is.EqualTo(3));
+                }
+                finally
+                {
+                    self.Dispose();
+                }
+                
+            }
+        }
+        
+        [Test]
+        public void UnsafeEventHandler_Remove_ShouldRemoveCallback_IfInvokedFromCallback()
+        {
+            unsafe
+            {
+                var self = new Self();
+
+                try
+                {
+                    self.Callback = UnsafeDelegate.Create(&DoRemoveSelf, &self);
+                    self.Handler.Add(self.Callback);
+                
+                    self.Handler.Invoke();
+                    Assert.That(self.Counter, Is.EqualTo(1));
+                
+                    self.Handler.Invoke();
+                    Assert.That(self.Counter, Is.EqualTo(1));
+                }
+                finally
+                {
+                    self.Dispose();
+                }
+            }
+        }
+        
+        [Test]
+        public void UnsafeEventHandler_Remove_ShouldDoNothing_IfNotPreviouslyAdded()
+        {
+            unsafe
+            {
+                var sum = 0;
+                using var sut = new UnsafeEventHandler<int, int>();
+                
+                sut.Remove(UnsafeDelegate.Create(UnsafeSum2, &sum));
+                sut.Invoke(8, 9);
+                Assert.That(sum, Is.EqualTo(0));
+                
+                sut.Remove(default);
+                sut.Invoke(8, 9);
+                Assert.That(sum, Is.EqualTo(0));
+            }
+        }
+
+        [Test]
+        public void UnsafeEventHandler_Add_ShouldThrow_IfInvalidCallback()
+        {
+            using var sut = new UnsafeEventHandler();
+            Assert.Throws<ArgumentException>(() => sut.Add(default));
         }
     }
 }

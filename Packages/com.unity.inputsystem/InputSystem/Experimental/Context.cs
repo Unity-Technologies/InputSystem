@@ -1,7 +1,9 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Shouldly;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
@@ -47,6 +49,43 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly EventStream m_Events;                              // Shared system queue of observable events.
         private int m_NodeId;                                               // Context specific node ID counter.
         private readonly TimerManager m_TimerManager;
+
+        private unsafe UnsafeContext* m_UnsafeContext;
+        
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct UnsafeContext
+        {
+            private AllocatorManager.AllocatorHandle m_Allocator;
+
+            public UnsafeContext(AllocatorManager.AllocatorHandle allocator)
+            {
+                m_Allocator = allocator;
+            }
+
+            public AllocatorManager.AllocatorHandle allocator => m_Allocator;
+            
+            public unsafe void* Allocate(int sizeOf, int alignOf, int items = 1)
+            {
+                return m_Allocator.Allocate(sizeOf, alignOf, items);
+            }
+
+            public unsafe T* Allocate<T>() where T : unmanaged
+            {
+                return (T*)Allocate(sizeof(T), UnsafeUtility.AlignOf<T>());
+            }
+            
+            public unsafe void Free(void* ptr, int sizeOf, int alignOf, int items)
+            {
+                AllocatorManager.Free(m_Allocator, ptr, sizeOf, alignOf, items);
+            }
+
+            public unsafe void Free<T>(T* ptr) where T : unmanaged
+            {
+                Free(ptr, sizeof(T), UnsafeUtility.AlignOf<T>(), 1);
+            }
+        }
+
+        internal unsafe ref UnsafeContext unsafeContext => ref *m_UnsafeContext;
         
         /*private readonly List<Type> m_RegisteredNodeTypes;
         private readonly List<RegisteredNode> m_RegisteredNodes;
@@ -85,28 +124,6 @@ namespace UnityEngine.InputSystem.Experimental
         }*/
 
         // TODO Consider exposing only allocator or only allocation functions
-        
-        public ref AllocatorManager.AllocatorHandle allocator => ref m_Allocator;
-
-        public unsafe void* Allocate(int sizeOf, int alignOf, int items = 1)
-        {
-            return m_Allocator.Allocate(sizeOf, alignOf, items);
-        }
-
-        public unsafe T* Allocate<T>() where T : unmanaged
-        {
-            return (T*)Allocate(sizeof(T), UnsafeUtility.AlignOf<T>());
-        }
-            
-        public unsafe void Free(void* ptr, int sizeOf, int alignOf, int items)
-        {
-            AllocatorManager.Free(m_Allocator, ptr, sizeOf, alignOf, items);
-        }
-
-        public unsafe void Free<T>(T* ptr) where T : unmanaged
-        {
-            Free(ptr, sizeof(T), UnsafeUtility.AlignOf<T>(), 1);
-        }
 
         private struct RegisteredNode
         {
@@ -159,13 +176,19 @@ namespace UnityEngine.InputSystem.Experimental
             }
             if (handle == 0)
                 throw new Exception($"Maximum number of concurrently existing {nameof(Context)} instances reached ({kMaxContexts}. Did you forget to dispose previous instances?");
-
-            allocator = AllocatorManager.Persistent;
+            
             m_StreamContexts = new();
             m_Streams = new();
             m_Events = new EventStream();
             m_Handle = handle;
             m_TimerManager = new TimerManager();
+
+            var allocator = AllocatorManager.Persistent;
+            unsafe
+            {
+                m_UnsafeContext = (UnsafeContext*)allocator.Allocate(sizeof(UnsafeContext), UnsafeUtility.AlignOf<UnsafeContext>());
+                *m_UnsafeContext = new UnsafeContext(allocator);
+            }
         }
         
         public static Context GetContext(int handle)
@@ -230,6 +253,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Dispose()
         {
+            // Dispose stream contexts and streams
             foreach (var kvp in m_StreamContexts)
                 kvp.Value.Dispose();
             foreach (var kvp in m_Streams)
@@ -237,6 +261,16 @@ namespace UnityEngine.InputSystem.Experimental
             
             // Release global slot
             _globals.Contexts[m_Handle - 1] = null;
+
+            // TODO Check and warn for any unsubscribed items
+            
+            // Deallocate associated unsafe context
+            unsafe
+            {
+                var allocator = m_UnsafeContext->allocator;
+                AllocatorManager.Free(allocator, m_UnsafeContext, sizeof(UnsafeContext), UnsafeUtility.AlignOf<UnsafeContext>());
+                m_UnsafeContext = null;
+            }
         }
     }
 }

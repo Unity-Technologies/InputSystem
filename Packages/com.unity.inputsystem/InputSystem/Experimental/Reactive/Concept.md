@@ -11,6 +11,12 @@ Overview of operations
 | Composite3D<T>         | T                  | First: T, Second: T   | Processor   | Might not be required since CombineLatest yields same behavior. Composite is a simplified specialization of CombineLatest with homogeneous input types. |
 | Composite3D<T>         | T                  | First: T, Second: T   | Processor   | Might not be required since CombineLatest yields same behavior. Composite is a simplified specialization of CombineLatest with homogeneous input types. |
 
+Each operation is implemented as follows, exemplified via Pressed:
+- Pressed - Proxy struct to chain operations and initiate subscriptions.
+- PressedObservable - Managed observable wrapper.
+- UnsafePressedObservable - Unamanaged observable wrapper.
+- PressedExtensionMethods - Extension methods applying to Pressed to extend functionality of IObservableInput implementations.
+
 // Frame-based input
 Gamepad.leftStick.DistinctUntilChanged().Last().Subscribe(...);
 Gamepad.buttonSouth.Pressed().First().Subscribe(...);
@@ -26,10 +32,20 @@ withLatestFrom
 sum/reduce
 
 Rebinding means modifying sources which are leaf streams. Bindings to be rebound may exist anywhere in the dependency graph.
+Can we extract existing bound controls from graph and allow recreating or alter existing bindings based on this?
+Basically it would be cleanest to unsubscribe from existing and reinstantiate that binding with another parameterization.
+E.g. extract a list of BindableInput instances (this is where a name makes sense) and get a list of the typed parts.
 
 Reducing code bloat
 
 Code bloat may be reduced by relying on code generation based off attributes. E.g.
+
+Best way to deal with phases? 
+- Option 1: Not at all, tie it into a phase event type when needed, e.g. Touch.phase
+
+
+
+
 
 ```cs
 [InputOperation(name = "Pressed")]

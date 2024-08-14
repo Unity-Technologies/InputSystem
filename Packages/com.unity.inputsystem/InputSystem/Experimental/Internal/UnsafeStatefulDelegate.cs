@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Experimental
         
         public void Invoke() => m_Ptr(ref *m_Data);
 
-        internal UnsafeDelegateHelper.Callback ToCallback() => new (m_Ptr, m_Data);
+        internal UnsafeCallback ToCallback() => new (m_Ptr, m_Data);
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -52,6 +52,6 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Invoke(T1 value) => m_Ptr(ref *m_Data, value);
 
-        internal UnsafeDelegateHelper.Callback ToCallback() => new(m_Ptr, m_Data);
+        internal UnsafeCallback ToCallback() => new(m_Ptr, m_Data);
     }
 }

@@ -104,8 +104,11 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe(IObserver<ValueTuple<T0, T1>> observer) =>
             Subscribe(Context.instance, observer);
 
-        public IDisposable Subscribe(Context context, IObserver<ValueTuple<T0, T1>> observer) =>
-            (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
+            where TObserver : IObserver<ValueTuple<T0, T1>>
+        {
+            return (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+        }
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);

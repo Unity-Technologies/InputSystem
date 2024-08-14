@@ -14,45 +14,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         internal struct Item
         {
-            public int Length;
             public int RefCount;
-        }
-
-        internal unsafe struct Callback : IEquatable<Callback>
-        {
-            public void* Function;
-            public void* Data;
-
-            public Callback(void* function, void* data)
-            {
-                Function = function;
-                Data = data;
-            }
-
-            public bool Equals(Callback other)
-            {
-                return Function == other.Function && Data == other.Data;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Callback other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(unchecked((int)(long)Function), unchecked((int)(long)Data));
-            }
-
-            public static bool operator ==(Callback left, Callback right)
-            {
-                return left.Equals(right);
-            }
-
-            public static bool operator !=(Callback left, Callback right)
-            {
-                return !left.Equals(right);
-            }
+            public int Length;
         }
 
         // Disposes a delegate if not null pointer, invoking with null pointer has no side effects.
@@ -63,50 +26,65 @@ namespace UnityEngine.InputSystem.Experimental
             Destroy((Item*)d);
             d = IntPtr.Zero;
         }
+
+        public static unsafe void SimpleAdd(ref IntPtr d, UnsafeCallback callback)
+        {
+            // TODO Append item to end of d
+        }
         
         // Adds a callback to the given delegate which may be null.
-        public static unsafe void Add(ref IntPtr d, Callback callback)
+        public static unsafe void Add(ref IntPtr d, UnsafeCallback callback)
         {;
+            if (callback.Function == null)
+                throw new ArgumentException($"Invalid '{nameof(callback)}' argument, function pointer is null.");
+            
+            // TODO We might as well remove this ref counting part for now since its not really atomic anyway
+            // TODO We either need to use combined tag pointer and global pointer ref counting or avoid it.
+            
+            // TODO This needs to fetch d and increment it at the same time FIX
             var previous = d; 
             for(;;)
             {
                 var before = previous;
-                AddRef(before);
-                var ptr = (IntPtr)Combine((Item*)previous, callback);
-                previous = Interlocked.CompareExchange(ref d, ptr, before);
+                //AddRef(before); // +1 = 2
+                var temp = (IntPtr)Combine((Item*)previous, callback);
+                previous = Interlocked.CompareExchange(ref d, temp, before); // TODO This is the problematic part since it cannot do ref count and atomic swap simultaneously this way
                 if (previous == before)
                 {
-                    Release(before);
+                    Release(ref before);
                     break;
                 }
                 
-                Release(before);
-                AllocatorManager.Free(_allocator, (void*)ptr);
-                    
+                //Release(before);
+                
+                // CAS failed so we deallocate temporary buffer
+                if (temp != IntPtr.Zero)
+                    Destroy((Item*)temp);
+
                 // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
             }
         }
         
         // Removes a callback from the given delegate if it exists
-        public static unsafe void Remove(ref IntPtr d, Callback callback)
+        public static unsafe void Remove(ref IntPtr d, UnsafeCallback callback)
         {;
             var previous = d; // Increase ref count of handler
             for(;;)
             {
                 var before = previous;
-                AddRef(before);
-                var ptr = (IntPtr)Remove((Item*)previous, callback);
-                if (ptr == before)
+                //AddRef(before);
+                var temp = (IntPtr)Remove((Item*)previous, callback);
+                if (temp == before)
                     return; // Not found
-                previous = Interlocked.CompareExchange(ref d, ptr, before);
+                previous = Interlocked.CompareExchange(ref d, temp, before);
                 if (previous == before)
                 {
-                    Release(before);
+                    Release(ref before);
                     break;
                 }
                 
-                Release(before);
-                AllocatorManager.Free(_allocator, (void*)ptr);
+                //Release(before);
+                Destroy((Item*)temp);
                     
                 // TODO Only deallocate if size increased, otherwise we may reuse existing buffer
             }
@@ -115,9 +93,9 @@ namespace UnityEngine.InputSystem.Experimental
         public static unsafe ReadOnlySpan<TDelegate> GetInvocationListAs<TDelegate>(IntPtr d) 
             where TDelegate : unmanaged
         {
-            if (sizeof(TDelegate) != sizeof(Callback))
+            if (sizeof(TDelegate) != sizeof(UnsafeCallback))
                 throw new Exception("Invalid size");
-            if (UnsafeUtility.AlignOf<TDelegate>() != UnsafeUtility.AlignOf<Callback>())
+            if (UnsafeUtility.AlignOf<TDelegate>() != UnsafeUtility.AlignOf<UnsafeCallback>())
                 throw new Exception("Invalid alignment");
             
             if (d == IntPtr.Zero)
@@ -127,33 +105,33 @@ namespace UnityEngine.InputSystem.Experimental
         }
         
         // Invokes a delegate taking a single argument. Note that its a responsibility of the caller that type match.
-        public static unsafe void Invoke<TArg1>(IntPtr d, TArg1 arg1)
-        {
-            /*var header = (Item*)d;
-            var handlers = (delegate*<TArg1, void*, void>*)(header + 1); // TODO The second argument here is not ideal
-            var n = header->Length;
-            for (var i = 0; i < n; i += 2)
-                handlers[i](arg1, handlers[i+1]);*/
-
-            var header = (Item*)d;
-            var callbacks = (Callback*)(header + 1);
-            var end = callbacks + header->Length;
-            for (; callbacks != end; ++callbacks)
-            {
-                var fp = (delegate*<TArg1, void*, void>)callbacks->Function;
-                fp(arg1, callbacks->Data);
-            }
-        }
+        // public static unsafe void Invoke<TArg1>(IntPtr d, TArg1 arg1)
+        // {
+        //     /*var header = (Item*)d;
+        //     var handlers = (delegate*<TArg1, void*, void>*)(header + 1); // TODO The second argument here is not ideal
+        //     var n = header->Length;
+        //     for (var i = 0; i < n; i += 2)
+        //         handlers[i](arg1, handlers[i+1]);*/
+        //
+        //     var header = (Item*)d;
+        //     var callbacks = (UnsafeCallback*)(header + 1);
+        //     var end = callbacks + header->Length;
+        //     for (; callbacks != end; ++callbacks)
+        //     {
+        //         var fp = (delegate*<TArg1, void*, void>)callbacks->Function;
+        //         fp(arg1, callbacks->Data);
+        //     }
+        // }
         
         // Invokes a delegate taking two arguments. Note that its a responsibility of the caller that types match.
-        public static unsafe void Invoke<TArg1, TArg2>(IntPtr d, TArg1 arg1, TArg2 arg2)
+        /*public static unsafe void Invoke<TArg1, TArg2>(IntPtr d, TArg1 arg1, TArg2 arg2)
         {
             var header = (Item*)d;
             var handlers = (delegate*<TArg1, TArg2, void*, void>*)(header + 1);
             var n = header->Length;
             for (var i = 0; i < n; i += 2)
                 handlers[i](arg1, arg2, handlers[i+1]);   
-        }
+        }*/
         
         public static unsafe int Length(IntPtr d)
         {
@@ -161,10 +139,10 @@ namespace UnityEngine.InputSystem.Experimental
         }
         
         // Combines a delegate with a callback. Note that existing may be null.
-        private static unsafe Item* Combine(Item* existing, Callback callback)
+        private static unsafe Item* Combine(Item* existing, UnsafeCallback callback)
         {
             var oldSize = existing == null ? 0 : existing->Length;
-            var sizeOf = sizeof(Callback);
+            var sizeOf = sizeof(UnsafeCallback);
             var item = Allocate(oldSize + 1, out var dst);
             if (oldSize != 0)
                 UnsafeUtility.MemCpy(dst, existing + 1, sizeOf * oldSize);
@@ -173,13 +151,13 @@ namespace UnityEngine.InputSystem.Experimental
         }
         
         // Removes a callback from an existing delegate
-        private static unsafe Item* Remove([NotNull] Item* existing, Callback callback)
+        private static unsafe Item* Remove([NotNull] Item* existing, UnsafeCallback callback)
         {
             if (existing == null)
                 return null; // Empty
             var oldSize = existing->Length; //Decode(out var src);
             var index = oldSize;
-            var src = (Callback*)(existing + 1);
+            var src = (UnsafeCallback*)(existing + 1);
             while (--index >= 0 && src[index] != callback) { } // TODO See https://stackoverflow.com/questions/66630082/what-are-alternatives-to-comparing-unmanaged-function-pointers-in-c-sharp-how-t#:~:text=error%20CS8909%3A%20Comparison%20of%20function,always%20yield%20the%20same%20pointer.
             if (index < 0)
                 return existing; // Not found
@@ -188,7 +166,7 @@ namespace UnityEngine.InputSystem.Experimental
             
             var newSize = oldSize - 1;
             var item = Allocate(newSize, out var dst);
-            var offset = index * sizeof(Callback);
+            var offset = index * sizeof(UnsafeCallback);
             UnsafeUtility.MemCpy(dst, src, offset);
             UnsafeUtility.MemCpy(dst + offset, src + index, newSize - index);
             return item;
@@ -196,12 +174,12 @@ namespace UnityEngine.InputSystem.Experimental
         
         // Allocates and constructs an item of given length and returns callback array by reference
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe Item* Allocate(int length, out Callback* callbacks)
+        private static unsafe Item* Allocate(int length, out UnsafeCallback* callbacks)
         {
             var item = (Item*)_allocator.Allocate(ComputeSizeBytes(length), UnsafeUtility.AlignOf<Item>());
             item->Length = length;
             item->RefCount = 1;
-            callbacks = (Callback*)(item + 1);
+            callbacks = (UnsafeCallback*)(item + 1);
             return item;
         }
         
@@ -216,24 +194,32 @@ namespace UnityEngine.InputSystem.Experimental
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe int ComputeSizeBytes(int length)
         {
-            return sizeof(Item) + length * sizeof(Callback);
+            return sizeof(Item) + length * sizeof(UnsafeCallback);
+        }
+
+        private static unsafe int ComputeSizeBytes(IntPtr ptr)
+        {
+            return ComputeSizeBytes(Length(ptr));
         }
         
         // Increases the reference count.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe void AddRef(IntPtr ptr)
+        internal static unsafe void AddRef(IntPtr ptr)
         {
-            if (ptr != IntPtr.Zero) 
-                Interlocked.Increment(ref ((Item*)ptr)->RefCount);
+            var item = (Item*)ptr;
+            if (item != null) 
+                Interlocked.Increment(ref item->RefCount);
         }
         
         // Decreases the reference count and cleans up resources if count reaches zero.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe void Release(IntPtr ptr)
+        internal static unsafe void Release(ref IntPtr ptr)
         {
             var item = (Item*)ptr;
-            if (item != null && Interlocked.Decrement(ref item->RefCount) == 0)
-                Destroy(item);
+            if (item == null || Interlocked.Decrement(ref item->RefCount) != 0)
+                return;
+            Destroy(item);
+            ptr = IntPtr.Zero;
         }
     }
 }

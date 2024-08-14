@@ -17,10 +17,13 @@ namespace UnityEngine.InputSystem.Experimental
             m_Ptr = callback;
             m_UnusedOnlyForPadding = null;
         }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke() => m_Ptr();
+        
         public IntPtr ToIntPtr() => (IntPtr)m_Ptr;
-        internal UnsafeDelegateHelper.Callback ToCallback() => new (m_Ptr, null);
+        
+        internal UnsafeCallback ToCallback() => new (m_Ptr, null);
     }
     
     [StructLayout(LayoutKind.Sequential)]
@@ -37,20 +40,25 @@ namespace UnityEngine.InputSystem.Experimental
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke() => m_Ptr(m_Data);
-        internal UnsafeDelegateHelper.Callback ToCallback() => new (m_Ptr, m_Data);
         
-        #region Convenience functions to allow for compiler to derive types
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal UnsafeCallback ToCallback() => new (m_Ptr, m_Data);
         
+        #region Convenience functions to allow for compiler to derive types to reduce code bloat.
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnsafeDelegate Create(delegate*<void*, void> function, void* state)
         {
             return new UnsafeDelegate(function, state);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnsafeDelegate<T> Create<T>(delegate*<T, void*, void> function, void* state) 
         {
             return new UnsafeDelegate<T>(function, state);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnsafeDelegate<T1, T2> Create<T1, T2>(delegate*<T1, T2, void*, void> function, void* state) 
         {
             return new UnsafeDelegate<T1, T2>(function, state);
@@ -64,7 +72,7 @@ namespace UnityEngine.InputSystem.Experimental
     {
         private readonly delegate*<T, void*, void> m_Ptr;
         private readonly void* m_Data;
-        
+
         public UnsafeDelegate(delegate*<T, void*, void> callback, void* data = null)
         {
             m_Ptr = callback;
@@ -72,7 +80,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(T value) => m_Ptr(value, m_Data);
-        internal UnsafeDelegateHelper.Callback ToCallback() => new (m_Ptr, m_Data);
+        internal UnsafeCallback ToCallback() => new (m_Ptr, m_Data);
     }
     
     [StructLayout(LayoutKind.Sequential)]
@@ -89,7 +97,8 @@ namespace UnityEngine.InputSystem.Experimental
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(T1 arg1, T2 arg2) => m_Ptr(arg1, arg2, m_Data);
-        internal UnsafeDelegateHelper.Callback ToCallback() => new(m_Ptr, m_Data);
+        
+        internal UnsafeCallback ToCallback() => new(m_Ptr, m_Data);
     }
 
 }

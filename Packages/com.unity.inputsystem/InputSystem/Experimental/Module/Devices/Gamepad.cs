@@ -34,6 +34,27 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         }
     }
 
+    public class ButtonAttribute : Attribute
+    {
+        // TODO Might need absolute/relative flags?
+        // TODO Might need on/off values?
+    }
+
+    public class AxisAttribute : Attribute
+    {
+        
+    }
+    
+    public class Axis2Attribute : Attribute
+    {
+        
+    }
+
+    public class NormalizedValueAttribute : Attribute
+    {
+        
+    }
+    
     // NOTE: Auto-generated from C struct definition. Aliased controls are basically C# counterpart of union.
     [Serializable]
     [StructLayout(LayoutKind.Explicit, Size = 16, Pack=1)]
@@ -59,15 +80,15 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             Select = 1 << 11,           // 2048
         }
         
-        [FieldOffset(0)] public GamepadButton buttons;  // Byte 0-3
-        [FieldOffset(4)] public float leftStickX;       // Byte 4-5
-        [FieldOffset(6)] public float leftStickY;       // Byte 6-7
-        [FieldOffset(4)] public Vector2 leftStick;      // Byte 4-7 (Aliased)
-        [FieldOffset(8)] public float rightStickX;      // Byte 8-9
-        [FieldOffset(10)] public float rightStickY;     // Byte 10-11
-        [FieldOffset(8)] public Vector2 rightStick;     // Byte 8-11 (Aliased)
-        [FieldOffset(12)] public float leftTrigger;     // Byte 12-13
-        [FieldOffset(14)] public float rightTrigger;    // Byte 14-15
+        [Button] [FieldOffset(0)] public GamepadButton buttons;  // Byte 0-3
+        [Axis] [FieldOffset(4)] public float leftStickX;       // Byte 4-5
+        [Axis] [FieldOffset(6)] public float leftStickY;       // Byte 6-7
+        [Axis2] [FieldOffset(4)] public Vector2 leftStick;      // Byte 4-7 (Aliased)
+        [Axis] [FieldOffset(8)] public float rightStickX;      // Byte 8-9
+        [Axis] [FieldOffset(10)] public float rightStickY;     // Byte 10-11
+        [Axis2] [FieldOffset(8)] public Vector2 rightStick;     // Byte 8-11 (Aliased)
+        [NormalizedValue] [FieldOffset(12)] public float leftTrigger;     // Byte 12-13
+        [NormalizedValue] [FieldOffset(14)] public float rightTrigger;    // Byte 14-15
 
         // Convenience accessors for individual buttons for this device model generated based on enum being
         // flagged for bit-flag access.
@@ -193,11 +214,11 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     /// "Gamepad/leftStick".
     /// </remarks>
     [InputSource]
-    public readonly struct Gamepad
+    public readonly struct Gamepad // TODO A gamepad instance itself should also be an observable input node
     {
         // Gamepad.LeftStick.Subscribe(...)
         
-        public static Gamepad any => new Gamepad();
+        public static Gamepad any => new Gamepad(); // TODO Should this be an observable current gamepad device?
         
         //private Stream<GamepadState> m_Stream;
         // TODO Add API to fetch Gamepad instances via Context as well as instance specific getters for actual control representations

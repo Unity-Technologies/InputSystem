@@ -52,7 +52,8 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe(IObserver<bool> observer) =>
             Subscribe(Context.instance, observer);
 
-        public IDisposable Subscribe(Context context, IObserver<bool> observer) =>
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
+            where TObserver : IObserver<bool> =>
             (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
         
         // TODO Reader end-point

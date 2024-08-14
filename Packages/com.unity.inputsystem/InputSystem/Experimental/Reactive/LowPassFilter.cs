@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe(IObserver<T> observer) =>
             Subscribe(Context.instance, observer);
 
-        public IDisposable Subscribe(Context context, IObserver<T> observer) =>
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer) where TObserver : IObserver<T> =>
             (m_Impl ??= new Impl(context, m_Source, m_Filter)).Subscribe(context, observer);
 
         public bool Equals(IDependencyGraphNode other)

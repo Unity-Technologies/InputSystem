@@ -93,6 +93,7 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         public readonly Usage Usage;
+        private readonly Field m_Field;
         
         public ObservableInputNode(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
@@ -107,16 +108,19 @@ namespace UnityEngine.InputSystem.Experimental
                 throw new ArgumentException(nameof(usage) + " is not a valid usage.");
 
             Usage = usage;
+            m_Field = field;
+            
             this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required");
             //m_NodeId = Context.InvalidNodeId;
         }
 
-        public readonly IDisposable Subscribe([NotNull] Context ctx, IObserver<T> observer)
+        public readonly IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
+            where TObserver : IObserver<T>
         {
             // Subscribe to source by subscribing to a stream context. Note that the stream context 
             // is consistent throughout the life-time of any existing associated subscriptions but
             // may change dynamically based on the availability of underlying streams (devices and/or controls).
-            return ctx.GetOrCreateStreamContext<T>(Usage).Subscribe(observer);
+            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(observer);
         }
 
         #region IObservable<T>
@@ -141,9 +145,9 @@ namespace UnityEngine.InputSystem.Experimental
         
         #region IUnsafeObservable
         
-        public UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
+        public readonly UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
         {
-            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(observer);
+            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(context, observer);
         }
         
         #endregion
@@ -167,9 +171,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// <inheritDoc />
         public bool Equals(IDependencyGraphNode other)
         {
-            if (other is ObservableInputNode<T> otherObservableInput)
-                return Equals(otherObservableInput);
-            return false;
+            return other is ObservableInputNode<T> otherNode && Equals(otherNode);
         }
 
         /// <inheritDoc />
