@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
 - Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
+- Fixed InputDeviceTester sample only visualizing a given touch contact once. [ISXB-1017](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1017)
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
