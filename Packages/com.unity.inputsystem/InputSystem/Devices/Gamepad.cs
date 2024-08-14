@@ -326,6 +326,64 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The right trigger button on a gamepad.
         /// </summary>
         RightTrigger = 33,
+
+        /// <summary>
+        /// The X button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
+        X = West,
+        /// <summary>
+        /// The Y button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
+        Y = North,
+        /// <summary>
+        /// The A button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
+        A = South,
+        /// <summary>
+        /// The B button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
+        B = East,
+
+        /// <summary>
+        /// The cross button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
+        Cross = South,
+        /// <summary>
+        /// The square button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
+        Square = West,
+        /// <summary>
+        /// The triangle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
+        Triangle = North,
+        /// <summary>
+        /// The circle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
+        Circle = East,
     }
 }
 
