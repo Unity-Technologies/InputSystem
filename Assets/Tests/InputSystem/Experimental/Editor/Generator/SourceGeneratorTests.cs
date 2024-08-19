@@ -18,7 +18,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             var field2 = myType.DeclareField<float>( "y", "3.14f");
             var inner = myType.DeclareClass("Inner");
             field2.visibility = Syntax.Visibility.Private;
-            Assert.That(new SourceGenerator(c).ToString(), Is.EqualTo($@"using System;
+            Assert.That(c.ToSource(), Is.EqualTo($@"using System;
 
 class MyType
 {{
@@ -42,8 +42,7 @@ class MyType
             x.fieldOffset = 0;
             var y = foo.DeclareField<int>("y");
             y.fieldOffset = 4;
-            var src = new SourceGenerator(c).ToString();
-            Assert.That(src, Is.EqualTo(@"using System;
+            Assert.That(c.ToSource(), Is.EqualTo(@"using System;
 
 /// <summary>
 /// This is the Foo class
@@ -64,8 +63,7 @@ partial struct Foo
             e.docSummary = "My summary.";
             e.AddItem(new Syntax.Enum.Item("First"));
             e.AddItem(new Syntax.Enum.Item("Second"));
-            var src = new SourceGenerator(c).ToString();
-            Assert.That(src, Is.EqualTo(@"/// <summary>
+            Assert.That(c.ToSource(), Is.EqualTo(@"/// <summary>
 /// My summary.
 /// </summary>
 enum MyEnum
@@ -86,7 +84,7 @@ enum MyEnum
             e.AddItem("Second", "2");
             e.AddItem("Third", "4");
             e.AddItem("Fourth", "8");
-            Assert.That(new SourceGenerator(c).ToString(), Is.EqualTo(@"/// <summary>
+            Assert.That(c.ToSource(), Is.EqualTo(@"/// <summary>
 /// My summary.
 /// </summary>
 [Flags]
@@ -105,7 +103,7 @@ enum MyEnum
         {
             var c = new SourceContext();
             // var i = c.DeclareInterface("IFoo");
-            Assert.That(new SourceGenerator(c).ToString(), Is.EqualTo(@""));
+            Assert.That(c.ToSource(), Is.EqualTo(@""));
         }
         
         [Test]
@@ -115,7 +113,7 @@ enum MyEnum
             var foo = c.root.DeclareClass("Foo");
             var bar = foo.DeclareMethod("Bar", Syntax.Visibility.Public, Syntax.TypeReference.For<int>())
                 .Statement("return 5");
-            Assert.That(new SourceGenerator(c).ToString(), Is.EqualTo(@"class Foo
+            Assert.That(c.ToSource(), Is.EqualTo(@"class Foo
 {
     public int Bar()
     {

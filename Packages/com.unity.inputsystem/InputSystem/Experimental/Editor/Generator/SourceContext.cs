@@ -85,4 +85,34 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             return type.Name;
         }
     }
+    
+    public static class SourceContextExtensions
+    {
+        public static void Format(this SourceContext context, SourceFormatter formatter)
+        {
+            foreach (var declaredType in context.root)
+                VisitDepthFirstRecursive(declaredType, 
+                    (node) => node.PreFormat(context, formatter), 
+                    (node) => node.Format(context, formatter), 
+                    (node) => node.PostFormat(context, formatter));
+        }
+        
+        public static string ToSource(this SourceContext context, SourceFormatter formatter = null)
+        {
+            formatter ??= new SourceFormatter();
+            Format(context, formatter);
+            return formatter.ToString();
+        }
+        
+        private static void VisitDepthFirstRecursive<TNode>(TNode root, Action<Syntax.INode> preVisitor, 
+            Action<Syntax.INode> visitor, Action<Syntax.INode> postVisitor)
+            where TNode : Syntax.INode
+        {
+            preVisitor(root); // TODO Combine pre and visitor?
+            visitor(root);
+            foreach (var child in root)
+                VisitDepthFirstRecursive(child, preVisitor, visitor, postVisitor);
+            postVisitor(root);
+        }
+    }
 }
