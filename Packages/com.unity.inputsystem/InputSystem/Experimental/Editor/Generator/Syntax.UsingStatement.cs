@@ -4,22 +4,34 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
-        public sealed class UsingStatement : IEquatable<UsingStatement>
+        public interface IDeclareUsing
+        {
+            public void AddUsing(UsingStatement statement);
+        }
+        
+        public sealed class UsingStatement : Node, IEquatable<UsingStatement>
         {
             private readonly string m_Namespace;
             
-            public UsingStatement(string ns)
+            public UsingStatement(SourceContext context, string ns) 
+                : base(context)
             {
                 m_Namespace = ns;
             }
-            
-            //public override void PreFormat(NewSourceFormatter formatter) { }
-            public void Format(SourceFormatter formatter)
+
+            public override void Format(SourceContext context, SourceFormatter formatter)
             {
                 formatter.Write("using");
                 formatter.Write(m_Namespace);
                 formatter.EndStatement();
+                formatter.NeedsParagraph();
             }
+
+            //public override void PreFormat(NewSourceFormatter formatter) { }
+            /*public void Format(SourceFormatter formatter)
+            {
+                
+            }*/
             //public override void PostFormat(NewSourceFormatter formatter) { }
             public bool Equals(UsingStatement other)
             {
@@ -47,6 +59,15 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             {
                 return !Equals(left, right);
             }
+        }
+    }
+    
+    public static class UsingExtensions
+    {
+        public static void Using<TTarget>(this TTarget target, string @namespace)
+            where TTarget : Syntax.IDeclareUsing, Syntax.INode
+        {
+            target.AddUsing(new Syntax.UsingStatement(target.context, @namespace));
         }
     }
 }

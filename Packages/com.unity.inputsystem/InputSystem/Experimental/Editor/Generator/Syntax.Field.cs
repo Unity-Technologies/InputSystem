@@ -4,6 +4,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
+        public interface IDeclareField
+        {
+            public void AddField(Field field);
+        }
+        
         public class Field : Node
         {
             public Field(SourceContext context, TypeReference type, string name, string value) 
@@ -14,7 +19,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 this.name = name;
                 this.value = value;
                 this.type = type;
-                context.AddUsing(type.declaredNamespace);
+                context.root.Using(type.declaredNamespace);
             }
             
             public string name { get; set; }
@@ -28,7 +33,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             {
                 if (fieldOffset >= 0)
                     formatter.Write($"[FieldOffset({fieldOffset})]"); // TODO Should be annotation
-                formatter.Write(formatter.ToString(visibility));
+                formatter.Write(formatter.Format(visibility));
                 if (isFixed)
                     formatter.Write("fixed");
                 if (type.isType)
@@ -46,24 +51,19 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     
     public static partial class SyntaxExtensions
     {
-        public static Syntax.Field DeclareField(this Syntax.MutableNode target, Syntax.DeclaredType type, string name, string value = null)
+        public static Syntax.Field DeclareField<TTarget>(this TTarget target, Syntax.DeclaredType type, string name, string value = null)
+            where TTarget : Syntax.IDeclareField, Syntax.INode
         {
             var field = new Syntax.Field(target.context, new Syntax.TypeReference(type), name, value);
-            target.Add(field);
+            target.AddField(field);
             return field;
         }
         
-        public static Syntax.Field DeclareField(this Syntax.MutableNode target, System.Type type, string name, string value = null)
+        public static Syntax.Field DeclareField<TTarget>(this TTarget target, System.Type type, string name, string value = null)
+            where TTarget : Syntax.IDeclareField, Syntax.INode
         {
             var field = new Syntax.Field(target.context, new Syntax.TypeReference(type), name, value);
-            target.Add(field);
-            return field;
-        }
-        
-        public static Syntax.Field DeclareField<T>(this Syntax.MutableNode target, string name, string value = null)
-        {
-            var field = new Syntax.Field(target.context, new Syntax.TypeReference(typeof(T)), name, value);
-            target.Add(field);
+            target.AddField(field);
             return field;
         }
     }

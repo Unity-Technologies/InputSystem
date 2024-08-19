@@ -2,7 +2,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public partial class Syntax
     {
-        public interface ISupportInterface
+        public interface IDeclareInterface
         {
             public void AddInterface(DeclaredInterface @interface);
         }
@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     {
         public static Syntax.DeclaredInterface DeclareInterface<TTarget>(this TTarget target, string name, 
             Syntax.TypeReference returnType = null)
-            where TTarget : Syntax.INode, Syntax.ISupportInterface
+            where TTarget : Syntax.INode, Syntax.IDeclareInterface
         {
             var x = new Syntax.DeclaredInterface(target.context, name);
             target.AddInterface(x);

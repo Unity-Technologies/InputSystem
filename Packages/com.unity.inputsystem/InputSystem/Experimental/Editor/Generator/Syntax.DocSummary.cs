@@ -15,6 +15,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
             public void Format(SourceFormatter formatter)
             {
+                formatter.Paragraph();
                 formatter.WriteSummary(text);
                 formatter.Newline();
             }

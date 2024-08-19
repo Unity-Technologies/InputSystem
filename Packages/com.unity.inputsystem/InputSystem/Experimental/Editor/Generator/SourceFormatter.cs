@@ -33,6 +33,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         private int m_Indent;
         private readonly int m_TabLength;
         private int m_LineLength;
+        private bool m_NeedsParagraph;
         private bool m_NeedsNewLine;
         private bool m_NeedsSpace;
         private readonly bool m_UseTabs;
@@ -89,7 +90,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             WriteUnformatted('>');
         }
 
-        public string ToString(Syntax.Visibility visibility)
+        public string Format(Syntax.Visibility visibility)
         {
             switch (visibility)
             {
@@ -111,8 +112,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             // If there is no previous text return immediately
             if (length == 0)
                 return;
-            
-            // If we need to move to the next line to begin a new line
+
             if (m_NeedsNewLine)
                 Newline();
             
@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             Write(value);
         }
         
-        public void DeclareField(string type, string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, string value = null, int fieldOffset = -1)
+        /*public void DeclareField(string type, string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, string value = null, int fieldOffset = -1)
         {
             if (fieldOffset >= 0)
                 Write($"[FieldOffset({fieldOffset})]");
@@ -191,7 +191,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 Write(value);
             }
             EndStatement();
-        }
+        }*/
 
         public void EndStatement()
         {
@@ -225,7 +225,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             WriteUnformatted(ns);
         }
         
-        public SourceFormatter BeginStruct(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, StructLayoutAttribute layout = null)
+        /*public SourceFormatter BeginStruct(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, StructLayoutAttribute layout = null)
         {
             if (layout != null)
             {
@@ -251,7 +251,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             BeginScope();
 
             return this;
-        }
+        }*/
 
         public SourceFormatter EndStruct()
         {
@@ -259,14 +259,14 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             return this;
         }
         
-        public void BeginClass(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal)
+        /*public void BeginClass(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal)
         {
             Write(ToString(visibility));
             Write("class");
             m_Buffer.Append(identifier);
             Newline();
             BeginScope();
-        }
+        }*/
 
         public void EndClass()
         {
@@ -275,7 +275,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
         public void BeginScope()
         {
-            if (m_NeedsNewLine)
+            if (m_NeedsNewLine || m_LineLength > 0)
                 Newline();
             Write(kOpenStatement);
             Newline();
@@ -322,6 +322,18 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             m_LineLength = 0;
         }
 
+        public void Paragraph()
+        {
+            if (!m_NeedsParagraph)
+                return;
+            
+            m_Buffer.Append(kNewline);
+            m_Buffer.Append(kNewline);
+            m_NeedsParagraph = false;
+            m_NeedsNewLine = false;
+            m_LineLength = 0;
+        }
+
         public override string ToString()
         {
             var temp = new StringBuilder();
@@ -343,6 +355,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         public void NeedsNewline()
         {
             m_NeedsNewLine = true;
+        }
+
+        public void NeedsParagraph()
+        {
+            m_NeedsParagraph = true;
         }
     }
 }

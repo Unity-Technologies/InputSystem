@@ -5,13 +5,16 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
+        public interface IDeclareClass
+        {
+            public void AddClass(Class @class);
+        }
+        
         /// <summary>
         /// A class syntax node.
         /// </summary>
-        public sealed class Class : DeclaredType, ISupportInterface
+        public sealed class Class : DeclaredType
         {
-            private List<DeclaredInterface> m_Interfaces;
-            
             /// <summary>
             /// Constructs a new class syntax node.
             /// </summary>
@@ -20,24 +23,16 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             internal Class([NotNull] SourceContext context, [NotNull] string name)
                 : base(context, "class", name)
             { }
-
-            public void AddInterface(DeclaredInterface @interface) => m_Interfaces.Add(@interface);
         }
     }
 
     public static partial class SyntaxExtensions
     {
-        public static Syntax.Class DeclareClass(this SourceContext target, string name)
-        {
-            var node = new Syntax.Class(target, name);
-            target.Add(node);
-            return node;
-        }
-        
-        public static Syntax.Class DeclareClass(this Syntax.MutableNode target, string name)
+        public static Syntax.Class DeclareClass<TSource>(this TSource target, string name)
+            where TSource : Syntax.IDeclareClass, Syntax.INode
         {
             var node = new Syntax.Class(target.context, name);
-            target.Add(node);
+            target.AddClass(node);
             return node;
         }
     }

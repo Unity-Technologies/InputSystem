@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem
             m_TriggerState.startTime = time;
             m_State.ChangePhaseOfInteraction(InputActionPhase.Started, ref m_TriggerState);
         }
-
+        
         public void Performed()
         {
             if (m_TriggerState.phase == InputActionPhase.Waiting)

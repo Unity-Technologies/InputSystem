@@ -5,6 +5,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
+        public interface IDeclareAttribute
+        {
+            void AddAttribute(Attribute attribute);
+        }
+        
         /// <summary>
         /// Represents an attribute annotation.
         /// </summary>
@@ -73,6 +78,17 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     annotation.AddParameter(new NamedParameter("size", absoluteSizeBytes.ToString()));
                 return annotation;
             }
+        }
+    }
+    
+    public static class AttributeExtensions
+    {
+        public static Syntax.Attribute DeclareAttribute<TTarget>(this TTarget target, string name)
+            where TTarget : Syntax.IDeclareAttribute
+        {
+            var attribute = new Syntax.Attribute(name);
+            target.AddAttribute(attribute);
+            return attribute;
         }
     }
 }

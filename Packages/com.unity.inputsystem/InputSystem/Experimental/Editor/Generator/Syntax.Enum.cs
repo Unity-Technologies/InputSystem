@@ -6,6 +6,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
+        public interface IDeclareEnum
+        {
+            public void AddEnum(Enum @enum);
+        }
+        
         public sealed class Enum : DeclaredType
         {
             public sealed class Item
@@ -85,24 +90,26 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
     public static partial class SyntaxExtensions
     {
-        public static Syntax.Enum DeclareEnum(this SourceContext target, string name)
+        public static Syntax.Enum DeclareEnum<TTarget>(this TTarget target, string name)
+            where TTarget : Syntax.IDeclareEnum, Syntax.INode
         {
-            var node = new Syntax.Enum(target, name);
-            target.Add(node);
+            var node = new Syntax.Enum(target.context, name);
+            target.AddEnum(node);
             return node;
         }
         
-        public static Syntax.Enum DeclareEnumFlags(this SourceContext target, string name)
+        public static Syntax.Enum DeclareEnumFlags<TTarget>(this TTarget target, string name)
+            where TTarget : Syntax.IDeclareEnum, Syntax.INode
         {
             var node = DeclareEnum(target, name);
-            node.annotations.Add(new Syntax.Attribute("Flags"));
+            node.AddAttribute(new Syntax.Attribute("Flags"));
             return node;
         }
         
-        public static Syntax.Enum DeclareEnumFlags(this SourceContext target, string name, params Syntax.Enum.Item[] items)
+        public static Syntax.Enum DeclareEnumFlags<TTarget>(this TTarget target, string name, params Syntax.Enum.Item[] items)
+            where TTarget : Syntax.IDeclareEnum, Syntax.INode
         {
-            var node = DeclareEnum(target, name);
-            node.annotations.Add(new Syntax.Attribute("Flags"));
+            var node = DeclareEnumFlags(target, name);
             if (items != null)
             {
                 foreach (var item in items)
@@ -110,13 +117,6 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     node.AddItem(item);
                 }
             }
-            return node;
-        }
-        
-        public static Syntax.Enum DeclareEnum(this Syntax.MutableNode target, string name)
-        {
-            var node = new Syntax.Enum(target.context, name);
-            target.Add(node);
             return node;
         }
     }

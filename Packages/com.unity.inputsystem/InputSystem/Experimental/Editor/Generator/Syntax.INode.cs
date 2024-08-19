@@ -31,18 +31,35 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             /// <param name="formatter">The associated formatter.</param>
             public void PostFormat([NotNull] SourceContext context, [NotNull] SourceFormatter formatter);
         }
+
+        public enum VisitOrder
+        {
+            PreOrder,
+            InOrder,
+            PostOrder
+        }
+        
+        public interface IVisitor
+        {
+            public void Visit(SourceContext context, SourceFormatter formatter, VisitOrder order);
+        }
+
+        public interface INodeContext
+        {
+            public SourceContext context { get; }
+        }
         
         /// <summary>
         /// Interface representing operations on an arbitrary syntax tree node.
         /// </summary>
-        public interface INode : IFormattableSyntaxNode
+        public interface INode : IFormattableSyntaxNode, IEnumerable<INode>, INodeContext
         {
-            public SourceContext context { get; }
+            //public SourceContext context { get; }
             
             /// <summary>
             /// Returns a read-only view of all child nodes associated with this node.
             /// </summary>
-            public IReadOnlyList<INode> children { get; }
+            //public IEnumerable<INode> children { get; }
         }
     }
 }

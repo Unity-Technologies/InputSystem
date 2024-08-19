@@ -19,10 +19,16 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 m_DeclaredType = type;
             }
 
+            public static TypeReference For<T>()
+            {
+                return new TypeReference(typeof(T));
+            }
+
             public bool isType => m_Type != null;
             public Type type => m_Type;
             public DeclaredType declaredType => m_DeclaredType;
             public string declaredNamespace => m_Type != null ? m_Type.Namespace : m_DeclaredType.declaredNamespace;
+            public string value => isType ? type.Name : declaredType.name;
             
             public bool Equals(TypeReference other)
             {

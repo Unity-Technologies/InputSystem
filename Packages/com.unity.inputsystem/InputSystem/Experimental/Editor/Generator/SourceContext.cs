@@ -1,49 +1,69 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using Microsoft.SqlServer.Server;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
-    public class SourceContext
+    /// <summary>
+    /// Represents a source generation context.
+    /// </summary>
+    public sealed class SourceContext 
     {
-        private readonly HashSet<string> m_Namespaces;
-        private readonly List<Syntax.DeclaredType> m_DeclaredTypes;
-        private readonly List<Syntax.UsingStatement> m_UsingStatements;
+        /// <summary>
+        /// The root node of a source file.
+        /// </summary>
+        public class Root : Syntax.Node, Syntax.IDeclareClass, Syntax.IDeclareStruct, Syntax.IDeclareEnum, 
+            Syntax.IDeclareUsing
+        {
+            private readonly HashSet<string> m_Namespaces;
+            private readonly List<Syntax.UsingStatement> m_UsingStatements;
+            private readonly List<Syntax.Class> m_Classes;
+            private readonly List<Syntax.Struct> m_Structs;
+            private readonly List<Syntax.Enum> m_Enums;
+            
+            internal Root(SourceContext context, string defaultNamespace = null) : base(context)
+            {
+                m_Namespaces = new HashSet<string>();
+                m_UsingStatements = new List<Syntax.UsingStatement>();
+                m_Classes = new List<Syntax.Class>();
+                m_Enums = new List<Syntax.Enum>();
+                m_Structs = new List<Syntax.Struct>();
+                this.defaultNamespace = defaultNamespace;
+            
+                SetChildren(m_UsingStatements, m_Enums, m_Classes, m_Structs);
+            }
 
+            public string defaultNamespace { get; set; }
+            
+            /// <inheritDoc />
+            public void AddClass(Syntax.Class @class) => m_Classes.Add(@class);
+            /// <inheritDoc />
+            public void AddStruct(Syntax.Struct @struct) => m_Structs.Add(@struct);
+            /// <inheritDoc />
+            public void AddEnum(Syntax.Enum @enum) => m_Enums.Add(@enum);
+            /// <inheritDoc />
+            public void AddUsing(Syntax.UsingStatement statement)
+            {
+                if (!m_UsingStatements.Contains(statement))
+                    m_UsingStatements.Add(statement);
+            }
+        }
+
+        /// <summary>
+        /// Constructs a new <c>SourceContext</c>.
+        /// </summary>
+        /// <param name="defaultNamespace">The default namespace to use if nodes are not added to an explicit namespace.</param>
         public SourceContext(string defaultNamespace = null)
         {
-            m_Namespaces = new HashSet<string>();
-            m_UsingStatements = new List<Syntax.UsingStatement>();
-            m_DeclaredTypes = new List<Syntax.DeclaredType>();
-            this.defaultNamespace = defaultNamespace;
-        }
-        
-        public IReadOnlyList<Syntax.UsingStatement> usingStatements => m_UsingStatements;
-        public IReadOnlyList<Syntax.DeclaredType> declaredTypes => m_DeclaredTypes;
-        public string defaultNamespace { get; set; }
-
-        public void AddUsing(Syntax.UsingStatement statement)
-        {
-            if (!m_UsingStatements.Contains(statement))
-                m_UsingStatements.Add(statement);
+            root = new Root(this, defaultNamespace);
         }
 
-        public void AddUsing(string usingNamespace)
-        {
-            if (!m_Namespaces.Add(usingNamespace))
-                return;
-            m_UsingStatements.Add(new Syntax.UsingStatement(usingNamespace));
-        }
-        
-        public void Add(Syntax.DeclaredType type)
-        {
-            if (type.context != this)
-                throw new ArgumentException();
-            
-            if (m_DeclaredTypes.Contains(type))
-                throw new Exception();
-            m_DeclaredTypes.Add(type);
-        }
-        
+        /// <summary>
+        /// Returns the root node of the source file to which all other nodes are attached.
+        /// </summary>
+        public Root root { get; }
+
         internal string GetTypeName(Type type)
         {
             // Custom handling of primitive types that doesn't require namespace access

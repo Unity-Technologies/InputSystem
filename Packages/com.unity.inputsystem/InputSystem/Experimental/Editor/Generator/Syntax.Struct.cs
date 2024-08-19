@@ -1,7 +1,15 @@
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
+        public interface IDeclareStruct
+        {
+            public void AddStruct(Struct @struct);
+        }
+        
         /// <summary>
         /// A struct syntax node.
         /// </summary>
@@ -10,8 +18,9 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             /// <summary>
             /// Constructs a new <c>Struct</c> syntax node.
             /// </summary>
+            /// <param name="context">The associated context.</param>
             /// <param name="name">The unique struct identifier.</param>
-            internal Struct(SourceContext context, string name)
+            internal Struct([NotNull] SourceContext context, [NotNull] string name)
                 : base(context, "struct", name)
             { }
         }
@@ -19,17 +28,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     
     public static partial class SyntaxExtensions
     {
-        public static Syntax.Struct DeclareStruct(this SourceContext target, string name)
-        {
-            var node = new Syntax.Struct(target, name);
-            target.Add(node);
-            return node;
-        }
-        
-        public static Syntax.Struct DeclareStruct(this Syntax.MutableNode target, string name)
+        public static Syntax.Struct DeclareStruct<TTarget>(this TTarget target, string name)
+            where TTarget : Syntax.IDeclareStruct, Syntax.INode
         {
             var node = new Syntax.Struct(target.context, name);
-            target.Add(node);
+            target.AddStruct(node);
             return node;
         }
     }
