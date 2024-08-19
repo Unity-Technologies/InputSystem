@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
+- Improved performance of disconnected device activation (ISX-1450)
 
 ### Added
 -  Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
