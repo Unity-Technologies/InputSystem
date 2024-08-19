@@ -27,6 +27,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed default scroll speed in uGUI being slower than before. [ISXB-766](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-766)
+- Fixed selection state preserving after a save operation. [ISXB-966](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-966)
 - Fixed an issue when multiple interactions drive an action and perform during the cancelation of the current active interaction [ISXB-310](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-310).
 - Fixed an issue when generating C# class of Input Actions that contain an action map named `Debug` [ISXB-851](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-851).
 - Fixed ArgumentNullException thrown when accessing Action's bindings after changing Composite part. [ISXB-494](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-494).
