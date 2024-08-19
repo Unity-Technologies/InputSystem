@@ -398,9 +398,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 #if (UNITY_2023_2_OR_NEWER)
             EditorAnalytics.SendAnalytic(analytic);
                 #else
+                    // This is a workaround for the fact that the AnalyticsResult enum is not available before 2023.1.0a14 when not using the built-in Unity Analytics module.
+                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
             var info = analytic.info;
             EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
             EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+                    #endif // UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
                 #endif // UNITY_2023_2_OR_NEWER
             #elif (UNITY_ANALYTICS) // Implicitly: !UNITY_EDITOR
             var info = analytic.info;
