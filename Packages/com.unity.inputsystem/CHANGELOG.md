@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
 - Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
+- Fixed InputDeviceTester sample only visualizing a given touch contact once. [ISXB-1017](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1017)
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 
 ### Added
@@ -22,7 +23,8 @@ however, it has to be formatted properly to pass verification tests.
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
 
 ### Added
--  Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
+- Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
+- Added automatic loading of custom extensions of InputProcessor, InputInteraction and InputBindingComposite [ISXB-856]](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-856).
 
 ## [1.10.0] - 2024-07-24
 
