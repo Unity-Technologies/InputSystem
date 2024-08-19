@@ -38,6 +38,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     {
         // TODO Might need absolute/relative flags?
         // TODO Might need on/off values?
+
+        public Type enumType { get; set; }
     }
 
     public class AxisAttribute : Attribute
@@ -222,6 +224,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         //private Stream<GamepadState> m_Stream;
         // TODO Add API to fetch Gamepad instances via Context as well as instance specific getters for actual control representations
+        
+        // TODO Consider getting rid of displayName
         
         //public readonly ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
 

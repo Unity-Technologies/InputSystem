@@ -8,11 +8,17 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             public static readonly Usage Position = new(9876342);
         }
     }
+
+    public enum Button
+    {
+        Off,
+        On
+    }
     
     [InputSource]
     public readonly struct Pointer
     {
         public static readonly ObservableInputNode<Vector2> position = new(Usages.PointerUsages.Position, nameof(Pointer) + "." + nameof(position));
-        public static readonly ObservableInputNode<Vector2> trigger = new(Usages.PointerUsages.Trigger, nameof(Pointer) + "." + nameof(trigger));
+        public static readonly ObservableInputNode<Button> trigger = new(Usages.PointerUsages.Trigger, nameof(Pointer) + "." + nameof(trigger));
     }
 }

@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// <summary>
     /// Used to mark constructor arguments as being input ports which makes them detectable by reflection.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Constructor)]
+    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Constructor | AttributeTargets.Field)]
     public class InputPortAttribute : System.Attribute
     {
         /// <summary>
