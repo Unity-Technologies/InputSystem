@@ -260,11 +260,25 @@ namespace UnityEngine.InputSystem.Utilities
                 else if (ch == '"')
                 {
                     ++m_Position;
-                    result = new JsonString
+
+                    JsonValue escapedResult = new JsonString
                     {
                         text = new Substring(m_Text, startIndex, m_Position - startIndex - 1),
                         hasEscapes = hasEscapes
                     };
+                    if (hasEscapes)
+                    {
+                        result = new JsonString
+                        {
+                            text = escapedResult.ToString(),
+                            hasEscapes = false
+                        };
+                    }
+                    else
+                    {
+                        result = escapedResult;
+                    }
+
                     return true;
                 }
                 ++m_Position;
