@@ -261,22 +261,35 @@ namespace UnityEngine.InputSystem.Utilities
                 {
                     ++m_Position;
 
-                    JsonValue escapedResult = new JsonString
-                    {
-                        text = new Substring(m_Text, startIndex, m_Position - startIndex - 1),
-                        hasEscapes = hasEscapes
-                    };
                     if (hasEscapes)
                     {
+                        var builder = new StringBuilder();
+                        var length = m_Position - startIndex - 1;
+                        for (var i = startIndex; i < length; ++i)
+                        {
+                            ch = m_Text[i];
+                            if (ch == '\\')
+                            {
+                                ++i;
+                                if (i == length)
+                                    break;
+                                ch = m_Text[i];
+                            }
+                            builder.Append(ch);
+                        }
                         result = new JsonString
                         {
-                            text = escapedResult.ToString(),
+                            text = builder.ToString(),
                             hasEscapes = false
                         };
                     }
                     else
                     {
-                        result = escapedResult;
+                        result = new JsonString
+                        {
+                            text = new Substring(m_Text, startIndex, m_Position - startIndex - 1),
+                            hasEscapes = hasEscapes
+                        };
                     }
 
                     return true;
