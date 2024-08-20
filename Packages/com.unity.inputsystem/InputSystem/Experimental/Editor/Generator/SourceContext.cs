@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.SqlServer.Server;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
@@ -94,11 +92,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     {
         public static void Format(this SourceContext context, SourceFormatter formatter)
         {
-            foreach (var declaredType in context.root)
-                VisitDepthFirstRecursive(declaredType, 
-                    (node) => node.PreFormat(context, formatter), 
-                    (node) => node.Format(context, formatter), 
-                    (node) => node.PostFormat(context, formatter));
+            VisitDepthFirstRecursive(context.root, context, formatter);
         }
         
         public static string ToSource(this SourceContext context, SourceFormatter formatter = null)
@@ -108,15 +102,14 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             return formatter.ToString();
         }
         
-        private static void VisitDepthFirstRecursive<TNode>(TNode root, Action<Syntax.INode> preVisitor, 
-            Action<Syntax.INode> visitor, Action<Syntax.INode> postVisitor)
+        private static void VisitDepthFirstRecursive<TNode>(TNode root, SourceContext context, SourceFormatter formatter)
             where TNode : Syntax.INode
         {
-            preVisitor(root); // TODO Combine pre and visitor?
-            visitor(root);
+            root.PreFormat(context, formatter);
+            root.Format(context, formatter);
             foreach (var child in root)
-                VisitDepthFirstRecursive(child, preVisitor, visitor, postVisitor);
-            postVisitor(root);
+                VisitDepthFirstRecursive(child, context, formatter);
+            root.PostFormat(context, formatter);
         }
     }
 }

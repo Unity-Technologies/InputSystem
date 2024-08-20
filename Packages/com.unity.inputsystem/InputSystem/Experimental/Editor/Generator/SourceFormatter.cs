@@ -1,17 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
-    public interface ISourceFormatter
-    {
-        
-    }
-    
     /// <summary>
     /// A basic C# source formatter.
     /// </summary>
@@ -139,6 +131,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         public void WriteUnformatted(char c)
         {
             m_Buffer.Append(c);
+        }
+
+        public void WriteLine(string text)
+        {
+            Write(text);
         }
 
         public void Write(char c)
