@@ -27,12 +27,12 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
     public static class StatementExtensions
     {
-        public static Syntax.Statement Statement<TTarget>(this TTarget target, string value)
+        public static TTarget Statement<TTarget>(this TTarget target, string value)
             where TTarget : Syntax.INode, Syntax.IDefineStatement
         {
             var statement = new Syntax.Statement(target.context, value);
             target.AddStatement(statement);
-            return statement;
+            return target;
         }
     }
 }

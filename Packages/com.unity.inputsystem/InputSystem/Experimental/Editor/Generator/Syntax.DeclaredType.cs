@@ -5,7 +5,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
-        public class DeclaredType : Node, IDeclareField, IDeclareInterface, IDeclareClass, IDeclareMethod, IDeclareAttribute
+        public class DeclaredType : Node, IDeclareField, IDeclareInterface, IDeclareClass, IDefineMethod, IDeclareAttribute
         {
             private readonly List<DeclaredInterface> m_Interfaces;
             private readonly List<Attribute> m_Attributes;

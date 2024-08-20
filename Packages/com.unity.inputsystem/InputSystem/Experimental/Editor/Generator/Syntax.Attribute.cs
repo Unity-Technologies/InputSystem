@@ -13,9 +13,9 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         /// <summary>
         /// Represents an attribute annotation.
         /// </summary>
-        public sealed class Attribute
+        public sealed class Attribute : ITakeArgument
         {
-            private readonly List<NamedParameter> m_Parameters;
+            private readonly List<Argument> m_Arguments;
             
             /// <summary>
             /// Constructs a new <c>Attribute</c>.
@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             public Attribute(string name)
             {
                 this.name = name;
-                m_Parameters = new List<NamedParameter>();
+                m_Arguments = new List<Argument>();
             }
 
             /// <summary>
@@ -35,48 +35,30 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             /// <summary>
             /// Returns the parameters associated with this attribute.
             /// </summary>
-            public IReadOnlyList<NamedParameter> parameters => m_Parameters;
+            public IReadOnlyList<Argument> arguments => m_Arguments;
 
-            /// <summary>
-            /// Adds a parameter to the attribute.
-            /// </summary>
-            /// <param name="parameter">The parameter to be added.</param>
-            public void AddParameter(NamedParameter parameter)
-            {
-                m_Parameters.Add(parameter);
-            }
-            
             public void Format(SourceFormatter formatter)
             {
-                formatter.Write($"[{name}");
-                if (m_Parameters.Count != 0)
+                formatter.WriteUnformatted('[');
+                formatter.WriteUnformatted(name);
+                if (m_Arguments.Count != 0)
                 {
                     formatter.WriteUnformatted('(');
-                    for (var i = 0; i < m_Parameters.Count; ++i)
+                    for (var i = 0; i < m_Arguments.Count; ++i)
                     {
                         if (i > 0)
-                        {
                             formatter.WriteUnformatted(", ");
-                        }
-                        formatter.WriteUnformatted(m_Parameters[i].name);
-                        formatter.WriteUnformatted(':');
-                        formatter.Write(m_Parameters[i].value);
+                        m_Arguments[i].Format(formatter);
                     }    
                     formatter.WriteUnformatted(')');
                 }
                 formatter.WriteUnformatted(']');
                 formatter.Newline();
             }
-            
-            public static Attribute StructLayout(LayoutKind layoutKind, int pack = 0, int absoluteSizeBytes = -1)
+
+            public void AddArgument(Argument argument)
             {
-                var annotation = new Attribute("StructLayout");
-                annotation.AddParameter(new NamedParameter("layoutKind", "LayoutKind." + layoutKind.ToString())); // TODO Use type function
-                if (pack > 0)
-                    annotation.AddParameter(new NamedParameter("pack", pack.ToString()));
-                if (absoluteSizeBytes > 0)
-                    annotation.AddParameter(new NamedParameter("size", absoluteSizeBytes.ToString()));
-                return annotation;
+                m_Arguments.Add(argument);
             }
         }
     }
@@ -89,6 +71,18 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             var attribute = new Syntax.Attribute(name);
             target.AddAttribute(attribute);
             return attribute;
+        }
+        
+        public static Syntax.Struct StructLayout(this Syntax.Struct @struct, LayoutKind layoutKind, 
+            int pack = 0, int absoluteSizeBytes = -1)
+        {
+            var attribute = @struct.DeclareAttribute("StructLayout")
+                .Argument("layoutKind", "LayoutKind." + layoutKind); // TODO Use type function
+            if (pack > 0)
+                attribute.Argument("pack", pack.ToString());
+            if (absoluteSizeBytes > 0)
+                attribute.Argument("size", absoluteSizeBytes.ToString());
+            return @struct;
         }
     }
 }

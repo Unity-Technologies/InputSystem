@@ -1,25 +1,57 @@
+using System.Collections.Generic;
+
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
-    public static partial class Syntax
+    public partial class Syntax
     {
-        public class NamedParameter
+        public interface IDefineParameter
         {
-            public NamedParameter(string name, string value)
+            public void AddParameter(Parameter parameter);
+        }
+        
+        public sealed class Parameter : IDeclareAttribute
+        {
+            private List<Attribute> m_Attributes;
+            
+            public Parameter(string name, TypeReference type, string value = null)
             {
-                this.type = type;
                 this.name = name;
-                this.value = value;
+                this.type = type;
+                this.m_Attributes = new List<Attribute>();
             }
             
-            public string type { get; set; }
             public string name { get; set; }
-            public string value { get; set; }
+            public TypeReference type { get; set; }
 
-            public void Format(SourceFormatter formatter)
+            public void Format(SourceContext context, SourceFormatter formatter)
             {
-                formatter.Write(type);
+                formatter.WriteUnformatted(context.GetTypeName(type.type));
                 formatter.Write(name);
             }
+
+            public void AddAttribute(Attribute attribute)
+            {
+                m_Attributes.Add(attribute);
+            }
+        }
+    }
+
+    public static class ParameterExtensions
+    {
+        public static TTarget Parameter<TTarget>(this TTarget target, string name, Syntax.TypeReference type)
+            where TTarget : Syntax.IDefineParameter, Syntax.INode
+        {
+            var node = new Syntax.Parameter(name, type);
+            target.AddParameter(node);
+            return target;
+        }
+        
+        public static TTarget Parameter<TTarget>(this TTarget target, string name, System.Type type)
+            where TTarget : Syntax.IDefineParameter, Syntax.INode
+        {
+            var node = new Syntax.Parameter(name, new Syntax.TypeReference(type));
+            target.AddParameter(node);
+            return target;
         }
     }
 }

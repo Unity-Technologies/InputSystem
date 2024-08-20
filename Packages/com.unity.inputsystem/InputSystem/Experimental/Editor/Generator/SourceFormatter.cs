@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -14,6 +15,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     /// <summary>
     /// A basic C# source formatter.
     /// </summary>
+    /// <remarks>Note that this formatter is not thread-safe.</remarks>
     public sealed class SourceFormatter
     {
         private const string kPublic = "public";
@@ -29,7 +31,6 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         private const char kAssign = '=';
         
         private readonly StringBuilder m_Buffer;
-        private readonly List<string> m_Namespaces;
         private int m_Indent;
         private readonly int m_TabLength;
         private int m_LineLength;
@@ -39,16 +40,14 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         private readonly bool m_UseTabs;
 
         private const string kSummary = "summary";
+        private const string kDocPrefix = "///";
         
         public SourceFormatter(bool useTabs = false, int tabLength = 4)
         {
             m_Buffer = new StringBuilder();
-            m_Namespaces = new List<string>();
             m_UseTabs = useTabs;
             m_TabLength = tabLength;
         }
-        
-        public string header { get; set; }
 
         public void Comment(string content)
         {
@@ -58,21 +57,16 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         
         public void WriteSummary(string content)
         {
-            WriteDocPrefix();
+            Write(kDocPrefix);
             WriteXmlOpenElement(kSummary);
             Newline();
             
-            WriteDocPrefix();
+            Write(kDocPrefix);
             Write(content);
             Newline();
             
-            WriteDocPrefix();
+            Write(kDocPrefix);
             WriteXmlCloseElement(kSummary);
-        }
-
-        private void WriteDocPrefix()
-        {
-            Write("///");
         }
         
         private void WriteXmlOpenElement(string name)
@@ -120,7 +114,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             // Otherwise make sure the line is indented.
             if (m_LineLength > 0)
             {
-                m_Buffer.Append(kSpace);
+                WriteUnformatted(kSpace);
                 ++m_LineLength;
             }
             else
@@ -133,7 +127,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         {
             var length = value.Length;
             BeginLine(length);
-            m_Buffer.Append(value);
+            WriteUnformatted(value);
             m_LineLength += length;
         }
 
@@ -150,25 +144,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         public void Write(char c)
         {
             BeginLine(1);
-            m_Buffer.Append(c);
+            WriteUnformatted(c);
             ++m_LineLength;
-        }
-
-        public void WriteType(string type)
-        {
-            var index = type.LastIndexOf('.');
-            if (index < 0)
-            {
-                Write(type);
-            }
-            else
-            {
-                var offset = index + 1;
-                Write(type.Substring(offset, type.Length - offset));
-                var ns = type.Substring(0, index);
-                if (!m_Namespaces.Contains(ns))
-                    m_Namespaces.Add(ns);
-            }
         }
 
         public void Assign(string name, string value)
@@ -177,37 +154,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             Write(kAssign);
             Write(value);
         }
-        
-        /*public void DeclareField(string type, string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, string value = null, int fieldOffset = -1)
-        {
-            if (fieldOffset >= 0)
-                Write($"[FieldOffset({fieldOffset})]");
-            Write(ToString(visibility));
-            WriteType(type);
-            Write(identifier);
-            if (value != null)
-            {
-                Write(kAssign);
-                Write(value);
-            }
-            EndStatement();
-        }*/
 
         public void EndStatement()
         {
             WriteUnformatted(kSemicolon);
             m_NeedsNewLine = true;
-        }
-
-        private void BeginAttribute(string name)
-        {
-            Write($"[StructLayout(");
-        }
-
-        private void EndAttribute()
-        {
-            WriteUnformatted(')');
-            WriteUnformatted(']');
         }
 
         private void NamedArgument(string argument, string value)
@@ -217,56 +168,6 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             WriteUnformatted(kSpace);
             WriteUnformatted(value);
         }
-
-        public void Using([NotNull] string ns)
-        {
-            Write("using");
-            WriteUnformatted(kSpace);
-            WriteUnformatted(ns);
-        }
-        
-        /*public SourceFormatter BeginStruct(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal, StructLayoutAttribute layout = null)
-        {
-            if (layout != null)
-            {
-                // TODO Add Using namespace to file using System.Runtime.InteropServices;
-                var value = layout.Value;
-                var type = layout.Value.GetType();
-                var ns = type.Namespace;
-                var fullName = type.FullName;
-                var v = fullName.Substring(ns.Length + 1, fullName.Length - ns.Length - 1);
-                
-                BeginAttribute("StructLayout");
-                NamedArgument("layoutKind", $"{layout.Value.GetType().Name}.{layout.Value.ToString()}");
-                //NamedArgument("layoutKind", v + "." + value);
-                //Write($"[StructLayout({layout.Value.GetType()}.{layout.Value.ToString()})]");
-                EndAttribute();
-                Newline();
-            }
-            
-            Write(ToString(visibility));
-            Write("struct");
-            Write(identifier);
-            Newline();
-            BeginScope();
-
-            return this;
-        }*/
-
-        public SourceFormatter EndStruct()
-        {
-            EndScope();
-            return this;
-        }
-        
-        /*public void BeginClass(string identifier, Syntax.Visibility visibility = Syntax.Visibility.Internal)
-        {
-            Write(ToString(visibility));
-            Write("class");
-            m_Buffer.Append(identifier);
-            Newline();
-            BeginScope();
-        }*/
 
         public void EndClass()
         {
@@ -299,25 +200,25 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             if (m_Indent > 0) --m_Indent;
         }
 
-        public void Indent()
+        private void Indent()
         {
             for (var i = 0; i < m_Indent; ++i)
             {
                 if (m_UseTabs)
                 {
-                    m_Buffer.Append(kTab);
+                    WriteUnformatted(kTab);
                 }
                 else
                 {
                     for (var j = m_TabLength; j != 0; --j)
-                        m_Buffer.Append(kSpace);    
+                        WriteUnformatted(kSpace);
                 }    
             }
         }
 
         public void Newline()
         {
-            m_Buffer.Append(kNewline);
+            WriteUnformatted(kNewline);
             m_NeedsNewLine = false;
             m_LineLength = 0;
         }
@@ -327,8 +228,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             if (!m_NeedsParagraph)
                 return;
             
-            m_Buffer.Append(kNewline);
-            m_Buffer.Append(kNewline);
+            WriteUnformatted(kNewline);
+            WriteUnformatted(kNewline);
             m_NeedsParagraph = false;
             m_NeedsNewLine = false;
             m_LineLength = 0;
@@ -336,19 +237,6 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
         public override string ToString()
         {
-            var temp = new StringBuilder();
-            if (!string.IsNullOrEmpty(header))
-                temp.Append(header);
-            foreach (var ns in m_Namespaces)
-                temp.Append(ns);
-            if (temp.Length > 0)
-            {
-                if (m_Buffer.Length == 0)
-                    return temp.ToString(); 
-                temp.Append(kNewline).Append(kNewline);
-                m_Buffer.Insert(0, temp);
-            }
-            
             return m_Buffer.ToString();
         }
 

@@ -37,7 +37,7 @@ class MyType
             var foo = c.root.DeclareStruct("Foo");
             foo.isPartial = true;
             foo.docSummary = "This is the Foo class";
-            foo.AddAttribute(Syntax.Attribute.StructLayout(LayoutKind.Sequential));
+            foo.StructLayout(LayoutKind.Sequential);
             var x = foo.DeclareField<int>("x");
             x.fieldOffset = 0;
             var y = foo.DeclareField<int>("y");
@@ -102,7 +102,8 @@ enum MyEnum
         public void SyntaxInterfaceTest()
         {
             var c = new SourceContext();
-            // var i = c.DeclareInterface("IFoo");
+            var i = c.root.DeclareInterface("IFoo");
+            i.DefineMethod("Bar");
             Assert.That(c.ToSource(), Is.EqualTo(@""));
         }
         
@@ -111,13 +112,33 @@ enum MyEnum
         {
             var c = new SourceContext();
             var foo = c.root.DeclareClass("Foo");
-            var bar = foo.DeclareMethod("Bar", Syntax.Visibility.Public, Syntax.TypeReference.For<int>())
+            var bar = foo.DefineMethod("Bar", Syntax.Visibility.Public, Syntax.TypeReference.For<int>())
                 .Statement("return 5");
             Assert.That(c.ToSource(), Is.EqualTo(@"class Foo
 {
     public int Bar()
     {
         return 5;
+    }
+}"));
+        }
+        
+        [Test]
+        public void SyntaxMethodWithArgumentsTest()
+        {
+            var c = new SourceContext();
+            var foo = c.root.DeclareClass("Foo");
+            var bar = foo.DefineMethod("Bar", Syntax.Visibility.Private)
+                .Parameter("x", typeof(int))
+                .Parameter("y", typeof(float))
+                .Statement("var z = (float)x * y")
+                .Statement("Debug.Log(z)");
+            Assert.That(c.ToSource(), Is.EqualTo(@"class Foo
+{
+    private void Bar(int x, float y)
+    {
+        var z = (float)x * y;
+        Debug.Log(z);
     }
 }"));
         }

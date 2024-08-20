@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 if (isFixed)
                     formatter.Write("fixed");
                 if (type.isType)
-                    formatter.WriteType(context.GetTypeName(type.type));
+                    formatter.Write(context.GetTypeName(type.type));
                 else
                     throw new NotImplementedException("Need to generate valid type and namespace from declared");
                 if (value != null)
