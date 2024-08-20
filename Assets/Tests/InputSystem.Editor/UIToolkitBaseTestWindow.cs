@@ -121,6 +121,17 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     }
 
     /// <summary>
+    /// Wait for UI toolkit scheduler to process the frame
+    /// </summary>
+    /// <param name="timeoutSecs">Maximum time to wait in seconds.</param>
+    protected IEnumerator WaitForSchedulerLoop(double timeoutSecs = 5.0)
+    {
+        bool done = false;
+        m_Window.rootVisualElement.schedule.Execute(() => done = true);
+        return WaitUntil(() => done == true, "WaitForSchedulerLoop", timeoutSecs);
+    }
+
+    /// <summary>
     /// Wait for the visual element to be focused
     /// </summary>
     /// <param name="ve">VisualElement to be focused</param>
