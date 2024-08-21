@@ -1609,7 +1609,7 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException("Binding accessor must point to composite or part binding");
 
                 AddBindingInternal(m_ActionMap,
-                    new InputBinding { path = path, isPartOfComposite = true, name = partName },
+                    new InputBinding { path = path, isPartOfComposite = true, name = partName, action = m_Action?.name },
                     m_BindingIndexInMap + 1);
 
                 return new BindingSyntax(m_ActionMap, m_BindingIndexInMap + 1, m_Action);

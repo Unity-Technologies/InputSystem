@@ -5250,6 +5250,36 @@ partial class CoreTests
         composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
         composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
 
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Description("ISXB-494 Changing composite of action inside a map triggered exception that wasn't caught by previous test.")]
+    public void Actions_CanChangeBindingPart_ToExistingCompositeInActionMap()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actionMap = new InputActionMap("Map");
+        var action = actionMap.AddAction("Action", InputActionType.Value, expectedControlLayout: "Axis");
+
+        action.AddCompositeBinding("Axis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+
+        Assert.That(action.bindings, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey, keyboard.dKey }));
+
+        var composite = action.ChangeCompositeBinding("Axis");
+
+        composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
+        composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
+
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    private void ValidateCompositeBindingsOnAction(InputAction action)
+    {
         Assert.That(action.bindings, Has.Count.EqualTo(5));
         Assert.That(action.bindings,
             Has.Exactly(1).With.Property("isComposite").EqualTo(true).And.With.Property("isPartOfComposite").EqualTo(false).And.With
