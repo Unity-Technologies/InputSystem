@@ -663,6 +663,13 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportCodeAuthoringAnalytic()
+    {
+        
+    }
+
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
     [Test]
     [Category("Analytics")]

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -8,6 +9,14 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
+    internal class InputApiAnalyticCounters
+    {
+        private int addActionMapToAsset;
+        private int removeActionMapFromAsset;
+        private int addActionToMap;
+        private int removeActionFromMap;
+    }
+    
     /// <summary>
     /// Methods to change the setup of <see cref="InputAction"/>, <see cref="InputActionMap"/>,
     /// and <see cref="InputActionAsset"/> objects.
@@ -305,6 +314,21 @@ namespace UnityEngine.InputSystem
                 groups = groups
             });
         }
+        
+        /// <summary>
+        /// Conditionally compiled helper for logging API usage of code-authored actions.
+        /// </summary>
+        /// <param name="api">The associated API function.</param>
+        /// <remarks>
+        /// Be extremely carefully to review for indirect calls and overloads to not register analytics twice.
+        /// Be extremely careful in enabling/disabling tracking before internal calls since those may otherwise
+        /// be incorrectly registered.
+        /// </remarks>
+        [Conditional("UNITY_EDITOR"), Conditional("UNITY_ANALYTICS"), Conditional("ENABLE_CLOUD_SERVICES_ANALYTICS")]
+        private static void RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api api)
+        {
+            UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Register(api);
+        }
 
         /// <summary>
         /// Add a binding that references the given <paramref name="control"/> and triggers
@@ -349,6 +373,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static BindingSyntax AddBinding(this InputAction action, InputBinding binding = default)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
+            
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
@@ -478,6 +504,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionMap.bindings"/>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
+            
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
             if (binding.path == null)
@@ -501,6 +529,8 @@ namespace UnityEngine.InputSystem
         public static CompositeSyntax AddCompositeBinding(this InputAction action, string composite,
             string interactions = null, string processors = null)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddCompositeBinding);
+            
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(composite))
@@ -580,6 +610,8 @@ namespace UnityEngine.InputSystem
         /// of <paramref name="action"/>).</exception>
         public static BindingSyntax ChangeBinding(this InputAction action, int index)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
+            
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
@@ -638,6 +670,8 @@ namespace UnityEngine.InputSystem
         /// of <paramref name="actionMap"/>).</exception>
         public static BindingSyntax ChangeBinding(this InputActionMap actionMap, int index)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
+            
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
             if (index < 0 || index >= actionMap.m_Bindings.LengthSafe())
@@ -836,6 +870,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBindingComposite"/>
         public static BindingSyntax ChangeCompositeBinding(this InputAction action, string compositeName)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeCompositeBinding);
+            
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(compositeName))
@@ -877,6 +913,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void Rename(this InputAction action, string newName)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.Rename);
+            
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(newName))
@@ -919,6 +957,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void AddControlScheme(this InputActionAsset asset, InputControlScheme controlScheme)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddControlScheme);
+            
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(controlScheme.name))
@@ -987,6 +1027,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void RemoveControlScheme(this InputActionAsset asset, string name)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.RemoveControlScheme);
+            
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
@@ -1007,11 +1049,14 @@ namespace UnityEngine.InputSystem
         /// <returns><paramref name="scheme"/></returns>
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithBindingGroup);
+            
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
         public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithDevice);
             if (required)
                 return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
@@ -1019,21 +1064,25 @@ namespace UnityEngine.InputSystem
 
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithRequiredDevice);
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
         }
 
         public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithOptionalDevice);
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
         public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithRequiredDevice);
             return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
         }
 
         public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithOptionalDevice);
             return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();
         }
 
