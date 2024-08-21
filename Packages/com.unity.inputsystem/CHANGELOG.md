@@ -79,6 +79,11 @@ however, it has to be formatted properly to pass verification tests.
 - Expanded editor and build insight analytics to cover ``.inputactions` asset editor usage, `InputSettings` and common component configurations.
 - Added Input Setting option allowing to keep platform-specific scroll wheel input values instead of automatically converting them to a normalized range.
 
+## [Unreleased] - 2024-07-04
+
+### Fixed
+- Fixed memory leak when the OnScreenStick component was destroyed.
+
 ## [1.8.2] - 2024-04-29
 
 ### Added
