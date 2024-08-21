@@ -2,6 +2,7 @@ editors:
   - version: 2021.3
   - version: 2022.3
   - version: 6000.0
+    disable_tvos_run: true
   - version: trunk
     disable_tvos_run: true
 
