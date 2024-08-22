@@ -2473,6 +2473,45 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private JsonParser.JsonString MakeEscapedJsonString(string theString)
+        {
+            //
+            // When we create the device description from the (passed from native) deviceDescriptor string in OnNativeDeviceDiscovered()
+            // we remove any escape characters from the capabilties field when we do InputDeviceDescription.FromJson() - this decoded
+            // description is used to create the device.
+            //
+            // This means that the native and managed code can have slightly different representations of the capabilities field.
+            //
+            // Managed: description.capabilities    string, unescaped
+            //                                      eg "{"deviceName":"Oculus Quest", ..."
+            //
+            // Native:  deviceDescriptor            string, containing a Json encoded "capabilities" name/value pair represented by an escaped Json string
+            //                                      eg "{\"deviceName\":\"Oculus Quest\", ..."
+            //
+            // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals() we
+            // reconstruct an escaped string and make an escaped JsonParser.JsonString and use that for the comparison instead.
+            //
+            var builder = new StringBuilder();
+            var length = theString.Length;
+            var hasEscapes = false;
+            for (var j = 0; j < length; ++j)
+            {
+                var ch = theString[j];
+                if (ch == '\\' || ch == '\"')
+                {
+                    builder.Append('\\');
+                    hasEscapes = true;
+                }
+                builder.Append(ch);
+            }
+            var jsonStringWithEscapes = new JsonParser.JsonString
+            {
+                text = builder.ToString(),
+                hasEscapes = hasEscapes
+            };
+            return jsonStringWithEscapes;
+        }
+
         private InputDevice TryMatchDisconnectedDevice(string deviceDescriptor)
         {
             for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
@@ -2491,39 +2530,7 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
                     continue;
-                //
-                // When we create the device description from the (passed from native) deviceDescriptor string in OnNativeDeviceDiscovered()
-                // we remove any escape characters from the capabilties field when we do InputDeviceDescription.FromJson() - this decoded
-                // description is used to create the device.
-                //
-                // This means that the native and managed code can have slightly different representations of the capabilities field.
-                //
-                // Managed: description.capabilities    string, unescaped (eg "{"deviceName":"Oculus Quest", ...")
-                // Native:  deviceDescriptor            string, containinf a Json encoded "capabilities" name/value represented with an escaped Json string (eg "{\"deviceName\":\"Oculus Quest\", ...")
-                //
-                // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals()
-                // reconstruct an escaped string and make an escaped JsonParser.JsonString and use that for the comparison instead.
-                //
-                var builder = new StringBuilder();
-                var length = description.capabilities.Length;
-                var hasEscapes = false;
-                for (var j = 0; j < length; ++j)
-                {
-                    var ch = description.capabilities[j];
-                    if (ch == '\\' || ch == '\"')
-                    {
-                        builder.Append('\\');
-                        hasEscapes = true;
-                    }
-                    builder.Append(ch);
-                }
-                string capabilitiesWithEscapes = builder.ToString();
-                var jsonCapabilitiesWithEscapes = new JsonParser.JsonString
-                {
-                    text = capabilitiesWithEscapes,
-                    hasEscapes = hasEscapes
-                };
-                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", jsonCapabilitiesWithEscapes, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", MakeEscapedJsonString(description.capabilities), deviceDescriptor))
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("serial", description.serial, deviceDescriptor))
                     continue;
