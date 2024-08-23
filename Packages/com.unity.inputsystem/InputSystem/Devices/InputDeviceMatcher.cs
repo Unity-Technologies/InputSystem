@@ -145,12 +145,12 @@ namespace UnityEngine.InputSystem.Layouts
         /// <summary>
         /// Add a pattern (simple string) to <see cref="patterns"/> to match a <see cref="InputDeviceDescription.manufacturer"/>.
         /// </summary>
-        /// <param name="pattern">String to match - simple keyword search in a device manufacturer string (eg "SONY").</param>
+        /// <param name="noRegExPattern">String to match - simple keyword search in a device manufacturer string (eg "SONY").</param>
         /// <returns>The modified device matcher with the added pattern.</returns>
         /// <seealso cref="InputDeviceDescription.manufacturer"/>
-        public InputDeviceMatcher WithManufacturerContains(string pattern)
+        public InputDeviceMatcher WithManufacturerContains(string noRegExPattern)
         {
-            return With(kManufacturerContainsKey, pattern, supportRegex:false);
+            return With(kManufacturerContainsKey, noRegExPattern, supportRegex:false);
         }
 
         /// <summary>
