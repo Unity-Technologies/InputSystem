@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="InputDeviceDescription.manufacturer"/>
         public InputDeviceMatcher WithManufacturerContains(string noRegExPattern)
         {
-            return With(kManufacturerContainsKey, noRegExPattern, supportRegex:false);
+            return With(kManufacturerContainsKey, noRegExPattern, supportRegex: false);
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace UnityEngine.InputSystem.Layouts
                 else if (key == kManufacturerContainsKey)
                 {
                     if (string.IsNullOrEmpty(deviceDescription.manufacturer)
-                          || !MatchSinglePropertyContains(pattern, deviceDescription.manufacturer))
+                        || !MatchSinglePropertyContains(pattern, deviceDescription.manufacturer))
                         return 0;
                 }
                 else if (key == kProductKey)

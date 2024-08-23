@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.DualShock
                     .WithInterface("HID")
                     .WithManufacturerContains("Sony")
                     .WithManufacturerContains("Entertainment")
-                    .WithProduct("PLAYSTATION(R)3 Controller", supportRegex:false));
+                    .WithProduct("PLAYSTATION(R)3 Controller", supportRegex: false));
             #endif
         }
     }
