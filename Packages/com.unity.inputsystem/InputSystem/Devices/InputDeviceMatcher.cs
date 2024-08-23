@@ -378,7 +378,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             // String match.
             if (pattern is string str)
-                return str.Contains(value, StringComparison.OrdinalIgnoreCase);
+                return value.Contains(str, StringComparison.OrdinalIgnoreCase);
 
             return false;
         }
