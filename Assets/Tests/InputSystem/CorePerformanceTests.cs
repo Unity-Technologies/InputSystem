@@ -194,7 +194,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     public void NEW_Performance_ReadControl_NoStream()
     {
         using var ctx = new Context();
-        using var r = UnityEngine.InputSystem.Experimental.Devices.Gamepad.LeftStick.Subscribe();
+        using var r = UnityEngine.InputSystem.Experimental.Devices.Gamepad.leftStick.Subscribe();
         Measure.Method(() => r.Read())
             .MeasurementCount(200)
             .WarmupCount(5)

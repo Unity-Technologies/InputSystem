@@ -17,7 +17,7 @@ namespace Tests.InputSystem.Experimental
             
             Assert.That(() =>
             {
-                using var s = Gamepad.LeftStick.Subscribe(context, observer);
+                using var s = Gamepad.leftStick.Subscribe(context, observer);
             }, Is.Not.AllocatingGCMemory());            
         }
     }

@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Experimental
                 visited.Add(node);
                 var n = node.childCount;
                 for (var i=0; i < n; ++i)
-                    visitor(node.GetChild(i));
+                    visitor(node.GetChild(i)); // TODO INcorrect should push to stack
             }
         }
 

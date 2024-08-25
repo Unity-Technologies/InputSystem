@@ -22,6 +22,7 @@ namespace UnityEngine.InputSystem.Experimental
             
         }
 
+        // TODO Replace observers with observerList?
         // TODO Implement IAsyncEnumerable<T>?
         internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T>
             where T : struct
@@ -40,6 +41,8 @@ namespace UnityEngine.InputSystem.Experimental
 
             //public Stream<T> stream => Stream as Stream<T>;
 
+            public int observerCount => m_ObserverCount;
+            
             public bool hasStream => m_Stream != null;
             
             public void SetStream(Stream<T> stream)
@@ -82,6 +85,22 @@ namespace UnityEngine.InputSystem.Experimental
                     {
                         m_Observers[j].OnNext(span[i]);
                     }
+                }
+            }
+
+            public void OnNext(T value)
+            {
+                for (var j = 0; j < m_ObserverCount; ++j)
+                {
+                    m_Observers[j].OnNext(value);
+                }
+            }
+
+            public void OnNext(ref T value)
+            {
+                for (var j = 0; j < m_ObserverCount; ++j)
+                {
+                    m_Observers[j].OnNext(value);
                 }
             }
 

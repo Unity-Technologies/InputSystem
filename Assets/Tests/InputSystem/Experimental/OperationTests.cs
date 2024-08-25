@@ -208,10 +208,10 @@ namespace Tests.InputSystem.Experimental
         [Test]
         public void Filter()
         {
-            var stick = Gamepad.LeftStick.Stub(m_Context);
+            var stick = Gamepad.leftStick.Stub(m_Context);
             
             var observer = new ListObserver<Vector2>();
-            using var opaqueSubscription = Gamepad.LeftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
+            using var opaqueSubscription = Gamepad.leftStick.Filter((v) => v.x >= 0.5f).Subscribe(m_Context, observer);
             //using var subscription = Gamepad.LeftStick.Filter<Vector2>(v => v.x >= 0.5f).Subscribe(m_Context, observer);
             
             stick.Change(new Vector2(0.4f, 0.0f));

@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Experimental
     
     // TODO Write two stream implementations, one local stream and once shared stream.
 
-    public static class StreamOperations
+    /*public static class StreamOperations
     {
         public static void Press(Stream<InputEvent> dst, Stream<bool> src)
         {
@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
         
         // TODO public static void Multipex<T>(Stream<Packet>)
-    }
+    }*/
     
     /// <summary>
     /// A stream containing objects of type T.

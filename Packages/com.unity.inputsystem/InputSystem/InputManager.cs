@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
@@ -3074,6 +3075,9 @@ namespace UnityEngine.InputSystem
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
+                    // Forward to adapter
+                    Experimental.InputSystemAdapter.Handle(currentEventReadPtr);
+                    
                     Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
 
                     // In before render updates, we only take state events and only those for devices

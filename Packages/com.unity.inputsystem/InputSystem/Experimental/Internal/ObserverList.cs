@@ -229,7 +229,112 @@ namespace UnityEngine.InputSystem.Experimental
            }
        }
    }*/
-    
+
+   internal class ObserverList3<T> : IObserver<T>
+   {
+       internal sealed class Subscription : IDisposable
+       {
+           private ObserverList3<T> m_Owner;   // TODO This could be sub array or pooled array or simply context ref
+           private IObserver<T> m_Observer;    // TODO This could be id since this is anyway O(N)
+
+           public Subscription(ObserverList3<T> owner, IObserver<T> observer)
+           {
+               m_Owner = owner;
+               m_Observer = observer;
+           }
+
+           public void Dispose()
+           {
+               if (m_Owner == null)
+                   return; // Already disposed
+                
+               m_Owner.Remove(m_Observer);
+                
+               m_Owner = null;
+               m_Observer = null;
+           }
+       }
+       
+       private IObserver<T> m_Observer;
+       private IObserver<T>[] m_Observers; // TODO If this was a range in a common array we could have used indices, that would give one array per type
+       private int m_Length;
+
+       public ObserverList3(IObserver<T> observer)
+       {
+           m_Observer = observer;
+           m_Observers = null;
+           m_Length = 0;
+       }
+
+       public Subscription Add(IObserver<T> observer)
+       {
+           if (m_Observers == null)
+           {
+               m_Observers = new IObserver<T>[2];
+               m_Observers[0] = observer;
+               m_Length = 1;
+           }
+           else if (m_Length < m_Observers.Length)
+           {
+               m_Observers[m_Length++] = observer;
+           }
+           else
+           {
+               var a = new IObserver<T>[m_Observers.Length * 2];
+               Array.Copy(m_Observers, 0, a, 0, m_Length);
+           }
+           m_Observers[m_Length++] = observer;
+
+           return null;
+           //return new Subscription()
+       }
+
+       public void Remove(IObserver<T> observer)
+       {
+           if (ReferenceEquals(m_Observer, observer))
+           {
+               var index = m_Length - 1;
+               m_Observer = m_Observers[index];
+               m_Observers[index] = null;
+               --m_Length;
+           }
+           else
+           {
+               var index = Array.IndexOf(m_Observers, observer, m_Length);
+               if (index < 0)
+                   throw new Exception();
+               Array.Copy(m_Observers, index + 1, m_Observers, index, m_Length - index - 1);
+           }
+       }
+       
+       public void OnCompleted()
+       {
+           m_Observer.OnCompleted();
+           for (var i = 0; i < m_Length; ++i)
+           {
+               m_Observers[i].OnCompleted();
+           }
+       }
+
+       public void OnError(Exception error)
+       {
+           m_Observer.OnError(error);
+           for (var i = 0; i < m_Length; ++i)
+           {
+               m_Observers[i].OnError(error);
+           }
+       }
+
+       public void OnNext(T value)
+       {
+           m_Observer.OnNext(value);
+           for (var i = 0; i < m_Length; ++i)
+           {
+               m_Observers[i].OnNext(value);
+           }
+       }
+   }
+   
     internal class ObserverList2<T> : IObserver<T>
     {
         private List<IObserver<T>> m_Observers;

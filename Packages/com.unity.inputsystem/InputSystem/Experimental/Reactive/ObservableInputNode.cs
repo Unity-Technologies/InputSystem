@@ -89,11 +89,12 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO A binding source associated with a specific usage but not with a specific context. Not clear anymore since it might be required to trace whether this is a source that may be shared in a graph.  
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
     // Note that ObservableInput is equatable based on underlying usage.
+    [Serializable]
     public struct ObservableInputNode<T> : IObservableInputNode<T>, IEquatable<ObservableInputNode<T>>, IUnsafeObservable<T>
         where T : struct
     {
-        public readonly Usage Usage;
-        private readonly Field m_Field;
+        [SerializeField] private Usage m_Usage;
+        [SerializeField] private Field m_Field;
         
         public ObservableInputNode(Usage usage, string displayName = null)
             : this(usage, Context.instance, Field.None, displayName)
@@ -107,12 +108,14 @@ namespace UnityEngine.InputSystem.Experimental
             if (usage == Usage.Invalid)
                 throw new ArgumentException(nameof(usage) + " is not a valid usage.");
 
-            Usage = usage;
+            m_Usage = usage;
             m_Field = field;
             
             this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required");
             //m_NodeId = Context.InvalidNodeId;
         }
+
+        public Usage usage => m_Usage;
 
         public readonly IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
             where TObserver : IObserver<T>
@@ -120,7 +123,7 @@ namespace UnityEngine.InputSystem.Experimental
             // Subscribe to source by subscribing to a stream context. Note that the stream context 
             // is consistent throughout the life-time of any existing associated subscriptions but
             // may change dynamically based on the availability of underlying streams (devices and/or controls).
-            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(observer);
+            return context.GetOrCreateStreamContext<T>(m_Usage).Subscribe(observer);
         }
 
         #region IObservable<T>
@@ -140,14 +143,14 @@ namespace UnityEngine.InputSystem.Experimental
         public readonly SubscriptionReader<T> Subscribe(Context context)
         {
             //m_NodeId = context.RegisterNode();
-            return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(Usage)); // Subscription reader need to 
+            return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(m_Usage)); // Subscription reader need to 
         }
         
         #region IUnsafeObservable
         
-        public readonly UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
+        public UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
         {
-            return context.GetOrCreateStreamContext<T>(Usage).Subscribe(context, observer);
+            return context.GetOrCreateStreamContext<T>(m_Usage).Subscribe(context, observer);
         }
         
         #endregion
@@ -169,21 +172,15 @@ namespace UnityEngine.InputSystem.Experimental
         #region IEquatable<T>
         
         /// <inheritDoc />
-        public bool Equals(IDependencyGraphNode other)
-        {
-            return other is ObservableInputNode<T> otherNode && Equals(otherNode);
-        }
+        public bool Equals(IDependencyGraphNode other) => other is ObservableInputNode<T> otherNode && Equals(otherNode);
 
         /// <inheritDoc />
-        public bool Equals(ObservableInputNode<T> other)
-        {
-            return Usage.Equals(other.Usage);   
-        }
+        public bool Equals(ObservableInputNode<T> other) => m_Usage.Equals(other.m_Usage);   
 
         /// <inheritDoc />
         public override bool Equals(object obj) => obj is ObservableInputNode<T> other && Equals(other);
         /// <inheritDoc />
-        public override int GetHashCode() => Usage.GetHashCode();
+        public override int GetHashCode() => m_Usage.GetHashCode();
 
         #endregion
     }

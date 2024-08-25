@@ -178,7 +178,7 @@ namespace Tests.InputSystem
         [Test]
         public void CachedNode()
         {
-            using var s0 = Gamepad.LeftStick.Subscribe(action: (Vector2 _) => { }, context: m_Context);
+            using var s0 = Gamepad.leftStick.Subscribe(action: (Vector2 _) => { }, context: m_Context);
             using var s1 = Gamepad.RightStick.Subscribe(action: (Vector2 _) => { }, context: m_Context);
             //Assert.Equals(m_Context.RegisteredNodeCount, Is.EqualTo(1));
         }
@@ -187,10 +187,10 @@ namespace Tests.InputSystem
         [Test]
         public void NodeEquality()
         {
-            Assert.That(Gamepad.LeftStick.Equals(null), Is.False);
-            Assert.That(Gamepad.LeftStick.Equals(Gamepad.RightStick), Is.False);
+            Assert.That(Gamepad.leftStick.Equals(null), Is.False);
+            Assert.That(Gamepad.leftStick.Equals(Gamepad.RightStick), Is.False);
             
-            Assert.That(Gamepad.LeftStick.Equals(Gamepad.LeftStick), Is.True);
+            Assert.That(Gamepad.leftStick.Equals(Gamepad.leftStick), Is.True);
             Assert.That(Gamepad.RightStick.Equals(Gamepad.RightStick), Is.True);
             
             Assert.That(Gamepad.ButtonEast.Pressed().Equals(null), Is.False);

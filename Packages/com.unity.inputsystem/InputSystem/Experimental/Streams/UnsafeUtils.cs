@@ -8,6 +8,29 @@ namespace UnityEngine.InputSystem.Experimental
 {
     internal unsafe static class UnsafeUtils
     {
+        public static void SetBit(byte* ptr, uint bitOffset) 
+        {
+            *(ptr + (bitOffset >> 3)) |= (byte)(1U << (int)(bitOffset & 7));
+        }
+
+        public static void ClearBit(byte* ptr, uint bitOffset)
+        {
+            *(ptr + (bitOffset >> 3)) &= (byte)~(1U << (int)(bitOffset & 7));
+        }
+        
+        public static void SetBit(byte* ptr, uint bitOffset, bool value)
+        {
+            if (value)
+                SetBit(ptr, bitOffset);
+            else
+                ClearBit(ptr, bitOffset);
+        }
+
+        public static bool GetBit(byte* ptr, uint bitOffset)
+        {
+            return 0 != (ptr[(bitOffset >> 3)] & (byte)(bitOffset & 7));
+        }
+        
         internal static long Distance(void* first, void* last)
         {
             var diff = ((ulong)last) - ((ulong)first);

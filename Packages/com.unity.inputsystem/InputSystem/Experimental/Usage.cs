@@ -12,6 +12,11 @@ namespace UnityEngine.InputSystem.Experimental
         public readonly uint Value;
 
         public Usage(uint value) { Value = value; }
+        public Usage(ushort page, ushort id)
+            : this((uint)page << 16 | id)
+        {  }
+        public ushort page => (ushort)(Value >> 16);
+        public ushort id => (ushort)Value;
         public static implicit operator bool(Usage usage) => usage != Invalid;
         public static explicit operator Usage(uint value) => new Usage(value);
         public static explicit operator uint(Usage usage) => usage.Value;

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using NUnit.Framework;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Generator;
+using UnityEngine.InputSystem.Experimental.JSON;
 
 namespace Tests.InputSystem.Experimental.Editor.Generator
 {
@@ -104,7 +105,12 @@ enum MyEnum
             var c = new SourceContext();
             var i = c.root.DeclareInterface("IFoo");
             i.DefineMethod("Bar");
-            Assert.That(c.ToSource(), Is.EqualTo(@""));
+            Assert.That(c.ToSource(), Is.EqualTo(@"interface IFoo
+{
+    public void Bar()
+    {
+    }
+}"));
         }
         
         [Test]
@@ -141,6 +147,56 @@ enum MyEnum
         Debug.Log(z);
     }
 }"));
+        }
+
+        [Test]
+        public void SyntaxSnippetTest()
+        {
+            var c = new SourceContext();
+            var foo = c.root.DeclareClass("Foo");
+            foo.Snippet(@"public void Bar() { return 5; }");
+            foo.DeclareField<int>("one");
+            foo.Snippet("public int Other(int x, int y)");
+            foo.Snippet("{");
+            foo.Snippet("   return x * y;");
+            foo.Snippet("}");
+            Assert.That(c.ToSource(), Is.EqualTo(@""));
+        }
+
+        [Test]
+        public void Json1()
+        {
+            var c = new JsonUtility.JsonContext("{}");
+            using var e = c.GetEnumerator();
+            Assert.That(e.MoveNext(), Is.False);
+        }
+
+
+        [Test]
+        public void Json2()
+        {
+            var c = new JsonUtility.JsonContext(@"{ ""first"": ""one"" }");
+            using var e = c.GetEnumerator();
+            Assert.That(e.MoveNext(), Is.True);
+            // TODO Object
+            // TODO Value "one"
+            // TODO Need to expose an enum for value type
+        }
+        
+        [Test]
+        public void JsonExample()
+        {
+            // See: https://json.org/example.html
+            var c = new JsonUtility.JsonContext("{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}");
+            using var e = c.GetEnumerator();
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
+        }
+
+        [Test]
+        public void JsonTry()
+        {
+            
         }
     }
 }

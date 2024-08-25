@@ -220,6 +220,13 @@ namespace UnityEngine.InputSystem.Experimental
             return stream;
         }
 
+        /*internal StreamContext<T> GetStreamContext<T>(Usage key) where T : struct
+        {
+            if (!m_StreamContexts.TryGetValue(key, out StreamContext context))
+                return null;
+            return context;
+        }*/
+
         internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
         {
             // Attempt to fetch existing stream context
@@ -272,5 +279,17 @@ namespace UnityEngine.InputSystem.Experimental
                 m_UnsafeContext = null;
             }
         }
+
+        public ReadOnlySpan<T> GetDevices<T>()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object RentNode(Type type)
+        {
+            return null; // TODO Implement pooling
+        }
+
+        public T RentNode<T>() => (T)RentNode(typeof(T));
     }
 }

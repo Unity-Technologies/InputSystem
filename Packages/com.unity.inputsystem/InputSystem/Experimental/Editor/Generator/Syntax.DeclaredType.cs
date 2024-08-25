@@ -5,13 +5,15 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public static partial class Syntax
     {
-        public class DeclaredType : Node, IDeclareField, IDeclareInterface, IDeclareClass, IDefineMethod, IDeclareAttribute
+        public class DeclaredType : Node, IDeclareField, IDeclareInterface, IDeclareClass, IDefineMethod, 
+            IDeclareAttribute, IDefineSnippet
         {
             private readonly List<DeclaredInterface> m_Interfaces;
             private readonly List<Attribute> m_Attributes;
             private readonly List<Field> m_Fields;
             private readonly List<Class> m_Classes;
             private readonly List<Method> m_Methods;
+            private readonly List<Snippet> m_Snippets;
             private readonly string m_Token;
 
             protected DeclaredType(SourceContext context, string token, string name)
@@ -25,8 +27,9 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 m_Fields = new List<Field>();
                 m_Classes = new List<Class>();
                 m_Methods = new List<Method>();
+                m_Snippets = new List<Snippet>();
                 
-                SetChildren(m_Interfaces, m_Fields, m_Classes, m_Methods);
+                SetChildren(m_Interfaces, m_Fields, m_Classes, m_Methods, m_Snippets);
             }
             public string name { get; set; }
             public DocSummary docSummary { get; set; }
@@ -46,6 +49,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 foreach (var annotation in m_Attributes)
                     annotation.Format(formatter);
                 
+                // Declaration
                 formatter.Write(formatter.Format(visibility));
                 if (isSealed)
                     formatter.Write("sealed");
@@ -106,6 +110,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             {
                 m_Attributes.Add(attribute);
             }
+            
+            public void AddSnippet(Syntax.Snippet snippet) => m_Snippets.Add(@snippet);
         }
     }
 }
