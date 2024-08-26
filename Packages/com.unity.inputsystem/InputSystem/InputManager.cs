@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
@@ -13,7 +14,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Profiler;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -64,10 +65,11 @@ namespace UnityEngine.InputSystem
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
 
-        static readonly InputProfilerMarker k_InputUpdateProfilerMarker = new InputProfilerMarker("InputUpdate");
-        static readonly InputProfilerMarker k_InputTryFindMatchingControllerMarker = new InputProfilerMarker("InputSystem.TryFindMatchingControlLayout");
-        static readonly InputProfilerMarker k_InputAddDeviceMarker = new InputProfilerMarker("InputSystem.AddDevice");
-        static readonly InputProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new InputProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputUpdateProfilerMarker = new ProfilerMarker("InputUpdate");
+        static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly ProfilerMarker k_InputAddDeviceMarker = new ProfilerMarker("InputSystem.AddDevice");
+        static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
 
         public InputMetrics metrics
         {
@@ -1965,6 +1967,65 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
+
+            // Register custom types by reflection
+            RegisterCustomTypes();
+        }
+
+        void RegisterCustomTypes(Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                if (!type.IsClass
+                    || type.IsAbstract
+                    || type.IsGenericType)
+                    continue;
+                if (typeof(InputProcessor).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterProcessor(type);
+                }
+                else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterInteraction(type);
+                }
+                else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterBindingComposite(type, null);
+                }
+            }
+        }
+
+        void RegisterCustomTypes()
+        {
+            k_InputRegisterCustomTypesMarker.Begin();
+
+            var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var inputSystemName = inputSystemAssembly.GetName().Name;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    // exclude InputSystem assembly which should be loaded first
+                    if (assembly == inputSystemAssembly) continue;
+
+                    // Only register types from assemblies that reference InputSystem
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    {
+                        if (referencedAssembly.Name == inputSystemName)
+                        {
+                            RegisterCustomTypes(assembly.GetTypes());
+                            break;
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    continue;
+                }
+            }
+
+            k_InputRegisterCustomTypesMarker.End();
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
