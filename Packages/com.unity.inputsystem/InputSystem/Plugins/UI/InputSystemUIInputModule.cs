@@ -2469,6 +2469,8 @@ namespace UnityEngine.InputSystem.UI
             get => base.sendPointerHoverToParent;
             set => base.sendPointerHoverToParent = value;
         }
+#else
+        private bool sendPointerHoverToParent => true;
 #endif
 
         /// <summary>
