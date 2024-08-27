@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
+- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
 - Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
 - Added automatic loading of custom extensions of InputProcessor, InputInteraction and InputBindingComposite [ISXB-856]](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-856).
 
