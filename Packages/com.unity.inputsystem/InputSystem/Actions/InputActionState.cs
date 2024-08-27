@@ -6,8 +6,10 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+
+using ProfilerMarker = Unity.Profiling.ProfilerMarker;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
 
@@ -122,6 +124,9 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
+        private static readonly ProfilerMarker k_InputInitialActionStateCheckMarker = new ProfilerMarker("InitialActionStateCheck");
+        private static readonly ProfilerMarker k_InputActionResolveConflictMarker = new ProfilerMarker("InputActionResolveConflict");
+        private static readonly ProfilerMarker k_InputActionCallbackMarker = new ProfilerMarker("InputActionCallback");
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -1164,6 +1169,9 @@ namespace UnityEngine.InputSystem
                     SetInitialStateCheckPending(bindingStatePtr, false);
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
 
+                // Ensure that pressTime is reset if the composite binding is reenable. ISXB-505
+                bindingStatePtr->pressTime = default;
+
                 SetControlEnabled(controlIndex, false);
             }
         }
@@ -1254,7 +1262,7 @@ namespace UnityEngine.InputSystem
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
 
-            Profiler.BeginSample("InitialActionStateCheck");
+            k_InputInitialActionStateCheckMarker.Begin();
 
             // Use current time as time of control state change.
             var time = InputState.currentTime;
@@ -1312,7 +1320,7 @@ namespace UnityEngine.InputSystem
             }
             manager.FireStateChangeNotifications();
 
-            Profiler.EndSample();
+            k_InputInitialActionStateCheckMarker.End();
         }
 
         // Called from InputManager when one of our state change monitors has fired.
@@ -1464,37 +1472,43 @@ namespace UnityEngine.InputSystem
                     // If the binding is part of a composite, check for interactions on the composite
                     // itself and give them a first shot at processing the value change.
                     var haveInteractionsOnComposite = false;
+                    var compositeAlreadyTriggered = false;
                     if (bindingStatePtr->isPartOfComposite)
                     {
                         var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
                         var compositeBindingPtr = &bindingStates[compositeBindingIndex];
 
-                        // If the composite has already been triggered from the very same event, ignore it.
+                        // If the composite has already been triggered from the very same event set a flag so it isn't triggered again.
                         // Example: KeyboardState change that includes both A and W key state changes and we're looking
                         //          at a WASD composite binding. There's a state change monitor on both the A and the W
                         //          key and thus the manager will notify us individually of both changes. However, we
                         //          want to perform the action only once.
-                        if (ShouldIgnoreInputOnCompositeBinding(compositeBindingPtr, eventPtr))
-                            return;
-
-                        // Update magnitude for composite.
-                        var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
-                        var compositeContext = new InputBindingCompositeContext
+                        // NOTE: Do NOT ignore this Event, we still need finish processing the individual button states.
+                        if (!ShouldIgnoreInputOnCompositeBinding(compositeBindingPtr, eventPtr))
                         {
-                            m_State = this,
-                            m_BindingIndex = compositeBindingIndex
-                        };
-                        trigger.magnitude = composites[compositeIndex].EvaluateMagnitude(ref compositeContext);
-                        memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
+                            // Update magnitude for composite.
+                            var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                            var compositeContext = new InputBindingCompositeContext
+                            {
+                                m_State = this,
+                                m_BindingIndex = compositeBindingIndex
+                            };
+                            trigger.magnitude = composites[compositeIndex].EvaluateMagnitude(ref compositeContext);
+                            memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
 
-                        // Run through interactions on composite.
-                        var interactionCountOnComposite = compositeBindingPtr->interactionCount;
-                        if (interactionCountOnComposite > 0)
+                            // Run through interactions on composite.
+                            var interactionCountOnComposite = compositeBindingPtr->interactionCount;
+                            if (interactionCountOnComposite > 0)
+                            {
+                                haveInteractionsOnComposite = true;
+                                ProcessInteractions(ref trigger,
+                                    compositeBindingPtr->interactionStartIndex,
+                                    interactionCountOnComposite);
+                            }
+                        }
+                        else
                         {
-                            haveInteractionsOnComposite = true;
-                            ProcessInteractions(ref trigger,
-                                compositeBindingPtr->interactionStartIndex,
-                                interactionCountOnComposite);
+                            compositeAlreadyTriggered = true;
                         }
                     }
 
@@ -1503,21 +1517,31 @@ namespace UnityEngine.InputSystem
                     // one of higher magnitude) or may even lead us to switch to processing a different binding
                     // (e.g. when an input of previously greater magnitude has now fallen below the level of another
                     // ongoing input with now higher magnitude).
-                    var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
-                    bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
+                    //
+                    // If Composite has already been triggered, skip this step; it's unnecessary and could also
+                    // cause a processing issue if we switch to another binding.
+                    var isConflictingInput = false;
+                    if (!compositeAlreadyTriggered)
+                    {
+                        isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
+                        bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
+                    }
 
                     // Process button presses/releases.
+                    // We MUST execute this processing even if Composite has already been triggered to ensure button states
+                    // are properly updated (ISXB-746)
                     if (!isConflictingInput)
                         ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
 
                     // If we have interactions, let them do all the processing. The presence of an interaction
                     // essentially bypasses the default phase progression logic of an action.
+                    // Interactions are skipped if compositeAlreadyTriggered is set.
                     var interactionCount = bindingStatePtr->interactionCount;
                     if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
                     {
                         ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
                     }
-                    else if (!haveInteractionsOnComposite && !isConflictingInput)
+                    else if (!haveInteractionsOnComposite && !isConflictingInput && !compositeAlreadyTriggered)
                     {
                         ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
@@ -1638,7 +1662,7 @@ namespace UnityEngine.InputSystem
             // Anything below here we want to avoid executing whenever we can.
             Debug.Assert(actionState->mayNeedConflictResolution);
 
-            Profiler.BeginSample("InputActionResolveConflict");
+            k_InputActionResolveConflictMarker.Begin();
 
             // We take a local copy of this value, so we can change it to use the starting control of composites
             // for simpler conflict resolution (so composites always use the same value), but still report the actually
@@ -1672,7 +1696,7 @@ namespace UnityEngine.InputSystem
             if (actionStateControlIndex == kInvalidIndex)
             {
                 actionState->magnitude = trigger.magnitude;
-                Profiler.EndSample();
+                k_InputActionResolveConflictMarker.End();
                 return false;
             }
 
@@ -1701,7 +1725,7 @@ namespace UnityEngine.InputSystem
 
                 // Keep recorded magnitude in action state up to date.
                 actionState->magnitude = trigger.magnitude;
-                Profiler.EndSample();
+                k_InputActionResolveConflictMarker.End();
                 return false;
             }
 
@@ -1715,7 +1739,7 @@ namespace UnityEngine.InputSystem
                 // actuation as we didn't have the highest actuation anyway.
                 if (!isControlCurrentlyDrivingTheAction)
                 {
-                    Profiler.EndSample();
+                    k_InputActionResolveConflictMarker.End();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
                     ////        first actuates; the current solution will occasionally run conflict resolution when it doesn't have to
                     ////        but won't require the extra bookkeeping)
@@ -1730,7 +1754,7 @@ namespace UnityEngine.InputSystem
                 {
                     // Keep recorded magnitude in action state up to date.
                     actionState->magnitude = trigger.magnitude;
-                    Profiler.EndSample();
+                    k_InputActionResolveConflictMarker.End();
                     return false;
                 }
 
@@ -1849,12 +1873,12 @@ namespace UnityEngine.InputSystem
                     actionState->bindingIndex = bindingWithHighestActuation;
                     actionState->magnitude = highestActuationLevel;
 
-                    Profiler.EndSample();
+                    k_InputActionResolveConflictMarker.End();
                     return false;
                 }
             }
 
-            Profiler.EndSample();
+            k_InputActionResolveConflictMarker.End();
 
             // If we're not really effecting any change on the action, ignore the control state change.
             // NOTE: We may be looking at a control here that points in a completely direction, for example, even
@@ -2247,6 +2271,14 @@ namespace UnityEngine.InputSystem
                                 };
                                 if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction, phaseAfterPerformedOrCanceled))
                                     return;
+
+                                // We performed the action,
+                                // so reset remaining interaction to waiting state.
+                                for (; i < numInteractions; ++i)
+                                {
+                                    index = interactionStartIndex + i;
+                                    ResetInteractionState(index);
+                                }
                             }
                             break;
                         }
@@ -2493,7 +2525,7 @@ namespace UnityEngine.InputSystem
                 m_ActionIndex = actionIndex,
             };
 
-            Profiler.BeginSample("InputActionCallback");
+            k_InputActionCallbackMarker.Begin();
 
             // Global callback goes first.
             var action = context.action;
@@ -2525,7 +2557,7 @@ namespace UnityEngine.InputSystem
             // Run callbacks (if any) on action map.
             DelegateHelpers.InvokeCallbacksSafe(ref callbacksOnMap, context, callbackName, actionMap);
 
-            Profiler.EndSample();
+            k_InputActionCallbackMarker.End();
         }
 
         private object GetActionOrNoneString(ref TriggerState trigger)
@@ -4472,23 +4504,27 @@ namespace UnityEngine.InputSystem
             ++InputActionMap.s_DeferBindingResolution;
             try
             {
-                for (var i = 0; i < s_GlobalState.globalList.length; ++i)
+                if (InputActionMap.s_NeedToResolveBindings)
                 {
-                    var handle = s_GlobalState.globalList[i];
-
-                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
-                    if (state == null)
+                    for (var i = 0; i < s_GlobalState.globalList.length; ++i)
                     {
-                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                        if (handle.IsAllocated)
-                            s_GlobalState.globalList[i].Free();
-                        s_GlobalState.globalList.RemoveAtWithCapacity(i);
-                        --i;
-                        continue;
-                    }
+                        var handle = s_GlobalState.globalList[i];
 
-                    for (var n = 0; n < state.totalMapCount; ++n)
-                        state.maps[n].ResolveBindingsIfNecessary();
+                        var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
+                        if (state == null)
+                        {
+                            // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                            if (handle.IsAllocated)
+                                s_GlobalState.globalList[i].Free();
+                            s_GlobalState.globalList.RemoveAtWithCapacity(i);
+                            --i;
+                            continue;
+                        }
+
+                        for (var n = 0; n < state.totalMapCount; ++n)
+                            state.maps[n].ResolveBindingsIfNecessary();
+                    }
+                    InputActionMap.s_NeedToResolveBindings = false;
                 }
             }
             finally

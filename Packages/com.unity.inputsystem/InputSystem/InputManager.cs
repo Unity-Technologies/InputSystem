@@ -2,16 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -62,6 +65,12 @@ namespace UnityEngine.InputSystem
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
 
+        static readonly ProfilerMarker k_InputUpdateProfilerMarker = new ProfilerMarker("InputUpdate");
+        static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly ProfilerMarker k_InputAddDeviceMarker = new ProfilerMarker("InputSystem.AddDevice");
+        static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
+
         public InputMetrics metrics
         {
             get
@@ -106,6 +115,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public InputActionAsset actions
         {
             get
@@ -119,6 +129,7 @@ namespace UnityEngine.InputSystem
                 ApplyActions();
             }
         }
+        #endif
 
         public InputUpdateType updateMask
         {
@@ -154,6 +165,23 @@ namespace UnityEngine.InputSystem
                 #endif
 
                 return m_UpdateMask.GetUpdateTypeForPlayer();
+            }
+        }
+
+        public InputSettings.ScrollDeltaBehavior scrollDeltaBehavior
+        {
+            get => m_ScrollDeltaBehavior;
+            set
+            {
+                if (m_ScrollDeltaBehavior == value)
+                    return;
+
+                m_ScrollDeltaBehavior = value;
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+                InputRuntime.s_Instance.normalizeScrollWheelDelta =
+                    m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
+#endif
             }
         }
 
@@ -246,11 +274,13 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public event Action onActionsChange
         {
             add => m_ActionsChangedListeners.AddCallback(value);
             remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
+        #endif
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
 
@@ -868,7 +898,7 @@ namespace UnityEngine.InputSystem
             InternedString layoutName = new InternedString(string.Empty);
             try
             {
-                Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
+                k_InputTryFindMatchingControllerMarker.Begin();
                 ////TODO: this will want to take overrides into account
 
                 // See if we can match by description.
@@ -932,7 +962,7 @@ namespace UnityEngine.InputSystem
             }
             finally
             {
-                Profiler.EndSample();
+                k_InputTryFindMatchingControllerMarker.End();
             }
             return layoutName;
         }
@@ -1277,7 +1307,7 @@ namespace UnityEngine.InputSystem
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            Profiler.BeginSample("InputSystem.AddDevice");
+            k_InputAddDeviceMarker.Begin();
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1286,7 +1316,7 @@ namespace UnityEngine.InputSystem
             {
                 if (throwIfNoLayoutFound)
                 {
-                    Profiler.EndSample();
+                    k_InputAddDeviceMarker.End();
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
                 }
 
@@ -1297,13 +1327,13 @@ namespace UnityEngine.InputSystem
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
-                Profiler.EndSample();
+                k_InputAddDeviceMarker.End();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
             device.m_Description = description;
-            Profiler.EndSample();
+            k_InputAddDeviceMarker.End();
             return device;
         }
 
@@ -1312,15 +1342,14 @@ namespace UnityEngine.InputSystem
         {
             try
             {
-                Profiler.BeginSample("InputSystem.AddDevice");
-
+                k_InputAddDeviceMarker.Begin();
                 var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
                 device.m_Description = description;
                 return device;
             }
             finally
             {
-                Profiler.EndSample();
+                k_InputAddDeviceMarker.End();
             }
         }
 
@@ -1764,19 +1793,23 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings, InputActionAsset actions)
+        internal void Initialize(IInputRuntime runtime, InputSettings settings)
         {
             Debug.Assert(settings != null);
 
             m_Settings = settings;
-            m_Actions = actions;
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InitializeActions();
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
 
             ApplySettings();
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             ApplyActions();
+            #endif
         }
 
         internal void Destroy()
@@ -1796,7 +1829,33 @@ namespace UnityEngine.InputSystem
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
                 Object.DestroyImmediate(m_Settings);
+
+            // Project-wide Actions are never temporary so we do not destroy them.
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Initialize project-wide actions:
+        // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
+        // - In player build we always attempt to find a preloaded asset.
+        private void InitializeActions()
+        {
+#if UNITY_EDITOR
+            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+#else
+            m_Actions = null;
+            var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
+            foreach (var candidate in candidates)
+            {
+                if (candidate.m_IsProjectWide)
+                {
+                    m_Actions = candidate;
+                    break;
+                }
+            }
+#endif // UNITY_EDITOR
+        }
+
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
         {
@@ -1816,6 +1875,8 @@ namespace UnityEngine.InputSystem
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
+
+            m_ScrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
@@ -1906,6 +1967,65 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
+
+            // Register custom types by reflection
+            RegisterCustomTypes();
+        }
+
+        void RegisterCustomTypes(Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                if (!type.IsClass
+                    || type.IsAbstract
+                    || type.IsGenericType)
+                    continue;
+                if (typeof(InputProcessor).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterProcessor(type);
+                }
+                else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterInteraction(type);
+                }
+                else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterBindingComposite(type, null);
+                }
+            }
+        }
+
+        void RegisterCustomTypes()
+        {
+            k_InputRegisterCustomTypesMarker.Begin();
+
+            var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var inputSystemName = inputSystemAssembly.GetName().Name;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    // exclude InputSystem assembly which should be loaded first
+                    if (assembly == inputSystemAssembly) continue;
+
+                    // Only register types from assemblies that reference InputSystem
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    {
+                        if (referencedAssembly.Name == inputSystemName)
+                        {
+                            RegisterCustomTypes(assembly.GetTypes());
+                            break;
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    continue;
+                }
+            }
+
+            k_InputRegisterCustomTypesMarker.End();
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2033,6 +2153,8 @@ namespace UnityEngine.InputSystem
         private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
 
+        private InputSettings.ScrollDeltaBehavior m_ScrollDeltaBehavior;
+
         #if UNITY_EDITOR
         // remember time offset to correctly restore it after editor mode is done
         private double latestNonEditorTimeOffsetToRealtimeSinceStartup;
@@ -2050,7 +2172,9 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private CallbackArray<Action> m_ActionsChangedListeners;
+        #endif
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2079,7 +2203,36 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
-        internal InputActionAsset m_Actions;
+
+        // Extract as booleans (from m_Settings) because feature check is in the hot path
+
+        private bool m_OptimizedControlsFeatureEnabled;
+        internal bool optimizedControlsFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_OptimizedControlsFeatureEnabled;
+            set => m_OptimizedControlsFeatureEnabled = value;
+        }
+
+        private bool m_ReadValueCachingFeatureEnabled;
+        internal bool readValueCachingFeatureEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ReadValueCachingFeatureEnabled;
+            set => m_ReadValueCachingFeatureEnabled = value;
+        }
+
+        private bool m_ParanoidReadValueCachingChecksEnabled;
+        internal bool paranoidReadValueCachingChecksEnabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => m_ParanoidReadValueCachingChecksEnabled;
+            set => m_ParanoidReadValueCachingChecksEnabled = value;
+        }
+
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private InputActionAsset m_Actions;
+        #endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2558,6 +2711,8 @@ namespace UnityEngine.InputSystem
             #endif
             updateMask = newUpdateMask;
 
+            scrollDeltaBehavior = m_Settings.scrollDeltaBehavior;
+
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
 
@@ -2606,12 +2761,10 @@ namespace UnityEngine.InputSystem
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
 
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var command = UseWindowsGamingInputCommand.Create(true);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
-                }
+                // Extract feature flags into fields since used in hot-path
+                m_ReadValueCachingFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseReadValueCaching));
+                m_OptimizedControlsFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseOptimizedControls));
+                m_ParanoidReadValueCachingChecksEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kParanoidReadValueCachingChecks));
             }
 
             // Cache some values.
@@ -2635,11 +2788,14 @@ namespace UnityEngine.InputSystem
                 "InputSystem.onSettingsChange");
         }
 
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
         }
+
+        #endif
 
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
@@ -2875,14 +3031,13 @@ namespace UnityEngine.InputSystem
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
-            ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
-            Profiler.BeginSample("InputUpdate");
+            k_InputUpdateProfilerMarker.Begin();
 
             if (m_InputEventStream.isOpen)
             {
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
             }
 
@@ -2896,7 +3051,7 @@ namespace UnityEngine.InputSystem
 
             if ((updateType & m_UpdateMask) == 0)
             {
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 return;
             }
 
@@ -2931,8 +3086,7 @@ namespace UnityEngine.InputSystem
             InputUpdate.OnUpdate(updateType);
 
             // Ensure optimized controls are in valid state
-            foreach (var device in devices)
-                device.EnsureOptimizationTypeHasNotChanged();
+            CheckAllDevicesOptimizedControlsHaveValidState();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
@@ -2997,7 +3151,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 InvokeAfterUpdateCallback(updateType);
                 if (canFlushBuffer)
                     eventBuffer.Reset();
@@ -3022,15 +3176,6 @@ namespace UnityEngine.InputSystem
                 // Handle events.
                 while (m_InputEventStream.remainingEventCount > 0)
                 {
-                    if (m_Settings.maxEventBytesPerUpdate > 0 &&
-                        totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
-                    {
-                        Debug.LogError(
-                            "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-                            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
-                        break;
-                    }
-
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
@@ -3245,7 +3390,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
-                            Profiler.EndSample();
+                            k_InputUpdateProfilerMarker.End();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
 #endif
@@ -3302,6 +3447,14 @@ namespace UnityEngine.InputSystem
                             {
 #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+#elif UNITY_ANDROID
+                                // Android keyboards can send events out of order: Holding down a key will send multiple
+                                // presses after a short time, like on most platforms. Unfortunately, on Android, the
+                                // last of these "presses" can be timestamped to be after the event of the key release.
+                                // If that happens, we'd skip the keyUp here, and the device state will have the key
+                                // "stuck" pressed. So, special case here to not skip keyboard events on Android. ISXB-475
+                                // N.B. Android seems to have similar issues with touch input (OnStateEvent, Touchscreen.cs)
+                                if (!(device is Keyboard))
 #endif
                                 break;
                             }
@@ -3333,6 +3486,8 @@ namespace UnityEngine.InputSystem
                             }
 
                             totalEventBytesProcessed += eventPtr.sizeInBytes;
+
+                            device.m_CurrentProcessedEventBytesOnUpdate += eventPtr.sizeInBytes;
 
                             // Update timestamp on device.
                             // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
@@ -3416,11 +3571,17 @@ namespace UnityEngine.InputSystem
                     }
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
+
+                    // Discard events in case the maximum event bytes per update has been exceeded
+                    if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
+                        break;
                 }
 
                 m_Metrics.totalEventProcessingTime +=
                     ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
                 m_Metrics.totalEventLagTime += totalEventLag;
+
+                ResetCurrentProcessedEventBytesForDevices();
 
                 m_InputEventStream.Close(ref eventBuffer);
             }
@@ -3428,7 +3589,7 @@ namespace UnityEngine.InputSystem
             {
                 // We need to restore m_InputEventStream to a sound state
                 // to avoid failing recursive OnUpdate check next frame.
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }
@@ -3436,13 +3597,75 @@ namespace UnityEngine.InputSystem
             if (shouldProcessActionTimeouts)
                 ProcessStateChangeMonitorTimeouts();
 
-            Profiler.EndSample();
-
+            k_InputUpdateProfilerMarker.End();
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
+        {
+            if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+            {
+                var eventsProcessedByDeviceLog = String.Empty;
+                // Only log the events processed by devices in last update call if we are in debug mode.
+                // This is to avoid the slightest overhead in release builds of having to iterate over all devices and
+                // reset the byte count, by the end of every update call with ResetCurrentProcessedEventBytesForDevices().
+                if (Debug.isDebugBuild)
+                    eventsProcessedByDeviceLog = $"Total events processed by devices in last update call:\n{MakeStringWithEventsProcessedByDevice()}";
+
+                Debug.LogError(
+                    "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                    + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.\n"
+                    + eventsProcessedByDeviceLog);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private string MakeStringWithEventsProcessedByDevice()
+        {
+            var eventsProcessedByDeviceLog = new StringBuilder();
+            for (int i = 0; i < m_DevicesCount; i++)
+            {
+                var deviceToLog = devices[i];
+                if (deviceToLog != null && deviceToLog.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    eventsProcessedByDeviceLog.Append($" - {deviceToLog.m_CurrentProcessedEventBytesOnUpdate} bytes processed by {deviceToLog}\n");
+            }
+            return eventsProcessedByDeviceLog.ToString();
+        }
+
+        // Reset the number of bytes processed by devices in the current update, for debug builds.
+        // This is to avoid the slightest overhead in release builds of having to iterate over all devices connected.
+        private void ResetCurrentProcessedEventBytesForDevices()
+        {
+            if (Debug.isDebugBuild)
+            {
+                for (var i = 0; i < m_DevicesCount; i++)
+                {
+                    var device = m_Devices[i];
+                    if (device != null && device.m_CurrentProcessedEventBytesOnUpdate > 0)
+                    {
+                        device.m_CurrentProcessedEventBytesOnUpdate = 0;
+                    }
+                }
+            }
+        }
+
+        // Only do this check in editor in hope that it will be sufficient to catch any misuse during development.
+        [Conditional("UNITY_EDITOR")]
+        void CheckAllDevicesOptimizedControlsHaveValidState()
+        {
+            if (!InputSystem.s_Manager.m_OptimizedControlsFeatureEnabled)
+                return;
+
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
@@ -3591,6 +3814,48 @@ namespace UnityEngine.InputSystem
                     stateOffsetInDevice, statePtr, stateSize, flipped);
             }
 
+            if (makeDeviceCurrent)
+            {
+                // Update the pressed/not pressed state of all buttons that have changed this update
+                // With enough ButtonControls being checked, it's faster to find out which have actually changed rather than test all.
+                if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
+                {
+                    foreach (var button in device.m_UpdatedButtons)
+                    {
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            ((ButtonControl)device.allControls[button]).UpdateWasPressedEditor();
+                        }
+                        else
+                        #endif
+                        ((ButtonControl)device.allControls[button]).UpdateWasPressed();
+                    }
+                }
+                else
+                {
+                    int buttonCount = 0;
+                    foreach (var button in device.m_ButtonControlsCheckingPressState)
+                    {
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            button.UpdateWasPressedEditor();
+                        }
+                        else
+                        #endif
+                        button.UpdateWasPressed();
+
+                        ++buttonCount;
+                    }
+
+                    // From testing, this is the point at which it becomes more efficient to use the same path as
+                    // ReadValueCaching to work out which ButtonControls have updated, rather than querying all.
+                    if (buttonCount > 45)
+                        device.m_UseCachePathForButtonPresses = true;
+                }
+            }
+
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
                 device, eventPtr, "InputSystem.onDeviceStateChange");
@@ -3628,7 +3893,9 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            if (InputSettings.readValueCachingFeatureEnabled)
+            // If we have enough ButtonControls being checked for wasPressedThisFrame/wasReleasedThisFrame,
+            // use this path to find out which have actually changed here.
+            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what
@@ -3742,6 +4009,7 @@ namespace UnityEngine.InputSystem
             public InputStateBuffers buffers;
             public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
+            public InputSettings.ScrollDeltaBehavior scrollDeltaBehavior;
             public InputMetrics metrics;
             public InputSettings settings;
             public InputActionAsset actions;
@@ -3786,9 +4054,12 @@ namespace UnityEngine.InputSystem
                 buffers = m_StateBuffers,
                 updateState = InputUpdate.Save(),
                 updateMask = m_UpdateMask,
+                scrollDeltaBehavior = m_ScrollDeltaBehavior,
                 metrics = m_Metrics,
                 settings = m_Settings,
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 actions = m_Actions,
+                #endif
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -3801,6 +4072,7 @@ namespace UnityEngine.InputSystem
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             updateMask = state.updateMask;
+            scrollDeltaBehavior = state.scrollDeltaBehavior;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 
@@ -3808,9 +4080,11 @@ namespace UnityEngine.InputSystem
                 Object.DestroyImmediate(m_Settings);
             m_Settings = state.settings;
 
-            if (m_Actions != null)
-                Object.DestroyImmediate(m_Actions);
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Note that we just reassign actions and never destroy them since always mapped to persisted asset
+            // and hence ownership lies with ADB.
             m_Actions = state.actions;
+            #endif
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
@@ -3839,7 +4113,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
-            Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
+            k_InputRestoreDevicesAfterReloadMarker.Begin();
 
             using (InputDeviceBuilder.Ref())
             {
@@ -3906,7 +4180,7 @@ namespace UnityEngine.InputSystem
                 m_SavedAvailableDevices = null;
             }
 
-            Profiler.EndSample();
+            k_InputRestoreDevicesAfterReloadMarker.End();
         }
 
         // We have two general types of devices we need to care about when recreating devices

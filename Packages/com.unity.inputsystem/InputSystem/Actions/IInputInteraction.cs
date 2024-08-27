@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     ///
-    /// Custom interactions can be registered using <see cref="InputSystem.RegisterInteraction"/>. This can be
+    /// Custom interactions are automatically registered by reflection but it can also be manually registered using <see cref="InputSystem.RegisterInteraction"/>. This can be
     /// done at any point during or after startup but has to be done before actions that reference the interaction
     /// are enabled or have their controls queried. A good point is usually to do it during loading like so:
     ///

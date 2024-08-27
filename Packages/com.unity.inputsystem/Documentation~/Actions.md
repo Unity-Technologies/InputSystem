@@ -18,19 +18,22 @@ You can then get a reference to this action in your code, and check its value, o
 
 Actions also make it simpler to create a system that lets your players [customize their bindings at runtime](ActionBindings.md#interactive-rebinding), which is a common requirement for games.
 
->**Note**
->Actions are a runtime only feature. You can't use them in `EditorWindow` code.
-
->__Note__: It is possible to read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
+>**Notes:**
+> - Actions are a runtime only feature. You can't use them in [Editor window code](https://docs.unity3d.com/ScriptReference/EditorWindow.html).
+>
+> - You can read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
+>
+> - Although you can reorder actions in this window, the ordering is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+> <br/>&nbsp;
 
 
 ## Overview
 
-When scripting with Actions in the Input System, there are number of important classes you can use, which are described here:
+When scripting with Actions in the Input System, there are number of important API you can use, which are described here:
 
-|Class|Description|
+|API name|Description|
 |-----|-----------|
-|`InputSystem.actions`|A reference to the set of actions configured in the [Input Actions editor](ActionsEditor.md). |
+|[`InputSystem.actions`](../api/UnityEngine.InputSystem.InputSystem.html)|A reference to the set of actions assigned as the [project-wide Actions](./ProjectWideActions.md).|
 |[`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html)|A named collection of Actions. The API equivalent to an entry in the "Action Maps" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputAction`](../api/UnityEngine.InputSystem.InputAction.html)|A named Action that can return the current value of the controls that it is bound to, or can trigger callbacks in response to input. The API equivalent to an entry in the "Actions" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html)|The relationship between an Action and the specific device controls for which it receives input. For more information about Bindings and how to use them, see [Action Bindings](ActionBindings.md).|
@@ -43,11 +46,7 @@ Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSyst
 
 The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) in the Project Settings window. This is the primary recommended workflow and suitable for most scenarios.
 
-However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example:
-
-- You can create [Input Actions assets](ActionAssets.md) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
-- You can manually load Actions from JSON data.
-- You can create Actions entirely in code, including setting up the bindings.
+However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example, by loading actions from JSON data, or creating actions entirely in code.
 
 ### Creating Actions using the Action editor
 
@@ -59,18 +58,11 @@ For information on how to create and edit Input Actions in the editor, see the [
 
 # Other ways to create Actions
 
-The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you developing something unusual or want to customize your project beyond the standard workflow.
-
-### Creating Actions in Input Action Assets
-
-You can create actions that are stored in an Asset instead of in your Project Settings, by creating an [Action Asset](ActionAssets.md). This workflow used to be the main workflow in previous versions of the Input System package, but has been superseded by the [Input Actions editor](ActionsEditor.md) in the Project Settings window, which provides a simpler workflow.
-
-However it is still possible to create [Action Assets](ActionAssets.md) which contain a complete set of Action Maps, Actions and Bindings, and use those instead of the project-wide Actions that are defined in the Project Settings window.
-
+The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) to configure a set of actions in an asset, as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you want to customize your project beyond the standard workflow.
 
 ### Creating Actions by declaring them in MonoBehaviours
 
-As an alternative workflow, you can declare individual [Input Action](../api/UnityEngine.InputSystem.InputAction.html) and [Input Action Maps](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components, like this:
+As an alternative workflow, you can declare individual [Input Action](../api/UnityEngine.InputSystem.InputAction.html) and [Input Action Maps](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components.
 
 ```CSharp
 using UnityEngine;
@@ -85,11 +77,9 @@ public class ExampleScript : MonoBehaviour
 
 The result is similar to using an Actions defined in the Input Actions editor, except the Actions are defined in the GameObject's properties and saved as Scene or Prefab data, instead of in a dedicated Asset.
 
-When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface similar to the Actions Asset window, which allows you to set up the bindings for those actions. For example:
+When you embed actions like this, by defining serialized InputAction fields in a MonoBehaviour, the GameObject's Inspector window displays an interface similar to the Actions column of the [Actions Editor](./ActionsEditor.md), which allows you to set up the bindings for those actions. For example:
 
 ![MyBehavior Inspector](Images/Workflow-EmbeddedActionsInspector.png)
-
-The visual editors work similarly to the [Input Actions editor](ActionsEditor.md).
 
 * To add or remove Actions or Bindings, click the Add (+) or Remove (-) icon in the header.
 * To edit Bindings, double-click them.<br>
@@ -98,36 +88,7 @@ The visual editors work similarly to the [Input Actions editor](ActionsEditor.md
 
 Unlike the project-wide actions in the Project Settings window, you must manually enable and disable Actions and Action Maps that are embedded in MonoBehaviour components.
 
-```CSharp
-public class MyBehavior : MonoBehaviour
-{
-    // ...
-
-    void Awake()
-    {
-        fireAction.performed += OnFire;
-        lookAction.performed += OnLook;
-
-        gameplayActions["fire"].performed += OnFire;
-    }
-
-    void OnEnable()
-    {
-        fireAction.Enable();
-        lookAction.Enable();
-
-        gameplayActions.Enable();
-    }
-
-    void OnDisable()
-    {
-        fireAction.Disable();
-        lookAction.Disable();
-
-        gameplayActions.Disable();
-    }
-}
-```
+When you use this workflow, the serialised action configurations are stored with the parent GameObject as part of the scene, opposite to being serialised with an Action Asset. This can be useful if you want to bundle the control bindings and behaviour together in a single monobehaviour or prefab, so it can be distributed together. However, this can also make it harder to organize your full set of control bindings if they are distributed across multiple prefabs or scenes.
 
 ### Loading Actions from JSON
 
@@ -174,7 +135,13 @@ Any action that you create in this way during Play mode do not persist in the In
 
 ## Enabling actions
 
-Actions defined in the [Input Actions editor](ActionsEditor.md) are enabled by default and ready to use. For actions defined elsewhere, such as in your own code or in Action Assets, they begin in a disabled state, and you must enable them before they will respond to input. You can enable them individually, or as a group by enabling the Action Map which contains them.
+Actions have an **enabled** state, meaning you can enable or disable them to suit different situations.
+
+If you have an Action Asset assigned as [project-wide](./ProjectWideActions.md), the actions it contains are enabled by default and ready to use.
+
+For actions defined elsewhere, such as in an Action Asset not assigned as project-wide, or defined your own code, they begin in a disabled state, and you must enable them before they will respond to input.
+
+You can enable actions individually, or as a group by enabling the Action Map which contains them.
 
 ```CSharp
 // Enable a single action.

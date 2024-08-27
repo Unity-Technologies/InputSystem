@@ -213,6 +213,9 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+#endif
             EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();
@@ -223,7 +226,10 @@ namespace UnityEngine.InputSystem.Interactions
         {
             root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));
 
-            var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior);
+            var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior)
+            {
+                tooltip = s_PressBehaviorLabel.tooltip
+            };
             behaviourDropdown.RegisterValueChangedCallback(evt =>
             {
                 target.behavior = (PressBehavior)evt.newValue;

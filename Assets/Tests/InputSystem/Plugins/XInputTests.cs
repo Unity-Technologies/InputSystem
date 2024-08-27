@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
-#if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
@@ -15,6 +15,10 @@ internal class XInputTests : CoreTestsFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    /* ////Brute-forcing by commenting out of Devices_SupportsXInputDevicesOnPlatform
+       ////since the test would still run while [Ignore] or UnityPlatform excluding it.
+#endif
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
@@ -44,6 +48,9 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    */
+#endif
 
     ////FIXME: we should not have tests that only run in players
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA

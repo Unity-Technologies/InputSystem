@@ -104,8 +104,10 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 20;
-            editButtonRect.x += bindingTextRect.width;
+            var bindingTextRectOffset = 80;
+            bindingTextRect.width += bindingTextRectOffset;
+            bindingTextRect.x -= bindingTextRectOffset + 20;
+            editButtonRect.x = bindingTextRect.x + bindingTextRect.width; // Place it directly after the textRect
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
@@ -160,6 +162,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
         {
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
+            #endif
             if (m_PickerDropdown == null)
             {
                 m_PickerDropdown = new InputControlPickerDropdown(

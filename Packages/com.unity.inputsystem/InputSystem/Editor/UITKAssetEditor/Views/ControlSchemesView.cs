@@ -25,14 +25,27 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.ControlSchemeEditorViewUxml);
 
             var controlSchemeVisualElement = controlSchemeEditor.CloneTree();
-            controlSchemeVisualElement.Q<Button>(kCancelButton).clicked += Close;
+            controlSchemeVisualElement.Q<Button>(kCancelButton).clicked += Cancel;
             controlSchemeVisualElement.Q<Button>(kSaveButton).clicked += SaveAndClose;
             controlSchemeVisualElement.Q<TextField>(kControlSchemeNameTextField).RegisterCallback<FocusOutEvent>(evt =>
             {
                 Dispatch((in InputActionsEditorState state) =>
                 {
-                    m_NewName = ControlSchemeCommands.MakeUniqueControlSchemeName(state,
-                        ((TextField)evt.currentTarget).value);
+                    // If the name is the same as the current name, don't change it
+                    var newName = ((TextField)evt.currentTarget).value.Trim();
+                    if (string.IsNullOrEmpty(newName) || String.Compare(newName, state.selectedControlScheme.name) == 0)
+                    {
+                        m_NewName = String.Empty;
+                        // write back the value to the text field if the name was empty
+                        ((TextField)evt.currentTarget).value = state.selectedControlScheme.name;
+                    }
+                    else
+                    {
+                        m_NewName = ControlSchemeCommands.MakeUniqueControlSchemeName(state, newName);
+                        // write back the value to the text field if the name was not unique
+                        ((TextField)evt.currentTarget).value = m_NewName;
+                    }
+
                     return state.With(selectedControlScheme: state.selectedControlScheme);
                 });
             });
@@ -50,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ModalWindow.Add(popupWindow);
             root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
-            m_ModalWindow.RegisterCallback<ClickEvent>(evt => Close());
+            m_ModalWindow.RegisterCallback<ClickEvent>(evt => CloseView());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
             m_ListView = controlSchemeVisualElement.Q<MultiColumnListView>(kControlSchemesListView);
@@ -95,7 +108,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(InputControlScheme viewState)
         {
-            rootElement.Q<TextField>(kControlSchemeNameTextField).value = viewState.name;
+            rootElement.Q<TextField>(kControlSchemeNameTextField).value = string.IsNullOrEmpty(m_NewName) ? viewState.name : m_NewName;
 
             m_ListView.itemsSource?.Clear();
             m_ListView.itemsSource = viewState.deviceRequirements.Count > 0 ?
@@ -111,13 +124,29 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SaveAndClose()
         {
+            // Persist the current ControlScheme values to the SerializedProperty
             Dispatch(ControlSchemeCommands.SaveControlScheme(m_NewName, m_UpdateExisting));
-            Close();
+            CloseView();
         }
 
-        private void Close()
+        private void Cancel()
         {
-            m_NewName = "";
+            // Reload the selected ControlScheme values from the SerilaizedProperty and throw away any changes
+            Dispatch(ControlSchemeCommands.ResetSelectedControlScheme());
+            CloseView();
+        }
+
+        private void CloseView()
+        {
+            // Closing the View without explicitly selecting "Save" or "Cancel" holds the values in the
+            // current UI state but won't persist them; the Asset Editor state isn't dirtied.
+            //
+            // This means accidentally clicking outside of the View (closes the dialog) won't immediately
+            // cause loss of work: the "Edit Control Scheme" option can be selected to re-open the View
+            // the changes retained. However, if a different ControlScheme is selected or the Asset
+            // Editor window is closed, then the changes are lost.
+
+            m_NewName = string.Empty;
             OnClosing?.Invoke(this);
         }
 

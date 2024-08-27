@@ -86,7 +86,13 @@ namespace UnityEngine.InputSystem.DualShock
         /// <summary>
         /// The last used/added DualShock controller.
         /// </summary>
+        /// <value>Equivalent to <see cref="Gamepad.leftTrigger"/>.</value>
         public new static DualShockGamepad current { get; private set; }
+
+        /// <summary>
+        /// If the controller is connected over HID, returns <see cref="HID.HID.HIDDeviceDescriptor"/> data parsed from <see cref="InputDeviceDescription.capabilities"/>.
+        /// </summary>
+        internal HID.HID.HIDDeviceDescriptor hidDescriptor { get; private set; }
 
         /// <inheritdoc />
         public override void MakeCurrent()
@@ -118,6 +124,9 @@ namespace UnityEngine.InputSystem.DualShock
             R2 = rightTrigger;
             L3 = leftStickButton;
             R3 = rightStickButton;
+
+            if (m_Description.capabilities != null && m_Description.interfaceName == "HID")
+                hidDescriptor = HID.HID.HIDDeviceDescriptor.FromJson(m_Description.capabilities);
         }
 
         /// <inheritdoc />

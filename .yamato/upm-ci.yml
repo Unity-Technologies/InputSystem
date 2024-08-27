@@ -32,7 +32,7 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -67,7 +67,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -80,12 +80,12 @@ build_ios_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on ios
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:v4.19.0
+    image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -99,7 +99,7 @@ run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
       type: Unity::mobile::iPhone
-      image: package-ci/macos-12:v4.19.0
+      image: {{ ios_and_tvos_macos_bokken_image }}
       model: SE
       flavor: b1.medium
   skip_checkout: true
@@ -117,12 +117,12 @@ build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:v4.19.0
+    image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
@@ -136,7 +136,7 @@ run_tvos_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on tvos
   agent:
       type: Unity::mobile::appletv
-      image: package-ci/macos-12:v4.19.0
+      image: {{ ios_and_tvos_macos_bokken_image }}
       flavor: b1.medium
   skip_checkout: true
   dependencies:
@@ -159,7 +159,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
+    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
@@ -247,6 +247,9 @@ publish{% cycle "", "_dryrun" %}:
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
+    - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
+    - upm-pvp require "supported rme" --no-report --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
+    - upm-pvp require "supported rme ./.yamato/PVPexemptions.json" --allow-missing --results upm-ci~/xray    
   artifacts:
     artifacts:
       paths:

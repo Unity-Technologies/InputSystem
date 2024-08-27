@@ -5,10 +5,10 @@
         <ui:VisualElement name="asset-menu" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); width: 16px; flex-shrink: 0; -unity-background-scale-mode: scale-to-fit;" />
     </ui:VisualElement>
     <ui:VisualElement name="current-asset-section">
-        <uie:ObjectField name="current-asset" type="UnityEngine.InputSystem.InputActionAsset, Unity.InputSystem" label="Active Input Action Asset" />
+        <uie:ObjectField name="current-asset" type="UnityEngine.InputSystem.InputActionAsset, Unity.InputSystem" label="Project-wide Actions" />
     </ui:VisualElement>
     <ui:VisualElement name="missing-asset-section">
-        <ui:HelpBox text="Project Wide Input Actions for the new input system are stored in an asset. Click the button below to create a actions asset you can edit." message-type="Info"/>
-        <ui:Button text="Create a new Project-wide Input Actions Asset" name="create-asset"/>
+        <ui:HelpBox text="Actions for the Input System are stored in an Action Asset. You can assign an Action Asset as project-wide in the field above to make them accessible directly through the InputSystem.actions API.&#10;&#10;Click the button below to create a new Action Asset containing default actions, which will be assigned as project-wide." message-type="Info"/>
+        <ui:Button text="Create and assign a default project-wide Action Asset" name="create-asset"/>
     </ui:VisualElement>
 </ui:UXML>

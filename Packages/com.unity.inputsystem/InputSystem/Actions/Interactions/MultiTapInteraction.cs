@@ -196,6 +196,9 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+#endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
@@ -205,7 +208,11 @@ namespace UnityEngine.InputSystem.Interactions
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var tapCountField = new IntegerField(m_TapCountLabel.text) { value = target.tapCount };
+            var tapCountField = new IntegerField(m_TapCountLabel.text)
+            {
+                value = target.tapCount,
+                tooltip = m_TapCountLabel.tooltip
+            };
             tapCountField.RegisterValueChangedCallback(evt =>
             {
                 target.tapCount = evt.newValue;

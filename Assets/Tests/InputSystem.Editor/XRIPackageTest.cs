@@ -28,6 +28,12 @@ public class XRIPackageTests
         {
             yield return null;
         }
+
+        //Delete the Assets/XRI folder (and its content) that the XRI package creates
+        if (AssetDatabase.IsValidFolder("Assets/XRI"))
+        {
+            AssetDatabase.DeleteAsset("Assets/XRI");
+        }
     }
 
     [UnityTest]
