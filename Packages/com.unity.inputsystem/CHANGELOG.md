@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
+- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
