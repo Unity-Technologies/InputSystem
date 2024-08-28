@@ -496,10 +496,12 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerDown, if present.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
 
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
                 // If no GO responded to OnPointerDown, look for one that responds to OnPointerClick.
                 // NOTE: This only looks up the handler. We don't invoke OnPointerClick here.
                 if (newPressed == null)
-                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                    newPressed = pointerClickHandler;
 
                 // Reset click state if delay to last release was too long or if we didn't
                 // press on the same object as last time. The latter part we don't know until
@@ -515,7 +517,7 @@ namespace UnityEngine.InputSystem.UI
                 // become null.
                 eventData.pointerPress = newPressed;
                 #if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
-                eventData.pointerClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                eventData.pointerClick = pointerClickHandler;
                 #endif
                 eventData.rawPointerPress = currentOverGo;
 
@@ -538,9 +540,9 @@ namespace UnityEngine.InputSystem.UI
                 //          click and OnPointerClick is thus never invoked.
                 var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
                 #if UNITY_2020_1_OR_NEWER
-                var isClick = eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
+                var isClick = eventData.pointerClick != null && eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
                 #else
-                var isClick = eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+                var isClick = eventData.pointerPress != null && eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
                 #endif
                 if (isClick)
                 {
