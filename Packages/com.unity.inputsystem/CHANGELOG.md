@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
 - Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
+- Added an IME Input sample scene.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
@@ -212,7 +213,6 @@ however, it has to be formatted properly to pass verification tests.
 - Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac).
 - Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 - Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
-- Added an IME Input sample scene.
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
