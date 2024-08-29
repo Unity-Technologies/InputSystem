@@ -70,4 +70,4 @@ scripting_backends:
   
 ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0
 
-performance_only: true
+performance_only: false
