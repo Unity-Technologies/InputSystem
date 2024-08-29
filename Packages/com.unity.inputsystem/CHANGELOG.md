@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 - Fixed Package compilation when Unity Analytics module is not enabled on 2022.3. [ISXB-996](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-996)
 - Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
+- Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
