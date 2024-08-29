@@ -393,8 +393,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-        #if ENABLE_CLOUD_SERVICES_ANALYTICS
-            #if (UNITY_EDITOR)
+            #if (UNITY_EDITOR && ENABLE_CLOUD_SERVICES_ANALYTICS)
                 #if (UNITY_2023_2_OR_NEWER)
             EditorAnalytics.SendAnalytic(analytic);
                 #else
@@ -413,7 +412,6 @@ namespace UnityEngine.InputSystem.LowLevel
             else
                 Debug.Log(error);     // Non fatal
             #endif //UNITY_EDITOR
-        #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
