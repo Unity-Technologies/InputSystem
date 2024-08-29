@@ -71,14 +71,13 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
         static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
 
-        static readonly ProfilerMarker k_InputOnBeforeUpdateMarker = new ProfilerMarker("onBeforeUpdate");
+        static readonly ProfilerMarker k_InputOnBeforeUpdateMarker = new ProfilerMarker("InputSystem.onBeforeUpdate");
         static readonly ProfilerMarker k_InputOnAfterUpdateMarker = new ProfilerMarker("InputSystem.onAfterUpdate");
         static readonly ProfilerMarker k_InputOnSettingsChangeMarker = new ProfilerMarker("InputSystem.onSettingsChange");
         static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
         static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
         static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
         private static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
-
         private static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
 
 
@@ -2720,7 +2719,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, k_InputOnBeforeUpdateMarker, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, k_InputOnBeforeUpdateMarker, "InputSystem.onBeforeUpdate");
         }
 
         /// <summary>
