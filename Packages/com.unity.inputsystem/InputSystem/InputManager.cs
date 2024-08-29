@@ -71,6 +71,17 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
         static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
 
+        static readonly ProfilerMarker k_InputOnBeforeUpdateMarker = new ProfilerMarker("onBeforeUpdate");
+        static readonly ProfilerMarker k_InputOnAfterUpdateMarker = new ProfilerMarker("InputSystem.onAfterUpdate");
+        static readonly ProfilerMarker k_InputOnSettingsChangeMarker = new ProfilerMarker("InputSystem.onSettingsChange");
+        static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
+        static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
+        static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
+        private static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
+
+        private static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
+
+
         public InputMetrics metrics
         {
             get
@@ -600,7 +611,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -868,7 +879,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -1121,7 +1132,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1287,7 +1298,7 @@ namespace UnityEngine.InputSystem
             device.MakeCurrent();
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Request device to send us an initial state update.
             if (device.enabled)
@@ -1442,7 +1453,7 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Try setting next device of same type as current
             InputSystem.GetDevice(device.GetType())?.MakeCurrent();
@@ -1466,7 +1477,7 @@ namespace UnityEngine.InputSystem
             // Trigger reset notification.
             var change = isHardReset ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
             InputActionState.OnDeviceChange(device, change);
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // If the device implements its own reset, let it handle it.
             if (!alsoResetDontResetControls && device is ICustomDeviceReset customReset)
@@ -1754,7 +1765,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
         }
 
         private unsafe void QueueEvent(InputEvent* eventPtr)
@@ -2500,7 +2511,7 @@ namespace UnityEngine.InputSystem
                     AddDevice(device);
 
                     DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reconnected,
-                        "InputSystem.onDeviceChange");
+                        k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                 }
                 else
                 {
@@ -2709,7 +2720,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, k_InputOnBeforeUpdateMarker, "onBeforeUpdate");
         }
 
         /// <summary>
@@ -2824,14 +2835,14 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
-                "InputSystem.onSettingsChange");
+                k_InputOnSettingsChangeMarker, "InputSystem.onSettingsChange");
         }
 
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
 
         #endif
@@ -3448,7 +3459,7 @@ namespace UnityEngine.InputSystem
                     if (m_EventListeners.length > 0)
                     {
                         DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                            new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
+                            new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
                         if (currentEventReadPtr->handled)
@@ -3590,7 +3601,7 @@ namespace UnityEngine.InputSystem
                                 ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices,
                                     ref m_DisconnectedDevicesCount, device);
                                 DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                    device, InputDeviceChange.Disconnected, "InputSystem.onDeviceChange");
+                                    device, InputDeviceChange.Disconnected, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             }
 
                             break;
@@ -3600,7 +3611,7 @@ namespace UnityEngine.InputSystem
                             device.NotifyConfigurationChanged();
                             InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
                             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
+                                device, InputDeviceChange.ConfigurationChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             break;
 
                         case DeviceResetEvent.Type:
@@ -3716,7 +3727,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
-                "InputSystem.onAfterUpdate");
+                k_InputOnAfterUpdateMarker, "InputSystem.onAfterUpdate");
         }
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
@@ -3897,7 +3908,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
-                device, eventPtr, "InputSystem.onDeviceStateChange");
+                device, eventPtr, k_InputOnDeviceSettingsChangeMarker, "InputSystem.onDeviceStateChange");
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
