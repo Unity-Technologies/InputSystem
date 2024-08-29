@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
 - Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
+- Added an IME Input sample scene.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
@@ -208,8 +209,8 @@ however, it has to be formatted properly to pass verification tests.
 - Make Project-wide Actions the default actions for Player Input.
 
 ### Added
-- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
-- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android.
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac).
 - Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 - Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
 
