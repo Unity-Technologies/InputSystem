@@ -234,7 +234,6 @@ all_tests:
             
 performance_tests_only:
   name: Performance Tests Only
-  performance_only: true
   dependencies:
     - .yamato/upm-ci.yml#win_trunk_performance    
   triggers:
