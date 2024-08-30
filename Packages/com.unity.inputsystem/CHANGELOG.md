@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 - Fixed Package compilation when Unity Analytics module is not enabled on 2022.3. [ISXB-996](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-996)
 - Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
+- Improved performance of disconnected device activation (ISX-1450)
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
@@ -25,7 +26,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
-- Improved performance of disconnected device activation (ISX-1450)
 
 ### Added
 - Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
