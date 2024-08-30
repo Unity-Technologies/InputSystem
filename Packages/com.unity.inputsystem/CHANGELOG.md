@@ -16,9 +16,12 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputDeviceTester sample only visualizing a given touch contact once. [ISXB-1017](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1017)
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 - Fixed Package compilation when Unity Analytics module is not enabled on 2022.3. [ISXB-996](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-996)
+- Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
+- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
+- Added an IME Input sample scene.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
@@ -211,8 +214,8 @@ however, it has to be formatted properly to pass verification tests.
 - Make Project-wide Actions the default actions for Player Input.
 
 ### Added
-- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
-- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android.
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac).
 - Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 - Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
 
