@@ -4,7 +4,7 @@
 {% for editor in editors %}
 {% for platform in platforms_win %}
 {{ platform.name }}_{{ editor.version }}_{{ test_category.name }}:
-  name : Build and Test version {{ editor.version }} on {{ platform.name }}
+  name : Build and Test version {{ editor.version }} on {{ platform.name }}, {{ test_category.name }} Tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -32,7 +32,7 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if test_category == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if test_category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -235,7 +235,7 @@ all_tests:
 performance_tests_only:
   name: Performance Tests Only
   dependencies:
-    - .yamato/upm-ci.yml#win_trunk_performance    
+    - .yamato/upm-ci.yml#win_trunk_{{ test_category.performance }}    
   triggers:
     recurring:
         - branch: develop
