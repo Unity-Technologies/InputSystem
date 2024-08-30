@@ -216,15 +216,15 @@ all_tests:
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
-    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_all
     {% endfor %}
     {% for platform in platforms_nix %}
-    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_all
     {% endfor %}
     {% for backend in scripting_backends %}
-    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}
+    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_all
     {% endfor %}
-    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_all
 {% if editor.disable_tvos_run %}
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
 {% else %}
