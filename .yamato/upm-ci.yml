@@ -41,6 +41,7 @@
 {% endfor %} # category
 {% endfor %}
 {% for platform in platforms_nix %}
+{% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
   name : Build and Test version {{ editor.version }} on {{ platform.name }}, {{ category.name }} tests
   agent:
@@ -76,8 +77,10 @@
         - "upm-ci~/test-results/**/*"
 {% endfor %}
 {% endfor %}
+{% endfor %}
 
 {% for editor in editors %}
+{% for category in test_category %}
 build_ios_{{ editor.version }}_{{ category.name }}:
   name: Build Tests on {{ editor.version }} on ios, {{ category.name }} tests
   agent:
@@ -114,6 +117,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     logs:
         paths:
           - "build/test-results/**"
+{% endfor %} #category
 
 build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
@@ -152,6 +156,7 @@ run_tvos_{{ editor.version }}:
           - "build/test-results/**"
 
 {% for backend in scripting_backends %}
+{% for category in test_category %}
 build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   name: Build Tests on {{ editor.version }} on android {{ backend.name }}, {{ category.name }} tests
   agent:
@@ -201,6 +206,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
     logs:
       paths:
         - "build/test-results/**"
+{% endfor %} #category
 {% endfor %}
 
 {% endfor %}
