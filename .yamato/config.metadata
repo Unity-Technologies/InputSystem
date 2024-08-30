@@ -71,5 +71,5 @@ scripting_backends:
 ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0
 
 test_category: 
-  - name: performance
-  - name: all
+  - name: Performance
+  - name: All
