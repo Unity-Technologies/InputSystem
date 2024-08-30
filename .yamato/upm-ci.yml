@@ -3,7 +3,7 @@
 
 {% for editor in editors %}
 {% for platform in platforms_win %}
-{{ platform.name }}_{{ editor.version }}_{{ test_category }}:
+{{ platform.name }}_{{ editor.version }}_{{ test_category.name }}:
   name : Build and Test version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
