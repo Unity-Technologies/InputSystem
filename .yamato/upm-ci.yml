@@ -237,7 +237,11 @@ all_tests:
 performance_tests_only:
   name: Performance Tests Only
   dependencies:
-    - .yamato/upm-ci.yml#win_trunk_performance    
+    {% for editor in editors %}
+    {% for platform in platforms_win %}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_performance
+    {% endfor %}    
+    {% endfor %}
   triggers:
     recurring:
         - branch: develop
