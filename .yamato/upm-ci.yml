@@ -235,7 +235,7 @@ all_tests:
 performance_tests_only:
   name: Performance Tests Only
   dependencies:
-    - .yamato/upm-ci.yml#win_trunk_{{ test_category.name.performance }}    
+    - .yamato/upm-ci.yml#win_trunk_performance    
   triggers:
     recurring:
         - branch: develop
