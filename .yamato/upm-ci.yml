@@ -5,7 +5,7 @@
 {% for platform in platforms_win %}
 {% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
-  name : Build and Test version {{ editor.version }} on {{ platform.name }}, {{ category.name }} tests
+  name : Build & Test {{ editor.version }} on {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -43,7 +43,7 @@
 {% for platform in platforms_nix %}
 {% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
-  name : Build and Test version {{ editor.version }} on {{ platform.name }}, {{ category.name }} tests
+  name : Build & Test {{ editor.version }} on {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
