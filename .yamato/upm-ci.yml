@@ -257,7 +257,7 @@ performance_tests_only:
     {% endfor %}
   triggers:
     recurring:
-        - branch: develop
+        - branch: input/performance-testing-changes
           frequency: daily
           rerun: always            
 
