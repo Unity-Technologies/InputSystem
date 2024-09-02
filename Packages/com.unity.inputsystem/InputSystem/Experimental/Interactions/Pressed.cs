@@ -40,6 +40,13 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Add PressedState, then we can have
+    //
+    // void OnNext()
+    // {
+    //      
+    // }
+    
     // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
     public readonly struct Pressed<TSource> : IObservableInputNode<InputEvent>, IUnsafeObservable<InputEvent>
@@ -61,7 +68,10 @@ namespace UnityEngine.InputSystem.Experimental
             //      within context and reuse this instance if it exists.
             // Do we want to compare this to impl?!
             
+            // TODO HOW Can we cache nodes for a given setup? It would basically mean we need a full Equals of content including type. Since we require nodes to be structs and be Equatable we might need to store the sources within the node but then we also box them.  
+            
             // TODO Attempt to get impl for source, if found subscribe to that node. If not found, create and subscribe.
+            // TODO This is only about caching so we might as well just hash and see if we get a hit (likely), but the problem is if its a false positive, the problem is our observers doesn't know their source. Maybe we should take that cost while we anyway allocate the node. 
             var impl = context.GetNodeImpl<PressedObserver>(this); // TODO Instead consider getting class cache for context, m_Source is typesafe key
             if (impl == null)
             {
@@ -113,6 +123,8 @@ namespace UnityEngine.InputSystem.Experimental
             public IEnumerator<InputEvent> GetEnumerator() => throw new NotImplementedException();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
+        
+        // TODO Need Reader<T> and SequenceReader<T> if we should even support it. Lets skip it.
 
         public bool Equals(IDependencyGraphNode other) => other is Pressed<TSource> pressed && Equals(pressed);
         public bool Equals(Pressed<TSource> other) => m_Source.Equals(other.m_Source);
@@ -129,7 +141,7 @@ namespace UnityEngine.InputSystem.Experimental
     public static class PressedExtensionMethods
     {
         /// <summary>
-        /// Returns a Press interaction operating on a source of type <typeparamref name="TSource"/>.
+        /// Returns a Press interaction taking <c>bool</c> as input and generating <c>InputEvent</c> as output.
         /// </summary>
         /// <param name="source">The source.</param>
         /// <typeparam name="TSource">The source type.</typeparam>
@@ -182,7 +194,7 @@ namespace UnityEngine.InputSystem.Experimental
         private static readonly delegate*<bool, void*, void> Next = &OnNext;
         
         private UnsafeEventHandler<InputEvent> m_OnNext;
-        private bool m_PreviousValue;
+        private bool m_PreviousValue; // Actual state
         private AllocatorManager.AllocatorHandle m_Allocator;
         private UnsafeSubscription m_TriggerSubscription; 
 

@@ -229,7 +229,125 @@ namespace UnityEngine.InputSystem.Experimental
            }
        }
    }*/
+   
+   // STRUCT-BASED VARIANT OF OBSERVER LIST 4
+   // TODO Consider using a pool: https://medium.com/@epeshk/the-big-performance-difference-between-arraypools-in-net-b25c9fc5e31d
+   // TODO Compare to a class based subscription with object pool for subscriptions and pooled observer list of class type
+   // TODO Problem with Subscription as a struct is that would be boxed if generalized. Right now its type based, which might be fine though.
+   internal struct ObserverList4<T> : IObserver<T>
+   {
+       private const int kInitialObserverRegisterCapacity = 100;
+       private static int _handle = 0;
+       private static readonly Dictionary<int, ObserverList4<T>> HandleToArray = new Dictionary<int, ObserverList4<T>>(kInitialObserverRegisterCapacity);
+       
+       // Note that this will likely not be boxed if used in a using statement, see:
+       // https://stackoverflow.com/questions/2412981/if-my-struct-implements-idisposable-will-it-be-boxed-when-used-in-a-using-statem
+       internal struct Subscription : IDisposable
+       {
+           private readonly int m_OwnerHandle;
+           private IObserver<T> m_Observer;
 
+           public Subscription(int ownerHandle, IObserver<T> observer)
+           {
+               m_OwnerHandle = ownerHandle;
+               m_Observer = observer;
+           }
+
+           public void Dispose()
+           {
+               // If already disposed
+               if (m_Observer == null) // If disposed
+                   return;
+               
+               // Retrieve copy of list, modify it and store it back in the register
+               if (!HandleToArray.TryGetValue(m_OwnerHandle, out var owner))
+                   return;
+               owner.Remove(m_Observer);
+               HandleToArray[m_OwnerHandle] = owner;
+
+               // Mark disposed
+               m_Observer = null;
+           }
+       }
+       
+       private IObserver<T>[] m_Observers; // TODO If this was a range in a common array we could have used indices, that would give one array per type
+       private int m_Length;
+       private readonly int m_Handle;
+
+       public ObserverList4(IObserver<T> observer) 
+           : this()
+       {
+           m_Observers = Allocate(1);
+           m_Observers[0] = observer;
+           m_Length = 1;
+           m_Handle = ++_handle;
+           HandleToArray[m_Handle] = this; // copy
+       }
+
+       public ReadOnlySpan<IObserver<T>> observers => 
+           new ReadOnlySpan<IObserver<T>>(m_Observers, 0, m_Length);
+
+       private IObserver<T>[] Allocate(int size)
+       {
+           return ArrayPool<IObserver<T>>.Shared.Rent(size);
+       }
+
+       private void Deallocate(IObserver<T>[] array)
+       {
+           ArrayPool<IObserver<T>>.Shared.Return(array, clearArray: true);
+       }
+       
+       public Subscription Add(IObserver<T> observer)
+       {
+           var reallocated = false;
+           if (m_Length >= m_Observers.Length)
+           {
+               var array = Allocate(m_Length + 1);
+               Array.Copy(m_Observers, 0, array, 0, m_Length);
+               Deallocate(m_Observers);
+               m_Observers = array;
+               reallocated = true;
+           }
+           m_Observers[m_Length++] = observer;
+           if (reallocated)
+               HandleToArray[m_Handle] = this;
+
+           return new Subscription(m_Handle, observer);
+       }
+
+       public void Remove(IObserver<T> observer)
+       {
+           var index = Array.IndexOf(m_Observers, observer, m_Length);
+           if (index < 0)
+               return; // TODO Since subscription is struct we might have disposed an accidental copy, we should probably generate a warning
+           Array.Copy(m_Observers, index + 1, m_Observers, index, m_Length - index - 1);
+           --m_Length;
+           HandleToArray[m_Handle] = this;
+       }
+       
+       public void OnCompleted()
+       {
+           for (var i = 0; i < m_Length; ++i)
+               m_Observers[i].OnCompleted();
+       }
+
+       public void OnError(Exception error)
+       {
+           for (var i = 0; i < m_Length; ++i)
+               m_Observers[i].OnError(error);
+       }
+
+       public void OnNext(T value)
+       {
+           for (var i = 0; i < m_Length; ++i)
+               m_Observers[i].OnNext(value);
+       }
+   }   
+   
+   // TODO Consider standard or custom ArrayPools: https://medium.com/@epeshk/the-big-performance-difference-between-arraypools-in-net-b25c9fc5e31d
+
+   // TODO Potential future improvement could be having a single inline observer but that should be guided by measurements
+   // TODO Problematic to have this as a class but necessary to refer back to it from subscription.
    internal class ObserverList3<T> : IObserver<T>
    {
        internal sealed class Subscription : IDisposable
@@ -246,7 +364,7 @@ namespace UnityEngine.InputSystem.Experimental
            public void Dispose()
            {
                if (m_Owner == null)
-                   return; // Already disposed
+                   return;
                 
                m_Owner.Remove(m_Observer);
                 
@@ -265,6 +383,9 @@ namespace UnityEngine.InputSystem.Experimental
            m_Observers = null;
            m_Length = 0;
        }
+
+       public ReadOnlySpan<IObserver<T>> observers => 
+           new ReadOnlySpan<IObserver<T>>(m_Observers, 0, m_Length);
 
        public Subscription Add(IObserver<T> observer)
        {
@@ -412,6 +533,7 @@ namespace UnityEngine.InputSystem.Experimental
             return new Subscription(this, observer);
         }
         
+        // TODO Allow linking subscriptions, this way when doing bulk subscriptions, we may link them and only return first subscription of chain. This can avoid some array allocations?
         // TODO Consider caching subscriptions globally.
         // TODO Additionally, if always returning this subscription type we might as well avoid IDisposable.
         // TODO Could basically be index to observer list and index to observer within that list, or only global observer. Note that if we apply defragmentation we might need to to store subscriptions as well which might be desirable from debugging perspective.

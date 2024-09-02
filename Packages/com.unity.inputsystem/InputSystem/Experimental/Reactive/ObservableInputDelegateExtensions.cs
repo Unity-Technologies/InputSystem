@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
@@ -23,12 +24,32 @@ namespace UnityEngine.InputSystem.Experimental
         /// <typeparam name="T">The data type.</typeparam>
         /// <typeparam name="TSource">The observable type.</typeparam>
         /// <returns>Disposable subscription.</returns>
-        public static IDisposable Subscribe<T, TSource>(this TSource observable, Action<T> action, Context context = null) 
+        public static IDisposable Subscribe<T>(this IObservableInput<T> observable, Action<T> action, Context context) 
+            where T : struct 
+        {
+            return observable.Subscribe(context, new NextObserverDelegateWrapper<T>(action));
+        }
+        public static IDisposable Subscribe<T>(this IObservableInput<T> observable, Action<T> action) 
+            where T : struct
+        {
+            return Subscribe(observable, action, Context.instance);
+        }
+        
+        public static IDisposable Subscribe<T, TCollection>(this IObservableInput<T> observable, Action<T> action, TCollection group) 
+            where T : struct
+            where TCollection : ICollection<IDisposable>
+        {
+            var subscription = Subscribe(observable, action, Context.instance);
+            group.Add(subscription);
+            return subscription;
+        }
+        
+        /*public static IDisposable Subscribe<T, TSource>(this TSource observable, Action<T> action, Context context = null) 
             where T : struct 
             where TSource : IObservableInputNode<T>
         {
             return observable.Subscribe(context, new NextObserverDelegateWrapper<T>(action));
-        }
+        }*/
 
         // Internal helper class that wraps an Actions as an IObserver
         private sealed class ObserverDelegateWrapper<T> : IObserver<T>

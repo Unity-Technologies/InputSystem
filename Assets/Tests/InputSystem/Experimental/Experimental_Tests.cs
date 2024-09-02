@@ -9,11 +9,12 @@ using Tests.InputSystem.Experimental;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Experimental;
-using UnityEngine.InputSystem.Experimental.Devices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.UIElements;
+using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
 using InputEvent = UnityEngine.InputSystem.Experimental.InputEvent;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
@@ -294,6 +295,36 @@ namespace Tests.InputSystem
             }, Is.Not.AllocatingGCMemory());
             
             // TODO Transform a trigger into a button
+        }
+
+        [Serializable]
+        struct Dummy
+        {
+            //[SerializeField] private int x;
+            //[SerializeField] private int y;
+            [SerializeField] public ObservableInputNode<Vector2> node;
+        }
+        
+        [Test]
+        public void SerializeTest()
+        {
+            // TODO This needs some work, at least not when not using System.Text.Json
+            //BindableInput<Vector2> x = default;
+            //x.AddBinding(Gamepad.leftStick); // TODO This will be a number, if returned observableInput is abstract we may have a problem
+            
+            // We need to rebuild from bottom up which calls for reflection
+
+            // TODO We could generate a deserializer from available types?! Basically we have [InputSource] on the classes that should generate the corresponding code.
+
+            var proxy = "UnityEngine.InputSystem.Experimental.Devices.Keyboard.keys.W";
+            
+            //var type = typeof(Gamepad);
+            //var property = type.GetProperty("leftStick");
+            
+            Dummy x = default;
+            x.node = Gamepad.leftStick;
+            var s = JsonUtility.ToJson(x, prettyPrint: true);
+            Debug.Log(s);
         }
 
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event

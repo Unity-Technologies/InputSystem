@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Experimental
     
     public static partial class Combine
     {
-        public static Chord<TSource> Chord<TSource>(this TSource source1, TSource source2)
+        public static Chord<TSource> Chord<TSource>(TSource source1, TSource source2)
             where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Chord<TSource>(source1, source2);

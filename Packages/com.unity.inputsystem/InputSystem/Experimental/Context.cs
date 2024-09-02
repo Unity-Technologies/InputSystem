@@ -135,7 +135,9 @@ namespace UnityEngine.InputSystem.Experimental
 
         internal int NodeCount => m_Nodes.Count;
 
+        // TODO If we really want cached nodes we need to rethink this since we must record sources. A lot would be solved if nodes are classes but this drives GC.
         // TODO We probably do not gain anything by keeping this centralized, consider distributing it for type safety
+        // TODO This is an anti-pattern at the moment where source will be boxed
         internal T GetNodeImpl<T>(IDependencyGraphNode source)
             where T : class
         {
@@ -226,6 +228,24 @@ namespace UnityEngine.InputSystem.Experimental
                 return null;
             return context;
         }*/
+
+        internal Stream<T> GetStream<T>(Usage key) where T : struct
+        {
+            if (m_Streams.TryGetValue(key, out var stream))
+                return (Stream<T>)stream;
+            return null;
+        }
+        
+        internal bool TryGetStreamContext<T>(Usage key, out StreamContext<T> streamContext) where T : struct
+        {
+            if (m_StreamContexts.TryGetValue(key, out StreamContext context))
+            {
+                streamContext = (StreamContext<T>)context;
+                return true;
+            }
+            streamContext = null;
+            return false;
+        }
 
         internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
         {

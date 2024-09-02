@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Experimental
                 }
             }
         
-            public Impl(Context context, TSource0 source0, TSource1 source1)
+            public Impl(Context context, TSource0 source0, TSource1 source1, Chain chain)
             {
                 var firstObserver = new FirstObserver(this);
                 var secondObserver = new SecondObserver(this);
@@ -93,12 +93,14 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource0 m_Source0;
         private readonly TSource1 m_Source1;
         private Impl m_Impl;
+        private Chain m_Chain;
         
         public CombineLatest(TSource0 source0, TSource1 source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;
             m_Impl = null;
+            m_Chain = default;
         }
 
         public IDisposable Subscribe(IObserver<ValueTuple<T0, T1>> observer) =>
@@ -107,7 +109,7 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
             where TObserver : IObserver<ValueTuple<T0, T1>>
         {
-            return (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+            return (m_Impl ??= new Impl(context, m_Source0, m_Source1, m_Chain)).Subscribe(context, observer);
         }
         
         public bool Equals(IDependencyGraphNode other) =>
@@ -124,6 +126,11 @@ namespace UnityEngine.InputSystem.Experimental
                 case 1: return m_Source1;
                 default: throw new ArgumentOutOfRangeException(nameof(index)); 
             }
+        }
+
+        public void Mark(ChainSettings settings)
+        {
+            m_Chain.Mark(settings);
         }
     }
 

@@ -25,10 +25,10 @@ namespace UnityEngine.InputSystem.Experimental
             else
                 ClearBit(ptr, bitOffset);
         }
-
+        
         public static bool GetBit(byte* ptr, uint bitOffset)
         {
-            return 0 != (ptr[(bitOffset >> 3)] & (byte)(bitOffset & 7));
+            return 0 != (ptr[bitOffset >> 3] & (1U << (byte)(bitOffset & 7)));
         }
         
         internal static long Distance(void* first, void* last)

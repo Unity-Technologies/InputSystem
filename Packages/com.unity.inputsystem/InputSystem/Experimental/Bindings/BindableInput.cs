@@ -1,104 +1,85 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    // TODO Do we even need this?
-    public class BindableInput<T> : IObserver<T>, IDisposable 
-        where T : struct
+    internal sealed class AggregateSubscription : IDisposable
     {
-        public delegate void Callback(T value);
-        public event Callback performed;
-
-        private Context m_Context;
-        private ObservableInputNode<T>[] m_Bindings;
-        private int m_BindingCount;
         private IDisposable[] m_Subscriptions;
-        private int m_SubscriptionCount;
-
-        public static BindableInput<T> Create(Callback callback, IObservableInputNode<T> source = null, Context context = null)
+            
+        public AggregateSubscription(int size)
         {
-            return new BindableInput<T>(callback, source, context);
+            if (size > 0)
+                m_Subscriptions = new IDisposable[size];
         }
-
-        public BindableInput(ObservableInputNode<T> binding, Context context = null)
+            
+        public IDisposable this[int key]
         {
-            m_Context = context ?? Context.instance;
-            Bind(binding);
-        }
-
-        public BindableInput(IObservableInputNode<T> binding, Context context = null)
-        {
-            m_Context = context ?? Context.instance;
-            Bind(binding);
-        }
-
-        public BindableInput(Callback callback, IObservableInputNode<T> binding = null, Context context = null)
-            : this(binding, context)
-        {
-            performed += callback; // TODO We could dispatch this down to avoid multiple levels of indirection?
-        }
-
-        public BindableInput(Callback callback, ObservableInputNode<T> binding, Context context = null)
-            : this(binding, context)
-        {
-            performed += callback;
-        }
-
-        /*public BindableInput(Callback callback, IObservable<T> binding, Context context = null)
-        {
-            m_Context = context;
-            Bind(binding);
-
-            performed += callback;
-        }*/
-
-        public static implicit operator BindableInput<T>(ObservableInputNode<T> source)
-        {
-            return new BindableInput<T>(source);
-        }
-
-        public void OnCompleted()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnError(Exception error)
-        {
-            Debug.LogException(error);
-        }
-
-        public void OnNext(T value)
-        {
-            performed?.Invoke(value);
-        }
-
-        public void Bind<TSource>(TSource source) where TSource : IObservableInputNode<T>
-        {
-            ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount,
-                source.Subscribe(m_Context, this));
-        }
-
-        /*public void Bind(InputBindingSource<T> source)
-        {
-            ArrayHelpers.AppendWithCapacity(ref m_Bindings, ref m_BindingCount, source);
-        }*/
-
-        // TODO Consider requiring context to be passed and instead only make IObservable<T> out of context owning objects
-        public void Bind(IObservableInputNode<T> observable)
-        {
-            var subscription = observable.Subscribe(this);
-            ArrayHelpers.AppendWithCapacity(ref m_Subscriptions, ref m_SubscriptionCount, subscription);
+            get => m_Subscriptions[key];
+            set => m_Subscriptions[key] = value;
         }
 
         public void Dispose()
         {
-            for (var i = 0; i < m_SubscriptionCount; ++i)
-            {
+            if (m_Subscriptions == null) 
+                return;
+                
+            for (var i = 0; i < m_Subscriptions.Length; ++i)
                 m_Subscriptions[i].Dispose();
-                m_Subscriptions[i] = null;
-            }
-            m_SubscriptionCount = 0;
+            m_Subscriptions = null;
+        }
+    }
+
+    internal sealed class NullDisposable : IDisposable
+    {
+        public static readonly NullDisposable Instance = new ();
+        
+        public void Dispose() { }
+    }
+    
+    // TODO This should be a serializable struct
+    // TODO This is a node that doesn't really do anything?! It would just provide an aggregate subscription
+    [Serializable]
+    public class BindableInput<T> : ScriptableObject, IObservableInput<T> 
+        where T : struct
+    {
+        [NonSerialized] private IObservableInput<T>[] m_Bindings;
+        [NonSerialized] private int m_BindingCount;
+        
+        [NonSerialized] private int m_SubscriptionCount;
+        [NonSerialized] private ObserverList2<T> m_Observers;
+        
+        public IDisposable Subscribe<TObserver>(TObserver observer)
+            where TObserver : IObserver<T>
+        {
+            return Subscribe(Context.instance, observer);
+        }
+
+        public IDisposable Subscribe<TObserver>([NotNull] Context context, TObserver observer)
+            where TObserver : IObserver<T>
+        {
+            if (m_BindingCount == 0)
+                return NullDisposable.Instance;
+            var aggregateSubscription = new AggregateSubscription(m_BindingCount);
+            for (var i = 0; i < m_BindingCount; ++i)
+                aggregateSubscription[i] = m_Bindings[i].Subscribe(context, observer);
+            return aggregateSubscription;
+        }
+
+        public void AddBinding(IObservableInput<T> binding)
+        {
+            ArrayHelpers.AppendWithCapacity(ref m_Bindings, ref m_BindingCount, binding);
+        }
+
+        public int bindingCount => m_BindingCount;
+
+        public void RemoveBinding(IObservableInputNode<T> binding)
+        {
+            if (m_BindingCount <= 0) 
+                return;
+            var index = Array.IndexOf(m_Bindings, binding);
+            Array.Copy(m_Bindings, index + 1, m_Bindings, index, m_Bindings.Length - 1);
         }
     }
 }

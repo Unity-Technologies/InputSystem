@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Experimental
             value = ((ulong)((uint)sourceType & kSourceTypeMask) << kSourceTypeShift) |
                     ((ulong)(sourceId & kSourceIdMask) << kSourceIdShift) |
                     ((ulong)(usageProtocol & kUsageProtocolMask) << kUsageProtocolBitsShift) |
-                    ((ulong)(usage.Value & kUsageMask) << kUsageShift);
+                    ((ulong)(usage.value & kUsageMask) << kUsageShift);
         }
         
         /// <summary>

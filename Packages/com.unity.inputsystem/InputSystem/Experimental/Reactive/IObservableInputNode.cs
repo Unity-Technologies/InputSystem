@@ -3,7 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public interface IObservableInput<out T>
+    // TODO Consider enforcing subscription type?
+
+    public interface IObservableInput
+    {
+        // This is a tagging interface
+    }
+    
+    public interface IObservableInput<out T> : IObservableInput
     {
         /// <summary>
         /// Subscribes to the given opaque source within context <paramref name="context"/>

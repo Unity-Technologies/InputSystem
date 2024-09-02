@@ -69,3 +69,13 @@ public partial struct PressedOperation
     }
 }
 ```
+
+Consider the trade-offs:
+- Build completely isolated dependencies:
+  - Compute the same thing N times
+  - Can be ran in parallel without problems
+  - No need to store dependency graph for lookup
+- Reuse existing dependencies
+  - Avoid duplicate computation
+  - Requires synchronization between dependent results if executed in parallel
+  - Need to store dependency graph for lookup

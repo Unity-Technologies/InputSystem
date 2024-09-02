@@ -265,34 +265,26 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         //public readonly ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
         
-        // TODO We want a read-only array here,  
-        private static readonly ObservableInputNode<bool>[] Buttons;
-        private static readonly ObservableInputNode<Vector2>[] Sticks;
-        
-        static Gamepad()
+        private static readonly ObservableInputNode<bool>[] Buttons = 
         {
-            Sticks = new ObservableInputNode<Vector2>[]
-            {
-                new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick"),
-                new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick")
-            };
-            
-            Buttons = new ObservableInputNode<bool>[]
-            {
-                new (Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth"), 
-                new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast"),
-                new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest"),
-                new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth"),
-                new(Usages.GamepadUsages.LeftShoulder, "Gamepad.LeftShoulder"),
-                new(Usages.GamepadUsages.RightShoulder, "Gamepad.RightShoulder"),
-                new(Usages.GamepadUsages.Select, "Gamepad.Select"),
-                new(Usages.GamepadUsages.Start, "Gamepad.Start"),
-                new(Usages.GamepadUsages.Up, "Gamepad.Up"),
-                new(Usages.GamepadUsages.Left, "Gamepad.Left"),
-                new(Usages.GamepadUsages.Right, "Gamepad.Right"),
-                new(Usages.GamepadUsages.Down, "Gamepad.Down")
-            };
-        }
+            new (Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth"), 
+            new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast"),
+            new(Usages.GamepadUsages.ButtonWest, "Gamepad.ButtonWest"),
+            new(Usages.GamepadUsages.ButtonNorth, "Gamepad.ButtonNorth"),
+            new(Usages.GamepadUsages.LeftShoulder, "Gamepad.LeftShoulder"),
+            new(Usages.GamepadUsages.RightShoulder, "Gamepad.RightShoulder"),
+            new(Usages.GamepadUsages.Select, "Gamepad.Select"),
+            new(Usages.GamepadUsages.Start, "Gamepad.Start"),
+            new(Usages.GamepadUsages.Up, "Gamepad.Up"),
+            new(Usages.GamepadUsages.Left, "Gamepad.Left"),
+            new(Usages.GamepadUsages.Right, "Gamepad.Right"),
+            new(Usages.GamepadUsages.Down, "Gamepad.Down")
+        };
+        private static readonly ObservableInputNode<Vector2>[] Sticks = 
+        {
+            new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick"),
+            new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick")
+        };
 
         public static ReadOnlySpan<ObservableInputNode<bool>> buttons => // TODO Return type would actually be a custom collection type
             new ReadOnlySpan<ObservableInputNode<bool>>(Buttons);

@@ -20,13 +20,14 @@ namespace UnityEngine.InputSystem.Experimental
     /// <summary>
     /// Provides input binding presents.
     /// </summary>
-    public static partial class Presets
+    public static class Presets
     {
         private struct MoveBindings : IInputBindingSource<Vector2>
         {
             public void ApplyTo(BindableInput<Vector2> target)
             {
-                target.Bind(Devices.Gamepad.leftStick); // Allows explicit type
+                target.AddBinding(Devices.Gamepad.leftStick); // Allows explicit type
+                //target.AddBinding(Combine.Composite(Devices.Keyboard.A, Devices.Keyboard.D)); // TODO Need 2D compositge
                 // TODO Keyboard composite
             }
         }
@@ -35,8 +36,8 @@ namespace UnityEngine.InputSystem.Experimental
         {
             public void ApplyTo(BindableInput<InputEvent> target)
             {
-                target.Bind(Devices.Gamepad.ButtonEast.Pressed());
-                target.Bind(Devices.Keyboard.Space.Pressed());
+                target.AddBinding(Devices.Gamepad.ButtonEast.Pressed());
+                target.AddBinding(Devices.Keyboard.Space.Pressed());
             }
         }
 

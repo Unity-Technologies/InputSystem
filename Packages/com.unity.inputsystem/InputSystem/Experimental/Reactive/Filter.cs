@@ -78,6 +78,13 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     public static class FilterExtensionMethods
     {
+        /// <summary>
+        /// Constructs a generic filter that applies a predicate to determine if data should be forwarded or not. 
+        /// </summary>
+        /// <param name="source">The source</param>
+        /// <param name="predicate">The predicate</param>
+        /// <typeparam name="T">The data type</typeparam>
+        /// <returns>Filter node</returns>
         public static Filter<T, IObservableInputNode<T>> Filter<T>(this IObservableInputNode<T> source, Predicate<T> predicate) 
             where T : struct 
         {

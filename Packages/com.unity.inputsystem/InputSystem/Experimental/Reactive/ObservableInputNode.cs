@@ -94,25 +94,29 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         [SerializeField] private Usage m_Usage;
+        [SerializeField] private Usage m_SourceUsage;
         [SerializeField] private Field m_Field;
         
-        public ObservableInputNode(Usage usage, string displayName = null)
-            : this(usage, Context.instance, Field.None, displayName)
-        {}
-
-        // TODO Remove context constructor if not needed/relevant
-        public ObservableInputNode(Usage usage, [NotNull] Context context, Field field, string displayName)
+        public ObservableInputNode(Usage usage, string displayName = null, Field field = default, Usage sourceUsage = default)
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context) + " is required.");
             if (usage == Usage.Invalid)
                 throw new ArgumentException(nameof(usage) + " is not a valid usage.");
-
-            m_Usage = usage;
-            m_Field = field;
-            
-            this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required");
-            //m_NodeId = Context.InvalidNodeId;
+            if (field == default)
+            {
+                m_SourceUsage = usage;
+            }
+            else
+            {
+                if (sourceUsage == default)
+                    throw new ArgumentException(nameof(sourceUsage) + " must be set when using a field");     
+                if (sourceUsage == usage)
+                    throw new ArgumentException($"{nameof(sourceUsage)} must be different than nameof{usage} when specifying a field."); // TODO Better to split into two constructors to avoid mistakes
+                m_SourceUsage = sourceUsage;
+            }
+                
+            this.m_Usage = usage;
+            this.m_Field = field;
+            this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required"); // TODO Consider getting rid of it. Replace with symbol backed by optional assembly?!.
         }
 
         public Usage usage => m_Usage;
@@ -123,6 +127,10 @@ namespace UnityEngine.InputSystem.Experimental
             // Subscribe to source by subscribing to a stream context. Note that the stream context 
             // is consistent throughout the life-time of any existing associated subscriptions but
             // may change dynamically based on the availability of underlying streams (devices and/or controls).
+            
+            // One option is to here create an intermediary node that simply does any of the following:
+            // 1) Checks bit(s) indicated by field and generate a boolean (generalized) - can avoid indirect call if source stream has history
+            // 2) Explicitly calls GetKey(usage) on KeyboardState (specific) - cannot avoid indirect call
             return context.GetOrCreateStreamContext<T>(m_Usage).Subscribe(observer);
         }
 

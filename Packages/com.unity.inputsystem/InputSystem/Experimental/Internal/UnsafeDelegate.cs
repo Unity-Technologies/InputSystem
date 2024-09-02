@@ -5,7 +5,8 @@ using System.Runtime.InteropServices;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Do we want a stateless and a stateful delegate?
-
+    // TODO Write doc and/or tests to provide that delegate may not compare equal unless constructed from the same delegate instance
+    
     [StructLayout(LayoutKind.Sequential)]
     public readonly unsafe struct UnsafeStatelessDelegate
     {

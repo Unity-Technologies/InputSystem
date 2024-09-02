@@ -24,6 +24,9 @@ namespace UnityEngine.InputSystem.Experimental
 
         // TODO Replace observers with observerList?
         // TODO Implement IAsyncEnumerable<T>?
+        // TODO Consider having support for inteface oriented sub-streams by default.
+        // For example, for keyboard each usage ID would map to bit in the usage corresponding to the interface, e.g. 0x09, hence, we could require
+        // that observers are feeded  
         internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T>
             where T : struct
         {
@@ -128,7 +131,7 @@ namespace UnityEngine.InputSystem.Experimental
                 --m_ObserverCount;
             }
 
-            public IDisposable Subscribe(IObserver<T> observer)
+            public IDisposable Subscribe(IObserver<T> observer) // TODO Only allow ObservableInputNode? If we pass field information into this we can utilize that
             {
                 ArrayHelpers.AppendWithCapacity<IObserver<T>>(ref m_Observers, ref m_ObserverCount, observer);
                 return new Subscription(this, observer);

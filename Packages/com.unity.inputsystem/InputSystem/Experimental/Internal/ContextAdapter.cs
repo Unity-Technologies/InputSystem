@@ -34,29 +34,56 @@ namespace UnityEngine.InputSystem.Experimental
         {
             Debug.Log(value);
         }
+
+        private static KeyboardState _previous; // TEMPORARY
         
         // TODO As long as KeyboardState sits in native memory there is no need for fixed
         // TODO Poor way of representing keyboard state, a leaner way would be either button groups mapping to uint
         //      or just ID of those being on/down. ?
-        private static unsafe void Handle(LowLevel.KeyboardState* @state)
+        private static unsafe void Handle(Context context, LowLevel.KeyboardState* @state)
         {
             // TODO Remap to desired output type and/or use usages to forward
-            //var c = MemoryHelpers.ReadSingleBit(state, (uint)Key.C);
+            //var c = MemoryHelpers.ReadSingleBit(state, (uint)Key.W);
 
-            
+            //Debug.Log("Handle: " + c);
             // TODO Should be compute xor with previous state here?! We need previous state which isn't support over legacy event queue, we likely need a Converter node for it to keep state
+
+            // TODO Inject into device stream if supported
             
-            var context = Context.instance.GetOrCreateStreamContext<KeyboardState>(Usages.Devices.Keyboard);
-            if (context.observerCount > 0)
+            // TODO If we had a proper stream here we could query only changed bits for their corresponding keys
+            
+            // TODO If we wanted to be really strict we would not have previous state in stream if not relevant.
+            //      Previous state is only relevant when a subsequent node need to
+            
+            // For now, let nodes track state when needed since its the simplest, reconsider stream state later, basically we could reallocate stream if needed when there is no data to defragment. Producer have good locality when doing this but producer may also just use static? 
+            
+            // TODO Being able to filter before invoking callbacks is key if abstract enough. Hence there is a need to guard on previous state. This means that ObservableInput needs knowledge of where it comes from. Hence maybe the callbacks into first node is different?
+            
+            if (context.TryGetStreamContext(Usages.Devices.Keyboard,
+                    out Context.StreamContext<KeyboardState> keyboardStreamContext) && 
+                keyboardStreamContext.observerCount > 0)
             {
+                // Convert and forward
                 KeyboardState keyboard;
                 Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(keyboard.keys, state->keys, 16);
                 
-                context.OnNext(ref keyboard);
+                keyboardStreamContext.OnNext(ref keyboard);
             }
             
+            //foreach (var k in System.Enum.GetValues(typeof(Devices.Key)))
+                
+            // TODO Temporary workaround, find the best solution, probably as child to KeyboardState, but single node to decode all which requires source to pass key
+            // TODO NOte that this isn't really a problem if we can compute difference since we only need to iterate changed bits
+            if (context.TryGetStreamContext(Devices.Usages.Keyboard.w,
+                    out Context.StreamContext<bool> streamContext) && streamContext.observerCount > 0)
+            {
+                streamContext.OnNext(MemoryHelpers.ReadSingleBit(state->keys, (uint)Devices.Usages.Keyboard.w));
+            }
+
+            // TODO We should also query device specific stream
+
             // TODO We cannot reasonably scan for observers of individual keys here
-            
+
             // Forward key state of individual keys to their corresponding observers
             //Log(c.ToString());
         }
@@ -76,6 +103,9 @@ namespace UnityEngine.InputSystem.Experimental
             
             // TODO It would be beneficial to do a single query here when encoded like this
 
+            // TODO Note that we cannot establish if something changed without a stream, this is the main issue with the single queue approach
+            // TODO For now we assume it has changed
+            
             var gamepad = Context.instance.GetOrCreateStreamContext<GamepadState>(Usages.Devices.Gamepad); // TODO Instead consider a dictionary of IObserver<T>, or rather in this case a list of observers since known type?
             if (gamepad.observerCount > 0)
             {
@@ -120,7 +150,7 @@ namespace UnityEngine.InputSystem.Experimental
             switch ((int)format)
             {
                 case Keys:
-                    Handle((LowLevel.KeyboardState*)@event->state);
+                    Handle(context, (LowLevel.KeyboardState*)@event->state);
                     break;
                 case Mouse:
                     Handle((LowLevel.MouseState*)@event->state);

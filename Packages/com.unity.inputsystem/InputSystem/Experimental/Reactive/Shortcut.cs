@@ -4,8 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace UnityEngine.InputSystem.Experimental
 {
     // TODO This is basically AND, redesign as such?
-    public struct Shortcut<TSource> : IObservableInputNode<bool>, IDependencyGraphNode
-        where TSource : IObservableInputNode<bool>, IDependencyGraphNode
+    public struct Shortcut<TSource> : IObservableInputNode<bool>, IDependencyGraphNode, IUnsafeObservable<bool> where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {
@@ -53,8 +52,8 @@ namespace UnityEngine.InputSystem.Experimental
                 throw new ArgumentNullException(nameof(modifier));
             if (trigger == null)
                 throw new ArgumentNullException(nameof(trigger));
-            if (modifier.Equals(trigger))
-                throw new ArgumentException($"{nameof(modifier)} may not be the same as {nameof(trigger)}");
+            //if (modifier.Equals(trigger)) // TODO This needs some work when source is derived, not sure we would even check it
+            //    throw new ArgumentException($"{nameof(modifier)} may not be the same as {nameof(trigger)}");
                 
             m_Modifier = modifier;
             m_Trigger = trigger;
@@ -84,6 +83,11 @@ namespace UnityEngine.InputSystem.Experimental
                 case 1: return m_Trigger;
                 default: throw new ArgumentOutOfRangeException(nameof(index));
             }
+        }
+
+        public UnsafeSubscription Subscribe(Context context, UnsafeDelegate<bool> observer)
+        {
+            throw new NotImplementedException();
         }
     }
 

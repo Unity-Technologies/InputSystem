@@ -206,6 +206,31 @@ namespace Tests.InputSystem.Experimental
         }
         
         [Test]
+        public void Composite_Test()
+        {
+            var west = Gamepad.ButtonWest.Stub(m_Context);   
+            var east = Gamepad.ButtonEast.Stub(m_Context);
+            
+            var observer = new ListObserver<float>();
+            using var subscription = Combine.Composite(negative: Gamepad.ButtonWest, positive: Gamepad.ButtonEast).Subscribe(m_Context, observer);
+            
+            west.Press();
+            m_Context.Update();
+            east.Press();
+            m_Context.Update();
+            west.Release();
+            m_Context.Update();
+            east.Release();
+            m_Context.Update();
+            
+            Assert.That(observer.Next.Count, Is.EqualTo(4));
+            Assert.That(observer.Next[0], Is.EqualTo(-1.0f));
+            Assert.That(observer.Next[1], Is.EqualTo(0.0f));            
+            Assert.That(observer.Next[2], Is.EqualTo(1.0f));
+            Assert.That(observer.Next[3], Is.EqualTo(0.0f));            
+        }
+        
+        [Test]
         public void Filter()
         {
             var stick = Gamepad.leftStick.Stub(m_Context);
@@ -225,6 +250,54 @@ namespace Tests.InputSystem.Experimental
             Assert.That(observer.Next[0], Is.EqualTo(new Vector2(0.5f, 0.0f)));
             Assert.That(observer.Next[1], Is.EqualTo(new Vector2(0.6f, 0.1f)));
         }
+
+        [Test]
+        public void Convert()
+        {
+            var stick = Gamepad.leftStick.Stub(m_Context);
+            
+            var observer = new ListObserver<float>();
+            using var opaqueSubscription = Gamepad.leftStick.Convert((Vector2 value) => value.x).Subscribe(m_Context, observer);
+            //using var subscription = Gamepad.LeftStick.Filter<Vector2>(v => v.x >= 0.5f).Subscribe(m_Context, observer);
+            
+            stick.Change(new Vector2(0.4f, 0.0f));
+            stick.Change(new Vector2(0.5f, 0.0f));
+            stick.Change(new Vector2(0.6f, 0.1f));
+            stick.Change(new Vector2(0.3f, 0.2f));
+            
+            m_Context.Update();
+            
+            Assert.That(observer.Next.Count, Is.EqualTo(4));
+            Assert.That(observer.Next[0], Is.EqualTo(0.4f));
+            Assert.That(observer.Next[1], Is.EqualTo(0.5f));
+            Assert.That(observer.Next[2], Is.EqualTo(0.6f));
+            Assert.That(observer.Next[3], Is.EqualTo(0.3f));
+        }
+        
+        // TODO Make karting demo using this
+        // InputAction<Vector2> steer;
+        // steer.AddBinding(Composite.FromDirections(left: Keyboard.A, right: Keyboard.D));
+        // steer.AddBinding(Gamepad.leftStick.x.Deadzone());
+        // steer.AddBinding(AttitudeSensor.sensors[0].CompensateForOrientation().TiltAroundZ());
+        // steerSubscription = steer.DistinctUntilChanged().Last().Subscribe((v) => input.Move = v);
+        //
+        // InputAction<bool> accelerate;
+        // accelerate.AddBinding(Keyboard.Space);
+        // accelerate.AddBinding(Gamepad.buttonSouth);
+        // accelerateSubscription = accelerate.Last().Subscribe(x => Debug.Log("Accelerating"));
+        //
+        // InputAction<bool> brake;
+        // brake.AddBinding(Keyboard.leftCtrl);
+        // brake.AddBinding(Gamepad.buttonWest);
+        // brakeSubscription = brake.Last().Subscribe(x => Debug.Log("Braking"));
+        //
+        // InputAction toggleMenu;
+        // toggleMenu.AddBinding(Keyboard.Escape);
+        // toggleMenu.AddBinding(Gamepad.start);
+        // toggleMenuSubscription = toggleMenu.Last().Subscribe(() => ToggleMenu());
+        //
+        // TODO InputAction should likely also be a struct proxy there is little need to keep it around since its
+        //      just a template for instantiating subscriptions.
         
         [Test]
         public void LowPassFilter()
