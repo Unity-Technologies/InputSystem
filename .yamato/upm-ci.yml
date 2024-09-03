@@ -5,7 +5,7 @@
 {% for platform in platforms_win %}
 {% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
-  name : Build & Test {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
+  name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -43,7 +43,7 @@
 {% for platform in platforms_nix %}
 {% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
-  name : Build & Test {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
+  name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -82,7 +82,7 @@
 {% for editor in editors %}
 {% for category in test_category %}
 build_ios_{{ editor.version }}_{{ category.name }}:
-  name: Build Tests - {{ editor.version }} - iOS, {{ category.name }} tests
+  name: Build - {{ editor.version }} - iOS, {{ category.name }} tests
   agent:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
@@ -101,7 +101,7 @@ build_ios_{{ editor.version }}_{{ category.name }}:
           - "build/logs/**"
 
 run_ios_{{ editor.version }}_{{ category.name }}:
-  name: Run Tests - {{ editor.version }} - iOS, {{ category.name }} tests
+  name: Run - {{ editor.version }} - iOS, {{ category.name }} tests
   agent:
       type: Unity::mobile::iPhone
       image: {{ ios_and_tvos_macos_bokken_image }}
@@ -120,7 +120,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
 {% endfor %} #category
 
 build_tvos_{{ editor.version }}:
-  name: Build Tests - {{ editor.version }} - tvOS
+  name: Build - {{ editor.version }} - tvOS
   agent:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
@@ -139,7 +139,7 @@ build_tvos_{{ editor.version }}:
           - "build/logs/**"
 
 run_tvos_{{ editor.version }}:
-  name: Run Tests - {{ editor.version }} - tvOS
+  name: Run - {{ editor.version }} - tvOS
   agent:
       type: Unity::mobile::appletv
       image: {{ ios_and_tvos_macos_bokken_image }}
@@ -158,7 +158,7 @@ run_tvos_{{ editor.version }}:
 {% for backend in scripting_backends %}
 {% for category in test_category %}
 build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
-  name: Build Tests - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
+  name: Build - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
       type: Unity::VM
       image: package-ci/win10:default
@@ -177,7 +177,7 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
           - "build/logs/**"
 
 run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
-  name: Run Tests - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
+  name: Run - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
       type: Unity::mobile::shield
       image: package-ci/win10:default
