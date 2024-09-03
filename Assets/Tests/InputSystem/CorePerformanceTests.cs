@@ -31,7 +31,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_MakeCircles()
     {
@@ -39,13 +39,13 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
     ////TODO: same test but with several actions listening on each gamepad
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_Update10Gamepads()
     {
@@ -61,12 +61,12 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(gamepads[i], default(GamepadState));
             InputSystem.Update();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_UpdateMouse100TimesInFrame()
     {
@@ -78,12 +78,12 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(mouse, default(MouseState));
             InputSystem.Update();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(true)]
     [TestCase(false)]
@@ -109,12 +109,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             EndTouch(2, new Vector2(111, 222), queueEventOnly: true);
             InputSystem.Update();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_ReadEveryKey()
     {
@@ -125,12 +125,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             foreach (var key in keyboard.allKeys)
                 key.ReadValue();
         })
-            .MeasurementCount(2000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase("Gamepad", "leftStick")]
     [TestCase("Gamepad", "buttonSouth")]
@@ -149,12 +149,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             throw new NotImplementedException();
 
         Measure.Method(method)
-            .MeasurementCount(20000)
+            .MeasurementCount(200)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase("Mouse")]
     [TestCase("Touchscreen")]
@@ -171,7 +171,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     // Layouts tested here must have precompiled versions for this test to be meaningful.
     [TestCase("Mouse")]
@@ -180,12 +180,12 @@ internal class CorePerformanceTests : CoreTestsFixture
     public void Performance_CreatePrecompiledDevice(string layoutName)
     {
         Measure.Method(() => InputDevice.Build<InputDevice>(layoutName))
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_TriggerAction()
     {
@@ -194,12 +194,12 @@ internal class CorePerformanceTests : CoreTestsFixture
         action.Enable();
 
         Measure.Method(() => PressAndRelease(gamepad.buttonSouth))
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_ReadActionValue_InCallback()
     {
@@ -210,12 +210,12 @@ internal class CorePerformanceTests : CoreTestsFixture
         action.performed += ctx => ctx.ReadValue<float>();
 
         Measure.Method(() => PressAndRelease(gamepad.buttonSouth))
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_ReadActionValue()
     {
@@ -226,12 +226,12 @@ internal class CorePerformanceTests : CoreTestsFixture
         Press(gamepad.buttonSouth);
 
         Measure.Method(() => action.ReadValue<float>())
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_ListenForUnpairedDeviceActivity()
     {
@@ -246,12 +246,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             BeginTouch(1, new Vector2(123, 234));
             EndTouch(1, new Vector2(234, 345));
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public unsafe void Performance_SearchForChangedButtonInEvent_Manually()
     {
@@ -293,7 +293,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_SearchForChangedButtonInEvent_UsingEnumerateChangedControls()
     {
@@ -321,7 +321,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
                 Assert.That(foundIt, Is.True);
             })
-                .MeasurementCount(50000)
+                .MeasurementCount(500)
                 .WarmupCount(5)
                 .Run();
         }
@@ -331,7 +331,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     // to monitor all incoming input events and figure out whether they are or are not leading
     // to a control scheme change. The performance impact of this must be as low as we can
     // get it.
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_AutoSwitchingOfControlSchemesInPlayerInput_UnrelatedDeviceIsFeedingInput()
     {
@@ -361,12 +361,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(678, 789)});
             InputSystem.Update();
         })
-            .MeasurementCount(50000)
+            .MeasurementCount(500)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_AutoSwitchingOfControlSchemesInPlayerInput_SwitchBackAndForth()
     {
@@ -399,12 +399,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             PressAndRelease(gamepad.buttonSouth);
             PressAndRelease(keyboard.spaceKey);
         })
-            .MeasurementCount(5000)
+            .MeasurementCount(500)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_Rebinding_OneSuccessfulCycle()
     {
@@ -421,7 +421,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 Assert.That(action.controls[0], Is.SameAs(gamepad.buttonNorth));
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
@@ -432,7 +432,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         CaseDoesNotMatch
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(LookupByName.CaseMatches)]
     [TestCase(LookupByName.CaseDoesNotMatch)]
@@ -449,12 +449,12 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             var _ = asset[(lookup == LookupByName.CaseDoesNotMatch ? "ACTION" : "action") + (int)(kActionCount * 0.75f)];
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_LookupActionByGuid()
     {
@@ -477,13 +477,13 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             Assert.That(asset[actionToFind.id.ToString()], Is.SameAs(actionToFind));
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
     // We're hitting MatchesPrefix a lot from rebinding, so make sure it's performing reasonably well.
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     public void Performance_MatchControlPathPrefix()
     {
@@ -501,12 +501,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             Assert.That(result3, Is.True);
             Assert.That(result4, Is.False);
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase("Gamepad")]
     [TestCase("Touchscreen")]
@@ -532,7 +532,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             match.Dispose();
             Assert.That(result, Is.EqualTo(success));
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
@@ -568,7 +568,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
@@ -593,12 +593,12 @@ internal class CorePerformanceTests : CoreTestsFixture
             for (var i = 0; i < 100000; ++i)
                 pos += mouse.position.ReadValue();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
@@ -636,12 +636,12 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
@@ -679,12 +679,12 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(10)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
@@ -716,7 +716,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(i / 1000f, i / 1000f) });
             }
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(10)
             .Run();
     }
@@ -762,7 +762,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(10)
             .Run();
     }
@@ -804,12 +804,12 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
             }
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(10)
             .Run();
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
@@ -830,7 +830,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .SampleGroup("Mouse Only")
             .WarmupCount(10)
             .Run();
@@ -843,7 +843,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
@@ -906,7 +906,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
@@ -969,7 +969,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .SampleGroup("Keyboard Only")
             .WarmupCount(10)
             .Run();
@@ -982,7 +982,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         }
     }
 
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.ReadValueCaching)]
@@ -1066,7 +1066,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     }
 
 #if ENABLE_VR
-    [Test, Performance, Version("2")]
+    [Test, Performance]
     [Category("Performance")]
     [TestCase(OptimizationTestType.NoOptimization)]
     [TestCase(OptimizationTestType.OptimizedControls)]
