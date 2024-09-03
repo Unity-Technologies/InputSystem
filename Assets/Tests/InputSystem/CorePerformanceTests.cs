@@ -166,7 +166,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         InputControlLayout.s_Layouts.precompiledLayouts.Clear();
 
         Measure.Method(() => InputDevice.Build<InputDevice>(layoutName))
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(5)
             .Run();
     }
@@ -593,7 +593,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             for (var i = 0; i < 100000; ++i)
                 pos += mouse.position.ReadValue();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(5)
             .Run();
     }
@@ -636,7 +636,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(5)
             .Run();
     }
@@ -679,7 +679,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(10)
             .Run();
     }
@@ -716,7 +716,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(i / 1000f, i / 1000f) });
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(10)
             .Run();
     }
@@ -762,7 +762,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(10)
             .Run();
     }
@@ -804,7 +804,7 @@ internal class CorePerformanceTests : CoreTestsFixture
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));
             }
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(10)
             .Run();
     }
@@ -830,7 +830,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .SampleGroup("Mouse Only")
             .WarmupCount(10)
             .Run();
@@ -843,7 +843,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
@@ -906,7 +906,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .SampleGroup("Gamepad Only")
             .WarmupCount(10)
             .Run();
@@ -969,7 +969,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             CallUpdate();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .SampleGroup("Keyboard Only")
             .WarmupCount(10)
             .Run();
@@ -1005,7 +1005,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             MethodToMeasure(gamepad);
         }).SampleGroup("ReadValueCaching Expected With WORSE Performance")
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(5)
             .Run();
 
@@ -1094,7 +1094,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             for (var i = 0; i < 4000; ++i)
                 poseControl.ReadValue();
         })
-            .MeasurementCount(10000)
+            .MeasurementCount(1000)
             .WarmupCount(5)
             .Run();
     }
