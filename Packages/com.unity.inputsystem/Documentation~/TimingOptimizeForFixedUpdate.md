@@ -62,24 +62,24 @@ public class ExampleScript : MonoBehaviour
 {  
     Vector2 moveInputValue;  
     Rigidbody rigidBody;  
-    public float moveForce \= 10;
+    public float moveForce = 10;
 
     private void Start()  
     {  
-        rigidBody \= GetComponent\<Rigidbody\>();  
+        rigidBody = GetComponent<Rigidbody>();  
     }
 
     public void OnMove(InputAction.CallbackContext context)  
     {  
         // in the event callback, we store the input value  
-        moveInputValue \= context.ReadValue\<Vector2\>();  
+        moveInputValue = context.ReadValue<Vector2>();  
     }
 
     private void FixedUpdate()  
     {  
         // in fixed update, we use the stored value for  
         // applying physics forces  
-        rigidBody.AddForce(moveInputValue \* moveForce);  
+        rigidBody.AddForce(moveInputValue * moveForce);  
     }  
 }
 ```
@@ -96,17 +96,17 @@ public class ExampleScript : MonoBehaviour
 {  
     InputAction moveAction;  
     Rigidbody rigidBody;  
-    public float moveForce \= 10;
+    public float moveForce = 10;
 
     private void Start()  
     {  
-        moveAction \= InputSystem.actions.FindAction("move");  
+        moveAction = InputSystem.actions.FindAction("move");  
     }
 
     private void FixedUpdate()  
     {  
-        Vector2 moveInputValue \= moveAction.ReadValue\<Vector2\>();  
-        rigidBody.AddForce(moveInputValue \* moveForce);  
+        Vector2 moveInputValue = moveAction.ReadValue<Vector2>();  
+        rigidBody.AddForce(moveInputValue * moveForce);  
     }  
 }
 ```

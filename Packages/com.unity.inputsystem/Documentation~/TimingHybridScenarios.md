@@ -15,7 +15,7 @@ public class ExampleScript : MonoBehaviour
 
     private void Start()  
     {  
-        jumpAction \= InputSystem.actions.FindAction("Jump");  
+        jumpAction = InputSystem.actions.FindAction("Jump");  
     }
 
     private void Update()  
@@ -28,7 +28,7 @@ public class ExampleScript : MonoBehaviour
             // start jump animation here
 
             // set this variable to true, for use in FixedUpdate  
-            jumpPressed \= true;
+            jumpPressed = true;
 
         }  
     }
@@ -40,7 +40,7 @@ public class ExampleScript : MonoBehaviour
             // apply jump physics here  
 
             // set the variable to false so that the jump pressed physics are only applied once
-            jumpPressed \= false;  
+            jumpPressed = false;  
         }  
     }  
 }
