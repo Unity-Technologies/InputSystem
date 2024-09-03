@@ -77,8 +77,8 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
         static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
         static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
-        private static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
-        private static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
+        static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
+        static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
 
 
         public InputMetrics metrics
