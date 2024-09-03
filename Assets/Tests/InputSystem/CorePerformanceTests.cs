@@ -166,7 +166,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         InputControlLayout.s_Layouts.precompiledLayouts.Clear();
 
         Measure.Method(() => InputDevice.Build<InputDevice>(layoutName))
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
@@ -399,7 +399,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             PressAndRelease(gamepad.buttonSouth);
             PressAndRelease(keyboard.spaceKey);
         })
-            .MeasurementCount(50000)
+            .MeasurementCount(5000)
             .WarmupCount(5)
             .Run();
     }
@@ -1005,7 +1005,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             MethodToMeasure(gamepad);
         }).SampleGroup("ReadValueCaching Expected With WORSE Performance")
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
 
@@ -1033,7 +1033,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         {
             MethodToMeasure(gamepad);
         }).SampleGroup("ReadValueCaching Expected With BETTER Performance")
-            .MeasurementCount(10000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
 
@@ -1094,7 +1094,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             for (var i = 0; i < 4000; ++i)
                 poseControl.ReadValue();
         })
-            .MeasurementCount(1000)
+            .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
