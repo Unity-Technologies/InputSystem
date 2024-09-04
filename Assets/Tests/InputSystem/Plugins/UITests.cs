@@ -38,7 +38,7 @@ using UnityEngine.UIElements;
 #pragma warning disable CS0649
 ////TODO: app focus handling
 
-internal class UITests : CoreTestsFixture
+internal partial class UITests : CoreTestsFixture
 {
     private struct TestObjects
     {
