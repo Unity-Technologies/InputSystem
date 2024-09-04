@@ -17,13 +17,13 @@ It’s important to understand that Fixed Update provides a simulation of code r
 
 ### When the frame rate runs faster than fixed time step duration
 
-![image alt text](./Images/TimingFastFPS.png) 
+![image alt text](./Images/TimingFastFPS.png)
 
 This diagram shows the frame rate running faster than the fixed update time step rate. Time progresses to the right, each frame is numbered, and shows its `Update` call at the start of the frame in orange. The fixed time step here is 0.02 seconds (50 times per second), and the game is running faster, at about 80 frames per second. In this situation there are some frames with one fixed update call, and some frames with none, depending on whether a full fixed update time step has completed by the time the frame starts. The fixed time step periods are marked with letters A, B, C, D, E, and the frames in which their corresponding fixed update calls occur are marked in green. The fixed update call for time step A occurs at the start of frame 4, the FixedUpdate call for time step B occurs at the start of frame 7, and so on.
 
 ### When the frame rate runs slower than the fixed time step duration:
 
-![image alt text](./Images/TimingSlowFPS.png) 
+![image alt text](./Images/TimingSlowFPS.png)
 
 This diagram shows the opposite scenario, when the fixed update cycle is running faster than the frame rate. The fixed time step here is 0.01 seconds (100 times per second), and the game frame rate is running slower, at about 40 frames per second. In this situation most frames have multiple fixed update calls before each update call, the number depending on how many whole update time steps have elapsed since the previous frame. The fixed update time step periods are marked with letters A, B, C, and so on, and  frames in which their corresponding fixed update calls occur are marked in green. The fixed update call for time step A and B occurs at the start of frame 2, the fixed update call for frames C, D & E occur at the start of frame 3, and so on.
 
@@ -34,9 +34,9 @@ In both types of situation, whether the frame rate is running either faster or s
 
 Because input that occurs during partially elapsed time steps isn't processed until the frame after the time step has fully completed, this has implications for increased input lag in fixed time step mode. There's almost always some amount of unprocessed time left between the end of the last fixed time step, and the start of the next frame. This means it's possible for input events to occur within that unprocessed time.
 
-An example of an input event occurring during such unprocessed time is shown in this diagram:  
+An example of an input event occurring during such unprocessed time is shown in this diagram:
 
-![image alt text](./Images/TimingUnprocessedTime.png) 
+![image alt text](./Images/TimingUnprocessedTime.png)
 
 This diagram shows the frame rate running faster than the fixed update time step rate. Each frame is numbered (1 to 7), and shows its `Update` call at the start of the frame in orange. The fixed time step here is 0.02s (50 steps per second), and the game is running faster, at about 80 frames per second. In this situation there are some frames with one fixed update call, and some frames with none.
 
@@ -55,32 +55,32 @@ This can introduce the problem of missed or duplicate discrete events however (s
 For event-driven input, where the [Player Input component](./PlayerInput.md) calls events in your code, you should store the input values in variables which you can then read in your `FixedUpdate` call. For example:
 
 ```
-using UnityEngine;  
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ExampleScript : MonoBehaviour  
-{  
-    Vector2 moveInputValue;  
-    Rigidbody rigidBody;  
+public class ExampleScript : MonoBehaviour
+{
+    Vector2 moveInputValue;
+    Rigidbody rigidBody;
     public float moveForce = 10;
 
-    private void Start()  
-    {  
-        rigidBody = GetComponent<Rigidbody>();  
+    private void Start()
+    {
+        rigidBody = GetComponent<Rigidbody>();
     }
 
-    public void OnMove(InputAction.CallbackContext context)  
-    {  
-        // in the event callback, we store the input value  
-        moveInputValue = context.ReadValue<Vector2>();  
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        // in the event callback, we store the input value
+        moveInputValue = context.ReadValue<Vector2>();
     }
 
-    private void FixedUpdate()  
-    {  
-        // in fixed update, we use the stored value for  
-        // applying physics forces  
-        rigidBody.AddForce(moveInputValue * moveForce);  
-    }  
+    private void FixedUpdate()
+    {
+        // in fixed update, we use the stored value for
+        // applying physics forces
+        rigidBody.AddForce(moveInputValue * moveForce);
+    }
 }
 ```
 
@@ -89,24 +89,24 @@ public class ExampleScript : MonoBehaviour
 For code where you're polling input action values, you can read the values directly from `FixedUpdate`:
 
 ```
-using UnityEngine;  
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ExampleScript : MonoBehaviour  
-{  
-    InputAction moveAction;  
-    Rigidbody rigidBody;  
+public class ExampleScript : MonoBehaviour
+{
+    InputAction moveAction;
+    Rigidbody rigidBody;
     public float moveForce = 10;
 
-    private void Start()  
-    {  
-        moveAction = InputSystem.actions.FindAction("move");  
+    private void Start()
+    {
+        moveAction = InputSystem.actions.FindAction("move");
     }
 
-    private void FixedUpdate()  
-    {  
-        Vector2 moveInputValue = moveAction.ReadValue<Vector2>();  
-        rigidBody.AddForce(moveInputValue * moveForce);  
-    }  
+    private void FixedUpdate()
+    {
+        Vector2 moveInputValue = moveAction.ReadValue<Vector2>();
+        rigidBody.AddForce(moveInputValue * moveForce);
+    }
 }
 ```

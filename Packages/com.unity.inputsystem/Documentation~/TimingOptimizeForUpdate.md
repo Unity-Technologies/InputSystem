@@ -16,6 +16,6 @@ Also use `Update` to poll for discrete on/off state changes using API such as **
 
 All events that occurred since the last frame are immediately processed before the current frame's `Update`, in the order that they were received. For continuously changing values  (for example, multiple changing position values of a continuously moving gamepad stick), you might receive multiple events per frame with backdated timestamps indicating when they occurred between the last frame and the start of the current frame.
 
-You can read and store input values from the input events in your event handler methods, and use those values to control your game in `Update`. 
+You can read and store input values from the input events in your event handler methods, and use those values to control your game in `Update`.
 
 For example, in the scenario shown in the previous diagram, at the start of frame 3, you will receive events for (**d**), (**e**), (**f**), and (**g**) and can process all of them in your game code.

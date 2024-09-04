@@ -1,6 +1,6 @@
 # Input events queue
 
-The Input System receives information from hardware input devices as a stream of events. These events represent either system events received from the input device, or snapshots in time based on frequent samples from the device. 
+The Input System receives information from hardware input devices as a stream of events. These events represent either system events received from the input device, or snapshots in time based on frequent samples from the device.
 
 The incoming events are stored in a queue, and by default are processed each frame. Input controls which have discrete (on/off) states, such as a button on a gamepad or mouse, generate corresponding single discrete events when they change state. Input controls with a range of motion, for example a stick or trigger on a gamepad that can be gradually moved over a period of time, generate a stream of individual events in rapid succession that approximates the smooth change in value.
 
