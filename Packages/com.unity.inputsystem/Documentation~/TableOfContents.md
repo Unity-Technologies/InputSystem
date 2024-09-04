@@ -31,7 +31,7 @@
         * [Optimize For Dynamic Update](TimingOptimizeForUpdate.md)
         * [Optimize For Fixed Update](TimingOptimizeForFixedUpdate.md)
         * [Avoid Missed or Duplicate Events](TimingAvoidMissedOrDuplicateEvents.md)
-        * [Hybrid Scenarios](TimingHybridScenarios.md)
+        * [Mixed Timing Scenarios](TimingMixedScenarios.md)
 * [Supported Input Devices](SupportedDevices.md)
   * [Pointers](Pointers.md)
       * [Touch support](Touch.md)
