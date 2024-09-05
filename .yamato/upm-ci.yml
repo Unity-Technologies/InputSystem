@@ -257,9 +257,12 @@ performance_tests_only:
     {% endfor %}
   triggers:
     recurring:
-        - branch: input/performance-testing-changes
+        - branch: develop
           frequency: daily
           rerun: on_new_revision            
+        - branch: master
+          frequency: weekly
+          rerun: on_new_revision              
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:
