@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
@@ -68,6 +69,17 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
         static readonly ProfilerMarker k_InputAddDeviceMarker = new ProfilerMarker("InputSystem.AddDevice");
         static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
+
+        static readonly ProfilerMarker k_InputOnBeforeUpdateMarker = new ProfilerMarker("InputSystem.onBeforeUpdate");
+        static readonly ProfilerMarker k_InputOnAfterUpdateMarker = new ProfilerMarker("InputSystem.onAfterUpdate");
+        static readonly ProfilerMarker k_InputOnSettingsChangeMarker = new ProfilerMarker("InputSystem.onSettingsChange");
+        static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
+        static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
+        static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
+        static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
+        static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
+
 
         public InputMetrics metrics
         {
@@ -598,7 +610,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -866,7 +878,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -1119,7 +1131,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1285,7 +1297,7 @@ namespace UnityEngine.InputSystem
             device.MakeCurrent();
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Request device to send us an initial state update.
             if (device.enabled)
@@ -1440,7 +1452,7 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Try setting next device of same type as current
             InputSystem.GetDevice(device.GetType())?.MakeCurrent();
@@ -1464,7 +1476,7 @@ namespace UnityEngine.InputSystem
             // Trigger reset notification.
             var change = isHardReset ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
             InputActionState.OnDeviceChange(device, change);
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // If the device implements its own reset, let it handle it.
             if (!alsoResetDontResetControls && device is ICustomDeviceReset customReset)
@@ -1752,7 +1764,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
         }
 
         private unsafe void QueueEvent(InputEvent* eventPtr)
@@ -1965,6 +1977,65 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
+
+            // Register custom types by reflection
+            RegisterCustomTypes();
+        }
+
+        void RegisterCustomTypes(Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                if (!type.IsClass
+                    || type.IsAbstract
+                    || type.IsGenericType)
+                    continue;
+                if (typeof(InputProcessor).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterProcessor(type);
+                }
+                else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterInteraction(type);
+                }
+                else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterBindingComposite(type, null);
+                }
+            }
+        }
+
+        void RegisterCustomTypes()
+        {
+            k_InputRegisterCustomTypesMarker.Begin();
+
+            var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var inputSystemName = inputSystemAssembly.GetName().Name;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    // exclude InputSystem assembly which should be loaded first
+                    if (assembly == inputSystemAssembly) continue;
+
+                    // Only register types from assemblies that reference InputSystem
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    {
+                        if (referencedAssembly.Name == inputSystemName)
+                        {
+                            RegisterCustomTypes(assembly.GetTypes());
+                            break;
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    continue;
+                }
+            }
+
+            k_InputRegisterCustomTypesMarker.End();
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2439,7 +2510,7 @@ namespace UnityEngine.InputSystem
                     AddDevice(device);
 
                     DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reconnected,
-                        "InputSystem.onDeviceChange");
+                        k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                 }
                 else
                 {
@@ -2473,6 +2544,45 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private JsonParser.JsonString MakeEscapedJsonString(string theString)
+        {
+            //
+            // When we create the device description from the (passed from native) deviceDescriptor string in OnNativeDeviceDiscovered()
+            // we remove any escape characters from the capabilties field when we do InputDeviceDescription.FromJson() - this decoded
+            // description is used to create the device.
+            //
+            // This means that the native and managed code can have slightly different representations of the capabilities field.
+            //
+            // Managed: description.capabilities    string, unescaped
+            //                                      eg "{"deviceName":"Oculus Quest", ..."
+            //
+            // Native:  deviceDescriptor            string, containing a Json encoded "capabilities" name/value pair represented by an escaped Json string
+            //                                      eg "{\"deviceName\":\"Oculus Quest\", ..."
+            //
+            // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals() we
+            // reconstruct an escaped string and make an escaped JsonParser.JsonString and use that for the comparison instead.
+            //
+            var builder = new StringBuilder();
+            var length = theString.Length;
+            var hasEscapes = false;
+            for (var j = 0; j < length; ++j)
+            {
+                var ch = theString[j];
+                if (ch == '\\' || ch == '\"')
+                {
+                    builder.Append('\\');
+                    hasEscapes = true;
+                }
+                builder.Append(ch);
+            }
+            var jsonStringWithEscapes = new JsonParser.JsonString
+            {
+                text = builder.ToString(),
+                hasEscapes = hasEscapes
+            };
+            return jsonStringWithEscapes;
+        }
+
         private InputDevice TryMatchDisconnectedDevice(string deviceDescriptor)
         {
             for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
@@ -2491,7 +2601,7 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
                     continue;
-                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", description.capabilities, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", MakeEscapedJsonString(description.capabilities), deviceDescriptor))
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("serial", description.serial, deviceDescriptor))
                     continue;
@@ -2609,7 +2719,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, k_InputOnBeforeUpdateMarker, "InputSystem.onBeforeUpdate");
         }
 
         /// <summary>
@@ -2724,14 +2834,14 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
-                "InputSystem.onSettingsChange");
+                k_InputOnSettingsChangeMarker, "InputSystem.onSettingsChange");
         }
 
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
 
         #endif
@@ -3348,7 +3458,7 @@ namespace UnityEngine.InputSystem
                     if (m_EventListeners.length > 0)
                     {
                         DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                            new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
+                            new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
                         if (currentEventReadPtr->handled)
@@ -3490,7 +3600,7 @@ namespace UnityEngine.InputSystem
                                 ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices,
                                     ref m_DisconnectedDevicesCount, device);
                                 DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                    device, InputDeviceChange.Disconnected, "InputSystem.onDeviceChange");
+                                    device, InputDeviceChange.Disconnected, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             }
 
                             break;
@@ -3500,7 +3610,7 @@ namespace UnityEngine.InputSystem
                             device.NotifyConfigurationChanged();
                             InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
                             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
+                                device, InputDeviceChange.ConfigurationChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             break;
 
                         case DeviceResetEvent.Type:
@@ -3616,7 +3726,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
-                "InputSystem.onAfterUpdate");
+                k_InputOnAfterUpdateMarker, "InputSystem.onAfterUpdate");
         }
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
@@ -3797,7 +3907,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
-                device, eventPtr, "InputSystem.onDeviceStateChange");
+                device, eventPtr, k_InputOnDeviceSettingsChangeMarker, "InputSystem.onDeviceStateChange");
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
