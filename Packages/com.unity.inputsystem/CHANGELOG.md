@@ -17,17 +17,18 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 - Fixed Package compilation when Unity Analytics module is not enabled on 2022.3. [ISXB-996](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-996)
 - Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
-
-### Added
-- Added Hinge Angle sensor support for foldable devices.
-- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
+- Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off. [ISXB-586](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-586)
+- Improved performance of disconnected device activation (ISX-1450)
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
 
 ### Added
+- Added Hinge Angle sensor support for foldable devices.
+- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
 - Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
 - Added automatic loading of custom extensions of InputProcessor, InputInteraction and InputBindingComposite [ISXB-856]](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-856).
+- Added an IME Input sample scene.
 
 ## [1.10.0] - 2024-07-24
 
@@ -208,8 +209,8 @@ however, it has to be formatted properly to pass verification tests.
 - Make Project-wide Actions the default actions for Player Input.
 
 ### Added
-- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
-- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android.
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac).
 - Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 - Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
 
