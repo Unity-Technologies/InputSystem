@@ -38,8 +38,9 @@
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
-{% endfor %} # category
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # platforms_win
+
 {% for platform in platforms_nix %}
 {% for category in test_category %}
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
@@ -75,9 +76,9 @@
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
-{% endfor %}
-{% endfor %}
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # platforms_nix
+{% endfor %} # editors
 
 {% for editor in editors %}
 {% for category in test_category %}
@@ -117,7 +118,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     logs:
         paths:
           - "build/test-results/**"
-{% endfor %} #category
+{% endfor %} # test_category
 
 build_tvos_{{ editor.version }}:
   name: Build - {{ editor.version }} - tvOS
@@ -206,10 +207,9 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
     logs:
       paths:
         - "build/test-results/**"
-{% endfor %} #category
-{% endfor %}
-
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # scripting_backends
+{% endfor %} # editors
 
 all_tests:
   name: All Tests  
