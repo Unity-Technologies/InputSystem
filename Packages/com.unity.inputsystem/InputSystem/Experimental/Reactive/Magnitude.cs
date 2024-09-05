@@ -16,6 +16,8 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void OnNext(T value)
         {
+            
+            
             //NumericPolicies.Instance.Magnitude(value);
         }
     }
@@ -33,6 +35,10 @@ namespace UnityEngine.InputSystem.Experimental
         
         public IDisposable Subscribe(IObserver<T> observer)
         {
+            // TODO One would need to establish how to treat T here or already provided the cast
+            
+            
+            
             throw new NotImplementedException();
         }
 
@@ -54,6 +60,8 @@ namespace UnityEngine.InputSystem.Experimental
 
     public static class MagnitudeExtensionMethods
     {
+        // TODO Figure this out, basically if we had an interface for nodes which would support this we could do it without proper interface constraints, but we need to move computation to node 
+        
         public static Magnitude<TSource, float> Magnitude<TSource>(this TSource source)
             where TSource : IObservableInputNode<float>, IDependencyGraphNode
         {

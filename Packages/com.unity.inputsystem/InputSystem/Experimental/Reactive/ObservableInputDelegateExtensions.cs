@@ -44,6 +44,8 @@ namespace UnityEngine.InputSystem.Experimental
             return subscription;
         }
         
+        // TODO If we have C#11 we might do public static IDisposable Subscribe<T>(this IObservableInput<T> observable, ref T field)
+        
         /*public static IDisposable Subscribe<T, TSource>(this TSource observable, Action<T> action, Context context = null) 
             where T : struct 
             where TSource : IObservableInputNode<T>

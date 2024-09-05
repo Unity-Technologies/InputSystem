@@ -56,6 +56,22 @@ namespace UnityEngine.InputSystem.Experimental
         public void SetPlayer(uint playerId);
     }
     
+    // TODO Continuous would need to to cache result to fire this would be convenient but may also be unnecessary overhead if we desire to interaction.
+    // TODO Best use case is WASD to move (sampled and time scaled) and mouse delta (relative) on the same binding.
+    // TODO Do we need absolute and relative Vector2?
+    // 
+    // InputBinding<Vector2> relativeMovement;
+    // relativeMovement.AddBinding(Gamepad.leftStick.Last()); // E.g. (1.0f, 0.0f)
+    // relativeMovement.AddBinding(Mouse.delta.Sum().Last()); // Eg. (1f + 2f + 3f, 0.0f)
+    
+    // TODO Consider usages to support aggregated versions out of the box.
+    //      E.g. this means sample-and-hold for absolute controls and Sum for relative controls.
+    // TODO Basically backend could have a 2 element array for aggregated if only one consumer context
+    
+    // TODO Note that Sum() is accumulated as we go. Last()
+    //
+    // TODO Consider allowing subscribe with ref field
+    
     public static class ContinuousExtensions
     {
         public static TSource Continuous<TSource>(this TSource source) 

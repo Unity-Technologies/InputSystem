@@ -5,48 +5,82 @@ using Unity.PerformanceTesting;
 
 namespace Tests.InputSystem.Experimental.Performance
 {
+    // This is a test fixture for micro-benchmarking various approaches to callbacks.
+    // Out of these it currently looks like multicast delegate is 3 times faster but should
+    // be tested on optimized build. Problem with multicast delegate is its GC pressure related
+    // to copy-on-write semantics.
+    [Category("Experimental")]
+    [TestFixture]
     public class CallbacksPerformanceTests
     {
+        private const int kSequenceLength = 100;
+        private const int kHandlerCount = 10;
+        
         private static int[] _sequence;
+        private static bool[] _add;
+        private static int _expected;
+        private static int _actual;
 
-        interface IInvokable
+        public interface IInvokable
         {
-            public int Invoke();
+            public void Invoke();
 
-            public void Setup(Random random);
+            public void Setup();
         }
         
-        private sealed class EventHandlerSubject
+        private static class Operations
         {
-            
+            public static void Add(int x) => _actual += x;
+            public static void Subtract(int x) => _actual -= x;
         }
-
-        public static class Operations
+        
+        private sealed class MulticastDelegateSubject : IInvokable
         {
-            public static void Add(ref int sum, int x) => sum += x;
-            public static void Subtract(ref int sum, int x) => sum -= x;
-        }
+            private delegate void Aggregate(int x);
+            private Aggregate m_Callbacks;
+            private static readonly Aggregate Add = Operations.Add;
+            private static readonly Aggregate Subtract = Operations.Subtract;
 
-        private sealed class DelegateSubject : IInvokable
-        {
-            public delegate void Aggregate(ref int sum, int x);
-            public List<Aggregate> callbacks = new List<Aggregate>();
-
-            private static readonly Aggregate add = Operations.Add;
-            private static readonly Aggregate subtract = Operations.Subtract;
-
-            public int Invoke()
+            public void Invoke()
             {
-                var sum = 0;
-                for (var i = 0; i < callbacks.Count; ++i)
-                    callbacks[i].Invoke(ref sum, _sequence[i]);
-                return sum;
+                for (var i=0; i < kSequenceLength; ++i)
+                    m_Callbacks.Invoke(_sequence[i]);
             }
 
-            public void Setup(Random random)
+            public void Setup()
             {
-                var doAdd = random.Next(2) > 0;
-                callbacks.Add(doAdd ? add : subtract);
+                m_Callbacks = _add[0] ? Add : Subtract;
+                for (var i = 1; i < _add.Length; ++i)
+                {
+                    if (_add[i])
+                        m_Callbacks += Add;
+                    else
+                        m_Callbacks += Subtract;
+                }
+            }
+        }
+        
+        private sealed class DelegateSubject : IInvokable
+        {
+            private delegate void Aggregate(int x);
+            private readonly List<Aggregate> m_Callbacks = new List<Aggregate>();
+            private static readonly Aggregate Add = Operations.Add;
+            private static readonly Aggregate Subtract = Operations.Subtract;
+
+            public void Invoke()
+            {
+                for (var i = 0; i < kSequenceLength; ++i)
+                {
+                    for (var j = 0; j < kHandlerCount; ++j)
+                        m_Callbacks[j].Invoke(_sequence[i]);
+                }
+            }
+
+            public void Setup()
+            {
+                // For each entry of sequence we want to perform
+                for (var i=0; i < _add.Length; ++i)
+                    m_Callbacks.Add(_add[i] ? Add : Subtract);
             }
         }
 
@@ -54,64 +88,88 @@ namespace Tests.InputSystem.Experimental.Performance
         {
             public interface ICallback
             {
-                public void Aggregate(ref int sum, int x);
+                public void Aggregate(int x);
             }
 
-            public class Add : ICallback
+            private class AddCallback : ICallback
             {
-                public void Aggregate(ref int sum, int x) => sum += x;
+                public void Aggregate(int x) => _actual += x;
             }
 
-            public class Subtract : ICallback
+            private class SubtractCallback : ICallback
             {
-                public void Aggregate(ref int sum, int x) => sum += x;
+                public void Aggregate(int x) => _actual -= x;
             }
 
-            private static readonly Add add = new Add();
-            private static readonly Subtract subtract = new Subtract();
-            public List<ICallback> callbacks = new List<ICallback>();
+            private static readonly AddCallback Add = new AddCallback();
+            private static readonly SubtractCallback Subtract = new SubtractCallback();
+            private readonly List<ICallback> m_Callbacks = new List<ICallback>();
             
-            public int Invoke()
+            public void Invoke()
             {
-                var sum = 0;
-                for (var i = 0; i < callbacks.Count; ++i)
-                    callbacks[i].Aggregate(ref sum, _sequence[i]);
-                return sum;
+                for (var i = 0; i < kSequenceLength; ++i)
+                {
+                    for (var j = 0; j < kHandlerCount; ++j)
+                        m_Callbacks[j].Aggregate(_sequence[i]);
+                }
             }
 
-            public void Setup(Random random)
+            public void Setup()
             {
-                var doAdd = random.Next(2) > 0;
-                callbacks.Add(doAdd ? add : subtract);
+                for (var i=0; i < _add.Length; ++i)
+                    m_Callbacks.Add(_add[i] ? Add : Subtract);
             }
         }
         
         [OneTimeSetUp]
-        void OneTimeSetUp()
+        public static void OneTimeSetUp()
         {
-            const int n = 100;
             var random = new Random(0);
-            _sequence = new int[n];
-            for (var i = 0; i < n; ++i)
-            {
+            
+            _sequence = new int[kSequenceLength];
+            for (var i = 0; i < kSequenceLength; ++i)
                 _sequence[i] = random.Next(10);
+            
+            _add = new bool[kHandlerCount];
+            for (var i = 0; i < kHandlerCount; ++i)
+                _add[i] = random.Next(2) > 0;
+
+            _expected = 0;
+            for (var i = 0; i < kSequenceLength; ++i)
+            {
+                for (var j = 0; j < kHandlerCount; ++j)
+                {
+                    if (_add[j])
+                        _expected += _sequence[i];
+                    else
+                        _expected -= _sequence[i];    
+                }
             }
         }
         
         public static object[] CallbackCases =
         {
+            new object[] { new MulticastDelegateSubject() },
+            new object[] { new DelegateSubject() },
             new object[] { new InterfaceSubject() },
         };
-        
+
         [Test, Performance]
         [TestCaseSource(nameof(CallbackCases))]
-        [Category("Experimental")]
-        void Callbacks(IInvokable subject)
+        public void Callbacks(IInvokable subject)
         {
-            var random = new Random(0);
-            subject.Setup(random);
-            var result = subject.Invoke();
-            Assert.That(result, Is.EqualTo(123));
+            subject.Setup();
+            
+            Measure.Method(() =>
+                {
+                    _actual = 0;
+                    subject.Invoke();
+                })
+                .MeasurementCount(100)
+                .WarmupCount(5)
+                .Run();
+            
+            Assert.That(_actual, Is.EqualTo(_expected));
         }
     }
 }

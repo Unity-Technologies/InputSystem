@@ -302,7 +302,7 @@ namespace Tests.InputSystem
         {
             //[SerializeField] private int x;
             //[SerializeField] private int y;
-            [SerializeField] public ObservableInputNode<Vector2> node;
+            [SerializeField] public ObservableInput<Vector2> node;
         }
         
         [Test]

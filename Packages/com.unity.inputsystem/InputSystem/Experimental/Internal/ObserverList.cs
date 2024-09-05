@@ -483,6 +483,10 @@ namespace UnityEngine.InputSystem.Experimental
             : this(new [] { disposable1, disposable2 })
         { }
 
+        public ObserverList2(IDisposable disposable1, IDisposable disposable2, IDisposable disposable3, IDisposable disposable4)
+            : this(new [] { disposable1, disposable2, disposable3, disposable4 })
+        { }
+        
         public ObserverList2(IDisposable[] disposables)
         {
             m_Observers = null;

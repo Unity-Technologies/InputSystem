@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEditor;
 
@@ -8,7 +11,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public class NodeGenerator
     {
-        private const string kHeader =
+        private const string kSourceHeader =
             @"// WARNING: This is an auto-generated file. Any manual edits will be lost.
 using System;
 using System.Buffers;
@@ -16,7 +19,10 @@ using System.Diagnostics.CodeAnalysis;
 
 using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions could be incorporated
 
-namespace UnityEngine.InputSystem.Experimental
+";
+        
+        private const string kSourceTemplate =
+            @"namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
     /// TemplateSummaryDoc
@@ -140,52 +146,113 @@ namespace UnityEngine.InputSystem.Experimental
                 .Replace("TOut", outputType, StringComparison.Ordinal);
         }
         
-        private static string Generate2(string filePath, string @namespace)
+        private static string Generate2(in Settings settings)
         {
-            var nodeName = "Process";                               // Derive via reflection
+            var nodeName = settings.name;                      // Derive via reflection
             var inputType = "bool";                                 // Derive via reflection of marked argument
             var outputType = "InputEvent";                          // Derive via implemented interfaces via reflection
             var extensionsName = nodeName + "Extensions";     // Fixed default
-            var fullNodeName = $"{@namespace}.{nodeName}{{TSource}}"; // Fully qualified name
+            var fullNodeName = $"{settings.@namespace}.{nodeName}{{TSource}}"; // Fully qualified name
 
             var sb = new StringBuilder();
-            sb.Append(Replace(kHeader, nodeName, fullNodeName, inputType, outputType));
+            sb.Append(kSourceHeader);
+            sb.Append(Replace(kSourceTemplate, settings.name, fullNodeName, inputType, outputType));
             return sb.ToString();
+        }
+        
+        static IEnumerable<Type> GetTypesWithAttribute(Assembly assembly, Type attributeType) {
+            foreach(Type type in assembly.GetTypes()) {
+                if (type.GetCustomAttributes(attributeType, true).Length > 0) {
+                    yield return type;
+                }
+            }
         }
         
         [MenuItem("Debug/Generate")]
         public static void Generate()
         {
+            var type = GetTypesWithAttribute(Assembly.GetAssembly(typeof(InputNodeAttribute)), typeof(InputNodeAttribute)).FirstOrDefault();
+
+            var attribute = type.GetCustomAttributes<InputNodeAttribute>().First();
+
+            //type.GetGenericArguments();
+            var onNextMethodName = "OnNext";
+            var methods = type.GetMethods();
+            for (var i = 0; i < methods.Length; ++i)
+            {
+                var method = methods[i];
+                if (method.Name.Equals("OnNext"))
+                {
+                    if (method.ReturnType.Name != "Void")
+                    {
+                        throw new Exception(
+                            $"Invalid return type for method \"{onNextMethodName}\" must be 'void' but was '{method.ReturnType}'.");    
+                    }
+                    
+                    var parameters = method.GetParameters();
+                    
+                    var genericArguments = method.GetGenericArguments();
+                    for (var j = 0; j < genericArguments.Length; ++j)
+                    {
+                        var genericArgument = genericArguments[j];
+                        var name = genericArgument.Name;
+                    }
+                }
+            }
+            
+            var settings = new Settings()
+            {
+                @namespace = type.Namespace,
+                name = attribute.name,
+                path = "Packages/com.unity.inputsystem/InputSystem/Experimental/Reactive/Generated.cs",
+                type = type
+            };
+            
+            Generate(settings);
+        }
+
+        internal static void Generate(in Settings settings)
+        {
+            // Extract settings
+            //var @namespace = settings.@namespace ?? "UnityEngine.InputSystem.Experimental";
+            //var path = settings.path ?? "Packages/com.unity.inputsystem/InputSystem/Experimental/Reactive/Generated.cs"; 
+            
             var stopwatch = Stopwatch.StartNew();
             
-            var packageNamespace = "UnityEngine.InputSystem.Experimental";
-            var filePath = $"Packages/com.unity.inputsystem/InputSystem/Experimental/Reactive/Generated.cs";
-
             try
             {
                 //Generate(destinationFilePath, packageNamespace);
-                var newContent = Generate2(filePath, packageNamespace);
-                var currentContent = File.Exists(filePath) ? File.ReadAllText(filePath) : null;
+                var newContent = Generate2(settings);
+                var currentContent = File.Exists(settings.path) ? File.ReadAllText(settings.path) : null;
                 if (!newContent.Equals(currentContent))
                 {
-                    File.WriteAllText(filePath, newContent);
+                    // TODO Check that it contains auto-header if exists to avoid overwriting user file?
+                    File.WriteAllText(settings.path, newContent);
                     
                     stopwatch.Stop();
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
-                    LogFileMessage(LogType.Log, filePath, $"successfully generated in {elapsed} seconds.");
+                    LogFileMessage(LogType.Log, settings.path, $"successfully generated in {elapsed} seconds.");
                 }
                 else
                 {
-                    LogFileMessage(LogType.Log, filePath, "already up to date");
+                    LogFileMessage(LogType.Log, settings.path, "already up to date");
                 }
             }
             catch (Exception e)
             {
-                LogFileMessage(LogType.Error, filePath, "could not be generated due to an unexpected exception");
+                LogFileMessage(LogType.Error, settings.path, "could not be generated due to an unexpected exception");
                 Debug.LogException(e);
             }
             
             stopwatch.Stop();
+        }
+
+        internal struct Settings
+        {
+            public string @namespace { get; set; }
+            public string path { get; set; }
+            public string name { get; set; }
+            public Type type { get; set; }
         }
 
         private static string Generate(string filePath, string @namespace)

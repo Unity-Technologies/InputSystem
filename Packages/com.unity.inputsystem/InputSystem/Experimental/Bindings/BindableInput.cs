@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO This should be a serializable struct
     // TODO This is a node that doesn't really do anything?! It would just provide an aggregate subscription
     [Serializable]
-    public class BindableInput<T> : ScriptableObject, IObservableInput<T> 
+    public class BindableInput<T> : /*ScriptableObject,*/ IObservableInput<T> 
         where T : struct
     {
         [NonSerialized] private IObservableInput<T>[] m_Bindings;

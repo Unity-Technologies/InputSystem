@@ -239,15 +239,15 @@ namespace Tests.InputSystem.Experimental
         [Test]
         public void Output_Write_Direct()
         {
-            Gamepad.RumbleHaptic.Offer(1.0f);
+            //Gamepad.RumbleHaptic.Offer(1.0f);
             throw new NotImplementedException();
         }
         
         [Test]
         public void Output_Write_Indirect() // TODO Generalize instead?
         {
-            var rumble = new BindableOutput<float>(Gamepad.RumbleHaptic);
-            rumble.Offer(1.0f);
+            //var rumble = new BindableOutput<float>(Gamepad.RumbleHaptic);
+            //rumble.Offer(1.0f);
             
             throw new NotImplementedException();
         }

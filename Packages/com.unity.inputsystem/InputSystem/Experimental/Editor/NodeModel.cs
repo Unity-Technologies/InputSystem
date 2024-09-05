@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Experimental
                 if (interfaceTypes.Length == 1)
                 {
                     valueType = interfaceTypes[0];
-                    concreteType = typeof(ObservableInputNode<>).MakeGenericType(valueType);
+                    concreteType = typeof(ObservableInput<>).MakeGenericType(valueType);
                         
                     // TODO Should only evaluate for constructor arguments? Or should we use this only to attempt makeing a concerete type
                     // We have determined that the current generic argument is a constraint on an input type. Make sure our concrete type fulfills all other constraints

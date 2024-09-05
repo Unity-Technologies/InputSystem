@@ -5,8 +5,12 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO If underlying sources are relative we need to aggregate all samples.
     // TODO We need to register ourself to be poked when we have processed underlying.
     
-    public struct Last
+    public static class LastExtensions
     {
-        
+        public static TSource Last<TSource>(this TSource source)
+            where TSource : IObservableInput
+        {
+            return source;
+        }
     }
 }

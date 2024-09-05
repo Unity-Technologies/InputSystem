@@ -25,6 +25,8 @@ namespace UnityEngine.InputSystem.Experimental
     
     /// <summary>
     /// This provides a temporary workaround for .NET 8 generic math support.
+    /// Similar workaround to https://jonskeet.uk/csharp/miscutil/usage/genericoperators.html and hence cannot provide
+    /// compile-time safety until C# INumber and similar solution is available.
     /// </summary>
     internal struct NumericPolicies : 
         INumericPolicy<int>, 

@@ -41,7 +41,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         D = UnityEngine.InputSystem.Key.D,
         C = UnityEngine.InputSystem.Key.C,
         LeftCtrl = UnityEngine.InputSystem.Key.LeftCtrl,
-        Space = UnityEngine.InputSystem.Key.Space
+        Space = UnityEngine.InputSystem.Key.Space,
+        Escape = UnityEngine.InputSystem.Key.Escape
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 4)]
@@ -124,7 +125,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         /// <summary>
         /// An observable aggregate device of all device instances present on the system.
         /// </summary>
-        public static ObservableInputNode<KeyboardState> any = new(Experimental.Usages.Devices.Keyboard,
+        public static ObservableInput<KeyboardState> any = new(Experimental.Usages.Devices.Keyboard,
             "Keyboard");
         
         // TODO public static ReadOnlySpan<Keyboard> devices => GetDevices(Context.instance);
@@ -142,15 +143,17 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         private static readonly ConvertFunc<KeyboardState, bool> GetKeyC = (state) => state.GetKey(Key.C);
         private static readonly ConvertFunc<KeyboardState, bool> GetKeyLeftCtrl = (state) => state.GetKey(Key.LeftCtrl);
         private static readonly ConvertFunc<KeyboardState, bool> GetKeySpace = (state) => state.GetKey(Key.Space);
+        private static readonly ConvertFunc<KeyboardState, bool> GetKeyEscape = (state) => state.GetKey(Key.Escape);
         
         // Individual key proxies
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> W = any.Convert(GetKeyW);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> A = any.Convert(GetKeyA);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> S = any.Convert(GetKeyS);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> D = any.Convert(GetKeyD);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> C = any.Convert(GetKeyC);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> LeftCtrl = any.Convert(GetKeyLeftCtrl);
-        public static Convert<ObservableInputNode<KeyboardState>, KeyboardState, bool> Space = any.Convert(GetKeySpace);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> W = any.Convert(GetKeyW);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> A = any.Convert(GetKeyA);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> S = any.Convert(GetKeyS);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> D = any.Convert(GetKeyD);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> C = any.Convert(GetKeyC);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> LeftCtrl = any.Convert(GetKeyLeftCtrl);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Space = any.Convert(GetKeySpace);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Escape = any.Convert(GetKeyEscape);
         
         // TODO Should we build the decoding into the type, e.g. ObservableInputCollection<Keyboard, Key, bool>(Usages.Keyboard) keys;
         // Keyboard.keys[Key.A].Subscribe(); // TODO This can provide a decoder  
@@ -170,15 +173,14 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         //public static ObservableInputNode<bool> A = new(Usages.Keyboard.a, "A");
         //public static ObservableInputNode<bool> S = new(Usages.Keyboard.s, "S");
         //public static ObservableInputNode<bool> D = new(Usages.Keyboard.d, "D");
-        public static ObservableInputNode<bool> Q = new(Usages.Keyboard.q, "Q");
-        public static ObservableInputNode<bool> E = new(Usages.Keyboard.e, "E");
-        public static ObservableInputNode<bool> UpArrow = new(Usages.Keyboard.upArrow, "Up Arrow");
-        public static ObservableInputNode<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
-        public static ObservableInputNode<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
-        public static ObservableInputNode<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
-        public static ObservableInputNode<bool> Escape = new(Usages.Keyboard.escape, "Escape");
-        public static ObservableInputNode<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
-        public static ObservableInputNode<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
+        public static ObservableInput<bool> Q = new(Usages.Keyboard.q, "Q");
+        public static ObservableInput<bool> E = new(Usages.Keyboard.e, "E");
+        public static ObservableInput<bool> UpArrow = new(Usages.Keyboard.upArrow, "Up Arrow");
+        public static ObservableInput<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
+        public static ObservableInput<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
+        public static ObservableInput<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
+        public static ObservableInput<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
+        public static ObservableInput<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
         //public static ObservableInputNode<bool> Shift = new(Usages.Keyboard.shift, "Shift");
         //public static ObservableInputNode<bool> Control = new(Usages.Keyboard.control, "Control");
         //public static ObservableInputNode<bool> Alt = new(Usages.Keyboard.alt, "Alt");

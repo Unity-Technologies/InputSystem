@@ -27,62 +27,23 @@ namespace UnityEngine.InputSystem.Experimental
     //      Should likely compare the two variants in a benchmark.
     //      Stream memory could easily be allocated from a native memory pool.
 
-    public static class ObservableInput
+
+    public interface IMagnitude
     {
-        private class InternalEmptyDisposable : IDisposable
-        {
-            public void Dispose()
-            {
-            }
-        }
-        
-        private static readonly InternalEmptyDisposable EmptyDisposable = new InternalEmptyDisposable();
-        
-        /*private class ObservableInputArray<T> : IObservableInput<T> 
-            where T : struct
-        {
-            private readonly T[] m_Data;
-
-            public ObservableInputArray(T[] data)
-            {
-                m_Data = data;
-            }
-
-            public void Dispose()
-            {
-                // Nothing
-            }
-            
-            public IDisposable Subscribe(IObserver<T> observer)
-            {
-                return Subscribe(Context.instance, observer);
-            }
-
-            public IDisposable Subscribe(Context context, IObserver<T> observer)
-            {
-                for (var i=0; i < m_Data.Length; ++i)
-                    observer.OnNext(m_Data[i]);
-                observer.OnCompleted();
-                return EmptyDisposable;
-            }
-        }*/
-        
-        /*public static IObservableInput<T> Create<T>(T[] values) where T : struct
-        {
-            return new ObservableInputArray<T>(values);
-        }*/
-
-        /*public static IObservableInput<T> Create<T>(params T[] values) where T : struct
-        {
-            return new ObservableInputArray<T>(values);
-        }*/
-        
-        /*public static IObservableInput<T> Merge<T>(IObservableInput<T> first, IObservableInput<T> second) where T : struct
-        {
-            return new Multiplexer<T>(first, second);
-        }*/
-
+        public float Magnitude();
     }
+
+    // TODO The benefit of IObserver<T> is that we can inspect the type that is subscribing to us, basically we can iterate bottom-up and build the graph. Explore this and see if it can help us.
+    /*public struct ObservableVector2Input : IMagnitude 
+    {
+        public float Magnitude() =>
+    }*/
+
+    /*public struct ObservableNumberInput<T> 
+        where T : struct, IComparable<T>, struct
+    {
+        
+    }*/
     
     // TODO This is the proxy for stream context, hence we should follow the same pattern?!
     // TODO Should really have key and not usage.... Not necessarily, if this represents a blue print. But makes more sense to let this be specific and let deviceId = 0 represents the set.
@@ -90,14 +51,14 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO See if we can make this readonly again (This isn't really a node, but a node proxy)
     // Note that ObservableInput is equatable based on underlying usage.
     [Serializable]
-    public struct ObservableInputNode<T> : IObservableInputNode<T>, IEquatable<ObservableInputNode<T>>, IUnsafeObservable<T>
+    public struct ObservableInput<T> : IObservableInputNode<T>, IEquatable<ObservableInput<T>>, IUnsafeObservable<T>
         where T : struct
     {
         [SerializeField] private Usage m_Usage;
         [SerializeField] private Usage m_SourceUsage;
         [SerializeField] private Field m_Field;
         
-        public ObservableInputNode(Usage usage, string displayName = null, Field field = default, Usage sourceUsage = default)
+        public ObservableInput(Usage usage, string displayName = null, Field field = default, Usage sourceUsage = default)
         {
             if (usage == Usage.Invalid)
                 throw new ArgumentException(nameof(usage) + " is not a valid usage.");
@@ -119,7 +80,8 @@ namespace UnityEngine.InputSystem.Experimental
             this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required"); // TODO Consider getting rid of it. Replace with symbol backed by optional assembly?!.
         }
 
-        public Usage usage => m_Usage;
+        public readonly Usage usage => m_Usage;
+        public readonly Field field => m_Field;
 
         public readonly IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
             where TObserver : IObserver<T>
@@ -167,9 +129,7 @@ namespace UnityEngine.InputSystem.Experimental
         
         /// <inheritDoc />
         public string displayName { get; }
-
-        /// <inheritDoc />
-        //public int nodeId => m_NodeId;
+        
         /// <inheritDoc />
         public int childCount => 0;
         /// <inheritDoc />
@@ -180,13 +140,13 @@ namespace UnityEngine.InputSystem.Experimental
         #region IEquatable<T>
         
         /// <inheritDoc />
-        public bool Equals(IDependencyGraphNode other) => other is ObservableInputNode<T> otherNode && Equals(otherNode);
+        public bool Equals(IDependencyGraphNode other) => other is ObservableInput<T> otherNode && Equals(otherNode);
 
         /// <inheritDoc />
-        public bool Equals(ObservableInputNode<T> other) => m_Usage.Equals(other.m_Usage);   
+        public bool Equals(ObservableInput<T> other) => m_Usage.Equals(other.m_Usage);   
 
         /// <inheritDoc />
-        public override bool Equals(object obj) => obj is ObservableInputNode<T> other && Equals(other);
+        public override bool Equals(object obj) => obj is ObservableInput<T> other && Equals(other);
         /// <inheritDoc />
         public override int GetHashCode() => m_Usage.GetHashCode();
 

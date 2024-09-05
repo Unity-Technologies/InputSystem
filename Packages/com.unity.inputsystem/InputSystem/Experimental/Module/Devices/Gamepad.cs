@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace UnityEngine.InputSystem.Experimental.Devices
@@ -241,22 +240,25 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         public static Gamepad any => new Gamepad(); // TODO Should this be an observable current gamepad device?
 
+        // TODO Need to make a decision
+        // Gamepad.any.leftStick;
+        // Gamepad.gamepads[0].leftStick;
+        
         /// <summary>
-        /// Returns all currently connected <c>Gamepad</c> devices on the system.
+        /// Returns all currently connected <c>Gamepad</c> devices on the system (if any).
         /// </summary>
-        /// <example>
-        /// <code>
-        /// Gamepad.devices[0].buttons.south;
-        /// </code>
-        /// </example>
+        /// <remarks>
+        /// The return value is never null.
+        /// </remarks>
         public static ReadOnlySpan<Gamepad> devices => GetDevices(Context.instance);
         
         /// <summary>
-        /// Returns all currently connected <c>Gamepad</c> devices on the system for the given context.
+        /// Returns all currently connected <c>Gamepad</c> devices on the system from the perspective of the
+        /// given context.
         /// </summary>
         /// <param name="context">The context for which to retrieve devices.</param>
         /// <returns>ReadOnlySpan&lt;Gamepad&gt; containing all available devices.</returns>
-        public static ReadOnlySpan<Gamepad> GetDevices(Context context) => context.GetDevices<Gamepad>(); // TODO Consider a DeviceCollection<Gamepad> capable of also indexing on ID etc.
+        public static ReadOnlySpan<Gamepad> GetDevices(Context context) => context.GetDevices<Gamepad>(); 
         
         //private Stream<GamepadState> m_Stream;
         // TODO Add API to fetch Gamepad instances via Context as well as instance specific getters for actual control representations
@@ -265,7 +267,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         //public readonly ObservableInput<Vector2> LeftStick = new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick");
         
-        private static readonly ObservableInputNode<bool>[] Buttons = 
+        private static readonly ObservableInput<bool>[] Buttons = 
         {
             new (Usages.GamepadUsages.ButtonSouth, "Gamepad.ButtonSouth"), 
             new(Usages.GamepadUsages.ButtonEast, "Gamepad.ButtonEast"),
@@ -280,36 +282,45 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             new(Usages.GamepadUsages.Right, "Gamepad.Right"),
             new(Usages.GamepadUsages.Down, "Gamepad.Down")
         };
-        private static readonly ObservableInputNode<Vector2>[] Sticks = 
+        private static readonly ObservableInput<Vector2>[] Sticks = 
         {
             new(Usages.GamepadUsages.LeftStick, "Gamepad.LeftStick"),
             new(Usages.GamepadUsages.RightStick, "Gamepad.RightStick")
         };
 
-        public static ReadOnlySpan<ObservableInputNode<bool>> buttons => // TODO Return type would actually be a custom collection type
-            new ReadOnlySpan<ObservableInputNode<bool>>(Buttons);
-        public static ReadOnlySpan<ObservableInputNode<Vector2>> sticks =>
-            new ReadOnlySpan<ObservableInputNode<Vector2>>(Sticks);
+        private static readonly ObservableInput<float>[] Values =
+        {
+            new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger"),
+            new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger")
+        };
+
+        #region Control type accessors
         
-        public static ObservableInputNode<Vector2> leftStick => Sticks[0];
-        public static readonly ObservableInputNode<Vector2> RightStick = Sticks[1];
+        public static ReadOnlySpan<ObservableInput<bool>> buttons => new (Buttons); // TODO Return type would actually be a custom collection type
+        public static ReadOnlySpan<ObservableInput<Vector2>> sticks => new (Sticks);
+        //public static ReadOnlySpan<ObservableInputNode<float>> values = new (Values); // TODO What is the issue?
         
-        public static readonly ObservableInputNode<float> LeftTrigger = new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger");
-        public static readonly ObservableInputNode<float> RightTrigger = new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger");
+        #endregion
         
-        public static readonly ObservableInputNode<bool> ButtonSouth = Buttons[0];
-        public static readonly ObservableInputNode<bool> ButtonEast = Buttons[1];
-        public static readonly ObservableInputNode<bool> ButtonNorth = Buttons[2];
-        public static readonly ObservableInputNode<bool> ButtonWest = Buttons[3];
-        public static readonly ObservableInputNode<bool> LeftShoulder = Buttons[4];
-        public static readonly ObservableInputNode<bool> RightShoulder = Buttons[5];
-        public static readonly ObservableInputNode<bool> Select = Buttons[6];
-        public static readonly ObservableInputNode<bool> Start = Buttons[7];
-        public static readonly ObservableInputNode<bool> Up = Buttons[8];
-        public static readonly ObservableInputNode<bool> Left = Buttons[9];
-        public static readonly ObservableInputNode<bool> Right = Buttons[10];
-        public static readonly ObservableInputNode<bool> Down = Buttons[11];
+        public static ObservableInput<Vector2> leftStick => Sticks[0]; // TODO This should be a specific ObservableInputNodeType allowing access to underlying
+        public static readonly ObservableInput<Vector2> RightStick = Sticks[1];
         
-        public static OutputBindingTarget<float> RumbleHaptic = new(Usages.GamepadUsages.RumbleHaptic); // TODO Move to HapticDevice
+        public static readonly ObservableInput<float> LeftTrigger = new(Usages.GamepadUsages.LeftTrigger, "Gamepad.LeftTrigger");
+        public static readonly ObservableInput<float> RightTrigger = new(Usages.GamepadUsages.RightTrigger, "Gamepad.RightTrigger");
+        
+        public static readonly ObservableInput<bool> ButtonSouth = Buttons[0];
+        public static readonly ObservableInput<bool> ButtonEast = Buttons[1];
+        public static readonly ObservableInput<bool> ButtonNorth = Buttons[2];
+        public static readonly ObservableInput<bool> ButtonWest = Buttons[3];
+        public static readonly ObservableInput<bool> LeftShoulder = Buttons[4];
+        public static readonly ObservableInput<bool> RightShoulder = Buttons[5];
+        public static readonly ObservableInput<bool> Select = Buttons[6];
+        public static readonly ObservableInput<bool> Start = Buttons[7];
+        public static readonly ObservableInput<bool> Up = Buttons[8];
+        public static readonly ObservableInput<bool> Left = Buttons[9];
+        public static readonly ObservableInput<bool> Right = Buttons[10];
+        public static readonly ObservableInput<bool> Down = Buttons[11];
     }
+
+    
 }

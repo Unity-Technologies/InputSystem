@@ -5,7 +5,18 @@ using UnityEngine.InputSystem.Experimental.Internal;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public class ObserverBase<TOut> where TOut : struct
+    public class ObserverCommon
+    {
+        protected void DisposeAndReset(ref IDisposable disposable)
+        {
+            disposable.Dispose();
+            disposable = null;
+        }
+    }
+    
+    // Should priority basically create a gate that stores output and defer 
+    
+    public class ObserverBase<TOut> : ObserverCommon where TOut : struct
     {
         private IObserver<TOut>[] m_Observers;
         private int m_ObserverCount;

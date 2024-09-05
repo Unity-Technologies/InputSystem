@@ -5,9 +5,12 @@ namespace UnityEngine.InputSystem.Experimental
 {
     // TODO Consider enforcing subscription type?
 
+    /// <summary>
+    /// A type-invariant tagging interface for observable input.
+    /// </summary>
+    /// <remarks>This is intentionally empty</remarks>
     public interface IObservableInput
     {
-        // This is a tagging interface
     }
     
     public interface IObservableInput<out T> : IObservableInput

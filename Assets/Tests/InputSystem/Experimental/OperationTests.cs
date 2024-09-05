@@ -368,5 +368,14 @@ namespace Tests.InputSystem.Experimental
             Assert.That(observer.Next[2], Is.EqualTo(new ValueTuple<bool, bool>(false, true)));
             Assert.That(observer.Next[3], Is.EqualTo(new ValueTuple<bool, bool>(false, false)));
         }
+        
+        [Test]
+        public void Compare()
+        {
+            var observer = new ListObserver<bool>();
+            using var subscription = Gamepad.LeftTrigger.GreaterThan(0.5f).Subscribe(m_Context, observer);
+            
+            // TODO Implement
+        }
     }
 }

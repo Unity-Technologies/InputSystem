@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.Experimental
         where TOut : struct
     {
         private TSource m_Source;
-        private ConvertFunc<TIn, TOut> m_Converter;
+        private readonly ConvertFunc<TIn, TOut> m_Converter;
 
         public Convert(TSource source, ConvertFunc<TIn, TOut> converter)
         {
