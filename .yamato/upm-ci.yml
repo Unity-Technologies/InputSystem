@@ -260,7 +260,7 @@ performance_tests_only:
         - branch: develop
           frequency: daily
           rerun: on_new_revision            
-        - branch: master
+        - branch: stable
           frequency: weekly
           rerun: on_new_revision              
 
