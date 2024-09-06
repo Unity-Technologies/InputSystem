@@ -3,27 +3,65 @@ uid: input-system-action-assets
 ---
 # Input Action Assets
 
-- [Creating Input Action Assets](#creating-input-action-assets)
-- [Editing Input Action Assets](#editing-input-action-assets)
+
+# Concept title
+
+First line: Summarize purpose of page in one sentence, starting with
+an active verb. No links or formatting.
+
+One to three paragraphs: Introduce the key takeaways of the body content, in
+order of appearance. No headings, images, or tables.
+
+Final paragraph (optional): Links to related documentation the user
+might be looking for instead.
+
+## Descriptive heading
+
+Use descriptive headings to break up the content and make the page easy to
+scan. Organize content logically and introduce ideas gradually.
+
+### Detailed heading
+
+Don't use headings below H3 level.
+
+## Additional resources
+
+- [Link](related-content-on-Unity-owned-platforms)
+- [Link](related-content-on-Unity-owned-platforms)
+
+--------------------------------------------
+
+
+- [Descriptive heading](#descriptive-heading)
+  - [Detailed heading](#detailed-heading)
+- [Additional resources](#additional-resources)
+- [Project-Wide Actions](#project-wide-actions)
 - [Using Input Action Assets](#using-input-action-assets)
 - [Type-safe C# API Generation](#type-safe-c-api-generation)
+  - [Auto-generating script code for Actions](#auto-generating-script-code-for-actions)
+  - [Using Action Assets with `PlayerInput`](#using-action-assets-with-playerinput)
+  - [Modifying Input Action Assets at runtime](#modifying-input-action-assets-at-runtime)
+  - [The Default Actions Asset](#the-default-actions-asset)
 
-An Input Action Asset is an Asset which contains a set of [Input Actions](Actions.md) definitions and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes). These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
+The Input System stores your configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an [Action Asset](ActionAssets.md) file.
+
+While it's possible to have more than one Action Asset in a project, most projects only ever need a single Action Asset. 
+
+These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
 The input system creates an Action Asset when you set up the [default project-wide actions](ProjectWideActions.md), but you can also create new Action Assets directly in the Project window.
 
-For most common scenarios, you do not need to use more than one Input Action Asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
+For most common scenarios, you do not need to use more than one Input Action Asset. This is because an Action Asset can contain multiple [Action Maps](ActionsEditor.html#configure-action-maps), which each containing a set of actions relevant to the various parts of your project (such as UI navigation, gameplay, etc).
+
+## Project-Wide Actions
+
+The Input System's **project-wide actions** feature allows you to choose an individual Action Asset to be available project-wide, which means the actions within that asset are available more conveniently through the Input System API without needing to set up references to a specific asset.
+
+When you assign an Action Asset as project-wide, it also becomes automatically [preloaded](https://docs.unity3d.com/ScriptReference/PlayerSettings.GetPreloadedAssets.html) when your app starts up, and is kept available until it terminates.
+
+Unless you have specific project requirements that require more than one Action Asset, the recommended workflow is to use a single Action Asset assigned as the project-wide actions.
 
 
-## Creating Input Action Assets
-
-To create an Asset that contains [Input Actions](Actions.md) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
-
-## Editing Input Action Assets
-
-To bring up the Action editor, double-click an `.inputactions` Asset in the Project Browser, or select the __Edit Asset__ button in the Inspector for that Asset. You can have more than one editor window open at the same time, but not for the same Asset.
-
-The Actions Editor which opens is identical to the [Actions Editor in the Project Settings window](ActionsEditor.md).
 
 
 ## Using Input Action Assets

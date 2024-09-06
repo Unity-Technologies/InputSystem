@@ -1,33 +1,51 @@
 ---
 uid: input-system-action-bindings
 ---
-# Input Bindings
+# Action Bindings
 
-* [Composite Bindings](#composite-bindings)
-  * [1D Axis](#1d-axis)
-  * [2D Vector](#2d-vector)
-  * [3D Vector](#3d-vector)
-  * [One Modifier](#one-modifier)
-  * [Two Modifiers](#two-modifiers)
-  * [Writing custom Composites](#writing-custom-composites)
-* [Working with Bindings](#working-with-bindings)
-  * [Looking up Bindings](#looking-up-bindings)
-  * [Changing Bindings](#changing-bindings)
-    * [Applying overrides](#applying-overrides)
-    * [Erasing Bindings](#erasing-bindings)
-    * [Adding Bindings](#adding-bindings)
-    * [Setting parameters](#setting-parameters)
-  * [Interactive rebinding](#interactive-rebinding)
-  * [Saving and loading rebinds](#saving-and-loading-rebinds)
-  * [Restoring original Bindings](#restoring-original-bindings)
-  * [Displaying Bindings](#displaying-bindings)
-* [Control schemes](#control-schemes)
-* [Details](#details)
-  * [Binding resolution](#binding-resolution)
-    * [Binding resolution while Actions are enabled](#binding-resolution-while-actions-are-enabled)
-    * [Choosing which Devices to use](#choosing-which-devices-to-use)
-  * [Conflicting inputs](#conflicting-inputs)
-  * [Initial state check](#initial-state-check)
+- [Composite Bindings](#composite-bindings)
+  - [1D axis](#1d-axis)
+  - [2D vector](#2d-vector)
+  - [3D vector](#3d-vector)
+  - [One Modifier](#one-modifier)
+  - [Two Modifiers](#two-modifiers)
+  - [Writing custom Composites](#writing-custom-composites)
+- [Working with Bindings](#working-with-bindings)
+- [Looking up Bindings](#looking-up-bindings)
+- [Changing Bindings](#changing-bindings)
+  - [Applying overrides](#applying-overrides)
+  - [Erasing Bindings](#erasing-bindings)
+  - [Adding Bindings](#adding-bindings)
+  - [Setting parameters](#setting-parameters)
+- [Interactive rebinding](#interactive-rebinding)
+- [Saving and loading rebinds](#saving-and-loading-rebinds)
+  - [Restoring original Bindings](#restoring-original-bindings)
+  - [Displaying Bindings](#displaying-bindings)
+- [Control Schemes](#control-schemes)
+- [Details](#details)
+  - [Binding resolution](#binding-resolution)
+  - [Conflicting inputs](#conflicting-inputs)
+  - [Initial state check](#initial-state-check)
+
+
+### Bindings
+
+* To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
+* To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
+* To duplicate an existing Binding, either right-click it and select __Duplicate__ from the context menu.
+
+You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
+
+![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
+_The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
+
+If you select a Binding, you can edit its properties in the right-hand pane of the window:
+
+![Binding Properties](Images/BindingProperties.png)
+
+
+
+
 
 An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). For example, the **right trigger** of a gamepad (a control) might be bound to an an action named "accelerate", so that pulling the right trigger causes a car to accelerate in your game.
 
