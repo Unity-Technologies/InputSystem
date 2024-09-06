@@ -1,0 +1,53 @@
+{% metadata_file .yamato/draft-config.metadata %}
+
+sample_publish_agent:
+  type: Unity::VM::osx
+  image: package-ci/mac:stable
+  flavor: m1.mac
+
+---
+
+{% for editor in editors %}
+draft_test_sample_projects_andisolation_{{ editor.version }}:
+  name : "[Draft] Test Publishing Sample Projects (And Isolation) [{{ editor.version }}]"
+  agent:
+    type: {{ sample_publish_agent.type }}
+    image: {{ sample_publish_agent.image }}
+    flavor: {{ sample_publish_agent.flavor }}
+  commands:
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
+  triggers:
+    cancel_old_ci: true
+    expression: ( NOT pull_request.draft ) AND ( pull_request.target eq "develop" )
+  artifacts:
+    UTR_Output.zip:
+      paths:
+        - "upm-ci~/**/*"
+{% endfor %}
+
+{% for editor in editors %}
+draft_test_sample_projects_{{ editor.version }}:
+  name : "[Draft] Test Publishing Sample Projects [{{ editor.version }}]"
+  agent:
+    type: {{ sample_publish_agent.type }}
+    image: {{ sample_publish_agent.image }}
+    flavor: {{ sample_publish_agent.flavor }}
+  commands:
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - pip install unity-downloader-cli --index-url {{ unity_downloader_cli_registry }}    
+    - unity-downloader-cli -c editor -w -u {{ editor.version }}
+    - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh
+  triggers:
+    cancel_old_ci: true
+    expression: ( NOT pull_request.draft ) AND ( pull_request.target eq "develop" )
+  dependencies:
+    - .yamato/draft-upm-pack.yml#draft_pack
+  artifacts:
+    UTR_Output.zip:
+      paths:
+        - "upm-ci~/**/*"
+{% endfor %}
