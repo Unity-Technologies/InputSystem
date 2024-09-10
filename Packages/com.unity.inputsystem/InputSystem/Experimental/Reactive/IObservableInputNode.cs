@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// <remarks>This is intentionally empty</remarks>
     public interface IObservableInput
     {
+        // TODO We would like to do this C#11 (ref fields feature) instead: public ref SubscriptionSettings settings;
     }
     
     public interface IObservableInput<out T> : IObservableInput

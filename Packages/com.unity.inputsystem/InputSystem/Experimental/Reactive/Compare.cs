@@ -71,8 +71,10 @@ namespace UnityEngine.InputSystem.Experimental
         private Compare m_Compare;
         private T m_Comparand;
         
-        public void Initialize([NotNull] IDisposable sourceSubscription, T comparand, Compare compare)
+        public void Initialize([NotNull] Context ctx, [NotNull] IDisposable sourceSubscription, T comparand, Compare compare)
         {
+            context = ctx;
+            
             m_SourceSubscription = sourceSubscription;
             m_Compare = compare;
             m_Comparand = comparand;
@@ -80,8 +82,11 @@ namespace UnityEngine.InputSystem.Experimental
 
         public void Unsubscribe([NotNull] IObserver<bool> observer)
         {
-            if (RemoveObserver(observer)) 
-                DisposeAndReset(ref m_SourceSubscription);
+            if (RemoveObserver(observer))
+            {
+                m_SourceSubscription.Dispose();
+                m_SourceSubscription = null;
+            }
         }
 
         public void OnNext(T value)

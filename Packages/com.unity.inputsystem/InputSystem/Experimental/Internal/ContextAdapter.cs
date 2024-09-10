@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using UnityEngine.InputSystem.Experimental.Devices;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using GamepadState = UnityEngine.InputSystem.Experimental.Devices.GamepadState;
+using KeyboardState = UnityEngine.InputSystem.Experimental.Devices.KeyboardState;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -13,9 +16,14 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     internal static class InputSystemAdapter
     {
-        private const int Keys = ('K' << 24) | ('E' << 16) | ('Y' << 8) | ('S' << 0); // KEYS
-        private const int Mouse = ('M' << 24) | ('O' << 16) | ('U' << 8) | ('S' << 0); // MOUS
-        private const int Gamepad = ('G' << 24) | ('A' << 16) | ('M' << 8) | ('P' << 0); // GAMP
+        // Define four CC codes for state event types since this isn't properly defined in module.
+        // Note that this replicates information defined in native headers.
+        // This should not really exist, module should define these in managed code.
+        private const int Keys = ('K' << 24) | ('E' << 16) | ('Y' << 8) | ('S' << 0);    // 'KEYS'
+        private const int Mouse = ('M' << 24) | ('O' << 16) | ('U' << 8) | ('S' << 0);   // 'MOUS'
+        private const int Gamepad = ('G' << 24) | ('A' << 16) | ('M' << 8) | ('P' << 0); // 'GAMP'
+        
+        #region Development support
         
         private static readonly StringBuilder LogBuffer = new StringBuilder();
         
@@ -34,6 +42,8 @@ namespace UnityEngine.InputSystem.Experimental
         {
             Debug.Log(value);
         }
+        
+        #endregion
 
         private static KeyboardState _previous; // TEMPORARY
         
@@ -67,7 +77,11 @@ namespace UnityEngine.InputSystem.Experimental
                 KeyboardState keyboard;
                 Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(keyboard.keys, state->keys, 16);
                 
+                // TODO Should process deferred calls before doing this one
+                
                 keyboardStreamContext.OnNext(ref keyboard);
+                context.InvokeDeferred();
+                context.InvokeDeferred2();
             }
             
             //foreach (var k in System.Enum.GetValues(typeof(Devices.Key)))
@@ -106,7 +120,7 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO Note that we cannot establish if something changed without a stream, this is the main issue with the single queue approach
             // TODO For now we assume it has changed
             
-            var gamepad = Context.instance.GetOrCreateStreamContext<GamepadState>(Usages.Devices.Gamepad); // TODO Instead consider a dictionary of IObserver<T>, or rather in this case a list of observers since known type?
+            var gamepad = context.GetOrCreateStreamContext<GamepadState>(Usages.Devices.Gamepad); // TODO Instead consider a dictionary of IObserver<T>, or rather in this case a list of observers since known type?
             if (gamepad.observerCount > 0)
             {
                 // Convert to desired format (adapter)
@@ -128,6 +142,7 @@ namespace UnityEngine.InputSystem.Experimental
                     rightTrigger = state->rightTrigger
                 };
                 
+                // Forward data
                 gamepad.OnNext(ref v);
             }
 
@@ -158,6 +173,9 @@ namespace UnityEngine.InputSystem.Experimental
                 case Gamepad:
                     Handle(context, (LowLevel.GamepadState*)@event->state);
                     break;
+                // TODO Add support for more event types
+                default:
+                    break;
             }
         }
         
@@ -166,22 +184,38 @@ namespace UnityEngine.InputSystem.Experimental
         public static unsafe void Handle(UnityEngine.InputSystem.LowLevel.InputEvent* @event)
         {
             var context = Context.instance;
+            var timestamp = @event->time;
             
             switch (@event->type)
             {
-                case LowLevel.StateEvent.Type:
+                case StateEvent.Type:
                     HandleStateEvent(context, (LowLevel.StateEvent*)@event);
                     break;
                 
-                case LowLevel.DeltaStateEvent.Type:
+                case DeltaStateEvent.Type:
                     break;
                 
-                case LowLevel.DeviceConfigurationEvent.Type:
+                case DeviceConfigurationEvent.Type:
                     break;
                 
-                case LowLevel.DeviceRemoveEvent.Type:
+                case DeviceRemoveEvent.Type:
                     break;
             }
+        }
+
+        public static void OnUpdate(InputUpdateType updateType, in InputEventBuffer eventBuffer)
+        {
+            // TODO Consider doing our own processing of the eventBuffer here transforming it into a stream context instead to properly mimic another underlying system. Downside is that it would cost us.
+            // TODO Consider having separate contexts for player and editor to allow both to execute individually
+
+            var updateStartTimestamp = Stopwatch.GetTimestamp();
+            
+            // TODO Process event buffer here instead of requiring callback form InputManager loop
+            
+            // Update input context via the Input System update
+            Context.instance.Update();
+
+            var updateEndTimestamp = Stopwatch.GetTimestamp() - updateStartTimestamp;
         }
     }
 }

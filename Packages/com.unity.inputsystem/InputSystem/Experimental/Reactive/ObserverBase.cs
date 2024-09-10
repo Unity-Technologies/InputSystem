@@ -1,55 +1,41 @@
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Experimental.Internal;
 
 namespace UnityEngine.InputSystem.Experimental
 {
     public class ObserverCommon
     {
-        protected void DisposeAndReset(ref IDisposable disposable)
+        public const int kDefaultPriority = 0;
+        
+        private readonly int m_Priority;
+
+        protected ObserverCommon(int priority = kDefaultPriority)
         {
-            disposable.Dispose();
-            disposable = null;
+            m_Priority = priority;
         }
     }
     
     // Should priority basically create a gate that stores output and defer 
     
-    public class ObserverBase<TOut> : ObserverCommon where TOut : struct
+    public class ObserverBase<TOut> : ObserverCommon 
+        where TOut : unmanaged
     {
+        private SubscriptionSettings m_Settings;
         private IObserver<TOut>[] m_Observers;
         private int m_ObserverCount;
 
-        /*public struct Proxy<TNode, TIn, TSource>
-            where TSource : IObservableInputNode<TIn> 
-            where TIn : struct
-            where TNode : ObserverBase<TOut>, IObserver<TIn>, IUnsubscribe<TOut>, new()
-        {
-            private TSource m_Source;
-            
-            public Proxy([InputPort] TSource source)
-            {
-                m_Source = source;
-            }
-            
-            public IDisposable Subscribe([NotNull] IObserver<TOut> observer) => 
-                Subscribe(Context.instance, observer);
-            
-            public IDisposable Subscribe<TObserver>([NotNull] Context context, [NotNull] TObserver observer)
-                where TObserver : IObserver<TOut>
-            {
-                // TODO Implement node sharing (multi-cast)
+        protected ObserverBase(int priority = kDefaultPriority)
+            : base(priority)
+        { }
 
-                // Construct node instance and register underlying subscriptions.
-                var impl = ObjectPool<TNode>.shared.Rent();
-                impl.Initialize(m_Source.Subscribe(context, impl) ); 
-
-                // Register observer with node and return subscription
-                impl.AddObserver(observer);
-                return new Subscription<TOut>(impl, observer);
-            }
-        }*/
+        /// <summary>
+        /// The associated context.
+        /// </summary>
+        protected Context context { get; set; }
         
         /// <summary>
         /// Adds an observer to the list of observers of this node.
@@ -66,8 +52,8 @@ namespace UnityEngine.InputSystem.Experimental
         /// <summary>
         /// Removes an observer from the list of observers of this node.
         /// </summary>
-        /// <param name="observer"></param>
-        /// <returns></returns>
+        /// <param name="observer">The observer to be removed.</param>
+        /// <returns>true if the observer was the last observer of this node, else false</returns>
         public bool RemoveObserver([NotNull] IObserver<TOut> observer)
         {
             ArrayPool<IObserver<TOut>>.Shared.Remove(ref m_Observers, observer, ref m_ObserverCount);
@@ -99,8 +85,46 @@ namespace UnityEngine.InputSystem.Experimental
         /// <param name="value"></param>
         protected void ForwardOnNext(TOut value)
         {
+            // TODO Shortcuts:
+            // As long as we process a single event at a time...
+            // Only that event may trickle down and trigger reactions in the dependency chain...
+            // If we would call chains with higher priority first, e.g. Ctrl+C when C is pressed, this would allow
+            // "consuming" that C event by aborting processing if Ctrl+C fires.
+            //
+            // Another way of doing it would be to allow all events to fire, and then if there are multiple tentative events with the same eventId only allow that/those with highest priority through.
+            // This wouldn't require any particular order of execution which might be desirable. If no priority is set this would not be done.
+            // A problem is still how to represents a priority on dependency chain, but if do not cache/reuse nodes this becomes simpler, or we exclude priority chains from caching/reuse.
+            // Revisited: Maybe not, the priority is stored at subscription. Hence it sits with the end node. Lets try this.
+            // Future: This could also work will async processing of individual chains since it would require merge/sort on eventId which would be derived.
+            //
+            // Keyboard ----> C -----> Shortcut ----> Pressed
+            //                  -----> Pressed
+            //
+            // One particular problem with this is that it becomes most relevant in end-node, but we cannot really say what is an end node.
+            //
+            // A simpler fix for this particular issue would be to identify that C is part of 2 flows. (Has 2 observers)
+            // If C is part of 2 flows it may result in OnNext propagation depending on state machines of downstream nodes. 
+            // However, this would require reused nodes.
+            if (m_Settings.eventGroupId != 0)
+            {
+                //context.Defer(this, Priority,);
+                // TODO We should move TOut and reference back to node into context, can be do this better via node interface
+                //context.Defer(() => value, m_Settings.eventGroupPriority);
+            }
             for (var i = 0; i < m_ObserverCount; ++i)
                 m_Observers[i].OnNext(value);
+        }
+
+        private void DoForwardOnNext(TOut value)
+        {
+            for (var i = 0; i < m_ObserverCount; ++i)
+                m_Observers[i].OnNext(value);
+        }
+
+        internal unsafe void DeferredForwardOnNext(void* data)
+        {
+            // TODO Assert correct alignment of data
+            DoForwardOnNext(*(TOut*)data);
         }
         
         // TODO These should really be in derived but not sure we should support proper RX

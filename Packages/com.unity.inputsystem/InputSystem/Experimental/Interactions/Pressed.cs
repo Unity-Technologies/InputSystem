@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 impl = new PressedObserver();
                 impl.Initialize(m_Source.Subscribe(context, impl)); // TODO An alternative here would be to utilize unsafe subscription
-                context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
+                //context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
             }
             
             // Note that subscription is done on the actual implementation node where we register observer

@@ -32,6 +32,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             public static readonly Usage LeftShoulder = new(9511593);
             public static readonly Usage RightShoulder = new(9511593);
             public static readonly Usage RumbleHaptic = new(2521315);
+            public static readonly Usage LeftStickHat = new(123897136);
+            public static readonly Usage RightStickHat = new(923897136);
         }
     }
 
@@ -280,7 +282,9 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             new(Usages.GamepadUsages.Up, "Gamepad.Up"),
             new(Usages.GamepadUsages.Left, "Gamepad.Left"),
             new(Usages.GamepadUsages.Right, "Gamepad.Right"),
-            new(Usages.GamepadUsages.Down, "Gamepad.Down")
+            new(Usages.GamepadUsages.Down, "Gamepad.Down"),
+            new(Usages.GamepadUsages.LeftStickHat, "Gamepad.LeftStickHat"),
+            new(Usages.GamepadUsages.RightStickHat, "Gamepad.RightStickHat")
         };
         private static readonly ObservableInput<Vector2>[] Sticks = 
         {
@@ -320,7 +324,12 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         public static readonly ObservableInput<bool> Left = Buttons[9];
         public static readonly ObservableInput<bool> Right = Buttons[10];
         public static readonly ObservableInput<bool> Down = Buttons[11];
+        public static readonly ObservableInput<bool> LeftStickHat = Buttons[12];
+        public static readonly ObservableInput<bool> RightStickHat = Buttons[13];
     }
 
-    
+    public class GamepadSettings
+    {
+        // TODO Should we 
+    }
 }

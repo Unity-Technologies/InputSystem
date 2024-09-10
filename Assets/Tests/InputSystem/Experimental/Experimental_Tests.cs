@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Tests.InputSystem.Experimental;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Experimental;
@@ -19,6 +20,7 @@ using InputEvent = UnityEngine.InputSystem.Experimental.InputEvent;
 using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using Object = UnityEngine.Object;
 
 // TODO Do we need a FixedInput type?
 
@@ -327,6 +329,64 @@ namespace Tests.InputSystem
             Debug.Log(s);
         }
 
+        [Serializable]
+        public class InputBindingPoC : ScriptableObject
+        {
+        }
+        
+        // Pull-based:
+        //
+        // 1. Register all subscriptions with context.
+        // 2. On update, execute all subscriptions (pull) in parallel using DOTS. Output is written into temporary buffer.
+        // 3. Merge all temporary buffers and sort them based on timestamp.
+        // 4. Dispatch output buffer. 
+        
+        // Push-based:
+        // 
+        // 1. On update, dispatch events.
+
+        // TODO We could wrap whole typed struct into a WrappedObservableGraph class object to allow it to be properly type safe and then handle this in derived delegate?
+        
+        // https://coffeebraingames.wordpress.com/2021/07/19/accessing-struct-fields-using-reflection-without-producing-garbage/
+        
+        // Gamepad.leftStick.Pressed()
+        //
+        // Expression is bool 
+        [Test]
+        public void SerializePoCTestBool()
+        {
+            var path = "Assets/SerializePocTest.asset";
+            try
+            {
+                var asset = ScriptableObject.CreateInstance<WrappedScriptableInputBindingInputEvent>();
+                asset.Set(Gamepad.ButtonSouth.Pressed());
+                AssetDatabase.CreateAsset(asset, path);
+                
+                var actual = AssetDatabase.LoadAssetAtPath<WrappedScriptableInputBindingInputEvent>(path);
+                Assert.That(actual, NUnit.Framework.Is.Not.Null);
+                Assert.That(asset.value, NUnit.Framework.Is.EqualTo(Gamepad.ButtonSouth));
+                
+                var actual2 = AssetDatabase.LoadAssetAtPath<ScriptableInputBinding<InputEvent>>(path);
+                Assert.That(actual2, NUnit.Framework.Is.Not.Null);
+            }
+            catch (Exception e)
+            {
+                AssetDatabase.DeleteAsset(path);   
+            }
+        }
+
+        [Test]
+        public void DeserializeJson()
+        {
+            const string kJsonEmpty = "{ }";
+
+            var ctx = new UnityEngine.InputSystem.Experimental.JSON.JsonUtility.JsonContext(kJsonEmpty);
+            ctx.GetEnumerator();
+        }
+        
+        // TODO Add another serialization test verifying it as a more general type.
+        // TODO Add GC memory constraint to the above
+        
         // TODO Verify initial state, e.g. is button already actuated, release triggers release event
         // TODO Verify that initial state is properly recorded so we e.g. may start in actuated state on first sync
         // TODO Local multiplayer, basically a binding filter, but probably good to let sources get assigned to players since physical control makes sense to assign to players. Let devices have a flag.

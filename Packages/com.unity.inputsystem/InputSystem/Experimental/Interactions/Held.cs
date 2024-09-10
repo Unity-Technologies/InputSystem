@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     // TODO We need want a timer callback when sufficient time has passed.
     //      This is either driven by processing an event with timestamp passed or timer event if no callback.
     //      The best implementation is likely native timer output.
-    public readonly struct Held<TSource> : IObservableInputNode<InputEvent>
+    public readonly struct Held<TSource> : IObservableInputNode<InputEvent> // TODO Should we observe a time as well? Or just defer/delay event into the future and cancel if necessary?
         where TSource : IObservableInputNode<bool>
     {
         // TODO This is a class only to be able to receive callbacks via IObserver<bool>
@@ -125,6 +125,13 @@ namespace UnityEngine.InputSystem.Experimental
             where TSource : IObservableInputNode<bool>, IDependencyGraphNode
         {
             return new Held<TSource>(source, duration);
+        }
+        
+        [InputNodeFactory(type=typeof(Held<IObservableInputNode<bool>>))]
+        public static Held<TSource> Held<TSource>(this TSource source)
+            where TSource : IObservableInputNode<bool>, IDependencyGraphNode
+        {
+            return new Held<TSource>(source, TimeSpan.FromMilliseconds(500)); // TODO Use a default setting
         }
     }
 }

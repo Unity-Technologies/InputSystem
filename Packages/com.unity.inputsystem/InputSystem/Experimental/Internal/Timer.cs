@@ -4,7 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public readonly struct MonotonicClock
+    interface IClock
+    {
+        public static TimePoint now { get; }
+    }
+    
+    public readonly struct MonotonicClock : IClock
     {
         private static uint _ticks;
         private static uint _autoTick;
@@ -216,6 +221,7 @@ namespace UnityEngine.InputSystem.Experimental
             
             for (;;)
             {
+                // We need to pop timers until we find the timer of interest
                 var t = m_PriorityQueue.Dequeue();
                 if (t == timer)
                     break;

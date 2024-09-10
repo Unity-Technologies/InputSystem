@@ -3,8 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO We can currently solve generic event collisions based on priority and deferred callbacks.
+    //      However, this requires user to go in and mark such events with priority.
+    //      It might be possible to figure this out since the situation where we do this is basically when two 
+    //      subscription chains share a common source node, i.e. a single events leads to two events fired for the
+    //      same source serial event id. 
+    
     // TODO This is basically AND, redesign as such?
-    public struct Shortcut<TSource> : IObservableInputNode<bool>, IDependencyGraphNode, IUnsafeObservable<bool> where TSource : IObservableInputNode<bool>, IDependencyGraphNode
+    public struct Shortcut<TSource> : IObservableInputNode<bool>, IUnsafeObservable<bool> where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>
         {

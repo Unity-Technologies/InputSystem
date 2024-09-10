@@ -2917,6 +2917,9 @@ namespace UnityEngine.InputSystem
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
+            // TODO Consider injecting here instead
+            Experimental.InputSystemAdapter.OnUpdate(updateType, in eventBuffer);
+            
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).

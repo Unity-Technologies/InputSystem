@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Shouldly;
@@ -184,7 +185,16 @@ namespace UnityEngine.InputSystem.Experimental
             m_Events = new EventStream();
             m_Handle = handle;
             m_TimerManager = new TimerManager();
-
+            
+            m_Deferred = new List<DeferredOnNext>();
+            m_Deferred2 = new List<DeferredOnNext2>();
+            unsafe
+            {
+                m_DeferredBuffer = null;
+            }
+            m_DeferredBufferCapacity = 0;
+            m_DeferredBufferLength = 0;
+            
             var allocator = AllocatorManager.Persistent;
             unsafe
             {
@@ -294,6 +304,16 @@ namespace UnityEngine.InputSystem.Experimental
             // Deallocate associated unsafe context
             unsafe
             {
+                // Deallocate and resset data associated with deferred events
+                if (m_Deferred2 != null)
+                {
+                    UnsafeUtility.Free(m_DeferredBuffer, Allocator.Persistent);
+                    m_DeferredBuffer = null;
+                    m_DeferredBufferCapacity = 0;
+                    m_DeferredBufferLength = 0;
+                }
+                
+                // Deallocate the unsafe context
                 var allocator = m_UnsafeContext->allocator;
                 AllocatorManager.Free(allocator, m_UnsafeContext, sizeof(UnsafeContext), UnsafeUtility.AlignOf<UnsafeContext>());
                 m_UnsafeContext = null;
@@ -311,5 +331,129 @@ namespace UnityEngine.InputSystem.Experimental
         }
 
         public T RentNode<T>() => (T)RentNode(typeof(T));
+        
+        #region Scheduler
+
+        // Currently "event consumption" is solved by deferring events when a node has an associated Event Group.
+        // Deferring events implies that instead of propagating forwarded calls to OnNext down the chain, we
+        // store tentative events in a buffer that we reconsider after we are done executing a certain underlying
+        // event ID that triggered the events. This is to avoid firing multiple events when there is an associated
+        // Event Group and events have been differentiated by non equal Priorities. 
+        //
+        // This might require another approach in case the dependency graph would be executed in an asynchronous
+        // fashion. Then this would potentially have been to inject events back into the main event buffer directly after
+        // the source event ID or at the end, and sort that buffer before initiating callbacks by processing the
+        // buffer a second time without evaluation. 
+        
+        internal interface IDeferred
+        {
+            internal unsafe void DeferredForwardOnNext(void* data);
+        }
+        
+        private struct DeferredOnNext
+        {
+            public Action OnNext;
+            public int Priority;
+        }
+
+        private struct DeferredOnNext2
+        {
+            public IDeferred Deferred;
+            public int Offset;
+            public int Priority;
+        }
+
+        private readonly List<DeferredOnNext> m_Deferred;
+        private readonly List<DeferredOnNext2> m_Deferred2;
+        
+        private const int kDeferredBufferAlignment = 16;
+        private unsafe void* m_DeferredBuffer;
+        private int m_DeferredBufferLength;
+        private int m_DeferredBufferCapacity;
+        
+        public void Defer(Action deferred, int priority)
+        {
+            if (m_Deferred.Count > 0 && m_Deferred[0].Priority < priority)
+                m_Deferred.Clear(); // No need to keep events that would never be fired anyway
+            m_Deferred.Add(new DeferredOnNext() { OnNext = deferred, Priority = priority});
+        }
+
+        private unsafe void Defer(IDeferred deferredEventContext, int priority, void* value, int sizeOf, int alignment)
+        {
+            if (m_Deferred2.Count > 0)
+            {
+                // Ignore deferral request if the event has lower priority than an already deferred event.
+                if (m_Deferred2[0].Priority > priority)
+                    return;
+                
+                // If the request has higher priority than the already deferred events we may drop the current ones.
+                if (m_Deferred2[0].Priority < priority)
+                {
+                    m_Deferred2.Clear();
+                    m_DeferredBufferLength = 0;
+                }
+            }
+                
+            // Compute offset (and reallocate if necessary) for the deferred event buffer to store associated data
+            var offset = CollectionHelper.Align(m_DeferredBufferLength, alignment);
+            if (offset > m_DeferredBufferCapacity)
+                ReallocateDeferredBuffer(offset + sizeOf);
+
+            // Push (append) data to the deferred buffer
+            var ptr = UnsafeUtils.Offset(m_DeferredBuffer, offset);
+            UnsafeUtility.MemCpy(ptr, value, sizeOf);
+            m_DeferredBufferLength = offset + sizeOf;
+            
+            // Push node to the list of deferred event nodes
+            m_Deferred2.Add(new DeferredOnNext2(){ Deferred = deferredEventContext, Offset = offset, Priority = priority});
+        }
+
+        private unsafe void ReallocateDeferredBuffer(int minimumSizeBytes)
+        {
+            var newCapacity = Math.Max(m_DeferredBufferCapacity * 2, minimumSizeBytes);
+            var buffer = UnsafeUtility.Malloc(newCapacity, kDeferredBufferAlignment, Allocator.Persistent);
+            if (m_DeferredBuffer != null)
+            {
+                UnsafeUtility.MemCpy(buffer, m_DeferredBuffer, m_DeferredBufferLength);
+                UnsafeUtility.Free(m_DeferredBuffer, Allocator.Persistent);
+            }
+            m_DeferredBufferCapacity = newCapacity;
+        }
+
+        internal unsafe void Defer<T>(IDeferred deferredEventContext, int priority, T value) where T : unmanaged
+        {
+            Defer(deferredEventContext, priority, &value, sizeof(T), UnsafeUtility.AlignOf<T>());
+        }
+
+        public void InvokeDeferred()
+        {
+            var n = m_Deferred.Count;
+            if (n == 0)
+                return;
+
+            var priority = m_Deferred[0].Priority;
+            m_Deferred[0].OnNext.Invoke();
+            for (var i=1; i < n && priority == m_Deferred[i].Priority; ++i)
+                m_Deferred[i].OnNext.Invoke();
+            m_Deferred.Clear();
+        }
+
+        
+        internal unsafe void InvokeDeferred2()
+        {
+            if (m_Deferred2.Count == 0)
+                return;
+            
+            for (var i = 0; i < m_Deferred2.Count; ++i)
+            {
+                var dataPtr = UnsafeUtils.Offset(m_DeferredBuffer, m_Deferred2[i].Offset);
+                m_Deferred2[i].Deferred.DeferredForwardOnNext(dataPtr);
+            }
+            
+            m_Deferred2.Clear();
+            m_DeferredBufferLength = 0;
+        }
+        
+        #endregion
     }
 }

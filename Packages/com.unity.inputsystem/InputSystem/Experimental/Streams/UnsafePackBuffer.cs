@@ -8,10 +8,12 @@ using Unity.Collections.LowLevel.Unsafe;
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// A utility that simplifies packing and unpacking data dynamically from an unsafe native byte buffer.
+    /// A utility that simplifies packing and unpacking data dynamically from an unsafe native byte buffer
+    /// given that the data model is known by encoder and decoder.
     /// </summary>
     /// <remarks>
-    /// Note that this struct acts as a wrapper on top of the underlying buffer.
+    /// Note that this struct acts as a wrapper on top of the underlying buffer and do not own the associated
+    /// buffer.
     ///
     /// Using this utility is NOT thread safe.
     /// </remarks>
@@ -161,6 +163,13 @@ namespace UnityEngine.InputSystem.Experimental
         public void Write(Quaternion value) => Write(value, 4);
         
         #region Checks
+
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS"), Conditional("UNITY_INPUT_SYSTEM_DEBUG")]
+        private unsafe void CheckCreated()
+        {
+            if (m_Data == null)
+                throw new Exception("Not created, did you forget to invoke struct constructor?");
+        }
         
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS"), Conditional("UNITY_INPUT_SYSTEM_DEBUG")]
         private static void CheckUlongPositivePowerOfTwo(ulong value)

@@ -42,7 +42,9 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         C = UnityEngine.InputSystem.Key.C,
         LeftCtrl = UnityEngine.InputSystem.Key.LeftCtrl,
         Space = UnityEngine.InputSystem.Key.Space,
-        Escape = UnityEngine.InputSystem.Key.Escape
+        Escape = UnityEngine.InputSystem.Key.Escape,
+        LeftShift = UnityEngine.InputSystem.Key.LeftShift,
+        RightShift = UnityEngine.InputSystem.Key.RightShift
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 4)]
@@ -144,6 +146,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         private static readonly ConvertFunc<KeyboardState, bool> GetKeyLeftCtrl = (state) => state.GetKey(Key.LeftCtrl);
         private static readonly ConvertFunc<KeyboardState, bool> GetKeySpace = (state) => state.GetKey(Key.Space);
         private static readonly ConvertFunc<KeyboardState, bool> GetKeyEscape = (state) => state.GetKey(Key.Escape);
+        private static readonly ConvertFunc<KeyboardState, bool> GetLeftShift = (state) => state.GetKey(Key.LeftShift);
+        private static readonly ConvertFunc<KeyboardState, bool> GetRightShift = (state) => state.GetKey(Key.RightShift);
         
         // Individual key proxies
         public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> W = any.Convert(GetKeyW);
@@ -154,6 +158,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> LeftCtrl = any.Convert(GetKeyLeftCtrl);
         public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Space = any.Convert(GetKeySpace);
         public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Escape = any.Convert(GetKeyEscape);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> LeftShift = any.Convert(GetLeftShift);
+        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> RightShift = any.Convert(GetRightShift);
         
         // TODO Should we build the decoding into the type, e.g. ObservableInputCollection<Keyboard, Key, bool>(Usages.Keyboard) keys;
         // Keyboard.keys[Key.A].Subscribe(); // TODO This can provide a decoder  
@@ -179,8 +185,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         public static ObservableInput<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
         public static ObservableInput<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
         public static ObservableInput<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
-        public static ObservableInput<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
-        public static ObservableInput<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
+        //public static ObservableInput<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
+        //public static ObservableInput<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
         //public static ObservableInputNode<bool> Shift = new(Usages.Keyboard.shift, "Shift");
         //public static ObservableInputNode<bool> Control = new(Usages.Keyboard.control, "Control");
         //public static ObservableInputNode<bool> Alt = new(Usages.Keyboard.alt, "Alt");

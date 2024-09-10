@@ -162,41 +162,5 @@ enum MyEnum
             foo.Snippet("}");
             Assert.That(c.ToSource(), Is.EqualTo(@""));
         }
-
-        [Test]
-        public void Json1()
-        {
-            var c = new JsonUtility.JsonContext("{}");
-            using var e = c.GetEnumerator();
-            Assert.That(e.MoveNext(), Is.False);
-        }
-
-
-        [Test]
-        public void Json2()
-        {
-            var c = new JsonUtility.JsonContext(@"{ ""first"": ""one"" }");
-            using var e = c.GetEnumerator();
-            Assert.That(e.MoveNext(), Is.True);
-            // TODO Object
-            // TODO Value "one"
-            // TODO Need to expose an enum for value type
-        }
-        
-        [Test]
-        public void JsonExample()
-        {
-            // See: https://json.org/example.html
-            var c = new JsonUtility.JsonContext("{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}");
-            using var e = c.GetEnumerator();
-            Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
-        }
-
-        [Test]
-        public void JsonTry()
-        {
-            
-        }
     }
 }

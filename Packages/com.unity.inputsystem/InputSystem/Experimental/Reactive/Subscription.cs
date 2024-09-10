@@ -19,14 +19,14 @@ namespace UnityEngine.InputSystem.Experimental
         {
             m_Subscription = ObjectPool<InternalSubscription<T>>.shared.Rent();
             m_Subscription.Initialize(subscriptionSource, observer);
-            m_Incarnation = m_Subscription.Incarnation; // store incarnation id when subscribed
+            m_Incarnation = m_Subscription.incarnation; // store incarnation id when subscribed
         }
 
         public void Dispose()
         {
             if (m_Subscription == null)
                 return; // already disposed
-            if (m_Incarnation != m_Subscription.Incarnation)
+            if (m_Incarnation != m_Subscription.incarnation)
                 return; // attempting to dispose via a reused copy
             
             m_Subscription.Dispose();
@@ -49,17 +49,17 @@ namespace UnityEngine.InputSystem.Experimental
         {
             m_SubscriptionSource = subscriptionSource;
             m_Observer = observer;
-            ++Incarnation; // Note: Prevents a reused subscription
+            ++incarnation; // Note: Prevents a reused subscription
         }
 
-        public int Incarnation { get; private set; } = ++InternalSubscription.WrapAroundCounter;
+        public int incarnation { get; private set; } = ++InternalSubscription.WrapAroundCounter;
 
         public void Dispose()
         {
             if (m_SubscriptionSource == null)
                 return;
             
-            ++Incarnation; // Mutate to prevent reused subscription dispose if subscription struct was copied
+            ++incarnation; // Mutate to prevent reused subscription dispose if subscription struct was copied
             m_SubscriptionSource.Unsubscribe(m_Observer);
             m_SubscriptionSource = null;
             m_Observer = null;

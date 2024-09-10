@@ -79,3 +79,7 @@ Consider the trade-offs:
   - Avoid duplicate computation
   - Requires synchronization between dependent results if executed in parallel
   - Need to store dependency graph for lookup
+
+TODO
+- Incorporate priority into observer base and proper chain propagation instead of having it in observablewrapper leaf.
+- Attempt to implement a generic composite proxy builder for combined expressions.

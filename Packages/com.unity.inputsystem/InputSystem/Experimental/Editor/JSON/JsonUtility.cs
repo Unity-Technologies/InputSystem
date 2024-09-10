@@ -2,49 +2,92 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Experimental.JSON
 {
-    // TODO We need System.Text.Json .NET Core 3.0 and beyond
-    
-    // RFC-8259 https://datatracker.ietf.org/doc/html/rfc8259#page-5
-    // Depth first
-    // https://www.json.org/json-en.html
-    // TODO Consider converting to ReadOnlySpan
+    /// <summary>
+    /// A minimalistic streaming JSON parser supporting RFC-8259 https://datatracker.ietf.org/doc/html/rfc8259#page-5.
+    /// See https://www.json.org/json-en.html for additional details.
+    /// </summary>
+    /// <remarks>
+    /// Mainly exists to mitigate lack of System.Text.Json of .NET Core 3.0 and beyond capabilities.
+    /// </remarks>
     public static class JsonUtility
     {
+        /// <summary>
+        /// Represents a JSON type according to RFC-8259.
+        /// </summary>
         public enum JsonType
         {
+            /// <summary>
+            /// Indicates that the associated JSON object or key-value pair is not valid.
+            /// </summary>
             Invalid,
+            
             /// <summary>
             /// Represents a JSON object as defined by RFC-8259.
             /// </summary>
             Object,
+            
+            /// <summary>
+            /// Represents a JSON array as defined by RFC-8259.
+            /// </summary>
             Array,
+            
+            /// <summary>
+            /// Represents a JSON value as defined by RFC-8259.
+            /// </summary>
             Value,
+            
+            /// <summary>
+            /// Represents a JSON string as defined by RFC-8259.
+            /// </summary>
             String,
+            
+            /// <summary>
+            /// Represents a JSON number as defined by RFC-8259.
+            /// </summary>
             Number
         }
 
-        //struct KeyValuePair
-        
+        /// <summary>
+        /// A JSON key-value pair where name represents the identifier and value represents the value.
+        /// Note that this is a basic representation of the JSON context and only classifies elements based on
+        /// the JSON grammar as defined in RFC-8259.
+        /// </summary>
+        /// <remarks>
+        /// The following may be expected:
+        /// - String: name holds the identifier and value contains the string (excluding quotation mark encoding).
+        /// - Object: name holds the identifier and value contains the surrounding curly-braces of the object including
+        ///           any sub-hierarchy. Note that for root object, name is null.
+        /// - Array:  name holds the identifier and value contains the array content surrounded by brackets.
+        /// - Number: name holds the identifier and value contains the value literal.
+        /// - Literal: name holds the identifier and value contains the literal.
+        ///
+        /// Note that only when parsing array elements index is defined.
+        /// </remarks>
         public struct JsonNode
         {
-            public JsonNode FirstChild()
-            {
-                return new JsonNode();
-            }
-
-            public string name => Data.Substring(NameStartIndex, NameEndIndex - NameStartIndex);
-            public string value => Data.Substring(ValueStartIndex, ValueEndIndex - ValueStartIndex);
-
+            /// <summary>
+            /// Returns the character sequence corresponding to the name of the current node.
+            /// </summary>
+            public ReadOnlySpan<char> name => Data.AsSpan(NameStartIndex, NameEndIndex - NameStartIndex);
+            
+            /// <summary>
+            /// Returns the character sequence corresponding to the value of the current node.
+            /// </summary>
+            public ReadOnlySpan<char> value => Data.AsSpan(ValueStartIndex, ValueEndIndex - ValueStartIndex);
+            
+            public int arrayElementIndex => NameEndIndex;
+            
             public string Data;
             public int ValueStartIndex;     // Value start index.
             public int ValueEndIndex;       // Value length.
-            public int NameStartIndex; // Start index of object name (excluding quotes)
-            public int NameEndIndex;   // length of object name (excluding quotes)
+            public int NameStartIndex;      // Start index of object name (excluding quotes)
+            public int NameEndIndex;        // length of object name (excluding quotes)
             public JsonType Type;
         }
 
@@ -55,6 +98,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             private readonly JsonNode m_Root;
 
             // TODO It depends a lot on what we want to achieve....
+            // Currently works mainly as a lexer.
             public struct JsonEnumerator : IEnumerator<JsonNode>
             {
                 private const int kMaxDepth = 10;
@@ -64,15 +108,22 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private int m_Index;
                 private JsonType m_Type;
                 private readonly string m_Buffer;
-
+                private bool m_HasKey;
+                private bool m_HasValue;
+                
+                private struct Range
+                {
+                    public int StartIndex;  // inclusive
+                    public int EndIndex;    // exclusive
+                }
+                
+                [StructLayout(LayoutKind.Sequential)]
                 private struct StackElement
                 {
-                    public int NameStartIndex;
-                    public int NameEndIndex;
+                    public Range name;
                     public int BeginObjectIndex;
                     public int EndObjectIndex;
-                    public int ValueStartIndex;
-                    public int ValueEndIndex;
+                    public Range value;
                 }
                 
                 public JsonEnumerator(string buffer)
@@ -83,6 +134,8 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     m_Index = 0;
                     m_Type = JsonType.Invalid;
                     m_Current = default;
+                    m_HasKey = false;
+                    m_HasValue = false;
                 }
 
                 private const char kBeginObject = '{';
@@ -93,15 +146,59 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private const char kValueSeparator = ',';
                 private const char kQuotationMark = '"';
                 private const char kEscapeSequence = '\\';
+                private const char kDecimalPoint = '.';
                 
                 private const char kWhiteSpaceSpace = ' ';
                 private const char kWhiteSpaceTab = '\t';  
                 private const char kWhiteSpaceLineFeed = '\n';
                 private const char kWhiteSpaceCarriageReturn = '\r';
+
+                private static Range ReadString(string buffer, int index)
+                {
+                    for (var i = index; i != buffer.Length; ++i)
+                    {
+                        if (buffer[i] == kQuotationMark)
+                            return new Range() { StartIndex = index, EndIndex = i };
+                    }
+                    throw new Exception($"Missing '{kQuotationMark}' terminating string.");
+                }
+
+                private static Range ReadNumber(string buffer, int index)
+                {
+                    var hasFloatingPoint = false;
+                    for (var i = index; i != buffer.Length; ++i)
+                    {
+                        var c = buffer[i];
+                        if (!char.IsDigit(c))
+                        {
+                            switch (c)
+                            {
+                                case kDecimalPoint:
+                                    if (hasFloatingPoint)
+                                        throw new Exception($"Unexpected '{kDecimalPoint}'.");
+                                    hasFloatingPoint = true;
+                                    break;
+                                case kValueSeparator:
+                                case kWhiteSpaceTab:
+                                case kWhiteSpaceSpace:
+                                case kWhiteSpaceLineFeed:
+                                case kWhiteSpaceCarriageReturn:
+                                    return new Range() { StartIndex = index, EndIndex = i };
+                                default:
+                                    throw new Exception(
+                                        $"Unexpected character '{c}'. Expected digit or decimal-point.");
+                            }    
+                        }
+                    }
+
+                    throw new Exception("Unexpected end of JSON content");
+                }
                 
                 public bool MoveNext()
                 {
                     ref var e = ref m_Stack[++m_Level];
+
+                    //m_Type = JsonType.Invalid;
                     
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack
                     {
@@ -109,60 +206,81 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         switch (c)
                         {
                             case kBeginObject:
-                                m_Type = JsonType.Object;
+                                m_Type = JsonType.Object; // TODO This should be on approach object after name separator?!
                                 e.EndObjectIndex = m_Buffer.LastIndexOf(kEndObject);
-                                e.NameStartIndex = -1;
-                                e.NameEndIndex = -1;
-                                // TODO Current: Object 
                                 break;
                             case kEndObject:
-                                break;
                             case kBeginArray:
-                                break;
                             case kEndArray:
                                 break;
-                            case kQuotationMark:
-                                if (e.NameStartIndex == -1)
-                                    e.NameStartIndex = m_Index + 1;
-                                else if (e.NameEndIndex == -1)
-                                    e.NameEndIndex = m_Index; 
-                                    // TODO Current: String
-                                //else if ()
+                            case kQuotationMark: // TODO This would benefit form just indexing through array
+                                if (!m_HasKey)
+                                {
+                                    var range = ReadString(m_Buffer, m_Index + 1);
+                                    e.name = range;
+                                    m_Index = range.EndIndex;
+                                    m_HasKey = true;
+                                }
                                 else
-                                    throw new Exception($"Unexpected {kQuotationMark} found on line {Line(m_Index)}.");
+                                {
+                                    var range = ReadString(m_Buffer, m_Index + 1);
+                                    e.value = range;
+                                    m_Index = range.EndIndex + 1;
+                                    SetCurrent(JsonType.String, e);
+                                    return true;
+                                }
                                 break;
                             
                             case kNameSeparator:
-                                //m_Type = JsonType.Value;
-                                // TODO This is incorrect, we should just mark we are looking for value and continue loop
-                                /*var valueEndIndex = m_Buffer.LastIndexOf(kEndObject, e.EndObjectIndex - 1, e.EndObjectIndex - m_Index - 1);
-                                m_Current = new JsonNode()
-                                {
-                                    Data = m_Buffer,
-                                    NameStartIndex = e.NameStartIndex,
-                                    NameEndIndex = e.NameEndIndex,
-                                    ValueStartIndex = m_Index,
-                                    ValueEndIndex = valueEndIndex,
-                                    Type = m_Type
-                                };
-                                return true;*/
-                                e.ValueStartIndex = -1;
-                                e.ValueEndIndex = -1;
+                                if (!m_HasKey)
+                                    throw new Exception($"Unexpected {kNameSeparator} found on line {Line(m_Index)}.");
                                 break;
-                                
+                            
+                            case kValueSeparator:
+                                if (m_HasKey && !m_HasValue)
+                                    throw new Exception($"Unexpected {kValueSeparator} found on line {Line(m_Index)}.");
+                                m_HasKey = false;
+                                m_HasValue = false;
+                                break;
+                            
+                            // Continue scanning if white-space
                             case kWhiteSpaceSpace:
                             case kWhiteSpaceTab:
                             case kWhiteSpaceLineFeed:
                             case kWhiteSpaceCarriageReturn:
                                 break;
+                            
                             default:
-                                if (e.NameStartIndex >= 0 && e.NameEndIndex == -1)
-                                    continue;
+                                // We have encountered a non-white-space or syntax encoding token.
+                                if (char.IsDigit(c))
+                                {
+                                    var range = ReadNumber(m_Buffer, m_Index);
+                                    e.value = range;
+                                    m_Index = range.EndIndex;
+                                    SetCurrent(JsonType.Number, e);
+                                    return true;
+                                }
+                                    
                                 throw new Exception("");
                         }    
                     }
                     
+                    m_Type = JsonType.Invalid;
                     return false;
+                }
+
+                private void SetCurrent(JsonType type, in StackElement e)
+                {
+                    m_Type = type;
+                    
+                    m_Current.Data = m_Buffer;
+                    m_Current.NameStartIndex = e.name.StartIndex;
+                    m_Current.NameEndIndex = e.name.EndIndex;
+                    m_Current.ValueStartIndex = e.value.StartIndex;
+                    m_Current.ValueEndIndex = e.value.EndIndex;
+                    m_Current.Type = m_Type;
+
+                    m_HasValue = true;
                 }
 
                 private int Line(int index)
