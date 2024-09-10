@@ -206,20 +206,18 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 
                 public bool MoveNext()
                 {
-                    ref var e = ref m_Stack[++m_Level];
-
-                    //m_Type = JsonType.Invalid;
-                    
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack
                     {
                         var c = m_Buffer[m_Index];
                         switch (c)
                         {
                             case kBeginObject:
+                                ++m_Level;
                                 m_Type = JsonType.Object; // TODO This should be on approach object after name separator?!
-                                e.EndObjectIndex = m_Buffer.LastIndexOf(kEndObject);
+                                m_Stack[m_Level].EndObjectIndex = m_Buffer.LastIndexOf(kEndObject);
                                 break;
                             case kEndObject:
+                                --m_Level;
                                 break;
                             case kBeginArray:
                             case kEndArray:
@@ -228,16 +226,15 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 if (!m_HasKey)
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
-                                    e.name = range;
+                                    m_Stack[m_Level].name = range;
                                     m_Index = range.End.Value;
                                     m_HasKey = true;
                                 }
                                 else
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
-                                    e.value = range;
                                     m_Index = range.End.Value + 1;
-                                    SetCurrent(JsonType.String, e);
+                                    SetCurrent(JsonType.String, range);
                                     return true;
                                 }
                                 break;
@@ -266,9 +263,8 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 if (char.IsDigit(c))
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
-                                    e.value = range;
                                     m_Index = range.End.Value;
-                                    SetCurrent(JsonType.Number, e);
+                                    SetCurrent(JsonType.Number, range);
                                     return true;
                                 }
                                     
@@ -280,8 +276,10 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     return false;
                 }
 
-                private void SetCurrent(JsonType type, in StackElement e)
+                private void SetCurrent(JsonType type, Range value)
                 {
+                    ref StackElement e = ref m_Stack[m_Level];
+                    e.value = value;
                     m_Current = new JsonNode(type, m_Buffer, e.name.Start.Value, e.name.End.Value, e.value.Start.Value, e.value.End.Value);
                     m_HasValue = true;
                 }
