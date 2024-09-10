@@ -25,7 +25,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             using var e = c.GetEnumerator();
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("b"));
             
@@ -39,7 +39,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             using var e = c.GetEnumerator();
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("1"));
             
@@ -53,7 +53,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             using var e = c.GetEnumerator();
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("1.0"));
             
@@ -66,7 +66,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             var c = new JsonUtility.JsonContext(@"{ ""a"": { ""b"" : 1.0 } }");
             using var e = c.GetEnumerator();
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("{ \"b\" : 1.0 } }"));
         }
@@ -78,12 +78,12 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             using var e = c.GetEnumerator();
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("b"));
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("c"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("d"));
             
@@ -97,12 +97,12 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             using var e = c.GetEnumerator();
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("1"));
             
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("b"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("2"));
             
@@ -130,7 +130,7 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             var c = new JsonUtility.JsonContext("{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}");
             using var e = c.GetEnumerator();
             Assert.That(e.MoveNext(), Is.True);
-            Assert.That(e.Current.Type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
         }
 
         [Test]

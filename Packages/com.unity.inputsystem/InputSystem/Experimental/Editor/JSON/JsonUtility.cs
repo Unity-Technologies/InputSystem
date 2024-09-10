@@ -69,26 +69,41 @@ namespace UnityEngine.InputSystem.Experimental.JSON
         ///
         /// Note that only when parsing array elements index is defined.
         /// </remarks>
-        public struct JsonNode
+        public readonly struct JsonNode
         {
+            public JsonNode(JsonType type, string data, int nameStartIndex, int nameEndIndex, 
+                int valueStartIndex, int valueEndIndex)
+            {
+                m_Data = data;
+                m_NameStartIndex = nameStartIndex;
+                m_NameEndIndex = nameEndIndex;
+                m_ValueStartIndex = valueStartIndex;
+                m_ValueEndIndex = valueEndIndex;
+                this.type = type;
+            }
+            
+            /// <summary>
+            /// The associated JSON type.
+            /// </summary>
+            public JsonType type { get; }
+
             /// <summary>
             /// Returns the character sequence corresponding to the name of the current node.
             /// </summary>
-            public ReadOnlySpan<char> name => Data.AsSpan(NameStartIndex, NameEndIndex - NameStartIndex);
+            public ReadOnlySpan<char> name => m_Data.AsSpan(m_NameStartIndex, m_NameEndIndex - m_NameStartIndex);
             
             /// <summary>
             /// Returns the character sequence corresponding to the value of the current node.
             /// </summary>
-            public ReadOnlySpan<char> value => Data.AsSpan(ValueStartIndex, ValueEndIndex - ValueStartIndex);
+            public ReadOnlySpan<char> value => m_Data.AsSpan(m_ValueStartIndex, m_ValueEndIndex - m_ValueStartIndex);
             
-            public int arrayElementIndex => NameEndIndex;
+            public int arrayElementIndex => m_NameEndIndex;
             
-            public string Data;
-            public int ValueStartIndex;     // Value start index.
-            public int ValueEndIndex;       // Value length.
-            public int NameStartIndex;      // Start index of object name (excluding quotes)
-            public int NameEndIndex;        // length of object name (excluding quotes)
-            public JsonType Type;
+            private readonly string m_Data;
+            private readonly int m_ValueStartIndex;     // Value start index.
+            private readonly int m_ValueEndIndex;       // Value length.
+            private readonly int m_NameStartIndex;      // Start index of object name (excluding quotes)
+            private readonly int m_NameEndIndex;        // length of object name (excluding quotes)
         }
 
         // TODO Might be that root should be value
@@ -110,12 +125,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private readonly string m_Buffer;
                 private bool m_HasKey;
                 private bool m_HasValue;
-                
-                private struct Range
-                {
-                    public int StartIndex;  // inclusive
-                    public int EndIndex;    // exclusive
-                }
                 
                 [StructLayout(LayoutKind.Sequential)]
                 private struct StackElement
@@ -155,10 +164,11 @@ namespace UnityEngine.InputSystem.Experimental.JSON
 
                 private static Range ReadString(string buffer, int index)
                 {
+                    // TODO Needs to handle escape sequences to comply to RFC
                     for (var i = index; i != buffer.Length; ++i)
                     {
                         if (buffer[i] == kQuotationMark)
-                            return new Range() { StartIndex = index, EndIndex = i };
+                            return new Range(index, i);
                     }
                     throw new Exception($"Missing '{kQuotationMark}' terminating string.");
                 }
@@ -183,7 +193,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 case kWhiteSpaceSpace:
                                 case kWhiteSpaceLineFeed:
                                 case kWhiteSpaceCarriageReturn:
-                                    return new Range() { StartIndex = index, EndIndex = i };
+                                    return new Range(index, i);
                                 default:
                                     throw new Exception(
                                         $"Unexpected character '{c}'. Expected digit or decimal-point.");
@@ -210,6 +220,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 e.EndObjectIndex = m_Buffer.LastIndexOf(kEndObject);
                                 break;
                             case kEndObject:
+                                break;
                             case kBeginArray:
                             case kEndArray:
                                 break;
@@ -218,14 +229,14 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
                                     e.name = range;
-                                    m_Index = range.EndIndex;
+                                    m_Index = range.End.Value;
                                     m_HasKey = true;
                                 }
                                 else
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
                                     e.value = range;
-                                    m_Index = range.EndIndex + 1;
+                                    m_Index = range.End.Value + 1;
                                     SetCurrent(JsonType.String, e);
                                     return true;
                                 }
@@ -256,7 +267,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
                                     e.value = range;
-                                    m_Index = range.EndIndex;
+                                    m_Index = range.End.Value;
                                     SetCurrent(JsonType.Number, e);
                                     return true;
                                 }
@@ -271,15 +282,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
 
                 private void SetCurrent(JsonType type, in StackElement e)
                 {
-                    m_Type = type;
-                    
-                    m_Current.Data = m_Buffer;
-                    m_Current.NameStartIndex = e.name.StartIndex;
-                    m_Current.NameEndIndex = e.name.EndIndex;
-                    m_Current.ValueStartIndex = e.value.StartIndex;
-                    m_Current.ValueEndIndex = e.value.EndIndex;
-                    m_Current.Type = m_Type;
-
+                    m_Current = new JsonNode(type, m_Buffer, e.name.Start.Value, e.name.End.Value, e.value.Start.Value, e.value.End.Value);
                     m_HasValue = true;
                 }
 
@@ -294,121 +297,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     }
                     return line;
                 }
-                
-//                 public bool MoveNext()
-//                 {
-//                     // Object variants:
-//                     // "name" : string | number | object | array
-//
-//                     // Start from current element in stack
-//                     ref var current = ref m_Stack[m_Level];
-//                     ++m_Level;
-//                     
-//                     switch (current.Type)
-//                     {
-//                         case JsonType.Object:
-//                         {
-//                             // Object must define a string name. White space is ignored and any non quote character
-//                             // should be considered an error.
-//                             var nameStartIndex = Scan(current.Data, current.StartIndex, current.EndIndex);
-//                             if (current.Data[nameStartIndex] != kQuotationMark)
-//                                 throw new Exception("Missing object name");
-//
-//                             var nameEndIndex = ScanFor(current.Data, nameStartIndex+1, current.EndIndex, kQuotationMark);
-//                             var kvpIndex = ScanFor(current.Data, nameEndIndex+1, current.EndIndex, kNameSeparator);
-//                             var valueIndex = Scan(current.Data, kvpIndex+1, current.EndIndex);
-//                             if (valueIndex == current.EndIndex)
-//                                 throw new Exception("Missing value");
-//                             
-//                             // Classify value type which must be either of:
-//                             // object, array, number, string, literal (true, false, null)
-//                             var c = current.Data[valueIndex];
-//                             switch (c)
-//                             {
-//                                 case kBeginObject:
-//                                     break;
-//                                 case kBeginArray:
-//                                     break;
-//                                 case kQuotationMark:
-//                                     break;
-//                                 case kNameSeparator:
-//                                     break;
-//                                 case kWhiteSpaceSpace:
-//                                 case kWhiteSpaceTab:
-//                                 case kWhiteSpaceLineFeed:
-//                                 case kWhiteSpaceCarriageReturn:
-//                                     break;
-//                                 default:
-//                                     throw new Exception("");
-//                             }
-//                         }
-//                             
-//                             break;
-//                         case JsonType.Array:
-//                             break;
-//                         case JsonType.Value:
-//                             break;
-//                         case JsonType.String:
-//                             break;
-//                         case JsonType.Number:
-//                             break;
-//                     }
-//                     
-//                     /*var n = m_Current.Data.Length;
-//                     for (var i = 0; i < n; ++i)
-//                     {
-//                         // Skip whitespace
-//                         var c = m_Current.Data[i];
-//                         if (Char.IsWhiteSpace(c))
-//                             continue;
-//                         
-//                         if (c == '{')
-//                         {
-//                             
-//                         }
-//                         if (c == '}')
-//                         {
-//                             
-//                         }
-//
-//                         if (c == '"')
-//                         {
-//                             
-//                         }
-//
-//                         if (c == '"')
-//                         {
-//                             
-//                         }
-//                     }*/
-//                     return false;
-//                 }
-
-                private static int IndexOf(string s, char c, int startIndex, int endIndex)
-                {
-                    return s.IndexOf( c, startIndex, endIndex - startIndex);
-                }
-                
-                private int Scan(string data, int startIndex, int endIndex)
-                {
-                    for (; startIndex < endIndex && char.IsWhiteSpace(data[startIndex]); ++startIndex) { }
-                    if (startIndex == endIndex)
-                        throw new Exception();
-                    return startIndex;
-                }
-                
-                private int ScanFor(string data, int startIndex, int endIndex, char terminate)
-                {
-                    for (; startIndex < endIndex && data[startIndex] != terminate; ++startIndex) { }
-                    if (startIndex == endIndex)
-                        throw new Exception();
-                    return startIndex;
-                }
-
-                private int NextEnd(string data, int startIndex, int endIndex)
-                {
-                    return -1;
-                }
 
                 public void Reset()
                 {
@@ -422,25 +310,10 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 public void Dispose() { }
             }
 
-            private const char kOpen = '{';
-            private const char kClose = '}';
-            
             public JsonContext(string json)
             {
                 m_Data = json;
-
-                //var start = json.IndexOf(kOpen) + 1;
-                //var end = json.LastIndexOf(kClose) - start;
-                
-                m_Root = new JsonNode
-                {
-                    Data = json,
-                    Type = JsonType.Object,
-                    ValueStartIndex = 0,
-                    ValueEndIndex = json.Length,
-                    NameStartIndex = -1,
-                    NameEndIndex = 0
-                };
+                m_Root = new JsonNode(JsonType.Object, json, -1, 0, 0, json.Length);
             }
 
             public JsonNode root => m_Root;
