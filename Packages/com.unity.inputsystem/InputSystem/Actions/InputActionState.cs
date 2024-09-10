@@ -2313,12 +2313,14 @@ namespace UnityEngine.InputSystem
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed && actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
+            if (newPhase == InputActionPhase.Performed &&
+                actionIndex != -1 && !actionStates[actionIndex].isPerformed &&
+                actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
             {
-                // We performed but we're not the interaction driving the action. We want to stay performed to make
-                // sure that if the interaction that is currently driving the action cancels, we get to perform
-                // the action. If we go back to waiting here, then the system can't tell that there's another interaction
-                // ready to perform (in fact, that has already performed).
+                // If the action was not already performed and we performed but we're not the interaction driving the action.
+                // We want to stay performed to make sure that if the interaction that is currently driving the action
+                // cancels, we get to perform the action. If we go back to waiting here, then the system can't tell
+                // that there's another interaction ready to perform (in fact, that has already performed).
             }
             else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
