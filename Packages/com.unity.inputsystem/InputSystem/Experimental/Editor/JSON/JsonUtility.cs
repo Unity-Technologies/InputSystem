@@ -72,13 +72,14 @@ namespace UnityEngine.InputSystem.Experimental.JSON
         public readonly struct JsonNode
         {
             public JsonNode(JsonType type, string data, int nameStartIndex, int nameEndIndex, 
-                int valueStartIndex, int valueEndIndex)
+                int valueStartIndex, int valueEndIndex, int arrayIndex)
             {
                 m_Data = data;
                 m_NameStartIndex = nameStartIndex;
                 m_NameEndIndex = nameEndIndex;
                 m_ValueStartIndex = valueStartIndex;
                 m_ValueEndIndex = valueEndIndex;
+                m_ArrayIndex = arrayIndex;
                 this.type = type;
             }
             
@@ -97,13 +98,14 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             /// </summary>
             public ReadOnlySpan<char> value => m_Data.AsSpan(m_ValueStartIndex, m_ValueEndIndex - m_ValueStartIndex);
             
-            public int arrayElementIndex => m_NameEndIndex;
+            public int arrayElementIndex => m_ArrayIndex;
             
             private readonly string m_Data;
             private readonly int m_ValueStartIndex;     // Value start index.
             private readonly int m_ValueEndIndex;       // Value length.
             private readonly int m_NameStartIndex;      // Start index of object name (excluding quotes)
             private readonly int m_NameEndIndex;        // length of object name (excluding quotes)
+            private readonly int m_ArrayIndex; // TODO Use name range for array index instead?!
         }
 
         // TODO Might be that root should be value
@@ -122,14 +124,14 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private int m_Level;
                 private int m_Index;
                 private readonly string m_Buffer;
-                private bool m_HasKey;
-                private bool m_HasValue;
                 
                 [StructLayout(LayoutKind.Sequential)]
                 private struct StackElement
                 {
                     public Range name;
                     public Range value;
+                    public int arrayIndex;
+                    public bool isArray;
                 }
                 
                 public JsonEnumerator(string buffer)
@@ -139,8 +141,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     m_Buffer = buffer;
                     m_Index = 0;
                     m_Current = default;
-                    m_HasKey = true; // TODO Initialize to true since root has no key?
-                    m_HasValue = false;
 
                     // Treat root as:
                     //      "": { ... } 
@@ -210,47 +210,50 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     var endIndex = buffer.LastIndexOf(kEndObject);
                     return new Range(index, endIndex + 1);
                 }
+
+                private static Range ReadArray(string buffer, int index)
+                {
+                    var endIndex = buffer.LastIndexOf(kEndArray);
+                    return new Range(index, endIndex + 1);
+                }
                 
                 public bool MoveNext()
                 {
+                    var hasKey = m_Index == 0 || m_Stack[m_Level].isArray; // Note: Root has empty key, also treat key as being set if inside array
+                    
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack
                     {
                         var c = m_Buffer[m_Index];
                         switch (c)
                         {
                             case kBeginObject:
-                            {
-                                
-                                // TODO Set current
-                                var range = ReadObject(m_Buffer, m_Index);
-                                SetCurrent(JsonType.Object, range); // TODO Should not use m_Buffer, should be stack element range
+                                SetCurrent(JsonType.Object, ReadObject(m_Buffer, m_Index)); 
                                 ++m_Index;
                                 ++m_Level;
-                                m_HasKey = false;
-                                m_HasValue = false;
                                 return true;
-                                //m_Type = JsonType.Object; // TODO This should be on approach object after name separator?!
-                                //m_Stack[m_Level].EndObjectIndex = m_Buffer.LastIndexOf(kEndObject); // TODO This should not use m_Buffer, nothing should
-                            }
-                                break;
                             
                             case kEndObject:
                                 --m_Level;
                                 break;
                             
                             case kBeginArray:
-                                break;
+                                SetCurrent(JsonType.Array, ReadArray(m_Buffer, m_Index));
+                                ++m_Index;
+                                m_Stack[m_Level].name = new Range(0, 0);
+                                m_Stack[m_Level].arrayIndex = 0;
+                                m_Stack[m_Level].isArray = true;
+                                return true;
                             
                             case kEndArray:
                                 break;
                             
-                            case kQuotationMark: // TODO This would benefit form just indexing through array
-                                if (!m_HasKey)
+                            case kQuotationMark:
+                                if (!hasKey)
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
                                     m_Stack[m_Level].name = range;
                                     m_Index = range.End.Value;
-                                    m_HasKey = true;
+                                    hasKey = true;
                                 }
                                 else
                                 {
@@ -262,15 +265,16 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 break;
                             
                             case kNameSeparator:
-                                if (!m_HasKey)
+                                if (!hasKey)
                                     throw new Exception($"Unexpected {kNameSeparator} found on line {Line(m_Index)}.");
                                 break;
                             
                             case kValueSeparator:
-                                if (m_HasKey && !m_HasValue)
+                                var isArray = m_Stack[m_Level].isArray;
+                                if (hasKey && !isArray) // TODO Should not throw if within array and index > 0
                                     throw new Exception($"Unexpected {kValueSeparator} found on line {Line(m_Index)}.");
-                                m_HasKey = false;
-                                m_HasValue = false;
+                                ++m_Stack[m_Level].arrayIndex;
+                                hasKey = isArray; // Arrays do not use keys so pretend we already have one
                                 break;
                             
                             // Continue scanning if white-space
@@ -282,6 +286,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                             
                             default:
                                 // We have encountered a non-white-space or syntax encoding token.
+                                // TODO Handle literals here as well
                                 if (char.IsDigit(c))
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
@@ -295,9 +300,10 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     }
                     
                     // No more key-value pairs to iterate
-                    // TODO Assert level is zero?
                     return false;
                 }
+
+                private void FailUnexpected(char c) => throw new Exception($"Unexpected {c} found on line {Line(m_Index)}.");
 
                 private void SetCurrent(JsonType type, Range value)
                 {
@@ -305,8 +311,8 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     e.value = value;
                     m_Current = new JsonNode(type, m_Buffer, 
                         e.name.Start.Value, e.name.End.Value, 
-                        e.value.Start.Value, e.value.End.Value);
-                    m_HasValue = true;
+                        e.value.Start.Value, e.value.End.Value, e.arrayIndex);
+                    //m_HasValue = true;
                 }
 
                 private int Line(int index)
@@ -336,7 +342,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             public JsonContext(string json)
             {
                 m_Data = json;
-                m_Root = new JsonNode(JsonType.Object, json, -1, 0, 0, json.Length);
+                m_Root = new JsonNode(JsonType.Object, json, -1, 0, 0, json.Length, -1);
             }
 
             public JsonNode root => m_Root;

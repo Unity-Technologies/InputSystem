@@ -110,9 +110,9 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         }
         
         [Test]
-        public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsArray()
+        public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsArrayOfNumbers()
         {
-            const string json = @"{ ""a"": [ { ""b"" : 1.0 } ] }";
+            const string json = @"{ ""a"": [ 1, 2 ] }";
             var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
             
@@ -124,13 +124,97 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Array));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
-            Assert.That(e.Current.value.ToString(), Is.EqualTo("[ { \"b\" : 1.0 } ]"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("[ 1, 2 ]"));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("1"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("2"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(1));
+            
+            Assert.That(e.MoveNext(), Is.False);
+        }
+        
+        [Test]
+        public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsArrayOfStrings()
+        {
+            const string json = @"{ ""a"": [ ""b"", ""c"" ] }";
+            var c = new JsonUtility.JsonContext(json);
+            using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Array));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("[ \"b\", \"c\" ]"));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("b"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("c"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(1));
+            
+            Assert.That(e.MoveNext(), Is.False);
+        }
+        
+        // TODO Array of literals
+        
+        [Test]
+        public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsArrayOfObjects()
+        {
+            const string json = @"{ ""a"": [ { ""b"" : 1 }, { ""c"" : 2 } ] }";
+            var c = new JsonUtility.JsonContext(json);
+            using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Array));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("[ { \"b\" : 1 }, { \"c\" : 2 } ]"));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("{ \"b\" : 1 }"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("b"));
-            Assert.That(e.Current.value.ToString(), Is.EqualTo("1.0"));
-            // TODO Assert array index
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("1"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(""));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("{ \"c\" : 2 }"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("c"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("2"));
+            Assert.That(e.Current.arrayElementIndex, Is.EqualTo(0));
             
             Assert.That(e.MoveNext(), Is.False);
         }
