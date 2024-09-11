@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Experimental.JSON
 {
@@ -108,11 +109,17 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             private readonly int m_ArrayIndex; // TODO Use name range for array index instead?!
         }
 
+        public class JsonParseException : Exception
+        {
+            public JsonParseException(string message)
+                : base(message)
+            { }
+        }
+
         // TODO Might be that root should be value
         public readonly struct JsonContext : IEnumerable<JsonNode>
         {
             private readonly string m_Data;
-            private readonly JsonNode m_Root;
 
             // TODO It depends a lot on what we want to achieve....
             // Currently works mainly as a lexer.
@@ -125,18 +132,17 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private int m_Index;
                 private readonly string m_Buffer;
                 
-                [StructLayout(LayoutKind.Sequential)]
                 private struct StackElement
                 {
-                    public Range name;
-                    public Range value;
-                    public int arrayIndex;
-                    public bool isArray;
+                    public Range Name;
+                    public Range Value;
+                    public int Index;
+                    public bool IsArray;
                 }
                 
-                public JsonEnumerator(string buffer)
+                public JsonEnumerator(string buffer, int maxDepth = kMaxDepth)
                 {
-                    m_Stack = new StackElement[kMaxDepth];
+                    m_Stack = new StackElement[maxDepth];
                     m_Level = 0;
                     m_Buffer = buffer;
                     m_Index = 0;
@@ -145,7 +151,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     // Treat root as:
                     //      "": { ... } 
                     // where only part after name separator correspond to passed buffer
-                    m_Stack[0].name = new Range(0, 0);
+                    m_Stack[0].Name = new Range(0, 0);
                 }
 
                 private const char kBeginObject = '{';
@@ -163,6 +169,10 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private const char kWhiteSpaceLineFeed = '\n';
                 private const char kWhiteSpaceCarriageReturn = '\r';
 
+                private const string kNull = "null";
+                private const string kFalse = "false";
+                private const string kTrue = "true";
+                
                 private static Range ReadString(string buffer, int index)
                 {
                     // TODO Needs to handle escape sequences to comply to RFC
@@ -171,7 +181,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         if (buffer[i] == kQuotationMark)
                             return new Range(index, i);
                     }
-                    throw new Exception($"Missing '{kQuotationMark}' terminating string.");
+                    throw new JsonParseException($"Missing '{kQuotationMark}' terminating string.");
                 }
 
                 private static Range ReadNumber(string buffer, int index)
@@ -186,7 +196,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                             {
                                 case kDecimalPoint:
                                     if (hasFloatingPoint)
-                                        throw new Exception($"Unexpected '{kDecimalPoint}'.");
+                                        throw new JsonParseException($"Unexpected '{kDecimalPoint}'. Expected digit, white-space or value separator.");
                                     hasFloatingPoint = true;
                                     break;
                                 case kValueSeparator:
@@ -196,30 +206,36 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 case kWhiteSpaceCarriageReturn:
                                     return new Range(index, i);
                                 default:
-                                    throw new Exception(
+                                    throw new JsonParseException(
                                         $"Unexpected character '{c}'. Expected digit or decimal-point.");
                             }    
                         }
                     }
 
-                    throw new Exception("Unexpected end of JSON content");
+                    throw new JsonParseException("Unexpected end of JSON content");
                 }
 
-                private static Range ReadObject(string buffer, int index)
+                private static Range ReadScope(string buffer, int index, char begin, char end)
                 {
-                    var endIndex = buffer.LastIndexOf(kEndObject);
-                    return new Range(index, endIndex + 1);
-                }
+                    var i = index + 1;
+                    var x = 1;
+                    for (; i < buffer.Length && x != 0; ++i)
+                    {
+                        var c = buffer[i];
+                        if (c == begin) 
+                            ++x;
+                        else if (c == end) 
+                            --x;
+                    }
 
-                private static Range ReadArray(string buffer, int index)
-                {
-                    var endIndex = buffer.LastIndexOf(kEndArray);
-                    return new Range(index, endIndex + 1);
+                    if (x != 0)
+                        throw new JsonParseException($"Failed to find matching end tag '{end}' for opening tag '{begin}' on line {Line(buffer, index)}");
+                    return new Range(index, i);
                 }
                 
                 public bool MoveNext()
                 {
-                    var hasKey = m_Index == 0 || m_Stack[m_Level].isArray; // Note: Root has empty key, also treat key as being set if inside array
+                    var hasKey = m_Index == 0 || m_Stack[m_Level].IsArray; // Note: Root has empty key, also treat key as being set if inside array
                     
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack
                     {
@@ -227,7 +243,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         switch (c)
                         {
                             case kBeginObject:
-                                SetCurrent(JsonType.Object, ReadObject(m_Buffer, m_Index)); 
+                                SetCurrent(JsonType.Object, ReadScope(m_Buffer, m_Index, kBeginObject, kEndObject));
                                 ++m_Index;
                                 ++m_Level;
                                 return true;
@@ -237,11 +253,11 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 break;
                             
                             case kBeginArray:
-                                SetCurrent(JsonType.Array, ReadArray(m_Buffer, m_Index));
+                                SetCurrent(JsonType.Array, ReadScope(m_Buffer, m_Index, kBeginArray, kEndArray));
                                 ++m_Index;
-                                m_Stack[m_Level].name = new Range(0, 0);
-                                m_Stack[m_Level].arrayIndex = 0;
-                                m_Stack[m_Level].isArray = true;
+                                m_Stack[m_Level].Name = new Range(0, 0);
+                                m_Stack[m_Level].Index = 0;
+                                m_Stack[m_Level].IsArray = true;
                                 return true;
                             
                             case kEndArray:
@@ -251,7 +267,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 if (!hasKey)
                                 {
                                     var range = ReadString(m_Buffer, m_Index + 1);
-                                    m_Stack[m_Level].name = range;
+                                    m_Stack[m_Level].Name = range;
                                     m_Index = range.End.Value;
                                     hasKey = true;
                                 }
@@ -266,14 +282,14 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                             
                             case kNameSeparator:
                                 if (!hasKey)
-                                    throw new Exception($"Unexpected {kNameSeparator} found on line {Line(m_Index)}.");
+                                    FailUnexpected(kNameSeparator);
                                 break;
                             
                             case kValueSeparator:
-                                var isArray = m_Stack[m_Level].isArray;
+                                var isArray = m_Stack[m_Level].IsArray;
                                 if (hasKey && !isArray) // TODO Should not throw if within array and index > 0
-                                    throw new Exception($"Unexpected {kValueSeparator} found on line {Line(m_Index)}.");
-                                ++m_Stack[m_Level].arrayIndex;
+                                    FailUnexpected(kValueSeparator);
+                                ++m_Stack[m_Level].Index;
                                 hasKey = isArray; // Arrays do not use keys so pretend we already have one
                                 break;
                             
@@ -285,8 +301,15 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 break;
                             
                             default:
+                                // Value (literal) support
+                                if (IsValue(kFalse)) 
+                                    return true;
+                                if (IsValue(kTrue)) 
+                                    return true;
+                                if (IsValue(kNull)) 
+                                    return true;
+                                
                                 // We have encountered a non-white-space or syntax encoding token.
-                                // TODO Handle literals here as well
                                 if (char.IsDigit(c))
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
@@ -295,7 +318,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                     return true;
                                 }
                                     
-                                throw new Exception("");
+                                throw new JsonParseException("");
                         }    
                     }
                     
@@ -303,25 +326,43 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     return false;
                 }
 
-                private void FailUnexpected(char c) => throw new Exception($"Unexpected {c} found on line {Line(m_Index)}.");
+                private bool IsValue(string expected)
+                {
+                    if (m_Index + expected.Length >= m_Buffer.Length)
+                        return false;
+                    if (!m_Buffer.AsSpan(m_Index, expected.Length).StartsWith(expected)) 
+                        return false;
+                    var range = new Range(m_Index, m_Index + expected.Length);
+                    m_Index = range.End.Value;
+                    SetCurrent(JsonType.Value, range);
+                    return true;
+                }
+
+                private void FailUnexpected(char c, string expected = null)
+                {
+                    var message = $"Unexpected '{c}' found on line {Line(m_Buffer, m_Index)}.";
+                    if (expected != null)
+                        throw new JsonParseException($"{message} {expected}");
+                    throw new JsonParseException(message);
+                }
 
                 private void SetCurrent(JsonType type, Range value)
                 {
                     ref StackElement e = ref m_Stack[m_Level];
-                    e.value = value;
+                    e.Value = value;
                     m_Current = new JsonNode(type, m_Buffer, 
-                        e.name.Start.Value, e.name.End.Value, 
-                        e.value.Start.Value, e.value.End.Value, e.arrayIndex);
+                        e.Name.Start.Value, e.Name.End.Value, 
+                        e.Value.Start.Value, e.Value.End.Value, e.Index);
                     //m_HasValue = true;
                 }
 
-                private int Line(int index)
+                private static int Line(string buffer, int index)
                 {
                     int line = 0;
-                    var n = Math.Min(index, m_Buffer.Length);
+                    var n = Math.Min(index, buffer.Length);
                     for (var i = 0; i < n; ++i)
                     {
-                        if (m_Buffer[i] == kWhiteSpaceLineFeed)
+                        if (buffer[i] == kWhiteSpaceLineFeed)
                             ++line;
                     }
                     return line;
@@ -342,11 +383,11 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             public JsonContext(string json)
             {
                 m_Data = json;
-                m_Root = new JsonNode(JsonType.Object, json, -1, 0, 0, json.Length, -1);
+                root = new JsonNode(JsonType.Object, json, -1, 0, 0, json.Length, -1);
             }
 
-            public JsonNode root => m_Root;
-            
+            public JsonNode root { get; }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public JsonEnumerator GetEnumerator() => new JsonEnumerator(m_Data);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
