@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 m_NameEndIndex = nameEndIndex;
                 m_ValueStartIndex = valueStartIndex;
                 m_ValueEndIndex = valueEndIndex;
-                m_ArrayIndex = arrayIndex;
+                arrayElementIndex = arrayIndex;
                 this.type = type;
             }
             
@@ -99,14 +99,13 @@ namespace UnityEngine.InputSystem.Experimental.JSON
             /// </summary>
             public ReadOnlySpan<char> value => m_Data.AsSpan(m_ValueStartIndex, m_ValueEndIndex - m_ValueStartIndex);
             
-            public int arrayElementIndex => m_ArrayIndex;
-            
+            public int arrayElementIndex { get; }
+
             private readonly string m_Data;
             private readonly int m_ValueStartIndex;     // Value start index.
             private readonly int m_ValueEndIndex;       // Value length.
             private readonly int m_NameStartIndex;      // Start index of object name (excluding quotes)
             private readonly int m_NameEndIndex;        // length of object name (excluding quotes)
-            private readonly int m_ArrayIndex; // TODO Use name range for array index instead?!
         }
 
         public class JsonParseException : Exception
@@ -293,7 +292,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 hasKey = isArray; // Arrays do not use keys so pretend we already have one
                                 break;
                             
-                            // Continue scanning if white-space
                             case kWhiteSpaceSpace:
                             case kWhiteSpaceTab:
                             case kWhiteSpaceLineFeed:
@@ -301,15 +299,12 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                                 break;
                             
                             default:
-                                // Value (literal) support
                                 if (IsValue(kFalse)) 
                                     return true;
                                 if (IsValue(kTrue)) 
                                     return true;
                                 if (IsValue(kNull)) 
                                     return true;
-                                
-                                // We have encountered a non-white-space or syntax encoding token.
                                 if (char.IsDigit(c))
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
@@ -353,7 +348,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     m_Current = new JsonNode(type, m_Buffer, 
                         e.Name.Start.Value, e.Name.End.Value, 
                         e.Value.Start.Value, e.Value.End.Value, e.Index);
-                    //m_HasValue = true;
                 }
 
                 private static int Line(string buffer, int index)
@@ -371,6 +365,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 public void Reset()
                 {
                     m_Level = 0;
+                    m_Index = 0;
                 }
 
                 public JsonNode Current => m_Current;

@@ -6,6 +6,8 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
 {
     // TODO Create Assert/Is extension to support spans in a convenient way
     
+    // Simple JSON is "Gamepad.leftStick"
+    
     [Category("Experimental")]
     public class JsonContextTests
     {
@@ -321,6 +323,11 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         }
         
         // TODO Test invalid syntax
+        // TODO Test exponential part e and E
+        // TODO Test fractional part only, e.g. .1f
+        // TODO Test negative numbers
+        // TODO Test root array
+        // TODO Test only values
         
         [Test]
         public void JsonExample()
