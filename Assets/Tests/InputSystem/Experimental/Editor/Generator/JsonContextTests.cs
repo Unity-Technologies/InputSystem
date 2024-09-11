@@ -12,8 +12,14 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnFalse_IfContentIsEmptyJson()
         {
-            var c = new JsonUtility.JsonContext("{}");
+            const string json = "{ }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.False);
         }
@@ -21,8 +27,14 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsString()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": ""b"" }");
+            const string json = @"{ ""a"": ""b"" }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
@@ -35,8 +47,14 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsInteger()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": 1 }");
+            const string json = @"{ ""a"": 1 }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
@@ -49,8 +67,14 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsFloatingPoint()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": 1.0 }");
+            const string json = @"{ ""a"": 1.0 }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
@@ -63,19 +87,65 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsNestedObject()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": { ""b"" : 1.0 } }");
+            const string json = @"{ ""a"": { ""b"" : 1.0 } }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
+            
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
             Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
             Assert.That(e.Current.value.ToString(), Is.EqualTo("{ \"b\" : 1.0 } }"));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("b"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("1.0"));
+            
+            Assert.That(e.MoveNext(), Is.False);
+        }
+        
+        [Test]
+        public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsArray()
+        {
+            const string json = @"{ ""a"": [ { ""b"" : 1.0 } ] }";
+            var c = new JsonUtility.JsonContext(json);
+            using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Array));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("a"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("[ { \"b\" : 1.0 } ]"));
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo("b"));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo("1.0"));
+            // TODO Assert array index
+            
+            Assert.That(e.MoveNext(), Is.False);
         }
         
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsMultipleStrings()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": ""b"", ""c"": ""d"" }");
+            const string json = @"{ ""a"": ""b"", ""c"": ""d"" }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.String));
@@ -93,8 +163,14 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldReturnTrue_IfContentIsMultipleIntegers()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": 1, ""b"": 2 }");
+            const string json = @"{ ""a"": 1, ""b"": 2 }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            
+            Assert.That(e.MoveNext(), Is.True);
+            Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Object));
+            Assert.That(e.Current.name.ToString(), Is.EqualTo(string.Empty));
+            Assert.That(e.Current.value.ToString(), Is.EqualTo(json));
             
             Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.Current.type, Is.EqualTo(JsonUtility.JsonType.Number));
@@ -112,8 +188,10 @@ namespace Tests.InputSystem.Experimental.Editor.Generator
         [Test]
         public void EnumeratorMoveNext_ShouldThrow_IfValueSeparatorInsteadOfNameSeparator()
         {
-            var c = new JsonUtility.JsonContext(@"{ ""a"": ""b"", ""c"", ""d"" }");
+            const string json = @"{ ""a"": ""b"", ""c"", ""d"" }";
+            var c = new JsonUtility.JsonContext(json);
             using var e = c.GetEnumerator();
+            Assert.That(e.MoveNext(), Is.True);
             Assert.That(e.MoveNext(), Is.True);
             Assert.Throws<Exception>(() => e.MoveNext()); // "c", "d" instead of "c": "d"
         }

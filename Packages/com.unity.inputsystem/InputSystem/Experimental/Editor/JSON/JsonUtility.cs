@@ -121,7 +121,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private JsonNode m_Current;
                 private int m_Level;
                 private int m_Index;
-                private JsonType m_Type;
                 private readonly string m_Buffer;
                 private bool m_HasKey;
                 private bool m_HasValue;
@@ -130,21 +129,23 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private struct StackElement
                 {
                     public Range name;
-                    public int BeginObjectIndex;
-                    public int EndObjectIndex;
                     public Range value;
                 }
                 
                 public JsonEnumerator(string buffer)
                 {
                     m_Stack = new StackElement[kMaxDepth];
-                    m_Level = -1;
+                    m_Level = 0;
                     m_Buffer = buffer;
                     m_Index = 0;
-                    m_Type = JsonType.Invalid;
                     m_Current = default;
-                    m_HasKey = false;
+                    m_HasKey = true; // TODO Initialize to true since root has no key?
                     m_HasValue = false;
+
+                    // Treat root as:
+                    //      "": { ... } 
+                    // where only part after name separator correspond to passed buffer
+                    m_Stack[0].name = new Range(0, 0);
                 }
 
                 private const char kBeginObject = '{';
@@ -203,6 +204,12 @@ namespace UnityEngine.InputSystem.Experimental.JSON
 
                     throw new Exception("Unexpected end of JSON content");
                 }
+
+                private static Range ReadObject(string buffer, int index)
+                {
+                    var endIndex = buffer.LastIndexOf(kEndObject);
+                    return new Range(index, endIndex + 1);
+                }
                 
                 public bool MoveNext()
                 {
@@ -212,16 +219,31 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         switch (c)
                         {
                             case kBeginObject:
+                            {
+                                
+                                // TODO Set current
+                                var range = ReadObject(m_Buffer, m_Index);
+                                SetCurrent(JsonType.Object, range); // TODO Should not use m_Buffer, should be stack element range
+                                ++m_Index;
                                 ++m_Level;
-                                m_Type = JsonType.Object; // TODO This should be on approach object after name separator?!
-                                m_Stack[m_Level].EndObjectIndex = m_Buffer.LastIndexOf(kEndObject);
+                                m_HasKey = false;
+                                m_HasValue = false;
+                                return true;
+                                //m_Type = JsonType.Object; // TODO This should be on approach object after name separator?!
+                                //m_Stack[m_Level].EndObjectIndex = m_Buffer.LastIndexOf(kEndObject); // TODO This should not use m_Buffer, nothing should
+                            }
                                 break;
+                            
                             case kEndObject:
                                 --m_Level;
                                 break;
+                            
                             case kBeginArray:
+                                break;
+                            
                             case kEndArray:
                                 break;
+                            
                             case kQuotationMark: // TODO This would benefit form just indexing through array
                                 if (!m_HasKey)
                                 {
@@ -272,7 +294,8 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         }    
                     }
                     
-                    m_Type = JsonType.Invalid;
+                    // No more key-value pairs to iterate
+                    // TODO Assert level is zero?
                     return false;
                 }
 
@@ -280,7 +303,9 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 {
                     ref StackElement e = ref m_Stack[m_Level];
                     e.value = value;
-                    m_Current = new JsonNode(type, m_Buffer, e.name.Start.Value, e.name.End.Value, e.value.Start.Value, e.value.End.Value);
+                    m_Current = new JsonNode(type, m_Buffer, 
+                        e.name.Start.Value, e.name.End.Value, 
+                        e.value.Start.Value, e.value.End.Value);
                     m_HasValue = true;
                 }
 
