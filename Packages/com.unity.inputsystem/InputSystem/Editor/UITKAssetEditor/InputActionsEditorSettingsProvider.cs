@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
             // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_State);
+                m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
                 m_StateContainer.StateChanged += OnStateChanged;
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));

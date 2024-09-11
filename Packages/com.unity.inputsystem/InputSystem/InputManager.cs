@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -63,6 +64,22 @@ namespace UnityEngine.InputSystem
         public TypeTable processors => m_Processors;
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
+
+        static readonly ProfilerMarker k_InputUpdateProfilerMarker = new ProfilerMarker("InputUpdate");
+        static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
+        static readonly ProfilerMarker k_InputAddDeviceMarker = new ProfilerMarker("InputSystem.AddDevice");
+        static readonly ProfilerMarker k_InputRestoreDevicesAfterReloadMarker = new ProfilerMarker("InputManager.RestoreDevicesAfterDomainReload");
+        static readonly ProfilerMarker k_InputRegisterCustomTypesMarker = new ProfilerMarker("InputManager.RegisterCustomTypes");
+
+        static readonly ProfilerMarker k_InputOnBeforeUpdateMarker = new ProfilerMarker("InputSystem.onBeforeUpdate");
+        static readonly ProfilerMarker k_InputOnAfterUpdateMarker = new ProfilerMarker("InputSystem.onAfterUpdate");
+        static readonly ProfilerMarker k_InputOnSettingsChangeMarker = new ProfilerMarker("InputSystem.onSettingsChange");
+        static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
+        static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
+        static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
+        static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
+        static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
+
 
         public InputMetrics metrics
         {
@@ -593,7 +610,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -861,7 +878,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "InputSystem.onLayoutChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, k_InputOnLayoutChangeMarker, "InputSystem.onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -891,7 +908,7 @@ namespace UnityEngine.InputSystem
             InternedString layoutName = new InternedString(string.Empty);
             try
             {
-                Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
+                k_InputTryFindMatchingControllerMarker.Begin();
                 ////TODO: this will want to take overrides into account
 
                 // See if we can match by description.
@@ -955,7 +972,7 @@ namespace UnityEngine.InputSystem
             }
             finally
             {
-                Profiler.EndSample();
+                k_InputTryFindMatchingControllerMarker.End();
             }
             return layoutName;
         }
@@ -1114,7 +1131,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1280,7 +1297,7 @@ namespace UnityEngine.InputSystem
             device.MakeCurrent();
 
             // Notify listeners.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Request device to send us an initial state update.
             if (device.enabled)
@@ -1300,7 +1317,7 @@ namespace UnityEngine.InputSystem
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            Profiler.BeginSample("InputSystem.AddDevice");
+            k_InputAddDeviceMarker.Begin();
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1309,7 +1326,7 @@ namespace UnityEngine.InputSystem
             {
                 if (throwIfNoLayoutFound)
                 {
-                    Profiler.EndSample();
+                    k_InputAddDeviceMarker.End();
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
                 }
 
@@ -1320,13 +1337,13 @@ namespace UnityEngine.InputSystem
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
-                Profiler.EndSample();
+                k_InputAddDeviceMarker.End();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
             device.m_Description = description;
-            Profiler.EndSample();
+            k_InputAddDeviceMarker.End();
             return device;
         }
 
@@ -1335,15 +1352,14 @@ namespace UnityEngine.InputSystem
         {
             try
             {
-                Profiler.BeginSample("InputSystem.AddDevice");
-
+                k_InputAddDeviceMarker.Begin();
                 var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
                 device.m_Description = description;
                 return device;
             }
             finally
             {
-                Profiler.EndSample();
+                k_InputAddDeviceMarker.End();
             }
         }
 
@@ -1436,7 +1452,7 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // Try setting next device of same type as current
             InputSystem.GetDevice(device.GetType())?.MakeCurrent();
@@ -1460,7 +1476,7 @@ namespace UnityEngine.InputSystem
             // Trigger reset notification.
             var change = isHardReset ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
             InputActionState.OnDeviceChange(device, change);
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
 
             // If the device implements its own reset, let it handle it.
             if (!alsoResetDontResetControls && device is ICustomDeviceReset customReset)
@@ -1748,7 +1764,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "InputSystem.onDeviceChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
         }
 
         private unsafe void QueueEvent(InputEvent* eventPtr)
@@ -1961,6 +1977,65 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
+
+            // Register custom types by reflection
+            RegisterCustomTypes();
+        }
+
+        void RegisterCustomTypes(Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                if (!type.IsClass
+                    || type.IsAbstract
+                    || type.IsGenericType)
+                    continue;
+                if (typeof(InputProcessor).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterProcessor(type);
+                }
+                else if (typeof(IInputInteraction).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterInteraction(type);
+                }
+                else if (typeof(InputBindingComposite).IsAssignableFrom(type))
+                {
+                    InputSystem.RegisterBindingComposite(type, null);
+                }
+            }
+        }
+
+        void RegisterCustomTypes()
+        {
+            k_InputRegisterCustomTypesMarker.Begin();
+
+            var inputSystemAssembly = typeof(InputProcessor).Assembly;
+            var inputSystemName = inputSystemAssembly.GetName().Name;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    // exclude InputSystem assembly which should be loaded first
+                    if (assembly == inputSystemAssembly) continue;
+
+                    // Only register types from assemblies that reference InputSystem
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    {
+                        if (referencedAssembly.Name == inputSystemName)
+                        {
+                            RegisterCustomTypes(assembly.GetTypes());
+                            break;
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    continue;
+                }
+            }
+
+            k_InputRegisterCustomTypesMarker.End();
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2435,7 +2510,7 @@ namespace UnityEngine.InputSystem
                     AddDevice(device);
 
                     DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reconnected,
-                        "InputSystem.onDeviceChange");
+                        k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                 }
                 else
                 {
@@ -2469,6 +2544,45 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private JsonParser.JsonString MakeEscapedJsonString(string theString)
+        {
+            //
+            // When we create the device description from the (passed from native) deviceDescriptor string in OnNativeDeviceDiscovered()
+            // we remove any escape characters from the capabilties field when we do InputDeviceDescription.FromJson() - this decoded
+            // description is used to create the device.
+            //
+            // This means that the native and managed code can have slightly different representations of the capabilities field.
+            //
+            // Managed: description.capabilities    string, unescaped
+            //                                      eg "{"deviceName":"Oculus Quest", ..."
+            //
+            // Native:  deviceDescriptor            string, containing a Json encoded "capabilities" name/value pair represented by an escaped Json string
+            //                                      eg "{\"deviceName\":\"Oculus Quest\", ..."
+            //
+            // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals() we
+            // reconstruct an escaped string and make an escaped JsonParser.JsonString and use that for the comparison instead.
+            //
+            var builder = new StringBuilder();
+            var length = theString.Length;
+            var hasEscapes = false;
+            for (var j = 0; j < length; ++j)
+            {
+                var ch = theString[j];
+                if (ch == '\\' || ch == '\"')
+                {
+                    builder.Append('\\');
+                    hasEscapes = true;
+                }
+                builder.Append(ch);
+            }
+            var jsonStringWithEscapes = new JsonParser.JsonString
+            {
+                text = builder.ToString(),
+                hasEscapes = hasEscapes
+            };
+            return jsonStringWithEscapes;
+        }
+
         private InputDevice TryMatchDisconnectedDevice(string deviceDescriptor)
         {
             for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
@@ -2487,7 +2601,7 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
                     continue;
-                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", description.capabilities, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", MakeEscapedJsonString(description.capabilities), deviceDescriptor))
                     continue;
                 if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("serial", description.serial, deviceDescriptor))
                     continue;
@@ -2605,7 +2719,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, k_InputOnBeforeUpdateMarker, "InputSystem.onBeforeUpdate");
         }
 
         /// <summary>
@@ -2720,14 +2834,14 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
-                "InputSystem.onSettingsChange");
+                k_InputOnSettingsChangeMarker, "InputSystem.onSettingsChange");
         }
 
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
-            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, "InputSystem.onActionsChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
 
         #endif
@@ -2966,14 +3080,13 @@ namespace UnityEngine.InputSystem
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
-            ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
-            Profiler.BeginSample("InputUpdate");
+            k_InputUpdateProfilerMarker.Begin();
 
             if (m_InputEventStream.isOpen)
             {
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
             }
 
@@ -2987,7 +3100,7 @@ namespace UnityEngine.InputSystem
 
             if ((updateType & m_UpdateMask) == 0)
             {
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 return;
             }
 
@@ -3087,7 +3200,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 InvokeAfterUpdateCallback(updateType);
                 if (canFlushBuffer)
                     eventBuffer.Reset();
@@ -3326,7 +3439,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
-                            Profiler.EndSample();
+                            k_InputUpdateProfilerMarker.End();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
 #endif
@@ -3345,7 +3458,7 @@ namespace UnityEngine.InputSystem
                     if (m_EventListeners.length > 0)
                     {
                         DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                            new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
+                            new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
                         if (currentEventReadPtr->handled)
@@ -3487,7 +3600,7 @@ namespace UnityEngine.InputSystem
                                 ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices,
                                     ref m_DisconnectedDevicesCount, device);
                                 DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                    device, InputDeviceChange.Disconnected, "InputSystem.onDeviceChange");
+                                    device, InputDeviceChange.Disconnected, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             }
 
                             break;
@@ -3497,7 +3610,7 @@ namespace UnityEngine.InputSystem
                             device.NotifyConfigurationChanged();
                             InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
                             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
-                                device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
+                                device, InputDeviceChange.ConfigurationChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
                             break;
 
                         case DeviceResetEvent.Type:
@@ -3525,7 +3638,7 @@ namespace UnityEngine.InputSystem
             {
                 // We need to restore m_InputEventStream to a sound state
                 // to avoid failing recursive OnUpdate check next frame.
-                Profiler.EndSample();
+                k_InputUpdateProfilerMarker.End();
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }
@@ -3533,8 +3646,7 @@ namespace UnityEngine.InputSystem
             if (shouldProcessActionTimeouts)
                 ProcessStateChangeMonitorTimeouts();
 
-            Profiler.EndSample();
-
+            k_InputUpdateProfilerMarker.End();
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
@@ -3614,7 +3726,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
-                "InputSystem.onAfterUpdate");
+                k_InputOnAfterUpdateMarker, "InputSystem.onAfterUpdate");
         }
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
@@ -3795,7 +3907,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
-                device, eventPtr, "InputSystem.onDeviceStateChange");
+                device, eventPtr, k_InputOnDeviceSettingsChangeMarker, "InputSystem.onDeviceStateChange");
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
@@ -4050,7 +4162,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
-            Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
+            k_InputRestoreDevicesAfterReloadMarker.Begin();
 
             using (InputDeviceBuilder.Ref())
             {
@@ -4117,7 +4229,7 @@ namespace UnityEngine.InputSystem
                 m_SavedAvailableDevices = null;
             }
 
-            Profiler.EndSample();
+            k_InputRestoreDevicesAfterReloadMarker.End();
         }
 
         // We have two general types of devices we need to care about when recreating devices

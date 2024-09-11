@@ -8,6 +8,8 @@ using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools;
+using UnityEngine.TestTools.Constraints;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -16,6 +18,7 @@ using UnityEngine.InputSystem.Plugins.InputForUI;
 using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
+using Is = NUnit.Framework.Is;
 
 // Note that these tests do not verify InputForUI default bindings at all.
 // It only verifies integration with Project-wide Input Actions.
@@ -681,6 +684,13 @@ public class InputForUITests : InputTestFixture
     }
 
 #endif // UNITY_EDITOR
+
+    [Test]
+    public void Update_DoesntAllocate()
+    {
+        Update(); // Warm-up internals
+        Assert.That(Update, Is.Not.AllocatingGCMemory());
+    }
 
     static void Update()
     {
