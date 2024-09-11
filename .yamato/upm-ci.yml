@@ -259,10 +259,10 @@ performance_tests_only:
     recurring:
         - branch: develop
           frequency: daily
-          rerun: on_new_revision            
+          rerun: always
         - branch: stable
           frequency: weekly
-          rerun: on_new_revision              
+          rerun: always
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:
