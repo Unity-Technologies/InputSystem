@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputActionCodeAuthoringAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        private const string kEventName = "input_code_authoring";
+        private const string kEventName = "input_action_code_authoring";
         private const int kMaxEventsPerHour = 100; // default: 1000
         private const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.Editor
             ++m_Counters[(int)api];
         }
         
-        // Cache callback
+        // Cache delegate
         private static readonly Action<PlayModeStateChange> PlayModeChanged = OnPlayModeStateChange;
 
         private static void OnPlayModeStateChange(PlayModeStateChange change)
@@ -54,11 +54,13 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Log("Play mode state change: " + change);
             if (change == PlayModeStateChange.ExitingEditMode)
             {
+                // Reset all counters when exiting edit mode
                 for (var i = 0; i < m_Counters.Length; ++i)
                     m_Counters[i] = 0;
             }
             if (change == PlayModeStateChange.ExitingPlayMode)
             {
+                // Send analytics and unhook delegate when exiting play-mode
                 EditorApplication.playModeStateChanged -= PlayModeChanged;
                 new InputActionCodeAuthoringAnalytic().Send();
             }
@@ -67,11 +69,12 @@ namespace UnityEngine.InputSystem.Editor
         [InitializeOnEnterPlayMode]
         private static void Hook()
         {
+            // Make sure only a single play-mode change delegate is registered
             EditorApplication.playModeStateChanged -= PlayModeChanged;
             EditorApplication.playModeStateChanged += PlayModeChanged;
         }
-        
-        public InputActionCodeAuthoringAnalytic()
+
+        private InputActionCodeAuthoringAnalytic()
         {
             info = new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }
@@ -95,7 +98,8 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             /// <summary>
-            /// Defines the associated component.
+            /// Specifies whether code-authoring (Input Action setup via extensions) was used at least once
+            /// during play-mode.
             /// </summary>
             public bool usesCodeAuthoring;
         }
@@ -108,7 +112,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             try
             {
-                // Determine aggregated perspective, i.e. was any API used
+                // Determine aggregated perspective, i.e. was "any" code-authoring API used
                 var usedCodeAuthoringDuringPlayMode = false;
                 for (var i = 0; i < m_Counters.Length; ++i)
                 {

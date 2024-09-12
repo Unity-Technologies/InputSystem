@@ -9,14 +9,6 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    internal class InputApiAnalyticCounters
-    {
-        private int addActionMapToAsset;
-        private int removeActionMapFromAsset;
-        private int addActionToMap;
-        private int removeActionFromMap;
-    }
-    
     /// <summary>
     /// Methods to change the setup of <see cref="InputAction"/>, <see cref="InputActionMap"/>,
     /// and <see cref="InputActionAsset"/> objects.
@@ -324,7 +316,7 @@ namespace UnityEngine.InputSystem
         /// Be extremely careful in enabling/disabling tracking before internal calls since those may otherwise
         /// be incorrectly registered.
         /// </remarks>
-        [Conditional("UNITY_EDITOR"), Conditional("UNITY_ANALYTICS"), Conditional("ENABLE_CLOUD_SERVICES_ANALYTICS")]
+        [Conditional("UNITY_EDITOR")]
         private static void RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api api)
         {
             UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Register(api);
