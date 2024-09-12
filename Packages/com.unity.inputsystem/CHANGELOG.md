@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased] - yyyy-mm-dd
+
+### Changed
+- Renamed editor Resources directories to PackageResources to fix package validation warnings.
+
 ## [1.11.0] - 2024-09-10
 
 ### Fixed
