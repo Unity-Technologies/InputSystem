@@ -49,7 +49,8 @@ namespace UnityEngine.InputSystem.Editor
         // Cache delegate
         private static readonly Action<PlayModeStateChange> PlayModeChanged = OnPlayModeStateChange;
 
-        private static void OnPlayModeStateChange(PlayModeStateChange change)
+        // Note: Internal visibility to simplify unit testing
+        internal static void OnPlayModeStateChange(PlayModeStateChange change)
         {
             Debug.Log("Play mode state change: " + change);
             if (change == PlayModeStateChange.ExitingEditMode)
