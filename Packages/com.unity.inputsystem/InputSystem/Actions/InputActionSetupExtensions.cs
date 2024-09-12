@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem
                 groups = groups
             });
         }
-        
+
         /// <summary>
         /// Conditionally compiled helper for logging API usage of code-authored actions.
         /// </summary>
@@ -320,6 +320,7 @@ namespace UnityEngine.InputSystem
         {
             UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Register(api);
         }
+
         #endif
 
         /// <summary>
@@ -368,7 +369,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
             #endif
-            
+
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
@@ -501,7 +502,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
             #endif
-            
+
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
             if (binding.path == null)
@@ -528,7 +529,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddCompositeBinding);
             #endif
-            
+
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(composite))
@@ -611,7 +612,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
             #endif
-            
+
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
@@ -673,7 +674,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
             #endif
-            
+
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
             if (index < 0 || index >= actionMap.m_Bindings.LengthSafe())
@@ -875,7 +876,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeCompositeBinding);
             #endif
-            
+
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(compositeName))
@@ -920,7 +921,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.Rename);
             #endif
-            
+
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(newName))
@@ -966,7 +967,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddControlScheme);
             #endif
-            
+
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(controlScheme.name))
@@ -1038,7 +1039,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.RemoveControlScheme);
             #endif
-            
+
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
@@ -1062,7 +1063,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithBindingGroup);
             #endif
-            
+
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
@@ -1071,7 +1072,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithDevice);
             #endif
-            
+
             if (required)
                 return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
@@ -1082,7 +1083,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithRequiredDevice);
             #endif
-            
+
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
         }
 
@@ -1091,7 +1092,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithOptionalDevice);
             #endif
-            
+
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
@@ -1100,7 +1101,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithRequiredDevice);
             #endif
-            
+
             return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
         }
 
@@ -1109,7 +1110,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithOptionalDevice);
             #endif
-            
+
             return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();
         }
 

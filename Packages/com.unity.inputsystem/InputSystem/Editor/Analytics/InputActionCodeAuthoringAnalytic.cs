@@ -39,13 +39,13 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private static readonly int[] m_Counters = new int[Enum.GetNames(typeof(Api)).Length];
-        
+
         public static void Register(Api api)
         {
             // Note: Currently discards detailed information and only sets a boolean (aggregated) value.
             ++m_Counters[(int)api];
         }
-        
+
         // Cache delegate
         private static readonly Action<PlayModeStateChange> PlayModeChanged = OnPlayModeStateChange;
 
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem.Editor
                 new InputActionCodeAuthoringAnalytic().Send();
             }
         }
-        
+
         [InitializeOnEnterPlayMode]
         private static void Hook()
         {
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             info = new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }
-        
+
         /// <summary>
         /// Represents InputAction code authoring editor data.
         /// </summary>
@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public bool usesCodeAuthoring;
         }
-        
+
 #if UNITY_2023_2_OR_NEWER
         public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     }
                 }
-                
+
                 data = new Data(usedCodeAuthoringDuringPlayMode);
                 error = null;
                 return true;
@@ -133,8 +133,8 @@ namespace UnityEngine.InputSystem.Editor
                 error = e;
                 return false;
             }
-        }     
-        
+        }
+
         public InputAnalytics.InputAnalyticInfo info { get; }
     }
 }

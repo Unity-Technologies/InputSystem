@@ -667,7 +667,7 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics_ShouldReportCodeAuthoringAnalytic()
     {
-        
+        CollectAnalytics(InputActionCodeAuthoringAnalytic.kEventName);
     }
 
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
