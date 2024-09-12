@@ -13,6 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed Multiple interactions could breaks on Composite Binding. [ISXB-619](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-619)
 
+### Changed
+- Renamed editor Resources directories to PackageResources to fix package validation warnings.
+
 ## [1.11.0] - 2024-09-10
 
 ### Fixed
