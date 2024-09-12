@@ -2,6 +2,7 @@
 
 using System;
 using UnityEditor;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -119,14 +120,14 @@ namespace UnityEngine.InputSystem.Editor
             /// <param name="usesCodeAuthoring">Specifies whether code authoring has been used.</param>
             public Data(bool usesCodeAuthoring)
             {
-                this.usesCodeAuthoring = usesCodeAuthoring;
+                uses_code_authoring = usesCodeAuthoring;
             }
 
             /// <summary>
             /// Specifies whether code-authoring (Input Action setup via extensions) was used at least once
             /// during play-mode.
             /// </summary>
-            public bool usesCodeAuthoring;
+            public bool uses_code_authoring;
         }
 
 #if UNITY_2023_2_OR_NEWER

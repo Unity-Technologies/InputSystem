@@ -690,7 +690,7 @@ partial class CoreTests
         Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputActionCodeAuthoringAnalytic.Data>());
 
         var data0 = (InputActionCodeAuthoringAnalytic.Data)sentAnalyticsEvents[0].data;
-        Assert.That(data0.usesCodeAuthoring, Is.False);
+        Assert.That(data0.uses_code_authoring, Is.False);
 
         // Pretend we are entering play-mode
         InputActionCodeAuthoringAnalytic.OnPlayModeStateChange(PlayModeStateChange.ExitingEditMode);
@@ -709,7 +709,7 @@ partial class CoreTests
         Assert.That(sentAnalyticsEvents[1].data, Is.TypeOf<InputActionCodeAuthoringAnalytic.Data>());
 
         var data1 = (InputActionCodeAuthoringAnalytic.Data)sentAnalyticsEvents[1].data;
-        Assert.That(data1.usesCodeAuthoring, Is.True);
+        Assert.That(data1.uses_code_authoring, Is.True);
     }
 
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
