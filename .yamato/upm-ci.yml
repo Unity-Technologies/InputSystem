@@ -3,8 +3,9 @@
 
 {% for editor in editors %}
 {% for platform in platforms_win %}
-{{ platform.name }}_{{ editor.version }}:
-  name : Build and Test version {{ editor.version }} on {{ platform.name }}
+{% for category in test_category %}
+{{ platform.name }}_{{ editor.version }}_{{ category.name }}:
+  name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -32,15 +33,18 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # platforms_win
+
 {% for platform in platforms_nix %}
-{{ platform.name }}_{{ editor.version }}:
-  name : Build and Test version {{ editor.version }} on {{ platform.name }}
+{% for category in test_category %}
+{{ platform.name }}_{{ editor.version }}_{{ category.name }}:
+  name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -67,17 +71,19 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
-{% endfor %}
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # platforms_nix
+{% endfor %} # editors
 
 {% for editor in editors %}
-build_ios_{{ editor.version }}:
-  name: Build Tests on {{ editor.version }} on ios
+{% for category in test_category %}
+build_ios_{{ editor.version }}_{{ category.name }}:
+  name: Build - {{ editor.version }} - iOS, {{ category.name }} tests
   agent:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
@@ -86,7 +92,7 @@ build_ios_{{ editor.version }}:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
-    - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
         paths:
@@ -95,8 +101,8 @@ build_ios_{{ editor.version }}:
         paths:
           - "build/logs/**"
 
-run_ios_{{ editor.version }}:
-  name: Run Tests on {{ editor.version }} on ios
+run_ios_{{ editor.version }}_{{ category.name }}:
+  name: Run - {{ editor.version }} - iOS, {{ category.name }} tests
   agent:
       type: Unity::mobile::iPhone
       image: {{ ios_and_tvos_macos_bokken_image }}
@@ -104,17 +110,18 @@ run_ios_{{ editor.version }}:
       flavor: b1.medium
   skip_checkout: true
   dependencies:
-    - .yamato/upm-ci.yml#build_ios_{{ editor.version }}  
+    - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
   artifacts:
     logs:
         paths:
           - "build/test-results/**"
+{% endfor %} # test_category
 
 build_tvos_{{ editor.version }}:
-  name: Build Tests on {{ editor.version }} on tvos
+  name: Build - {{ editor.version }} - tvOS
   agent:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
@@ -133,7 +140,7 @@ build_tvos_{{ editor.version }}:
           - "build/logs/**"
 
 run_tvos_{{ editor.version }}:
-  name: Run Tests on {{ editor.version }} on tvos
+  name: Run - {{ editor.version }} - tvOS
   agent:
       type: Unity::mobile::appletv
       image: {{ ios_and_tvos_macos_bokken_image }}
@@ -150,8 +157,9 @@ run_tvos_{{ editor.version }}:
           - "build/test-results/**"
 
 {% for backend in scripting_backends %}
-build_android_{{ editor.version }}_{{ backend.name }}:
-  name: Build Tests on {{ editor.version }} on android {{ backend.name }}
+{% for category in test_category %}
+build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
+  name: Build - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
       type: Unity::VM
       image: package-ci/win10:default
@@ -160,7 +168,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
-    - ./utr --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
         paths:
@@ -169,8 +177,8 @@ build_android_{{ editor.version }}_{{ backend.name }}:
         paths:
           - "build/logs/**"
 
-run_android_{{ editor.version }}_{{ backend.name }}:
-  name: Run Tests on {{ editor.version }} on android {{ backend.name }}
+run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
+  name: Run - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
       type: Unity::mobile::shield
       image: package-ci/win10:default
@@ -179,7 +187,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
   skip_checkout: true
   # Set a dependency on the build job
   dependencies:
-    - .yamato/upm-ci.yml#build_android_{{ editor.version }}_{{ backend.name }}  
+    - .yamato/upm-ci.yml#build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}
   commands:
     - {{ utr_install_win }}
     - |
@@ -189,7 +197,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
        # List the connected devices
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-       ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+       ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=android --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results
@@ -199,24 +207,24 @@ run_android_{{ editor.version }}_{{ backend.name }}:
     logs:
       paths:
         - "build/test-results/**"
-{% endfor %}
-
-{% endfor %}
+{% endfor %} # test_category
+{% endfor %} # scripting_backends
+{% endfor %} # editors
 
 all_tests:
-  name: All Tests
+  name: All Tests  
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
-    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_all
     {% endfor %}
     {% for platform in platforms_nix %}
-    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_all
     {% endfor %}
     {% for backend in scripting_backends %}
-    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}
+    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_all
     {% endfor %}
-    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_all
 {% if editor.disable_tvos_run %}
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
 {% else %}
@@ -230,6 +238,31 @@ all_tests:
       - targets:
           only:
             - "develop"
+            
+            
+performance_tests_only:
+  name: Performance Tests Only
+  dependencies:
+    {% for editor in editors %}
+    {% for platform in platforms_win %}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_performance
+    {% endfor %}    
+    {% for platform in platforms_nix %}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_performance
+    {% endfor %}
+    {% for backend in scripting_backends %}
+    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_performance
+    {% endfor %}
+    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_performance
+    {% endfor %}
+  triggers:
+    recurring:
+        - branch: develop
+          frequency: daily
+          rerun: always
+        - branch: stable
+          frequency: weekly
+          rerun: always
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:
