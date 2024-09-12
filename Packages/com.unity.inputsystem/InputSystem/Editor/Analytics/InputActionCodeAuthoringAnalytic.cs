@@ -40,10 +40,28 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly int[] m_Counters = new int[Enum.GetNames(typeof(Api)).Length];
 
+        /// <summary>
+        /// Registers a call to the associated API.
+        /// </summary>
+        /// <param name="api">Enumeration identifying the API.</param>
         public static void Register(Api api)
         {
+            if (suppress)
+                return;
+
             // Note: Currently discards detailed information and only sets a boolean (aggregated) value.
             ++m_Counters[(int)api];
+        }
+
+        /// <summary>
+        /// Suppresses the registration of analytics.
+        /// </summary>
+        /// <remarks>
+        /// May be used to temporarily suppress analytics to avoid false positives from internal usage.
+        /// </remarks>
+        public static bool suppress
+        {
+            get; set;
         }
 
         // Cache delegate
@@ -58,12 +76,18 @@ namespace UnityEngine.InputSystem.Editor
                 // Reset all counters when exiting edit mode
                 for (var i = 0; i < m_Counters.Length; ++i)
                     m_Counters[i] = 0;
+
+                // Make sure not suppressed
+                suppress = false;
             }
             if (change == PlayModeStateChange.ExitingPlayMode)
             {
                 // Send analytics and unhook delegate when exiting play-mode
                 EditorApplication.playModeStateChanged -= PlayModeChanged;
                 new InputActionCodeAuthoringAnalytic().Send();
+
+                // No reason to not suppress
+                suppress = true;
             }
         }
 
