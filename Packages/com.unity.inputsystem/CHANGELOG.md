@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
+- Renamed editor Resources directories to PackageResources to fix package validation warnings.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
