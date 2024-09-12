@@ -11,9 +11,9 @@ namespace UnityEngine.InputSystem.Editor
 #endif // UNITY_2023_2_OR_NEWER
     internal class InputActionCodeAuthoringAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        private const string kEventName = "input_action_code_authoring";
-        private const int kMaxEventsPerHour = 100; // default: 1000
-        private const int kMaxNumberOfElements = 100; // default: 1000
+        public const string kEventName = "input_action_code_authoring";
+        public const int kMaxEventsPerHour = 100; // default: 1000
+        public const int kMaxNumberOfElements = 100; // default: 1000
 
         /// <summary>
         /// Enumeration type for code authoring APIs mapping to <see cref="InputActionSetupExtensions"/>.
