@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
 {
     /// <summary>
     /// A minimalistic streaming JSON parser supporting RFC-8259 https://datatracker.ietf.org/doc/html/rfc8259#page-5.
-    /// See https://www.json.org/json-en.html for additional details.
+    /// See https://www.json.org/json-en.html for additional details and syntax.
     /// </summary>
     /// <remarks>
     /// Mainly exists to mitigate lack of System.Text.Json of .NET Core 3.0 and beyond capabilities.
@@ -161,7 +161,12 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 private const char kValueSeparator = ',';
                 private const char kQuotationMark = '"';
                 private const char kEscapeSequence = '\\';
+                
                 private const char kDecimalPoint = '.';
+                private const char kExponential1 = 'e';
+                private const char kExponential2 = 'E';
+                private const char kNegative = '-';
+                private const char kPositive = '+';
                 
                 private const char kWhiteSpaceSpace = ' ';
                 private const char kWhiteSpaceTab = '\t';  
@@ -180,38 +185,59 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                         if (buffer[i] == kQuotationMark)
                             return new Range(index, i);
                     }
+                    
                     throw new JsonParseException($"Missing '{kQuotationMark}' terminating string.");
                 }
-
+                
+                // TODO This incorrect verifies numbers, should extract range first
                 private static Range ReadNumber(string buffer, int index)
                 {
-                    var hasFloatingPoint = false;
-                    for (var i = index; i != buffer.Length; ++i)
+                    var hasDecimalPoint = false;
+                    var hasExponent = false;
+                    var i = index + 1;
+                    for (; i != buffer.Length; ++i)
                     {
                         var c = buffer[i];
-                        if (!char.IsDigit(c))
+                        if (char.IsDigit(c))
+                            continue;
+                        
+                        switch (c)
                         {
-                            switch (c)
-                            {
-                                case kDecimalPoint:
-                                    if (hasFloatingPoint)
-                                        throw new JsonParseException($"Unexpected '{kDecimalPoint}'. Expected digit, white-space or value separator.");
-                                    hasFloatingPoint = true;
-                                    break;
-                                case kValueSeparator:
-                                case kWhiteSpaceTab:
-                                case kWhiteSpaceSpace:
-                                case kWhiteSpaceLineFeed:
-                                case kWhiteSpaceCarriageReturn:
-                                    return new Range(index, i);
-                                default:
-                                    throw new JsonParseException(
-                                        $"Unexpected character '{c}'. Expected digit or decimal-point.");
-                            }    
-                        }
+                            case kDecimalPoint:
+                                if (hasDecimalPoint)
+                                    throw new JsonParseException($"Unexpected '{c}'. Expected digit, white-space or value separator.");
+                                hasDecimalPoint = true;
+                                break;
+                            case kExponential1:
+                            case kExponential2:
+                                if (!char.IsDigit(buffer[i-1]))
+                                    throw new JsonParseException($"Exponent '{kExponential1}'/'{kExponential2}' must be preceded by a digit.");
+                                if (hasExponent)
+                                    throw new JsonParseException($"Unexpected '{c}'. Expected digit, white-space or value separator.");
+                                hasExponent = true;
+                                var j = i + 1;
+                                if (j == buffer.Length)
+                                    throw new JsonParseException($"Unexpected '{c}'. Expected digit, white-space or value separator.");
+                                var k = buffer[j];
+                                if (!char.IsDigit(k) && k != kNegative && k != kPositive)
+                                    throw new JsonParseException($"Unexpected '{k}'. Expected digit, '{kNegative}' or '{kPositive}'.");
+                                ++i;
+                                break;
+                            case kValueSeparator:
+                            case kWhiteSpaceTab:
+                            case kWhiteSpaceSpace:
+                            case kWhiteSpaceLineFeed:
+                            case kWhiteSpaceCarriageReturn:
+                                // TODO Verify last is number
+                                return new Range(index, i);
+                            default:
+                                throw new JsonParseException($"Unexpected character '{c}'. Expected digit or decimal-point.");
+                        }   
                     }
-
-                    throw new JsonParseException("Unexpected end of JSON content");
+                    
+                    // TODO Move SetCurrent here and return bool
+                    // TODO Verify last is number
+                    return new Range(index, i);
                 }
 
                 private static Range ReadScope(string buffer, int index, char begin, char end)
@@ -234,6 +260,7 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 
                 public bool MoveNext()
                 {
+                    var isExponential = false;
                     var hasKey = m_Index == 0 || m_Stack[m_Level].IsArray; // Note: Root has empty key, also treat key as being set if inside array
                     
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack
@@ -297,21 +324,21 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                             case kWhiteSpaceLineFeed:
                             case kWhiteSpaceCarriageReturn:
                                 break;
-                            
+                                
                             default:
-                                if (IsValue(kFalse)) 
-                                    return true;
-                                if (IsValue(kTrue)) 
-                                    return true;
-                                if (IsValue(kNull)) 
-                                    return true;
-                                if (char.IsDigit(c))
+                                if (char.IsDigit(c) || c == kNegative)
                                 {
                                     var range = ReadNumber(m_Buffer, m_Index);
                                     m_Index = range.End.Value;
                                     SetCurrent(JsonType.Number, range);
                                     return true;
                                 }
+                                if (IsValue(kFalse)) 
+                                    return true;
+                                if (IsValue(kTrue)) 
+                                    return true;
+                                if (IsValue(kNull)) 
+                                    return true;
                                     
                                 throw new JsonParseException("");
                         }    
@@ -331,6 +358,11 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                     m_Index = range.End.Value;
                     SetCurrent(JsonType.Value, range);
                     return true;
+                }
+
+                private void FailMissingTermination(char begin, char end)
+                {
+                    throw new JsonParseException($"Failed to find matching end tag '{end}' for opening tag '{begin}' on line {Line(m_Buffer, m_Index)}");
                 }
 
                 private void FailUnexpected(char c, string expected = null)
