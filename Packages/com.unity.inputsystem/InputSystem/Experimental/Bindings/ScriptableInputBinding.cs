@@ -2,6 +2,8 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO All of these should really be e.g. Move.inputbinding.asset
+    
     /// <summary>
     /// An opaque base class for scriptable input bindings required to support the serialization engine.
     /// </summary>
@@ -10,12 +12,13 @@ namespace UnityEngine.InputSystem.Experimental
         /// <summary>
         /// Returns the associated binding type.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Value type of the binding.</returns>
         public abstract Type GetBindingType();
     }
 
     /// <summary>
-    /// Represents an abstract scriptable input binding that is also an observable input.
+    /// Represents an abstract scriptable input binding that is also an observable input generating a specific
+    /// observable value type.
     /// </summary>
     /// <typeparam name="T">The observable value type.</typeparam>
     public abstract class ScriptableInputBinding<T> : ScriptableInputBinding, IObservableInput<T>, IObservable<T> 
@@ -27,8 +30,15 @@ namespace UnityEngine.InputSystem.Experimental
     }
     
     // https://discussions.unity.com/t/serialized-interface-fields/871555/13
+
+    /*public abstract class TypeErasedBinding
+    {
+        
+    }*/
+
+
     
-    // TODO Remove
+    // TODO Remove or fix? Basically we might have to require that we can deal with bindings this way but Unity requires us to use a base.
     public abstract class ScriptableInputWrapperBinding<T> : ScriptableInputBinding, IObservableInput<T>, IObservable<T> 
         where T : struct
     {

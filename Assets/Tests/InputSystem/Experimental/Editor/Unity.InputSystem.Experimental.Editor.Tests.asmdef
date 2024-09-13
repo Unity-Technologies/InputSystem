@@ -1,0 +1,21 @@
+{
+    "name": "Unity.InputSystem.Experimental.Editor.Tests",
+    "rootNamespace": "Unity.InputSystem.Experimental.Editor.Tests",
+    "references": [
+        "Unity.InputSystem.Experimental",
+        "Unity.InputSystem.Experimental.Editor",
+        "Unity.TestFramework.Build",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

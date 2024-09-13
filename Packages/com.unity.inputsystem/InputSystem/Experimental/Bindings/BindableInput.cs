@@ -38,12 +38,16 @@ namespace UnityEngine.InputSystem.Experimental
         public void Dispose() { }
     }
     
+    // TODO Remove this complexity since same problem as an e.g. Mux? Instead use a mux node internally.
+    //      This could be the type we wrap. 
+    
     // TODO This should be a serializable struct
     // TODO This is a node that doesn't really do anything?! It would just provide an aggregate subscription
     [Serializable]
-    public class BindableInput<T> : /*ScriptableObject,*/ IObservableInput<T> 
+    public class BindableInput<T> : IObservableInput<T> 
         where T : struct
     {
+        // TODO Note that m_Bindings would box as long as input is a struct 
         [NonSerialized] private IObservableInput<T>[] m_Bindings;
         [NonSerialized] private int m_BindingCount;
         
