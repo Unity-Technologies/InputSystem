@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed memory leak when the OnScreenStick component was destroyed [ISXB-1070](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1070). Contribution by [LukeUnityDev](https://github.com/LukeUnityDev).
+
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
 
