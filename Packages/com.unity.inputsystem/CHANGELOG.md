@@ -10,6 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+## Fixed
+- Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
+
+### Changed
+- Renamed editor Resources directories to PackageResources to fix package validation warnings.
+
 ## [1.11.0] - 2024-09-10
 
 ### Fixed
@@ -21,12 +27,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
 - Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off. [ISXB-586](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-586)
 - Improved performance of disconnected device activation (ISX-1450)
-- Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
-
-### Added
-- Added Hinge Angle sensor support for foldable devices.
-- Added InputDeviceMatcher.WithManufacturerContains(string noRegexMatch) API to improve DualShockSupport.Initialize performance (ISX-1411)
-- Added an IME Input sample scene.
+- Fixed DualSense controllers being recognized as DualShock4 (ISX-1411)
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
