@@ -2215,7 +2215,7 @@ namespace UnityEngine.InputSystem
 
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
-            if (actionIndex != -1)
+            if (actionIndex != kInvalidIndex)
             {
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
@@ -2314,7 +2314,7 @@ namespace UnityEngine.InputSystem
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
             if (newPhase == InputActionPhase.Performed &&
-                actionIndex != -1 && !actionStates[actionIndex].isPerformed &&
+                actionIndex != kInvalidIndex && !actionStates[actionIndex].isPerformed &&
                 actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
             {
                 // If the action was not already performed and we performed but we're not the interaction driving the action.

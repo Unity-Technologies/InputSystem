@@ -10080,7 +10080,7 @@ partial class CoreTests
         Assert.That(canceledInteraction, Is.Null);
         Assert.That(performedInteraction, Is.Null);
 
-        currentTime = 0.01;
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f; // half of the tap time to ensure that it performs.
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
 
@@ -10090,27 +10090,27 @@ partial class CoreTests
         performedInteraction = null;
 
         // Long PressRelease AW trigger a hold
-        currentTime = 1;
+        currentTime += 1;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
         InputSystem.Update();
 
         // tap should be canceled
-        currentTime = 2;
+        currentTime += InputSystem.settings.defaultTapTime * 4.0;
         InputSystem.Update();
 
         Assert.That(canceledInteraction, Is.TypeOf(typeof(TapInteraction)));
         Assert.That(performedInteraction, Is.Null);
         canceledInteraction = null;
 
-        // hold should be trigered
-        currentTime = 4;
+        // After (defaultTapTime*4 + 2) seconds hold should be performed with duration=2
+        currentTime += 2;
         InputSystem.Update();
         Assert.That(canceledInteraction, Is.Null);
         Assert.That(performedInteraction, Is.TypeOf(typeof(HoldInteraction)));
         performedInteraction = null;
 
         // hold should be canceled
-        currentTime = 5;
+        currentTime += 1;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
         Assert.That(canceledInteraction, Is.TypeOf(typeof(HoldInteraction)));
@@ -10118,20 +10118,20 @@ partial class CoreTests
         canceledInteraction = null;
 
         // Should be no other remaining events
-        currentTime = 10;
+        currentTime += 5;
         InputSystem.Update();
         Assert.That(canceledInteraction, Is.Null);
         Assert.That(performedInteraction, Is.Null);
 
         // PressRelease AW trigger a tap to ensure that is still working
-        currentTime = 11;
+        currentTime += 1;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
         InputSystem.Update();
 
         Assert.That(canceledInteraction, Is.Null);
         Assert.That(performedInteraction, Is.Null);
 
-        currentTime = 11.01;
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
 
@@ -10141,7 +10141,7 @@ partial class CoreTests
         canceledInteraction = null;
 
         // Should be no other remaining events
-        currentTime = 100;
+        currentTime += 100;
         InputSystem.Update();
         Assert.That(canceledInteraction, Is.Null);
         Assert.That(performedInteraction, Is.Null);
