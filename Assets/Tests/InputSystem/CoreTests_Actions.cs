@@ -4661,7 +4661,7 @@ partial class CoreTests
             ctx => { ++receivedCalls; };
         action.Enable();
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.East};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         var secondState = new GamepadState {buttons = 0};
 
         InputSystem.QueueStateEvent(gamepad, firstState);
@@ -6925,7 +6925,7 @@ partial class CoreTests
             trace.SubscribeTo(action);
 
             // Perform tap.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 0.0);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A), 0.0);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.05);
             InputSystem.Update();
 
@@ -6942,7 +6942,7 @@ partial class CoreTests
             trace.Clear();
 
             // Perform slow tap.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 2.0);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A), 2.0);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(),
                 2.0 + InputSystem.settings.defaultSlowTapTime + 0.0001);
             InputSystem.Update();

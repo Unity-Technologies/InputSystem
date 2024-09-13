@@ -4180,7 +4180,7 @@ partial class CoreTests
 
         Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
 
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
@@ -4199,15 +4199,15 @@ partial class CoreTests
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
 
-        InputSystem.QueueStateEvent(gamepad2, new GamepadState().WithButton(GamepadButton.East));
+        InputSystem.QueueStateEvent(gamepad2, new GamepadState().WithButton(GamepadButton.B));
         InputSystem.Update();
         Assert.That(Gamepad.current, Is.SameAs(gamepad2));
 
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
 
         // If none of the controls changed, a state event shouldn't switch current gamepad.

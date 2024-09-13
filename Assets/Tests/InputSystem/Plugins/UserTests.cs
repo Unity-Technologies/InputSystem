@@ -942,7 +942,7 @@ internal class UserTests : CoreTestsFixture
 
         ++InputUser.listenForUnpairedDeviceActivity;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.A));
         InputSystem.Update();
 
         Assert.That(receivedControls, Has.Count.EqualTo(2));

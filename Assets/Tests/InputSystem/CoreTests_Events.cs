@@ -103,7 +103,7 @@ partial class CoreTests
         allButtonPresses.Clear();
 
         Release(gamepad.buttonSouth);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South, GamepadButton.East));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
         InputSystem.Update();
 
         Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
@@ -135,7 +135,7 @@ partial class CoreTests
 
         Assert.That(callCount, Is.Zero);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
         InputSystem.Update();
 
         Assert.That(callCount, Is.EqualTo(1));
@@ -145,7 +145,7 @@ partial class CoreTests
 
         Assert.That(callCount, Is.EqualTo(1));
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
         InputSystem.Update();
 
         Assert.That(callCount, Is.EqualTo(1));
@@ -222,7 +222,7 @@ partial class CoreTests
             controls = eventPtr.GetAllButtonPresses().ToList();
         };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South, GamepadButton.East));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
         InputSystem.Update();
 
         Assert.That(controls, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
@@ -1319,7 +1319,7 @@ partial class CoreTests
 
             trace.Enable();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
             InputSystem.QueueStateEvent(gamepad, default(GamepadState));
             InputSystem.Update();
 
@@ -1338,8 +1338,8 @@ partial class CoreTests
         {
             trace.Enable();
 
-            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.East));
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.A));
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.B));
 
             InputSystem.Update();
 
@@ -1358,7 +1358,7 @@ partial class CoreTests
         {
             trace.Enable();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
             InputSystem.Update();
 
             Assert.That(trace.eventCount, Is.EqualTo(2));
@@ -1539,7 +1539,7 @@ partial class CoreTests
             originalTrace.Enable();
 
             InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(123, 234) });
-            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
             InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(234, 345) });
 
             InputSystem.Update();
