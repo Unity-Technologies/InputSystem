@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -7,7 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// Used to mark constructor arguments as being input ports which makes them detectable by reflection.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Constructor | AttributeTargets.Field)]
-    public class InputPortAttribute : System.Attribute
+    public class InputPortAttribute : Attribute
     {
         /// <summary>
         /// Optionally override the input port type name with a custom display name. Defaults to null in which
@@ -16,7 +15,7 @@ namespace UnityEngine.InputSystem.Experimental
         public string name { get; set; }
     }
 
-    public class InputNodeFactoryAttribute : System.Attribute
+    public class InputNodeFactoryAttribute : Attribute
     {
         public Type type { get; set; }
     }

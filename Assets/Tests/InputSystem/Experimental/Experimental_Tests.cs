@@ -10,7 +10,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
@@ -348,32 +347,7 @@ namespace Tests.InputSystem
         // TODO We could wrap whole typed struct into a WrappedObservableGraph class object to allow it to be properly type safe and then handle this in derived delegate?
         
         // https://coffeebraingames.wordpress.com/2021/07/19/accessing-struct-fields-using-reflection-without-producing-garbage/
-        
-        // Gamepad.leftStick.Pressed()
-        //
-        // Expression is bool 
-        [Test]
-        public void SerializePoCTestBool()
-        {
-            var path = "Assets/SerializePocTest.asset";
-            try
-            {
-                var asset = ScriptableObject.CreateInstance<WrappedScriptableInputBindingInputEvent>();
-                asset.Set(Gamepad.ButtonSouth.Pressed());
-                AssetDatabase.CreateAsset(asset, path);
-                
-                var actual = AssetDatabase.LoadAssetAtPath<WrappedScriptableInputBindingInputEvent>(path);
-                Assert.That(actual, NUnit.Framework.Is.Not.Null);
-                Assert.That(asset.value, NUnit.Framework.Is.EqualTo(Gamepad.ButtonSouth));
-                
-                var actual2 = AssetDatabase.LoadAssetAtPath<ScriptableInputBinding<InputEvent>>(path);
-                Assert.That(actual2, NUnit.Framework.Is.Not.Null);
-            }
-            catch (Exception e)
-            {
-                AssetDatabase.DeleteAsset(path);   
-            }
-        }
+
 
         [Test]
         public void DeserializeJson()

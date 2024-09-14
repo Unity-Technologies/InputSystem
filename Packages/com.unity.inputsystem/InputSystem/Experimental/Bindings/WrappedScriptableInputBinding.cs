@@ -48,36 +48,45 @@ namespace UnityEngine.InputSystem.Experimental
             return node.Subscribe(context, observer);
         }
     }*/
-    
-    public class WrappedScriptableInputBinding<T> : ScriptableInputBinding<T> where T : struct
-    {
-        // How do we solve this, will lead to boxing of 1 element, one solution may be to wrap at root level via class to do an allocation rather than constant boxing of temporary?
-        [SerializeField] private IObservableInput<T> m_Value;
-        
-        public void Set<TValue>(in TValue val) 
-            where TValue : IObservableInput<T>
-        {
-            m_Value = val;
-        }
 
-        public IObservableInput<T> value => m_Value;
+    public interface IWrappedScriptableInputBinding<in T> where T : struct
+    {
+        public void Set<TValue>(in TValue val) where TValue : IObservableInput<T>;
+    }
+    
+    // Interesting take on this problem: https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/SerializableInterface.cs
+    
+    public class WrappedScriptableInputBinding<T> : ScriptableInputBinding<T> 
+        where T : struct
+    {
+        // Note that we store a type erased observer m_Value to avoid issues with Unity serialization of generics.
+        // Since we only allow Set to be called when the type constraints are fulfilled we will succeed with casts.
         
-        public override IDisposable Subscribe<TObserver>(Context context, TObserver observer) => m_Value.Subscribe(context, observer);
+        // How do we solve this, will lead to boxing of 1 element, one solution may be to wrap at root level via class to do an allocation rather than constant boxing of temporary?
+        //[SerializeField] private IObservableInput<T> m_Value; // Seems to be problem
+        [SerializeField] private IObservableInput m_Value;
+
+        public void Set(in IObservableInput<T> observable) => m_Value = observable;
+
+        //public IObservableInput<T> value => m_Value;
+        public IObservableInput<T> value => m_Value as IObservableInput<T>;
+        
+        public override IDisposable Subscribe<TObserver>(Context context, TObserver observer) => value.Subscribe(context, observer);
     }
 
-    public static class WrappedScriptableInputBinding
+    /*public static class WrappedScriptableInputBinding
     {
         public static ScriptableObject Wrap<TSource, T>(this TSource source) where TSource : IObservableInput<T>
         {
             return null;
         }
-    }
+    }*/
     
     // TODO Consider this, if we have a single asset type, its by definition not type-safe. 
     
     // TODO This gives us the assigningment validation using standard tools, there might be a better way by using indirection where the ScriptableObject would be an inner part of the root?
-    public class WrappedScriptableInputBindingBool : WrappedScriptableInputBinding<bool> { }
-    public class WrappedScriptableInputBindingInputEvent : WrappedScriptableInputBinding<InputEvent> { } // TODO Should just mark [InputType]
+
+    // TODO Should just mark [InputType]
     
     /* A LITTLE BIT BETTER
      public class WrappedScriptableInputBinding : ScriptableInputBinding<bool>

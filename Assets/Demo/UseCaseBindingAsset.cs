@@ -89,7 +89,7 @@ namespace UseCases
 
         [Tooltip("Allows configuring an input binding for jumping")]
         public ScriptableInputBinding<InputEvent> jump;
-        
+
         //public BindableInput<Vector2> m_Move = new BindableInput<Vector2>(); // TODO Should be a scriptable object or extracted from one instead of new
 
         //public BindableInput<InputEvent> m_Celebrate;

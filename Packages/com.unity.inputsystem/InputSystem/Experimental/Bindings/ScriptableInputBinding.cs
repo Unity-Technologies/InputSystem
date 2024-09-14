@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// Returns the associated binding type.
         /// </summary>
         /// <returns>Value type of the binding.</returns>
-        public abstract Type GetBindingType();
+        public abstract Type GetBindingType(); // TODO Remove if not needed
     }
 
     /// <summary>
@@ -26,7 +26,8 @@ namespace UnityEngine.InputSystem.Experimental
     {
         public override Type GetBindingType() => typeof(T);
         public IDisposable Subscribe(IObserver<T> observer) => Subscribe(Context.instance, observer);
-        public abstract IDisposable Subscribe<TObserver>(Context context, TObserver observer) where TObserver : IObserver<T>;
+        public abstract IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
+            where TObserver : IObserver<T>;
     }
     
     // https://discussions.unity.com/t/serialized-interface-fields/871555/13
@@ -39,17 +40,17 @@ namespace UnityEngine.InputSystem.Experimental
 
     
     // TODO Remove or fix? Basically we might have to require that we can deal with bindings this way but Unity requires us to use a base.
-    public abstract class ScriptableInputWrapperBinding<T> : ScriptableInputBinding, IObservableInput<T>, IObservable<T> 
+    /*public abstract class ScriptableInputWrapperBinding<T> : ScriptableInputBinding, IObservableInput<T>, IObservable<T> 
         where T : struct
     {
-        private IObservableInputNode<T> node; // TODO We cannot use an interface, so we need to use TObservableInput instead to make it concrete. This implies we need to build a concrete chain.
+        private IObservableInputNode<T> m_Node; // TODO We cannot use an interface, so we need to use TObservableInput instead to make it concrete. This implies we need to build a concrete chain.
         
         public override Type GetBindingType() => typeof(T);
         public IDisposable Subscribe(IObserver<T> observer) => Subscribe(Context.instance, observer);
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
             where TObserver : IObserver<T>
         {
-            return node.Subscribe(context, observer);
+            return m_Node.Subscribe(context, observer);
         }
-    }
+    }*/
 }

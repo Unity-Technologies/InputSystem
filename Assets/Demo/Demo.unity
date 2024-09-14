@@ -221,7 +221,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2750bf53bb8e4963bb74d7347dc5d8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveInput: {fileID: 11400000, guid: 6e143f1c746f947e0bf0b6776d83a1ab, type: 2}
+  move: {fileID: 11400000, guid: 101ef807f8f384ec1a974e7a03ebf796, type: 2}
+  jump: {fileID: 0}
 --- !u!114 &1006841993
 MonoBehaviour:
   m_ObjectHideFlags: 0

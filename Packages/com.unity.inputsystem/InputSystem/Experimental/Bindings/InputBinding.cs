@@ -1,38 +1,38 @@
-using UnityEditor;
+using System;
+using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public abstract class InputBinding : ScriptableObject
+    public static class InputBinding
     {
-        public abstract IObservableInput<T> GetObservableInput<T>();
-    }
-    
-    // Defines output type but not storage type
-    public class InputBinding<T> : InputBinding 
-        where T : struct
-    {
-        private IObservableInputNode<T> m_Node; // TODO We cannot use an interface, so we need to use TObservableInput instead to make it concrete. This implies we need to build a concrete chain.
-
-        public override IObservableInput<T> GetObservableInput<T>()
+        private static ScriptableInputBinding Create(System.Type type)
         {
-            return m_Node as IObservableInput<T>;
-        }
-
-        internal void Set(IObservableInputNode<T> node)
-        {
-            m_Node = node;
+            // TODO Use registration via code generated registration for custom input types
+            
+            if (type == typeof(InputEvent))
+                return ScriptableObject.CreateInstance<InputEventInputBinding>();
+            if (type == typeof(bool))
+                return ScriptableObject.CreateInstance<BooleanInputBinding>();
+            if (type == typeof(Vector2))
+                return ScriptableObject.CreateInstance<Vector2InputBinding>();
+            
+            throw new ArgumentException($"Type \"{type}\" is not a supported input value type. Custom types " + 
+                                        $"need to be marked with {nameof(InputValueTypeAttribute)} to be used " +
+                                        "as input value types in asset-based workflows.");
         }
         
-        // Support creating an empty binding asset
-        [MenuItem("Assets/Create/Input/XXX")]
-        public static void CreateInputAsset()
+        private static WrappedScriptableInputBinding<T> Create<T>() where T : struct
         {
-            var asset = ScriptableObject.CreateInstance<InputBinding<Vector2>>();
-            ProjectWindowUtil.CreateAsset(asset, "Assets/InputBindingTest.asset");
-            /*ProjectWindowUtil.CreateAssetWithContent(
-                filename: "Binding.asset",
-                content: "{}",
-                icon: null); // TODO We should set appropriate icon, otherwise no icon is displayed during renaming (prior to file getting imported).*/
-        }    
+            return (WrappedScriptableInputBinding<T>)Create(typeof(T));
+        }
+        
+        public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
+            where T : struct 
+        {
+            var binding = (WrappedScriptableInputBinding<T>)Create(typeof(T));
+            // TODO Set name?!
+            binding.Set(source);
+            return binding;
+        }
     }
 }
