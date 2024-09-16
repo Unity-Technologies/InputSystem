@@ -84,7 +84,8 @@ public class TouchISX : MonoBehaviour
         int id = control.touchId.ReadValue();
 
         // Sometimes the Began phase is detected twice. The redundant one needs to be filtered out
-        if (m_HighlightPool.Find(id.ToString()) != null) return;
+        if (m_HighlightPool.Find(id.ToString())?.gameObject?.activeSelf ?? false)
+            return;
 
         Vector2 pos = Camera.main.ScreenToWorldPoint(control.position.ReadValue());
 

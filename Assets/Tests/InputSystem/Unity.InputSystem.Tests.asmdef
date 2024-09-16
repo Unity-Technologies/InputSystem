@@ -33,11 +33,6 @@
         },
         {
             "name": "Unity",
-            "expression": "2021.1",
-            "define": "TEMP_DISABLE_UITOOLKIT_TEST"
-        },
-        {
-            "name": "Unity",
             "expression": "2022.1",
             "define": "TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST"
         },
@@ -55,6 +50,11 @@
             "name": "Unity",
             "expression": "6000.0.11",
             "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.15",
+            "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         }
     ],
     "noEngineReferences": false

@@ -30,7 +30,8 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
-
+        // For UI testing purpose
+        internal InputActionAsset currentAssetInEditor => m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
@@ -225,7 +226,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_State.m_Analytics == null)
                 m_State.m_Analytics = m_Analytics;
 
-            m_StateContainer = new StateContainer(m_State);
+            m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();

@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -83,6 +83,11 @@ namespace UnityEngine.InputSystem
 
     public static partial class InputSystem
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
+#endif
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
+
         #region Layouts
 
         /// <summary>
@@ -3403,6 +3408,7 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
+
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3532,7 +3538,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.InitializeInEditor");
+            k_InputInitializeInEditorMarker.Begin();
 
             Reset(runtime: runtime);
 
@@ -3625,7 +3631,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
-            Profiler.EndSample();
+            k_InputInitializeInEditorMarker.End();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3851,7 +3857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            k_InputResetMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3911,7 +3917,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
 
-            Profiler.EndSample();
+            k_InputResetMarker.End();
         }
 
         /// <summary>
