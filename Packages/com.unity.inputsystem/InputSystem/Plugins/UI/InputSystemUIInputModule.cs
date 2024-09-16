@@ -2217,7 +2217,12 @@ namespace UnityEngine.InputSystem.UI
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
                         ref var state = ref GetPointerStateForIndex(i);
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
+                        // Touch pointers need to get forced to no longer be pressed otherwise they will not get released in subsequent frames. 
+                        if (m_PointerStates[i].pointerType == UIPointerType.Touch)
+                        {
+                            state.leftButton.isPressed = false;
+                        }
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen || (m_PointerStates[i].pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame))
                         {
                             SendPointerExitEventsAndRemovePointer(i);
                             --i;
@@ -2230,7 +2235,12 @@ namespace UnityEngine.InputSystem.UI
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
                         ref var state = ref GetPointerStateForIndex(i);
-                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
+                        // Touch pointers need to get forced to no longer be pressed otherwise they will not get released in subsequent frames. 
+                        if (m_PointerStates[i].pointerType == UIPointerType.Touch)
+                        {
+                            state.leftButton.isPressed = false;
+                        }
+                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen || (m_PointerStates[i].pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame))
                         {
                             SendPointerExitEventsAndRemovePointer(i);
                             --i;
