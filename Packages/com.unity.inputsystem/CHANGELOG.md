@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ## Fixed
+- Fixed Multiple interactions could breaks on Composite Binding. [ISXB-619](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-619)
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 
 ### Changed
