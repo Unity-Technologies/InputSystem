@@ -1469,7 +1469,7 @@ namespace UnityEngine.InputSystem
                         else
                         {
                             // The device count check is here to allow the unit tests to pass (and not trigger this error message)
-                            if (InputSystem.devices.Count>0 && availableDevices.Count==0)
+                            if (InputSystem.devices.Count > 0 && availableDevices.Count == 0)
                                 Debug.LogError($"Cannot find matching control scheme for {this.name} (all control schemes already paired)", this);
                         }
                     }
