@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
+- PlayerInput component now warns if the system cannot find matching control scheme, which can occur if all control schemes already paired (e.g. to other game objects with PlayerInput components) [ISXB-1020](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1020)
 
 ## [1.11.0] - 2024-09-10
 
