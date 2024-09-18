@@ -10041,6 +10041,112 @@ partial class CoreTests
         Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
     }
 
+    // Ensure that https://jira.unity3d.com/browse/ISXB-619 regress
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithCompositeWithMultipleInteractions_Works()
+    {
+        // Will ensure that :
+        // PressRelease AW trigger a tap
+        // Long PressRelease AW trigger a hold
+        // PressRelease AW trigger a tap
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad", interactions: "tap,hold(duration=2)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        IInputInteraction performedInteraction = null;
+        IInputInteraction canceledInteraction = null;
+        action.performed += ctx =>
+        {
+            performedInteraction = ctx.interaction;
+        };
+        action.canceled += ctx =>
+        {
+            canceledInteraction = ctx.interaction;
+        };
+
+        // PressRelease AW trigger a tap
+        currentTime = 0;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f; // half of the tap time to ensure that it performs.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Long PressRelease AW trigger a hold
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // tap should be canceled
+        currentTime += InputSystem.settings.defaultTapTime * 4.0;
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(TapInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // After (defaultTapTime*4 + 2) seconds hold should be performed with duration=2
+        currentTime += 2;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        performedInteraction = null;
+
+        // hold should be canceled
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 5;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        // PressRelease AW trigger a tap to ensure that is still working
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 100;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WithMultipleComposites_CancelsIfCompositeIsReleased()
