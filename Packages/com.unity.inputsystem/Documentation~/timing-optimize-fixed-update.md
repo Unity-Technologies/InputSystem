@@ -1,8 +1,8 @@
 # Optimize for fixed-timestep or physics-based scenarios
 
-If you are working with the physics system or using `FixedUpdate` to control your game in a scenario where a small amount of input latency is acceptable (for example, a few frames), the simplest approach is to set the input system update mode to **Process Events in Fixed Update**. This means your input code in `FixedUpdate` will operate as expected.
+If you are working with the physics system or using `FixedUpdate` to control your game in a scenario where a small amount of input latency is acceptable (for example, a few frames), the simplest approach is to set the [input system update mode](./timing-select-mode.md) to **Process Events in Fixed Update**. This means your input code in `FixedUpdate` will operate as expected.
 
-However, if you are working with the physics system or using `FixedUpdate` to control your game and want to get the minimum possible latency from the Input System, minimizing lag, set the input system update mode to **Process Events in Dynamic Update**. However in doing this, you must understand how to avoid the problems which can arise when using this strategy. Although it might seem incorrect if you have code in `FixedUpdate`, for most cases, this approach minimizes lag compared with processing events in Fixed Update. The reasons for this are explained in detail on this page. Having a good understanding of how input is processed in each mode allows you to make your own decision about how best to process input for your particular project.
+To get the minimum possible latency from the Input System and minimize lag, set the input system update mode to **Process Events in Dynamic Update**. However in doing this, you must understand how to avoid the problems which can arise when using this strategy. Although it might seem incorrect if you have code in `FixedUpdate`, for most cases, this approach minimizes lag compared with processing events in Fixed Update. The reasons for this are explained in detail on this page. Having a good understanding of how input is processed in each mode allows you to make your own decision about how best to process input for your particular project.
 
 ## Input in Fixed Update mode
 
@@ -10,7 +10,7 @@ When you set the input system update mode to **Process Events in Fixed Update**,
 
 If your game’s frame rate is running faster than the fixed time step period, you will have either zero or one `FixedUpdate` call per frame, depending whether the previous fixed time step has completed or not. If your game’s frame rate is running slower than the fixed time step period, you will have one or more `FixedUpdate` calls per frame \- as many as are required to catch up with the number of completed fixed time step periods that have elapsed.
 
-You can learn more about how the player loop processes fixed update time steps in [Time And Frame Rate Management](https://docs.unity3d.com/Manual/TimeFrameManagement.html).
+You can learn more about how the player loop processes fixed update time steps in [Time And Frame Rate Management](xref:TimeFrameManagement).
 
 It’s important to understand that Fixed Update provides a simulation of code running at fixed time deltas (the fixed time step), however it does not actually run at regular time intervals. Instead, at the start of each frame loop, Unity will run as many Fixed Update steps as is needed to catch-up to the current frame’s time. If a whole fixed time step hasn't completed yet, no Fixed Update steps occur. If more than one whole fixed time step has elapsed, more than one Fixed Update step occurs. This means that on each frame, the `FixedUpdate` method can be called a variable number of times (or even not at all) depending on how much time has elapsed since the last frame and the value set for the Fixed Update time step.
 
@@ -21,7 +21,7 @@ It’s important to understand that Fixed Update provides a simulation of code r
 
 This diagram shows the frame rate running faster than the fixed update time step rate. Time progresses to the right, each frame is numbered, and shows its `Update` call at the start of the frame in orange. The fixed time step here is 0.02 seconds (50 times per second), and the game is running faster, at about 80 frames per second. In this situation there are some frames with one fixed update call, and some frames with none, depending on whether a full fixed update time step has completed by the time the frame starts. The fixed time step periods are marked with letters A, B, C, D, E, and the frames in which their corresponding fixed update calls occur are marked in green. The fixed update call for time step A occurs at the start of frame 4, the FixedUpdate call for time step B occurs at the start of frame 7, and so on.
 
-### When the frame rate runs slower than the fixed time step duration:
+### When the frame rate runs slower than the fixed time step duration
 
 ![image alt text](./Images/TimingSlowFPS.png)
 
@@ -46,9 +46,9 @@ This has the counterintuitive effect that the processing of input on frame 4 act
 
 ## Minimize latency when using fixed update code
 
-In order to minimize input latency in input code in your `FixedUpdate` calls, you should set the input system update mode to **Process Events in Dynamic Update**. This has the effect of eliminating the problem of unprocessed time described previously. You can then use an event-driven or polling technique to read your input without missing events that occurred after the last fixed timestep but before the current frame.
+To minimize input latency in input code in `FixedUpdate` calls, set the input system update mode to **Process Events in Dynamic Update**, which eliminates the problem of unprocessed time described previously. You can then use an event-driven or polling technique to read your input without missing events that occurred after the last fixed timestep but before the current frame.
 
-This can introduce the problem of missed or duplicate discrete events however (such as attempting to read whether a button was pressed in a given frame), so if you use this strategy, you must understand how to [avoid missed or duplicate events](TimingAvoidMissedOrDuplicateEvents.md) in mixed timing scenarios requiring fixed and dynamic input.
+However, the **Process Events in Dynamic Update** mode might introduce the problem of missed or duplicate discrete events, such as attempting to read whether a button was pressed in a given frame. If you use this strategy, you must understand how to [avoid missed or duplicate events](TimingAvoidMissedOrDuplicateEvents.md) in mixed timing scenarios requiring fixed and dynamic input.
 
 ### Event-driven input with fixed update code
 
