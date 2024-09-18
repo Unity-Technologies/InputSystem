@@ -18,6 +18,8 @@ namespace UnityEngine.InputSystem.Editor
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
 
+        internal ContextualMenuManipulator contextualMenuManipulator;
+
         // for testing purposes to know if the item is focused to accept input
         internal bool IsFocused { get; private set; } = false;
 
@@ -87,6 +89,11 @@ namespace UnityEngine.InputSystem.Editor
                 m_IsEditing = false;
             }
             EditTextFinished = null;
+            if (contextualMenuManipulator != null)
+            {
+                contextualMenuManipulator.target = null;
+                contextualMenuManipulator = null;
+            }
         }
 
         public void FocusOnRenameTextField()
