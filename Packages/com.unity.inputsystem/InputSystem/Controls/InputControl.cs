@@ -1242,7 +1242,7 @@ namespace UnityEngine.InputSystem
                 // InputStateBuffers.Get{Front,Back}Buffer() now check for the requested index being
                 // in-bounds and return null if not - check that here to avoid null derefence later.
                 //
-                if (currentStatePtr is null)
+                if (currentStatePtr == null)
                 {
                     return ref m_UnprocessedCachedValue;
                 }
