@@ -27,9 +27,8 @@ namespace UnityEngine.InputSystem.Editor
         #region ActionMaps
         public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem, int index)
         {
-            var manipulator = new ContextualMenuManipulator(menuEvent =>
+            treeViewItem.OnContextualMenuPopulateEvent = (menuEvent =>
             {
-                //menuEvent.menu.ClearItems();
                 // TODO: AddAction should enable m_RenameOnActionAdded
                 menuEvent.menu.AppendAction(add_Action_String, _ => mapView.Dispatch(Commands.AddAction()));
                 menuEvent.menu.AppendSeparator();
@@ -43,8 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
                 if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
                     menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
-            }) { target = treeViewItem };
-            treeViewItem.contextualMenuManipulator = manipulator;
+            });
         }
 
         // Add "Add Action Map" option to empty space under the ListView. Matches with old IMGUI style (ISX-1519).
