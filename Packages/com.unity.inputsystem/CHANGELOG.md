@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
+- Changed representation of GamepadButton enum values in Inspector to display aliased enum values as a single item to avoid confusion around selection and aliased value display when multiple enum items map to the same numerical value. [ISXB-543](https://jira.unity3d.com/browse/ISXB-543)
 
 ## [1.11.0] - 2024-09-10
 
@@ -32,7 +33,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
-- Changed representation of GamepadButton enum values in Inspector to display aliased enum values as a single item to avoid confusion around selection and aliased value display when multiple enum items map to the same numerical value.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
