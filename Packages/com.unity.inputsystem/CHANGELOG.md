@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
+
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
 
@@ -18,7 +21,6 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
 - Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
-- Fixed touch pointers being released twice causing an index out of bounds error.
 
 ### Added
 - Added Hinge Angle sensor support for foldable devices.
