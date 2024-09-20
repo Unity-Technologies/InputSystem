@@ -3927,10 +3927,6 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
-#else
-#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
         // Setup the Test Scene
