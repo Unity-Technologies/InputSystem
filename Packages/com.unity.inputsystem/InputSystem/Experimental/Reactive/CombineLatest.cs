@@ -375,5 +375,7 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return new CombineLatest<T0, T1, T2, T3, TSource0, TSource1, TSource2, TSource3>(source0, source1, source2, source3);
         }
+        
+        // TODO Provide another N-sized CombineLatest
     }
 }

@@ -48,8 +48,8 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct
     {
         // TODO Note that m_Bindings would box as long as input is a struct 
-        [NonSerialized] private IObservableInput<T>[] m_Bindings;
-        [NonSerialized] private int m_BindingCount;
+        [SerializeReference] private IObservableInput<T>[] m_Bindings;
+        [SerializeField] private int m_BindingCount;
         
         [NonSerialized] private int m_SubscriptionCount;
         [NonSerialized] private ObserverList2<T> m_Observers;
@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem.Experimental
             ArrayHelpers.AppendWithCapacity(ref m_Bindings, ref m_BindingCount, binding);
         }
 
-        public int bindingCount => m_BindingCount;
+        public int count => m_BindingCount;
 
         public void RemoveBinding(IObservableInputNode<T> binding)
         {

@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Experimental
     }
 
     /// <summary>
-    /// Represents a stream end-point.
+    /// Represents a stream end-point that includes a usage of an associated protocol.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 8)]
     public readonly struct Endpoint : IEquatable<Endpoint>
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
         
         /// <summary>
-        /// Returns a multi-source endpoint mapping to a specific usage regardless of source identifier.
+        /// Returns an interleaved multi-source endpoint mapping to a specific usage regardless of source identifier.
         /// </summary>
         /// <param name="usage">The associated usage.</param>
         /// <returns><c>Endpoint</c> instance.</returns>

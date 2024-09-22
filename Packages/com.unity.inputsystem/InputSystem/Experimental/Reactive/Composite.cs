@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -6,6 +7,7 @@ namespace UnityEngine.InputSystem.Experimental
     // float x = positiveX - negativeX;
     // float y = positiveY - negativeY;
     
+    [Serializable]
     public struct CompositeAxisProxy<TSource0, TSource1> : IObservableInputNode<float>
         where TSource0 : IObservableInputNode<bool>, IDependencyGraphNode
         where TSource1 : IObservableInputNode<bool>, IDependencyGraphNode
@@ -42,13 +44,13 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
         
-        private readonly TSource0 m_Source0;
-        private readonly TSource1 m_Source1;
+        [SerializeField] private TSource0 source0;
+        [SerializeField] private TSource1 source1;
         
         public CompositeAxisProxy([InputPort] TSource0 source0, [InputPort] TSource1 source1)
         {
-            m_Source0 = source0;
-            m_Source1 = source1;
+            this.source0 = source0;
+            this.source1 = source1;
         }
 
         public IDisposable Subscribe(IObserver<float> observer) =>
@@ -57,7 +59,7 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
             where TObserver : IObserver<float>
         {
-            return new Impl(context, m_Source0, m_Source1).Subscribe(context, observer);
+            return new Impl(context, source0, source1).Subscribe(context, observer);
         }
         
         // TODO Reader end-point
@@ -72,13 +74,14 @@ namespace UnityEngine.InputSystem.Experimental
         {
             switch (index)
             {
-                case 0: return m_Source0;
-                case 1: return m_Source1;
+                case 0: return source0;
+                case 1: return source1;
                 default: throw new ArgumentOutOfRangeException(nameof(index));
             }
         }
     }
     
+    [Serializable]
     public struct CompositeVector2Proxy<TSource0, TSource1, TSource2, TSource3> : IObservableInputNode<Vector2>
         where TSource0 : IObservableInputNode<bool>, IDependencyGraphNode
         where TSource1 : IObservableInputNode<bool>, IDependencyGraphNode
@@ -118,17 +121,18 @@ namespace UnityEngine.InputSystem.Experimental
             }
         }
         
-        private readonly TSource0 m_Source0;
-        private readonly TSource1 m_Source1;
-        private readonly TSource2 m_Source2;
-        private readonly TSource3 m_Source3;
+        [SerializeField] private TSource0 source0;
+        [SerializeField] private TSource1 source1;
+        [SerializeField] private TSource2 source2;
+        [SerializeField] private TSource3 source3;
         
-        public CompositeVector2Proxy([InputPort] TSource0 source0, [InputPort] TSource1 source1, [InputPort] TSource2 source2, [InputPort] TSource3 source3)
+        public CompositeVector2Proxy([InputPort] TSource0 source0, [InputPort] TSource1 source1, 
+            [InputPort] TSource2 source2, [InputPort] TSource3 source3)
         {
-            m_Source0 = source0;
-            m_Source1 = source1;
-            m_Source2 = source2;
-            m_Source3 = source3;
+            this.source0 = source0;
+            this.source1 = source1;
+            this.source2 = source2;
+            this.source3 = source3;
         }
 
         public IDisposable Subscribe(IObserver<Vector2> observer) =>
@@ -137,7 +141,7 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
             where TObserver : IObserver<Vector2>
         {
-            return new Impl(context, m_Source0, m_Source1, m_Source2, m_Source3).Subscribe(context, observer);
+            return new Impl(context, source0, source1, source2, source3).Subscribe(context, observer);
         }
         
         // TODO Reader end-point
@@ -152,8 +156,8 @@ namespace UnityEngine.InputSystem.Experimental
         {
             switch (index)
             {
-                case 0: return m_Source0;
-                case 1: return m_Source1;
+                case 0: return source0;
+                case 1: return source1;
                 default: throw new ArgumentOutOfRangeException(nameof(index));
             }
         }

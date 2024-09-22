@@ -6,6 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// A class providing cross-platform first-person-shooter (FPS) input binding presets inspired by popular games in
     /// the genre.
     /// </summary>
+    [InputPreset(category: "First-Person-Shooter (FPS)")]
     public static class FirstPersonShooter
     {
         /// <summary>

@@ -260,7 +260,6 @@ namespace UnityEngine.InputSystem.Experimental.JSON
                 
                 public bool MoveNext()
                 {
-                    var isExponential = false;
                     var hasKey = m_Index == 0 || m_Stack[m_Level].IsArray; // Note: Root has empty key, also treat key as being set if inside array
                     
                     for (; m_Index != m_Buffer.Length; ++m_Index) // TODO begin and end should be established and stored on stack

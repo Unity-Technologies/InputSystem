@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Serialization;
 
 // TODO See comments in header
 // TODO Should we be allowed to construct a node that isn't properly connected? E.g. null source.
@@ -49,14 +50,15 @@ namespace UnityEngine.InputSystem.Experimental
     
     // TODO Consider generalizing as specialization of Step transition for binary type.
     // Represents a press interaction
-    public readonly struct Pressed<TSource> : IObservableInputNode<InputEvent>, IUnsafeObservable<InputEvent>
+    [Serializable]
+    public struct Pressed<TSource> : IObservableInputNode<InputEvent>, IUnsafeObservable<InputEvent>
         where TSource : IObservableInputNode<bool>, IDependencyGraphNode, IUnsafeObservable<bool>
     {
-        private readonly TSource m_Source;
+        [SerializeField] private TSource source;
         
         public Pressed([InputPort] TSource source)
         {
-            m_Source = source;
+            this.source = source;
         }
 
         public IDisposable Subscribe(IObserver<InputEvent> observer) => Subscribe(Context.instance, observer);
@@ -76,7 +78,7 @@ namespace UnityEngine.InputSystem.Experimental
             if (impl == null)
             {
                 impl = new PressedObserver();
-                impl.Initialize(m_Source.Subscribe(context, impl)); // TODO An alternative here would be to utilize unsafe subscription
+                impl.Initialize(source.Subscribe(context, impl)); // TODO An alternative here would be to utilize unsafe subscription
                 //context.RegisterNodeImpl(this, impl); // TODO Unable to unregister impl with this design
             }
             
@@ -94,14 +96,14 @@ namespace UnityEngine.InputSystem.Experimental
             // TODO m_Source.GetEnumerator();
             
             // TODO Need additional constraint on source so that we can unroll into operations
-            return new Reader(m_Source);
+            return new Reader(source);
             //return new Reader<InputEvent, Impl>(GetImplementation(context));
         }
 
         public unsafe UnsafeSubscription Subscribe(Context context, UnsafeDelegate<InputEvent> observer) // TODO Should take observer (receiver)?
         {
             // Initialize state
-            var pressed = UnsafePressed.Create(context, m_Source, false); // TODO GetorCreate?
+            var pressed = UnsafePressed.Create(context, source, false); // TODO GetorCreate?
             return UnsafePressed.Subscribe(pressed, observer);
         }
         
@@ -127,12 +129,12 @@ namespace UnityEngine.InputSystem.Experimental
         // TODO Need Reader<T> and SequenceReader<T> if we should even support it. Lets skip it.
 
         public bool Equals(IDependencyGraphNode other) => other is Pressed<TSource> pressed && Equals(pressed);
-        public bool Equals(Pressed<TSource> other) => m_Source.Equals(other.m_Source);
+        public bool Equals(Pressed<TSource> other) => source.Equals(other.source);
         
         public string displayName => "Pressed"; // TODO Could be optional attribute and use type name when not defined
         public int childCount => 1; // TODO Could be detected by presence of attributes on properties
         public IDependencyGraphNode GetChild(int index) =>
-            index == 0 ? m_Source : throw new ArgumentOutOfRangeException(nameof(index)); // TODO Problematic if attribute unless defined that if there are at least one subscription attempting to change source will throw, or we can use constructor to detect IObservable inputs passed to iut, or use a factory similar to JavaFX to keep it immutable but provide a detectable interface.
+            index == 0 ? source : throw new ArgumentOutOfRangeException(nameof(index)); // TODO Problematic if attribute unless defined that if there are at least one subscription attempting to change source will throw, or we can use constructor to detect IObservable inputs passed to iut, or use a factory similar to JavaFX to keep it immutable but provide a detectable interface.
     }
     
     /// <summary>

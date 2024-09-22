@@ -2,6 +2,12 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    /// <summary>
+    /// Multiplexes two streams of type <typeparamref name="T"/> by interleaving items from each of the
+    /// streams in the order they where emitted..
+    /// </summary>
+    /// <typeparam name="T">The type parameter.</typeparam>
+    /// <typeparam name="TSource">The source type.</typeparam>
     public struct Merge<T, TSource> : IObservableInputNode<T>, IDependencyGraphNode
         where TSource : IObservableInputNode<T>, IDependencyGraphNode
         where T : struct
@@ -79,15 +85,25 @@ namespace UnityEngine.InputSystem.Experimental
             private void ForwardOnNext(T value) => m_Observers.OnNext(value);
         }
         
-        private readonly TSource m_Source0;
-        private readonly TSource m_Source1;
-        private Impl m_Impl;
+        [SerializeField] private TSource m_Source0;
+        [SerializeField] private TSource m_Source1;
         
         public Merge(TSource source0, TSource source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;
-            m_Impl = null;
+        }
+        
+        public TSource source0
+        {
+            get => m_Source0;
+            set => m_Source0 = value;
+        }
+        
+        public TSource source1
+        {
+            get => m_Source1;
+            set => m_Source1 = value;
         }
 
         public IDisposable Subscribe(IObserver<T> observer) =>
@@ -95,7 +111,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
             where TObserver : IObserver<T> =>
-            (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+            new Impl(context, m_Source0, m_Source1).Subscribe(context, observer);
         
         public bool Equals(IDependencyGraphNode other) =>
             this.CompareDependencyGraphs(other);

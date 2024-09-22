@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 
 namespace UnityEngine.InputSystem.Experimental.Devices
@@ -32,20 +31,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         }
     }
     
-    // Auto-generated from extended HID standard specification of Keys. 
-    public enum Key 
-    {
-        W = UnityEngine.InputSystem.Key.W,
-        A = UnityEngine.InputSystem.Key.A,
-        S = UnityEngine.InputSystem.Key.S,
-        D = UnityEngine.InputSystem.Key.D,
-        C = UnityEngine.InputSystem.Key.C,
-        LeftCtrl = UnityEngine.InputSystem.Key.LeftCtrl,
-        Space = UnityEngine.InputSystem.Key.Space,
-        Escape = UnityEngine.InputSystem.Key.Escape,
-        LeftShift = UnityEngine.InputSystem.Key.LeftShift,
-        RightShift = UnityEngine.InputSystem.Key.RightShift
-    }
+    // Auto-generated from extended HID standard specification of Keys.
 
     [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 4)]
     public struct Buttons
@@ -62,9 +48,19 @@ namespace UnityEngine.InputSystem.Experimental.Devices
 
         [FieldOffset(0)] public uint value;
     }
+
+    public interface IBitField // Consider this instead?
+    {
+        int Count { get; }
+        bool GetValue(int bitIndex);
+    }
     
+    // TODO Currently using fixed since that was present from previous code, but if we store these unsafe structs in native memory we shouldn't need to fix address.
+    /// <summary>
+    /// Represents a mutable keyboard state.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct KeyboardState
+    public unsafe struct KeyboardState 
     {
         public void ClearKey(Key key)
         {
@@ -127,69 +123,40 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         /// <summary>
         /// An observable aggregate device of all device instances present on the system.
         /// </summary>
-        public static ObservableInput<KeyboardState> any = new(Experimental.Usages.Devices.Keyboard,
+        public static ObservableInput<KeyboardState> Any = new(Experimental.Usages.Devices.Keyboard,
             "Keyboard");
         
+        // Keyboard.Any.leftStick; AND Keyboard.devices[0].leftStick;
+        //
+        // vs
+        //
+        // Keyboard.leftStick AND Keyboard.devices[0].leftStick AND Keyboard.devices["platform-dependent-identifier"].leftStick
+        
         // TODO public static ReadOnlySpan<Keyboard> devices => GetDevices(Context.instance);
-
 
         // TODO Maybe its just a bad idea supporting monitoring of individual keys. Instead we could support monitoring button groups and only filter when required. For this form one would hardcode the offset/checking. But that is quite similar to what we do here.
         
         // TODO Another option is a KeyboardDecoder node which does all of this for us, e.g. map each bit to an output, providing separate ObservableInputNode instances for each. The problem is that we must store the Key to filter on somewhere. 
         
-        // Cached decoders
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyW = (state) => state.GetKey(Key.W);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyA = (state) => state.GetKey(Key.A);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyS = (state) => state.GetKey(Key.S);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyD = (state) => state.GetKey(Key.D);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyC = (state) => state.GetKey(Key.C);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyLeftCtrl = (state) => state.GetKey(Key.LeftCtrl);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeySpace = (state) => state.GetKey(Key.Space);
-        private static readonly ConvertFunc<KeyboardState, bool> GetKeyEscape = (state) => state.GetKey(Key.Escape);
-        private static readonly ConvertFunc<KeyboardState, bool> GetLeftShift = (state) => state.GetKey(Key.LeftShift);
-        private static readonly ConvertFunc<KeyboardState, bool> GetRightShift = (state) => state.GetKey(Key.RightShift);
+        // TODO Need to implement ButtonControl or BitControl or BinaryControl, HID calls it button, lets make a dedicated KeyControl to support this device
+        // TODO Consider specializing KeyControl further to instead deriving usage from changed bits
         
         // Individual key proxies
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> W = any.Convert(GetKeyW);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> A = any.Convert(GetKeyA);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> S = any.Convert(GetKeyS);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> D = any.Convert(GetKeyD);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> C = any.Convert(GetKeyC);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> LeftCtrl = any.Convert(GetKeyLeftCtrl);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Space = any.Convert(GetKeySpace);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> Escape = any.Convert(GetKeyEscape);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> LeftShift = any.Convert(GetLeftShift);
-        public static Convert<ObservableInput<KeyboardState>, KeyboardState, bool> RightShift = any.Convert(GetRightShift);
-        
-        // TODO Should we build the decoding into the type, e.g. ObservableInputCollection<Keyboard, Key, bool>(Usages.Keyboard) keys;
-        // Keyboard.keys[Key.A].Subscribe(); // TODO This can provide a decoder  
-        
-        // TODO This is not great, capture used. ObservableInputNode basically mediates subscribtion to a device stream context. That context is usage aware.
-        //      We probably need a special transform for sub streams  
-        //public static IObservableInput<bool> W = any.Convert((KeyboardState ks) => ks.GetKey(Key.W));
-        //public static IObservableInput<bool> A = any.Convert((KeyboardState ks) => ks.GetKey(Key.A));
-        //public static IObservableInput<bool> S = any.Convert((KeyboardState ks) => ks.GetKey(Key.S));
-        //public static IObservableInput<bool> D = any.Convert((KeyboardState ks) => ks.GetKey(Key.D));
-        
-        // TODO Wowuld it be beneficial to map usages in 2 tiers. First lookup page (interface), then lookup id (control).
-        // If we do this. 
-        
-        //public static ObservableInputNode<bool> W = new(Usages.Keyboard.w, "W", Field.Bit((uint)Key.W), Experimental.Usages.Devices.Keyboard);
-        //public static ObservableInputNode<bool> W = new(Usages.Keyboard.w, "W");
-        //public static ObservableInputNode<bool> A = new(Usages.Keyboard.a, "A");
-        //public static ObservableInputNode<bool> S = new(Usages.Keyboard.s, "S");
-        //public static ObservableInputNode<bool> D = new(Usages.Keyboard.d, "D");
-        public static ObservableInput<bool> Q = new(Usages.Keyboard.q, "Q");
-        public static ObservableInput<bool> E = new(Usages.Keyboard.e, "E");
-        public static ObservableInput<bool> UpArrow = new(Usages.Keyboard.upArrow, "Up Arrow");
-        public static ObservableInput<bool> DownArrow = new(Usages.Keyboard.downArrow, "Down Arrow");
-        public static ObservableInput<bool> LeftArrow = new(Usages.Keyboard.leftArrow, "Left Arrow");
-        public static ObservableInput<bool> RightArrow = new(Usages.Keyboard.rightArrow, "Right Arrow");
-        //public static ObservableInput<bool> LeftShift = new(Usages.Keyboard.leftShift, "Left Shift");
-        //public static ObservableInput<bool> RightShift = new(Usages.Keyboard.rightShift, "Right Shift");
-        //public static ObservableInputNode<bool> Shift = new(Usages.Keyboard.shift, "Shift");
-        //public static ObservableInputNode<bool> Control = new(Usages.Keyboard.control, "Control");
-        //public static ObservableInputNode<bool> Alt = new(Usages.Keyboard.alt, "Alt");
-        //public static ObservableInputNode<bool> Space = new(Usages.Keyboard.space, "Space");
+        public static KeyControl W = Any.Key(Key.W);
+        public static KeyControl A = Any.Key(Key.A);
+        public static KeyControl S = Any.Key(Key.S);
+        public static KeyControl D = Any.Key(Key.D);
+        public static KeyControl C = Any.Key(Key.C);
+        public static KeyControl Q = Any.Key(Key.Q); 
+        public static KeyControl E = Any.Key(Key.E); 
+        public static KeyControl LeftCtrl = Any.Key(Key.LeftCtrl);
+        public static KeyControl Space = Any.Key(Key.Space);
+        public static KeyControl Escape = Any.Key(Key.Escape);
+        public static KeyControl LeftShift = Any.Key(Key.LeftShift);
+        public static KeyControl RightShift = Any.Key(Key.RightShift);
+        public static KeyControl UpArrow = Any.Key(Key.UpArrow);
+        public static KeyControl DownArrow = Any.Key(Key.DownArrow);
+        public static KeyControl LeftArrow = Any.Key(Key.LeftArrow);
+        public static KeyControl RightArrow = Any.Key(Key.RightArrow);
     }
 }

@@ -221,8 +221,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2750bf53bb8e4963bb74d7347dc5d8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  move: {fileID: 11400000, guid: 101ef807f8f384ec1a974e7a03ebf796, type: 2}
-  jump: {fileID: 0}
+  move: {fileID: 11400000, guid: 68b333d24db87462abc40cc3c1d77820, type: 2}
+  jump: {fileID: 11400000, guid: 71b3ce68336994c5583bc2109ab58236, type: 2}
+  fire: {fileID: 11400000, guid: dca21065431b34bca9c1d775ca6d8e8d, type: 2}
+  key:
+    source:
+      m_Usage:
+        value: 1234
+      m_SourceUsage:
+        value: 5678
+    key: 33
 --- !u!114 &1006841993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,7 +311,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Parameter: 0.5
+  jump:
+    m_Bindings: []
+    m_BindingCount: 0
   player: 0
+  references:
+    version: 2
+    RefIds: []
 --- !u!4 &1717065589
 Transform:
   m_ObjectHideFlags: 0

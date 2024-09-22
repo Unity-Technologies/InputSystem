@@ -1,38 +1,74 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public static class InputBinding
+    internal interface IInputBinding
     {
-        private static ScriptableInputBinding Create(System.Type type)
+        
+    }
+    
+    [Serializable]
+    internal enum InputBindingMode
+    {
+        Undefined,
+        Reference,
+        Value
+    }
+ 
+    // Interesting take on this problem: https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/SerializableInterface.cs
+    
+    [Serializable]
+    public class InputBinding<T> // TODO IEquatable<InputBinding<T>> 
+        where T : struct
+    {
+        [SerializeField] private Object m_Object;
+        [SerializeField] private InputBindingMode m_Mode;
+        [SerializeReference] private object m_Value;
+        
+        public InputBinding() { }
+
+        public InputBinding(IObservableInput<T> value)
         {
-            // TODO Use registration via code generated registration for custom input types
-            
-            if (type == typeof(InputEvent))
-                return ScriptableObject.CreateInstance<InputEventInputBinding>();
-            if (type == typeof(bool))
-                return ScriptableObject.CreateInstance<BooleanInputBinding>();
-            if (type == typeof(Vector2))
-                return ScriptableObject.CreateInstance<Vector2InputBinding>();
-            
-            throw new ArgumentException($"Type \"{type}\" is not a supported input value type. Custom types " + 
-                                        $"need to be marked with {nameof(InputValueTypeAttribute)} to be used " +
-                                        "as input value types in asset-based workflows.");
+            this.value = value;
         }
         
-        private static WrappedScriptableInputBinding<T> Create<T>() where T : struct
+        public IObservableInput<T> value
         {
-            return (WrappedScriptableInputBinding<T>)Create(typeof(T));
-        }
-        
-        public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
-            where T : struct 
-        {
-            var binding = (WrappedScriptableInputBinding<T>)Create(typeof(T));
-            // TODO Set name?!
-            binding.Set(source);
-            return binding;
+            get
+            {
+                switch (m_Mode)
+                {
+                    // The binding is currently associated with a UnityEngine.Object
+                    case InputBindingMode.Reference:
+                        return m_Object as IObservableInput<T>;
+                    
+                    // The binding is currently associated with a C# object
+                    case InputBindingMode.Value:
+                        return m_Value as IObservableInput<T>;
+                    
+                    // The binding is currently not set and hence is null.
+                    case InputBindingMode.Undefined:
+                    default:
+                        return null;
+                }
+            }
+            set
+            {
+                if (value is Object unityObject)
+                {
+                    m_Value = null;
+                    m_Object = unityObject;
+                    m_Mode = InputBindingMode.Reference;
+                }
+                else 
+                {
+                    m_Object = null;
+                    m_Value = value;
+                    m_Mode = InputBindingMode.Value;
+                }
+            }
         }
     }
 }

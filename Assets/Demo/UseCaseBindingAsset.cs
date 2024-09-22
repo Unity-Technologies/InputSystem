@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Experimental;
+using UnityEngine.InputSystem.Experimental.Devices;
 using UnityEngine.Serialization;
 using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
 using Keyboard = UnityEngine.InputSystem.Experimental.Devices.Keyboard;
@@ -90,11 +91,19 @@ namespace UseCases
         [Tooltip("Allows configuring an input binding for jumping")]
         public ScriptableInputBinding<InputEvent> jump;
 
+        [Tooltip("The binding to be used to fire")]
+        public ScriptableInputBinding<bool> fire;
+
+        public KeyControl key;
+        //public ObservableInput<bool> input; // Seem to work
+
+        //public InputBinding<Vector2> move2;
+
         //public BindableInput<Vector2> m_Move = new BindableInput<Vector2>(); // TODO Should be a scriptable object or extracted from one instead of new
 
         //public BindableInput<InputEvent> m_Celebrate;
         
-        private IDisposable m_Subscription, m_JumpSubscription;
+        private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription;
     
         private void OnEnable()
         {
@@ -102,12 +111,15 @@ namespace UseCases
             m_Subscription = move.TrySubscribe(v => moveDirection = v);
 
             m_JumpSubscription = jump.TrySubscribe(v => Debug.Log("Jump"));
+            
+            m_FireSubscription = fire.TrySubscribe(v => isFiring = v);
         }
 
         private void OnDisable()
         {
             m_Subscription?.Dispose();
             m_JumpSubscription?.Dispose();
+            m_FireSubscription?.Dispose();
         }
         
         /*

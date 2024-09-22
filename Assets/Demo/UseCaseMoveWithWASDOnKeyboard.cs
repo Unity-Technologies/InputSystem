@@ -31,13 +31,11 @@ namespace UseCases
         #endregion
         
         private IDisposable m_Subscription;
-    
+
         private void OnEnable()
         {
             m_Subscription = Combine.Composite(Keyboard.A, Keyboard.D, Keyboard.S, Keyboard.W)
                 .Subscribe(v => moveDirection = v);
-
-            // TODO Compiler cannot derive types, investigate: Gamepad.ButtonWest.Combine(Keyboard.D).Combine(Keyboard.S).Combine(Keyboard.S).Combine(Keyboard.W).ToComposite().Subscribe(v => moveDirection = v);
         }
 
         private void OnDisable()

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Consider if we want readonly (Not serializable by Unity)
     /// <summary>
     /// Represents a data field of information.
     /// </summary>

@@ -1,0 +1,3 @@
+- Consider pointer/touch oriented areas (non-UI dependent, for increased flexibility of on-screen control concepts). Makes sense to support circle and rectangle based areas.
+- True virtual controls without latency. Implies not re-routing via any other sub-system, e.g. UI introducing additional latency. Events should derive from existing event IDs and inject in-order into existing queue. Potentially using event deferred dispatch mechanism.
+- Automatic UI bindings in Inspector.

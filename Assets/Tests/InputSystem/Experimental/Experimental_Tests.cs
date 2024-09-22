@@ -313,6 +313,8 @@ namespace Tests.InputSystem
             //BindableInput<Vector2> x = default;
             //x.AddBinding(Gamepad.leftStick); // TODO This will be a number, if returned observableInput is abstract we may have a problem
             
+            // Pressed<KeyControl>
+            
             // We need to rebuild from bottom up which calls for reflection
 
             // TODO We could generate a deserializer from available types?! Basically we have [InputSource] on the classes that should generate the corresponding code.

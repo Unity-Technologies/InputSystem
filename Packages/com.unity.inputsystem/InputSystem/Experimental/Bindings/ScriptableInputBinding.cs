@@ -1,9 +1,8 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    // TODO All of these should really be e.g. Move.inputbinding.asset
-    
     /// <summary>
     /// An opaque base class for scriptable input bindings required to support the serialization engine.
     /// </summary>
@@ -14,6 +13,49 @@ namespace UnityEngine.InputSystem.Experimental
         /// </summary>
         /// <returns>Value type of the binding.</returns>
         public abstract Type GetBindingType(); // TODO Remove if not needed
+        
+        #region Static factory interface
+
+        private static readonly Dictionary<Type, Type> Factories;
+
+        static ScriptableInputBinding()
+        {
+            // TODO Use registration via code generated registration for custom input types
+
+            Factories = new Dictionary<Type, Type>
+            {
+                { typeof(InputEvent), typeof(InputEventInputBinding) },
+                { typeof(bool), typeof(InputEventInputBinding) },
+                { typeof(Vector2), typeof(Vector2InputBinding) }
+            };
+            
+            // TODO Assert all bindings are inheriting ScriptableInputBinding
+        }
+        
+        private static ScriptableInputBinding Create(System.Type type)
+        {
+            if (Factories.TryGetValue(type, out var bindingType))
+                return (ScriptableInputBinding)CreateInstance(bindingType);
+            
+            throw new ArgumentException($"Type \"{type}\" is not a supported input value type. Custom types " + 
+                                        $"need to be marked with {nameof(InputValueTypeAttribute)} to be used " +
+                                        "as input value types in asset-based workflows.");
+        }
+        
+        private static WrappedScriptableInputBinding<T> Create<T>() where T : struct
+        {
+            return (WrappedScriptableInputBinding<T>)Create(typeof(T));
+        }
+        
+        public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
+            where T : struct 
+        {
+            var binding = (WrappedScriptableInputBinding<T>)Create(typeof(T));
+            binding.Set(source);
+            return binding;
+        }
+        
+        #endregion
     }
 
     /// <summary>
@@ -29,28 +71,4 @@ namespace UnityEngine.InputSystem.Experimental
         public abstract IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
             where TObserver : IObserver<T>;
     }
-    
-    // https://discussions.unity.com/t/serialized-interface-fields/871555/13
-
-    /*public abstract class TypeErasedBinding
-    {
-        
-    }*/
-
-
-    
-    // TODO Remove or fix? Basically we might have to require that we can deal with bindings this way but Unity requires us to use a base.
-    /*public abstract class ScriptableInputWrapperBinding<T> : ScriptableInputBinding, IObservableInput<T>, IObservable<T> 
-        where T : struct
-    {
-        private IObservableInputNode<T> m_Node; // TODO We cannot use an interface, so we need to use TObservableInput instead to make it concrete. This implies we need to build a concrete chain.
-        
-        public override Type GetBindingType() => typeof(T);
-        public IDisposable Subscribe(IObserver<T> observer) => Subscribe(Context.instance, observer);
-        public IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
-            where TObserver : IObserver<T>
-        {
-            return m_Node.Subscribe(context, observer);
-        }
-    }*/
 }

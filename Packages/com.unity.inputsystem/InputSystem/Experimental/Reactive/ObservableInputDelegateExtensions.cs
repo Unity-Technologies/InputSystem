@@ -107,9 +107,19 @@ namespace UnityEngine.InputSystem.Experimental
         public static IDisposable TrySubscribe<T>(this IObservableInput<T> observable, Action<T> action, int priority = 0) 
             where T : struct
         {
-            if (observable == null)
-                return null;
-            return Subscribe(observable, action, Context.instance, priority);
+            if (observable != null)
+            {
+                try
+                {
+                    return Subscribe(observable, action, Context.instance, priority);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }    
+            }
+            
+            return null;
         } 
         
         public static IDisposable Subscribe<T>(this IObservableInput<T> observable, Action<T> action, int priority = 0) 

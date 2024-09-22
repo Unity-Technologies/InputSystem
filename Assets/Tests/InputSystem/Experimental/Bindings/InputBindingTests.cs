@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Net;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.InputSystem.Experimental;
@@ -32,6 +34,7 @@ namespace Tests.InputSystem.Experimental.Bindings
                 // Create the asset in asset database
                 AssetDatabase.CreateAsset(asset, path);
                 
+                // TODO Why isn't this exposing problems with serializing this?
                 // Make sure it loads and deserializes as specific type
                 var actual = AssetDatabase.LoadAssetAtPath<WrappedScriptableInputBinding<T>>(path);
                 Assert.That(actual, Is.Not.Null);
@@ -46,7 +49,7 @@ namespace Tests.InputSystem.Experimental.Bindings
                 subscription = actualGeneric.Subscribe(m_Context, observer);
                 Assert.That(subscription, Is.Not.Null);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 subscription?.Dispose();
                 AssetDatabase.DeleteAsset(path);
@@ -61,16 +64,26 @@ namespace Tests.InputSystem.Experimental.Bindings
             TestBindingAsset(asset, path);
         }
         
+        // TODO Convert to parameterized tests
+        
         [Test]
-        public void BooleanInputBinding_SupportsSerialization() => TestBindingAsset(
-            InputBinding.Create(Gamepad.ButtonSouth));
+        public void BooleanInputBinding_KeyboardKey_SupportsSerialization() => TestBindingAsset(
+            ScriptableInputBinding.Create(Keyboard.W));
+        
+        [Test]
+        public void BooleanInputBinding_GamepadButtonSouth_SupportsSerialization() => TestBindingAsset(
+            ScriptableInputBinding.Create(Gamepad.ButtonSouth));
         
         [Test]
         public void InputEventInputBinding_SupportsSerialization() => TestBindingAsset(
-            InputBinding.Create(Gamepad.ButtonSouth.Pressed()));
+            ScriptableInputBinding.Create(Gamepad.ButtonSouth.Pressed()));
         
         [Test] 
-        public void Vector2InputBinding_SupportsSerialization() => TestBindingAsset(
-            InputBinding.Create(Gamepad.leftStick));
+        public void Vector2InputBinding_GamepadLeftStick_SupportsSerialization() => TestBindingAsset(
+            ScriptableInputBinding.Create(Gamepad.leftStick));
+        
+        [Test] 
+        public void Vector2InputBinding_KeyboardComposite_SupportsSerialization() => TestBindingAsset(
+            ScriptableInputBinding.Create(Combine.Composite(Keyboard.A, Keyboard.D, Keyboard.S, Keyboard.W)));
     }
 }

@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
 {
     // Default selector allows "Assets" and "Scene"
     // https://discussions.unity.com/t/custompropertydrawer-for-a-class-with-a-generic-type/498538/4
-    [CustomPropertyDrawer(typeof(ScriptableInputBinding<>), useForChildren: true)]
+    //[CustomPropertyDrawer(typeof(ScriptableInputBinding<>), useForChildren: true)]
     internal sealed class ScriptableInputBindingPropertyDrawer : PropertyDrawer
     {
         const string kAssetSearchProviderId = "InputBindingAssetSearchProvider";

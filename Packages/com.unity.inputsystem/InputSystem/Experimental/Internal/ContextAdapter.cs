@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Experimental
                 
                 // TODO Should process deferred calls before doing this one
                 
-                keyboardStreamContext.OnNext(ref keyboard);
+                keyboardStreamContext.OnNext(ref keyboard); // TODO Lets look into gating this instead
                 context.InvokeDeferred();
                 context.InvokeDeferred2();
             }
