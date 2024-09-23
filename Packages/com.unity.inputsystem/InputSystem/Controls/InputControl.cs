@@ -1232,6 +1232,20 @@ namespace UnityEngine.InputSystem
                 if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
                     return ref ReadUnprocessedStateInEditor();
 #endif
+                // Case ISXB-606
+                // If an object reference has the underlying object deleted then a device can go
+                // away which means that the underlying state buffers will have been resized.
+                //
+                // The currentStatePtr accessor uses GetDeviceIndex() to index into the state
+                // buffers but this index can then be out of bounds.
+                //
+                // InputStateBuffers.Get{Front,Back}Buffer() now check for the requested index being
+                // in-bounds and return null if not - check that here to avoid null derefence later.
+                //
+                if (currentStatePtr == null)
+                {
+                    return ref m_UnprocessedCachedValue;
+                }
 
                 if (
                     // if feature is disabled we re-evaluate every call
