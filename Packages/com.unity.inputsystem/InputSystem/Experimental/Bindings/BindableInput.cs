@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Experimental
         }
 
         public int count => m_BindingCount;
-
+        
         public void RemoveBinding(IObservableInputNode<T> binding)
         {
             if (m_BindingCount <= 0) 

@@ -25,21 +25,21 @@ namespace UnityEngine.InputSystem.Experimental.Editor
             createObject.text = "Create Unity Object";
             createObject.clicked += () =>
             {
-                SetPropertyValue(property, InputBindingMode.Reference, ScriptableInputBinding.Create(Devices.Gamepad.leftStick));
+                SetPropertyValue(property, InputBindingMode.UnityObject, ScriptableInputBinding.Create(Devices.Gamepad.leftStick));
             };
 
             var createObj = new Button();
             createObj.text = "Create Object";
             createObj.clicked += () =>
             {
-                SetPropertyValue(property, InputBindingMode.Value, Devices.Gamepad.leftStick);
+                SetPropertyValue(property, InputBindingMode.Object, Devices.Gamepad.leftStick);
             };
             
             var reset = new Button();
             reset.text = "Reset";
             reset.clicked += () =>
             {
-                SetPropertyValue(property, InputBindingMode.Value, null);
+                SetPropertyValue(property, InputBindingMode.Object, null);
             };
             
             // Add fields to the container.
@@ -102,15 +102,15 @@ namespace UnityEngine.InputSystem.Experimental.Editor
         {
             switch (mode)
             {
-                case InputBindingMode.Reference:
+                case InputBindingMode.UnityObject:
                     SetObjectReference(property, (Object)value);
                     SetValue(property, null);
-                    SetMode(property, InputBindingMode.Reference);
+                    SetMode(property, InputBindingMode.UnityObject);
                     break;
-                case InputBindingMode.Value:
+                case InputBindingMode.Object:
                     SetObjectReference(property, null);
                     SetValue(property, value);
-                    SetMode(property, InputBindingMode.Value);
+                    SetMode(property, InputBindingMode.Object);
                     break;
                 case InputBindingMode.Undefined:
                 default:

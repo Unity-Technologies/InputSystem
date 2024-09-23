@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// An opaque base class for scriptable input bindings required to support the serialization engine.
+    /// An opaque base class for scriptable input bindings.
     /// </summary>
     public abstract class ScriptableInputBinding : ScriptableObject, IObservableInput
     {
@@ -42,16 +42,18 @@ namespace UnityEngine.InputSystem.Experimental
                                         "as input value types in asset-based workflows.");
         }
         
+        // TODO Consider type erasure
         private static WrappedScriptableInputBinding<T> Create<T>() where T : struct
         {
             return (WrappedScriptableInputBinding<T>)Create(typeof(T));
         }
         
+        // TODO Consider type erasure
         public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
             where T : struct 
         {
             var binding = (WrappedScriptableInputBinding<T>)Create(typeof(T));
-            binding.Set(source);
+            binding.value = source;
             return binding;
         }
         

@@ -1,3 +1,5 @@
+// TODO This should be code generated
+
 namespace UnityEngine.InputSystem.Experimental
 {
     // Note that this type is needed only since ScriptableObject do not support CreateInstance with generic types.

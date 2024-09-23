@@ -222,8 +222,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   move: {fileID: 11400000, guid: 68b333d24db87462abc40cc3c1d77820, type: 2}
-  jump: {fileID: 11400000, guid: 71b3ce68336994c5583bc2109ab58236, type: 2}
-  fire: {fileID: 11400000, guid: dca21065431b34bca9c1d775ca6d8e8d, type: 2}
+  jump: {fileID: 0}
+  fire: {fileID: 0}
   key:
     source:
       m_Usage:
@@ -392,7 +392,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 45
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -419,7 +419,7 @@ Transform:
   m_GameObject: {fileID: 1900725046}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

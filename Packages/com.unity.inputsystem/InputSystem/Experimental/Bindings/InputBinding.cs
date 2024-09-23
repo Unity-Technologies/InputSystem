@@ -13,8 +13,8 @@ namespace UnityEngine.InputSystem.Experimental
     internal enum InputBindingMode
     {
         Undefined,
-        Reference,
-        Value
+        UnityObject,
+        Object
     }
  
     // Interesting take on this problem: https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/SerializableInterface.cs
@@ -41,11 +41,11 @@ namespace UnityEngine.InputSystem.Experimental
                 switch (m_Mode)
                 {
                     // The binding is currently associated with a UnityEngine.Object
-                    case InputBindingMode.Reference:
+                    case InputBindingMode.UnityObject:
                         return m_Object as IObservableInput<T>;
                     
                     // The binding is currently associated with a C# object
-                    case InputBindingMode.Value:
+                    case InputBindingMode.Object:
                         return m_Value as IObservableInput<T>;
                     
                     // The binding is currently not set and hence is null.
@@ -60,13 +60,13 @@ namespace UnityEngine.InputSystem.Experimental
                 {
                     m_Value = null;
                     m_Object = unityObject;
-                    m_Mode = InputBindingMode.Reference;
+                    m_Mode = InputBindingMode.UnityObject;
                 }
                 else 
                 {
                     m_Object = null;
                     m_Value = value;
-                    m_Mode = InputBindingMode.Value;
+                    m_Mode = InputBindingMode.Object;
                 }
             }
         }
