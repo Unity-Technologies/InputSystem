@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Marks the interaction as being performed and then transitions back to <see cref="InputActionPhase.Waiting"/>
         /// to wait for input. This behavior is desirable for interaction events that are instant and reflect
-        /// a transitional interaction pattern such as <see cref="Interactions.PressInteraction"/> or <see cref="Interactions.TapInteraction"/>.  
+        /// a transitional interaction pattern such as <see cref="Interactions.PressInteraction"/> or <see cref="Interactions.TapInteraction"/>.
         /// </summary>
         /// <remarks>
         /// Note that this affects the current interaction only. There might be multiple interactions on a binding
@@ -179,7 +179,6 @@ namespace UnityEngine.InputSystem
                 m_TriggerState.startTime = time;
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
-
 
         /// <summary>
         /// Marks the interaction as being performed and then transitions into I <see cref="InputActionPhase.Started"/>
@@ -199,7 +198,7 @@ namespace UnityEngine.InputSystem
         /// Marks the interaction as being performed and then stays in that state waiting for an input to
         /// cancel the interactions active state. This behavior is desirable for interaction events that
         /// are active for a duration until a cancellation condition is true, such as <see cref="Interactions.HoldInteraction"/> or <see cref="Interactions.TapInteraction"/> where releasing
-        /// the associated button cancels the interaction..  
+        /// the associated button cancels the interaction..
         /// </summary>
         public void PerformedAndStayPerformed()
         {
