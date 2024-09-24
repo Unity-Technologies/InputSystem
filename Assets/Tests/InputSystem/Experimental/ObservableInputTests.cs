@@ -30,5 +30,7 @@ namespace Tests.InputSystem.Experimental
             var json = UnityEngine.JsonUtility.ToJson(Gamepad.leftStick);
             Assert.That(json, Is.EqualTo(""));
         }
+        
+        // TODO Verify proxy is marked [Serializable] and verify fields are [SerializeField]
     }
 }

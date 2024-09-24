@@ -20,6 +20,8 @@ namespace UnityEngine.InputSystem.Experimental
             
             // TODO Parse JSON and construct objects
 
+            // Gamepad.leftStick        // TODO Contains punctuation so defer to ObservableInput<bool>
+            
             // Effectively could be replaced by a lookup table for edit-mode
             var types = TypeCache.GetTypesWithAttribute(typeof(InputSourceAttribute));
             for (var i = 0; i < types.Count; ++i)

@@ -14,9 +14,9 @@ namespace UnityEngine.InputSystem.Experimental
         LessOrEqualTo
     }
     
-    public struct Compare<TSource, T> : IObservableInputNode<bool>
+    public struct Compare<TSource, T> : IObservableInputNode<bool>, IUnsafeObservable<bool>
         where TSource : IObservableInputNode<T>
-        where T : struct
+        where T : struct, IComparable<T>
     {
         private TSource m_Source;
         private T m_Value;
@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe(IObserver<bool> observer)
         {
-            throw new NotImplementedException();
+            return Subscribe(Context.instance, observer);
         }
 
         public bool Equals(IDependencyGraphNode other)
@@ -52,6 +52,13 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
             where TObserver : IObserver<bool>
+        {
+            var node = new CompareObserver<T>();
+            node.Initialize(context, m_Source.Subscribe(context, node), m_Value, m_Compare);
+            return Subscribe(context, observer);
+        }
+
+        public UnsafeSubscription Subscribe(Context context, UnsafeDelegate<bool> observer)
         {
             throw new NotImplementedException();
         }
@@ -121,9 +128,15 @@ namespace UnityEngine.InputSystem.Experimental
     {
         public static Compare<TSource, T> GreaterThan<TSource, T>(this TSource source, T value)
             where TSource : IObservableInputNode<T> 
-            where T : struct
+            where T : struct, IComparable<T>
         {
             return new Compare<TSource, T>(source, value, Compare.GreaterThan);
+        }
+        
+        public static Compare<TSource, float> AsButton<TSource>(this TSource source, float value = 0.5f)
+            where TSource : IObservableInputNode<float> 
+        {
+            return new Compare<TSource, float>(source, value, Compare.GreaterThan);
         }
     }
 }

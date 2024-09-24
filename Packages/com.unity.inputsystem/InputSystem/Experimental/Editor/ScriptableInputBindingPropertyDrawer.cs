@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Search;
+using UnityEngine;
+using UnityEngine.InputSystem.Experimental;
 using UnityEngine.Search;
+using Object = UnityEngine.Object;
 
-namespace UnityEngine.InputSystem.Experimental.Editor
+namespace UnityEditor.InputSystem.Experimental
 {
     // Default selector allows "Assets" and "Scene"
     // https://discussions.unity.com/t/custompropertydrawer-for-a-class-with-a-generic-type/498538/4
@@ -25,7 +27,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
                 // This is needed to support all zoom-modes for an unknown reason.
                 // Also, fetchLabel/fetchDescription and what is provided to CreateItem is playing different
                 // roles at different zoom levels.
-                var icon = Editor.Resources.LoadIcon(Editor.Resources.Icon.InteractiveBinding);
+                var icon = Resources.LoadIcon(Resources.Icon.InteractiveBinding);
 
                 return new SearchProvider(id, displayName)
                 {
@@ -44,7 +46,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
             private static IEnumerable<SearchItem> FilteredSearch(SearchContext context, SearchProvider provider,
                 Func<Object, string> fetchObjectLabel, 
                 Func<Object, string> createItemFetchDescription, 
-                Func<IEnumerable<Object>> fetchAssets, 
+                Func<IEnumerable<UnityEngine.Object>> fetchAssets, 
                 string description)
             {
                 foreach (var asset in fetchAssets())
@@ -58,7 +60,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
                 }
             }
             
-            private static string FetchLabel(Object obj)
+            private static string FetchLabel(UnityEngine.Object obj)
             {
                 return obj.name;
             }
@@ -96,7 +98,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
 
             public static SearchProvider CreateForPresets()
             {
-                var icon = Editor.Resources.LoadIcon(Editor.Resources.Icon.Asset);
+                var icon = Resources.LoadIcon(Resources.Icon.Asset);
                 
                 return new SearchProvider(kPresetSearchProviderId, "Presets")
                 {
@@ -106,7 +108,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
                     fetchLabel = FetchLabel,
                     fetchPreview = (item, context, size, options) => icon,
                     fetchThumbnail = (item, context) => icon,
-                    toObject = (item, type) => item.data as Object,
+                    toObject = (item, type) => item.data as UnityEngine.Object,
                 };
             }
 
@@ -122,7 +124,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
         internal static readonly SearchFlags PickerSearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
 
         // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
-        internal static readonly Search.SearchViewFlags PickerViewFlags = SearchViewFlags.DisableBuilderModeToggle
+        internal static readonly SearchViewFlags PickerViewFlags = SearchViewFlags.DisableBuilderModeToggle
                                                                           | SearchViewFlags.DisableInspectorPreview
                                                                           | SearchViewFlags.ListView
                                                                           | SearchViewFlags.DisableSavedSearchQuery;

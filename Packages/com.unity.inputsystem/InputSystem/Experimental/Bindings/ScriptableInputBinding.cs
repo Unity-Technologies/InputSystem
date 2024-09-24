@@ -25,11 +25,11 @@ namespace UnityEngine.InputSystem.Experimental
             Factories = new Dictionary<Type, Type>
             {
                 { typeof(InputEvent), typeof(InputEventInputBinding) },
-                { typeof(bool), typeof(InputEventInputBinding) },
+                { typeof(bool), typeof(BooleanInputBinding) },
                 { typeof(Vector2), typeof(Vector2InputBinding) }
             };
             
-            // TODO Assert all bindings are inheriting ScriptableInputBinding
+            // TODO Assert all bindings are inheriting ScriptableInputBinding with inner type matching key type
         }
         
         private static ScriptableInputBinding Create(System.Type type)
@@ -50,9 +50,10 @@ namespace UnityEngine.InputSystem.Experimental
         
         // TODO Consider type erasure
         public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
-            where T : struct 
+            where T : struct
         {
-            var binding = (WrappedScriptableInputBinding<T>)Create(typeof(T));
+            var opaque = Create(typeof(T));
+            var binding = (WrappedScriptableInputBinding<T>)opaque;
             binding.value = source;
             return binding;
         }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33769fa6e85e42a4a51c49c1921d2e70, type: 3}
+  m_Name: Look
+  m_EditorClassIdentifier: 
+  m_Value:
+    rid: 8345279490773745740
+  references:
+    version: 2
+    RefIds:
+    - rid: 8345279490773745740
+      type: {class: 'ObservableInput`1[[UnityEngine.Vector2, UnityEngine.CoreModule]]',
+        ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
+      data:
+        m_Usage:
+          value: 3213574
+        m_SourceUsage:
+          value: 3213574

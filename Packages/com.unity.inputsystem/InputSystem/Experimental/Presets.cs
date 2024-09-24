@@ -22,37 +22,6 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     public static class Presets
     {
-        private struct MoveBindings : IInputBindingSource<Vector2>
-        {
-            public void ApplyTo(BindableInput<Vector2> target)
-            {
-                target.AddBinding(Devices.Gamepad.leftStick); // Allows explicit type
-                //target.AddBinding(Combine.Composite(Devices.Keyboard.A, Devices.Keyboard.D)); // TODO Need 2D compositge
-                // TODO Keyboard composite
-            }
-        }
-        
-        private struct JumpBindings : IInputBindingSource<InputEvent>
-        {
-            public void ApplyTo(BindableInput<InputEvent> target)
-            {
-                target.AddBinding(Devices.Gamepad.ButtonEast.Pressed());
-                target.AddBinding(Devices.Keyboard.Space.Pressed());
-            }
-        }
 
-        /// <summary>
-        /// General purpose cross-platform input binding preset for most common interaction to perform a Jump in games.
-        /// </summary>
-        /// <remarks>
-        /// Binds the following controls:
-        /// - Press (X) to jump on DualShock or DualSense controller.
-        /// - Press (A) to jump on XBox controller.
-        /// </remarks>
-        /// <returns>Binding preset.</returns>
-        public static IInputBindingSource<InputEvent> Jump()
-        {
-            return new JumpBindings();
-        }
     }
 }

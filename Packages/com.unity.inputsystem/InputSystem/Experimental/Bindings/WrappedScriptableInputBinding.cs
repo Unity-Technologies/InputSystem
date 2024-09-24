@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Experimental
     public class WrappedScriptableInputBinding<T> : ScriptableInputBinding<T> 
         where T : struct
     {
-        [SerializeReference] private IObservableInput<T> m_Value;
+        [SerializeReference, HideInInspector] private IObservableInput<T> m_Value;
         
         /// <summary>
         /// Sets or gets the wrapped <see cref="IObservableInput{T}"/> instance. 

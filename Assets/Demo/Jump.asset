@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1348326dbb4a4482a9aec687306cd780, type: 3}
+  m_Name: Jump
+  m_EditorClassIdentifier: 
+  m_Value:
+    rid: 8345279490773745741
+  references:
+    version: 2
+    RefIds:
+    - rid: 8345279490773745741
+      type: {class: 'Merge`1[[UnityEngine.InputSystem.Experimental.InputEvent, Unity.InputSystem]]',
+        ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
+      data:
+        source0:
+          rid: 8345279490773745742
+        source1:
+          rid: 8345279490773745743
+    - rid: 8345279490773745742
+      type: {class: 'Pressed`1[[UnityEngine.InputSystem.Experimental.KeyControl, Unity.InputSystem]]',
+        ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
+      data:
+        source:
+          source:
+            m_Usage:
+              value: 131072
+            m_SourceUsage:
+              value: 131072
+          key: 1
+    - rid: 8345279490773745743
+      type: {class: 'Pressed`1[[UnityEngine.InputSystem.Experimental.ObservableInput`1[[System.Boolean, mscorlib]], Unity.InputSystem]]',
+        ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
+      data:
+        source:
+          m_Usage:
+            value: 2313185468
+          m_SourceUsage:
+            value: 2313185468

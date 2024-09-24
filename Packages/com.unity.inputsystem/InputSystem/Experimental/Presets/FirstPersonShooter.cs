@@ -1,101 +1,202 @@
-using UnityEditor;
-
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
     /// A class providing cross-platform first-person-shooter (FPS) input binding presets inspired by popular games in
     /// the genre.
     /// </summary>
-    [InputPreset(category: "First-Person-Shooter (FPS)")]
     public static class FirstPersonShooter
     {
+        private const string Category = "First-Person Shooter (FPS)";
+
         /// <summary>
         /// Expresses intent to move.
         /// </summary>
         /// <returns>Binding producing a normalized unit vector in 2D space.</returns>
-        public static BindableInput<Vector2> Move()
+        [InputPreset(category: Category)]
+        public static Merge<Vector2> Move()
         {
-            var binding = new BindableInput<Vector2>();
-            binding.AddBinding(Combine.Composite(
-                negativeX: Devices.Keyboard.A, 
-                positiveX: Devices.Keyboard.D, 
-                negativeY: Devices.Keyboard.S, 
-                positiveY: Devices.Keyboard.W));
-            binding.AddBinding(Devices.Gamepad.leftStick.Deadzone());
-            // TODO Conditional left hand-side relative touch drag if no gamepad is present
-            return binding;
+            return Combine.Merge(Combine.Composite(
+                    negativeX: Devices.Keyboard.A,
+                    positiveX: Devices.Keyboard.D,
+                    negativeY: Devices.Keyboard.S,
+                    positiveY: Devices.Keyboard.W),
+                Devices.Gamepad.leftStick.Deadzone());
         }
 
         /// <summary>
         /// Expresses intent to make a relative change to look orientation.
         /// </summary>
         /// <returns>Binding producing a normalized relative vector in 2D space.</returns>
-        public static BindableInput<Vector2> Look()
+        [InputPreset(category: Category)]
+        public static Merge<Vector2> Look()
         {
-            var binding = new BindableInput<Vector2>();
-            // TODO binding.AddBinding(Devices.Mouse.Delta.ScaleWith(MouseSettings.sensitivitySetting));
-            // TODO binding.AddBinding(Devices.Gamepad.RightStick.Deadzone().ScaleWith(GamepadSettings.rightStickSensitivitySetting).ScaleWithDeltaTime());
-            binding.AddBinding(Devices.Gamepad.RightStick.Deadzone().ScaleWithDeltaTime());
-            // TODO Conditional right hand-side relative touch drag if no gamepad is present
-            return binding;
+            return Combine.Merge(Devices.Mouse.delta,       // TODO Ideally this should be compilation error, should have Sum()
+                Devices.Gamepad.RightStick.Deadzone());
         }
 
         /// <summary>
         /// Expresses whether the user is intending to fire the weapon (weapon trigger held).
         /// </summary>
         /// <returns>Observable boolean condition.</returns>
-        public static BindableInput<bool> FireWeapon()
+        [InputPreset(category: Category, displayName: "Fire Weapon")]
+        public static Merge<bool> FireWeapon()
         {
-            var binding = new BindableInput<bool>();
-            // TODO binding.AddBinding(Devices.Gamepad.RightTrigger.Actuated());
-            // TODO binding.AddBinding(Devices.Mouse.PrimaryButton);
-            return binding;
+            return Combine.Merge<bool>(Devices.Mouse.primaryMouseButton, 
+                Devices.Gamepad.RightTrigger.GreaterThan(0.5f));
         }
 
         /// <summary>
         /// Expresses whether the user intend to switch weapon.
         /// </summary>
         /// <returns>Observable event.</returns>
-        public static BindableInput<InputEvent> SwitchWeapon()
+        [InputPreset(category: Category, displayName: "Switch Weapon")]
+        public static Merge<InputEvent> SwitchWeapon()
         {
-            var binding = new BindableInput<InputEvent>();
-            // TODO binding.AddBinding(Devices.Gamepad.RightShoulder.Tap());
-            return binding;
+            return Combine.Merge(Devices.Keyboard.Q.Pressed(), 
+                Devices.Gamepad.RightShoulder.Pressed());
+        }
+
+        [InputPreset(category: Category, displayName: "Weapon Mod")]
+        public static Merge<InputEvent> WeaponMod()
+        {
+            return Combine.Merge(Devices.Mouse.secondaryMouseButton.Pressed(), 
+                Devices.Gamepad.LeftTrigger.AsButton().Pressed());
+        }
+        
+        [InputPreset(category: Category, displayName: "Switch Weapon Mod")]
+        public static Merge<InputEvent> SwitchWeaponMod()
+        {
+            return Combine.Merge(Devices.Keyboard.F.Pressed(), Devices.Gamepad.Up.Pressed());
         }
 
         /// <summary>
         /// Expresses an intent to show the weapon wheel for quick weapon selection.
         /// </summary>
         /// <returns>Observable event.</returns>
-        public static BindableInput<InputEvent> WeaponWheel()
+        [InputPreset(category: Category, displayName: "Weapon Wheel")]
+        public static Merge<InputEvent> WeaponWheel()
         {
-            var binding = new BindableInput<InputEvent>();
-            binding.AddBinding(Devices.Keyboard.Q.Held()); // TODO This would be for a show action, its likely that we want a boolean condition here thats true once held for X seconds. Then one could use Press/Release on that.
-            return binding;
+            return Combine.Merge(Devices.Keyboard.Q.Held(), Devices.Gamepad.RightShoulder.Held());
         }
 
         /// <summary>
         /// Expresses an intent to jump.
         /// </summary>
         /// <returns>Observable event.</returns>
-        public static BindableInput<InputEvent> Jump()
+        [InputPreset(category: Category)]
+        public static Merge<InputEvent> Jump()
         {
-            var binding = new BindableInput<InputEvent>();
-            binding.AddBinding(Devices.Keyboard.Space.Pressed());
-            binding.AddBinding(Devices.Gamepad.ButtonSouth.Pressed());
-            return binding;
+            return Combine.Merge(Devices.Keyboard.Space.Pressed(), Devices.Gamepad.ButtonSouth.Pressed());
+        }
+
+        /// <summary>
+        /// Expresses an intent to dash.
+        /// </summary>
+        /// <returns>Observable event.</returns>
+        [InputPreset(category: Category)]
+        public static Merge<InputEvent> Dash()
+        {
+            return Combine.Merge(Devices.Keyboard.LeftShift.Pressed(), Devices.Gamepad.ButtonEast.Pressed());
         }
 
         /// <summary>
         /// Expresses the intent to perform a melee attack.
         /// </summary>
         /// <returns>Observable event.</returns>
-        public static BindableInput<InputEvent> Melee()
+        [InputPreset(category: Category)]
+        public static Merge<InputEvent> Melee()
         {
-            var binding = new BindableInput<InputEvent>();
-            binding.AddBinding(Devices.Keyboard.E.Pressed());
-            binding.AddBinding(Devices.Gamepad.RightStickHat.Pressed());
-            return binding;
+            return Combine.Merge(Devices.Keyboard.E.Pressed(), Devices.Gamepad.RightStickHat.Pressed());
+        }
+        
+        [InputPreset(category: Category)]
+        public static Merge<InputEvent> Equipment()
+        {
+            return Combine.Merge(Devices.Keyboard.LeftCtrl.Pressed(), Devices.Gamepad.LeftShoulder.Pressed());
+        }
+        
+        [InputPreset(category: Category, displayName: "Switch Equipment")]
+        public static Merge<InputEvent> SwitchEquipment()
+        {
+            return Combine.Merge(Devices.Keyboard.G.Pressed(), Devices.Gamepad.Left.Pressed());
+        }
+        
+        [InputPreset(category: Category, displayName: "Next Weapon")]
+        public static IObservableInput<InputEvent> NextWeapon()
+        {
+            return null; // TODO Scroll wheel up
+        }
+        
+        [InputPreset(category: Category, displayName: "Previous Weapon")]
+        public static IObservableInput<InputEvent> PreviousWeapon()
+        {
+            return null; // TODO Scroll wheel up
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon1()
+        {
+            return Devices.Keyboard.Digit1.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon2()
+        {
+            return Devices.Keyboard.Digit2.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon3()
+        {
+            return Devices.Keyboard.Digit3.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon4()
+        {
+            return Devices.Keyboard.Digit4.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon5()
+        {
+            return Devices.Keyboard.Digit5.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon6()
+        {
+            return Devices.Keyboard.Digit6.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon7()
+        {
+            return Devices.Keyboard.Digit7.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Weapon8()
+        {
+            return Devices.Keyboard.Digit8.Pressed();
+        }
+        
+        [InputPreset(category: Category)]
+        public static IObservableInput<InputEvent> Inventory()
+        {
+            return Devices.Keyboard.Tab.Pressed();
+        }
+        
+        [InputPreset(category: Category, displayName: "Voice Chat")]
+        public static IObservableInput<InputEvent> VoiceChat()
+        {
+            return Devices.Keyboard.B.Pressed();
+        }
+        
+        [InputPreset(category: Category, displayName: "Mission Information")]
+        public static IObservableInput<InputEvent> MissionInformation()
+        {
+            return Devices.Keyboard.LeftAlt.Pressed();
         }
     }
 }

@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.InputSystem.Experimental;
 
-namespace UnityEngine.InputSystem.Experimental
+namespace UnityEditor.InputSystem.Experimental
 {
     internal class NodeModel
     {

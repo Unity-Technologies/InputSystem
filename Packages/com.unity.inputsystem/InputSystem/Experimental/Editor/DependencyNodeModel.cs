@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine.InputSystem.Experimental;
 
-namespace UnityEngine.InputSystem.Experimental
+namespace UnityEditor.InputSystem.Experimental
 {
     // TODO Consider removing this and make it accessible via NodeModel.Types()
     internal sealed class DependencyNodeModel : IEnumerable<NodeModel>

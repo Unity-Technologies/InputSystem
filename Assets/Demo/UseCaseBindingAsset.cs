@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using UnityEditor;
 using UnityEditor.AssetImporters;
+using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
@@ -86,7 +87,7 @@ namespace UseCases
         #endregion
 
         [Tooltip("Allows configuring an input binding for moving")]
-        public ScriptableInputBinding<Vector2> move;
+        public ScriptableInputBinding<Vector2> move; // TODO Consider if this should be InputBinding<Vector2, Interleaved<Vector2>>
 
         [Tooltip("Allows configuring an input binding for jumping")]
         public ScriptableInputBinding<InputEvent> jump;
@@ -104,9 +105,11 @@ namespace UseCases
         //public BindableInput<InputEvent> m_Celebrate;
         
         private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription;
-    
+        
         private void OnEnable()
         {
+            //Debug.Log(ExampleSourceGenerated.ExampleSourceGenerated.GetTestText());
+            
             // Note: Using TrySubscribe instead of Subscribe which doesn't fail if "move" is null.
             m_Subscription = move.TrySubscribe(v => moveDirection = v);
 

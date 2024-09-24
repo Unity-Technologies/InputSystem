@@ -1,17 +1,19 @@
-#if UNITY_EDITOR
 using System;
 using UnityEditor;
+using UnityEngine;
 
-namespace UnityEngine.InputSystem.Experimental.Editor
+namespace UnityEditor.InputSystem.Experimental
 {
-    // Note that non-existing caching here is intentional since icon selected might be theme dependent.
-    // There is no reason to cache icons unless there is a significant performance impact on the editor.
-
     /// <summary>
-    /// Access package resources.
+    /// Provides access to editor-only Input System package associated resources.
     /// </summary>
     internal static class Resources
     {
+        public const string PackagePath = "Packages/com.unity.inputsystem/InputSystem/";
+        public const string PackageEditorPath = PackagePath + "Experimental/Editor";
+        public const string InputBindingAssetExtension = ".asset";
+        public const string InputBindingAssetPresetMenu = "Assets/Create/Input Binding Presets/";
+        
         /// <summary>
         /// Supported package-specific icons.
         /// </summary>
@@ -46,5 +48,3 @@ namespace UnityEngine.InputSystem.Experimental.Editor
         }
     }
 }
-
-#endif // #if UNITY_EDITOR

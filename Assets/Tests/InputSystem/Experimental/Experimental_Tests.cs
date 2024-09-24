@@ -357,6 +357,7 @@ namespace Tests.InputSystem
             const string kJsonEmpty = "{ }";
 
             var ctx = new UnityEngine.InputSystem.Experimental.JSON.JsonUtility.JsonContext(kJsonEmpty);
+            
             ctx.GetEnumerator();
         }
         

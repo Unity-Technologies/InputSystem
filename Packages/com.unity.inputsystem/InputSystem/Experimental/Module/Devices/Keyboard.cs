@@ -14,6 +14,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
             public static readonly Usage d = new(0x07, (ushort)UnityEngine.InputSystem.Key.D);
             public static readonly Usage q = new(0x07, (ushort)UnityEngine.InputSystem.Key.Q);
             public static readonly Usage e = new(0x07, (ushort)UnityEngine.InputSystem.Key.E);
+            public static readonly Usage f = new(0x07, (ushort)UnityEngine.InputSystem.Key.F);
             public static readonly Usage upArrow = new(0x07, (ushort)UnityEngine.InputSystem.Key.UpArrow);
             public static readonly Usage downArrow = new(0x07, (ushort)UnityEngine.InputSystem.Key.DownArrow);
             public static readonly Usage leftArrow = new(0x07, (ushort)UnityEngine.InputSystem.Key.LeftArrow);
@@ -142,18 +143,33 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         // TODO Consider specializing KeyControl further to instead deriving usage from changed bits
         
         // Individual key proxies
+        public static KeyControl B = Any.Key(Key.B);
         public static KeyControl W = Any.Key(Key.W);
         public static KeyControl A = Any.Key(Key.A);
         public static KeyControl S = Any.Key(Key.S);
         public static KeyControl D = Any.Key(Key.D);
         public static KeyControl C = Any.Key(Key.C);
         public static KeyControl Q = Any.Key(Key.Q); 
-        public static KeyControl E = Any.Key(Key.E); 
+        public static KeyControl E = Any.Key(Key.E);
+        public static KeyControl F = Any.Key(Key.F);
+        public static KeyControl G = Any.Key(Key.G); 
+        public static KeyControl Digit1 = Any.Key(Key.Digit1);
+        public static KeyControl Digit2 = Any.Key(Key.Digit2);
+        public static KeyControl Digit3 = Any.Key(Key.Digit3);
+        public static KeyControl Digit4 = Any.Key(Key.Digit4);
+        public static KeyControl Digit5 = Any.Key(Key.Digit5);
+        public static KeyControl Digit6 = Any.Key(Key.Digit6);
+        public static KeyControl Digit7 = Any.Key(Key.Digit7);
+        public static KeyControl Digit8 = Any.Key(Key.Digit8);
+        public static KeyControl Digit9 = Any.Key(Key.Digit9);
+        public static KeyControl Tab = Any.Key(Key.Tab);
         public static KeyControl LeftCtrl = Any.Key(Key.LeftCtrl);
         public static KeyControl Space = Any.Key(Key.Space);
         public static KeyControl Escape = Any.Key(Key.Escape);
         public static KeyControl LeftShift = Any.Key(Key.LeftShift);
         public static KeyControl RightShift = Any.Key(Key.RightShift);
+        public static KeyControl LeftAlt = Any.Key(Key.LeftAlt);
+        public static KeyControl RightAlt = Any.Key(Key.RightAlt);
         public static KeyControl UpArrow = Any.Key(Key.UpArrow);
         public static KeyControl DownArrow = Any.Key(Key.DownArrow);
         public static KeyControl LeftArrow = Any.Key(Key.LeftArrow);

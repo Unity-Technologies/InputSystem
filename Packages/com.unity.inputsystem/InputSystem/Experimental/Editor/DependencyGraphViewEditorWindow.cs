@@ -3,9 +3,11 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+using UnityEngine.InputSystem.Experimental;
 using UnityEngine.UIElements;
 
-namespace UnityEngine.InputSystem.Experimental
+namespace UnityEditor.InputSystem.Experimental
 {
     public class DependencyGraphViewEditorWindow : GraphViewEditorWindow
     {
@@ -280,7 +282,7 @@ namespace UnityEngine.InputSystem.Experimental
         
     }
 
-    public static class ObservableInputEditorExtensions
+    public static partial class ObservableInputEditorExtensions
     {
         /// <summary>
         /// Shows the given observable input as a graph.

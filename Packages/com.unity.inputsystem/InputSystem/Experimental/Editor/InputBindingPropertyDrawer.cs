@@ -1,10 +1,10 @@
 using System;
-using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.UIElements;
+using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
 
-namespace UnityEngine.InputSystem.Experimental.Editor
+namespace UnityEditor.InputSystem.Experimental
 {
     // https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/Extensions.cs
     
@@ -25,14 +25,14 @@ namespace UnityEngine.InputSystem.Experimental.Editor
             createObject.text = "Create Unity Object";
             createObject.clicked += () =>
             {
-                SetPropertyValue(property, InputBindingMode.UnityObject, ScriptableInputBinding.Create(Devices.Gamepad.leftStick));
+                SetPropertyValue(property, InputBindingMode.UnityObject, ScriptableInputBinding.Create(Gamepad.leftStick));
             };
 
             var createObj = new Button();
             createObj.text = "Create Object";
             createObj.clicked += () =>
             {
-                SetPropertyValue(property, InputBindingMode.Object, Devices.Gamepad.leftStick);
+                SetPropertyValue(property, InputBindingMode.Object, Gamepad.leftStick);
             };
             
             var reset = new Button();
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
             return GetObjectProperty(property).objectReferenceValue;
         }
 
-        private static void SetObjectReference(SerializedProperty property, Object value)
+        private static void SetObjectReference(SerializedProperty property, UnityEngine.Object value)
         {
             GetObjectProperty(property).objectReferenceValue = value;
         }
@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Experimental.Editor
             switch (mode)
             {
                 case InputBindingMode.UnityObject:
-                    SetObjectReference(property, (Object)value);
+                    SetObjectReference(property, (UnityEngine.Object)value);
                     SetValue(property, null);
                     SetMode(property, InputBindingMode.UnityObject);
                     break;
