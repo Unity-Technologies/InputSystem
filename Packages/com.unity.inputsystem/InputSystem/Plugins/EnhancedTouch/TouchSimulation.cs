@@ -2,6 +2,7 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -236,6 +237,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 }
             }
         }
+        
+        private void TryPerformUserPairingOfSimulatedTouchscreen()
+        {
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                InputUser.PerformPairingWithDevice(simulatedTouchscreen, m_PlayerInput.user);
+            }
+        }
 
         protected void OnEnable()
         {
@@ -264,6 +273,28 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             InputSystem.onDeviceChange += m_OnDeviceChange;
             InputSystem.onEvent += m_OnEvent;
+            
+            // In case there's a PlayerInput component in the scene, we want to pair the simulated touchscreen to
+            // the PlayerInput user. The touchscreen device does not queue events so we need to pair it to the user.
+            m_PlayerInput = PlayerInput.s_AllActivePlayersCount > 0 ? PlayerInput.s_AllActivePlayers[0] : null; 
+            if (m_PlayerInput)
+            {
+                TryPerformUserPairingOfSimulatedTouchscreen();
+                InputUser.onChange += PairSimulatedTouchscreenOnChange;
+            }
+        }
+        private void PairSimulatedTouchscreenOnChange(InputUser user, InputUserChange change, InputDevice device)
+        {
+            if (change == InputUserChange.ControlSchemeChanged)
+            {
+                // When the control scheme is changed, we pair the simulated touchscreen in case
+                // the new control scheme has action bindings that can be used in it.
+                // E.g. UI/Point action with touch/position binding is set to Keyboard&Mouse control scheme.
+                if (!user.pairedDevices.ContainsReference(simulatedTouchscreen))
+                {
+                    TryPerformUserPairingOfSimulatedTouchscreen();
+                }
+            }
         }
 
         protected void OnDisable()
@@ -284,6 +315,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             InputSystem.onDeviceChange -= m_OnDeviceChange;
             InputSystem.onEvent -= m_OnEvent;
+            if(m_PlayerInput)
+                InputUser.onChange -= PairSimulatedTouchscreenOnChange;
         }
 
         private unsafe void UpdateTouch(int touchIndex, int pointerIndex, TouchPhase phase, InputEventPtr eventPtr = default)
@@ -356,6 +389,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
+        private PlayerInput m_PlayerInput;
 
         #if UNITY_EDITOR
         static TouchSimulation()
