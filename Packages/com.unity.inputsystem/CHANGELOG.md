@@ -17,9 +17,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
 - Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141)
 - Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151)
+- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656)
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086)
+- Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
 
 ## [1.11.2] - 2024-10-16
 
@@ -30,13 +32,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "AnalyticsResult" errors on consoles [ISXB-1107]
 - Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
 - Fixed event handling when using Fixed Update processing where WasPressedThisFrame could appear to true for consecutive frames [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1006)
+- Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
-
-### Fixed
-- Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
 
 ### Changed
 - Removed the InputManager to InputSystem project-wide asset migration code for performance improvement (ISX-2086)
