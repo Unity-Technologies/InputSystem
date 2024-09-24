@@ -15,6 +15,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed memory leak when the OnScreenStick component was destroyed [ISXB-1070](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1070). Contribution by [LukeUnityDev](https://github.com/LukeUnityDev).
 - Fixed Action Maps contextual menu in Action Editor UI that occasionally displays unrelated items.
 - Fixed "MissingReferenceException" errors when closing an in-game dropdown field [ISXB-1081](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1081).
+- Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
+- Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
