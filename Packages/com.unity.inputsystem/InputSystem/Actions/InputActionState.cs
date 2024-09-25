@@ -127,6 +127,8 @@ namespace UnityEngine.InputSystem
         private static readonly ProfilerMarker k_InputInitialActionStateCheckMarker = new ProfilerMarker("InitialActionStateCheck");
         private static readonly ProfilerMarker k_InputActionResolveConflictMarker = new ProfilerMarker("InputActionResolveConflict");
         private static readonly ProfilerMarker k_InputActionCallbackMarker = new ProfilerMarker("InputActionCallback");
+        private static readonly ProfilerMarker k_InputOnActionChangeMarker = new ProfilerMarker("InpustSystem.onActionChange");
+        private static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -2213,7 +2215,7 @@ namespace UnityEngine.InputSystem
 
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
-            if (actionIndex != -1)
+            if (actionIndex != kInvalidIndex)
             {
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
@@ -2311,12 +2313,14 @@ namespace UnityEngine.InputSystem
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed && actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
+            if (newPhase == InputActionPhase.Performed &&
+                actionIndex != kInvalidIndex && !actionStates[actionIndex].isPerformed &&
+                actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
             {
-                // We performed but we're not the interaction driving the action. We want to stay performed to make
-                // sure that if the interaction that is currently driving the action cancels, we get to perform
-                // the action. If we go back to waiting here, then the system can't tell that there's another interaction
-                // ready to perform (in fact, that has already performed).
+                // If the action was not already performed and we performed but we're not the interaction driving the action.
+                // We want to stay performed to make sure that if the interaction that is currently driving the action
+                // cancels, we get to perform the action. If we go back to waiting here, then the system can't tell
+                // that there's another interaction ready to perform (in fact, that has already performed).
             }
             else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
@@ -2548,7 +2552,7 @@ namespace UnityEngine.InputSystem
                         return;
                 }
 
-                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, action, change, "InputSystem.onActionChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, action, change, k_InputOnActionChangeMarker, "InputSystem.onActionChange");
             }
 
             // Run callbacks (if any) directly on action.
@@ -4336,7 +4340,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, actionOrMapOrAsset, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, actionOrMapOrAsset, change, k_InputOnActionChangeMarker, "InputSystem.onActionChange");
             if (change == InputActionChange.BoundControlsChanged)
                 DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }

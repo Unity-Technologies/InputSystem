@@ -54,7 +54,6 @@ namespace UnityEngine.InputSystem.DualShock
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithManufacturerContains("Sony")
-                    .WithManufacturerContains("Entertainment")
                     .WithProduct("Wireless Controller"));
 
             InputSystem.RegisterLayout<DualShock3GamepadHID>(
@@ -67,7 +66,6 @@ namespace UnityEngine.InputSystem.DualShock
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithManufacturerContains("Sony")
-                    .WithManufacturerContains("Entertainment")
                     .WithProduct("PLAYSTATION(R)3 Controller", supportRegex: false));
             #endif
         }
