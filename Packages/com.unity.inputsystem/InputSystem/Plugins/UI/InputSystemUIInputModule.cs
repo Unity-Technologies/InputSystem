@@ -473,7 +473,7 @@ namespace UnityEngine.InputSystem.UI
             }
 
             // now issue the enter call up to but not including the common root
-            Transform oldPointerEnter = eventData.pointerEnter?.transform;
+            Transform oldPointerEnter = eventData.pointerEnter ? eventData.pointerEnter.transform : null;
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
