@@ -2893,22 +2893,8 @@ namespace UnityEngine.InputSystem
 
         private bool ShouldRunDeviceInBackground(InputDevice device)
         {
-            var runDeviceInBackground =
-                m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices &&
+            return m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices &&
                 device.canRunInBackground;
-
-            // In editor, we may override canRunInBackground depending on the gameViewFocus setting.
-            #if UNITY_EDITOR
-            if (runDeviceInBackground)
-            {
-                if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
-                    runDeviceInBackground = false;
-                else if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
-                    runDeviceInBackground = !(device is Pointer || device is Keyboard);
-            }
-            #endif
-
-            return runDeviceInBackground;
         }
 
         internal void OnFocusChanged(bool focus)
