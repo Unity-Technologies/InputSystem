@@ -48,7 +48,7 @@ This has the counterintuitive effect that the processing of input on frame 4 act
 
 To minimize input latency in input code in `FixedUpdate` calls, set the input system update mode to **Process Events in Dynamic Update**, which eliminates the problem of unprocessed time described previously. You can then use an event-driven or polling technique to read your input without missing events that occurred after the last fixed timestep but before the current frame.
 
-However, the **Process Events in Dynamic Update** mode might introduce the problem of missed or duplicate discrete events, such as attempting to read whether a button was pressed in a given frame. If you use this strategy, you must understand how to [avoid missed or duplicate events](TimingAvoidMissedOrDuplicateEvents.md) in mixed timing scenarios requiring fixed and dynamic input.
+However, the **Process Events in Dynamic Update** mode might introduce the problem of missed or duplicate discrete events, such as attempting to read whether a button was pressed in a given frame. If you use this strategy, you must understand how to [avoid missed or duplicate events](./timing-missed-duplicate-events.md) in mixed timing scenarios requiring fixed and dynamic input.
 
 ### Event-driven input with fixed update code
 

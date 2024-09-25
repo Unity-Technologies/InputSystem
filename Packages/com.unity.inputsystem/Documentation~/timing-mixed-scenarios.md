@@ -1,6 +1,6 @@
 # Mixed timing scenarios with fixed and dynamic input
 
-There are some situations where you might set the Update Mode **process in Dynamic Update** even when using input code in `FixedUpdate`, to minimize input latency, as described in the [previous section](TimingOptimizeForFixedUpdate.md).
+There are some situations where you might set the Update Mode **process in Dynamic Update** even when using input code in `FixedUpdate`, to minimize input latency, as described in the [previous section](./timing-optimize-fixed-update.md).
 
 In this situation, for discrete events you must ensure that you use  [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) or [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_) in `Update`, and pass through a variable to your `FixedUpdate` code to indicate the event happened. There may still be some latency between the frame in which the event occurred, and the next `FixedUpdate` call.
 
