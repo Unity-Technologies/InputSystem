@@ -1,4 +1,5 @@
 using System;
+using Unity.Profiling;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -7,11 +8,11 @@ namespace UnityEngine.InputSystem.Utilities
         // InvokeCallbacksSafe protects both against the callback getting removed while being called
         // and against exceptions being thrown by the callback.
 
-        public static void InvokeCallbacksSafe(ref CallbackArray<Action> callbacks, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe(ref CallbackArray<Action> callbacks, ProfilerMarker marker, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
-            Profiling.Profiler.BeginSample(callbackName);
+            marker.Begin();
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -29,7 +30,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiling.Profiler.EndSample();
+            marker.End();
         }
 
         public static void InvokeCallbacksSafe<TValue>(ref CallbackArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
@@ -57,11 +58,11 @@ namespace UnityEngine.InputSystem.Utilities
             Profiling.Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref CallbackArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref CallbackArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, ProfilerMarker marker, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
-            Profiling.Profiler.BeginSample(callbackName);
+            marker.Begin();
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -79,7 +80,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiling.Profiler.EndSample();
+            marker.End();
         }
 
         public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref CallbackArray<Func<TValue1, TValue2, bool>> callbacks,
