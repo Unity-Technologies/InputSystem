@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.11.1] - 2024-09-26
+
+### Fixed
+- Fixed Multiple interactions could breaks on Composite Binding. [ISXB-619](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-619)
+- Fixed memory leak when the OnScreenStick component was destroyed [ISXB-1070](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1070). Contribution by [LukeUnityDev](https://github.com/LukeUnityDev).
+- Fixed Action Maps contextual menu in Action Editor UI that occasionally displays unrelated items.
+- Fixed "MissingReferenceException" errors when closing an in-game dropdown field [ISXB-1081](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1081).
+- Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
+- Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
+
+### Changed
+- Renamed editor Resources directories to PackageResources to fix package validation warnings.
+- Changed representation of GamepadButton enum values in Inspector to display aliased enum values as a single item to avoid confusion around selection and aliased value display when multiple enum items map to the same numerical value. [ISXB-543](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-543)
+- PlayerInput component now warns if the system cannot find matching control scheme, which can occur if all control schemes already paired (e.g. to other game objects with PlayerInput components) [ISXB-1020](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1020)
+
 ## [1.11.0] - 2024-09-10
 
 ### Fixed
@@ -19,6 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed 'OnDrop' event not called when 'IPointerDownHandler' is also listened. [ISXB-1014](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1014)
 - Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off. [ISXB-586](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-586)
 - Improved performance of disconnected device activation (ISX-1450)
+- Fixed DualSense controllers being recognized as DualShock4 (ISX-1411)
 
 ### Changed
 - Use `ProfilerMarker` instead of `Profiler.BeginSample` and `Profiler.EndSample` when appropriate to enable recording of profiling data.
