@@ -104,7 +104,7 @@ enum MyEnum
         {
             var c = new SourceContext();
             var i = c.root.DeclareInterface("IFoo");
-            i.DefineMethod("Bar");
+            i.DefineMethod("Bar", Syntax.Visibility.Public);
             Assert.That(c.ToSource(), Is.EqualTo(@"interface IFoo
 {
     public void Bar()
@@ -150,7 +150,7 @@ enum MyEnum
         }
 
         [Test]
-        public void SyntaxSnippetTest()
+        public void SyntaxSnippetTest() // TODO Infinite loop, investigate
         {
             var c = new SourceContext();
             var foo = c.root.DeclareClass("Foo");
@@ -158,9 +158,19 @@ enum MyEnum
             foo.DeclareField<int>("one");
             foo.Snippet("public int Other(int x, int y)");
             foo.Snippet("{");
-            foo.Snippet("   return x * y;");
+            foo.Snippet("    return x * y;");
             foo.Snippet("}");
-            Assert.That(c.ToSource(), Is.EqualTo(@""));
+            Assert.That(c.ToSource(), Is.EqualTo(@"using System;
+
+class Foo
+{
+    int one;
+    public void Bar() { return 5; }
+    public int Other(int x, int y)
+    {
+        return x * y;
+    }
+}"));
         }
     }
 }

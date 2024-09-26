@@ -85,37 +85,19 @@ namespace UseCases
         }
         */
         #endregion
-
-        [Tooltip("Allows configuring an input binding for moving")]
-        public ScriptableInputBinding<Vector2> move; // TODO Consider if this should be InputBinding<Vector2, Interleaved<Vector2>>
-
-        [Tooltip("Allows configuring an input binding for jumping")]
-        public ScriptableInputBinding<InputEvent> jump;
-
-        [Tooltip("The binding to be used to fire")]
-        public ScriptableInputBinding<bool> fire;
-
-        public KeyControl key;
-        //public ObservableInput<bool> input; // Seem to work
-
-        //public InputBinding<Vector2> move2;
-
-        //public BindableInput<Vector2> m_Move = new BindableInput<Vector2>(); // TODO Should be a scriptable object or extracted from one instead of new
-
-        //public BindableInput<InputEvent> m_Celebrate;
         
-        private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription;
+        public ScriptableInputBinding<Vector2> move;
+        public ScriptableInputBinding<InputEvent> jump;
+        public ScriptableInputBinding<bool> fire;
+        
+        private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription, m_Temp;
         
         private void OnEnable()
         {
-            //Debug.Log(ExampleSourceGenerated.ExampleSourceGenerated.GetTestText());
-            
-            // Note: Using TrySubscribe instead of Subscribe which doesn't fail if "move" is null.
             m_Subscription = move.TrySubscribe(v => moveDirection = v);
-
             m_JumpSubscription = jump.TrySubscribe(v => Debug.Log("Jump"));
-            
             m_FireSubscription = fire.TrySubscribe(v => isFiring = v);
+            //m_Temp = Keyboard.Space.Changed().Subscribe(x => Debug.Log("Hello: " + x));
         }
 
         private void OnDisable()
@@ -123,15 +105,7 @@ namespace UseCases
             m_Subscription?.Dispose();
             m_JumpSubscription?.Dispose();
             m_FireSubscription?.Dispose();
+            m_Temp?.Dispose();
         }
-        
-        /*
-        var types = TypeCache.GetTypesDerivedFrom<ScriptableInputBinding>();
-            foreach (var type in types)
-        {
-            if (type.IsAbstract)
-                continue;
-            Debug.Log("Types: " + type);
-        }*/
     }
 }

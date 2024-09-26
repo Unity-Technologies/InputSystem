@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
-using UnityEngine.InputSystem.Experimental.Generator;
 
 namespace UnityEditor.InputSystem.Experimental.Generator
 {
@@ -15,49 +14,70 @@ namespace UnityEditor.InputSystem.Experimental.Generator
         [UnityEditor.MenuItem("Debug/Generate Presets Code")]
         public static void GenerateMenuItem() => Run();
 
-        private sealed class Context : BasicSourceFormatter
+        private sealed class Context
         {
-            private int m_Count;
+            private readonly string m_Path;
+            private readonly string m_PresetIdentifier;
+            private readonly string m_SourceNamespace;
+            private readonly List<Item> m_Items;
+
+            private struct Item
+            {
+                public MethodInfo Method;
+                public InputPresetAttribute Attribute;
+                public Type ValueType;
+            }
             
             public Context(string presetIdentifier, string path, string sourceNamespace)
-                : base(path)
             {
-                WriteLine(SourceUtils.Header);
-                WriteLine($"using {sourceNamespace};");
-                NewLine();
-                WriteLine("namespace UnityEditor.InputSystem.Experimental");
-                WriteLine('{');
-                IncreaseIndent();
-                WriteLine($"public static class {presetIdentifier}");
-                WriteLine("{");
-                IncreaseIndent();
-            }
-
-            public void End()
-            {
-                DecreaseIndent();
-                WriteLine("}");
-                DecreaseIndent();
-                WriteLine('}');
-
-                Complete();
+                m_Items = new List<Item>();
+                m_Path = path;
+                m_PresetIdentifier = presetIdentifier;
+                m_SourceNamespace = sourceNamespace;
             }
             
             public void AddMethod(MethodInfo method, InputPresetAttribute attribute, Type valueType)
             {
-                if (m_Count > 0)
-                    NewLine();
+                m_Items.Add(new Item(){ Method = method, Attribute = attribute, ValueType = valueType});
+            }
+
+            public string path => m_Path;
+
+            public override string ToString()
+            {
+                var b = new SourceBuilder(m_Path);
                 
-                var presetMethodName = method.Name;
-                var presetName = attribute.displayName ?? presetMethodName;
-                var presetClass = method!.DeclaringType!.Name;
-                var presetCategory = attribute.category;
+                b.WriteLine(SourceUtils.Header);
+                b.WriteLine($"using {m_SourceNamespace};");
+                b.NewLine();
+                b.WriteLine("namespace UnityEditor.InputSystem.Experimental");
+                b.BeginScope();
+                b.WriteLine($"public static class {m_PresetIdentifier}");
+                b.BeginScope();
+
+                WriteItem(b, m_Items[0]);
+                for (var i = 1; i < m_Items.Count; ++i)
+                {
+                    b.NewLine();
+                    WriteItem(b, m_Items[i]);
+                }
+                
+                b.EndScope();
+                b.EndScope();
+
+                return b.ToString();
+            }
+
+            private void WriteItem(SourceBuilder b, in Item item)
+            {
+                var presetMethodName = item.Method.Name;
+                var presetName = item.Attribute.displayName ?? presetMethodName;
+                var presetClass = item.Method.DeclaringType!.Name;
+                var presetCategory = item.Attribute.category;
                 //var valueTypeName = valueType.Name;
                 //WriteLine($"\t\t[MenuItem(Editor.Resources.InputBindingAssetPresetMenu + \"{presetCategory}/{presetName} ({valueTypeName})\")]");
-                WriteLine($"[MenuItem(Resources.InputBindingAssetPresetMenu + \"{presetCategory}/{presetName}\")]");
-                WriteLine($"public static void {presetMethodName}() => {presetClass}.{presetMethodName}().CreateAssetFromName(\"{presetMethodName}\");");
-                
-                ++m_Count;
+                b.WriteLine($"[MenuItem(Resources.InputBindingAssetPresetMenu + \"{presetCategory}/{presetName}\")]");
+                b.WriteLine($"public static void {presetMethodName}() => {presetClass}.{presetMethodName}().CreateAssetFromName(\"{presetMethodName}\");");
             }
         }
 
@@ -71,7 +91,6 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                 if (!ValidateMethod(method, out var valueType)) 
                     continue;
                 
-                var attribute = GetPresetAttribute(method);
                 var declaringType = method.DeclaringType;
                 if (declaringType == null)
                     continue;
@@ -83,13 +102,11 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                         declaringType.Namespace);
                     dict.Add(declaringType, ctx);
                 }
-                ctx.AddMethod(method, attribute, valueType);
+                ctx.AddMethod(method, GetPresetAttribute(method), valueType);
             }
 
             foreach (var value in dict.Values)
             {
-                value.End();
-                var content = value.ToString();
                 SourceUtils.Generate(value.path, () => value.ToString(), Debug.unityLogger);
             }
         }

@@ -28,10 +28,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     
     public static partial class SyntaxExtensions
     {
-        public static Syntax.Struct DeclareStruct<TTarget>(this TTarget target, string name)
+        public static Syntax.Struct DeclareStruct<TTarget>(this TTarget target, string name, Syntax.Visibility visibility = Syntax.Visibility.Default)
             where TTarget : Syntax.IDeclareStruct, Syntax.INode
         {
             var node = new Syntax.Struct(target.context, name);
+            node.visibility = visibility;
             target.AddStruct(node);
             return node;
         }

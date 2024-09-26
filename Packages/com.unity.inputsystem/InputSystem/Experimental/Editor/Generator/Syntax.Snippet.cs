@@ -26,10 +26,15 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 var startIndex = 0;
                 while (startIndex < text.Length)
                 {
+                    // "Split" snippet into rows and copy over via formatter
                     var stopIndex = text.IndexOf('\n', startIndex);
-                    for (var i = startIndex; i < stopIndex; ++i)
-                        formatter.WriteUnformatted(text[i]);
+                    if (stopIndex == -1)
+                        stopIndex = text.Length;
+                    formatter.WriteLine(text.AsSpan(startIndex, stopIndex - startIndex));
+                    //for (var i = startIndex; i < stopIndex; ++i)
+                    //    formatter.WriteUnformatted(text[i]);
                     formatter.Newline();
+                    startIndex = stopIndex + 1;
                 }
             }
         }

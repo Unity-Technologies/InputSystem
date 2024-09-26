@@ -1,3 +1,6 @@
+using System;
+using UnityEditor.InputSystem.Experimental.Generator;
+
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
     public partial class Syntax
@@ -12,6 +15,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             public DeclaredInterface(SourceContext context, string name) 
                 : base(context, "interface", name)
             {
+            }
+
+            public static DeclaredInterface FromType(SourceContext context, System.Type type)
+            {
+                return new DeclaredInterface(context, type.Name);
             }
         }
 
@@ -46,6 +54,17 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             where TTarget : Syntax.INode, Syntax.IImplementInterface
         {
             var x = new Syntax.ImplementedInterface(target.context, @interface);
+            target.AddImplementedInterface(x);
+            return target;
+        }
+        
+        public static Syntax.IImplementInterface ImplementInterface<TTarget>(this TTarget target, Type @interface)
+            where TTarget : Syntax.INode, Syntax.IImplementInterface
+        {
+            // TODO FIX when supporting inheritance Debug.Assert(@interface.IsInterface);
+            
+            // TODO Register namespace of interface type
+            var x = new Syntax.ImplementedInterface(target.context, SourceUtils.GetTypeName(@interface));
             target.AddImplementedInterface(x);
             return target;
         }

@@ -11,8 +11,6 @@ namespace UnityEditor.InputSystem.Experimental
 {
     public class DependencyGraphViewEditorWindow : GraphViewEditorWindow
     {
-        private const string ResourcePath = "Packages/com.unity.inputsystem/InputSystem/Experimental/Editor/Resources";
-        
         private class GraphView : UnityEditor.Experimental.GraphView.GraphView
         {
             private DependencyGraphViewEditorWindow m_EditorWindow;
@@ -125,7 +123,7 @@ namespace UnityEditor.InputSystem.Experimental
 
             private void AddStyles()
             {
-                var styleSheet = (StyleSheet)EditorGUIUtility.Load(ResourcePath + "/DependencyGraphView.uss");
+                var styleSheet = (StyleSheet)EditorGUIUtility.Load(Resources.PackageEditorResourcePath + "/DependencyGraphView.uss");
                 styleSheets.Add(styleSheet);
             }
 
@@ -195,7 +193,7 @@ namespace UnityEditor.InputSystem.Experimental
 
         private void AddStyles()
         {
-            var styleSheet = (StyleSheet)EditorGUIUtility.Load(ResourcePath + "/DependencyGraphVariables.uss");
+            var styleSheet = (StyleSheet)EditorGUIUtility.Load(Resources.PackageEditorResourcePath + "/DependencyGraphVariables.uss");
             rootVisualElement.styleSheets.Add(styleSheet);
         }
         

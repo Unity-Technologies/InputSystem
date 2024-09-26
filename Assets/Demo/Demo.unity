@@ -221,16 +221,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2750bf53bb8e4963bb74d7347dc5d8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  move: {fileID: 0}
+  move: {fileID: 11400000, guid: ea323a516b17e40649c3007d993fd653, type: 2}
   jump: {fileID: 0}
   fire: {fileID: 0}
-  key:
-    source:
-      m_Usage:
-        value: 1234
-      m_SourceUsage:
-        value: 5678
-    key: 33
 --- !u!114 &1006841993
 MonoBehaviour:
   m_ObjectHideFlags: 0

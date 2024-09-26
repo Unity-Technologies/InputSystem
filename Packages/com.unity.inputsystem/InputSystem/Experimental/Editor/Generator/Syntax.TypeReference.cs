@@ -1,13 +1,17 @@
 using System;
+using System.Text;
+using UnityEditor.InputSystem.Experimental.Generator;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
+    // TODO Needs context to transform types, but why would we when we can have it here?!
     public static partial class Syntax
     {
         public sealed class TypeReference : IEquatable<TypeReference>
         {
             private readonly DeclaredType m_DeclaredType;
             private readonly Type m_Type;
+            private readonly TypeArgument m_TypeArgument;
             
             public TypeReference(Type type)
             {
@@ -19,17 +23,37 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 m_DeclaredType = type;
             }
 
+            public TypeReference(TypeArgument typeArgument)
+            {
+                m_TypeArgument = typeArgument;
+            }
+
             public static TypeReference For<T>()
             {
                 return new TypeReference(typeof(T));
             }
+            
+            public static implicit operator TypeReference(System.Type type) => new TypeReference(type);
+            public static implicit operator TypeReference(TypeArgument type) => new TypeReference(type);
 
             public bool isType => m_Type != null;
+            public bool isGeneric => m_TypeArgument != null;
             public Type type => m_Type;
             public DeclaredType declaredType => m_DeclaredType;
             public string declaredNamespace => m_Type != null ? m_Type.Namespace : m_DeclaredType.declaredNamespace;
-            public string value => isType ? type.Name : declaredType.name;
-            
+
+            public string value
+            {
+                get
+                {
+                    if (m_Type != null)
+                        return SourceUtils.GetTypeName(m_Type);    
+                    if (isGeneric)
+                        return m_TypeArgument.name;
+                    return declaredType.name;
+                }
+            }
+
             public bool Equals(TypeReference other)
             {
                 if (ReferenceEquals(null, other)) return false;

@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: Move
   m_EditorClassIdentifier: 
   m_Value:
-    rid: 8345279490773745737
+    rid: 8345279515011055848
   references:
     version: 2
     RefIds:
-    - rid: 8345279490773745737
+    - rid: 8345279515011055848
       type: {class: 'Merge`1[[UnityEngine.Vector2, UnityEngine.CoreModule]]', ns: UnityEngine.InputSystem.Experimental,
         asm: Unity.InputSystem}
       data:
         source0:
-          rid: 8345279490773745738
+          rid: 8345279515011055849
         source1:
-          rid: 8345279490773745739
-    - rid: 8345279490773745738
+          rid: 8345279515011055850
+    - rid: 8345279515011055849
       type: {class: 'CompositeVector2Proxy`4[[UnityEngine.InputSystem.Experimental.KeyControl, Unity.InputSystem],[UnityEngine.InputSystem.Experimental.KeyControl, Unity.InputSystem],[UnityEngine.InputSystem.Experimental.KeyControl, Unity.InputSystem],[UnityEngine.InputSystem.Experimental.KeyControl, Unity.InputSystem]]',
         ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
       data:
@@ -57,7 +57,7 @@ MonoBehaviour:
             m_SourceUsage:
               value: 131072
           key: 37
-    - rid: 8345279490773745739
+    - rid: 8345279515011055850
       type: {class: 'ObservableInput`1[[UnityEngine.Vector2, UnityEngine.CoreModule]]',
         ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
       data:

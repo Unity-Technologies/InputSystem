@@ -34,5 +34,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             target.AddStatement(statement);
             return target;
         }
+        
+        public static TTarget Assignment<TTarget>(this TTarget target, string variable, string value)
+            where TTarget : Syntax.INode, Syntax.IDefineStatement
+        {
+            return Statement(target, $"{variable} = {value}");
+        }
     }
 }

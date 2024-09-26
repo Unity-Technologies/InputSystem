@@ -11,6 +11,8 @@ namespace UnityEditor.InputSystem.Experimental
     {
         public const string PackagePath = "Packages/com.unity.inputsystem/InputSystem/";
         public const string PackageEditorPath = PackagePath + "Experimental/Editor";
+        public const string PackageEditorResourcePath = PackageEditorPath + "/PackageResources";
+        
         public const string InputBindingAssetExtension = ".asset";
         public const string InputBindingAssetPresetMenu = "Assets/Create/Input Binding Presets/";
         

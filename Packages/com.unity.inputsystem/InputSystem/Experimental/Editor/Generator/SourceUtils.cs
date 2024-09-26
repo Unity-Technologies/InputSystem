@@ -1,17 +1,66 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
+using UnityEngine;
 
-namespace UnityEngine.InputSystem.Experimental.Generator
+namespace UnityEditor.InputSystem.Experimental.Generator
 {
     internal static class SourceUtils
     {
         internal const string Header = @"// This is an auto-generated source file. Any manual edits will be lost.";
         
+        internal static string GetTypeName(Type type)
+        {
+            // Custom handling of primitive types that doesn't require namespace access
+            if (type.IsPrimitive)
+            {
+                if (type == typeof(bool)) return "bool";
+                if (type == typeof(int)) return "int";
+                if (type == typeof(uint)) return "uint";
+                if (type == typeof(float)) return "float";
+                if (type == typeof(double)) return "double";
+                if (type == typeof(char)) return "char";
+                if (type == typeof(byte)) return "byte";
+                if (type == typeof(short)) return "short";
+                if (type == typeof(ushort)) return "ushort";
+                if (type == typeof(nint)) return "nint";
+                if (type == typeof(nuint)) return "nuint";
+                if (type == typeof(string)) return "string";
+            }
+            else if (type.IsGenericType)
+            {
+                // TODO Cache results
+                var tmp = new StringBuilder(type.Name.Substring(0, type.Name.IndexOf('`')));
+                var args = type.GenericTypeArguments;
+                tmp.Append('<');
+                tmp.Append(GetTypeName(args[0]));
+                for (var i = 1; i < args.Length; ++i)
+                {
+                    tmp.Append(", ");
+                    tmp.Append(GetTypeName(args[i]));
+                }
+                tmp.Append('>');
+                return tmp.ToString();
+            }
+            
+            return type.Name;
+        }
+        
+        private static string GetChecksum(string path)
+        {
+            // TODO Consider larger buffer size if its a problem
+            using FileStream stream = File.OpenRead(path);
+            var sha = new SHA256Managed();
+            var checksum = sha.ComputeHash(stream);
+            return BitConverter.ToString(checksum);
+            //return BitConverter.ToString(checksum).Replace("-", String.Empty);
+        }
+        
         internal static void Generate(string path, Func<string> generator)
         {
-            Generate(path, generator, Debug.unityLogger);
+            Generate(path, generator, UnityEngine.Debug.unityLogger);
         }
         
         internal static void Generate(string path, Func<string> generator, ILogger logger)
@@ -38,7 +87,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             catch (Exception e)
             {
                 LogFileMessage(logger, LogType.Error, path, "could not be generated due to an unexpected exception");
-                Debug.LogException(e);
+                logger.LogException(e);
             }
             
             stopwatch.Stop();

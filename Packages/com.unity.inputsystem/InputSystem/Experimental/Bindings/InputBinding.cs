@@ -17,8 +17,6 @@ namespace UnityEngine.InputSystem.Experimental
         Object
     }
  
-    // Interesting take on this problem: https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/SerializableInterface.cs
-    
     [Serializable]
     public class InputBinding<T> // TODO IEquatable<InputBinding<T>> 
         where T : struct

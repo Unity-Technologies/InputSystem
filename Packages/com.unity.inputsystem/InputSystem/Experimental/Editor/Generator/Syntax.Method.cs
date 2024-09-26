@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.InputSystem.Experimental.Generator;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
@@ -50,18 +51,24 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             }
             
             public string name { get; set; }
+            public bool isConstructor { get; set; }
+            public bool isExtensionMethod { get; set; }
             public TypeReference returnType { get; set; }
             public Visibility visibility { get; set; }
             public bool isAbstract { get; set; }
+            public bool isStatic { get; set; }
 
             public override void PreFormat(SourceContext context, SourceFormatter formatter)
             {
                 formatter.Write(formatter.Format(visibility));
                 
+                if (isStatic)
+                    formatter.Write("static");
                 if (isAbstract)
                     formatter.Write("abstract");
                 
-                formatter.Write(returnType == null ? "void" : context.GetTypeName(returnType.type));
+                if (!isConstructor)
+                    formatter.Write(returnType == null ? "void" : SourceUtils.GetTypeName(returnType.type));
 
                 formatter.Write(name);
                 formatter.WriteUnformatted('(');
@@ -69,6 +76,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 {
                     if (i > 0)
                         formatter.WriteUnformatted(", ");
+                    else if (isExtensionMethod)
+                        formatter.WriteUnformatted("this ");
                     m_Parameters[i].Format(context, formatter);
                 }
                 formatter.WriteUnformatted(')');

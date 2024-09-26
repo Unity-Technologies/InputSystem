@@ -60,12 +60,12 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 formatter.Write(formatter.Format(visibility));
                 if (isSealed)
                     formatter.Write("sealed");
-                if (isPartial)
-                    formatter.Write("partial");
                 if (isReadOnly)
                     formatter.Write("readonly");
                 if (isStatic)
                     formatter.Write("static");
+                if (isPartial)
+                    formatter.Write("partial");
                 formatter.Write(m_Token);
                 formatter.Write(name);
                 if (m_GenericTypeArguments.Count > 0)
@@ -86,8 +86,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     {
                         if (i > 0)
                             formatter.WriteUnformatted(", ");
-                        else
-                            formatter.WriteUnformatted(m_ImplementedInterfaces[i].name);
+                        formatter.WriteUnformatted(m_ImplementedInterfaces[i].name);
                     }
                 }
 

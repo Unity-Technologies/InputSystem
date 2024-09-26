@@ -125,17 +125,26 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
         public void WriteUnformatted(string value)
         {
+            if (m_LineLength == 0) 
+                Indent();
             m_Buffer.Append(value);
         }
         
         public void WriteUnformatted(char c)
         {
+            if (m_LineLength == 0) 
+                Indent();
             m_Buffer.Append(c);
         }
 
         public void WriteLine(string text)
         {
             Write(text);
+        }
+
+        public void WriteLine(ReadOnlySpan<char> span)
+        {
+            Write(span.ToString()); // TODO FIX, inefficient
         }
 
         public void Write(char c)

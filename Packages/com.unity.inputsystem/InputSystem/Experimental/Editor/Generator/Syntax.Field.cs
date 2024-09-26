@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.InputSystem.Experimental.Generator;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
@@ -19,7 +20,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 this.name = name;
                 this.value = value;
                 this.type = type;
-                context.root.Using(type.declaredNamespace);
+                if (!type.isGeneric)
+                    context.root.Using(type.declaredNamespace);
             }
             
             public string name { get; set; }
@@ -37,8 +39,10 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 if (isFixed)
                     formatter.Write("fixed");
                 if (type.isType)
-                    formatter.Write(context.GetTypeName(type.type));
-                else
+                    formatter.Write(SourceUtils.GetTypeName(type.type));
+                else if (type.isGeneric)
+                    formatter.Write(type.value);
+                else if (!type.isGeneric)
                     throw new NotImplementedException("Need to generate valid type and namespace from declared");
                 if (value != null)
                     formatter.Assign(name, value);
@@ -63,6 +67,14 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             where TTarget : Syntax.IDeclareField, Syntax.INode
         {
             var field = new Syntax.Field(target.context, new Syntax.TypeReference(type), name, value);
+            target.AddField(field);
+            return field;
+        }
+        
+        public static Syntax.Field DeclareField<TTarget>(this TTarget target, Syntax.TypeArgument typeArgument, string name)
+            where TTarget : Syntax.IDeclareField, Syntax.INode
+        {
+            var field = new Syntax.Field(target.context, new Syntax.TypeReference(typeArgument), name, null);
             target.AddField(field);
             return field;
         }

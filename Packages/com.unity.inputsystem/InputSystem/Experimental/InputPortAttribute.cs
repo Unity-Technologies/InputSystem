@@ -3,7 +3,8 @@ using System;
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// Used to mark constructor arguments as being input ports which makes them detectable by reflection.
+    /// Used to mark method or constructor arguments as being input ports which makes them detectable by reflection
+    /// and indicates that they are backed by serialized fields of the node struct.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Constructor | AttributeTargets.Field)]
     public class InputPortAttribute : Attribute
@@ -13,10 +14,5 @@ namespace UnityEngine.InputSystem.Experimental
         /// case the parameter name will be used instead.
         /// </summary>
         public string name { get; set; }
-    }
-
-    public class InputNodeFactoryAttribute : Attribute
-    {
-        public Type type { get; set; }
     }
 }

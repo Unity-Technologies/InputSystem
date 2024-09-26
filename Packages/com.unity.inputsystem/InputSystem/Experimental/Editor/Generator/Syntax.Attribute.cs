@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
             public void Format(SourceFormatter formatter)
             {
-                formatter.WriteUnformatted('[');
+                formatter.WriteUnformatted('['); // TODO This is a problem, not taking indent into account
                 formatter.WriteUnformatted(name);
                 if (m_Arguments.Count != 0)
                 {
@@ -65,12 +65,19 @@ namespace UnityEngine.InputSystem.Experimental.Generator
     
     public static class AttributeExtensions
     {
-        public static Syntax.Attribute DeclareAttribute<TTarget>(this TTarget target, string name)
+        public static Syntax.Attribute DeclareAttribute<TTarget>(this TTarget target, string name) // TODO Consider not supporting string
             where TTarget : Syntax.IDeclareAttribute
         {
             var attribute = new Syntax.Attribute(name);
             target.AddAttribute(attribute);
             return attribute;
+        }
+        
+        public static Syntax.Attribute DeclareAttribute<TTarget>(this TTarget target, System.Type attribute)
+            where TTarget : Syntax.IDeclareAttribute, Syntax.INode
+        {
+            target.context.root.Using(attribute.Namespace);
+            return DeclareAttribute(target, attribute.Name);
         }
         
         public static Syntax.Struct StructLayout(this Syntax.Struct @struct, LayoutKind layoutKind, 

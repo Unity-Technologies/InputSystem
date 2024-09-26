@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEngine.InputSystem.Experimental
 {
-    public enum Compare
+    public enum ComparisionOperator
     {
         EqualTo,
         NotEqualTo,
@@ -20,9 +19,9 @@ namespace UnityEngine.InputSystem.Experimental
     {
         private TSource m_Source;
         private T m_Value;
-        private Compare m_Compare;
+        private ComparisionOperator m_Compare;
         
-        public Compare(TSource source, T value, Compare compare)
+        public Compare(TSource source, T value, ComparisionOperator compare)
         { 
             m_Source = source;
             m_Value = value;
@@ -75,10 +74,10 @@ namespace UnityEngine.InputSystem.Experimental
         where T : struct, IComparable<T>
     {
         private IDisposable m_SourceSubscription; // TODO This means we have already boxed it if its a struct, bad
-        private Compare m_Compare;
+        private ComparisionOperator m_Compare;
         private T m_Comparand;
         
-        public void Initialize([NotNull] Context ctx, [NotNull] IDisposable sourceSubscription, T comparand, Compare compare)
+        public void Initialize([NotNull] Context ctx, [NotNull] IDisposable sourceSubscription, T comparand, ComparisionOperator compare)
         {
             context = ctx;
             
@@ -100,22 +99,22 @@ namespace UnityEngine.InputSystem.Experimental
         {
             switch (m_Compare)
             {
-                case Compare.EqualTo:
+                case ComparisionOperator.EqualTo:
                     ForwardOnNext(value.CompareTo(m_Comparand) == 0);
                     break;
-                case Compare.NotEqualTo:
+                case ComparisionOperator.NotEqualTo:
                     ForwardOnNext(value.CompareTo(m_Comparand) != 0);
                     break;
-                case Compare.GreaterThan:
+                case ComparisionOperator.GreaterThan:
                     ForwardOnNext(value.CompareTo(m_Comparand) > 0);
                     break;
-                case Compare.LessThan:
+                case ComparisionOperator.LessThan:
                     ForwardOnNext(value.CompareTo(m_Comparand) < 0);
                     break;
-                case Compare.GreaterOrEqualTo:
+                case ComparisionOperator.GreaterOrEqualTo:
                     ForwardOnNext(value.CompareTo(m_Comparand) >= 0);
                     break;
-                case Compare.LessOrEqualTo:
+                case ComparisionOperator.LessOrEqualTo:
                     ForwardOnNext(value.CompareTo(m_Comparand) <= 0);
                     break;
                 default:
@@ -124,19 +123,19 @@ namespace UnityEngine.InputSystem.Experimental
         }        
     }
     
-    public static class CompareExtensions
+    public static partial class CompareExtensions
     {
         public static Compare<TSource, T> GreaterThan<TSource, T>(this TSource source, T value)
             where TSource : IObservableInputNode<T> 
             where T : struct, IComparable<T>
         {
-            return new Compare<TSource, T>(source, value, Compare.GreaterThan);
+            return new Compare<TSource, T>(source, value, ComparisionOperator.GreaterThan);
         }
         
         public static Compare<TSource, float> AsButton<TSource>(this TSource source, float value = 0.5f)
             where TSource : IObservableInputNode<float> 
         {
-            return new Compare<TSource, float>(source, value, Compare.GreaterThan);
+            return new Compare<TSource, float>(source, value, ComparisionOperator.GreaterThan);
         }
     }
 }

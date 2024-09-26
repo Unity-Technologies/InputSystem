@@ -9,5 +9,11 @@ namespace UnityEngine.InputSystem.Experimental
     /// Only blittable value-types may be marked as input value types.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Struct)]
-    public class InputValueTypeAttribute : Attribute { }
+    public class InputValueTypeAttribute : Attribute
+    {
+        public InputValueTypeAttribute()
+        {
+            
+        }
+    }
 }

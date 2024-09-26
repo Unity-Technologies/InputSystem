@@ -19,9 +19,14 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
     
+    public interface IForwardOnNext<T>
+    {
+        public void ForwardOnNext(T value);
+    }
+    
     // Should priority basically create a gate that stores output and defer 
     
-    public class ObserverBase<TOut> : ObserverCommon 
+    public class ObserverBase<TOut> : ObserverCommon, IForwardOnNext<TOut> 
         where TOut : unmanaged
     {
         private SubscriptionSettings m_Settings;
@@ -83,7 +88,7 @@ namespace UnityEngine.InputSystem.Experimental
         /// Forwards a value to all observers.
         /// </summary>
         /// <param name="value"></param>
-        protected void ForwardOnNext(TOut value)
+        public void ForwardOnNext(TOut value)
         {
             // TODO Shortcuts:
             // As long as we process a single event at a time...

@@ -2,6 +2,10 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    // TODO Provide a way to enumerate interfaces of device.
+    /// <summary>
+    /// Represents an human-computer-interface device.
+    /// </summary>
     public readonly struct Device : IEquatable<Device>
     {
         private readonly ushort m_Id;
