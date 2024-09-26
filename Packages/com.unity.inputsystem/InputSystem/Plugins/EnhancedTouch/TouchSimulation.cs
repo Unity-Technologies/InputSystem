@@ -237,7 +237,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 }
             }
         }
-        
+
         private void TryPerformUserPairingOfSimulatedTouchscreen()
         {
             using (InputActionRebindingExtensions.DeferBindingResolution())
@@ -273,16 +273,17 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             InputSystem.onDeviceChange += m_OnDeviceChange;
             InputSystem.onEvent += m_OnEvent;
-            
+
             // In case there's a PlayerInput component in the scene, we want to pair the simulated touchscreen to
             // the PlayerInput user. The touchscreen device does not queue events so we need to pair it to the user.
-            m_PlayerInput = PlayerInput.s_AllActivePlayersCount > 0 ? PlayerInput.s_AllActivePlayers[0] : null; 
+            m_PlayerInput = PlayerInput.s_AllActivePlayersCount > 0 ? PlayerInput.s_AllActivePlayers[0] : null;
             if (m_PlayerInput)
             {
                 TryPerformUserPairingOfSimulatedTouchscreen();
                 InputUser.onChange += PairSimulatedTouchscreenOnChange;
             }
         }
+
         private void PairSimulatedTouchscreenOnChange(InputUser user, InputUserChange change, InputDevice device)
         {
             if (change == InputUserChange.ControlSchemeChanged)
@@ -315,7 +316,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             InputSystem.onDeviceChange -= m_OnDeviceChange;
             InputSystem.onEvent -= m_OnEvent;
-            if(m_PlayerInput)
+            if (m_PlayerInput)
                 InputUser.onChange -= PairSimulatedTouchscreenOnChange;
         }
 
