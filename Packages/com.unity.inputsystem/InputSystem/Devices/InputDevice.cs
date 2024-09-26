@@ -247,13 +247,13 @@ namespace UnityEngine.InputSystem
                 // In the editor, "background" refers to "game view not focused", not to the editor not being active.
                 // So, we modulate canRunInBackground depending on how input should behave WRT game view according
                 // to the input settings.
-#if UNITY_EDITOR
+                #if UNITY_EDITOR
                 var gameViewFocus = InputSystem.settings.editorInputBehaviorInPlayMode;
                 if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     return false; // No device considered being able to run without game view focus.
                 if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
-
+                #endif
 
                 return canDeviceRunInBackground;
             }
@@ -267,7 +267,6 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-#endif
                 if ((m_DeviceFlags & DeviceFlags.CanRunInBackgroundHasBeenQueried) != 0)
                     return (m_DeviceFlags & DeviceFlags.CanRunInBackground) != 0;
 

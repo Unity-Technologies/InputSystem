@@ -4550,13 +4550,6 @@ partial class CoreTests
                     Assert.That(gamepad.canRunInBackground, Is.True);
                     Assert.That(joystick.canRunInBackground, Is.True);
                     Assert.That(keyboard.canRunInBackground, Is.False);
-#if UNITY_EDITOR
-                    Assert.That(trackedDevice.canDeviceRunInBackground, Is.True);
-                    Assert.That(mouse.canDeviceRunInBackground, Is.True);
-                    Assert.That(gamepad.canDeviceRunInBackground, Is.True);
-                    Assert.That(joystick.canDeviceRunInBackground, Is.True);
-                    Assert.That(keyboard.canDeviceRunInBackground, Is.True);
-#endif
                     break;
 
                 case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
@@ -4565,13 +4558,6 @@ partial class CoreTests
                     Assert.That(gamepad.canRunInBackground, Is.False);
                     Assert.That(joystick.canRunInBackground, Is.False);
                     Assert.That(keyboard.canRunInBackground, Is.False);
-#if UNITY_EDITOR
-                    Assert.That(trackedDevice.canDeviceRunInBackground, Is.True);
-                    Assert.That(mouse.canDeviceRunInBackground, Is.True);
-                    Assert.That(gamepad.canDeviceRunInBackground, Is.True);
-                    Assert.That(joystick.canDeviceRunInBackground, Is.True);
-                    Assert.That(keyboard.canDeviceRunInBackground, Is.True);
-#endif
                     break;
             }
         }

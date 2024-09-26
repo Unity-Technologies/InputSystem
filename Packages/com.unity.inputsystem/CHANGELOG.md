@@ -23,7 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed representation of GamepadButton enum values in Inspector to display aliased enum values as a single item to avoid confusion around selection and aliased value display when multiple enum items map to the same numerical value. [ISXB-543](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-543)
 - PlayerInput component now warns if the system cannot find matching control scheme, which can occur if all control schemes already paired (e.g. to other game objects with PlayerInput components) [ISXB-1020](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1020)
 ### Added
-- Added the display of the device flag CanRunInBackground in device debug view.
+- Added the display of the device flag `CanRunInBackground` in device debug view.
 
 ## [1.11.0] - 2024-09-10
 
