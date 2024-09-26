@@ -10,7 +10,7 @@ When you set the input system update mode to **Process Events in Fixed Update**,
 
 If your game’s frame rate is running faster than the fixed time step period, you will have either zero or one `FixedUpdate` call per frame, depending whether the previous fixed time step has completed or not. If your game’s frame rate is running slower than the fixed time step period, you will have one or more `FixedUpdate` calls per frame \- as many as are required to catch up with the number of completed fixed time step periods that have elapsed.
 
-You can learn more about how the player loop processes fixed update time steps in [Time And Frame Rate Management](xref:TimeFrameManagement).
+You can learn more about how the player loop processes fixed update time steps in [Time and Framerate Management](https://docs.unity3d.com/Manual/TimeFrameManagement.html).
 
 It’s important to understand that Fixed Update provides a simulation of code running at fixed time deltas (the fixed time step), however it does not actually run at regular time intervals. Instead, at the start of each frame loop, Unity will run as many Fixed Update steps as is needed to catch-up to the current frame’s time. If a whole fixed time step hasn't completed yet, no Fixed Update steps occur. If more than one whole fixed time step has elapsed, more than one Fixed Update step occurs. This means that on each frame, the `FixedUpdate` method can be called a variable number of times (or even not at all) depending on how much time has elapsed since the last frame and the value set for the Fixed Update time step.
 
