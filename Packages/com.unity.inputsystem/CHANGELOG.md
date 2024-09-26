@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased] - yyyy-mm-dd
+## [1.11.1] - 2024-09-26
 
 ### Fixed
 - Fixed Multiple interactions could breaks on Composite Binding. [ISXB-619](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-619)
