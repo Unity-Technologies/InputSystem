@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
-    public static partial class Syntax
+    /*public static partial class Syntax
     {
         // TODO Make it a node with children
-        /*public class ParameterList 
+        public class ParameterList 
         {
             private List<Parameter> m_Parameters;
 
@@ -27,8 +27,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 {
                     sb.Append()
                 }
-                return formatter.ToString();
+                return sb.ToString();
             }
-        } */   
-    }
+        }  
+    }*/
 }

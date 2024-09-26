@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     var stopIndex = text.IndexOf('\n', startIndex);
                     if (stopIndex == -1)
                         stopIndex = text.Length;
-                    formatter.WriteLine(text.AsSpan(startIndex, stopIndex - startIndex));
+                    formatter.Write(text.AsSpan(startIndex, stopIndex - startIndex));
                     //for (var i = startIndex; i < stopIndex; ++i)
                     //    formatter.WriteUnformatted(text[i]);
                     formatter.Newline();

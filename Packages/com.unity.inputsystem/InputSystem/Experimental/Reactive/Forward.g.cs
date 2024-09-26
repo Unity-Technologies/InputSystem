@@ -2,20 +2,21 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Internal;
+
 namespace UnityEngine.InputSystem.Experimental
 {
-
-
-[InputSourceAttribute]
+    [InputSourceAttribute]
     public partial struct Forward<TSource> : IObservableInputNode<bool>
         where TSource : struct, IObservableInputNode<bool>
     {
         private TSource source;
+
         public Forward(TSource source)
         {
             this.source = source;
         }
-        public IDisposable Subscribe(IObserver<bool> observer)
+
+        public IDisposable Subscribe( [NotNullAttribute] IObserver<bool> observer)
         {
             return Subscribe(Context.instance, observer);
         }
@@ -45,25 +46,35 @@ namespace UnityEngine.InputSystem.Experimental
         }
         #endregion
     }
+
     internal sealed class ForwardNode : ObserverBase<bool>, IUnsubscribe<bool>, IObserver<bool>
     {
         private IDisposable m_sourceSubscription;
+
         public void Initialize(IDisposable sourceSubscription)
         {
             this.m_sourceSubscription = sourceSubscription;
         }
+
         public void Unsubscribe(IObserver<bool> observer)
         {
             if (!RemoveObserver(observer)) return;
             this.m_sourceSubscription.Dispose();
             this.m_sourceSubscription = null;
         }
+
         public void OnNext(bool value)
         {
             UnityEngine.InputSystem.Experimental.MyStatelessOperation.Forward(this, value);
         }
     }
+
     public static partial class ForwardExtensions
     {
+        public static Forward<TSource> Forward<TSource>(this TSource source)
+            where TSource : struct, IObservableInputNode<bool>
+        {
+            return new Forward<TSource>(source);
+        }
     }
 }

@@ -134,10 +134,10 @@ enum MyEnum
         {
             var c = new SourceContext();
             var foo = c.root.DeclareClass("Foo");
-            var bar = foo.DefineMethod("Bar", Syntax.Visibility.Private)
-                .Parameter("x", typeof(int))
-                .Parameter("y", typeof(float))
-                .Statement("var z = (float)x * y")
+            var bar = foo.DefineMethod("Bar", Syntax.Visibility.Private);
+            bar.Parameter("x", typeof(int));
+            bar.Parameter("y", typeof(float));
+            bar.Statement("var z = (float)x * y")
                 .Statement("Debug.Log(z)");
             Assert.That(c.ToSource(), Is.EqualTo(@"class Foo
 {

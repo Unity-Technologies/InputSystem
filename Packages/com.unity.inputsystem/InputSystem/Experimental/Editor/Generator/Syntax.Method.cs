@@ -35,10 +35,11 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             public void AddParameter(Parameter parameter) => m_Parameters.Add(parameter);
         }
         
-        public sealed class Method : Node, IDefineStatement, IDefineParameter
+        public sealed class Method : Node, IDefineStatement, IDefineParameter, IDefineTypeArgument
         {
-            private readonly List<Parameter> m_Parameters = new List<Parameter>();
-            private readonly List<Statement> m_Statements = new List<Statement>();
+            private readonly List<Parameter> m_Parameters = new();
+            private readonly List<Statement> m_Statements = new();
+            private readonly List<TypeArgument> m_TypeArguments = new();
             
             public Method(SourceContext context, string name, Visibility visibility, TypeReference returnType) 
                 : base(context)
@@ -60,17 +61,19 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
             public override void PreFormat(SourceContext context, SourceFormatter formatter)
             {
+                formatter.Paragraph();
                 formatter.Write(formatter.Format(visibility));
                 
                 if (isStatic)
                     formatter.Write("static");
                 if (isAbstract)
                     formatter.Write("abstract");
-                
+
                 if (!isConstructor)
-                    formatter.Write(returnType == null ? "void" : SourceUtils.GetTypeName(returnType.type));
+                    formatter.Write(returnType == null ? "void" : returnType.value);
 
                 formatter.Write(name);
+                TypeArgument.Format(formatter, m_TypeArguments);
                 formatter.WriteUnformatted('(');
                 for (var i = 0; i < m_Parameters.Count; ++i)
                 {
@@ -81,6 +84,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     m_Parameters[i].Format(context, formatter);
                 }
                 formatter.WriteUnformatted(')');
+                
+                TypeArgument.FormatConstraints(formatter, m_TypeArguments);
                 formatter.BeginScope();
             }
             
@@ -91,6 +96,9 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
             public void AddStatement(Statement statement) => m_Statements.Add(statement);
             public void AddParameter(Parameter parameter) => m_Parameters.Add(parameter);
+            public void AddTypeArgument(TypeArgument arg) => m_TypeArguments.Add(arg);
+
+            public IReadOnlyList<Parameter> parameters => m_Parameters;
         }
     }
     

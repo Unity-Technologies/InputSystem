@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem.Experimental
     {
         // Simplest case: Single input stateless node
         [InputOperation]
-        public static void Forward<TContext>(TContext ctx, [InputPort] bool value)
+        internal static void Forward<TContext>(TContext ctx, [InputPort] bool value)
             where TContext : IForwardOnNext<bool>
         {
             ctx.ForwardOnNext(value);

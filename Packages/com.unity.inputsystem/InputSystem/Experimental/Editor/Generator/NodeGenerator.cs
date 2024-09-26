@@ -382,6 +382,7 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                 
                 //var inputs = new List<Port>();
                 var typeArgumentList = new StringBuilder();
+                var argList = new StringBuilder();
                 
                 // Input #1
                 var inputs = GetPorts(info);
@@ -395,9 +396,13 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                     field.visibility = Syntax.Visibility.Private;
 
                     if (typeArgumentList.Length != 0)
+                    {
                         typeArgumentList.Append(", ");
+                        argList.Append(", ");
+                    }
                     typeArgumentList.Append(inputs[i].GenericTypeName);
-
+                    argList.Append(inputs[i].Name);
+                    
                     inputs[i].Field = field;
                     inputs[i].Type = genericArg;
                 }
@@ -410,14 +415,14 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                 ctor.isConstructor = true;
                 
                 // Forwarding IObservable subscribe
-                var proxySubscribe = proxy.DefineMethod("Subscribe");
-                proxySubscribe.visibility = Syntax.Visibility.Public;
-                proxySubscribe.returnType = new Syntax.TypeReference(typeof(IDisposable)); // TODO Allow implicit conversion
-                proxySubscribe.Parameter("observer", observerType); // TODO NotNull
+                var proxySubscribe = proxy.DefineMethod("Subscribe", visibility: Syntax.Visibility.Public);
+                proxySubscribe.returnType = typeof(IDisposable);
+                proxySubscribe.Parameter("observer", observerType).NotNull(); // TODO NotNull
                 proxySubscribe.Statement("return Subscribe(Context.instance, observer)");
                 //proxy.Snippet($"public IDisposable Subscribe([NotNull] IObserver<{outputTypeName}> observer) => Subscribe(Context.instance, observer);");
                 
                 // IObservableInput subscribe
+                proxy.Snippet("");
                 proxy.Snippet("public IDisposable Subscribe<TObserver>([NotNull] Context context, [NotNull] TObserver observer)");
                 proxy.Snippet($"    where TObserver : IObserver<{outputType}>");
                 proxy.Snippet("{");
@@ -432,6 +437,7 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                 proxy.Snippet("    impl.AddObserver(observer);");
                 proxy.Snippet($"    return new Subscription<{outputTypeName}>(impl, observer);");
                 proxy.Snippet("}");
+                proxy.Snippet("");
                 
                 // IDependencyGraphNode
                 proxy.Snippet("#region IDependencyGraphNode");
@@ -476,7 +482,6 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                 var onNext = node.DefineMethod("OnNext", Syntax.Visibility.Public);
                 onNext.Statement($"{settings.declaringType}.{settings.methodName}(this, value)"); // TODO Use parameter list
                 
-                var tmp = new StringBuilder();
                 for (var i = 0; i < inputs.Length; ++i)
                 {
                     var argName = $"{inputs[i].Name}Subscription";
@@ -501,16 +506,20 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
                 extensions.isPartial = true;
                 extensions.isStatic = true;
 
-                /*
-                var ext = extensions.DefineMethod(operation, Syntax.Visibility.Public);
+                // TODO This calls for dynamic solutions depending on number of arguments.
+                var ext = extensions.DefineMethod(proxyName, Syntax.Visibility.Public);
                 ext.isExtensionMethod = true;
                 ext.isStatic = true;
-                // TODO Pass type argument ext.Parameter("source", )
-                // TODO Need support for type argument in method
-                // TODO Need support for type constraints in method
-                ext.returnType = new Syntax.TypeArgument(ctx, explicitType); // TODO FIX
-                // TODO Parameter list ext.Statement($"return new {explicitType}({})");
-                */
+                for (var i = 0; i < inputs.Length; ++i)
+                {
+                    var source = ext.TypeArgument(inputs[i].GenericTypeName);
+                    source.AddStructConstraint();
+                    source.AddConstraint(typeof(IObservableInputNode<>).MakeGenericType(inputType));
+                    ext.Parameter(inputs[i].Name, source);
+                }
+
+                ext.Statement($"return new {explicitType}({argList})"); // TODO Need full argument list
+                ext.returnType = new Syntax.TypeArgument(ctx, explicitType); // TODO Fix syntax
                 
                 return ctx.ToSource();
             }

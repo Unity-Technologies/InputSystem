@@ -23,6 +23,46 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             
             public string name { get; set; }
 
+            public static void Format(SourceFormatter formatter, IReadOnlyList<TypeArgument> typeArguments)
+            {
+                if (typeArguments.Count == 0) return;
+                formatter.WriteUnformatted('<');
+                formatter.WriteUnformatted(typeArguments[0].name);
+                for (var i = 1; i < typeArguments.Count; ++i)
+                {
+                    formatter.WriteUnformatted(", ");
+                    formatter.WriteUnformatted(typeArguments[i].name);
+                }
+                formatter.WriteUnformatted('>');
+            }
+
+            public static void FormatConstraints(SourceFormatter formatter, IReadOnlyList<TypeArgument> typeArguments)
+            {
+                if (typeArguments.Count <= 0) return;
+                for (var i = 0; i < typeArguments.Count; ++i)
+                {
+                    var typeArgument = typeArguments[i];
+                    if (typeArgument.constraints.Count == 0)
+                        continue;
+                        
+                    formatter.Newline();
+                    formatter.IncreaseIndent();
+                    if (typeArgument.constraints.Count > 0)
+                    {
+                        formatter.Write("where ");
+                        formatter.WriteUnformatted(typeArgument.name);
+                        formatter.WriteUnformatted(" : ");
+                        for (var j = 0; j < typeArgument.constraints.Count; ++j)
+                        {
+                            if (j > 0)
+                                formatter.WriteUnformatted(", ");
+                            formatter.WriteUnformatted(typeArgument.constraints[j]);   
+                        }
+                    }
+                    formatter.DecreaseIndent();
+                }
+            }
+
             public void AddConstraint(string constraint)
             {
                 m_Constraints.Add(constraint);

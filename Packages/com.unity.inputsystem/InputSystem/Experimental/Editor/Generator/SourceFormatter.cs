@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         {
             switch (visibility)
             {
-                case Syntax.Visibility.Public:
+                case Syntax.Visibility.Public: 
                     return kPublic;
                 case Syntax.Visibility.Internal:
                     return kInternal;
@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             else
             {
                 Indent();
-            }   
+            }
         }
         
         public void Write([NotNull] string value)
@@ -122,27 +122,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             WriteUnformatted(value);
             m_LineLength += length;
         }
-
-        public void WriteUnformatted(string value)
-        {
-            if (m_LineLength == 0) 
-                Indent();
-            m_Buffer.Append(value);
-        }
         
-        public void WriteUnformatted(char c)
-        {
-            if (m_LineLength == 0) 
-                Indent();
-            m_Buffer.Append(c);
-        }
-
-        public void WriteLine(string text)
-        {
-            Write(text);
-        }
-
-        public void WriteLine(ReadOnlySpan<char> span)
+        public void Write(ReadOnlySpan<char> span)
         {
             Write(span.ToString()); // TODO FIX, inefficient
         }
@@ -151,6 +132,18 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         {
             BeginLine(1);
             WriteUnformatted(c);
+            ++m_LineLength;
+        }
+
+        public void WriteUnformatted(string value)
+        {
+            m_Buffer.Append(value);
+            m_LineLength += value.Length;
+        }
+        
+        public void WriteUnformatted(char c)
+        {
+            m_Buffer.Append(c);
             ++m_LineLength;
         }
 
@@ -165,6 +158,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
         {
             WriteUnformatted(kSemicolon);
             m_NeedsNewLine = true;
+            m_NeedsParagraph = true;
         }
 
         private void NamedArgument(string argument, string value)
@@ -187,6 +181,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             Write(kOpenStatement);
             Newline();
             IncreaseIndent();
+            m_NeedsParagraph = false;
         }
 
         public void EndScope()
@@ -194,6 +189,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             DecreaseIndent();
             Write(kCloseStatement);
             m_NeedsNewLine = true;
+            m_NeedsParagraph = true;
         }
         
         public void IncreaseIndent()
@@ -203,7 +199,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
 
         public void DecreaseIndent()
         {
-            if (m_Indent > 0) --m_Indent;
+            if (m_Indent > 0) 
+                --m_Indent;
         }
 
         private void Indent()

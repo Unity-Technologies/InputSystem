@@ -38,6 +38,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 if (name == null)
                     return;
                 
+                formatter.Paragraph();
                 formatter.Write("namespace");
                 formatter.Write(name);
                 formatter.BeginScope();

@@ -90,31 +90,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     }
                 }
 
-                if (m_GenericTypeArguments.Count > 0)
-                {
-                    for (var i = 0; i < m_GenericTypeArguments.Count; ++i)
-                    {
-                        var typeArgument = m_GenericTypeArguments[i];
-                        if (typeArgument.constraints.Count == 0)
-                            continue;
-                        
-                        formatter.Newline();
-                        formatter.IncreaseIndent();
-                        if (typeArgument.constraints.Count > 0)
-                        {
-                            formatter.Write("where ");
-                            formatter.WriteUnformatted(typeArgument.name);
-                            formatter.WriteUnformatted(" : ");
-                            for (var j = 0; j < typeArgument.constraints.Count; ++j)
-                            {
-                                if (j > 0)
-                                    formatter.WriteUnformatted(", ");
-                                formatter.WriteUnformatted(typeArgument.constraints[j]);   
-                            }
-                        }
-                        formatter.DecreaseIndent();
-                    }
-                }
+                TypeArgument.FormatConstraints(formatter, m_GenericTypeArguments);
                 formatter.BeginScope();
             }
 
