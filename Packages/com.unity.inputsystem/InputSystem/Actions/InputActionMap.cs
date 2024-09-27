@@ -318,6 +318,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputActionMap()
         {
+            InputSystem.manager.InvalidateBindings();
         }
 
         /// <summary>
@@ -808,7 +809,7 @@ namespace UnityEngine.InputSystem
             ControlsForEachActionInitialized = 1 << 2,
             BindingsForEachActionInitialized = 1 << 3,
         }
-
+        
         internal struct DeviceArray
         {
             private bool m_HaveValue;
@@ -1191,6 +1192,9 @@ namespace UnityEngine.InputSystem
             m_ControlsForEachAction = null;
             controlsForEachActionInitialized = false;
 
+            // Indicate that there is at least one action map that has a change
+            InputSystem.manager.InvalidateBindings();
+
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)
@@ -1203,7 +1207,7 @@ namespace UnityEngine.InputSystem
 
             needToResolveBindings = true;
             bindingResolutionNeedsFullReResolve |= fullResolve;
-
+            
             if (InputSystem.manager.areDeferredBindingsToResolve)
                 return false;
 
@@ -1980,6 +1984,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public void OnAfterDeserialize()
         {
+            // Indicate that there is at least one action map that has a change
+            InputSystem.manager.InvalidateBindings();
+
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
             m_EnabledActionsCount = 0;

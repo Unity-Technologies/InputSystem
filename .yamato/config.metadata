@@ -1,7 +1,9 @@
 editors:
   - version: 2021.3
   - version: 2022.3
+    disable_tvos_run: true
   - version: 6000.0
+    disable_tvos_run: true
   - version: trunk
     disable_tvos_run: true
 
@@ -66,4 +68,8 @@ scripting_backends:
   - name: mono
   - name: il2cpp
   
-ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0 
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0
+
+test_category: 
+  - name: performance
+  - name: all

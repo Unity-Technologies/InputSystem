@@ -196,6 +196,9 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+#endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
-
+using Unity.Profiling;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
@@ -20,6 +20,8 @@ namespace UnityEngine.InputSystem
     /// </summary>
     internal class InputTestStateManager
     {
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
+        
         public InputSystemState GetSavedState()
         {
             return m_SavedStateStack.Peek();
@@ -63,7 +65,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public void Reset(bool enableRemoting, IInputRuntime runtime)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            k_InputResetMarker.Begin();
 
             InputSystem.TestHook_DisableActions();
 
@@ -93,7 +95,7 @@ namespace UnityEngine.InputSystem
 
             InputSystem.TestHook_EnableActions();
 
-            Profiler.EndSample();
+            k_InputResetMarker.End();
         }
 
         ////FIXME: this method doesn't restore things like InputDeviceDebuggerWindow.onToolbarGUI

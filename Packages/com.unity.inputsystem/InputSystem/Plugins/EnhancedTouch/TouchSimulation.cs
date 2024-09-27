@@ -385,7 +385,16 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 Disable();
         }
 
-        #endif
+        [CustomEditor(typeof(TouchSimulation))]
+        private class TouchSimulationEditor : UnityEditor.Editor
+        {
+            public void OnDisable()
+            {
+                new InputComponentEditorAnalytic(InputSystemComponent.TouchSimulation).Send();
+            }
+        }
+
+        #endif // UNITY_EDITOR
 
         ////TODO: Remove IInputStateChangeMonitor from this class when we can break the API
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)

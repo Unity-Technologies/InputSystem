@@ -83,6 +83,8 @@ You can also reset the UI action map to its default bindings by selecting **Rese
 ## The UI Input Module component
 
 When working with Unity UI (uGUI), or when using UI Toolkit in versions of Unity prior to Unity 2023.2, you must use the **UI Input Module** component which defines which actions are passed through to your UI, as well as some other UI-related input settings.
+> **Note:**
+> If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions. Also, The UI action map will be enabled, along with the default action map specified on any UI Input Module component in the scene.
 
 The UI Input module is implemented in the class [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 

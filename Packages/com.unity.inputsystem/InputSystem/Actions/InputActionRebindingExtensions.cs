@@ -1298,12 +1298,21 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
-        /// // A MonoBehaviour that can be hooked up to a UI.Button control.
+        /// using TMPro;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class RebindButton : MonoBehaviour
         /// {
-        ///     public InputActionReference m_Action; // Reference to an action to rebind.
-        ///     public int m_BindingIndex; // Index into m_Action.bindings for binding to rebind.
-        ///     public Text m_DisplayText; // Text in UI that receives the binding display string.
+        ///
+        ///     // A MonoBehaviour that can be hooked up to a UI.Button control.
+        ///     // This example requires you to set up a Text Mesh Pro text field,
+        ///     // And a UI button which calls the OnClick method in this script.
+        ///
+        ///     public InputActionReference actionReference; // Reference to an action to rebind.
+        ///     public int bindingIndex; // Index into m_Action.bindings for binding to rebind.
+        ///     public TextMeshProUGUI displayText; // Text in UI that receives the binding display string.
+        ///     private InputActionRebindingExtensions.RebindingOperation rebind;
         ///
         ///     public void OnEnable()
         ///     {
@@ -1312,26 +1321,20 @@ namespace UnityEngine.InputSystem
         ///
         ///     public void OnDisable()
         ///     {
-        ///         m_Rebind?.Dispose();
+        ///         rebind?.Dispose();
         ///     }
         ///
         ///     public void OnClick()
         ///     {
-        ///         var rebind = m_Action.PerformInteractiveRebinding()
-        ///             .WithTargetBinding(m_BindingIndex)
-        ///             .OnComplete(_ => UpdateDisplayText())
-        ///             .Start();
+        ///         var rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
+        ///         rebind.Start();
         ///     }
         ///
         ///     private void UpdateDisplayText()
         ///     {
-        ///         m_DisplayText.text = m_Action.GetBindingDisplayString(m_BindingIndex);
+        ///         displayText.text = actionReference.action.GetBindingDisplayString(bindingIndex);
         ///     }
-        ///
-        ///     private void RebindingOperation m_Rebind;
         /// }
-        ///
-        /// rebind.Start();
         /// </code>
         /// </example>
         ///
@@ -2786,6 +2789,11 @@ namespace UnityEngine.InputSystem
     {
         public int deferredCount => m_DeferredCount;
 
+        public void InvalidateBindings()
+        {
+            m_NeedToResolveBindings = true;
+        }
+        
         public void Acquire()
         {
             ++m_DeferredCount;
@@ -2811,25 +2819,29 @@ namespace UnityEngine.InputSystem
             ++m_DeferredCount;
             try
             {
-                ref var globalList = ref InputActionState.s_GlobalState.globalList;
-
-                for (var i = 0; i < globalList.length; ++i)
+                if (m_NeedToResolveBindings)
                 {
-                    var handle = globalList[i];
+                    ref var globalList = ref InputActionState.s_GlobalState.globalList;
 
-                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
-                    if (state == null)
+                    for (var i = 0; i < globalList.length; ++i)
                     {
-                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                        if (handle.IsAllocated)
-                            globalList[i].Free();
-                        globalList.RemoveAtWithCapacity(i);
-                        --i;
-                        continue;
-                    }
+                        var handle = globalList[i];
 
-                    for (var n = 0; n < state.totalMapCount; ++n)
-                        state.maps[n].ResolveBindingsIfNecessary();
+                        var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
+                        if (state == null)
+                        {
+                            // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                            if (handle.IsAllocated)
+                                globalList[i].Free();
+                            globalList.RemoveAtWithCapacity(i);
+                            --i;
+                            continue;
+                        }
+
+                        for (var n = 0; n < state.totalMapCount; ++n)
+                            state.maps[n].ResolveBindingsIfNecessary();
+                    }    
+                    m_NeedToResolveBindings = false;
                 }
             }
             finally
@@ -2840,5 +2852,6 @@ namespace UnityEngine.InputSystem
 
 
         private int m_DeferredCount;
+        private bool m_NeedToResolveBindings; // TODO Revisit: Was previously static, but based on changes by Alex+Tim might no longer be needed?!
     }
 }
