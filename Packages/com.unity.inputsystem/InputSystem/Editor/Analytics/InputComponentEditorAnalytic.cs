@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem.Editor
             m_Component = component;
         }
 
-#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
         public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
         public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
@@ -86,4 +86,4 @@ namespace UnityEngine.InputSystem.Editor
         public InputAnalytics.InputAnalyticInfo info { get; }
     }
 }
-#endif
+#endif // UNITY_EDITOR
