@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+- Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
+
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
@@ -47,7 +50,6 @@ however, it has to be formatted properly to pass verification tests.
 - Added tests for Input Action Editor UI for managing action maps (List, create, rename, delete) (ISX-2087)
 - Added automatic loading of custom extensions of InputProcessor, InputInteraction and InputBindingComposite [ISXB-856]](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-856).
 - Added an IME Input sample scene.
-- Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions`.
 
 ## [1.10.0] - 2024-07-24
 
