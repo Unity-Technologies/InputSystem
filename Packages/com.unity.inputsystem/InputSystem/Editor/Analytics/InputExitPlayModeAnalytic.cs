@@ -74,8 +74,7 @@ namespace UnityEngine.InputSystem.Editor
             if (change == PlayModeStateChange.ExitingEditMode)
             {
                 // Reset all counters when exiting edit mode
-                for (var i = 0; i < m_Counters.Length; ++i)
-                    m_Counters[i] = 0;
+                Array.Clear(m_Counters, 0, m_Counters.Length);
 
                 // Make sure not suppressed
                 suppress = false;
@@ -123,8 +122,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             /// <summary>
-            /// Specifies whether code-authoring (Input Action setup via extensions) was used at least once
-            /// during play-mode.
+            /// Specifies whether code-authoring (Input Action setup via extensions) was used at least once during play-mode.
             /// </summary>
             public bool uses_code_authoring;
         }
