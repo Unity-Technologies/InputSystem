@@ -352,6 +352,7 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
             return ports;
         }
         
+        // Consider separated extension method generation based on InputType.
         private static string GenerateOperation(MethodInfo info)
         {
             var outputType = typeof(bool); // TODO FIX

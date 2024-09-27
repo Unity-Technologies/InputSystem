@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Experimental
             return new Merge<T, TSource0, TSource1>(source0, source1);
         }
         
-        // TODO Consider if we should generate merge extensions for supported types to avoid boxing. This would be possible within package but would be problematic for extensions? Use extensions within project to verify.
+        // TODO Consider if we should generate merge extensions similar to this for supported types to avoid boxing. This would be possible within package but would be problematic for extensions? Use extensions within project to verify.
         public static Merge<bool, TSource0, TSource1> Merge<TSource0, TSource1>(
             TSource0 source0, TSource1 source1)
             where TSource0 : IObservableInputNode<bool> 

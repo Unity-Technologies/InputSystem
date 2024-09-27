@@ -282,7 +282,6 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly TSource1 m_Source1;
         private readonly TSource2 m_Source2;
         private readonly TSource3 m_Source3;
-        private Impl m_Impl;
         private Chain m_Chain;
         
         public CombineLatest(TSource0 source0, TSource1 source1, TSource2 source2, TSource3 source3)
@@ -291,7 +290,6 @@ namespace UnityEngine.InputSystem.Experimental
             m_Source1 = source1;
             m_Source2 = source2;
             m_Source3 = source3;
-            m_Impl = null;
             m_Chain = default;
         }
 
@@ -301,7 +299,7 @@ namespace UnityEngine.InputSystem.Experimental
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
             where TObserver : IObserver<ValueTuple<T0, T1, T2, T3>>
         {
-            return (m_Impl ??= new Impl(context, m_Source0, m_Source1, m_Source2, m_Source3, m_Chain)).Subscribe(context, observer);
+            return new Impl(context, m_Source0, m_Source1, m_Source2, m_Source3, m_Chain).Subscribe(context, observer);
         }
         
         public bool Equals(IDependencyGraphNode other) =>
