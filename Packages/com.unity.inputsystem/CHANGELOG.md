@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
+- Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
 
 ## [1.11.1] - 2024-09-26
 
