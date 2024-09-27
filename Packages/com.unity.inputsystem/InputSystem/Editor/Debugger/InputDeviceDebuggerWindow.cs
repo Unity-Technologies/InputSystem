@@ -347,6 +347,8 @@ namespace UnityEngine.InputSystem.Editor
                 flags.Add("DisabledInRuntime");
             if (m_Device.disabledWhileInBackground)
                 flags.Add("DisabledWhileInBackground");
+            if (m_Device.canDeviceRunInBackground)
+                flags.Add("CanRunInBackground");
             m_DeviceFlags = m_Device.m_DeviceFlags;
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());
         }

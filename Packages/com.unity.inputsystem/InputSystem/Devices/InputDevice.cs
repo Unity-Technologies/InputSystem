@@ -255,6 +255,18 @@ namespace UnityEngine.InputSystem
                     return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
                 #endif
 
+                return canDeviceRunInBackground;
+            }
+        }
+        /// <summary>
+        /// In editor, it may differ from canRunInBackground depending on the gameViewFocus setting.
+        /// This property is used by Device Debug View
+        /// </summary>
+        /// <value>Whether the device should generate input while in the background.</value>
+        internal bool canDeviceRunInBackground
+        {
+            get
+            {
                 if ((m_DeviceFlags & DeviceFlags.CanRunInBackgroundHasBeenQueried) != 0)
                     return (m_DeviceFlags & DeviceFlags.CanRunInBackground) != 0;
 
