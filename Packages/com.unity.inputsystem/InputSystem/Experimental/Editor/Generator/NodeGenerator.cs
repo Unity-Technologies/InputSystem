@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Experimental.Generator;
 
@@ -309,222 +310,212 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
             return sb.ToString();
         }
         
-        struct Port
+        readonly struct Port
         {
-            public string Name;
-            public string TypeName;
-            public string GenericTypeName;
-            public string ArgName;
-            public Syntax.Field Field;
-            public Syntax.TypeReference Type;
+            public readonly string Name;
+            public readonly string GenericTypeName;
+            public readonly Type ParameterType;
             
-            public Port(Type type, string name, string genericTypeName, string argName)
+            public Port(Type type, string name, string genericTypeName)
             {
-                this.Name = name;
-                this.TypeName = SourceUtils.GetTypeName(type);
-                this.GenericTypeName = genericTypeName;
-                this.ArgName = argName;
-                Field = default;
-                Type = default;
+                Name = name;
+                ParameterType = type;
+                GenericTypeName = genericTypeName;
             }
         }
 
-        private static Port[] GetPorts(MethodInfo info)
+        private static Port[] GetPorts(MethodInfo info, out string typeArguments, out string argumentList)
         {
             var parameterInfos = info.GetParameters();
             var length = parameterInfos.Length;
             var count = length - 1;
             var ports = new Port[count];
-            for (int i = 1; i < length; ++i)
+            for (var i = 1; i < length; ++i)
             {
-                ref var p = ref parameterInfos[i];
-                ports[i-1] = new Port(p.ParameterType, count == 1 ? "source" : $"source{i}", 
-                    count == 1 ? "TSource" : $"TSource{i}", 
-                    p.Name);
+                ports[i-1] = new Port(type: parameterInfos[i].ParameterType, 
+                    name: count == 1 ? "source" : $"source{i}", 
+                    genericTypeName: count == 1 ? "TSource" : $"TSource{i}");
             }
+            
+            var temp = new StringBuilder();
+            temp.Append(ports[0].GenericTypeName);
+            for (var i = 1; i < count; ++i)
+                temp.Append(", ").Append(ports[i].GenericTypeName);
+            typeArguments = temp.ToString();
+
+            temp.Clear();
+            temp.Append(ports[0].Name);
+            for (var i = 1; i < count; ++i)
+                temp.Append(", ").Append(ports[i].Name);
+            argumentList = temp.ToString();
+
             return ports;
-    }
+        }
         
-        private static string GenerateOperation(in Settings settings, MethodInfo info, Type inputType, Type outputType, bool stateless)
+        private static string GenerateOperation(MethodInfo info)
         {
-            var inputTypeName = SourceUtils.GetTypeName(inputType);
+            var outputType = typeof(bool); // TODO FIX
+            
+            var methodName = info.Name;
+            var proxyName = methodName;
+            var nodeName = $"{methodName}Node";
             var outputTypeName = SourceUtils.GetTypeName(outputType);
             
-            /*var sb = new StringBuilder();
-            sb.Append(Replace(kSourceHeader, settings, inputTypeName, outputTypeName));
-            sb.Append(Replace(kSourceBeginNamespace, settings, inputTypeName, outputTypeName));
-            sb.Append(Replace(kSourceTemplate2, settings, inputTypeName, outputTypeName));
-            if (stateless)
-                sb.Append(Replace(kSourceStatelessObserverTemplate, settings, inputTypeName, outputTypeName));
-            else
-                sb.Append(Replace(kSourceStatefulObserverTemplate, settings, inputTypeName, outputTypeName));
-            sb.Append(Replace(kSourceExtensionMethods, settings, inputTypeName, outputTypeName));
-            sb.Append(Replace(kSourceEndNamespace, settings, inputTypeName, outputTypeName));*/
-
-            if (true)
+            // Source file context
+            var ctx = new SourceContext();
+            ctx.root.Using("System");
+            ctx.root.Using("System.Diagnostics.CodeAnalysis");
+            ctx.root.Using("UnityEngine.InputSystem.Experimental");
+            ctx.root.Using("UnityEngine.InputSystem.Experimental.Internal"); // TODO Fix, should not access internals
+            
+            // Root namespace
+            var @namespace = ctx.root.Namespace(info.DeclaringType!.Namespace);
+            
+            // Proxy struct
+            var proxy = @namespace.DeclareStruct(name: info.Name, Syntax.Visibility.Public);
+            proxy.isPartial = true;
+            proxy.ImplementInterface(typeof(IObservableInputNode<>).MakeGenericType(outputType));
+            proxy.DeclareAttribute(typeof(SerializableAttribute));
+            proxy.DeclareAttribute(typeof(InputSourceAttribute));
+            var proxyConstructor = proxy.DefineMethod(proxyName, Syntax.Visibility.Public);
+            proxyConstructor.isConstructor = true;
+            
+            // Extension method class
+            var extensions = @namespace.DeclareClass(info.Name + "Extensions");
+            extensions.visibility = Syntax.Visibility.Public;
+            extensions.isPartial = true;
+            extensions.isStatic = true;
+            
+            // Node class
+            var node = @namespace.DeclareClass(nodeName);
+            node.isSealed = true;
+            node.visibility = Syntax.Visibility.Internal;
+            node.ImplementInterface(typeof(ObserverBase<>).MakeGenericType(outputType)); // TODO Not technically correct
+            node.ImplementInterface(typeof(IUnsubscribe<>).MakeGenericType(outputType));
+            
+            var nodeInitializeMethod = node.DefineMethod(name: "Initialize", visibility: Syntax.Visibility.Public);
+            
+            var nodeObserverType = typeof(IObserver<>).MakeGenericType(outputType);
+            var nodeUnsubscribeMethod = node.DefineMethod(name: "Unsubscribe", visibility: Syntax.Visibility.Public);
+            nodeUnsubscribeMethod.Parameter("observer", nodeObserverType);
+            nodeUnsubscribeMethod.Statement("if (!RemoveObserver(observer)) return");
+            
+            var nodeOnNextMethod = node.DefineMethod("OnNext", Syntax.Visibility.Public);
+            nodeOnNextMethod.Statement($"{info.DeclaringType}.{methodName}(this, value)"); // TODO Use parameter list
+            
+            // Inputs
+            var inputs = GetPorts(info, out var typeArgumentList, out var argList);
+            for (var i = 0; i < inputs.Length; ++i)
             {
-                var proxyName = info.Name;
-                var nodeName = $"{info.Name}Node";
+                var input = inputs[i];
                 
-                // TODO Fix, namespaces should be automatic
-                var ctx = new SourceContext();
-                ctx.root.Using("System");
-                ctx.root.Using("System.Diagnostics.CodeAnalysis");
-                ctx.root.Using("UnityEngine.InputSystem.Experimental");
-                ctx.root.Using("UnityEngine.InputSystem.Experimental.Internal"); // TODO Fix, should not access internals
+                // Node needs to be an observer of all input types
+                node.ImplementInterface(typeof(IObserver<>).MakeGenericType(input.ParameterType));
                 
-                var ns = ctx.root.Namespace(info.DeclaringType!.Namespace);
+                // Each input is represented by a generic type in struct to avoid boxing and indirection
+                var genericArg = proxy.TypeArgument(input.GenericTypeName);
+                genericArg.AddStructConstraint();
+                genericArg.AddConstraint(typeof(IObservableInputNode<>).MakeGenericType(input.ParameterType));
                 
-                var proxy = ns.DeclareStruct(name: info.Name, Syntax.Visibility.Public);
-                proxy.isPartial = true;
-                proxy.ImplementInterface(typeof(IObservableInputNode<>).MakeGenericType(outputType));
-                proxy.DeclareAttribute(nameof(InputSourceAttribute));
+                // Each input is backed by a serializable field in proxy struct
+                var field = proxy.DeclareField(genericArg, name: input.Name);
+                field.visibility = Syntax.Visibility.Private;
+                field.DeclareAttribute(typeof(SerializeField));
                 
-                //var inputs = new List<Port>();
-                var typeArgumentList = new StringBuilder();
-                var argList = new StringBuilder();
+                // Node holds a subscription field associated with the input
+                var argName = $"{input.Name}Subscription";
+                var fieldName = $"m_{argName}";
+                var subscriptionField = node.DeclareField(typeof(IDisposable), fieldName);
+                subscriptionField.visibility = Syntax.Visibility.Private;
                 
-                // Input #1
-                var inputs = GetPorts(info);
-                for (var i = 0; i < inputs.Length; ++i)
-                {
-                    var genericArg = proxy.TypeArgument(inputs[i].GenericTypeName);
-                    genericArg.AddStructConstraint();
-                    genericArg.AddConstraint(typeof(IObservableInputNode<>).MakeGenericType(inputType));
-                    
-                    var field = proxy.DeclareField(genericArg, name: inputs[i].Name);
-                    field.visibility = Syntax.Visibility.Private;
-
-                    if (typeArgumentList.Length != 0)
-                    {
-                        typeArgumentList.Append(", ");
-                        argList.Append(", ");
-                    }
-                    typeArgumentList.Append(inputs[i].GenericTypeName);
-                    argList.Append(inputs[i].Name);
-                    
-                    inputs[i].Field = field;
-                    inputs[i].Type = genericArg;
-                }
+                // Add input parameter to proxy struct constructor
+                proxyConstructor.Parameter(input.Name, genericArg);
+                proxyConstructor.Statement($"this.{input.Name} = {input.Name}");
                 
-                var explicitType = $"{proxyName}<{typeArgumentList}>";
-                var observerType = typeof(IObserver<>).MakeGenericType(outputType);
+                // Add node input subscription to initialization method and assign it to field
+                nodeInitializeMethod.Parameter(argName, typeof(IDisposable)).NotNull();
+                nodeInitializeMethod.Statement($"{fieldName} = {argName}");
                 
-                // Constructor
-                var ctor = proxy.DefineMethod(settings.nodeName, Syntax.Visibility.Public);
-                ctor.isConstructor = true;
+                // Add unsubscription logic for input to node
+                nodeUnsubscribeMethod.Statement($"{fieldName}.Dispose()");
+                nodeUnsubscribeMethod.Statement($"{fieldName} = null");
                 
-                // Forwarding IObservable subscribe
-                var proxySubscribe = proxy.DefineMethod("Subscribe", visibility: Syntax.Visibility.Public);
-                proxySubscribe.returnType = typeof(IDisposable);
-                proxySubscribe.Parameter("observer", observerType).NotNull(); // TODO NotNull
-                proxySubscribe.Statement("return Subscribe(Context.instance, observer)");
-                //proxy.Snippet($"public IDisposable Subscribe([NotNull] IObserver<{outputTypeName}> observer) => Subscribe(Context.instance, observer);");
-                
-                // IObservableInput subscribe
-                proxy.Snippet("");
-                proxy.Snippet("public IDisposable Subscribe<TObserver>([NotNull] Context context, [NotNull] TObserver observer)");
-                proxy.Snippet($"    where TObserver : IObserver<{outputType}>");
-                proxy.Snippet("{");
-                proxy.Snippet("    // TODO Implement node sharing (multi-cast)");
-                proxy.Snippet($"    var impl = ObjectPool<{nodeName}>.shared.Rent();");
-                proxy.Snippet("     impl.Initialize(");
-                for (var i = 0; i < inputs.Length; ++i)
-                {
-                    proxy.Snippet($"         {inputs[i].Name}.Subscribe(context, impl)");
-                }
-                proxy.Snippet("     );");
-                proxy.Snippet("    impl.AddObserver(observer);");
-                proxy.Snippet($"    return new Subscription<{outputTypeName}>(impl, observer);");
-                proxy.Snippet("}");
-                proxy.Snippet("");
-                
-                // IDependencyGraphNode
-                proxy.Snippet("#region IDependencyGraphNode");
-                proxy.Snippet($"public bool Equals(IDependencyGraphNode other) => other is {explicitType} node && Equals(node);");
-                proxy.Snippet($"public bool Equals({explicitType} other) => {inputs[0].Name}.Equals(other.{inputs[0].Name});"); // TODO FIX
-                // TODO Need return statement: var property = proxy.DefineProperty(nameof(IDependencyGraphNode.displayName), typeof(string));
-                proxy.Snippet($"public string displayName => \"{info.Name}\";");
-                proxy.Snippet($"public int childCount => {inputs.Length};");
-                /*var getChild = proxy.DefineMethod(nameof(IDependencyGraphNode.GetChild), Syntax.Visibility.Public);
-                getChild.returnType = typeof(IDependencyGraphNode);
-                getChild.Parameter("index", typeof(int));
-                getChild.Statement("switch(index)"); // TODO Cannot be statement, should be block
-                getChild.Statement("{");
-                for (var i = 0; i < inputs.Count; ++i)
-                    getChild.Statement($"        case {i}: return {inputs[i].Name};");
-                getChild.Statement("    default: throw new ArgumentOutOfRangeException(nameof(index));");
-                getChild.Statement("}");*/
-                proxy.Snippet("public IDependencyGraphNode GetChild(int index)");
-                proxy.Snippet("{");
-                proxy.Snippet("    switch(index)");
-                proxy.Snippet("    {");
-                for (var i = 0; i < inputs.Length; ++i)
-                    proxy.Snippet($"        case {i}: return {inputs[i].Name};");
-                proxy.Snippet("        default: throw new ArgumentOutOfRangeException(nameof(index));");
-                proxy.Snippet("    }");
-                proxy.Snippet("}");
-                proxy.Snippet("#endregion");
-                
-                var node = ns.DeclareClass(nodeName);
-                node.isSealed = true;
-                node.visibility = Syntax.Visibility.Internal;
-                node.ImplementInterface(typeof(ObserverBase<>).MakeGenericType(outputType)); // TODO Not technically correct
-                node.ImplementInterface(typeof(IUnsubscribe<>).MakeGenericType(outputType));
-                node.ImplementInterface(typeof(IObserver<>).MakeGenericType(inputType));
-                
-                var initialize = node.DefineMethod(name: "Initialize", visibility: Syntax.Visibility.Public);
-                var unsubscribe = node.DefineMethod(name: "Unsubscribe", visibility: Syntax.Visibility.Public);
-                
-                unsubscribe.Parameter("observer", observerType);
-                unsubscribe.Statement("if (!RemoveObserver(observer)) return");
-                
-                var onNext = node.DefineMethod("OnNext", Syntax.Visibility.Public);
-                onNext.Statement($"{settings.declaringType}.{settings.methodName}(this, value)"); // TODO Use parameter list
-                
-                for (var i = 0; i < inputs.Length; ++i)
-                {
-                    var argName = $"{inputs[i].Name}Subscription";
-                    var fieldName = $"m_{inputs[i].Name}Subscription";
-                    var fieldRef = $"this.{fieldName}";
-                    var subscriptionField = node.DeclareField(typeof(IDisposable), fieldName);
-                    subscriptionField.visibility = Syntax.Visibility.Private;
-                    
-                    ctor.Parameter(inputs[i].Name, inputs[i].Type);
-                    ctor.Statement($"this.{inputs[i].Name} = {inputs[i].Name}"); // TODO AssignmentStatement
-                    
-                    initialize.Parameter(argName, typeof(IDisposable)); // TODO NotNull
-                    initialize.Statement($"{fieldRef} = {argName}"); // TODO AssignmentStatement
-                    unsubscribe.Statement($"{fieldRef}.Dispose()");
-                    unsubscribe.Statement($"{fieldRef} = null");
-                    
-                    onNext.Parameter("value", inputType); // TODO Take type from element
-                }
-                
-                var extensions = ns.DeclareClass(info.Name + "Extensions");
-                extensions.visibility = Syntax.Visibility.Public;
-                extensions.isPartial = true;
-                extensions.isStatic = true;
-
-                // TODO This calls for dynamic solutions depending on number of arguments.
-                var ext = extensions.DefineMethod(proxyName, Syntax.Visibility.Public);
-                ext.isExtensionMethod = true;
-                ext.isStatic = true;
-                for (var i = 0; i < inputs.Length; ++i)
-                {
-                    var source = ext.TypeArgument(inputs[i].GenericTypeName);
-                    source.AddStructConstraint();
-                    source.AddConstraint(typeof(IObservableInputNode<>).MakeGenericType(inputType));
-                    ext.Parameter(inputs[i].Name, source);
-                }
-
-                ext.Statement($"return new {explicitType}({argList})"); // TODO Need full argument list
-                ext.returnType = new Syntax.TypeArgument(ctx, explicitType); // TODO Fix syntax
-                
-                return ctx.ToSource();
+                // Add input parameter to OnNext method of node
+                nodeOnNextMethod.Parameter("value", input.ParameterType);
             }
             
-            //return sb.ToString();
+            // Forwarding IObservable subscribe
+            var proxySubscribe = proxy.DefineMethod("Subscribe", visibility: Syntax.Visibility.Public);
+            proxySubscribe.returnType = typeof(IDisposable);
+            proxySubscribe.Parameter("observer", nodeObserverType).NotNull();
+            proxySubscribe.Statement("return Subscribe(Context.instance, observer)");
+            
+            // IObservableInput subscribe
+            proxy.Snippet(" ");
+            proxy.Snippet("public IDisposable Subscribe<TObserver>([NotNull] Context context, [NotNull] TObserver observer)");
+            proxy.Snippet($"    where TObserver : IObserver<{outputType}>");
+            proxy.Snippet("{");
+            proxy.Snippet("    if (context == null) throw new ArgumentNullException(nameof(context));");
+            proxy.Snippet("    if (observer == null) throw new ArgumentNullException(nameof(observer));");
+            proxy.Snippet("    // TODO Implement node sharing (multi-cast)");
+            proxy.Snippet($"    var impl = ObjectPool<{nodeName}>.shared.Rent();");
+            proxy.Snippet("    impl.Initialize(");
+            for (var i = 0; i < inputs.Length; ++i)
+                proxy.Snippet($"         {inputs[i].Name}.Subscribe(context, impl)");
+            proxy.Snippet("    );");
+            proxy.Snippet("    impl.AddObserver(observer);");
+            proxy.Snippet($"    return new Subscription<{outputTypeName}>(impl, observer);");
+            proxy.Snippet("}");
+            proxy.Snippet(" ");
+            
+            // IDependencyGraphNode
+            var explicitType = $"{proxyName}<{typeArgumentList}>";
+            proxy.Snippet("#region IDependencyGraphNode");
+            proxy.Snippet($"public bool Equals(IDependencyGraphNode other) => other is {explicitType} node && Equals(node);");
+            if (inputs.Length == 1)
+            {
+                proxy.Snippet($"public bool Equals({explicitType} other) => {inputs[0].Name}.Equals(other.{inputs[0].Name});");
+            }
+            else
+            {
+                proxy.Snippet($"public bool Equals({explicitType} other)");
+                proxy.Snippet("{");
+                var n = inputs.Length - 1;
+                proxy.Snippet($"return {inputs[0].Name}.Equals(other.{inputs[0].Name}) &&");
+                for (var i = 1; i < n; ++i)
+                    proxy.Snippet($"    {inputs[i].Name}.Equals(other.{inputs[i].Name}) &&");
+                proxy.Snippet($"    {inputs[n].Name}.Equals(other.{inputs[n].Name});");
+                proxy.Snippet("}");
+                proxy.Snippet(" ");
+            }
+            proxy.Snippet($"public string displayName => \"{info.Name}\";");
+            proxy.Snippet($"public int childCount => {inputs.Length};");
+            proxy.Snippet("public IDependencyGraphNode GetChild(int index)");
+            proxy.Snippet("{");
+            proxy.Snippet("    switch(index)");
+            proxy.Snippet("    {");
+            for (var i = 0; i < inputs.Length; ++i)
+                proxy.Snippet($"        case {i}: return {inputs[i].Name};");
+            proxy.Snippet("        default: throw new ArgumentOutOfRangeException(nameof(index));");
+            proxy.Snippet("    }");
+            proxy.Snippet("}");
+            proxy.Snippet("#endregion");
+            
+            // Extension method
+            var extensionMethod = extensions.DefineMethod(proxyName, Syntax.Visibility.Public);
+            extensionMethod.isExtensionMethod = true;
+            extensionMethod.isStatic = true;
+            extensionMethod.returnType = new Syntax.TypeArgument(ctx, explicitType); // TODO Fix syntax
+            extensionMethod.Statement($"return new {explicitType}({argList})");
+            for (var i = 0; i < inputs.Length; ++i)
+            {
+                var source = extensionMethod.TypeArgument(inputs[i].GenericTypeName);
+                source.AddStructConstraint();
+                source.AddConstraint(typeof(IObservableInputNode<>).MakeGenericType(inputs[i].ParameterType));
+                extensionMethod.Parameter(inputs[i].Name, source);
+            }
+            
+            return ctx.ToSource();
         }
         
         static IEnumerable<Type> GetTypesWithAttribute(Assembly assembly, Type attributeType) {
@@ -545,28 +536,14 @@ using UnityEngine.InputSystem.Experimental.Internal; // TODO ArrayPoolExtensions
         private static void GenerateOperations()
         {
             var operationMethods = TypeCache.GetMethodsWithAttribute(typeof(InputOperationAttribute));
-            foreach (var operationMethod in operationMethods)
+            foreach (var operationMethod in operationMethods) // TODO Consider parallel for
             {
                 if (operationMethod.IsAbstract) 
                     continue;
-                var stateless = operationMethod.IsStatic;
-                var generic = operationMethod.DeclaringType!.IsGenericType; // TODO If declaring type is generic we need to parameterize it as such
-
+                
                 var folder = Path.Combine(Resources.PackagePath, "Experimental/Reactive/");
                 var path = folder + operationMethod.Name + ".g.cs";
-                var settings = new Settings(operationMethod.DeclaringType!.Namespace,
-                    operationMethod.Name,
-                    operationMethod.DeclaringType,
-                    operationMethod.Name);
-
-                var parameters = operationMethod.GetParameters();
-                //if (parameters.Length != 2)
-                //    continue; // TODO Generate errors
-                var inputCount = parameters.Length - 1;
-                
-                // TODO Make a list of inputs, need to find a way to express whether we want inputs by index.
-                
-                SourceUtils.Generate(path, () => GenerateOperation(settings, operationMethod, typeof(bool), typeof(bool), stateless));
+                SourceUtils.Generate(path, () => GenerateOperation(operationMethod));
             }
         }
         

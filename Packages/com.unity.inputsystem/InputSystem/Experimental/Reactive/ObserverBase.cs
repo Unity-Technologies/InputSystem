@@ -1,19 +1,17 @@
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Experimental.Internal;
 
 namespace UnityEngine.InputSystem.Experimental
 {
     public class ObserverCommon
     {
-        public const int kDefaultPriority = 0;
+        public const int DefaultPriority = 0;
         
         private readonly int m_Priority;
 
-        protected ObserverCommon(int priority = kDefaultPriority)
+        protected ObserverCommon(int priority = DefaultPriority)
         {
             m_Priority = priority;
         }
@@ -33,7 +31,11 @@ namespace UnityEngine.InputSystem.Experimental
         private IObserver<TOut>[] m_Observers;
         private int m_ObserverCount;
 
-        protected ObserverBase(int priority = kDefaultPriority)
+        /// <summary>
+        /// Constructs a new instance.
+        /// </summary>
+        /// <param name="priority">The associated output priority.</param>
+        protected ObserverBase(int priority = DefaultPriority)
             : base(priority)
         { }
 

@@ -19,20 +19,10 @@ namespace UnityEngine.InputSystem.Experimental
             m_Receiver = receiver;
         }
         
-        public void OnCompleted()
-        {
-            m_Receiver.ForwardOnCompleted();
-        }
-
-        public void OnError(Exception error)
-        {
-            m_Receiver.ForwardOnError(error);
-        }
+        public void OnCompleted() => m_Receiver.ForwardOnCompleted();
+        public void OnError(Exception error) => m_Receiver.ForwardOnError(error);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnNext(T value)
-        {
-            m_Receiver.ForwardOnNext(value);
-        }
+        public void OnNext(T value) => m_Receiver.ForwardOnNext(value);
     }
 }

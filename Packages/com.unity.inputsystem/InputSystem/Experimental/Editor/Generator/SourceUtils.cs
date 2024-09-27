@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -10,6 +11,8 @@ namespace UnityEditor.InputSystem.Experimental.Generator
     internal static class SourceUtils
     {
         internal const string Header = @"// This is an auto-generated source file. Any manual edits will be lost.";
+
+        private static readonly Dictionary<Type, string> typeNameCache = new();
         
         internal static string GetTypeName(Type type)
         {
@@ -31,7 +34,9 @@ namespace UnityEditor.InputSystem.Experimental.Generator
             }
             else if (type.IsGenericType)
             {
-                // TODO Cache results
+                if (typeNameCache.TryGetValue(type, out string cachedString))
+                    return cachedString;
+                
                 var tmp = new StringBuilder(type.Name.Substring(0, type.Name.IndexOf('`')));
                 var args = type.GenericTypeArguments;
                 tmp.Append('<');
@@ -42,7 +47,10 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                     tmp.Append(GetTypeName(args[i]));
                 }
                 tmp.Append('>');
-                return tmp.ToString();
+
+                var s = tmp.ToString();
+                typeNameCache.Add(type, s);
+                return s;
             }
             
             return type.Name;
@@ -77,11 +85,13 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                     
                     stopwatch.Stop();
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
-                    LogFileMessage(logger, LogType.Log, path, $"successfully generated in {elapsed} seconds.");
+                    LogFileMessage(logger, LogType.Log, path, $"successfully generated. Completed in {elapsed} seconds.");
                 }
                 else
                 {
-                    LogFileMessage(logger, LogType.Log, path, "already up to date.");
+                    stopwatch.Stop();
+                    var elapsed = stopwatch.Elapsed.TotalSeconds;
+                    LogFileMessage(logger, LogType.Log, path, $"already up to date. Completed in {elapsed} seconds.");
                 }
             }
             catch (Exception e)

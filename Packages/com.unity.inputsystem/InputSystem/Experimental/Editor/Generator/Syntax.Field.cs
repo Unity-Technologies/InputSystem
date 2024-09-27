@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor.InputSystem.Experimental.Generator;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
@@ -10,11 +11,15 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             public void AddField(Field field);
         }
         
-        public class Field : Node
+        public class Field : Node, IDeclareAttribute
         {
+            private readonly List<Syntax.Attribute> m_Attributes;
+
             public Field(SourceContext context, TypeReference type, string name, string value) 
                 : base(context)
             {
+                m_Attributes = new List<Syntax.Attribute>();
+                
                 this.fieldOffset = -1;
                 this.visibility = Visibility.Default;
                 this.name = name;
@@ -35,6 +40,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             {
                 if (fieldOffset >= 0)
                     formatter.Write($"[FieldOffset({fieldOffset})]"); // TODO Should be annotation
+                Attribute.Format(formatter, m_Attributes);
                 formatter.Write(formatter.Format(visibility));
                 if (isFixed)
                     formatter.Write("fixed");
@@ -50,6 +56,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                     formatter.Write(name);
                 formatter.EndStatement();
             }
+
+            public void AddAttribute(Attribute attribute) => m_Attributes.Add(attribute);
         }
     }
     

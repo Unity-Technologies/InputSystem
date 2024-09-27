@@ -65,18 +65,6 @@ namespace UnityEngine.InputSystem.Experimental
             this.source0 = source0;
             this.source1 = source1;
         }
-        
-        /*public TSource source0
-        {
-            get => m_Source0;
-            set => m_Source0 = value;
-        }
-        
-        public TSource source1
-        {
-            get => m_Source1;
-            set => m_Source1 = value;
-        }*/
 
         public IDisposable Subscribe(IObserver<T> observer) => Subscribe(Context.instance, observer);
 
@@ -151,18 +139,6 @@ namespace UnityEngine.InputSystem.Experimental
             this.source0 = source0;
             this.source1 = source1;
         }
-        
-        /*public TSource source0
-        {
-            get => m_Source0;
-            set => m_Source0 = value;
-        }
-        
-        public TSource source1
-        {
-            get => m_Source1;
-            set => m_Source1 = value;
-        }*/
 
         public IDisposable Subscribe(IObserver<T> observer) => Subscribe(Context.instance, observer);
 
@@ -221,12 +197,5 @@ namespace UnityEngine.InputSystem.Experimental
         {
             return new Merge<T>(source0, source1);
         }
-        
-        /*public static Merge<T, IObservableInputNode<T>> Merge<T>(
-            IObservableInputNode<T> source0, IObservableInputNode<T> source1)
-            where T : struct
-        {
-            return new Merge<T, IObservableInputNode<T>>(source0, source1);
-        }*/
     }
 }

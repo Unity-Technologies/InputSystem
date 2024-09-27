@@ -63,14 +63,16 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 formatter.WriteUnformatted(')');
             }
 
-            public static void Format(SourceFormatter formatter, IReadOnlyList<Attribute> attributes)
+            public static bool Format(SourceFormatter formatter, IReadOnlyList<Attribute> attributes)
             {
-                if (attributes.Count == 0) return;
+                if (attributes.Count == 0) 
+                    return false;
                 formatter.Write('[');
                 for (var i=0; i < attributes.Count; ++i)
                     Format(formatter, attributes[i], i);
                 formatter.WriteUnformatted(']');
-                formatter.WriteUnformatted(' ');
+                //formatter.WriteUnformatted(' ');
+                return true;
             }
 
             public void AddArgument(Argument argument)
@@ -94,7 +96,10 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             where TTarget : Syntax.IDeclareAttribute, Syntax.INode
         {
             target.context.root.Using(attribute.Namespace);
-            return DeclareAttribute(target, attribute.Name);
+            var name = attribute.Name;
+            if (name.EndsWith("Attribute"))
+                name = name.Substring(0, name.Length - 9);
+            return DeclareAttribute(target, name);
         }
         
         public static Syntax.Attribute NotNull<TTarget>(this TTarget target)

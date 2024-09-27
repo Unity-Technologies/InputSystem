@@ -14,6 +14,7 @@ namespace UnityEngine.InputSystem.Experimental
             public Impl(Context context, TSource source0, TSource source1)
             {
                 // TODO This is one way to implement chord, but it might be better to use same strategy as merge to avoid copying? (But this is simpler)
+                // TODO E.g. if this use indexed forwarders we can just use index bits to affect a bit flag.
                 var combineLatest = new CombineLatest<bool, bool, TSource, TSource>(source0, source1);
                 m_Observers = new ObserverList2<bool>(combineLatest.Subscribe(context, this));
             }
@@ -40,21 +41,21 @@ namespace UnityEngine.InputSystem.Experimental
         
         private readonly TSource m_Source0;
         private readonly TSource m_Source1;
-        private Impl m_Impl;
         
         public Chord([InputPort] TSource source0, [InputPort] TSource source1)
         {
             m_Source0 = source0;
             m_Source1 = source1;
-            m_Impl = null;
         }
 
         public IDisposable Subscribe(IObserver<bool> observer) =>
             Subscribe(Context.instance, observer);
 
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer)
-            where TObserver : IObserver<bool> =>
-            (m_Impl ??= new Impl(context, m_Source0, m_Source1)).Subscribe(context, observer);
+            where TObserver : IObserver<bool>
+        {
+            return new Impl(context, m_Source0, m_Source1).Subscribe(context, observer);   
+        }
         
         // TODO Reader end-point
         

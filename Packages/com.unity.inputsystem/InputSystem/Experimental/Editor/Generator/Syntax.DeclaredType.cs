@@ -53,8 +53,8 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 // TODO Insert newline if formatter has previous data?
                 docSummary?.Format(formatter);
 
-                foreach (var annotation in m_Attributes)
-                    annotation.Format(formatter);
+                if (Attribute.Format(formatter, m_Attributes))
+                    formatter.Newline();
                 
                 // Declaration
                 formatter.Write(formatter.Format(visibility));

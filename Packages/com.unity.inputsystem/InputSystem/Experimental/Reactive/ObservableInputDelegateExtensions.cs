@@ -68,8 +68,10 @@ namespace UnityEngine.InputSystem.Experimental
                 m_Action(value);
             }
 
-            public void OnNext(T value)
+            public void OnNext(T value) // TODO This should move to observer base ?!
             {
+                // Forward directly unless priority is set, in which case we instead defer the invocation of the
+                // callback with an associated priority. In order for deferral to work we need to capture value.
                 if (m_Priority == 0)
                 {
                     m_Action(value);
@@ -77,7 +79,6 @@ namespace UnityEngine.InputSystem.Experimental
                 }
                 m_Stored = value;
                 m_Context.Defer(m_Deferred, m_Priority);
-                //m_Action(value);   
             }
         }
 

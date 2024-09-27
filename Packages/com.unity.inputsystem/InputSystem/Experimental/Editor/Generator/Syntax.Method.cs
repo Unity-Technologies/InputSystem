@@ -75,14 +75,15 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 formatter.Write(name);
                 TypeArgument.Format(formatter, m_TypeArguments);
                 formatter.WriteUnformatted('(');
-                for (var i = 0; i < m_Parameters.Count; ++i)
+                Parameter.Format(formatter, m_Parameters);
+                /*for (var i = 0; i < m_Parameters.Count; ++i)
                 {
                     if (i > 0)
                         formatter.WriteUnformatted(", ");
                     else if (isExtensionMethod)
                         formatter.WriteUnformatted("this ");
                     m_Parameters[i].Format(context, formatter);
-                }
+                }*/
                 formatter.WriteUnformatted(')');
                 
                 TypeArgument.FormatConstraints(formatter, m_TypeArguments);
