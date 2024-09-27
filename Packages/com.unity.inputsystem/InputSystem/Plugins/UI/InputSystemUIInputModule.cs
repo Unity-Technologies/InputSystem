@@ -2234,8 +2234,6 @@ namespace UnityEngine.InputSystem.UI
                     // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
-                        ref var state = ref GetPointerStateForIndex(i);
-                        // Touch pointers need to get forced to no longer be pressed otherwise they will not get released in subsequent frames.
                         if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
                         {
                             SendPointerExitEventsAndRemovePointer(i);
