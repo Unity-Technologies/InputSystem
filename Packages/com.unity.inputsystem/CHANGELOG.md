@@ -10,13 +10,15 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
+
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
-- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed Multiple interactions could breaks on Composite Binding. [ISXB-619](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-619)
 - Fixed memory leak when the OnScreenStick component was destroyed [ISXB-1070](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1070). Contribution by [LukeUnityDev](https://github.com/LukeUnityDev).
 - Fixed Action Maps contextual menu in Action Editor UI that occasionally displays unrelated items.
