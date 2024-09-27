@@ -29,6 +29,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed memory allocation on every frame when using UIDocument without EventSystem. [ISXB-953](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-953)
 - Fixed Action Maps name edition which could be inconsistent in Input Action Editor UI.
+
+### Added
+- Added Hinge Angle sensor support for foldable devices.
 - Fixed InputDeviceTester sample only visualizing a given touch contact once. [ISXB-1017](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1017)
 - Fixed an update loop in the asset editor that occurs when selecting an Action Map that has no Actions.
 - Fixed Package compilation when Unity Analytics module is not enabled on 2022.3. [ISXB-996](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-996)
