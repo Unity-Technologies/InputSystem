@@ -92,14 +92,14 @@ namespace UnityEngine.InputSystem.OnScreen
                         m_PointerDownAction = new InputAction();
 
                     #if UNITY_EDITOR
-                    InputActionCodeAuthoringAnalytic.suppress = true;
+                    InputExitPlayModeAnalytic.suppress = true;
                     #endif
                     m_PointerDownAction.AddBinding("<Mouse>/leftButton");
                     m_PointerDownAction.AddBinding("<Pen>/tip");
                     m_PointerDownAction.AddBinding("<Touchscreen>/touch*/press");
                     m_PointerDownAction.AddBinding("<XRController>/trigger");
                     #if UNITY_EDITOR
-                    InputActionCodeAuthoringAnalytic.suppress = false;
+                    InputExitPlayModeAnalytic.suppress = false;
                     #endif
                 }
 
@@ -109,13 +109,13 @@ namespace UnityEngine.InputSystem.OnScreen
                         m_PointerMoveAction = new InputAction();
 
                     #if UNITY_EDITOR
-                    InputActionCodeAuthoringAnalytic.suppress = true;
+                    InputExitPlayModeAnalytic.suppress = true;
                     #endif
                     m_PointerMoveAction.AddBinding("<Mouse>/position");
                     m_PointerMoveAction.AddBinding("<Pen>/position");
                     m_PointerMoveAction.AddBinding("<Touchscreen>/touch*/position");
                     #if UNITY_EDITOR
-                    InputActionCodeAuthoringAnalytic.suppress = false;
+                    InputExitPlayModeAnalytic.suppress = false;
                     #endif
                 }
 

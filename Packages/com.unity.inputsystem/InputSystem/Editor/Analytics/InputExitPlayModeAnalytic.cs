@@ -10,9 +10,9 @@ namespace UnityEngine.InputSystem.Editor
     [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
         maxNumberOfElements: kMaxNumberOfElements, vendorKey: UnityEngine.InputSystem.InputAnalytics.kVendorKey)]
 #endif // UNITY_2023_2_OR_NEWER
-    internal class InputActionCodeAuthoringAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
+    internal class InputExitPlayModeAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
     {
-        public const string kEventName = "input_action_code_authoring";
+        public const string kEventName = "input_exit_playmode";
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
@@ -71,7 +71,6 @@ namespace UnityEngine.InputSystem.Editor
         // Note: Internal visibility to simplify unit testing
         internal static void OnPlayModeStateChange(PlayModeStateChange change)
         {
-            Debug.Log("Play mode state change: " + change);
             if (change == PlayModeStateChange.ExitingEditMode)
             {
                 // Reset all counters when exiting edit mode
@@ -85,7 +84,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Send analytics and unhook delegate when exiting play-mode
                 EditorApplication.playModeStateChanged -= PlayModeChanged;
-                new InputActionCodeAuthoringAnalytic().Send();
+                new InputExitPlayModeAnalytic().Send();
 
                 // No reason to not suppress
                 suppress = true;
@@ -100,13 +99,13 @@ namespace UnityEngine.InputSystem.Editor
             EditorApplication.playModeStateChanged += PlayModeChanged;
         }
 
-        private InputActionCodeAuthoringAnalytic()
+        private InputExitPlayModeAnalytic()
         {
             info = new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }
 
         /// <summary>
-        /// Represents InputAction code authoring editor data.
+        /// Represents data collected when exiting play-mode..
         /// </summary>
         /// <remarks>
         /// Ideally this struct should be readonly but then Unity cannot serialize/deserialize it.
@@ -117,7 +116,7 @@ namespace UnityEngine.InputSystem.Editor
             /// <summary>
             /// Creates a new <c>Data</c> instance.
             /// </summary>
-            /// <param name="usesCodeAuthoring">Specifies whether code authoring has been used.</param>
+            /// <param name="usesCodeAuthoring">Specifies whether code authoring has been used during play-mode.</param>
             public Data(bool usesCodeAuthoring)
             {
                 uses_code_authoring = usesCodeAuthoring;

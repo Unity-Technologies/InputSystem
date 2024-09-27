@@ -316,9 +316,9 @@ namespace UnityEngine.InputSystem
         /// be incorrectly registered.
         /// </remarks>
         #if UNITY_EDITOR
-        private static void RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api api)
+        private static void RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api api)
         {
-            UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Register(api);
+            UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Register(api);
         }
 
         #endif
@@ -367,7 +367,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputAction action, InputBinding binding = default)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.AddBinding);
             #endif
 
             if (action == null)
@@ -500,7 +500,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.AddBinding);
             #endif
 
             if (actionMap == null)
@@ -527,7 +527,7 @@ namespace UnityEngine.InputSystem
             string interactions = null, string processors = null)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddCompositeBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.AddCompositeBinding);
             #endif
 
             if (action == null)
@@ -610,7 +610,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeBinding(this InputAction action, int index)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ChangeBinding);
             #endif
 
             if (action == null)
@@ -672,7 +672,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeBinding(this InputActionMap actionMap, int index)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ChangeBinding);
             #endif
 
             if (actionMap == null)
@@ -874,7 +874,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeCompositeBinding(this InputAction action, string compositeName)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ChangeCompositeBinding);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ChangeCompositeBinding);
             #endif
 
             if (action == null)
@@ -919,7 +919,7 @@ namespace UnityEngine.InputSystem
         public static void Rename(this InputAction action, string newName)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.Rename);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.Rename);
             #endif
 
             if (action == null)
@@ -965,7 +965,7 @@ namespace UnityEngine.InputSystem
         public static void AddControlScheme(this InputActionAsset asset, InputControlScheme controlScheme)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.AddControlScheme);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.AddControlScheme);
             #endif
 
             if (asset == null)
@@ -1037,7 +1037,7 @@ namespace UnityEngine.InputSystem
         public static void RemoveControlScheme(this InputActionAsset asset, string name)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.RemoveControlScheme);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.RemoveControlScheme);
             #endif
 
             if (asset == null)
@@ -1061,7 +1061,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithBindingGroup);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeWithBindingGroup);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
@@ -1070,7 +1070,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithDevice);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeWithDevice);
             #endif
 
             if (required)
@@ -1081,7 +1081,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithRequiredDevice);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeWithRequiredDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
@@ -1090,7 +1090,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeWithOptionalDevice);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeWithOptionalDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
@@ -1099,7 +1099,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithRequiredDevice);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeOrWithRequiredDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
@@ -1108,7 +1108,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputActionCodeAuthoringAnalytic.Api.ControlSchemeOrWithOptionalDevice);
+            RegisterApiUsage(UnityEngine.InputSystem.Editor.InputExitPlayModeAnalytic.Api.ControlSchemeOrWithOptionalDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();
