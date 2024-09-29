@@ -3,7 +3,7 @@ using UnityEngine.InputSystem.Experimental;
 
 namespace UnityEditor.InputSystem.Experimental
 {
-	public static class FirstPersonShooterMenuItems
+	internal static class FirstPersonShooterMenuItems
 	{
 		[MenuItem(Resources.InputBindingAssetPresetMenu + "First-Person Shooter (FPS)/Inventory")]
 		public static void Inventory() => FirstPersonShooter.Inventory().CreateAssetFromName("Inventory");

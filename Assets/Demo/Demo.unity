@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2750bf53bb8e4963bb74d7347dc5d8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  move: {fileID: 11400000, guid: ea323a516b17e40649c3007d993fd653, type: 2}
+  move: {fileID: 11400000, guid: 87394e2ec1b0c464f9eca4e19eacef2b, type: 2}
   jump: {fileID: 0}
   fire: {fileID: 0}
 --- !u!114 &1006841993

@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// </summary>
     /// <remarks>
     /// Only blittable value-types may be marked as input value types.
-    ///
+    /// 
     /// The following types are supported by default and hence do not need to be attributed with
     /// <see cref="InputValueTypeAttribute"/>.
     /// </remarks>

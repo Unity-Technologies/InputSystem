@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             public string name { get; set; }
             public TypeReference type { get; set; }
 
-            public void Format(SourceContext context, SourceFormatter formatter)
+            public override void Format(SourceContext _, SourceFormatter formatter)
             {
                 Attribute.Format(formatter, m_Attributes);
                 

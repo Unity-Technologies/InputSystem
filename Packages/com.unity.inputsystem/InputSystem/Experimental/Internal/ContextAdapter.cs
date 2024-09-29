@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Experimental
             
             // TODO Being able to filter before invoking callbacks is key if abstract enough. Hence there is a need to guard on previous state. This means that ObservableInput needs knowledge of where it comes from. Hence maybe the callbacks into first node is different?
             
-            if (context.TryGetStreamContext(Usages.Devices.Keyboard,
+            if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0, Usages.Devices.Keyboard),
                     out Context.StreamContext<KeyboardState> keyboardStreamContext) && 
                 keyboardStreamContext.observerCount > 0)
             {
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Experimental
                 
             // TODO Temporary workaround, find the best solution, probably as child to KeyboardState, but single node to decode all which requires source to pass key
             // TODO NOte that this isn't really a problem if we can compute difference since we only need to iterate changed bits
-            if (context.TryGetStreamContext(Devices.Usages.Keyboard.w,
+            if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0,Devices.Usages.Keyboard.w),
                     out Context.StreamContext<bool> streamContext) && streamContext.observerCount > 0)
             {
                 streamContext.OnNext(MemoryHelpers.ReadSingleBit(state->keys, (uint)Devices.Usages.Keyboard.w));
@@ -119,8 +119,9 @@ namespace UnityEngine.InputSystem.Experimental
 
             // TODO Note that we cannot establish if something changed without a stream, this is the main issue with the single queue approach
             // TODO For now we assume it has changed
-            
-            var gamepad = context.GetOrCreateStreamContext<GamepadState>(Usages.Devices.Gamepad); // TODO Instead consider a dictionary of IObserver<T>, or rather in this case a list of observers since known type?
+
+            var endpoint = Endpoint.FromUsage(Usages.Devices.Gamepad);
+            var gamepad = context.GetOrCreateStreamContext<GamepadState>(endpoint); // TODO Instead consider a dictionary of IObserver<T>, or rather in this case a list of observers since known type?
             if (gamepad.observerCount > 0)
             {
                 // Convert to desired format (adapter)
@@ -146,11 +147,11 @@ namespace UnityEngine.InputSystem.Experimental
                 gamepad.OnNext(ref v);
             }
 
-            var leftStick = Context.instance.GetOrCreateStreamContext<Vector2>(Devices.Usages.GamepadUsages.LeftStick);
+            var leftStick = Context.instance.GetOrCreateStreamContext<Vector2>(Endpoint.FromUsage(Devices.Usages.GamepadUsages.LeftStick));
             if (leftStick.observerCount > 0)
                 leftStick.OnNext(state->leftStick);
 
-            var buttonSouth = Context.instance.GetOrCreateStreamContext<bool>(Devices.Usages.GamepadUsages.ButtonSouth);
+            var buttonSouth = Context.instance.GetOrCreateStreamContext<bool>(Endpoint.FromUsage(Devices.Usages.GamepadUsages.ButtonSouth));
             if (buttonSouth.observerCount > 0)
                 buttonSouth.OnNext(0 != (state->buttons & (uint)LowLevel.GamepadButton.South));
             

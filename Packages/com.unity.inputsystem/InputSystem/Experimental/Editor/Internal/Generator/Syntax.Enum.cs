@@ -42,7 +42,6 @@ namespace UnityEngine.InputSystem.Experimental.Generator
                 this.name = name;
             }
             
-            public string name { get; set; }
             public IReadOnlyList<Item> items => m_Items;
 
             public void AddItem(Item item)

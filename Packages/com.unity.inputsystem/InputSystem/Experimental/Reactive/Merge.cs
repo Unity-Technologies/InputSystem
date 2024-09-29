@@ -103,10 +103,12 @@ namespace UnityEngine.InputSystem.Experimental
             {
                 var firstObserver = new ForwardingObserver<T, Impl>(this);
                 var secondObserver = new ForwardingObserver<T, Impl>(this);
+
+                // TODO When we have multiple subscriptions, we might want to do try-catch and warn about subscriptions that could be setup?!
+                IDisposable subscription0 = source0.Subscribe(context, firstObserver);
+                IDisposable subscription1 = source1.Subscribe(context, secondObserver);
                 
-                m_Observers = new ObserverList2<T>( 
-                    source0.Subscribe(context, firstObserver),
-                    source1.Subscribe(context, secondObserver));
+                m_Observers = new ObserverList2<T>(subscription0, subscription1);
             }
 
             public IDisposable Subscribe(IObserver<T> observer) => 

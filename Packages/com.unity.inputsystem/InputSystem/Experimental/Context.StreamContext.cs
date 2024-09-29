@@ -30,12 +30,12 @@ namespace UnityEngine.InputSystem.Experimental
         internal sealed class StreamContext<T> : StreamContext, IObservable<T>, IDisposable, IEnumerable<T>
             where T : struct
         {
-            private readonly Usage m_Usage;         // The associated usage
+            private readonly Endpoint m_Usage;         // The associated usage
             private IObserver<T>[] m_Observers;     // The associated observers of this stream
             private int m_ObserverCount;            // The current observer count
             private Stream<T> m_Stream;             // Reference to associated underlying stream (if any)
 
-            public StreamContext(Usage usage, Stream<T> stream = null)
+            public StreamContext(Endpoint usage, Stream<T> stream = null)
                 : base()
             {
                 m_Usage = usage;

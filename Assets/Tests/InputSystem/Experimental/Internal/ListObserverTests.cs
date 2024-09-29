@@ -8,7 +8,7 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 namespace Tests.InputSystem.Experimental
 {
     [Category("Experimental")]
-    internal class ObservableListTests : ContextTestFixture
+    internal class ListObserverTests : ContextTestFixture
     {
         [Test]
         public void Subscribe_ShouldNotAllocate()

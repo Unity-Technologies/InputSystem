@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;
@@ -9,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.InputSystem.Experimental
 {
-    public class DependencyGraphViewEditorWindow : GraphViewEditorWindow
+    internal class DependencyGraphViewEditorWindow : GraphViewEditorWindow
     {
         private class GraphView : UnityEditor.Experimental.GraphView.GraphView
         {

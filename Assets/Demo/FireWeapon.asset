@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f18ef1fed54e7c8fc689b0a8e0752a, type: 3}
+  m_Name: FireWeapon
+  m_EditorClassIdentifier: 
+  m_Value:
+    rid: 8345279590517702726
+  references:
+    version: 2
+    RefIds:
+    - rid: 8345279590517702726
+      type: {class: 'Merge`1[[System.Boolean, mscorlib]]', ns: UnityEngine.InputSystem.Experimental,
+        asm: Unity.InputSystem}
+      data:
+        source0:
+          rid: 8345279590517702727
+        source1:
+          rid: 8345279590517702728
+    - rid: 8345279590517702727
+      type: {class: 'ObservableControl`1[[System.Boolean, mscorlib]]', ns: UnityEngine.InputSystem.Experimental.Devices,
+        asm: Unity.InputSystem}
+      data:
+        endpoint:
+          value: 2342344
+    - rid: 8345279590517702728
+      type: {class: 'Compare`2[[UnityEngine.InputSystem.Experimental.ObservableInput`1[[System.Single, mscorlib]], Unity.InputSystem],[System.Single, mscorlib]]',
+        ns: UnityEngine.InputSystem.Experimental, asm: Unity.InputSystem}
+      data: 

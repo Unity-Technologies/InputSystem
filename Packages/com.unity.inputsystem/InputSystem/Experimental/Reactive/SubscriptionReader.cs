@@ -19,8 +19,8 @@ namespace UnityEngine.InputSystem.Experimental
             m_StreamContext = streamContext;
         }
 
-        internal SubscriptionReader([NotNull] Context context, Usage usage)
-            : this(context.GetOrCreateStreamContext<T>(usage))
+        internal SubscriptionReader([NotNull] Context context, Endpoint endpoint)
+            : this(context.GetOrCreateStreamContext<T>(endpoint))
         { }
 
         public T Read()

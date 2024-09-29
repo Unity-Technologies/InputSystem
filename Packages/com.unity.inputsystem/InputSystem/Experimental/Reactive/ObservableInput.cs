@@ -54,33 +54,20 @@ namespace UnityEngine.InputSystem.Experimental
     public struct ObservableInput<T> : IObservableInputNode<T>, IEquatable<ObservableInput<T>>, IUnsafeObservable<T>
         where T : struct
     {
-        [SerializeField] private Usage m_Usage;
-        [SerializeField] private Usage m_SourceUsage;
+        [SerializeField] private Endpoint m_Endpoint;
         [SerializeField] private Field m_Field;
         
-        public ObservableInput(Usage usage, string displayName = null, Field field = default, Usage sourceUsage = default)
+        public ObservableInput(Endpoint endpoint, string displayName = null, Field field = default)
         {
-            if (usage == Usage.Invalid)
-                throw new ArgumentException(nameof(usage) + " is not a valid usage.");
-            if (field == default)
-            {
-                m_SourceUsage = usage;
-            }
-            else
-            {
-                if (sourceUsage == default)
-                    throw new ArgumentException(nameof(sourceUsage) + " must be set when using a field");     
-                if (sourceUsage == usage)
-                    throw new ArgumentException($"{nameof(sourceUsage)} must be different than nameof{usage} when specifying a field."); // TODO Better to split into two constructors to avoid mistakes
-                m_SourceUsage = sourceUsage;
-            }
+            if (endpoint == Endpoint.Invalid)
+                throw new ArgumentException(nameof(this.endpoint) + " is not a valid usage.");
                 
-            this.m_Usage = usage;
+            this.m_Endpoint = endpoint;
             this.m_Field = field;
             this.displayName = displayName ?? throw new ArgumentNullException(nameof(displayName) + " is required"); // TODO Consider getting rid of it. Replace with symbol backed by optional assembly?!.
         }
 
-        public readonly Usage usage => m_Usage;
+        public readonly Endpoint endpoint => m_Endpoint;
         public readonly Field field => m_Field;
 
         public readonly IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
@@ -93,7 +80,7 @@ namespace UnityEngine.InputSystem.Experimental
             // One option is to here create an intermediary node that simply does any of the following:
             // 1) Checks bit(s) indicated by field and generate a boolean (generalized) - can avoid indirect call if source stream has history
             // 2) Explicitly calls GetKey(usage) on KeyboardState (specific) - cannot avoid indirect call
-            return context.GetOrCreateStreamContext<T>(m_Usage).Subscribe(observer);
+            return context.GetOrCreateStreamContext<T>(m_Endpoint).Subscribe(observer);
         }
 
         #region IObservable<T>
@@ -113,14 +100,14 @@ namespace UnityEngine.InputSystem.Experimental
         public readonly SubscriptionReader<T> Subscribe(Context context)
         {
             //m_NodeId = context.RegisterNode();
-            return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(m_Usage)); // Subscription reader need to 
+            return new SubscriptionReader<T>(context.GetOrCreateStreamContext<T>(m_Endpoint)); // Subscription reader need to 
         }
         
         #region IUnsafeObservable
         
         public UnsafeSubscription Subscribe([NotNull] Context context, UnsafeDelegate<T> observer)
         {
-            return context.GetOrCreateStreamContext<T>(m_Usage).Subscribe(context, observer);
+            return context.GetOrCreateStreamContext<T>(m_Endpoint).Subscribe(context, observer);
         }
         
         #endregion
@@ -143,12 +130,12 @@ namespace UnityEngine.InputSystem.Experimental
         public bool Equals(IDependencyGraphNode other) => other is ObservableInput<T> otherNode && Equals(otherNode);
 
         /// <inheritDoc />
-        public bool Equals(ObservableInput<T> other) => m_Usage.Equals(other.m_Usage);   
+        public bool Equals(ObservableInput<T> other) => m_Endpoint.Equals(other.m_Endpoint);   
 
         /// <inheritDoc />
         public override bool Equals(object obj) => obj is ObservableInput<T> other && Equals(other);
         /// <inheritDoc />
-        public override int GetHashCode() => m_Usage.GetHashCode();
+        public override int GetHashCode() => m_Endpoint.GetHashCode();
 
         #endregion
     }

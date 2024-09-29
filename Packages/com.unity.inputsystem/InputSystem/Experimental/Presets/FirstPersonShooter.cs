@@ -1,3 +1,5 @@
+using UnityEngine.InputSystem.Experimental.Devices;
+
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
@@ -30,7 +32,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static Merge<Vector2> Look()
         {
-            return Combine.Merge(Devices.Mouse.delta,       // TODO Ideally this should be compilation error, should have Sum()
+            return Combine.Merge(Devices.Mouse.any.delta,       // TODO Ideally this should be compilation error, should have Sum()
                 Devices.Gamepad.RightStick.Deadzone());
         }
 
@@ -41,7 +43,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category, displayName: "Fire Weapon")]
         public static Merge<bool> FireWeapon()
         {
-            return Combine.Merge<bool>(Devices.Mouse.primaryMouseButton, 
+            return Combine.Merge<bool>(Devices.Mouse.any.buttons[0], 
                 Devices.Gamepad.RightTrigger.GreaterThan(0.5f));
         }
 
@@ -59,7 +61,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category, displayName: "Weapon Mod")]
         public static Merge<InputEvent> WeaponMod()
         {
-            return Combine.Merge(Devices.Mouse.secondaryMouseButton.Pressed(), 
+            return Combine.Merge(Devices.Mouse.any.buttons[0].Pressed(), 
                 Devices.Gamepad.LeftTrigger.AsButton().Pressed());
         }
         

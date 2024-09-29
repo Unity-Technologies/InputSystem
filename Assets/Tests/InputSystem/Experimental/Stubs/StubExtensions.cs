@@ -10,12 +10,12 @@ namespace Tests.InputSystem
         public static Stub<T> Stub<T>(this ObservableInput<T> source, Context context, T initialValue = default)
             where T : struct
         {
-            return new Stub<T>(context.CreateStream(key: source.usage, initialValue: initialValue));
+            return new Stub<T>(context.CreateStream(key: source.endpoint, initialValue: initialValue));
         }
         
         public static ButtonStub Stub(this ObservableInput<bool> source, Context context, bool initialValue = default)
         {
-            return new ButtonStub(context.CreateStream(key: source.usage, initialValue: initialValue));
+            return new ButtonStub(context.CreateStream(key: source.endpoint, initialValue: initialValue));
         }
     }
 }

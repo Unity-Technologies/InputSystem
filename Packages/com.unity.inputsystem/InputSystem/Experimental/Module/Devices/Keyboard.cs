@@ -4,7 +4,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
 {
     public static partial class Usages
     {
-        // TODO We current use the exist Keys enum for simplicity
+        // TODO We current use the exist Keys enum for simplicity with adapter
         // We use HID compliant usages for keyboard to not diverge from standardized values.
         public static partial class Keyboard
         {
@@ -33,22 +33,6 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     }
     
     // Auto-generated from extended HID standard specification of Keys.
-
-    [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 4)]
-    public struct Buttons
-    {
-        public void Clear(int bitIndex)
-        {
-            value &= (1U << (bitIndex & 31));
-        }
-        
-        public void Set(int bitIndex)
-        {
-            value |= (1U << (bitIndex & 31));
-        }
-
-        [FieldOffset(0)] public uint value;
-    }
 
     public interface IBitField // Consider this instead?
     {
@@ -124,7 +108,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         /// <summary>
         /// An observable aggregate device of all device instances present on the system.
         /// </summary>
-        public static ObservableInput<KeyboardState> Any = new(Experimental.Usages.Devices.Keyboard,
+        public static ObservableInput<KeyboardState> Any = new(Endpoint.FromUsage(Experimental.Usages.Devices.Keyboard),
             "Keyboard");
         
         // Keyboard.Any.leftStick; AND Keyboard.devices[0].leftStick;

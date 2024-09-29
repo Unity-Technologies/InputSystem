@@ -1,14 +1,8 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using Shouldly;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Rendering.VirtualTexturing;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -45,8 +39,8 @@ namespace UnityEngine.InputSystem.Experimental
         private readonly int m_Handle;
         
         private AllocatorManager.AllocatorHandle m_Allocator;
-        private readonly Dictionary<Usage, StreamContext> m_StreamContexts; // Tracks observed usages/streams.
-        private readonly Dictionary<Usage, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
+        private readonly Dictionary<Endpoint, StreamContext> m_StreamContexts; // Tracks observed usages/streams.
+        private readonly Dictionary<Endpoint, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
         private readonly EventStream m_Events;                              // Shared system queue of observable events.
         private int m_NodeId;                                               // Context specific node ID counter.
         private readonly TimerManager m_TimerManager;
@@ -218,7 +212,7 @@ namespace UnityEngine.InputSystem.Experimental
             return nextNodeId;
         }
         
-        public Stream<T> CreateStream<T>(Usage key, T initialValue) where T : struct
+        public Stream<T> CreateStream<T>(Endpoint key, T initialValue) where T : struct
         {
             if (m_Streams.ContainsKey(key))
                 throw new Exception("Stream already exist");
@@ -239,14 +233,14 @@ namespace UnityEngine.InputSystem.Experimental
             return context;
         }*/
 
-        internal Stream<T> GetStream<T>(Usage key) where T : struct
+        internal Stream<T> GetStream<T>(Endpoint key) where T : struct
         {
             if (m_Streams.TryGetValue(key, out var stream))
                 return (Stream<T>)stream;
             return null;
         }
         
-        internal bool TryGetStreamContext<T>(Usage key, out StreamContext<T> streamContext) where T : struct
+        internal bool TryGetStreamContext<T>(Endpoint key, out StreamContext<T> streamContext) where T : struct
         {
             if (m_StreamContexts.TryGetValue(key, out StreamContext context))
             {
@@ -257,7 +251,7 @@ namespace UnityEngine.InputSystem.Experimental
             return false;
         }
 
-        internal StreamContext<T> GetOrCreateStreamContext<T>(Usage key) where T : struct
+        internal StreamContext<T> GetOrCreateStreamContext<T>(Endpoint key) where T : struct
         {
             // Attempt to fetch existing stream context
             if (!m_StreamContexts.TryGetValue(key, out StreamContext context))

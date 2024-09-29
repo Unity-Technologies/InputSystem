@@ -4,6 +4,9 @@ using System;
 
 namespace UnityEngine.InputSystem.Experimental
 {
+    /// <summary>
+    /// Enumeration type for Keyboard interface keys.
+    /// </summary>
     [Serializable]
     public enum Key 
     {

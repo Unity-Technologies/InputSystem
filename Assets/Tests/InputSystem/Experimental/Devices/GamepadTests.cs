@@ -149,7 +149,7 @@ namespace Tests.InputSystem.Experimental
         [Test]
         public void GamepadProducer()
         {
-            using var stream = context.CreateStream<GamepadState>(Usages.Devices.Gamepad, default);
+            using var stream = context.CreateStream<GamepadState>(Endpoint.FromUsage(Usages.Devices.Gamepad), default);
             
             var writer = new GamepadWriter(100);
             writer.SetStream(stream);

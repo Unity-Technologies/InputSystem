@@ -147,7 +147,7 @@ namespace Tests.InputSystem
         [Test]
         public void Stream()
         {
-            using var s = new Stream<int>(Usages.GamepadUsages.LeftStick, 100);
+            using var s = new Stream<int>(Endpoint.FromUsage(Usages.GamepadUsages.LeftStick), 100);
 
             // Even though stream is initialized with an initial value this value should not be part of changed values
             {

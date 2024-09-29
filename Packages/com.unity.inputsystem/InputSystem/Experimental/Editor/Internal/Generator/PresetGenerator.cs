@@ -52,7 +52,7 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                 b.NewLine();
                 b.WriteLine("namespace UnityEditor.InputSystem.Experimental");
                 b.BeginScope();
-                b.WriteLine($"public static class {m_PresetIdentifier}");
+                b.WriteLine($"internal static class {m_PresetIdentifier}");
                 b.BeginScope();
 
                 WriteItem(b, m_Items[0]);

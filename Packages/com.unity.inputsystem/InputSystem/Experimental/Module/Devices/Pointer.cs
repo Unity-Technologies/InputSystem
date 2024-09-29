@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     [InputSource]
     public readonly struct Pointer
     {
-        public static readonly ObservableInput<Vector2> position = new(Usages.PointerUsages.Position, nameof(Pointer) + "." + nameof(position));
-        public static readonly ObservableInput<Button> trigger = new(Usages.PointerUsages.Trigger, nameof(Pointer) + "." + nameof(trigger));
+        public static readonly ObservableInput<Vector2> position = new(Endpoint.FromUsage(Usages.PointerUsages.Position), nameof(Pointer) + "." + nameof(position));
+        public static readonly ObservableInput<Button> trigger = new(Endpoint.FromUsage(Usages.PointerUsages.Trigger), nameof(Pointer) + "." + nameof(trigger));
     }
 }

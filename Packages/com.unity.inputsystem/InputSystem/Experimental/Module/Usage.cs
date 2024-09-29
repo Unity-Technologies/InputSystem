@@ -24,5 +24,14 @@ namespace UnityEngine.InputSystem.Experimental
         public static bool operator!=(Usage lhs, Usage rhs) => !(lhs == rhs);
         public override string ToString() => $"0x{value:x8}";
         public int CompareTo(Usage other) => value.CompareTo(other.value);
+        
+        public static Usage operator +(Usage a, uint offset) => new(a.value + offset);
+
+        public static Usage operator +(Usage a, int offset)
+        {
+            if (offset < 0) 
+                throw new ArgumentOutOfRangeException($"{nameof(offset)} must be greater or equal to zero.");
+            return new(a.value + (uint)offset);  
+        } 
     }
 }

@@ -66,15 +66,15 @@ namespace UnityEngine.InputSystem.Experimental
         
         private NativeArray<T> m_Values;
         private int m_Count;
-        public readonly Usage Usage;
+        public readonly Endpoint Usage;
 
         public const int DefaultCapacity = 2;
 
-        public Stream(Usage usage, T initialValue, int initialCapacity = DefaultCapacity)
+        public Stream(Endpoint usage, T initialValue, int initialCapacity = DefaultCapacity)
             : this(usage, ref initialValue, initialCapacity)
         { }
         
-        public Stream(Usage usage, ref T initialValue, int initialCapacity = DefaultCapacity)
+        public Stream(Endpoint usage, ref T initialValue, int initialCapacity = DefaultCapacity)
         {
             Usage = usage;
             m_Values = new NativeArray<T>(initialCapacity, Allocator.Persistent);

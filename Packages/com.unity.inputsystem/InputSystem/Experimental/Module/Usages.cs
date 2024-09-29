@@ -25,6 +25,11 @@ namespace UnityEngine.InputSystem.Experimental
             /// Represents the usage of a device interface for a standard-model keyboard device.
             /// </summary>
             public static readonly Usage Keyboard = new(0x00020000);
+
+            /// <summary>
+            /// Represents the usage of a device interface for a standard-model pointer device.
+            /// </summary>
+            public static readonly Usage Pointer = new(0x00030000);
             
             /// <summary>
             /// Represents the usage of a device interface for a standard-model gamepad device.

@@ -9,7 +9,7 @@ namespace UnityEditor.InputSystem.Experimental
     // https://github.com/Thundernerd/Unity3D-SerializableInterface/blob/main/Runtime/Extensions.cs
     
     [CustomPropertyDrawer(typeof(InputBinding<>), useForChildren: true)]
-    public class InputBindingPropertyDrawer : PropertyDrawer
+    internal class InputBindingPropertyDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {

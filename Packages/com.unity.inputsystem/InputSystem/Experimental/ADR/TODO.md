@@ -1,3 +1,11 @@
 - Consider pointer/touch oriented areas (non-UI dependent, for increased flexibility of on-screen control concepts). Makes sense to support circle and rectangle based areas.
 - True virtual controls without latency. Implies not re-routing via any other sub-system, e.g. UI introducing additional latency. Events should derive from existing event IDs and inject in-order into existing queue. Potentially using event deferred dispatch mechanism.
 - Automatic UI bindings in Inspector.
+- Without a struct base proxy design we have the following
+  - pros: 
+    - no GC pressure when configuring bindings (until subscribe)
+  - cons:
+    - problematic to cache nodes since we cannot keep reference to dependency chain, this can likely be solved by serializing tree
+    - problematic to generate unboxed extensions (type bloat) due to compilers inability to derive types when type relying on it is also generic
+  - opportunities 
+    - if code generation is used, we could generate partially specialized extension functions that allows resolving type. We need this for [InputType].

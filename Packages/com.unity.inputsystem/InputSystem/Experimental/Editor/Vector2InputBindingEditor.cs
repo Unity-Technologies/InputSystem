@@ -9,7 +9,7 @@ namespace UnityEditor.InputSystem.Experimental
     // https://docs.unity3d.com/ScriptReference/Editor.RenderStaticPreview.html
     
     [CustomEditor(typeof(Vector2InputBinding))]
-    public class Vector2InputBindingEditor : UnityEditor.Editor
+    internal class Vector2InputBindingEditor : UnityEditor.Editor
     {
         //private Vector2InputBinding item => target as Vector2InputBinding;
         

@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Experimental
 
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer) where TObserver : IObserver<bool>
         {
-            if (source.usage == Usage.Invalid)
+            if (source.endpoint == Endpoint.Invalid)
                 throw new Exception($"Invalid source usage");
             if (key == Key.None)
                 throw new Exception($"Invalid key for subscription");
