@@ -49,7 +49,7 @@ A technique to give the user the feel of absolute minimum latency while still us
 
 In this scenario, set your Update Mode **Process events in Dynamic Update** which gives you the fastest response in your `Update` call. However for the reasons mentioned in the previous section, this might mean you miss discrete events if you use methods like [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) in your `FixedUpdate` call. To avoid this problem, use a variable to pass through the pressed/released state of the discrete event from the event handler to your FixedUpdate call, and then clear it once your FixedUpdate code has acted on it. For example:
 
-```
+```c#
 using UnityEngine;
 using UnityEngine.InputSystem;
 
