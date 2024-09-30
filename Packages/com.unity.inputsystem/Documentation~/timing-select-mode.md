@@ -2,7 +2,7 @@
 
 The Input System **Update Mode** controls when the input system processes queued input events.
 
-You can find and change the Update Mode by going to **Project Settings** \> **Input System Package** \> **Input Settings** \> **Update Mode.**
+You can find and change the Update Mode by going to **Project Settings** \> **Input System Package** \> **Input Settings** \> **Update Mode**.
 
 The choice of Update Mode that best suits your project relates to whether you're using Update or FixedUpdate to respond to input events. You should choose this based on the specifics of the game you're making. You can read more about Update and FixedUpdate in [Time and Framerate Management](https://docs.unity3d.com/Manual/TimeFrameManagement.html).
 
