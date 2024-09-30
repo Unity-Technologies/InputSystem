@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Experimental
 
             public override void Process()
             {
-                if (m_Stream == null)
+                if (m_Stream == null) // TODO Better to move out, e.g. hasStream
                     return;
 
                 // TODO Consider order here, complete for one observer vs in-order (still partial)

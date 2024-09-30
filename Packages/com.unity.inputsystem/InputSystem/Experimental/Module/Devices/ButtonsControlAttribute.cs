@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.InputSystem.Experimental.Devices
+namespace UnityEngine.InputSystem.Experimental
 {
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class ButtonsControlAttribute : Attribute

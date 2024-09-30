@@ -14,9 +14,7 @@ using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.UIElements;
-using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
 using InputEvent = UnityEngine.InputSystem.Experimental.InputEvent;
-using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 using Vector2 = UnityEngine.Vector2;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Object = UnityEngine.Object;
@@ -147,7 +145,7 @@ namespace Tests.InputSystem
         [Test]
         public void Stream()
         {
-            using var s = new Stream<int>(Endpoint.FromUsage(Usages.GamepadUsages.LeftStick), 100);
+            using var s = new Stream<int>(Endpoint.FromUsage(Usages.Gamepad.LeftStick), 100);
 
             // Even though stream is initialized with an initial value this value should not be part of changed values
             {

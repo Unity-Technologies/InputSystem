@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.InputSystem.Experimental;
-using Keyboard = UnityEngine.InputSystem.Experimental.Devices.Keyboard;
 
 namespace UseCases
 {

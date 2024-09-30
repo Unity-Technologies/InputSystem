@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Search;
@@ -11,7 +12,7 @@ namespace UnityEditor.InputSystem.Experimental
 {
     // Default selector allows "Assets" and "Scene"
     // https://discussions.unity.com/t/custompropertydrawer-for-a-class-with-a-generic-type/498538/4
-    //[CustomPropertyDrawer(typeof(ScriptableInputBinding<>), useForChildren: true)]
+    [CustomPropertyDrawer(typeof(ScriptableInputBinding<>), useForChildren: true)]
     internal sealed class ScriptableInputBindingPropertyDrawer : PropertyDrawer
     {
         const string kAssetSearchProviderId = "InputBindingAssetSearchProvider";
@@ -54,6 +55,9 @@ namespace UnityEditor.InputSystem.Experimental
                     var label = fetchObjectLabel(asset);
                     if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
                         continue; // Ignore due to filtering
+                    var type = asset.GetType();
+                    //if (type is typeof(ScriptableInputBinding<>))
+                        //continue;
                     var id = asset.GetInstanceID().ToString();
                     var item = createItemFetchDescription(asset);
                     yield return provider.CreateItem(context, id, label, item, null, asset);
@@ -114,6 +118,8 @@ namespace UnityEditor.InputSystem.Experimental
 
             private static IEnumerable<Object> FetchPresets()
             {
+                //yield return new List<string>() { "Apa" };
+                
                 yield break;
             }
         }
@@ -134,16 +140,71 @@ namespace UnityEditor.InputSystem.Experimental
             SearchProviders.CreateForAssets(),
             SearchProviders.CreateForPresets()
         }, string.Empty, PickerSearchFlags);
-        
+      
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            
             ObjectField.DoObjectField(
                 position: position, 
                 property: property, 
-                objType: typeof(ScriptableInputBinding), 
+                objType: GetFieldType(), 
                 label: label,
                 context: m_Context, 
                 searchViewFlags: PickerViewFlags);
+        }
+
+        private Type GetFieldType() // TODO Should be code generated
+        {
+            var type = fieldInfo.FieldType;
+            var genericArgument = GetGenericArgument(type);
+
+            if (ScriptableInputBinding.TryGetInputBindingType(genericArgument, out var bindingType))
+                return bindingType;
+            return type;
+
+            //return ScriptableInputBinding.GetInputBindingType(genericArgument);
+            /*if (type == typeof(ScriptableInputBinding<bool>))
+                return typeof(BooleanInputBinding);
+            if (type == typeof(ScriptableInputBinding<Vector2>))
+                return typeof(Vector2InputBinding);
+            if (type == typeof(ScriptableInputBinding<InputEvent>))
+                return typeof(InputEventInputBinding);
+
+            return type;*/
+        }
+        
+        private Type GetGenericArgument(Type type)
+        {
+            while (type != null)
+            {
+                if (type.IsArray)
+                    type = type.GetElementType();
+
+                if (type == null)
+                    return null;
+
+                if (type.IsGenericType)
+                {
+                    if (typeof(IEnumerable).IsAssignableFrom(type))
+                    {
+                        type = type.GetGenericArguments()[0];
+                    }
+                    else if (type.GetGenericTypeDefinition() == typeof(ScriptableInputBinding<>))
+                    {
+                        return type.GetGenericArguments()[0];
+                    }
+                    else
+                    {
+                        type = type.BaseType;
+                    }
+                }
+                else
+                {
+                    type = type.BaseType;
+                }
+            }
+
+            return null;
         }
     }
 }

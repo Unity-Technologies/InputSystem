@@ -2,15 +2,11 @@ using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
-using Tests.InputSystem;
-using Tests.InputSystem.Experimental;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.PerformanceTesting;
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
-using UnityEngine.InputSystem.Experimental;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -48,7 +44,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [TestCase(1000)]
     public void NEW_Performance_Uniform_Growth_Add_1000_floats(int initialCapacity)
     {
-        using var uniform = new UniformBuffer<float>(initialCapacity, AllocatorManager.Persistent);
+        using var uniform = new X.UniformBuffer<float>(initialCapacity, AllocatorManager.Persistent);
         Measure.Method(() =>
             {
                 for (var i=0; i < 1000; ++i)
@@ -193,8 +189,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Category("Performance")]
     public void NEW_Performance_ReadControl_NoStream()
     {
-        using var ctx = new Context();
-        using var r = UnityEngine.InputSystem.Experimental.Devices.Gamepad.leftStick.Subscribe();
+        using var ctx = new X.Context();
+        using var r = UnityEngine.InputSystem.Experimental.Gamepad.leftStick.Subscribe();
         Measure.Method(() => r.Read())
             .MeasurementCount(200)
             .WarmupCount(5)

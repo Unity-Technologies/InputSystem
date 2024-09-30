@@ -103,9 +103,9 @@ namespace Tests.InputSystem.Experimental
                 set
                 {
                     if (value)
-                        m_Value.buttons |= UnityEngine.InputSystem.Experimental.Devices.GamepadState.GamepadButton.East;
+                        m_Value.buttons |= UnityEngine.InputSystem.Experimental.GamepadState.GamepadButton.East;
                     else
-                        m_Value.buttons &= ~UnityEngine.InputSystem.Experimental.Devices.GamepadState.GamepadButton.East;
+                        m_Value.buttons &= ~UnityEngine.InputSystem.Experimental.GamepadState.GamepadButton.East;
                 }
             }
 

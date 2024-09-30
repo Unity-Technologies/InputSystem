@@ -3,11 +3,14 @@ using System;
 namespace UnityEngine.InputSystem.Experimental
 {
     /// <summary>
-    /// Symbols are constants providing a symbolic physical representation if a control that is often referencing
+    /// Symbols are constants providing a symbolic physical representation of a control that is often referencing
     /// a label, shape or spatial location of a control that allows a user to identify which control is being
-    /// referred to. Symbols are useful for debugging and/or rebinding UI or UI describing controls used to
-    /// interact with the game or application if dynamically generated.
+    /// referred to. 
     /// </summary>
+    /// <remarks>
+    /// Symbols are useful for debugging and/or rebinding UI or UI describing controls used to interact with the game
+    /// or application if dynamically generated.
+    /// </remarks>
     public struct Symbol
     {
         public const uint Unspecified = 0;

@@ -7,11 +7,11 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace UnityEngine.InputSystem.Experimental.Devices
+namespace UnityEngine.InputSystem.Experimental
 {
     public static partial class Usages
     {
-        public static partial class GamepadUsages
+        public static partial class Gamepad
         {
             public static readonly Usage LeftStick = new(436321321);
             public static readonly Usage RightStick = new(3213574);
@@ -271,31 +271,31 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         
         private static readonly ObservableInput<bool>[] Buttons = 
         {
-            new (Endpoint.FromUsage(Usages.GamepadUsages.ButtonSouth), "Gamepad.ButtonSouth"), 
-            new(Endpoint.FromUsage(Usages.GamepadUsages.ButtonEast), "Gamepad.ButtonEast"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.ButtonWest), "Gamepad.ButtonWest"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.ButtonNorth), "Gamepad.ButtonNorth"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.LeftShoulder), "Gamepad.LeftShoulder"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.RightShoulder), "Gamepad.RightShoulder"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Select), "Gamepad.Select"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Start), "Gamepad.Start"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Up), "Gamepad.Up"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Left), "Gamepad.Left"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Right), "Gamepad.Right"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.Down), "Gamepad.Down"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.LeftStickHat), "Gamepad.LeftStickHat"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.RightStickHat), "Gamepad.RightStickHat")
+            new (Endpoint.FromUsage(Usages.Gamepad.ButtonSouth), "Gamepad.ButtonSouth"), 
+            new(Endpoint.FromUsage(Usages.Gamepad.ButtonEast), "Gamepad.ButtonEast"),
+            new(Endpoint.FromUsage(Usages.Gamepad.ButtonWest), "Gamepad.ButtonWest"),
+            new(Endpoint.FromUsage(Usages.Gamepad.ButtonNorth), "Gamepad.ButtonNorth"),
+            new(Endpoint.FromUsage(Usages.Gamepad.LeftShoulder), "Gamepad.LeftShoulder"),
+            new(Endpoint.FromUsage(Usages.Gamepad.RightShoulder), "Gamepad.RightShoulder"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Select), "Gamepad.Select"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Start), "Gamepad.Start"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Up), "Gamepad.Up"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Left), "Gamepad.Left"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Right), "Gamepad.Right"),
+            new(Endpoint.FromUsage(Usages.Gamepad.Down), "Gamepad.Down"),
+            new(Endpoint.FromUsage(Usages.Gamepad.LeftStickHat), "Gamepad.LeftStickHat"),
+            new(Endpoint.FromUsage(Usages.Gamepad.RightStickHat), "Gamepad.RightStickHat")
         };
         private static readonly ObservableInput<Vector2>[] Sticks = 
         {
-            new(Endpoint.FromUsage(Usages.GamepadUsages.LeftStick), "Gamepad.LeftStick"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.RightStick), "Gamepad.RightStick")
+            new(Endpoint.FromUsage(Usages.Gamepad.LeftStick), "Gamepad.LeftStick"),
+            new(Endpoint.FromUsage(Usages.Gamepad.RightStick), "Gamepad.RightStick")
         };
 
         private static readonly ObservableInput<float>[] Values =
         {
-            new(Endpoint.FromUsage(Usages.GamepadUsages.LeftTrigger), "Gamepad.LeftTrigger"),
-            new(Endpoint.FromUsage(Usages.GamepadUsages.RightTrigger), "Gamepad.RightTrigger")
+            new(Endpoint.FromUsage(Usages.Gamepad.LeftTrigger), "Gamepad.LeftTrigger"),
+            new(Endpoint.FromUsage(Usages.Gamepad.RightTrigger), "Gamepad.RightTrigger")
         };
 
         #region Control type accessors
@@ -309,8 +309,8 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         public static ObservableInput<Vector2> leftStick => Sticks[0]; // TODO This should be a specific ObservableInputNodeType allowing access to underlying
         public static readonly ObservableInput<Vector2> RightStick = Sticks[1];
         
-        public static readonly ObservableInput<float> LeftTrigger = new(Endpoint.FromUsage(Usages.GamepadUsages.LeftTrigger), "Gamepad.LeftTrigger");
-        public static readonly ObservableInput<float> RightTrigger = new(Endpoint.FromUsage(Usages.GamepadUsages.RightTrigger), "Gamepad.RightTrigger");
+        public static readonly ObservableInput<float> LeftTrigger = new(Endpoint.FromUsage(Usages.Gamepad.LeftTrigger), "Gamepad.LeftTrigger");
+        public static readonly ObservableInput<float> RightTrigger = new(Endpoint.FromUsage(Usages.Gamepad.RightTrigger), "Gamepad.RightTrigger");
         
         public static readonly ObservableInput<bool> ButtonSouth = Buttons[0];
         public static readonly ObservableInput<bool> ButtonEast = Buttons[1];

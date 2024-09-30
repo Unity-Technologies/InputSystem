@@ -1,17 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Numerics;
-using UnityEditor;
-using UnityEditor.AssetImporters;
-using UnityEditor.Presets;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Experimental;
-using UnityEngine.InputSystem.Experimental.Devices;
-using UnityEngine.Serialization;
-using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
-using Keyboard = UnityEngine.InputSystem.Experimental.Devices.Keyboard;
 using Vector2 = UnityEngine.Vector2;
 
 namespace UseCases

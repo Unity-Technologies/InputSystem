@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -29,6 +30,8 @@ namespace UnityEditor.InputSystem.Experimental
                 AddSearchWindow();
                 AddGridBackground();
                 AddStyles();
+                
+                AddElement(CreateOutputNode(Vector2.zero));
             }
 
             private void AddSearchWindow()
@@ -68,6 +71,14 @@ namespace UnityEditor.InputSystem.Experimental
                 // TODO We might use attributes instead of require ChildCount and GetChild(int index)
                 var node = new DependencyGraphViewNode(model);
                 node.SetPosition(new Rect(position, Vector2.zero));
+                node.Draw();
+                return node;
+            }
+
+            internal OutputGraphViewNode CreateOutputNode(Vector2 position)
+            {
+                var node = new OutputGraphViewNode();
+                node.SetPosition(new Rect(Vector2.zero, Vector2.zero));
                 node.Draw();
                 return node;
             }
@@ -138,9 +149,24 @@ namespace UnityEditor.InputSystem.Experimental
             }
         }
 
+        private class OutputGraphViewNode : Node
+        {
+            public OutputGraphViewNode()
+            {
+                base.title = "Output";
+            }
+
+            public void Draw()
+            {
+                var port = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(object));
+                port.portName = "Input";
+                inputContainer.Add(port);    
+            }
+        }
+        
         private class DependencyGraphViewNode : Node
         {
-            private NodeModel m_Model;
+            private readonly NodeModel m_Model;
 
             public DependencyGraphViewNode(NodeModel model)
             {
@@ -157,8 +183,7 @@ namespace UnityEditor.InputSystem.Experimental
                 // Create input(s) 
                 for (var i = 0; i < m_Model.inputs.Length; ++i)
                 {
-                    var port = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, 
-                        typeof(bool));
+                    var port = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(bool));
                     port.portName = m_Model.inputs[i];
                     inputContainer.Add(port);    
                 }
@@ -166,8 +191,7 @@ namespace UnityEditor.InputSystem.Experimental
                 // Create output(s)
                 for (var i = 0; i < m_Model.outputs.Length; ++i)
                 {
-                    var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
-                        typeof(bool));
+                    var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(bool));
                     outputPort.portName = m_Model.outputs[i];
                     outputContainer.Add(outputPort);    
                 }
@@ -236,6 +260,8 @@ namespace UnityEditor.InputSystem.Experimental
                 var model = new DependencyNodeModel();
                 var searchListEntry = new List<SearchTreeEntry>();
                 searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Create")));
+                searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Input Source"), 1));
+                // TODO Add input sources
                 searchListEntry.Add(new SearchTreeGroupEntry(new GUIContent("Input Node"), 1));
                 for (var i = 0; i < model.count; ++i)
                 {

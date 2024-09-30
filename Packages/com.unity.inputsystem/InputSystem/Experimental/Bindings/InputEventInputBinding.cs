@@ -1,8 +1,15 @@
-// TODO This should be code generated
-
+// This is an auto-generated source file. Any manual edits will be lost.
 namespace UnityEngine.InputSystem.Experimental
 {
-    // Note that this type is needed only since ScriptableObject do not support CreateInstance with generic types.
-    // TODO This should be code generated based on input type
     public class InputEventInputBinding : WrappedScriptableInputBinding<InputEvent> { }
+
+    struct BootstrapInputEventInputBinding
+    {
+        [UnityEditor.InitializeOnLoadMethod]
+        public static void Install()
+        {
+            ScriptableInputBinding.RegisterInputBindingType(typeof(InputEvent), typeof(InputEventInputBinding));
+        }
+    }
 }
+

@@ -16,20 +16,22 @@ namespace UnityEngine.InputSystem.Experimental
         
         #region Static factory interface
 
-        private static readonly Dictionary<Type, Type> Factories;
+        private static readonly Dictionary<Type, Type> Factories = new ();
 
-        static ScriptableInputBinding()
+        internal static void RegisterInputBindingType(Type valueType, Type inputBindingType) // TODO Rename RegisterInputBindingType
         {
-            // TODO Use registration via code generated registration for custom input types
-
-            Factories = new Dictionary<Type, Type>
-            {
-                { typeof(InputEvent), typeof(InputEventInputBinding) },
-                { typeof(bool), typeof(BooleanInputBinding) },
-                { typeof(Vector2), typeof(Vector2InputBinding) }
-            };
+            if (valueType == null)
+                throw new ArgumentNullException($"{nameof(valueType)}");
+            if (inputBindingType == null)
+                throw new ArgumentNullException($"{nameof(inputBindingType)}");
+            // TODO Add more checks on type constraints
             
-            // TODO Assert all bindings are inheriting ScriptableInputBinding with inner type matching key type
+            Factories.Add(valueType, inputBindingType);
+        }
+
+        internal static bool TryGetInputBindingType(Type valueType, out Type type)
+        {
+            return Factories.TryGetValue(valueType, out type);
         }
         
         private static ScriptableInputBinding Create(System.Type type)
@@ -42,13 +44,11 @@ namespace UnityEngine.InputSystem.Experimental
                                         "as input value types in asset-based workflows.");
         }
         
-        // TODO Consider type erasure
         private static WrappedScriptableInputBinding<T> Create<T>() where T : struct
         {
             return (WrappedScriptableInputBinding<T>)Create(typeof(T));
         }
         
-        // TODO Consider type erasure
         public static WrappedScriptableInputBinding<T> Create<T>(IObservableInput<T> source) 
             where T : struct
         {

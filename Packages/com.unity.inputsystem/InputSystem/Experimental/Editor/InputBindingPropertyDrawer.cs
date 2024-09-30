@@ -2,7 +2,6 @@ using System;
 using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Experimental;
 using UnityEngine.UIElements;
-using Gamepad = UnityEngine.InputSystem.Experimental.Devices.Gamepad;
 
 namespace UnityEditor.InputSystem.Experimental
 {

@@ -3,33 +3,67 @@ using System.Runtime.InteropServices;
 
 namespace Tests.InputSystem.Experimental
 {
+    /// <summary>
+    /// Represents a numeric interval.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct Interval : IEquatable<Interval>, IComparable<Interval>
     {
+        /// <summary>
+        /// Constructs a new interval from the given bounds.
+        /// </summary>
+        /// <param name="lowerBound">The lower bound of the interval (inclusive).</param>
+        /// <param name="upperBound">The upper bound of the interval (exclusive).</param>
+        /// <exception cref="ArgumentOutOfRangeException">If <paramref name="lowerBound"/> is greater than
+        /// <paramref name="upperBound"/>.</exception>
         public Interval(int lowerBound = 0, int upperBound = 0)
         {
+            if (lowerBound > upperBound)
+                throw new ArgumentOutOfRangeException($"'{nameof(lowerBound)}' must be less or equal to '{nameof(upperBound)}'");
+            
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
         }
 
+        /// <summary>
+        /// Returns the lower bound of the interval (inclusive).
+        /// </summary>
         public int lowerBound { get; }
 
+        /// <summary>
+        /// Returns the upper bound of the interval (exclusive).
+        /// </summary>
         public int upperBound { get; }
 
+        /// <summary>
+        /// Returns the length of the interval.
+        /// </summary>
         public int length => upperBound - lowerBound;
 
-        public bool isEmpty => lowerBound >= upperBound;
+        /// <summary>
+        /// Returns whether the interval is empty.
+        /// </summary>
+        public bool isEmpty => length == 0;
         
-        public bool Contains(int x)
-        {
-            return x >= lowerBound && x < upperBound;
-        }
+        /// <summary>
+        /// Returns whether this instance contains <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be tested.</param>
+        /// <returns></returns>
+        public bool Contains(int value) => value >= lowerBound && value < upperBound;
 
-        public bool Contains(Interval other)
-        {
-            return lowerBound <= other.lowerBound && upperBound >= other.upperBound;
-        }
+        /// <summary>
+        /// Returns whether this instance contains sub-interval <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">The interval to be tested.</param>
+        /// <returns><c>true</c> if this interval contains <paramref name="other"/>, else <c>false</c>.</returns>
+        public bool Contains(Interval other) => lowerBound <= other.lowerBound && upperBound >= other.upperBound;
 
+        /// <summary>
+        /// Returns the intersection of this instance and <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">The other interval.</param>
+        /// <returns>An interval representing an intersection of this interval and <paramref name="other"/>.</returns>
         public Interval Intersection(Interval other)
         {
             return new Interval(

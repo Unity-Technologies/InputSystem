@@ -18,11 +18,11 @@ namespace UnityEngine.InputSystem.Experimental
         public static Merge<Vector2> Move()
         {
             return Combine.Merge(Combine.Composite(
-                    negativeX: Devices.Keyboard.A,
-                    positiveX: Devices.Keyboard.D,
-                    negativeY: Devices.Keyboard.S,
-                    positiveY: Devices.Keyboard.W),
-                Devices.Gamepad.leftStick.Deadzone());
+                    negativeX: Keyboard.A,
+                    positiveX: Keyboard.D,
+                    negativeY: Keyboard.S,
+                    positiveY: Keyboard.W),
+                Gamepad.leftStick.Deadzone());
         }
 
         /// <summary>
@@ -32,8 +32,8 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static Merge<Vector2> Look()
         {
-            return Combine.Merge(Devices.Mouse.any.delta,       // TODO Ideally this should be compilation error, should have Sum()
-                Devices.Gamepad.RightStick.Deadzone());
+            return Combine.Merge(Mouse.any.delta,       // TODO Ideally this should be compilation error, should have Sum()
+                Gamepad.RightStick.Deadzone());
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category, displayName: "Fire Weapon")]
         public static Merge<bool> FireWeapon()
         {
-            return Combine.Merge<bool>(Devices.Mouse.any.buttons[0], 
-                Devices.Gamepad.RightTrigger.GreaterThan(0.5f));
+            return Combine.Merge<bool>(Mouse.any.buttons[0], 
+                Gamepad.RightTrigger.GreaterThan(0.5f));
         }
 
         /// <summary>
@@ -54,21 +54,21 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category, displayName: "Switch Weapon")]
         public static Merge<InputEvent> SwitchWeapon()
         {
-            return Combine.Merge(Devices.Keyboard.Q.Pressed(), 
-                Devices.Gamepad.RightShoulder.Pressed());
+            return Combine.Merge(Keyboard.Q.Pressed(), 
+                Gamepad.RightShoulder.Pressed());
         }
 
         [InputPreset(category: Category, displayName: "Weapon Mod")]
         public static Merge<InputEvent> WeaponMod()
         {
-            return Combine.Merge(Devices.Mouse.any.buttons[0].Pressed(), 
-                Devices.Gamepad.LeftTrigger.AsButton().Pressed());
+            return Combine.Merge(Mouse.any.buttons[0].Pressed(), 
+                Gamepad.LeftTrigger.AsButton().Pressed());
         }
         
         [InputPreset(category: Category, displayName: "Switch Weapon Mod")]
         public static Merge<InputEvent> SwitchWeaponMod()
         {
-            return Combine.Merge(Devices.Keyboard.F.Pressed(), Devices.Gamepad.Up.Pressed());
+            return Combine.Merge(Keyboard.F.Pressed(), Gamepad.Up.Pressed());
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category, displayName: "Weapon Wheel")]
         public static Merge<InputEvent> WeaponWheel()
         {
-            return Combine.Merge(Devices.Keyboard.Q.Held(), Devices.Gamepad.RightShoulder.Held());
+            return Combine.Merge(Keyboard.Q.Held(), Gamepad.RightShoulder.Held());
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static Merge<InputEvent> Jump()
         {
-            return Combine.Merge(Devices.Keyboard.Space.Pressed(), Devices.Gamepad.ButtonSouth.Pressed());
+            return Combine.Merge(Keyboard.Space.Pressed(), Gamepad.ButtonSouth.Pressed());
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static Merge<InputEvent> Dash()
         {
-            return Combine.Merge(Devices.Keyboard.LeftShift.Pressed(), Devices.Gamepad.ButtonEast.Pressed());
+            return Combine.Merge(Keyboard.LeftShift.Pressed(), Gamepad.ButtonEast.Pressed());
         }
 
         /// <summary>
@@ -108,19 +108,19 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static Merge<InputEvent> Melee()
         {
-            return Combine.Merge(Devices.Keyboard.E.Pressed(), Devices.Gamepad.RightStickHat.Pressed());
+            return Combine.Merge(Keyboard.E.Pressed(), Gamepad.RightStickHat.Pressed());
         }
         
         [InputPreset(category: Category)]
         public static Merge<InputEvent> Equipment()
         {
-            return Combine.Merge(Devices.Keyboard.LeftCtrl.Pressed(), Devices.Gamepad.LeftShoulder.Pressed());
+            return Combine.Merge(Keyboard.LeftCtrl.Pressed(), Gamepad.LeftShoulder.Pressed());
         }
         
         [InputPreset(category: Category, displayName: "Switch Equipment")]
         public static Merge<InputEvent> SwitchEquipment()
         {
-            return Combine.Merge(Devices.Keyboard.G.Pressed(), Devices.Gamepad.Left.Pressed());
+            return Combine.Merge(Keyboard.G.Pressed(), Gamepad.Left.Pressed());
         }
         
         [InputPreset(category: Category, displayName: "Next Weapon")]
@@ -138,67 +138,67 @@ namespace UnityEngine.InputSystem.Experimental
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon1()
         {
-            return Devices.Keyboard.Digit1.Pressed();
+            return Keyboard.Digit1.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon2()
         {
-            return Devices.Keyboard.Digit2.Pressed();
+            return Keyboard.Digit2.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon3()
         {
-            return Devices.Keyboard.Digit3.Pressed();
+            return Keyboard.Digit3.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon4()
         {
-            return Devices.Keyboard.Digit4.Pressed();
+            return Keyboard.Digit4.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon5()
         {
-            return Devices.Keyboard.Digit5.Pressed();
+            return Keyboard.Digit5.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon6()
         {
-            return Devices.Keyboard.Digit6.Pressed();
+            return Keyboard.Digit6.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon7()
         {
-            return Devices.Keyboard.Digit7.Pressed();
+            return Keyboard.Digit7.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Weapon8()
         {
-            return Devices.Keyboard.Digit8.Pressed();
+            return Keyboard.Digit8.Pressed();
         }
         
         [InputPreset(category: Category)]
         public static IObservableInput<InputEvent> Inventory()
         {
-            return Devices.Keyboard.Tab.Pressed();
+            return Keyboard.Tab.Pressed();
         }
         
         [InputPreset(category: Category, displayName: "Voice Chat")]
         public static IObservableInput<InputEvent> VoiceChat()
         {
-            return Devices.Keyboard.B.Pressed();
+            return Keyboard.B.Pressed();
         }
         
         [InputPreset(category: Category, displayName: "Mission Information")]
         public static IObservableInput<InputEvent> MissionInformation()
         {
-            return Devices.Keyboard.LeftAlt.Pressed();
+            return Keyboard.LeftAlt.Pressed();
         }
     }
 }

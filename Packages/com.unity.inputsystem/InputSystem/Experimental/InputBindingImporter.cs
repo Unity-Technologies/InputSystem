@@ -44,10 +44,10 @@ namespace UnityEngine.InputSystem.Experimental
             //typeof("UnityEngine.InputSystem.")
             
             //var obj = ScriptableObject.CreateInstance<Vector2ScriptableInputBinding>();
-            var obj = ScriptableObject.CreateInstance<Vector2InputBinding>();
-            var guid = GUID.Generate().ToString();
-            ctx.AddObjectToAsset(guid, obj); // TODO DO we need to keep GUID consistent?
-            ctx.SetMainObject(obj);
+            //var obj = ScriptableObject.CreateInstance<Vector2InputBinding>();
+            //var guid = GUID.Generate().ToString();
+            //ctx.AddObjectToAsset(guid, obj); // TODO DO we need to keep GUID consistent?
+            //ctx.SetMainObject(obj);
         }
         
         // Support creating an empty binding asset

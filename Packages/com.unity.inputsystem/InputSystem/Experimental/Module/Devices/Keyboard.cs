@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace UnityEngine.InputSystem.Experimental.Devices
+namespace UnityEngine.InputSystem.Experimental
 {
     public static partial class Usages
     {

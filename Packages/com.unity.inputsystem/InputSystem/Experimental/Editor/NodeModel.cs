@@ -31,6 +31,10 @@ namespace UnityEditor.InputSystem.Experimental
                     return "double";
                 if (type == typeof(byte))
                     return "byte";
+                if (type == typeof(nint))
+                    return "nint";
+                if (type == typeof(nuint))
+                    return "nuint";
             }
 
             return type.ToString();

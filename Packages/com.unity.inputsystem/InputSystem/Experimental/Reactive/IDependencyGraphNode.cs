@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Experimental
     /// <summary>
     /// Represents a node in a dependency graph.
     /// </summary>
-    public interface IDependencyGraphNode : IEquatable<IDependencyGraphNode>
+    public interface IDependencyGraphNode : IEquatable<IDependencyGraphNode> // TODO Consider removing this interface completely, displayName could be reflective attribute and children could be reflective fields/constructor/properties. 
     {
         /// <summary>
         /// Returns a display name of this node.

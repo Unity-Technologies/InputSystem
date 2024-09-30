@@ -29,11 +29,17 @@ namespace UnityEditor.InputSystem.Experimental
                     // Construct task to compute model
                     _nodeModelsTask = new Task<List<NodeModel>>(() =>
                     {
-                        var nodeTypes = FindClasses(typeof(IDependencyGraphNode)).ToArray();
+                        var nodeTypes = TypeCache.GetTypesDerivedFrom<IDependencyGraphNode>();
+                        var models = new List<NodeModel>(nodeTypes.Count);
+                        for (var i=0; i < nodeTypes.Count; ++i)
+                            models.Add(new NodeModel(nodeTypes[i]));
+                        return models;
+
+                        /*var nodeTypes = FindClasses(typeof(IDependencyGraphNode)).ToArray();
                         var models = new List<NodeModel>(nodeTypes.Length);
                         for (var i = 0; i < nodeTypes.Length; ++i)
                             models.Add(new NodeModel(nodeTypes[i]));
-                        return models;
+                        return models;*/
                     });
                     
                     // Schedule the task for execution
@@ -58,6 +64,7 @@ namespace UnityEditor.InputSystem.Experimental
 
         private static IEnumerable<Type> FindClasses(Type type)
         {
+            // TODO Switch typ Type Cache
             return AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p =>

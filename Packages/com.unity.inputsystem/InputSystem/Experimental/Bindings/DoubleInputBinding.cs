@@ -1,14 +1,14 @@
 // This is an auto-generated source file. Any manual edits will be lost.
 namespace UnityEngine.InputSystem.Experimental
 {
-    public class Vector2InputBinding : WrappedScriptableInputBinding<Vector2> { }
+    public class DoubleInputBinding : WrappedScriptableInputBinding<double> { }
 
-    struct BootstrapVector2InputBinding
+    struct BootstrapDoubleInputBinding
     {
         [UnityEditor.InitializeOnLoadMethod]
         public static void Install()
         {
-            ScriptableInputBinding.RegisterInputBindingType(typeof(Vector2), typeof(Vector2InputBinding));
+            ScriptableInputBinding.RegisterInputBindingType(typeof(double), typeof(DoubleInputBinding));
         }
     }
 }

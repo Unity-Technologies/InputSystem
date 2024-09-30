@@ -24,6 +24,7 @@ namespace UseCases
                 m_Subscription1 = Keyboard.C.Released().Subscribe(@event => Debug.Log("Released(C)"), priority: 1);
             m_Subscription2 = Combine.Shortcut(Keyboard.LeftCtrl, Keyboard.C).Pressed().Subscribe(@event => Debug.Log("Pressed(Ctrl+C)"), priority: 2);
             m_Subscription3 = Combine.Shortcut(Keyboard.LeftShift, Keyboard.C).Pressed().Subscribe(@event => Debug.Log("Pressed(Shift+C)"), priority: 2);
+            // Keyboard.LeftShift.Shortcut(Keyboard.C);
         }
 
         private void OnDisable()

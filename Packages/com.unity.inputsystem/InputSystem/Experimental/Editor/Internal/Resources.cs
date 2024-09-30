@@ -9,6 +9,7 @@ namespace UnityEditor.InputSystem.Experimental
     internal static class Resources
     {
         public const string PackagePath = "Packages/com.unity.inputsystem/InputSystem/";
+        public const string PackageBindingsPath = PackagePath + "Experimental/Bindings"; // TODO Runtime
         public const string PackageEditorPath = PackagePath + "Experimental/Editor";
         public const string PackageEditorResourcePath = PackageEditorPath + "/PackageResources";
         

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.InputSystem.Experimental.Internal;
 
-namespace UnityEngine.InputSystem.Experimental.Devices
+namespace UnityEngine.InputSystem.Experimental
 {
     // TODO
     // We want this node to be possible to inject decoder prior to indirect callbacks, an interval map is likely a good choice.

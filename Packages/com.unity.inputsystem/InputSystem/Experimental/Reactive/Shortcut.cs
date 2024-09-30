@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Experimental
     //      subscription chains share a common source node, i.e. a single events leads to two events fired for the
     //      same source serial event id. 
     
-    // TODO This is basically AND, redesign as such?
+    // TODO This is basically AND, redesign as such? Its not, ths should be updated to also take order into account?! On Win it matters on Mac it doesn't
     public struct Shortcut<TSource> : IObservableInputNode<bool>, IUnsafeObservable<bool> where TSource : IObservableInputNode<bool>, IDependencyGraphNode
     {
         private sealed class Impl : IObserver<ValueTuple<bool, bool>>

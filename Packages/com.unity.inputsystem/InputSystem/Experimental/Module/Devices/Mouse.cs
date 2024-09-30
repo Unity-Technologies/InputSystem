@@ -1,9 +1,11 @@
 using System;
+using System.Net;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.Experimental.Internal;
 
 // TODO using Unity.Mathematics;
 
-namespace UnityEngine.InputSystem.Experimental.Devices
+namespace UnityEngine.InputSystem.Experimental
 {
     public static partial class Usages
     {
@@ -25,15 +27,29 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
+    //[InputInterface(Experimental.Usages.Devices.Mouse)]
     public struct MouseState
     {
+        [Serializable, StructLayout(LayoutKind.Sequential)]
+        public struct Buttons
+        {
+            public Buttons(uint value)
+            {
+                this.value = value;
+            }
+            
+            public bool this[int index] => Bits.GetBit(value, index);
+
+            public uint value;
+        }
+        
         [FieldOffset(0), RelativeControl] public float deltaX;
         [FieldOffset(4), RelativeControl] public float deltaY;
         [FieldOffset(0), RelativeControl] public Vector2 delta;
         [FieldOffset(8), RelativeControl] public float scrollX;
         [FieldOffset(12), RelativeControl] public float scrollY;
-        [FieldOffset(8), ButtonsControl] public Vector2 scroll;
-        [FieldOffset((16)), ButtonsControl] public uint buttons;
+        [FieldOffset(8), RelativeControl] public Vector2 scroll;
+        [FieldOffset((16)), ButtonsControl] public Buttons buttons;
     }
     
     /// <summary>
@@ -43,7 +59,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
     /// All exposed controls may not be present depending on the capabilities of the underlying hardware, OS or drivers.
     /// </remarks>
     [Serializable]
-    public struct Mouse
+    public struct Mouse : IObservableInputNode<MouseState> // TODO Would make sense to use another interface than IDependencyGraphNode since it cannot have children
     {
         public readonly struct Buttons
         {
@@ -62,17 +78,17 @@ namespace UnityEngine.InputSystem.Experimental.Devices
                 {
                     if (index < 0 || index > 4)
                         throw new ArgumentOutOfRangeException(nameof(index));
-                    return Get(index);
+                    return new(
+                        Endpoint.FromDeviceAndUsage(m_DeviceId, m_Usage + index),
+                        Field.Bit(16, 0));
                 }
             }
-    
-            private ObservableControl<bool> Get(int index) => new (
-                Endpoint.FromDeviceAndUsage(m_DeviceId, m_Usage + index), 
-                Field.Bit(16, 0));
+            
+            // TODO Have mouse button enum
         }
         
         #region Device access
-        
+
         /// <summary>
         /// Returns an aggregate <see cref="Mouse"/> device representing the aggregated result of all such devices
         /// on the system (if any).
@@ -85,7 +101,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         /// <remarks>
         /// The return value is never <c>null</c>.
         /// </remarks>
-        public static ReadOnlySpan<Mouse> devices => GetDevices(Context.instance);
+        public static ReadOnlySpan<Mouse> devices => GetDevices(Context.instance); // TODO Should be observable collection
         
         /// <summary>
         /// Returns all currently connected <c>Mouse</c> devices on the system from the perspective of the
@@ -93,7 +109,7 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         /// </summary>
         /// <param name="context">The context for which to retrieve devices.</param>
         /// <returns>ReadOnlySpan&lt;Mouse&gt; containing all available devices.</returns>
-        public static ReadOnlySpan<Mouse> GetDevices(Context context) => context.GetDevices<Mouse>(); 
+        public static ReadOnlySpan<Mouse> GetDevices(Context context) => context.GetDevices<Mouse>();  // TODO Should be observable collection
         
         #endregion
         
@@ -119,5 +135,20 @@ namespace UnityEngine.InputSystem.Experimental.Devices
         internal Mouse(ushort deviceId) => m_DeviceId = deviceId;
         
         private ushort m_DeviceId;
+        
+        public IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
+            where TObserver : IObserver<MouseState>
+        {
+            // Subscribe directly to end-point stream context
+            var ctx = context.GetOrCreateStreamContext<MouseState>(
+                Endpoint.FromDeviceAndUsage(m_DeviceId, Experimental.Usages.Devices.Mouse));
+            return ctx.Subscribe(observer);
+        }
+        public IDisposable Subscribe(IObserver<MouseState> observer) => Subscribe(Context.instance, observer);
+        public bool Equals(IDependencyGraphNode other) => other is Mouse node && Equals(node);
+        public bool Equals(Mouse other) => m_DeviceId.Equals(other.m_DeviceId);
+        public string displayName => "Standard Mouse";
+        public int childCount => 0;
+        public IDependencyGraphNode GetChild(int index) => throw new ArgumentOutOfRangeException(nameof(index));
     }
 }

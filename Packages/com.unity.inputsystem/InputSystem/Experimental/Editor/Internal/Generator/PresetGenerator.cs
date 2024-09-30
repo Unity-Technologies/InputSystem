@@ -80,7 +80,7 @@ namespace UnityEditor.InputSystem.Experimental.Generator
                 b.WriteLine($"public static void {presetMethodName}() => {presetClass}.{presetMethodName}().CreateAssetFromName(\"{presetMethodName}\");");
             }
         }
-
+        
         private static void Run()
         {
             var dict = new Dictionary<Type, Context>();

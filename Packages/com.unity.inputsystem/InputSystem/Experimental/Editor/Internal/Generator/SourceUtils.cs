@@ -11,7 +11,8 @@ namespace UnityEditor.InputSystem.Experimental.Generator
     internal static class SourceUtils
     {
         internal const string Header = @"// This is an auto-generated source file. Any manual edits will be lost.";
-
+        internal const string CSharpSuffix = ".cs";
+        
         private static readonly Dictionary<Type, string> typeNameCache = new();
         
         internal static string GetTypeName(Type type)

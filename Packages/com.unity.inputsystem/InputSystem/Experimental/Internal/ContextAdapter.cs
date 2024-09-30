@@ -1,11 +1,8 @@
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
-using GamepadState = UnityEngine.InputSystem.Experimental.Devices.GamepadState;
-using KeyboardState = UnityEngine.InputSystem.Experimental.Devices.KeyboardState;
+using UnityEngine.InputSystem.Experimental.Devices;
+using GamepadState = UnityEngine.InputSystem.Experimental.GamepadState;
+using KeyboardState = UnityEngine.InputSystem.Experimental.KeyboardState;
 
 namespace UnityEngine.InputSystem.Experimental
 {
@@ -22,11 +19,13 @@ namespace UnityEngine.InputSystem.Experimental
         private const int Keys = ('K' << 24) | ('E' << 16) | ('Y' << 8) | ('S' << 0);    // 'KEYS'
         private const int Mouse = ('M' << 24) | ('O' << 16) | ('U' << 8) | ('S' << 0);   // 'MOUS'
         private const int Gamepad = ('G' << 24) | ('A' << 16) | ('M' << 8) | ('P' << 0); // 'GAMP'
+        private const int Pointer = ('P' << 24) | ('T' << 16) | ('R' << 8) | (' ' << 0); // 'PTR '
         
         #region Development support
         
-        private static readonly StringBuilder LogBuffer = new StringBuilder();
+        private static readonly StringBuilder LogBuffer = new ();
         
+        [Conditional("DEVELOPMENT_BUILD")]
         private static unsafe void LogEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr)
         {
             LogBuffer.Clear();
@@ -37,12 +36,13 @@ namespace UnityEngine.InputSystem.Experimental
             LogBuffer.Append(", eventId: ").Append(eventPtr->eventId);
             Debug.Log(LogBuffer);
         }
-
+        
+        [Conditional("DEVELOPMENT_BUILD")]
         private static void Log(string value)
         {
             Debug.Log(value);
         }
-        
+
         #endregion
 
         private static KeyboardState _previous; // TEMPORARY
@@ -69,11 +69,12 @@ namespace UnityEngine.InputSystem.Experimental
             
             // TODO Being able to filter before invoking callbacks is key if abstract enough. Hence there is a need to guard on previous state. This means that ObservableInput needs knowledge of where it comes from. Hence maybe the callbacks into first node is different?
             
+            //
             if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0, Usages.Devices.Keyboard),
                     out Context.StreamContext<KeyboardState> keyboardStreamContext) && 
                 keyboardStreamContext.observerCount > 0)
             {
-                // Convert and forward
+                // Convert and forward to observers of keyboard interface
                 KeyboardState keyboard;
                 Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(keyboard.keys, state->keys, 16);
                 
@@ -83,28 +84,27 @@ namespace UnityEngine.InputSystem.Experimental
                 context.InvokeDeferred();
                 context.InvokeDeferred2();
             }
-            
-            //foreach (var k in System.Enum.GetValues(typeof(Devices.Key)))
-                
-            // TODO Temporary workaround, find the best solution, probably as child to KeyboardState, but single node to decode all which requires source to pass key
-            // TODO NOte that this isn't really a problem if we can compute difference since we only need to iterate changed bits
-            if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0,Devices.Usages.Keyboard.w),
-                    out Context.StreamContext<bool> streamContext) && streamContext.observerCount > 0)
-            {
-                streamContext.OnNext(MemoryHelpers.ReadSingleBit(state->keys, (uint)Devices.Usages.Keyboard.w));
-            }
-
-            // TODO We should also query device specific stream
-
-            // TODO We cannot reasonably scan for observers of individual keys here
-
-            // Forward key state of individual keys to their corresponding observers
-            //Log(c.ToString());
         }
 
-        private static unsafe void Handle(LowLevel.MouseState* @state)
+        // Mouse interface adapter
+        private static unsafe void Handle(Context context, LowLevel.MouseState* @state)
         {
-            // TODO Implement            
+            if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0, Usages.Devices.Mouse),
+                    out Context.StreamContext<MouseState> mouseStreamContext) &&
+                mouseStreamContext.observerCount > 0)
+            {
+                var mouse = new MouseState()
+                {
+                    deltaX = state->delta.x,
+                    deltaY = state->delta.y,
+                    scrollX = state->scroll.x,
+                    scrollY = state->scroll.y,
+                    buttons = new MouseState.Buttons(state->buttons)
+                };
+                // discard: state->clickcount
+                // discard: state->displayIndex
+                mouseStreamContext.OnNext(ref mouse);
+            }
         }
 
         private static unsafe void Handle(Context context, LowLevel.GamepadState* @state)
@@ -147,16 +147,21 @@ namespace UnityEngine.InputSystem.Experimental
                 gamepad.OnNext(ref v);
             }
 
-            var leftStick = Context.instance.GetOrCreateStreamContext<Vector2>(Endpoint.FromUsage(Devices.Usages.GamepadUsages.LeftStick));
+            var leftStick = Context.instance.GetOrCreateStreamContext<Vector2>(Endpoint.FromUsage(Usages.Gamepad.LeftStick));
             if (leftStick.observerCount > 0)
                 leftStick.OnNext(state->leftStick);
 
-            var buttonSouth = Context.instance.GetOrCreateStreamContext<bool>(Endpoint.FromUsage(Devices.Usages.GamepadUsages.ButtonSouth));
+            var buttonSouth = Context.instance.GetOrCreateStreamContext<bool>(Endpoint.FromUsage(Usages.Gamepad.ButtonSouth));
             if (buttonSouth.observerCount > 0)
                 buttonSouth.OnNext(0 != (state->buttons & (uint)LowLevel.GamepadButton.South));
             
             // TODO Send value to observable
             //Devices.Gamepad.leftStick.OnNext(gamepad.leftStick);
+        }
+
+        private static unsafe void Handle(Context context, LowLevel.PointerState* @state)
+        {
+            // TODO Implement
         }
 
         private static unsafe void HandleStateEvent(Context context, LowLevel.StateEvent* @event)
@@ -169,10 +174,13 @@ namespace UnityEngine.InputSystem.Experimental
                     Handle(context, (LowLevel.KeyboardState*)@event->state);
                     break;
                 case Mouse:
-                    Handle((LowLevel.MouseState*)@event->state);
+                    Handle(context, (LowLevel.MouseState*)@event->state);
                     break;
                 case Gamepad:
                     Handle(context, (LowLevel.GamepadState*)@event->state);
+                    break;
+                case Pointer:
+                    Handle(context, (LowLevel.PointerState*)@event->state);
                     break;
                 // TODO Add support for more event types
                 default:
@@ -189,22 +197,22 @@ namespace UnityEngine.InputSystem.Experimental
             
             switch (@event->type)
             {
-                case StateEvent.Type:
+                case LowLevel.StateEvent.Type:
                     HandleStateEvent(context, (LowLevel.StateEvent*)@event);
                     break;
                 
-                case DeltaStateEvent.Type:
+                case LowLevel.DeltaStateEvent.Type:
                     break;
                 
-                case DeviceConfigurationEvent.Type:
+                case LowLevel.DeviceConfigurationEvent.Type:
                     break;
                 
-                case DeviceRemoveEvent.Type:
+                case LowLevel.DeviceRemoveEvent.Type:
                     break;
             }
         }
 
-        public static void OnUpdate(InputUpdateType updateType, in InputEventBuffer eventBuffer)
+        public static void OnUpdate(LowLevel.InputUpdateType updateType, in LowLevel.InputEventBuffer eventBuffer)
         {
             // TODO Consider doing our own processing of the eventBuffer here transforming it into a stream context instead to properly mimic another underlying system. Downside is that it would cost us.
             // TODO Consider having separate contexts for player and editor to allow both to execute individually

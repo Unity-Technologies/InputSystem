@@ -8,7 +8,8 @@ namespace UnityEditor.InputSystem.Experimental
     // https://discussions.unity.com/t/how-to-use-renderstaticpreview-with-a-user-defined-property/143371/2
     // https://docs.unity3d.com/ScriptReference/Editor.RenderStaticPreview.html
     
-    [CustomEditor(typeof(Vector2InputBinding))]
+    // TODO Would need code generation "binding type"
+    /*[CustomEditor(typeof(Vector2InputBinding))]
     internal class Vector2InputBindingEditor : UnityEditor.Editor
     {
         //private Vector2InputBinding item => target as Vector2InputBinding;
@@ -29,5 +30,5 @@ namespace UnityEditor.InputSystem.Experimental
             
             return base.RenderStaticPreview(assetPath, subAssets, width, height);
         }
-    }
+    }*/
 }

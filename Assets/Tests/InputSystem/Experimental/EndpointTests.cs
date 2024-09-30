@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using UnityEngine.InputSystem.Experimental;
-using Usages = UnityEngine.InputSystem.Experimental.Devices.Usages;
 
 namespace Tests.InputSystem.Experimental
 {
@@ -8,10 +7,10 @@ namespace Tests.InputSystem.Experimental
     {
         private static readonly object[] EndpointTestCases = new object[]
         {
-            new object[]{ Endpoint.FromUsage(Usages.GamepadUsages.ButtonEast), 
-                Usages.GamepadUsages.ButtonEast, Endpoint.AnySource, EndpointKind.Device },
-            new object[]{ Endpoint.FromDeviceAndUsage(13, Usages.GamepadUsages.ButtonSouth), 
-                Usages.GamepadUsages.ButtonSouth, 13, EndpointKind.Device }
+            new object[]{ Endpoint.FromUsage(Usages.Gamepad.ButtonEast), 
+                Usages.Gamepad.ButtonEast, Endpoint.AnySource, EndpointKind.Device },
+            new object[]{ Endpoint.FromDeviceAndUsage(13, Usages.Gamepad.ButtonSouth), 
+                Usages.Gamepad.ButtonSouth, 13, EndpointKind.Device }
         };
         
         [Test]
