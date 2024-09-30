@@ -6,7 +6,7 @@ In this situation, for discrete events you must ensure that you use  [`WasPresse
 
 For example:
 
-```
+```c#
 using UnityEngine;
 using UnityEngine.InputSystem;
 
