@@ -122,6 +122,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
         {
+            if (device == simulatedTouchscreen)
+            {
+                // Avoid processing events queued by this simulation device
+                return;
+            }
+
             var pointerIndex = m_Pointers.IndexOfReference(device, m_NumPointers);
             if (pointerIndex < 0)
                 return;
@@ -290,63 +296,33 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             Debug.Assert(m_CurrentDisplayIndices[pointerIndex] <= byte.MaxValue, "Display index was larger than expected");
             byte displayIndex = (byte)m_CurrentDisplayIndices[pointerIndex];
 
+            // We need to partially set TouchState in a similar way that the Native side would do, but deriving that
+            // data from the Pointer events.
+            // The handling of the remaining fields is done by the Touchscreen.OnStateEvent() callback.
             var touch = new TouchState
             {
                 phase = phase,
                 position = position,
-                displayIndex = displayIndex
+                displayIndex = displayIndex,
             };
-            var time = eventPtr.valid ? eventPtr.time : InputState.currentTime;
-
-            var oldTouchState = (TouchState*)((byte*)simulatedTouchscreen.currentStatePtr +
-                simulatedTouchscreen.touches[touchIndex].stateBlock.byteOffset);
 
             if (phase == TouchPhase.Began)
             {
-                touch.isPrimaryTouch = m_PrimaryTouchIndex < 0;
-                touch.startTime = time;
+                touch.startTime = eventPtr.valid ? eventPtr.time : InputState.currentTime;
                 touch.startPosition = position;
                 touch.touchId = ++m_LastTouchId;
-                touch.tapCount = oldTouchState->tapCount; // Get reset automatically by Touchscreen.
-
-                if (touch.isPrimaryTouch)
-                    m_PrimaryTouchIndex = touchIndex;
             }
             else
             {
-                touch.touchId = oldTouchState->touchId;
-                touch.isPrimaryTouch = m_PrimaryTouchIndex == touchIndex;
-                touch.delta = position - oldTouchState->position;
-                touch.startPosition = oldTouchState->startPosition;
-                touch.startTime = oldTouchState->startTime;
-                touch.tapCount = oldTouchState->tapCount;
-
-                if (phase == TouchPhase.Ended)
-                {
-                    touch.isTap = time - oldTouchState->startTime <= Touchscreen.s_TapTime &&
-                        (position - oldTouchState->startPosition).sqrMagnitude <= Touchscreen.s_TapRadiusSquared;
-                    if (touch.isTap)
-                        ++touch.tapCount;
-                }
+                touch.touchId = m_LastTouchId;
             }
 
             //NOTE: Processing these events still happen in the current frame.
-            using (StateEvent.From(simulatedTouchscreen, out var touchscreenEventPtr))
-            {
-                if (touch.isPrimaryTouch)
-                {
-                    simulatedTouchscreen.primaryTouch.WriteValueIntoEvent(touch, touchscreenEventPtr);
-                    InputSystem.QueueEvent(touchscreenEventPtr);
-                }
-                simulatedTouchscreen.touches[touchIndex].WriteValueIntoEvent(touch, touchscreenEventPtr);
-                InputSystem.QueueEvent(touchscreenEventPtr);
-            }
+            InputSystem.QueueStateEvent(simulatedTouchscreen, touch);
 
             if (phase.IsEndedOrCanceled())
             {
                 m_Touches[touchIndex] = null;
-                if (m_PrimaryTouchIndex == touchIndex)
-                    m_PrimaryTouchIndex = -1;
             }
         }
 
