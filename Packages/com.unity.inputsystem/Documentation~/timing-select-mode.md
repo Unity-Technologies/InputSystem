@@ -10,6 +10,6 @@ The choice of Update Mode that best suits your project relates to whether you're
 
 In cases where a small amount of input latency (a few frames) isn't an issue, set the update mode to match where you read your input. If your input code is in `Update` (usually non-physics-based scenarios), use **Process Events in Dynamic Update**. If your input code is in `FixedUpdate` (usually physics-based scenarios), use **Process Events in Fixed Update**.
 
-### When minimum latency is a necessity
+## When minimum latency is a necessity
 
 In cases where minimum latency is a necessity, set the update mode to **Process Events in Dynamic Update**, even if you're using code in FixedUpdate to apply physics forces based on input. This strategy comes with some additional issues that you must be aware of. Refer to the section [Optimizing for fixed-timestep scenarios](timing-optimize-fixed-update.md) for more information.
