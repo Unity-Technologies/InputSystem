@@ -4,7 +4,7 @@ If you're not working with the physics system or using `FixedUpdate`, always set
 
 You can use either a Polling or Event-driven approach to read and process input each frame. You can find out more about Polling or Event-driven approaches in [Responding To Actions](RespondingToActions.html). Whether you choose polling or event-driven, as long as you have your Update Mode set to **Process Events in Dynamic Update**, you receive the latest events and values at the start of each frame.
 
-### Polling technique
+## Polling technique
 
 Poll input in `Update` and use those values to control your game in `Update`. If there were multiple events after the last frame completed (for example, multiple changing position values of a continuously moving gamepad stick), polling gives you the most recently processed value which is often fine for most scenarios. This approach is often called **sample-and-hold** and is a form of down-sampling, because individual subframe information is discarded. For example, in the scenario shown in the diagram below, polling the input on frame 3 gives the value for event (**g**), while the values for events (**d**) (**e**) and (**f**) are discarded.
 
