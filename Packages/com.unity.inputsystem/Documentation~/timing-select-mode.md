@@ -12,4 +12,4 @@ In cases where a small amount of input latency (a few frames) isn't an issue, se
 
 ### When minimum latency is a necessity
 
-In cases where minimum latency is a necessity, set the update mode to **Process Events in Dynamic Update**, even if you're using code in FixedUpdate to apply physics forces based on input. This strategy comes with some additional issues that you must be aware of. Refer to the section [Optimizing for fixed-timestep scenarios](./timing-optimize-fixed-update.md) for more information.
+In cases where minimum latency is a necessity, set the update mode to **Process Events in Dynamic Update**, even if you're using code in FixedUpdate to apply physics forces based on input. This strategy comes with some additional issues that you must be aware of. Refer to the section [Optimizing for fixed-timestep scenarios](timing-optimize-fixed-update.md) for more information.
