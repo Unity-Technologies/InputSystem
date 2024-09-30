@@ -1,6 +1,6 @@
 # Optimize for dynamic update (non-physics) scenarios
 
-If you're not working with the physics system or using `FixedUpdate`, always set the input system to process input in sync with the frame rate and `Update`()` calls. This is the default setting, but to check or set this, go to  **Project Settings** \> **Input System Package** \> **Input Settings**, and set **Update Mode** to **Process Events in Dynamic Update**.
+If you're not working with the physics system or using `FixedUpdate`, always set the input system to process input in sync with the frame rate and `Update()` calls. This is the default setting, but to check or set this, go to  **Project Settings** \> **Input System Package** \> **Input Settings**, and set **Update Mode** to **Process Events in Dynamic Update**.
 
 You can use either a Polling or Event-driven approach to read and process input each frame. You can find out more about Polling or Event-driven approaches in [Responding To Actions](RespondingToActions.html). Whether you choose polling or event-driven, as long as you have your Update Mode set to **Process Events in Dynamic Update**, you receive the latest events and values at the start of each frame.
 
