@@ -35,6 +35,7 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             
             public static implicit operator TypeReference(System.Type type) => new TypeReference(type);
             public static implicit operator TypeReference(TypeArgument type) => new TypeReference(type);
+            public static implicit operator TypeReference(DeclaredType type) => new TypeReference(type);
 
             public bool isType => m_Type != null;
             public bool isGeneric => m_TypeArgument != null;

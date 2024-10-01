@@ -7,17 +7,16 @@ namespace UseCases
 {
     public class Playground : UseCase
     {
+        public ScriptableInputBinding<Vector2> move;
+        public ScriptableInputBinding<InputEvent> jump;
+        
         public void OnEnable()
         {
-
+            move.Subscribe(x => moveDirection = x);
+            jump.Subscribe(evt => Debug.Log("Jump"));
         }
 
         public void OnDisable()
-        {
-                        
-        }
-
-        public void Update()
         {
             
         }

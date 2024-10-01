@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.InputSystem.Experimental.Generator;
 
 namespace UnityEngine.InputSystem.Experimental.Generator
 {
@@ -22,11 +23,29 @@ namespace UnityEngine.InputSystem.Experimental.Generator
             
             public string name { get; set; }
             public Visibility visibility { get; set; }
+            public Statement getter { get; set; }
+            public Statement setter { get; set; }
 
             public override void Format(SourceContext context, SourceFormatter formatter)
             {
                 formatter.Write(formatter.Format(visibility));
+                formatter.Write(m_Type.value);
                 formatter.Write(name);
+
+                var isDefined = getter != null || setter != null;
+                if (isDefined)
+                {
+                    formatter.BeginScope();
+                    if (getter != null)
+                    {
+                        // TODO Format getter
+                    }
+                    if (setter != null)
+                    {
+                        // TODO Format setter
+                    }
+                    formatter.EndScope();    
+                }
             }
         }
     }

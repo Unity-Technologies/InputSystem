@@ -41,10 +41,11 @@ namespace UnityEngine.InputSystem.Experimental
         /// </summary>
         /// <returns>Observable boolean condition.</returns>
         [InputPreset(category: Category, displayName: "Fire Weapon")]
-        public static Merge<bool> FireWeapon()
+        public static /*Merge<bool>*/ IObservableInput<bool> FireWeapon()
         {
-            return Combine.Merge<bool>(Mouse.any.buttons[0], 
-                Gamepad.RightTrigger.GreaterThan(0.5f));
+            return Keyboard.LeftCtrl;
+            /*return Combine.Merge<bool>(Mouse.any.buttons[0],
+                Gamepad.RightTrigger.GreaterThan(0.5f));*/
         }
 
         /// <summary>

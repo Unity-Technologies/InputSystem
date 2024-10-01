@@ -19,22 +19,22 @@ namespace UnityEngine.InputSystem.Experimental
             /// <summary>
             /// Represents the usage of a device interface for a standard-model mouse device.
             /// </summary>
-            public static readonly Usage Mouse = new(0x00010000);
+            public static readonly Usage Mouse = new(0x00010000); // TODO Move together with mouse usages.
             
             /// <summary>
             /// Represents the usage of a device interface for a standard-model keyboard device.
             /// </summary>
-            public static readonly Usage Keyboard = new(0x00020000);
+            public static readonly Usage Keyboard = new(0x00020000); // TODO Move together with keyboard usages.
 
             /// <summary>
             /// Represents the usage of a device interface for a standard-model pointer device.
             /// </summary>
-            public static readonly Usage Pointer = new(0x00030000);
+            public static readonly Usage Pointer = new(0x00030000); // TODO Move together with pointer usages.
             
             /// <summary>
             /// Represents the usage of a device interface for a standard-model gamepad device.
             /// </summary>
-            public static readonly Usage Gamepad = new(0x00040000);
+            public static readonly Usage Gamepad = new(0x00040000); // TODO Move together with gamepad usages.
         }
 
         public static partial class Haptic

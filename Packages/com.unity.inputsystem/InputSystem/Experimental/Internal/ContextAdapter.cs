@@ -90,16 +90,16 @@ namespace UnityEngine.InputSystem.Experimental
         private static unsafe void Handle(Context context, LowLevel.MouseState* @state)
         {
             if (context.TryGetStreamContext(Endpoint.FromDeviceAndUsage(0, Usages.Devices.Mouse),
-                    out Context.StreamContext<MouseState> mouseStreamContext) &&
+                    out Context.StreamContext<MouseReading> mouseStreamContext) &&
                 mouseStreamContext.observerCount > 0)
             {
-                var mouse = new MouseState()
+                var mouse = new MouseReading()
                 {
                     deltaX = state->delta.x,
                     deltaY = state->delta.y,
                     scrollX = state->scroll.x,
                     scrollY = state->scroll.y,
-                    buttons = new MouseState.Buttons(state->buttons)
+                    buttons = new MouseReading.Buttons(state->buttons)
                 };
                 // discard: state->clickcount
                 // discard: state->displayIndex

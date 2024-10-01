@@ -1,3 +1,5 @@
+// TODO In general this solution also suffers from a problem that needs a solution which is related to negative transitions on the state graph, e.g. not counting shortcut if some other key is down. So likely this needs to be expressed or be checked. At least it might imply that shorcuts/chords should be co-evaluated.
+
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem.Experimental;

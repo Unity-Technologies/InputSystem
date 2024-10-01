@@ -22,35 +22,6 @@ namespace UnityEngine.InputSystem.Experimental
         }
     }
 
-    /// <summary>
-    /// Represents a reading of mouse device state.
-    /// </summary>
-    [Serializable]
-    [StructLayout(LayoutKind.Explicit)]
-    //[InputInterface(Experimental.Usages.Devices.Mouse)]
-    public struct MouseState
-    {
-        [Serializable, StructLayout(LayoutKind.Sequential)]
-        public struct Buttons
-        {
-            public Buttons(uint value)
-            {
-                this.value = value;
-            }
-            
-            public bool this[int index] => Bits.GetBit(value, index);
-
-            public uint value;
-        }
-        
-        [FieldOffset(0), RelativeControl] public float deltaX;
-        [FieldOffset(4), RelativeControl] public float deltaY;
-        [FieldOffset(0), RelativeControl] public Vector2 delta;
-        [FieldOffset(8), RelativeControl] public float scrollX;
-        [FieldOffset(12), RelativeControl] public float scrollY;
-        [FieldOffset(8), RelativeControl] public Vector2 scroll;
-        [FieldOffset((16)), ButtonsControl] public Buttons buttons;
-    }
     
     /// <summary>
     /// Represents a standard model interface of a Mouse device.
@@ -59,9 +30,10 @@ namespace UnityEngine.InputSystem.Experimental
     /// All exposed controls may not be present depending on the capabilities of the underlying hardware, OS or drivers.
     /// </remarks>
     [Serializable]
-    public struct Mouse : IObservableInputNode<MouseState> // TODO Would make sense to use another interface than IDependencyGraphNode since it cannot have children
+    public partial struct Mouse : IObservableInputNode<MouseReading> // TODO Would make sense to use another interface than IDependencyGraphNode since it cannot have children
     {
-        public readonly struct Buttons
+        // TODO Code generator OR analyzer should verify selected alignments at compile time 
+        public readonly struct Buttons // TODO : IObservableInputNode<uint>, would allow co-evaluating buttons
         {
             private readonly ushort m_DeviceId;
             private readonly Usage m_Usage;
@@ -137,18 +109,69 @@ namespace UnityEngine.InputSystem.Experimental
         private ushort m_DeviceId;
         
         public IDisposable Subscribe<TObserver>(Context context, TObserver observer) 
-            where TObserver : IObserver<MouseState>
+            where TObserver : IObserver<MouseReading>
         {
             // Subscribe directly to end-point stream context
-            var ctx = context.GetOrCreateStreamContext<MouseState>(
+            var ctx = context.GetOrCreateStreamContext<MouseReading>(
                 Endpoint.FromDeviceAndUsage(m_DeviceId, Experimental.Usages.Devices.Mouse));
             return ctx.Subscribe(observer);
         }
-        public IDisposable Subscribe(IObserver<MouseState> observer) => Subscribe(Context.instance, observer);
+        public IDisposable Subscribe(IObserver<MouseReading> observer) => Subscribe(Context.instance, observer);
         public bool Equals(IDependencyGraphNode other) => other is Mouse node && Equals(node);
         public bool Equals(Mouse other) => m_DeviceId.Equals(other.m_DeviceId);
         public string displayName => "Standard Mouse";
         public int childCount => 0;
         public IDependencyGraphNode GetChild(int index) => throw new ArgumentOutOfRangeException(nameof(index));
+    }
+    
+    [Serializable, StructLayout(LayoutKind.Sequential)]
+    public struct Buttons 
+    {
+        public Buttons(uint value)
+        {
+            this.value = value;
+        }
+                
+        public bool this[int index] => Bits.GetBit(value, index);
+
+        public uint value;
+    }
+
+    /// <summary>
+    /// Represents a reading of mouse device state.
+    /// </summary>
+    [InputDeviceReading(deviceClassName: "Mouse"), Serializable, StructLayout(LayoutKind.Explicit)]
+    //[InputInterface(Experimental.Usages.Devices.Mouse)]
+    public partial struct MouseReading
+    {
+        // When aggregating controls:
+        // - Relative value controls are aggregated by SUM and then clamped to range. E.g. mouse deltas are summed but are unconstrained. 
+        // - Button controls are combined with logical OR
+        // - Absolute value controls are aggregated by LAST
+        // - Collections should likely be merged? E.g. touches
+        public static void Aggregate(ref MouseReading first, ref MouseReading second)
+        {
+            first.delta += second.delta;
+            first.scroll += second.scroll;
+            first.buttons = new Buttons(first.buttons.value | second.buttons.value);
+        }
+
+        // We only allow relative events to be coalesced, if absolute values change we need to produce a new reading. 
+        public static bool Coalesce(ref MouseReading first, ref MouseReading second)
+        {
+            if (first.buttons.value != second.buttons.value)
+                return false;
+            first.delta += second.delta;
+            first.scroll += second.scroll;
+            return true;
+        }
+            
+        [FieldOffset(0), RelativeControl] public float deltaX;
+        [FieldOffset(4), RelativeControl] public float deltaY;
+        [FieldOffset(0), RelativeControl] public Vector2 delta;
+        [FieldOffset(8), RelativeControl] public float scrollX;
+        [FieldOffset(12), RelativeControl] public float scrollY;
+        [FieldOffset(8), RelativeControl] public Vector2 scroll;
+        [FieldOffset((16)), ButtonsControl] public Buttons buttons;
     }
 }

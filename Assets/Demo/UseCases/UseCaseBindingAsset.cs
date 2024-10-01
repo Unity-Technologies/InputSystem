@@ -5,31 +5,6 @@ using Vector2 = UnityEngine.Vector2;
 
 namespace UseCases
 {
-    // TODO We might actually use an importer and when we import we will create an InputBindingAsset that can create the represented object for us.
-    //      Why wouldn't we parse the configuration already at editor stage? Then there is no work to do during import.
-    
-    // Strategy pattern: https://unity.com/how-to/scriptableobjects-delegate-objects
-    
-    // Scripted importer: https://medium.com/miijiis-unified-works/have-unity-support-your-custom-file-part-4-6-fc2ae4ec09c0
-
-    
-    
-    // TODO Use customer picker with a tab containing presets?
-    
-    // TODO Implement a ScriptableInputBindingObject that wraps an .inputactions asset? 
-    
-    /*[CreateAssetMenu(menuName = "Input/Input Binding", fileName = "Move")]
-    public class MovePreset : ScriptableInputBinding<Vector2>
-    {
-        public override IDisposable Subscribe<TObserver>(Context context, TObserver observer)
-        {
-            // TODO Basically this is where we should create an internal mux and just aggregate?!
-            return Combine.Composite(Keyboard.A, Keyboard.D, Keyboard.S, Keyboard.W)
-                .Subscribe(context, observer);
-        }
-    }*/
-    
-    
     public class UseCaseBindingAsset : UseCase
     {
         #region How to currently do it
@@ -79,14 +54,13 @@ namespace UseCases
         public ScriptableInputBinding<InputEvent> jump;
         public ScriptableInputBinding<bool> fire;
         
-        private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription, m_Temp;
+        private IDisposable m_Subscription, m_JumpSubscription, m_FireSubscription;
         
         private void OnEnable()
         {
             m_Subscription = move.TrySubscribe(v => moveDirection = v);
             m_JumpSubscription = jump.TrySubscribe(v => Debug.Log("Jump"));
             m_FireSubscription = fire.TrySubscribe(v => isFiring = v);
-            //m_Temp = Keyboard.Space.Changed().Subscribe(x => Debug.Log("Hello: " + x));
         }
 
         private void OnDisable()
@@ -94,7 +68,6 @@ namespace UseCases
             m_Subscription?.Dispose();
             m_JumpSubscription?.Dispose();
             m_FireSubscription?.Dispose();
-            m_Temp?.Dispose();
         }
     }
 }
