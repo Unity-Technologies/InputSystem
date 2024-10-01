@@ -14,6 +14,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
 
+### Fixed
+- Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
+
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
