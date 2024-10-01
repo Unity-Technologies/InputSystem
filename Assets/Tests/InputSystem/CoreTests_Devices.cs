@@ -4181,7 +4181,7 @@ partial class CoreTests
         InputSystem.Update();
 
         // "Unplug" device.
-                var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
+        var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
         InputSystem.QueueEvent(ref removeEvent1);
         InputSystem.Update();
 
