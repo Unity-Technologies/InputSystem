@@ -2,7 +2,6 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -284,7 +283,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             m_NumPointers = 0;
             m_LastTouchId = 0;
-            m_PrimaryTouchIndex = -1;
 
             InputSystem.onDeviceChange -= m_OnDeviceChange;
             InputSystem.onEvent -= m_OnEvent;
@@ -303,7 +301,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             {
                 phase = phase,
                 position = position,
-                displayIndex = displayIndex,
+                displayIndex = displayIndex
             };
 
             if (phase == TouchPhase.Began)
@@ -333,12 +331,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private ButtonControl[] m_Touches;
 
         [NonSerialized] private int m_LastTouchId;
-        [NonSerialized] private int m_PrimaryTouchIndex = -1;
         [NonSerialized] private Action<InputDevice, InputDeviceChange> m_OnDeviceChange;
         [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
-        private PlayerInput m_PlayerInput;
 
         #if UNITY_EDITOR
         static TouchSimulation()
