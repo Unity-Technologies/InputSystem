@@ -14,6 +14,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
 
+### Fixed
+- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
+
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
