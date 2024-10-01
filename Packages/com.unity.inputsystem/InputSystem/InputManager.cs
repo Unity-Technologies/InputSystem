@@ -2562,6 +2562,16 @@ namespace UnityEngine.InputSystem
             // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals() we
             // reconstruct an escaped string and make an escaped JsonParser.JsonString and use that for the comparison instead.
             //
+
+            if (string.IsNullOrEmpty(theString))
+            {
+                return new JsonParser.JsonString
+                {
+                    text = string.Empty, // text should be an empty string and not null for consistency on property comparisons
+                    hasEscapes = false
+                };
+            }
+
             var builder = new StringBuilder();
             var length = theString.Length;
             var hasEscapes = false;
