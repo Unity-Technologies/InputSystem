@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.HID
 
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;
-        
+
         private static readonly ProfilerMarker k_HIDParseDescriptorFallback = new ProfilerMarker("HIDParseDescriptorFallback");
 
         // This is the workhorse for figuring out fallback options for HIDs attached to the system.
