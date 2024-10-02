@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
