@@ -670,7 +670,7 @@ internal class PlayerInputTests : CoreTestsFixture
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
-       
+
         var go = new GameObject();
 
         var onScreenButton = go.AddComponent<OnScreenButton>();
