@@ -372,7 +372,7 @@ internal class OnScreenTests : CoreTestsFixture
         var gameObject = new GameObject();
 
         Assert.That(OnScreenControl.HasAnyActive, Is.False);
-        
+
         var buttonA = gameObject.AddComponent<OnScreenButton>();
 
         Assert.That(OnScreenControl.HasAnyActive, Is.True);
@@ -380,7 +380,7 @@ internal class OnScreenTests : CoreTestsFixture
         var buttonB = gameObject.AddComponent<OnScreenButton>();
         buttonA.controlPath = "/<Keyboard>/a";
         buttonB.controlPath = "/<Keyboard>/b";
-        
+
         Assert.That(OnScreenControl.HasAnyActive, Is.True);
 
         buttonA.enabled = false;

@@ -35,13 +35,13 @@ namespace UnityEngine.InputSystem.OnScreen
     /// types of device layouts (e.g. one control references 'buttonWest' on
     /// a gamepad and another references 'leftButton' on a mouse), then a device
     /// is created for each type referenced by the setup.
-    /// 
+    ///
     /// The <see cref="OnScreenControl"/> works by simulating events from the device specified in the <see cref="OnScreenControl.controlPath"/>
     /// property. Some parts of the Input System, such as the <see cref="PlayerInput"/> component, can be set up to
     /// auto-switch <see cref="PlayerInput.neverAutoSwitchControlSchemes"/> to a new device when input from them is detected.
     /// When a device is switched, any currently running inputs from the previously active device are cancelled.
     ///
-    /// To avoid this situation, you need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent 
+    /// To avoid this situation, you need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent
     /// control schemes of the simulated device.
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
@@ -217,8 +217,7 @@ namespace UnityEngine.InputSystem.OnScreen
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-
-        // Used by PlayerInput auto switch for scheme to prevent using Pointer device. 
+        // Used by PlayerInput auto switch for scheme to prevent using Pointer device.
         internal static bool HasAnyActive => s_nbActiveInstances != 0;
         private static int s_nbActiveInstances = 0;
 
