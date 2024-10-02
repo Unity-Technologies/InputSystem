@@ -1869,7 +1869,7 @@ namespace UnityEngine.InputSystem
             // Early out if the device isn't usable with any of our control schemes.
             var actions = all[0].actions;
             // Skip Pointer device if any OnScreenControl is active since they will use it to generate device event
-            return actions != null && (!OnScreenControl.HasAnyActive || device is not Pointer) && actions.IsUsableWithDevice(device);
+            return actions != null && (!OnScreenControl.HasAnyActive || !(device is Pointer)) && actions.IsUsableWithDevice(device);
         }
 
         private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
