@@ -257,6 +257,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             if (m_Touches == null)
                 m_Touches = new ButtonControl[simulatedTouchscreen.touches.Count];
 
+            if (m_TouchIds == null)
+                m_TouchIds = new int[simulatedTouchscreen.touches.Count];
+
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Added);
 
@@ -309,10 +312,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 touch.startTime = eventPtr.valid ? eventPtr.time : InputState.currentTime;
                 touch.startPosition = position;
                 touch.touchId = ++m_LastTouchId;
+                m_TouchIds[touchIndex] = m_LastTouchId;
             }
             else
             {
-                touch.touchId = m_LastTouchId;
+                touch.touchId = m_TouchIds[touchIndex];
             }
 
             //NOTE: Processing these events still happen in the current frame.
@@ -329,6 +333,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private Vector2[] m_CurrentPositions;
         [NonSerialized] private int[] m_CurrentDisplayIndices;
         [NonSerialized] private ButtonControl[] m_Touches;
+        [NonSerialized] private int[] m_TouchIds;
 
         [NonSerialized] private int m_LastTouchId;
         [NonSerialized] private Action<InputDevice, InputDeviceChange> m_OnDeviceChange;
