@@ -2,13 +2,9 @@
 
 Learn how to configure input to suit the needs of your project.
 
-User input comes in many forms, from keyboard, mouse, gamepads, and more. Configuring input means you define the meaning of the controls on your users devices, as well as details such as 
+User input comes in many forms, from keyboard, mouse, gamepads, and more. The Input System allows you to configure the connection and meaning between controls on your user's physical input devices, and the way your game or app responds to those inputs.
 
-One or two paragraphs: Describe the key themes of the subpages, and link
-to background context. No headings, images, or tables.
-
-Final paragraph (optional): Links to related documentation the user
-might be looking for instead.
+Once you have set up input, you can then [respond to input](respond-to-input.md).
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |

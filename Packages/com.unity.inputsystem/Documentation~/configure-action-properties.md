@@ -1,4 +1,4 @@
-# Configure Actions
+# Configure Action Properties
 
 * To add a new Action, select the Add (+) icon in the header of the Action column.
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.

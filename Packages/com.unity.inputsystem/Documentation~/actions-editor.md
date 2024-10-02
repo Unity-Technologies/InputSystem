@@ -41,6 +41,11 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
 
 
+> **Note:**
+> Although you can reorder actions in this window, the ordering is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+
+
+
 ## Action type and Control type
 
 If you select an Action, you can edit its properties in the right-hand pane of the window:

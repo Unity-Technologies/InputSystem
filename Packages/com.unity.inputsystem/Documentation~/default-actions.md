@@ -1,4 +1,4 @@
-# The default actions
+# The default project-wide actions
 
 When you [create and assign default project-wide actions](CreateActionAsset.md) the Action Asset comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input from the most common types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen, and extended reality (XR).
 
@@ -14,3 +14,18 @@ You can also delete all action maps, or reset all the actions back to the defaul
 ![The Input Actions **more** menu as displayed in the Project Settings window](images/InputActionsSettingsMoreMenu.png)
 
 > **Note:** this **more** (⋮) menu is not available when the Actions Editor is open in a separate window, it is only present in the Project Settings window.
+
+### The legacy default Actions Asset
+
+The Input System Package also comes with an asset called `DefaultInputActions.inputactions` containing a default setup of Actions. This default actions asset is older than, and entirely separate from the default project-wide actions described above. It is a legacy asset that remains included in the package for backward compatibility. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.
+
+```CSharp
+void Start()
+{
+    // Create an instance of the default actions.
+    var actions = new DefaultInputActions();
+    actions.Player.Look.performed += OnLook;
+    actions.Player.Move.performed += OnMove;
+    actions.Enable();
+}
+```
