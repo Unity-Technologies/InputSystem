@@ -420,7 +420,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 m_SeenPenEvents = true;
 
             var positionISX = ctx.ReadValue<Vector2>();
-            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : 0);
+            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : (asPenDevice != null ? asPenDevice.displayIndex.ReadValue() : 0));
             var position = ScreenBottomLeftToPanelPosition(positionISX, targetDisplay);
             var delta = pointerState.LastPositionValid ? position - pointerState.LastPosition : Vector2.zero;
 
