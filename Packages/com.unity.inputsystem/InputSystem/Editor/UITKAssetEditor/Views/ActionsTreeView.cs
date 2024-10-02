@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
             m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
-            m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
+            m_ActionsTreeView.viewDataKey = $"InputActionTreeView_{stateContainer.assetGUID}";
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
             m_ActionsTreeView.selectionType = UIElements.SelectionType.Single;
             m_ActionsTreeView.makeItem = () => new InputActionsTreeViewItem();
@@ -134,11 +134,6 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
                     Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
-                }
-                else
-                {
-                    Dispatch(Commands.SelectAction(null));
-                    Dispatch(Commands.SelectBinding(-1));
                 }
             };
 
@@ -611,30 +606,38 @@ namespace UnityEngine.InputSystem.Editor
 
                     if (serializedInputBinding.isComposite)
                     {
+                        var isLastBinding = i >= actionBindings.Count - 1;
+                        var hasHiddenCompositeParts = false;
+
                         var compositeItems = new List<TreeViewItemData<ActionOrBindingData>>();
-                        var nextBinding = actionBindings[++i];
-                        var hiddenCompositeParts = false;
-                        while (nextBinding.isPartOfComposite)
+
+                        if (!isLastBinding)
                         {
-                            var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme, state.selectedDeviceRequirementIndex);
-                            if (isVisible)
+                            var nextBinding = actionBindings[++i];
+
+                            while (nextBinding.isPartOfComposite)
                             {
-                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
-                                compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
-                                    new ActionOrBindingData(isAction: false, name, actionMapIndex, isComposite: false,
-                                        isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, nextBinding.indexOfBinding))));
+                                var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme, state.selectedDeviceRequirementIndex);
+                                if (isVisible)
+                                {
+                                    var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
+                                    compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(new Guid(nextBinding.id), idDictionary),
+                                        new ActionOrBindingData(isAction: false, name, actionMapIndex, isComposite: false,
+                                            isPartOfComposite: true, GetControlLayout(nextBinding.path), bindingIndex: nextBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, nextBinding.indexOfBinding))));
+                                }
+                                else
+                                    hasHiddenCompositeParts = true;
+
+                                if (++i >= actionBindings.Count)
+                                    break;
+
+                                nextBinding = actionBindings[i];
                             }
-                            else
-                                hiddenCompositeParts = true;
 
-                            if (++i >= actionBindings.Count)
-                                break;
-
-                            nextBinding = actionBindings[i];
+                            i--;
                         }
-                        i--;
 
-                        var shouldCompositeBeVisible = !(compositeItems.Count == 0 && hiddenCompositeParts); //hide composite if all parts are hidden
+                        var shouldCompositeBeVisible = !(compositeItems.Count == 0 && hasHiddenCompositeParts); //hide composite if all parts are hidden
                         if (shouldCompositeBeVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(GetIdForGuid(inputBindingId, idDictionary),
                                 new ActionOrBindingData(isAction: false, serializedInputBinding.name, actionMapIndex, isComposite: true, isPartOfComposite: false, action.expectedControlType, bindingIndex: serializedInputBinding.indexOfBinding, isCut: state.IsBindingCut(actionMapIndex, serializedInputBinding.indexOfBinding)),

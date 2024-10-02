@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -8,7 +9,6 @@ using UnityEngineInternal.Input;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -281,6 +281,19 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        public bool normalizeScrollWheelDelta
+        {
+            get => NativeInputSystem.normalizeScrollWheelDelta;
+            set => NativeInputSystem.normalizeScrollWheelDelta = value;
+        }
+
+        public float scrollWheelDeltaPerTick
+        {
+            get => NativeInputSystem.GetScrollWheelDeltaPerTick();
+        }
+#endif
+
         public bool isInBatchMode => Application.isBatchMode;
 
         #if UNITY_EDITOR
@@ -376,27 +389,31 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if UNITY_ANALYTICS
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
+            #if (UNITY_EDITOR)
+                #if (UNITY_2023_2_OR_NEWER)
+            EditorAnalytics.SendAnalytic(analytic);
+                #else
+            // The preprocessor filtering is a workaround for the fact that the AnalyticsResult enum is not available before 2023.1.0a14 when not using the built-in Unity Analytics module.
+                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+                    #endif // UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+                #endif // UNITY_2023_2_OR_NEWER
+            #elif (ENABLE_CLOUD_SERVICES_ANALYTICS) // Implicitly: !UNITY_EDITOR && UNITY_ANALYTICS
+            var info = analytic.info;
+            Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            if (analytic.TryGatherData(out var data, out var error))
+                Analytics.Analytics.SendEvent(info.Name, data);
+            else
+                Debug.Log(error);     // Non fatal
+            #endif //UNITY_EDITOR
         }
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            #if UNITY_ANALYTICS
-            #if UNITY_EDITOR
-            EditorAnalytics.SendEventWithLimit(name, data);
-            #else
-            Analytics.Analytics.SendEvent(name, data);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
-        }
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

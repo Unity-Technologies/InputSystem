@@ -47,19 +47,19 @@ The following example demonstrates this kind of setup with a fire Action that th
 var fireAction = new InputAction("fire");
 fireAction.AddBinding("<Gamepad>/buttonSouth")
     // Tap fires, slow tap charges. Both act on release.
-    .WithInteractions("tap;slowTap");
+    .WithInteractions("tap,slowTap");
 
 fireAction.started +=
     context =>
     {
-        if (context.Interaction is SlowTapInteraction)
+        if (context.interaction is SlowTapInteraction)
             ShowChargingUI();
     };
 
 fireAction.performed +=
     context =>
     {
-        if (context.Interaction is SlowTapInteraction)
+        if (context.interaction is SlowTapInteraction)
             ChargedFire();
         else
             Fire();
@@ -67,6 +67,7 @@ fireAction.performed +=
 
 fireAction.canceled +=
     _ => HideChargingUI();
+fireAction.Enable();
 ```
 
 ### Multiple Controls on an Action
@@ -78,6 +79,8 @@ If you have multiple Controls bound to a Binding or an Action which has an Inter
 If multiple Interactions are present on a single Binding or Action, then the Input System checks the Interactions in the order they are present on the Binding. The code example [above](#operation) illustrates this example. The Binding on the `fireAction` Action has two Interactions: `WithInteractions("tap;slowTap")`. The [tap](#tap) Interaction gets a first chance at interpreting the input from the Action. If the button is pressed, the Action calls the `Started` callback on the tap Interaction. If the user keeps holding the button, the tap Interaction times out, and the Action calls the [`Canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled) callback for the tap Interaction and starts processing the [slow tap](#slowtap) Interaction (which now receives a `Started` callback).
 
 At any one time, only one Interaction can be "driving" the action (that is, it gets to determine the action's current [`phase`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_phase)). If an Interaction higher up in the stack cancels, Interactions lower down in the stack can take over.
+
+Note that the order of interactions can affect which interaction is passed to your callback function. For example, an action with [Tap](#tap), [MultiTap](#multitap) and [Hold](#hold) interactions will have different behaviour when the interactions are in a different order, such as [Hold](#hold), [MultiTap](#multitap) and [Tap](#tap). If you get unexpected behaviour, you may need to experiment with a different ordering.
 
 ### Timeouts
 
