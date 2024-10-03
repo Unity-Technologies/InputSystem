@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+- Fixed "AnalyticsResult" errors on consoles [ISXB-1107]
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
