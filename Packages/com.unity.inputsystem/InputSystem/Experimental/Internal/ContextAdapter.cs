@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.Experimental
                     deltaY = state->delta.y,
                     scrollX = state->scroll.x,
                     scrollY = state->scroll.y,
-                    buttons = new MouseReading.Buttons(state->buttons)
+                    buttons = new Buttons(state->buttons)
                 };
                 // discard: state->clickcount
                 // discard: state->displayIndex

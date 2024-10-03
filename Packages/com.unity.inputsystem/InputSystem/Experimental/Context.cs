@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Experimental
         private AllocatorManager.AllocatorHandle m_Allocator;
         private readonly Dictionary<Endpoint, StreamContext> m_StreamContexts; // Tracks observed usages/streams.
         private readonly Dictionary<Endpoint, IStream> m_Streams;              // Tracks available streams (typed StreamContexts).
-        private readonly EventStream m_Events;                              // Shared system queue of observable events.
+        //private readonly EventStream m_Events;                              // Shared system queue of observable events.
         private int m_NodeId;                                               // Context specific node ID counter.
         private readonly TimerManager m_TimerManager;
 
@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Experimental
             
             m_StreamContexts = new();
             m_Streams = new();
-            m_Events = new EventStream();
+            //m_Events = new EventStream();
             m_Handle = handle;
             m_TimerManager = new TimerManager();
             
