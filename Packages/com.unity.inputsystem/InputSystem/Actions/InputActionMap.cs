@@ -318,7 +318,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputActionMap()
         {
-            s_NeedToResolveBindings = true;
         }
 
         /// <summary>
@@ -811,7 +810,6 @@ namespace UnityEngine.InputSystem
         }
 
         internal static int s_DeferBindingResolution;
-        internal static bool s_NeedToResolveBindings;
 
         internal struct DeviceArray
         {
@@ -1194,9 +1192,6 @@ namespace UnityEngine.InputSystem
             // Clear cached controls for actions. Don't need to necessarily clear m_BindingsForEachAction.
             m_ControlsForEachAction = null;
             controlsForEachActionInitialized = false;
-
-            // Indicate that there is at least one action map that has a change
-            s_NeedToResolveBindings = true;
 
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
@@ -1987,9 +1982,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public void OnAfterDeserialize()
         {
-            // Indicate that there is at least one action map that has a change
-            s_NeedToResolveBindings = true;
-
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
             m_EnabledActionsCount = 0;

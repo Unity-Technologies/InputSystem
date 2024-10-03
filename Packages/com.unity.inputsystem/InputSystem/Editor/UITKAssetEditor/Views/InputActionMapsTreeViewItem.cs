@@ -1,7 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-using System;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -18,10 +17,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
-        public Action<ContextualMenuPopulateEvent> OnContextualMenuPopulateEvent;
-
-        // for testing purposes to know if the item is focused to accept input
-        internal bool IsFocused { get; private set; } = false;
 
         private bool m_IsEditing;
         private static InputActionMapsTreeViewItem s_EditingItem = null;
@@ -41,13 +36,7 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnMouseUp = false;
 
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.RegisterCallback<FocusInEvent>(e => IsFocused = true);
-            renameTextfield.RegisterCallback<FocusOutEvent>(e => { OnEditTextFinished(); IsFocused = false; });
-            _ = new ContextualMenuManipulator(menuBuilder =>
-            {
-                OnContextualMenuPopulateEvent?.Invoke(menuBuilder);
-            })
-            { target = this };
+            renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
         public Label label => this.Q<Label>();
@@ -62,38 +51,28 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.UnregisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
-        private double lastSingleClick;
+        private float lastSingleClick;
         private static InputActionMapsTreeViewItem selected;
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
         {
             if (e.clickCount != 1 || e.button != (int)MouseButton.LeftMouse || e.target == null)
                 return;
-            var now = EditorApplication.timeSinceStartup;
-            if (selected == this && now - lastSingleClick < 3)
+
+            if (selected == this && Time.time - lastSingleClick < 3f)
             {
                 FocusOnRenameTextField();
                 e.StopImmediatePropagation();
                 lastSingleClick = 0;
-                return;
             }
-            lastSingleClick = now;
+            lastSingleClick = Time.time;
             selected = this;
         }
 
         public void Reset()
         {
-            if (m_IsEditing)
-            {
-                lastSingleClick = 0;
-                delegatesFocus = false;
-
-                renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
-                label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-                s_EditingItem = null;
-                m_IsEditing = false;
-            }
             EditTextFinished = null;
+            m_IsEditing = false;
         }
 
         public void FocusOnRenameTextField()
@@ -108,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
 
             //a bit hacky - e.StopImmediatePropagation() for events does not work like expected on ListViewItems or TreeViewItems because
             //the listView/treeView reclaims the focus - this is a workaround with less overhead than rewriting the events
-            schedule.Execute(() => renameTextfield.Q<TextField>().Focus()).StartingIn(120);
+            DelayCall();
             renameTextfield.SelectAll();
 
             s_EditingItem = this;
@@ -118,6 +97,12 @@ namespace UnityEngine.InputSystem.Editor
         public static void CancelRename()
         {
             s_EditingItem?.OnEditTextFinished();
+        }
+
+        async void DelayCall()
+        {
+            await Task.Delay(120);
+            renameTextfield.Q<TextField>().Focus();
         }
 
         private void OnEditTextFinished()

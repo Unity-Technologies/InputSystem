@@ -30,8 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
-        // For UI testing purpose
-        internal InputActionAsset currentAssetInEditor => m_AssetObjectForEditing;
+
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
@@ -41,12 +40,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private StateContainer m_StateContainer;
         private InputActionsEditorView m_View;
-
-        private InputActionsEditorSessionAnalytic m_Analytics;
-
-        private InputActionsEditorSessionAnalytic analytics =>
-            m_Analytics ??= new InputActionsEditorSessionAnalytic(
-                InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow);
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -188,8 +181,6 @@ namespace UnityEngine.InputSystem.Editor
                     if (m_AssetObjectForEditing == null)
                     {
                         workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
-                        if (m_State.m_Analytics == null)
-                            m_State.m_Analytics = analytics;
                         m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
                         m_AssetObjectForEditing = workingCopy;
                     }
@@ -223,16 +214,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             CleanupStateContainer();
 
-            if (m_State.m_Analytics == null)
-                m_State.m_Analytics = m_Analytics;
-
-            m_StateContainer = new StateContainer(m_State, m_AssetGUID);
+            m_StateContainer = new StateContainer(m_State);
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
+            m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, Save);
 
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
@@ -247,7 +235,7 @@ namespace UnityEngine.InputSystem.Editor
             // and editor loosing focus instead.
             #else
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                Save(isAutoSave: false);
+                Save();
             #endif
         }
 
@@ -261,7 +249,7 @@ namespace UnityEngine.InputSystem.Editor
             return m_State.serializedObject.targetObject as InputActionAsset;
         }
 
-        private void Save(bool isAutoSave)
+        private void Save()
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -271,11 +259,6 @@ namespace UnityEngine.InputSystem.Editor
             #endif
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
-
-            if (isAutoSave)
-                analytics.RegisterAutoSave();
-            else
-                analytics.RegisterExplicitSave();
         }
 
         private bool HasContentChanged()
@@ -302,30 +285,13 @@ namespace UnityEngine.InputSystem.Editor
             UpdateWindowTitle();
         }
 
-        private void OnEnable()
-        {
-            analytics.Begin();
-        }
-
-        private void OnDisable()
-        {
-            analytics.End();
-        }
-
-        private void OnFocus()
-        {
-            analytics.RegisterEditorFocusIn();
-        }
-
         private void OnLostFocus()
         {
             // Auto-save triggers on focus-lost instead of on every change
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
-                Save(isAutoSave: true);
+                Save();
             #endif
-
-            analytics.RegisterEditorFocusOut();
         }
 
         private void HandleOnDestroy()
@@ -344,7 +310,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case Dialog.Result.Save:
-                    Save(isAutoSave: false);
+                    Save();
                     break;
                 case Dialog.Result.Cancel:
                     // Cancel editor quit. (open new editor window with the edited asset)
@@ -477,7 +443,7 @@ namespace UnityEngine.InputSystem.Editor
         private static void SaveShortcut(ShortcutArguments arguments)
         {
             var window = (InputActionsEditorWindow)arguments.context;
-            window.Save(isAutoSave: false);
+            window.Save();
         }
 
         [Shortcut("Input Action Editor/Add Action Map", typeof(InputActionsEditorWindow), KeyCode.M, ShortcutModifiers.Alt)]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using Unity.Profiling;
+using UnityEngine.Profiling;
 
 ////REVIEW: remove users automatically when exiting play mode?
 
@@ -36,9 +36,6 @@ namespace UnityEngine.InputSystem.Users
     public struct InputUser : IEquatable<InputUser>
     {
         public const uint InvalidId = 0;
-
-        static readonly ProfilerMarker k_InputUserOnChangeMarker = new ProfilerMarker("InputUser.onChange");
-        static readonly ProfilerMarker k_InputCheckForUnpairMarker = new ProfilerMarker("InputCheckForUnpairedDeviceActivity");
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -1020,7 +1017,7 @@ namespace UnityEngine.InputSystem.Users
 
             if (s_GlobalState.onChange.length == 0)
                 return;
-            k_InputUserOnChangeMarker.Begin();
+            Profiler.BeginSample("InputUser.onChange");
             s_GlobalState.onChange.LockForChanges();
             for (var i = 0; i < s_GlobalState.onChange.length; ++i)
             {
@@ -1035,7 +1032,7 @@ namespace UnityEngine.InputSystem.Users
                 }
             }
             s_GlobalState.onChange.UnlockForChanges();
-            k_InputUserOnChangeMarker.End();
+            Profiler.EndSample();
         }
 
         private static int TryFindUserIndex(uint userId)
@@ -1655,14 +1652,14 @@ namespace UnityEngine.InputSystem.Users
                 return;
             }
 
-            k_InputCheckForUnpairMarker.Begin();
+            Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
 
             // Apply the pre-filter. If there's callbacks and none of them return true,
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
             {
-                k_InputCheckForUnpairMarker.End();
+                Profiler.EndSample();
                 return;
             }
 
@@ -1701,7 +1698,7 @@ namespace UnityEngine.InputSystem.Users
                     break;
             }
 
-            k_InputCheckForUnpairMarker.End();
+            Profiler.EndSample();
         }
 
         /// <summary>

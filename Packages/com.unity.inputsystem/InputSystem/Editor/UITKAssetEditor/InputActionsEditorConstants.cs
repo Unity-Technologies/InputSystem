@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         // Paths
         public const string PackagePath = "Packages/com.unity.inputsystem";
-        public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/PackageResources";
+        public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 
         /// Template names
         public const string ProjectSettingsUxml = "/InputActionsProjectSettings.uxml";

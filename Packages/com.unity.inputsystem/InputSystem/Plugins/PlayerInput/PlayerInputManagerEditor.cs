@@ -17,12 +17,6 @@ namespace UnityEngine.InputSystem.Editor
             InputUser.onChange += OnUserChange;
         }
 
-        public void OnDisable()
-        {
-            new InputComponentEditorAnalytic(InputSystemComponent.PlayerInputManager).Send();
-            new PlayerInputManagerEditorAnalytic(this).Send();
-        }
-
         public void OnDestroy()
         {
             InputUser.onChange -= OnUserChange;

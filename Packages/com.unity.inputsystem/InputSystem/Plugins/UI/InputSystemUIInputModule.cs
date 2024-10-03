@@ -117,24 +117,6 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// A multiplier value that allows you to adjust the scroll wheel speed sent to uGUI (Unity UI) components.
-        /// </summary>
-        /// <remarks>
-        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value and behaves the same as the legacy Standalone Input Module.
-        ///
-        /// A value larger than one increases the scrolling speed per tick, and a value less than one decreases the speed.
-        ///
-        /// You can set this to a negative value to invert the scroll direction. A value of zero prevents mousewheel scrolling from working at all.
-        ///
-        /// Note: this has no effect on UI Toolkit content, only uGUI components.
-        /// </remarks>
-        public float scrollDeltaPerTick
-        {
-            get => m_ScrollDeltaPerTick;
-            set => m_ScrollDeltaPerTick = value;
-        }
-
-        /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
         public override void ActivateModule()
@@ -404,7 +386,7 @@ namespace UnityEngine.InputSystem.UI
 
         private void ProcessPointerMovement(ExtendedPointerEventData eventData, GameObject currentPointerTarget)
         {
-#if UNITY_2021_1_OR_NEWER
+            #if UNITY_2021_1_OR_NEWER
             // If the pointer moved, send move events to all UI elements the pointer is
             // currently over.
             var wasMoved = eventData.IsPointerMoving();
@@ -413,7 +395,7 @@ namespace UnityEngine.InputSystem.UI
                 for (var i = 0; i < eventData.hovered.Count; ++i)
                     ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
             }
-#endif
+            #endif
 
             // If we have no target or pointerEnter has been deleted,
             // we just send exit events to anything we are tracking
@@ -435,78 +417,32 @@ namespace UnityEngine.InputSystem.UI
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
                 return;
 
-            Transform commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
-            Transform pointerParent = ((Component)currentPointerTarget.GetComponentInParent<IPointerExitHandler>())?.transform;
+            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
 
             // We walk up the tree until a common root and the last entered and current entered object is found.
             // Then send exit and enter events up to, but not including, the common root.
-            // ** or when !m_SendPointerEnterToParent, stop when meeting a gameobject with an exit event handler
             if (eventData.pointerEnter != null)
             {
-                var current = eventData.pointerEnter.transform;
-                while (current != null)
+                for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
                 {
-                    // if we reach the common root break out!
-                    if (sendPointerHoverToParent && current == commonRoot)
-                        break;
-
-                    // if we reach a PointerExitEvent break out!
-                    if (!sendPointerHoverToParent && current == pointerParent)
-                        break;
-
-#if UNITY_2021_3_OR_NEWER
-                    eventData.fullyExited = current != commonRoot && eventData.pointerEnter != currentPointerTarget;
-#endif
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
-
-                    if (sendPointerHoverToParent)
-                        current = current.parent;
-
-                    // if we reach the common root break out!
-                    if (current == commonRoot)
-                        break;
-
-                    if (!sendPointerHoverToParent)
-                        current = current.parent;
                 }
             }
 
-            // now issue the enter call up to but not including the common root
-            Transform oldPointerEnter = eventData.pointerEnter ? eventData.pointerEnter.transform : null;
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
-                Transform current = currentPointerTarget.transform;
-                while (current != null && !PointerShouldIgnoreTransform(current))
+                for (var current = currentPointerTarget.transform;
+                     current != null && current != commonRoot && !PointerShouldIgnoreTransform(current);
+                     current = current.parent)
                 {
-#if UNITY_2021_3_OR_NEWER
-                    eventData.reentered = current == commonRoot && current != oldPointerEnter;
-                    // if we are sending the event to parent, they are already in hover mode at that point. No need to bubble up the event.
-                    if (sendPointerHoverToParent && eventData.reentered)
-                        break;
-#endif
-
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
-#if UNITY_2021_1_OR_NEWER
+                    #if UNITY_2021_1_OR_NEWER
                     if (wasMoved)
                         ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
-#endif
+                    #endif
                     eventData.hovered.Add(current.gameObject);
-
-                    // stop when encountering an object with the pointerEnterHandler
-                    if (!sendPointerHoverToParent && current.GetComponent<IPointerEnterHandler>() != null)
-                        break;
-
-                    if (sendPointerHoverToParent)
-                        current = current.parent;
-
-                    // if we reach the common root break out!
-                    if (current == commonRoot)
-                        break;
-
-                    if (!sendPointerHoverToParent)
-                        current = current.parent;
                 }
             }
         }
@@ -542,12 +478,10 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerDown, if present.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
 
-                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
                 // If no GO responded to OnPointerDown, look for one that responds to OnPointerClick.
                 // NOTE: This only looks up the handler. We don't invoke OnPointerClick here.
                 if (newPressed == null)
-                    newPressed = pointerClickHandler;
+                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
                 // Reset click state if delay to last release was too long or if we didn't
                 // press on the same object as last time. The latter part we don't know until
@@ -562,9 +496,9 @@ namespace UnityEngine.InputSystem.UI
                 // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
                 // become null.
                 eventData.pointerPress = newPressed;
-#if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
-                eventData.pointerClick = pointerClickHandler;
-#endif
+                #if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
+                eventData.pointerClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                #endif
                 eventData.rawPointerPress = currentOverGo;
 
                 // Save the drag handler for drag events during this mouse down.
@@ -585,11 +519,11 @@ namespace UnityEngine.InputSystem.UI
                 //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
                 //          click and OnPointerClick is thus never invoked.
                 var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-#if UNITY_2020_1_OR_NEWER
-                var isClick = eventData.pointerClick != null && eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
-#else
-                var isClick = eventData.pointerPress != null && eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
-#endif
+                #if UNITY_2020_1_OR_NEWER
+                var isClick = eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
+                #else
+                var isClick = eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+                #endif
                 if (isClick)
                 {
                     // Count clicks.
@@ -612,13 +546,11 @@ namespace UnityEngine.InputSystem.UI
 
                 // Invoke OnPointerClick or OnDrop.
                 if (isClick)
-                {
-#if UNITY_2020_1_OR_NEWER
+                    #if UNITY_2020_1_OR_NEWER
                     ExecuteEvents.Execute(eventData.pointerClick, eventData, ExecuteEvents.pointerClickHandler);
-#else
+                    #else
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
-#endif
-                }
+                    #endif
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
 
@@ -777,9 +709,9 @@ namespace UnityEngine.InputSystem.UI
                 var cancelAction = m_CancelAction?.action;
 
                 var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasPerformedThisFrame())
+                if (cancelAction != null && cancelAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
@@ -2130,6 +2062,8 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
+        internal const float kPixelPerLine = 20;
+
         private void OnScrollCallback(InputAction.CallbackContext context)
         {
             var index = GetPointerStateIndexFor(ref context);
@@ -2137,12 +2071,9 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
-
-            var scrollDelta = context.ReadValue<Vector2>();
-
-            // ISXB-704: convert input value to BaseInputModule convention.
-            state.scrollDelta = (scrollDelta / InputSystem.scrollWheelDeltaPerTick) * scrollDeltaPerTick;
-
+            // The old input system reported scroll deltas in lines, we report pixels.
+            // Need to scale as the UI system expects lines.
+            state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
@@ -2287,18 +2218,6 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
-#if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
-        const float kSmallestScrollDeltaPerTick = 0.00001f;
-        public override Vector2 ConvertPointerEventScrollDeltaToTicks(Vector2 scrollDelta)
-        {
-            if (Mathf.Abs(scrollDeltaPerTick) < kSmallestScrollDeltaPerTick)
-                return Vector2.zero;
-
-            return scrollDelta / scrollDeltaPerTick;
-        }
-
-#endif
-
         private void HookActions()
         {
             if (m_ActionsHooked)
@@ -2432,10 +2351,6 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
         [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
 
-        // See ISXB-766 for a history of where the 6.0f value comes from
-        // (we used to have 120 per tick on Windows and divided it by 20.)
-        [SerializeField] private float m_ScrollDeltaPerTick = 6.0f;
-
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
 
         private struct InputActionReferenceState
@@ -2469,17 +2384,6 @@ namespace UnityEngine.InputSystem.UI
         private NavigationModel m_NavigationState;
 
         [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
-
-#if UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT
-        // Needed for testing.
-        internal new bool sendPointerHoverToParent
-        {
-            get => base.sendPointerHoverToParent;
-            set => base.sendPointerHoverToParent = value;
-        }
-#else
-        private bool sendPointerHoverToParent => true;
-#endif
 
         /// <summary>
         /// Controls the origin point of raycasts when the cursor is locked.

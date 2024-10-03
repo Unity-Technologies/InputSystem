@@ -143,17 +143,6 @@ namespace UnityEngine.InputSystem.Layouts
         }
 
         /// <summary>
-        /// Add a pattern (simple string) to <see cref="patterns"/> to match a <see cref="InputDeviceDescription.manufacturer"/>.
-        /// </summary>
-        /// <param name="noRegExPattern">String to match - simple keyword search in a device manufacturer string (eg "SONY").</param>
-        /// <returns>The modified device matcher with the added pattern.</returns>
-        /// <seealso cref="InputDeviceDescription.manufacturer"/>
-        public InputDeviceMatcher WithManufacturerContains(string noRegExPattern)
-        {
-            return With(kManufacturerContainsKey, noRegExPattern, supportRegex: false);
-        }
-
-        /// <summary>
         /// Add a pattern to <see cref="patterns"/> to match a <see cref="InputDeviceDescription.product"/>.
         /// </summary>
         /// <param name="pattern">String to match.</param>
@@ -320,12 +309,6 @@ namespace UnityEngine.InputSystem.Layouts
                         || !MatchSingleProperty(pattern, deviceDescription.manufacturer))
                         return 0;
                 }
-                else if (key == kManufacturerContainsKey)
-                {
-                    if (string.IsNullOrEmpty(deviceDescription.manufacturer)
-                        || !MatchSinglePropertyContains(pattern, deviceDescription.manufacturer))
-                        return 0;
-                }
                 else if (key == kProductKey)
                 {
                     if (string.IsNullOrEmpty(deviceDescription.product)
@@ -370,15 +353,6 @@ namespace UnityEngine.InputSystem.Layouts
             // Regex match.
             if (pattern is Regex regex)
                 return regex.IsMatch(value);
-
-            return false;
-        }
-
-        private static bool MatchSinglePropertyContains(object pattern, string value)
-        {
-            // String match.
-            if (pattern is string str)
-                return value.Contains(str, StringComparison.OrdinalIgnoreCase);
 
             return false;
         }
@@ -544,7 +518,6 @@ namespace UnityEngine.InputSystem.Layouts
         private static readonly InternedString kInterfaceKey = new InternedString("interface");
         private static readonly InternedString kDeviceClassKey = new InternedString("deviceClass");
         private static readonly InternedString kManufacturerKey = new InternedString("manufacturer");
-        private static readonly InternedString kManufacturerContainsKey = new InternedString("manufacturerContains");
         private static readonly InternedString kProductKey = new InternedString("product");
         private static readonly InternedString kVersionKey = new InternedString("version");
 
@@ -556,7 +529,6 @@ namespace UnityEngine.InputSystem.Layouts
             public string deviceClass;
             public string[] deviceClasses;
             public string manufacturer;
-            public string manufacturerContains;
             public string[] manufacturers;
             public string product;
             public string[] products;
@@ -645,16 +617,12 @@ namespace UnityEngine.InputSystem.Layouts
                     foreach (var value in deviceClasses)
                         matcher = matcher.WithDeviceClass(value);
 
-                // Manufacturer (string or regex)
+                // Manufacturer.
                 if (!string.IsNullOrEmpty(manufacturer))
                     matcher = matcher.WithManufacturer(manufacturer);
                 if (manufacturers != null)
                     foreach (var value in manufacturers)
                         matcher = matcher.WithManufacturer(value);
-
-                // ManufacturerContains (simple string, can occur anywhere in the reported manufacturer string)
-                if (!string.IsNullOrEmpty(manufacturerContains))
-                    matcher = matcher.WithManufacturerContains(manufacturerContains);
 
                 // Product.
                 if (!string.IsNullOrEmpty(product))

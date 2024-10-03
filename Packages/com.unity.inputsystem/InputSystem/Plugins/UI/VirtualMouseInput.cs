@@ -3,10 +3,6 @@ using System;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
-
 ////TODO: respect cursor lock mode
 
 ////TODO: investigate how driving the HW cursor behaves when FPS drops low
@@ -612,18 +608,6 @@ namespace UnityEngine.InputSystem.UI
             /// </summary>
             HardwareCursorIfAvailable,
         }
-
-        #if UNITY_EDITOR
-        [UnityEditor.CustomEditor(typeof(VirtualMouseInput))]
-        private class VirtualMouseInputEditor : UnityEditor.Editor
-        {
-            public void OnDisable()
-            {
-                new InputComponentEditorAnalytic(InputSystemComponent.VirtualMouseInput).Send();
-                new VirtualMouseInputEditorAnalytic(this).Send();
-            }
-        }
-        #endif
     }
 }
 #endif // PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI

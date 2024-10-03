@@ -48,12 +48,6 @@ namespace UnityEngine.InputSystem.Editor
             #endif
         }
 
-        public void OnDisable()
-        {
-            new InputComponentEditorAnalytic(InputSystemComponent.PlayerInput).Send();
-            new PlayerInputEditorAnalytic(this).Send();
-        }
-
         public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
@@ -90,42 +84,25 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 1) // Don't show if <Any> is the only option.
             {
                 // Default control scheme picker.
-                Color currentBg = GUI.backgroundColor;
-                // if the invalid DefaultControlSchemeName is selected set the popup draw the BG color in red
-                if (m_InvalidDefaultControlSchemeName != null && m_SelectedDefaultControlScheme == 1)
-                    GUI.backgroundColor = Color.red;
 
-                var rect = EditorGUILayout.GetControlRect();
-                var label = EditorGUI.BeginProperty(rect, m_DefaultControlSchemeText, m_DefaultControlSchemeProperty);
-                var selected = EditorGUI.Popup(rect, label, m_SelectedDefaultControlScheme, m_ControlSchemeOptions);
-                EditorGUI.EndProperty();
+                var selected = EditorGUILayout.Popup(m_DefaultControlSchemeText, m_SelectedDefaultControlScheme,
+                    m_ControlSchemeOptions);
                 if (selected != m_SelectedDefaultControlScheme)
                 {
                     if (selected == 0)
                     {
                         m_DefaultControlSchemeProperty.stringValue = null;
                     }
-                    // if there is an invalid default scheme name it will be at rank 1.
-                    // we use m_InvalidDefaultControlSchemeName to prevent usage of the string with "name<Not Found>"
-                    else if (m_InvalidDefaultControlSchemeName != null && selected == 1)
-                    {
-                        m_DefaultControlSchemeProperty.stringValue = m_InvalidDefaultControlSchemeName;
-                    }
                     else
                     {
-                        m_DefaultControlSchemeProperty.stringValue = m_ControlSchemeOptions[selected].text;
+                        m_DefaultControlSchemeProperty.stringValue =
+                            m_ControlSchemeOptions[selected].text;
                     }
                     m_SelectedDefaultControlScheme = selected;
                 }
-                // Restore the initial color
-                GUI.backgroundColor = currentBg;
 
-
-                rect = EditorGUILayout.GetControlRect();
-                label = EditorGUI.BeginProperty(rect, m_AutoSwitchText, m_NeverAutoSwitchControlSchemesProperty);
                 var neverAutoSwitchValueOld = m_NeverAutoSwitchControlSchemesProperty.boolValue;
-                var neverAutoSwitchValueNew = !EditorGUI.Toggle(rect, label, !neverAutoSwitchValueOld);
-                EditorGUI.EndProperty();
+                var neverAutoSwitchValueNew = !EditorGUILayout.Toggle(m_AutoSwitchText, !neverAutoSwitchValueOld);
                 if (neverAutoSwitchValueOld != neverAutoSwitchValueNew)
                 {
                     m_NeverAutoSwitchControlSchemesProperty.boolValue = neverAutoSwitchValueNew;
@@ -135,11 +112,9 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ActionMapOptions != null && m_ActionMapOptions.Length > 0)
             {
                 // Default action map picker.
-                var rect = EditorGUILayout.GetControlRect();
-                var label = EditorGUI.BeginProperty(rect, m_DefaultActionMapText, m_DefaultActionMapProperty);
-                var selected = EditorGUI.Popup(rect, label, m_SelectedDefaultActionMap,
+
+                var selected = EditorGUILayout.Popup(m_DefaultActionMapText, m_SelectedDefaultActionMap,
                     m_ActionMapOptions);
-                EditorGUI.EndProperty();
                 if (selected != m_SelectedDefaultActionMap)
                 {
                     if (selected == 0)
@@ -174,7 +149,7 @@ namespace UnityEngine.InputSystem.Editor
                 var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
                 if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
                 {
-                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions than this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
                     if (GUILayout.Button(m_FixInputModuleText))
                         InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
                 }
@@ -449,7 +424,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionNames = null;
                 m_SelectedDefaultActionMap = -1;
                 m_SelectedDefaultControlScheme = -1;
-                m_InvalidDefaultControlSchemeName = null;
                 return;
             }
 
@@ -512,36 +486,22 @@ namespace UnityEngine.InputSystem.Editor
 
             // Read out control schemes.
             var selectedDefaultControlScheme = playerInput.defaultControlScheme;
-            m_InvalidDefaultControlSchemeName = null;
             m_SelectedDefaultControlScheme = 0;
-            ////TODO: sort alphabetically and ensure that the order is the same in the schemes editor
-            var controlSchemesNames = asset.controlSchemes.Select(cs => cs.name).ToList();
-
-            // try to find the selected Default Control Scheme
-            if (!string.IsNullOrEmpty(selectedDefaultControlScheme))
-            {
-                // +1 since <Any> will be the first in the list
-                m_SelectedDefaultControlScheme = 1 + controlSchemesNames.FindIndex(name => string.Compare(name, selectedDefaultControlScheme,
-                    StringComparison.InvariantCultureIgnoreCase) == 0);
-                // if not found, will insert the invalid name next to <Any>
-                if (m_SelectedDefaultControlScheme == 0)
-                {
-                    m_InvalidDefaultControlSchemeName = selectedDefaultControlScheme;
-                    m_SelectedDefaultControlScheme = 1;
-                    controlSchemesNames.Insert(0, $"{selectedDefaultControlScheme}{L10n.Tr("<Not Found>")}");
-                }
-            }
-            else
-            {
-                playerInput.defaultControlScheme = null;
-            }
-
-            m_ControlSchemeOptions = new GUIContent[controlSchemesNames.Count + 1];
+            var controlSchemes = asset.controlSchemes;
+            m_ControlSchemeOptions = new GUIContent[controlSchemes.Count + 1];
             m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<Any>"));
-            for (var i = 0; i < controlSchemesNames.Count; ++i)
+            ////TODO: sort alphabetically
+            for (var i = 0; i < controlSchemes.Count; ++i)
             {
-                m_ControlSchemeOptions[i + 1] = new GUIContent(controlSchemesNames[i]);
+                var name = controlSchemes[i].name;
+                m_ControlSchemeOptions[i + 1] = new GUIContent(name);
+
+                if (selectedDefaultControlScheme != null && string.Compare(name, selectedDefaultControlScheme,
+                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                    m_SelectedDefaultControlScheme = i + 1;
             }
+            if (m_SelectedDefaultControlScheme <= 0)
+                playerInput.defaultControlScheme = null;
 
             // Read out action maps.
             var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
@@ -602,7 +562,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private int[] m_ActionMapIndices;
         [NonSerialized] private int m_NumActionMaps;
         [NonSerialized] private int m_SelectedDefaultControlScheme;
-        [NonSerialized] private string m_InvalidDefaultControlSchemeName;
         [NonSerialized] private GUIContent[] m_ControlSchemeOptions;
         [NonSerialized] private int m_SelectedDefaultActionMap;
         [NonSerialized] private GUIContent[] m_ActionMapOptions;

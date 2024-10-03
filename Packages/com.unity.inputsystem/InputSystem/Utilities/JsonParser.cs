@@ -260,7 +260,6 @@ namespace UnityEngine.InputSystem.Utilities
                 else if (ch == '"')
                 {
                     ++m_Position;
-
                     result = new JsonString
                     {
                         text = new Substring(m_Text, startIndex, m_Position - startIndex - 1),

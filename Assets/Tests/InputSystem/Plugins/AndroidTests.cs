@@ -502,7 +502,6 @@ internal class AndroidTests : CoreTestsFixture
     [TestCase(typeof(AndroidAmbientTemperature))]
     [TestCase(typeof(AndroidGameRotationVector))]
     [TestCase(typeof(AndroidStepCounter))]
-    [TestCase(typeof(AndroidHingeAngle))]
     public void Devices_CanCreateAndroidSensors(Type type)
     {
         var device = InputSystem.AddDevice(type.Name);
@@ -519,7 +518,6 @@ internal class AndroidTests : CoreTestsFixture
     [TestCase("AndroidProximity", "distance")]
     [TestCase("AndroidRelativeHumidity", "relativeHumidity")]
     [TestCase("AndroidAmbientTemperature", "ambientTemperature")]
-    [TestCase("AndroidHingeAngle", "angle")]
     public void Devices_SupportSensorsWithAxisControl(string layoutName, string controlName)
     {
         var device = InputSystem.AddDevice(layoutName);

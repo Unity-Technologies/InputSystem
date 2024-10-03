@@ -10,7 +10,6 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.AnimatedValues;
-using UnityEngine.InputSystem.Editor;
 #endif
 ////TODO: custom icon for OnScreenStick component
 
@@ -91,16 +90,10 @@ namespace UnityEngine.InputSystem.OnScreen
                     if (m_PointerDownAction == null)
                         m_PointerDownAction = new InputAction();
 
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = true;
-                    #endif
                     m_PointerDownAction.AddBinding("<Mouse>/leftButton");
                     m_PointerDownAction.AddBinding("<Pen>/tip");
                     m_PointerDownAction.AddBinding("<Touchscreen>/touch*/press");
                     m_PointerDownAction.AddBinding("<XRController>/trigger");
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = false;
-                    #endif
                 }
 
                 if (m_PointerMoveAction == null || m_PointerMoveAction.bindings.Count == 0)
@@ -108,15 +101,9 @@ namespace UnityEngine.InputSystem.OnScreen
                     if (m_PointerMoveAction == null)
                         m_PointerMoveAction = new InputAction();
 
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = true;
-                    #endif
                     m_PointerMoveAction.AddBinding("<Mouse>/position");
                     m_PointerMoveAction.AddBinding("<Pen>/position");
                     m_PointerMoveAction.AddBinding("<Touchscreen>/touch*/position");
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = false;
-                    #endif
                 }
 
                 m_PointerDownAction.started += OnPointerDown;
@@ -125,14 +112,9 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_PointerMoveAction.Enable();
             }
 
-            // Unable to setup elements according to settings if a RectTransform is not available (ISXB-915, ISXB-916).
-            if (!(transform is RectTransform))
-                return;
-
             m_StartPos = ((RectTransform)transform).anchoredPosition;
 
             if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
-
             m_PointerDownPos = m_StartPos;
 
             var dynamicOrigin = new GameObject(kDynamicOriginClickable, typeof(Image));
@@ -148,35 +130,26 @@ namespace UnityEngine.InputSystem.OnScreen
             image.alphaHitTestMinimumThreshold = 0.5f;
         }
 
-        private void OnDestroy()
-        {
-            if (m_UseIsolatedInputActions)
-            {
-                m_PointerDownAction.started -= OnPointerDown;
-                m_PointerDownAction.canceled -= OnPointerUp;
-            }
-        }
-
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
         {
-            var canvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
-            if (canvasRectTransform == null)
+            var canvasRect = transform.parent?.GetComponentInParent<RectTransform>();
+            if (canvasRect == null)
             {
-                Debug.LogError(GetWarningMessage());
+                Debug.LogError("OnScreenStick needs to be attached as a child to a UI Canvas to function properly.");
                 return;
             }
 
             switch (m_Behaviour)
             {
                 case Behaviour.RelativePositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
                     break;
                 case Behaviour.ExactPositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
                     MoveStick(pointerPosition, uiCamera);
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out var pointerDown);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out var pointerDown);
                     m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
             }
@@ -184,14 +157,13 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void MoveStick(Vector2 pointerPosition, Camera uiCamera)
         {
-            var canvasRectTransform = UGUIOnScreenControlUtils.GetCanvasRectTransform(transform);
-            if (canvasRectTransform == null)
+            var canvasRect = transform.parent?.GetComponentInParent<RectTransform>();
+            if (canvasRect == null)
             {
-                Debug.LogError(GetWarningMessage());
+                Debug.LogError("OnScreenStick needs to be attached as a child to a UI Canvas to function properly.");
                 return;
             }
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, pointerPosition, uiCamera, out var position);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out var position);
             var delta = position - m_PointerDownPos;
 
             switch (m_Behaviour)
@@ -281,14 +253,9 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void OnDrawGizmosSelected()
         {
-            // This will not produce meaningful results unless we have a rect transform (ISXB-915, ISXB-916).
-            var parentRectTransform = transform.parent as RectTransform;
-            if (parentRectTransform == null)
-                return;
+            Gizmos.matrix = ((RectTransform)transform.parent).localToWorldMatrix;
 
-            Gizmos.matrix = parentRectTransform.localToWorldMatrix;
-
-            var startPos = parentRectTransform.anchoredPosition;
+            var startPos = ((RectTransform)transform).anchoredPosition;
             if (Application.isPlaying)
                 startPos = m_StartPos;
 
@@ -488,18 +455,8 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
             }
 
-            public void OnDisable()
-            {
-                // Report analytics
-                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenStick).Send();
-                new OnScreenStickEditorAnalytic(this).Send();
-            }
-
             public override void OnInspectorGUI()
             {
-                // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
-                UGUIOnScreenControlEditorUtils.ShowWarningIfNotPartOfCanvasHierarchy((OnScreenStick)target);
-
                 EditorGUILayout.PropertyField(m_MovementRange);
                 EditorGUILayout.PropertyField(m_ControlPathInternal);
                 EditorGUILayout.PropertyField(m_Behaviour);

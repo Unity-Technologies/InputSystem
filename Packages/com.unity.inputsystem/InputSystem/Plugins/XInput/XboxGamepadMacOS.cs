@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         public enum Button
         {
             Start = 11,
-            Select = 10,
+            Select = 16,
             LeftThumbstickPress = 13,
             RightThumbstickPress = 14,
             LeftShoulder = 6,

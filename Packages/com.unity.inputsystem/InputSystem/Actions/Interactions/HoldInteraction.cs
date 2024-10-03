@@ -124,9 +124,6 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
-#endif
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();
         }

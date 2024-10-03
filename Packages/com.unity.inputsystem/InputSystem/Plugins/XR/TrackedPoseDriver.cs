@@ -265,7 +265,8 @@ namespace UnityEngine.InputSystem.XR
 
             if (m_PositionInput.reference == null)
             {
-                RenameAndEnable(action, $"{gameObject.name} - TPD - Position");
+                action.Rename($"{gameObject.name} - TPD - Position");
+                action.Enable();
             }
         }
 
@@ -284,7 +285,8 @@ namespace UnityEngine.InputSystem.XR
 
             if (m_RotationInput.reference == null)
             {
-                RenameAndEnable(action, $"{gameObject.name} - TPD - Rotation");
+                action.Rename($"{gameObject.name} - TPD - Rotation");
+                action.Enable();
             }
         }
 
@@ -303,20 +305,9 @@ namespace UnityEngine.InputSystem.XR
 
             if (m_TrackingStateInput.reference == null)
             {
-                RenameAndEnable(action, $"{gameObject.name} - TPD - Tracking State");
+                action.Rename($"{gameObject.name} - TPD - Tracking State");
+                action.Enable();
             }
-        }
-
-        private void RenameAndEnable(InputAction action, string name)
-        {
-#if UNITY_EDITOR
-            Editor.InputExitPlayModeAnalytic.suppress = true;
-#endif
-            action.Rename(name);
-#if UNITY_EDITOR
-            Editor.InputExitPlayModeAnalytic.suppress = false;
-#endif
-            action.Enable();
         }
 
         void UnbindPosition()

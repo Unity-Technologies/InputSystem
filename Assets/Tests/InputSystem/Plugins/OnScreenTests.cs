@@ -467,6 +467,7 @@ internal class OnScreenTests : CoreTestsFixture
     }
 
     [UnityTest]
+    [Ignore("Failing on 2023.3.3f1 https://jira.unity3d.com/browse/ISX-1462")]
     [Category("Devices")]
     public IEnumerator Devices_OnScreenStickDoesNotReceivePointerUpEventsInIsolatedMode()
     {

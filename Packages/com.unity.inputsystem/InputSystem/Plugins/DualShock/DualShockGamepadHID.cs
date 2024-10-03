@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// See ConvertInputReport for the exact conversion.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 9 /* !!! Beware !!! If you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)]
-    public struct DualSenseHIDInputReport : IInputStateTypeInfo
+    internal struct DualSenseHIDInputReport : IInputStateTypeInfo
     {
         public static FourCC Format = new FourCC('D', 'S', 'V', 'S'); // DualSense Virtual State
         public FourCC format => Format;
@@ -349,7 +349,7 @@ namespace UnityEngine.InputSystem.DualShock
 
         private float? m_LowFrequencyMotorSpeed;
         private float? m_HighFrequenceyMotorSpeed;
-        protected Color? m_LightBarColor;
+        private Color? m_LightBarColor;
         private byte outputSequenceId;
 
         protected override void FinishSetup()

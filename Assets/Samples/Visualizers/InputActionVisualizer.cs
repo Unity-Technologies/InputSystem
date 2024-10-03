@@ -63,12 +63,9 @@ namespace UnityEngine.InputSystem.Samples
         {
             base.OnDisable();
 
-            if (s_EnabledInstances != null)
-            {
-                s_EnabledInstances.Remove(this);
-                if (s_EnabledInstances.Count == 0)
-                    InputSystem.onActionChange -= OnActionChange;
-            }
+            s_EnabledInstances.Remove(this);
+            if (s_EnabledInstances.Count == 0)
+                InputSystem.onActionChange -= OnActionChange;
 
             if (m_Visualization == Visualization.Interaction && m_Action != null)
             {

@@ -1,6 +1,5 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
@@ -176,16 +175,12 @@ namespace UnityEngine.InputSystem.LowLevel
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
-#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
-        bool normalizeScrollWheelDelta { get; set; }
-        float scrollWheelDeltaPerTick { get; }
-#endif
-
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
         #if UNITY_ANALYTICS || UNITY_EDITOR
-        void SendAnalytic(InputAnalytics.IInputAnalytic analytic);
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+        void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
+        void SendAnalyticsEvent(string name, object data);
+        #endif
 
         bool isInBatchMode { get; }
 
