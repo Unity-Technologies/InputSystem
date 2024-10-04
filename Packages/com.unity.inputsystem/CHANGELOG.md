@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
 
 ### Added
