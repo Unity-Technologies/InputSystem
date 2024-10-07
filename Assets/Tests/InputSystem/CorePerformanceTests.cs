@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -1100,4 +1101,70 @@ internal class CorePerformanceTests : CoreTestsFixture
     }
 
 #endif
+
+#if UNITY_2022_3_OR_NEWER
+    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+    [UnityTest, Performance]
+    [Category("Performance")] 
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkersSimpleUseCase()
+    {
+        string[] markers =
+        {
+            "InputUpdate",
+            "InputSystem.onBeforeUpdate",
+            "InputSystem.onAfterUpdate",
+            "PreUpdate.NewInputUpdate",
+            "PreUpdate.InputForUIUpdate",
+            "FixedUpdate.NewInputFixedUpdate"
+        };  
+        
+        using(Measure.ProfilerMarkers(markers))
+        {
+            var gamepad = InputSystem.AddDevice<Gamepad>();
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            for (var i = 0; i < 100; ++i)
+            {
+                Set(gamepad.leftStick, new Vector2(i / 1000f, i / 1000f), queueEventOnly: true);
+                Press(gamepad.buttonSouth, queueEventOnly: true);
+                Press(gamepad.buttonNorth, queueEventOnly: true);
+                Release(gamepad.buttonSouth, queueEventOnly: true);
+                Release(gamepad.buttonNorth, queueEventOnly: true);
+
+                PressAndRelease(keyboard.wKey, queueEventOnly: true);
+                PressAndRelease(keyboard.aKey, queueEventOnly: true);
+                PressAndRelease(keyboard.sKey, queueEventOnly: true);
+                PressAndRelease(keyboard.dKey, queueEventOnly: true);                
+
+                InputSystem.Update();
+                yield return null;
+             }
+        }
+    }
+
+    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+    [UnityTest, Performance]
+    [Category("Performance")]
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkersDoingNothing()
+    {
+        string[] markers =
+        {
+            "InputUpdate",
+            "InputSystem.onBeforeUpdate",
+            "InputSystem.onAfterUpdate",
+            "PreUpdate.NewInputUpdate",
+            "PreUpdate.InputForUIUpdate",
+            "FixedUpdate.NewInputFixedUpdate"
+        };       
+
+        yield return Measure.Frames()
+            .WarmupCount(30)
+            .DontRecordFrametime() 
+            .MeasurementCount(300)
+            .ProfilerMarkers(markers)
+            .Run();        
+    }
 }
+#endif
