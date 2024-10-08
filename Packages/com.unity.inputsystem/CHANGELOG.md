@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
 - Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
 - Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656)
@@ -31,6 +32,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "MissingReferenceException" errors when closing an in-game dropdown field [ISXB-1081](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1081).
 - Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
+- Fixed simulated touch input not working with PlayerInput component [ISXB-483](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-483).
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
