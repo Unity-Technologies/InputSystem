@@ -2,6 +2,7 @@ using System;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
@@ -34,6 +35,14 @@ namespace UnityEngine.InputSystem.OnScreen
     /// types of device layouts (e.g. one control references 'buttonWest' on
     /// a gamepad and another references 'leftButton' on a mouse), then a device
     /// is created for each type referenced by the setup.
+    ///
+    /// The <see cref="OnScreenControl"/> works by simulating events from the device specified in the <see cref="OnScreenControl.controlPath"/>
+    /// property. Some parts of the Input System, such as the <see cref="PlayerInput"/> component, can be set up to
+    /// auto-switch <see cref="PlayerInput.neverAutoSwitchControlSchemes"/> to a new device when input from them is detected.
+    /// When a device is switched, any currently running inputs from the previously active device are cancelled.
+    ///
+    /// To avoid this situation, you need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent
+    /// control schemes of the simulated device.
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
@@ -208,13 +217,45 @@ namespace UnityEngine.InputSystem.OnScreen
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
+        // Used by PlayerInput auto switch for scheme to prevent using Pointer device.
+        internal static bool HasAnyActive => s_nbActiveInstances != 0;
+        private static int s_nbActiveInstances = 0;
+
         protected virtual void OnEnable()
         {
+            ++s_nbActiveInstances;
             SetupInputControl();
+            if (m_Control == null)
+                return;
+            // if we are in single player and if it the first active switch to the target device.
+            if (s_nbActiveInstances == 1 &&
+                PlayerInput.isSinglePlayer)
+            {
+                var firstPlayer = PlayerInput.GetPlayerByIndex(0);
+                if (firstPlayer?.neverAutoSwitchControlSchemes == false)
+                {
+                    var devices = firstPlayer.devices;
+                    bool deviceFound = false;
+                    // skip is the device is already part of the current scheme
+                    foreach (var device in devices)
+                    {
+                        if (m_Control.device.deviceId == device.deviceId)
+                        {
+                            deviceFound = true;
+                            break;
+                        }
+                    }
+                    if (!deviceFound)
+                    {
+                        firstPlayer.SwitchCurrentControlScheme(m_Control.device);
+                    }
+                }
+            }
         }
 
         protected virtual void OnDisable()
         {
+            --s_nbActiveInstances;
             if (m_Control == null)
                 return;
 

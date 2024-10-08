@@ -365,6 +365,33 @@ internal class OnScreenTests : CoreTestsFixture
         Assert.That(InputSystem.devices, Has.None.InstanceOf<Keyboard>());
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_DisablingLastOnScreenControlDoesReportActiveControl()
+    {
+        var gameObject = new GameObject();
+
+        Assert.That(OnScreenControl.HasAnyActive, Is.False);
+
+        var buttonA = gameObject.AddComponent<OnScreenButton>();
+
+        Assert.That(OnScreenControl.HasAnyActive, Is.True);
+
+        var buttonB = gameObject.AddComponent<OnScreenButton>();
+        buttonA.controlPath = "/<Keyboard>/a";
+        buttonB.controlPath = "/<Keyboard>/b";
+
+        Assert.That(OnScreenControl.HasAnyActive, Is.True);
+
+        buttonA.enabled = false;
+
+        Assert.That(OnScreenControl.HasAnyActive, Is.True);
+
+        buttonB.enabled = false;
+
+        Assert.That(OnScreenControl.HasAnyActive, Is.False);
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1271942
     [UnityTest]
     [Category("Devices")]

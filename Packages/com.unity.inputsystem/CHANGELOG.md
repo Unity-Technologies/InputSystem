@@ -13,13 +13,15 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
+- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656)
+
+### Changed
+- Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
-
-### Fixed
-- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
 
 ## [1.11.1] - 2024-09-26
 

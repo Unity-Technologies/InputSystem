@@ -23,13 +23,15 @@ namespace UnityEngine.InputSystem.OnScreen
     /// <remarks>
     /// The <see cref="OnScreenStick"/> works by simulating events from the device specified in the <see cref="OnScreenControl.controlPath"/>
     /// property. Some parts of the Input System, such as the <see cref="PlayerInput"/> component, can be set up to
-    /// auto-switch to a new device when input from them is detected. When a device is switched, any currently running
-    /// inputs from the previously active device are cancelled. In the case of <see cref="OnScreenStick"/>, this can mean that the
-    /// <see cref="IPointerUpHandler.OnPointerUp"/> method will be called and the stick will jump back to center, even though
-    /// the pointer input has not physically been released.
+    /// auto-switch <see cref="PlayerInput.neverAutoSwitchControlSchemes"/> to a new device when input from them is detected.
+    /// When a device is switched, any currently running inputs from the previously active device are cancelled.
+    /// In the case of <see cref="OnScreenStick"/>, this can mean that the <see cref="IPointerUpHandler.OnPointerUp"/> method will be called
+    /// and the stick will jump back to center, even though the pointer input has not physically been released.
     ///
     /// To avoid this situation, set the <see cref="useIsolatedInputActions"/> property to true. This will create a set of local
     /// Input Actions to drive the stick that are not cancelled when device switching occurs.
+    /// You might also need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent
+    /// control schemes of the simulated device.
     /// </remarks>
     [AddComponentMenu("Input/On-Screen Stick")]
     [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
