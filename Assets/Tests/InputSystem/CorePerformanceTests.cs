@@ -1126,6 +1126,8 @@ internal class CorePerformanceTests : CoreTestsFixture
         var moveAction = InputSystem.actions.FindAction("Move");
         var lookAction = InputSystem.actions.FindAction("Look");
         var attackAction = InputSystem.actions.FindAction("Attack");
+        var jumpAction = InputSystem.actions.FindAction("Jump");
+        var sprintAction = InputSystem.actions.FindAction("Sprint");
             
         int performedCallCount = 0;
 
@@ -1143,95 +1145,50 @@ internal class CorePerformanceTests : CoreTestsFixture
             
             performedCallCount++; 
         };
+
+        jumpAction.performed += context => { 
+            
+            performedCallCount++;
+        };
+
+        sprintAction.performed += context => { 
+            
+            performedCallCount++; 
+        };
         
         using(Measure.ProfilerMarkers(markers))
         {   
-            for (var i = 0; i < 100; ++i)
+            for (int i = 0; i < 500; ++i)
             {
                 PressAndRelease(keyboard.wKey, queueEventOnly: true);
                 PressAndRelease(keyboard.aKey, queueEventOnly: true);
                 PressAndRelease(keyboard.sKey, queueEventOnly: true);
                 PressAndRelease(keyboard.dKey, queueEventOnly: true);
 
+                PressAndRelease(keyboard.leftShiftKey, queueEventOnly: true);
+
+                PressAndRelease(keyboard.spaceKey, queueEventOnly: true);
+
                 Click(mouse.leftButton, queueEventOnly: true);                
                 
-                Move(mouse.position, new Vector2(i, i), queueEventOnly: true);
+                //mouse movements for higher polling mice (66*60 ~ 4kHz)
+                for (int j = 0; j < 66; ++j) {
+                    
+                    Move(mouse.position, new Vector2(i+j, i+j), queueEventOnly: true);
+                }
 
-                InputSystem.Update();                                
+                InputSystem.Update();
                 
                 yield return null;
              }
         }
     }
-
-    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
-    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
-    [UnityTest, Performance]
-    [Category("Performance")] 
-    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_Touch()
-    {
-        string[] markers =
-        {
-            "InputUpdate",
-            "InputSystem.onBeforeUpdate",
-            "InputSystem.onAfterUpdate",
-            "PreUpdate.NewInputUpdate",
-            "PreUpdate.InputForUIUpdate",
-            "FixedUpdate.NewInputFixedUpdate"
-        };
-
-        var touchScreen = InputSystem.AddDevice<Touchscreen>();        
-            
-        int performedCallCount = 0;
-               
-        var lookAction = InputSystem.actions.FindAction("Look");
-        var attackAction = InputSystem.actions.FindAction("Attack");
-        attackAction.AddBinding("<Pointer>/press");
-
-        
-        lookAction.performed += context => { 
-            
-            performedCallCount++;
-            //Debug.Log(context.control.ToString());
-        };
-        
-        attackAction.performed += context => {
-            
-            performedCallCount++; 
-            Debug.Log(context.control.ToString());
-        };        
-        
-        BeginTouch(1, new Vector2(1, 2), queueEventOnly: true);
-
-        using(Measure.ProfilerMarkers(markers))
-        {   
-            for (var i = 0; i < 100; ++i)
-            {
-                MoveTouch(1, new Vector2(1+i, 2+i), queueEventOnly: true);
-                
-                if(i % 2 == 0) {
-                    BeginTouch(2, new Vector2(40+i, 40+i), queueEventOnly: true);                    
-                }
-
-                else {
-                    EndTouch(2, new Vector2(40+i-1, 40+i-1), queueEventOnly: true);                    
-                }
-
-                InputSystem.Update();                
-
-                Debug.Log(performedCallCount);
-                
-                yield return null;
-             }
-        }
-    }
-
 
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
     [UnityTest, Performance]
     [Category("Performance")]
-    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkersDoingNothing()
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_DoingNothing()
     {
         string[] markers =
         {
@@ -1246,7 +1203,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         yield return Measure.Frames()
             .WarmupCount(30)
             .DontRecordFrametime() 
-            .MeasurementCount(300)
+            .MeasurementCount(500)
             .ProfilerMarkers(markers)
             .Run();        
     }
