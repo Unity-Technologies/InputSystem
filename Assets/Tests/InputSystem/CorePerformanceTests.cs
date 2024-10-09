@@ -13,6 +13,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
+using static System.Collections.Specialized.BitVector32;
 
 ////TODO: add test for domain reload logic
 
@@ -1107,7 +1108,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
     [UnityTest, Performance]
     [Category("Performance")] 
-    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkersSimpleUseCase()
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_FPS()
     {
         string[] markers =
         {
@@ -1118,30 +1119,113 @@ internal class CorePerformanceTests : CoreTestsFixture
             "PreUpdate.InputForUIUpdate",
             "FixedUpdate.NewInputFixedUpdate"
         };  
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+            
+        var moveAction = InputSystem.actions.FindAction("Move");
+        var lookAction = InputSystem.actions.FindAction("Look");
+        var attackAction = InputSystem.actions.FindAction("Attack");
+            
+        int performedCallCount = 0;
+
+        moveAction.performed += context => { 
+            
+            performedCallCount++;    
+        };
+        
+        lookAction.performed += context => {
+            
+            performedCallCount++; 
+        };
+        
+        attackAction.performed += context => { 
+            
+            performedCallCount++; 
+        };
         
         using(Measure.ProfilerMarkers(markers))
-        {
-            var gamepad = InputSystem.AddDevice<Gamepad>();
-            var keyboard = InputSystem.AddDevice<Keyboard>();
-
+        {   
             for (var i = 0; i < 100; ++i)
             {
-                Set(gamepad.leftStick, new Vector2(i / 1000f, i / 1000f), queueEventOnly: true);
-                Press(gamepad.buttonSouth, queueEventOnly: true);
-                Press(gamepad.buttonNorth, queueEventOnly: true);
-                Release(gamepad.buttonSouth, queueEventOnly: true);
-                Release(gamepad.buttonNorth, queueEventOnly: true);
-
                 PressAndRelease(keyboard.wKey, queueEventOnly: true);
                 PressAndRelease(keyboard.aKey, queueEventOnly: true);
                 PressAndRelease(keyboard.sKey, queueEventOnly: true);
-                PressAndRelease(keyboard.dKey, queueEventOnly: true);                
+                PressAndRelease(keyboard.dKey, queueEventOnly: true);
 
-                InputSystem.Update();
+                Click(mouse.leftButton, queueEventOnly: true);                
+                
+                Move(mouse.position, new Vector2(i, i), queueEventOnly: true);
+
+                InputSystem.Update();                                
+                
                 yield return null;
              }
         }
     }
+
+    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+    [UnityTest, Performance]
+    [Category("Performance")] 
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_Touch()
+    {
+        string[] markers =
+        {
+            "InputUpdate",
+            "InputSystem.onBeforeUpdate",
+            "InputSystem.onAfterUpdate",
+            "PreUpdate.NewInputUpdate",
+            "PreUpdate.InputForUIUpdate",
+            "FixedUpdate.NewInputFixedUpdate"
+        };
+
+        var touchScreen = InputSystem.AddDevice<Touchscreen>();        
+            
+        int performedCallCount = 0;
+               
+        var lookAction = InputSystem.actions.FindAction("Look");
+        var attackAction = InputSystem.actions.FindAction("Attack");
+        attackAction.AddBinding("<Pointer>/press");
+
+        
+        lookAction.performed += context => { 
+            
+            performedCallCount++;
+            //Debug.Log(context.control.ToString());
+        };
+        
+        attackAction.performed += context => {
+            
+            performedCallCount++; 
+            Debug.Log(context.control.ToString());
+        };        
+        
+        BeginTouch(1, new Vector2(1, 2), queueEventOnly: true);
+
+        using(Measure.ProfilerMarkers(markers))
+        {   
+            for (var i = 0; i < 100; ++i)
+            {
+                MoveTouch(1, new Vector2(1+i, 2+i), queueEventOnly: true);
+                
+                if(i % 2 == 0) {
+                    BeginTouch(2, new Vector2(40+i, 40+i), queueEventOnly: true);                    
+                }
+
+                else {
+                    EndTouch(2, new Vector2(40+i-1, 40+i-1), queueEventOnly: true);                    
+                }
+
+                InputSystem.Update();                
+
+                Debug.Log(performedCallCount);
+                
+                yield return null;
+             }
+        }
+    }
+
 
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
