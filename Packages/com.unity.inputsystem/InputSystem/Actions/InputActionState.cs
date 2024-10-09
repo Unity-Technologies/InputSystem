@@ -2447,10 +2447,10 @@ namespace UnityEngine.InputSystem
                 newState.magnitude = 0f;
 
             newState.phase = newPhase;
+            newState.frame = Time.frameCount;
             if (newPhase == InputActionPhase.Performed)
             {
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
-                newState.frame = Time.frameCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
