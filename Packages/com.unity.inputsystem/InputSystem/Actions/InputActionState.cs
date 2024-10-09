@@ -560,6 +560,7 @@ namespace UnityEngine.InputSystem
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
                 newActionState.bindingIndex = oldActionState.bindingIndex;
+                newActionState.frame = oldActionState.frame;
 
                 if (oldActionState.phase != InputActionPhase.Disabled)
                 {
@@ -884,6 +885,7 @@ namespace UnityEngine.InputSystem
                 actionState->lastCompletedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
+                actionState->frame = default;
             }
 
             Debug.Assert(!actionState->isStarted, "Cannot reset an action to started phase");
@@ -2448,6 +2450,7 @@ namespace UnityEngine.InputSystem
             if (newPhase == InputActionPhase.Performed)
             {
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.frame = Time.frameCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
@@ -3627,7 +3630,7 @@ namespace UnityEngine.InputSystem
         /// other is to represent the current actuation state of an action as a whole. The latter is stored in <see cref="actionStates"/>
         /// while the former is passed around as temporary instances on the stack.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 52)]
+        [StructLayout(LayoutKind.Explicit, Size = 56)]
         public struct TriggerState
         {
             public const int kMaxNumMaps = byte.MaxValue;
@@ -3651,6 +3654,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
+            [FieldOffset(52)] private int m_Frame;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3804,6 +3808,12 @@ namespace UnityEngine.InputSystem
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
+            }
+
+            internal int frame
+            {
+                get => m_Frame;
+                set => m_Frame = value;
             }
 
             /// <summary>
