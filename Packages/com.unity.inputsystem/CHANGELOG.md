@@ -13,14 +13,12 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
+- Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
-
-### Fixed
-- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
-- Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
 
 ## [1.11.1] - 2024-09-26
 
