@@ -91,10 +91,16 @@ namespace UnityEngine.InputSystem.OnScreen
                     if (m_PointerDownAction == null)
                         m_PointerDownAction = new InputAction();
 
+                    #if UNITY_EDITOR
+                    InputExitPlayModeAnalytic.suppress = true;
+                    #endif
                     m_PointerDownAction.AddBinding("<Mouse>/leftButton");
                     m_PointerDownAction.AddBinding("<Pen>/tip");
                     m_PointerDownAction.AddBinding("<Touchscreen>/touch*/press");
                     m_PointerDownAction.AddBinding("<XRController>/trigger");
+                    #if UNITY_EDITOR
+                    InputExitPlayModeAnalytic.suppress = false;
+                    #endif
                 }
 
                 if (m_PointerMoveAction == null || m_PointerMoveAction.bindings.Count == 0)
@@ -102,9 +108,15 @@ namespace UnityEngine.InputSystem.OnScreen
                     if (m_PointerMoveAction == null)
                         m_PointerMoveAction = new InputAction();
 
+                    #if UNITY_EDITOR
+                    InputExitPlayModeAnalytic.suppress = true;
+                    #endif
                     m_PointerMoveAction.AddBinding("<Mouse>/position");
                     m_PointerMoveAction.AddBinding("<Pen>/position");
                     m_PointerMoveAction.AddBinding("<Touchscreen>/touch*/position");
+                    #if UNITY_EDITOR
+                    InputExitPlayModeAnalytic.suppress = false;
+                    #endif
                 }
 
                 m_PointerDownAction.started += OnPointerDown;
@@ -134,6 +146,15 @@ namespace UnityEngine.InputSystem.OnScreen
 
             image.sprite = SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
             image.alphaHitTestMinimumThreshold = 0.5f;
+        }
+
+        private void OnDestroy()
+        {
+            if (m_UseIsolatedInputActions)
+            {
+                m_PointerDownAction.started -= OnPointerDown;
+                m_PointerDownAction.canceled -= OnPointerUp;
+            }
         }
 
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
