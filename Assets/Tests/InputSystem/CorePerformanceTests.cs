@@ -1103,11 +1103,11 @@ internal class CorePerformanceTests : CoreTestsFixture
 
 #endif
 
-#if UNITY_2022_3_OR_NEWER
+    #if UNITY_2022_3_OR_NEWER
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
     [UnityTest, Performance]
-    [Category("Performance")] 
+    [Category("Performance")]
     public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_FPS()
     {
         string[] markers =
@@ -1118,46 +1118,41 @@ internal class CorePerformanceTests : CoreTestsFixture
             "PreUpdate.NewInputUpdate",
             "PreUpdate.InputForUIUpdate",
             "FixedUpdate.NewInputFixedUpdate"
-        };  
+        };
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
-            
+
         var moveAction = InputSystem.actions.FindAction("Move");
         var lookAction = InputSystem.actions.FindAction("Look");
         var attackAction = InputSystem.actions.FindAction("Attack");
         var jumpAction = InputSystem.actions.FindAction("Jump");
         var sprintAction = InputSystem.actions.FindAction("Sprint");
-            
+
         int performedCallCount = 0;
 
-        moveAction.performed += context => { 
-            
-            performedCallCount++;    
-        };
-        
-        lookAction.performed += context => {
-            
-            performedCallCount++; 
-        };
-        
-        attackAction.performed += context => { 
-            
-            performedCallCount++; 
-        };
-
-        jumpAction.performed += context => { 
-            
+        moveAction.performed += context => {
             performedCallCount++;
         };
 
-        sprintAction.performed += context => { 
-            
-            performedCallCount++; 
+        lookAction.performed += context => {
+            performedCallCount++;
         };
-        
-        using(Measure.ProfilerMarkers(markers))
-        {   
+
+        attackAction.performed += context => {
+            performedCallCount++;
+        };
+
+        jumpAction.performed += context => {
+            performedCallCount++;
+        };
+
+        sprintAction.performed += context => {
+            performedCallCount++;
+        };
+
+        using (Measure.ProfilerMarkers(markers))
+        {
             for (int i = 0; i < 500; ++i)
             {
                 PressAndRelease(keyboard.wKey, queueEventOnly: true);
@@ -1169,18 +1164,18 @@ internal class CorePerformanceTests : CoreTestsFixture
 
                 PressAndRelease(keyboard.spaceKey, queueEventOnly: true);
 
-                Click(mouse.leftButton, queueEventOnly: true);                
-                
+                Click(mouse.leftButton, queueEventOnly: true);
+
                 //mouse movements for higher polling mice (66*60 ~ 4kHz)
-                for (int j = 0; j < 66; ++j) {
-                    
-                    Move(mouse.position, new Vector2(i+j, i+j), queueEventOnly: true);
+                for (int j = 0; j < 66; ++j)
+                {
+                    Move(mouse.position, new Vector2(i + j, i + j), queueEventOnly: true);
                 }
 
                 InputSystem.Update();
-                
+
                 yield return null;
-             }
+            }
         }
     }
 
@@ -1198,14 +1193,15 @@ internal class CorePerformanceTests : CoreTestsFixture
             "PreUpdate.NewInputUpdate",
             "PreUpdate.InputForUIUpdate",
             "FixedUpdate.NewInputFixedUpdate"
-        };       
+        };
 
         yield return Measure.Frames()
             .WarmupCount(30)
-            .DontRecordFrametime() 
+            .DontRecordFrametime()
             .MeasurementCount(500)
             .ProfilerMarkers(markers)
-            .Run();        
+            .Run();
     }
+
+    #endif
 }
-#endif
