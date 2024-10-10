@@ -123,8 +123,8 @@ namespace UnityEngine.InputSystem
         /// Mark the interaction has having begun.
         /// </summary>
         /// <remarks>
-        /// Note that this affects the current interaction only. There may be multiple interactions on a binding
-        /// and arbitrary many interactions may concurrently be in started state. However, only one interaction
+        /// This affects the current interaction only. There might be multiple interactions on a binding
+        /// and arbitrary many interactions might concurrently be in started state. However, only one interaction
         /// (usually the one that starts first) is allowed to drive the action's state as a whole. If an interaction
         /// that is currently driving an action is canceled, however, the next interaction in the list that has
         /// been started will take over and continue driving the action.
@@ -161,6 +161,18 @@ namespace UnityEngine.InputSystem
             m_State.ChangePhaseOfInteraction(InputActionPhase.Started, ref m_TriggerState);
         }
 
+        /// <summary>
+        /// Marks the interaction as being performed and then transitions back to <see cref="InputActionPhase.Waiting"/>
+        /// to wait for input. This behavior is desirable for interaction events that are instant and reflect
+        /// a transitional interaction pattern such as <see cref="Interactions.PressInteraction"/> or <see cref="Interactions.TapInteraction"/>.
+        /// </summary>
+        /// <remarks>
+        /// Note that this affects the current interaction only. There might be multiple interactions on a binding
+        /// and arbitrary many interactions might concurrently be in started state. However, only one interaction
+        /// (usually the one that starts first) is allowed to drive the action's state as a whole. If an interaction
+        /// that is currently driving an action is canceled, however, the next interaction in the list that has
+        /// been started will take over and continue driving the action.
+        /// </remarks>
         public void Performed()
         {
             if (m_TriggerState.phase == InputActionPhase.Waiting)
@@ -168,6 +180,12 @@ namespace UnityEngine.InputSystem
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
 
+        /// <summary>
+        /// Marks the interaction as being performed and then transitions into I <see cref="InputActionPhase.Started"/>
+        /// to wait for an initial trigger condition to be true before being performed again. This behavior
+        /// may be desirable for interaction events that reflect transitional interaction patterns but should
+        /// be considered as started until a cancellation condition is true, such as releasing a button.
+        /// </summary>
         public void PerformedAndStayStarted()
         {
             if (m_TriggerState.phase == InputActionPhase.Waiting)
@@ -176,6 +194,12 @@ namespace UnityEngine.InputSystem
                 phaseAfterPerformed: InputActionPhase.Started);
         }
 
+        /// <summary>
+        /// Marks the interaction as being performed and then stays in that state waiting for an input to
+        /// cancel the interactions active state. This behavior is desirable for interaction events that
+        /// are active for a duration until a cancellation condition is true, such as <see cref="Interactions.HoldInteraction"/> or <see cref="Interactions.TapInteraction"/> where releasing
+        /// the associated button cancels the interaction..
+        /// </summary>
         public void PerformedAndStayPerformed()
         {
             if (m_TriggerState.phase == InputActionPhase.Waiting)
@@ -184,6 +208,16 @@ namespace UnityEngine.InputSystem
                 phaseAfterPerformed: InputActionPhase.Performed);
         }
 
+        /// <summary>
+        ///  Marks the interaction as being interrupted or aborted. This is relevant to signal that the interaction
+        ///  pattern was not completed, for example, the user pressed and then released a button before the minimum
+        ///  time required for a <see cref="Interactions.HoldInteraction"/> to complete.
+        /// </summary>
+        /// <remarks>
+        /// This is used by most existing interactions to cancel the transitions in the interaction state machine
+        /// when a condition required to proceed turned false or other indirect requirements were not met, such as
+        /// time-based conditions.
+        /// </remarks>
         public void Canceled()
         {
             if (m_TriggerState.phase != InputActionPhase.Canceled)

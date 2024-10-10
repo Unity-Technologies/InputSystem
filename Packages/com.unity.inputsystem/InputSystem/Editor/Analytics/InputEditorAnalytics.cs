@@ -4,7 +4,7 @@ using System;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal static partial class InputEditorAnalytics
+    internal static class InputEditorAnalytics
     {
         /// <summary>
         /// Represents notification behavior setting associated with <see cref="PlayerInput"/> and
