@@ -1153,13 +1153,12 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         using (Measure.ProfilerMarkers(markers))
         {
-            
             Press(keyboard.wKey, queueEventOnly: true);
 
             for (int i = 0; i < 500; ++i)
             {
-                
-                if (i % 60 == 0) { 
+                if (i % 60 == 0)
+                {
                     PressAndRelease(keyboard.aKey, queueEventOnly: true);
                     PressAndRelease(keyboard.sKey, queueEventOnly: true);
                     PressAndRelease(keyboard.dKey, queueEventOnly: true);
