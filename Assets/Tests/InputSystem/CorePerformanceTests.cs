@@ -1153,21 +1153,26 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         using (Measure.ProfilerMarkers(markers))
         {
+            
+            Press(keyboard.wKey, queueEventOnly: true);
+
             for (int i = 0; i < 500; ++i)
             {
-                PressAndRelease(keyboard.wKey, queueEventOnly: true);
-                PressAndRelease(keyboard.aKey, queueEventOnly: true);
-                PressAndRelease(keyboard.sKey, queueEventOnly: true);
-                PressAndRelease(keyboard.dKey, queueEventOnly: true);
+                
+                if (i % 60 == 0) { 
+                    PressAndRelease(keyboard.aKey, queueEventOnly: true);
+                    PressAndRelease(keyboard.sKey, queueEventOnly: true);
+                    PressAndRelease(keyboard.dKey, queueEventOnly: true);
 
-                PressAndRelease(keyboard.leftShiftKey, queueEventOnly: true);
+                    PressAndRelease(keyboard.leftShiftKey, queueEventOnly: true);
 
-                PressAndRelease(keyboard.spaceKey, queueEventOnly: true);
+                    PressAndRelease(keyboard.spaceKey, queueEventOnly: true);
+                }
 
                 Click(mouse.leftButton, queueEventOnly: true);
 
-                //mouse movements for higher polling mice (66*60 ~ 4kHz)
-                for (int j = 0; j < 66; ++j)
+                //mouse movements for higher polling mice
+                for (int j = 0; j < 99; ++j)
                 {
                     Move(mouse.position, new Vector2(i + j, i + j), queueEventOnly: true);
                 }
