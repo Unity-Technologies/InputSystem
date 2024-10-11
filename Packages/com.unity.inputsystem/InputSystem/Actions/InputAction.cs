@@ -1236,7 +1236,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
             }
 
             return false;
@@ -1285,7 +1285,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
             }
 
             return false;
@@ -1344,7 +1344,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
             }
 
             return false;
@@ -1417,7 +1417,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
             }
 
             return false;
