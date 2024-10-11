@@ -4162,13 +4162,40 @@ partial class CoreTests
         recorder.CollectFromAllThreads();
 #endif
 
-        // We expect a single allocation for each call to ReportNewInputDevice when there is one disconnected device
-        //
-        int numberOfRepeats = 2;
-        int numberOfDisconnectedDevices = 1;
-        int numberOfCallsToReportNewInputDevicePerRun = 2;
-        int expectedAllocations = numberOfRepeats * numberOfDisconnectedDevices * numberOfCallsToReportNewInputDevicePerRun;
-        Assert.AreEqual(expectedAllocations, recorder.sampleBlockCount);
+        // No allocations are expected.
+        Assert.AreEqual(0, recorder.sampleBlockCount);
+    }
+
+    // Regression test to cover having null descriptor fields for a device. Some non-desktop gamepad device types do this.
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingAndReaddingDeviceWithNullDescriptorFields_DoesNotThrow()
+    {
+        // InputDeviceDescription.ToJson writes empty string fields and not null values, whereas reporting a device via an incomplete description string will fully omit the fields.
+        string description = @"{
+            ""type"": ""Gamepad"",
+            ""product"": ""TestProduct""
+        }";
+
+        var deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // "Unplug" device.
+        var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent1);
+        InputSystem.Update();
+
+        // "Plug" it back in.
+        deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // Repeat that sequence.
+        var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent2);
+        InputSystem.Update();
+
+        runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
     }
 
     [Test]
