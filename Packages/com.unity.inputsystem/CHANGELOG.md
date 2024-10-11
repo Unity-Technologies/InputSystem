@@ -25,6 +25,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
 
+### Changed
+- Removed the InputManager to InputSystem project-wide asset migration code for performance improvement (ISX-2086)
+
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
