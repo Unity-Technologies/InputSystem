@@ -1581,6 +1581,7 @@ namespace UnityEngine.InputSystem
             {
                 actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
                 actionState->isPressed = true;
+                actionState->frame = Time.frameCount;
             }
             else if (actionState->isPressed)
             {
@@ -1589,6 +1590,7 @@ namespace UnityEngine.InputSystem
                 {
                     actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
                     actionState->isPressed = false;
+                    actionState->frame = Time.frameCount;
                 }
             }
         }
