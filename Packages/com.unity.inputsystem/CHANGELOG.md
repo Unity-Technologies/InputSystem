@@ -13,7 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
 - Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
 - Fixed "AnalyticsResult" errors on consoles [ISXB-1107]
+- Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
 - Fixed event handling when using Fixed Update processing where WasPressedThisFrame could appear to true for consecutive frames [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1006)
 
 ### Added
@@ -21,7 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
 
 ### Fixed
-- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
+- Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
 
 ## [1.11.1] - 2024-09-26
 
