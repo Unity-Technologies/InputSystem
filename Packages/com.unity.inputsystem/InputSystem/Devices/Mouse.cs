@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public static FourCC Format => new FourCC('M', 'O', 'U', 'S');
 
         /// <summary>
-        /// Screen-space position of the mouse in pixels.
+        /// Screen-space position of the mouse in pixels. Updated independently from delta using WM. At high framerates, certain frames might not receive any new position data.
         /// </summary>
         /// <value>Position of mouse on screen.</value>
         /// <seealso cref="Pointer.position"/>
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 position;
 
         /// <summary>
-        /// Screen-space motion delta of the mouse in pixels.
+        /// Screen-space motion delta of the mouse in pixels. Updated independently from position using raw mouse input. At high framerates, certain frames might not receive any new delta data.
         /// </summary>
         /// <value>Mouse movement.</value>
         /// <seealso cref="Pointer.delta"/>
