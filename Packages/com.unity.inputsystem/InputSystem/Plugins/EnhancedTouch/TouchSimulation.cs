@@ -316,7 +316,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
             else
             {
-                touch.touchId = oldTouchState->touchId; // TODO: Follow-up develop: touch.touchId = m_TouchIds[touchIndex];
+                touch.touchId = m_TouchIds[touchIndex];
+                /*touch.touchId = oldTouchState->touchId; // TODO: Follow-up develop: touch.touchId = m_TouchIds[touchIndex];
                 touch.isPrimaryTouch = m_PrimaryTouchIndex == touchIndex;
                 touch.delta = position - oldTouchState->position;
                 touch.startPosition = oldTouchState->startPosition;
@@ -329,7 +330,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                         (position - oldTouchState->startPosition).sqrMagnitude <= Touchscreen.settings.tapRadiusSquared;
                     if (touch.isTap)
                         ++touch.tapCount;
-                }
+                }*/
             }
 
             //NOTE: Processing these events still happen in the current frame.
