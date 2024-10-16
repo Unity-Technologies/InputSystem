@@ -809,7 +809,7 @@ namespace UnityEngine.InputSystem
             ControlsForEachActionInitialized = 1 << 2,
             BindingsForEachActionInitialized = 1 << 3,
         }
-        
+
         internal struct DeviceArray
         {
             private bool m_HaveValue;
@@ -1207,7 +1207,7 @@ namespace UnityEngine.InputSystem
 
             needToResolveBindings = true;
             bindingResolutionNeedsFullReResolve |= fullResolve;
-            
+
             if (InputSystem.manager.areDeferredBindingsToResolve)
                 return false;
 

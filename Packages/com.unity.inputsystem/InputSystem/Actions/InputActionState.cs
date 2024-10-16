@@ -4509,7 +4509,7 @@ namespace UnityEngine.InputSystem
                 }
             }
         }
-        
+
         internal static void DisableAllActions()
         {
             for (var i = 0; i < s_GlobalState.globalList.length; ++i)

@@ -409,7 +409,7 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
+        var storedSettings = InputSystem.manager.settings;
         InputSettings defaultSettings = null;
 
         try
@@ -470,7 +470,7 @@ partial class CoreTests
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
+            InputSystem.manager.settings = storedSettings;
             if (defaultSettings != null)
                 Object.DestroyImmediate(defaultSettings);
         }
@@ -482,7 +482,7 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
+        var storedSettings = InputSystem.manager.settings;
         InputSettings customSettings = null;
 
         try
@@ -576,7 +576,7 @@ partial class CoreTests
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
+            InputSystem.manager.settings = storedSettings;
             if (customSettings != null)
                 Object.DestroyImmediate(customSettings);
         }

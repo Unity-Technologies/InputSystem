@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
         static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
 #endif
-        
+
         static InputSystem()
         {
             GlobalInitialize(true);
@@ -886,26 +886,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="UnityEngine.InputSystem.Editor.InputParameterEditor{TObject}"/>
         public static void RegisterProcessor(Type type, string name = null)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            // Default name to name of type without Processor suffix.
-            if (string.IsNullOrEmpty(name))
-            {
-                name = type.Name;
-                if (name.EndsWith("Processor"))
-                    name = name.Substring(0, name.Length - "Processor".Length);
-            }
-
-            // Flush out any precompiled layout depending on the processor.
-            var precompiledLayouts = s_Manager.m_Layouts.precompiledLayouts;
-            foreach (var key in new List<InternedString>(precompiledLayouts.Keys)) // Need to keep key list stable while iterating; ToList() for some reason not available with .NET Standard 2.0 on Mono.
-            {
-                if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
-                    s_Manager.m_Layouts.precompiledLayouts.Remove(key);
-            }
-
-            s_Manager.processors.AddTypeRegistration(name, type);
+            s_Manager.RegisterProcessor(type, name);
         }
 
         /// <summary>
@@ -3249,17 +3230,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="ListInteractions"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            if (string.IsNullOrEmpty(name))
-            {
-                name = type.Name;
-                if (name.EndsWith("Interaction"))
-                    name = name.Substring(0, name.Length - "Interaction".Length);
-            }
-
-            s_Manager.interactions.AddTypeRegistration(name, type);
+            s_Manager.RegisterInteraction(type, name);
         }
 
         /// <summary>
@@ -3318,17 +3289,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="TryGetBindingComposite"/>
         public static void RegisterBindingComposite(Type type, string name)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            if (string.IsNullOrEmpty(name))
-            {
-                name = type.Name;
-                if (name.EndsWith("Composite"))
-                    name = name.Substring(0, name.Length - "Composite".Length);
-            }
-
-            s_Manager.composites.AddTypeRegistration(name, type);
+            s_Manager.RegisterBindingComposite(type, name);
         }
 
         /// <summary>
@@ -3499,6 +3460,7 @@ namespace UnityEngine.InputSystem
 
             return true;
         }
+
         #endif //!UNITY_EDITOR
 #endif // DEVELOPMENT_BUILD || UNITY_EDITOR
 
@@ -3798,6 +3760,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
         }
+
 #endif // UNITY_INCLUDE_TESTS
 
         private static void RunInitialUpdate()

@@ -2793,7 +2793,7 @@ namespace UnityEngine.InputSystem
         {
             m_NeedToResolveBindings = true;
         }
-        
+
         public void Acquire()
         {
             ++m_DeferredCount;
@@ -2840,7 +2840,7 @@ namespace UnityEngine.InputSystem
 
                         for (var n = 0; n < state.totalMapCount; ++n)
                             state.maps[n].ResolveBindingsIfNecessary();
-                    }    
+                    }
                     m_NeedToResolveBindings = false;
                 }
             }
@@ -2849,7 +2849,6 @@ namespace UnityEngine.InputSystem
                 --m_DeferredCount;
             }
         }
-
 
         private int m_DeferredCount;
         private bool m_NeedToResolveBindings; // TODO Revisit: Was previously static, but based on changes by Alex+Tim might no longer be needed?!

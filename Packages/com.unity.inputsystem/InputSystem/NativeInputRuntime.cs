@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.LowLevel
         private static NativeInputRuntime s_Instance;
 
         // Private ctor exists to enforce Singleton pattern
-        private NativeInputRuntime() { }
+        private NativeInputRuntime() {}
 
         /// <summary>
         /// Employ the Singleton pattern for this class and initialize a new instance on first use.

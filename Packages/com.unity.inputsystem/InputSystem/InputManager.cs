@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     internal partial class InputManager : IDisposable
     {
-        private InputManager() { }
+        private InputManager() {}
 
         public static InputManager CreateAndInitialize(IInputRuntime runtime, InputSettings settings, bool fakeManagerForRemotingTests = false)
         {
@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem
             {
                 settings = ScriptableObject.CreateInstance<InputSettings>();
                 settings.hideFlags = HideFlags.HideAndDontSave;
-            }    
+            }
             newInstance.m_Settings = settings;
 
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem
             return newInstance;
         }
 
-#region Dispose implementation
+        #region Dispose implementation
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -133,8 +133,9 @@ namespace UnityEngine.InputSystem
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         private bool disposedValue;
-#endregion
+        #endregion
 
         public ReadOnlyArray<InputDevice> devices => new ReadOnlyArray<InputDevice>(m_Devices, 0, m_DevicesCount);
 
@@ -448,7 +449,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-            m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
+                     m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #else
             m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -1882,7 +1883,6 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Initialize project-wide actions:
         // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
@@ -1904,6 +1904,7 @@ namespace UnityEngine.InputSystem
             }
             #endif // UNITY_EDITOR
         }
+
         #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
@@ -2031,15 +2032,15 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (typeof(InputProcessor).IsAssignableFrom(type))
                 {
-                    InputSystem.RegisterProcessor(type);
+                    RegisterProcessor(type);
                 }
                 else if (typeof(IInputInteraction).IsAssignableFrom(type))
                 {
-                    InputSystem.RegisterInteraction(type);
+                    RegisterInteraction(type);
                 }
                 else if (typeof(InputBindingComposite).IsAssignableFrom(type))
                 {
-                    InputSystem.RegisterBindingComposite(type, null);
+                    RegisterBindingComposite(type, null);
                 }
             }
         }
@@ -2075,6 +2076,47 @@ namespace UnityEngine.InputSystem
             }
 
             k_InputRegisterCustomTypesMarker.End();
+        }
+
+        private static string GetRegisteredTypeDefaultName(Type type, string name, string suffix)
+        {
+            // Default name to name of type without suffix.
+            if (!string.IsNullOrEmpty(name))
+                return name;
+            name = type.Name;
+            if (name.EndsWith(suffix))
+                name = name.Substring(0, name.Length - suffix.Length);
+            return name;
+        }
+
+        internal void RegisterProcessor(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Processor");
+
+            // Flush out any precompiled layout depending on the processor.
+            var precompiledLayouts = m_Layouts.precompiledLayouts;
+            foreach (var key in new List<InternedString>(precompiledLayouts.Keys)) // Need to keep key list stable while iterating; ToList() for some reason not available with .NET Standard 2.0 on Mono.
+            {
+                if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
+                    m_Layouts.precompiledLayouts.Remove(key);
+            }
+
+            processors.AddTypeRegistration(name, type);
+        }
+
+        public void RegisterInteraction(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Interaction");
+            interactions.AddTypeRegistration(name, type);
+        }
+
+        public void RegisterBindingComposite(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Composite");
+            composites.AddTypeRegistration(name, type);
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2177,7 +2219,7 @@ namespace UnityEngine.InputSystem
         /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
         /// Using Acquire/Release semantics via the returned context object, binding resolution can be deferred until the entire operation
         /// is complete and the final binding setup is in place.
-        /// 
+        ///
         /// NOTE: Returned DeferBindingResolutionContext object is used globally for all ActionMaps.
         /// </remarks>
         internal DeferBindingResolutionContext DeferBindingResolution()
@@ -2272,7 +2314,7 @@ namespace UnityEngine.InputSystem
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
         #endif
-        
+
         private IInputRuntime m_Runtime;
         private InputMetrics m_Metrics;
         private InputSettings m_Settings;
@@ -2302,7 +2344,7 @@ namespace UnityEngine.InputSystem
             get => m_ParanoidReadValueCachingChecksEnabled;
             set => m_ParanoidReadValueCachingChecksEnabled = value;
         }
-        
+
         #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
         #endif
@@ -2914,8 +2956,9 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
+
         #endif
-    
+
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
@@ -3766,7 +3809,7 @@ namespace UnityEngine.InputSystem
         [Conditional("UNITY_EDITOR")]
         void CheckAllDevicesOptimizedControlsHaveValidState()
         {
-            if (!InputSystem.s_Manager.m_OptimizedControlsFeatureEnabled)
+            if (!InputSystem.manager.m_OptimizedControlsFeatureEnabled)
                 return;
 
             foreach (var device in devices)
@@ -3923,7 +3966,7 @@ namespace UnityEngine.InputSystem
             {
                 // Update the pressed/not pressed state of all buttons that have changed this update
                 // With enough ButtonControls being checked, it's faster to find out which have actually changed rather than test all.
-                if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
+                if (InputSystem.manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
                 {
                     foreach (var button in device.m_UpdatedButtons)
                     {
@@ -4000,7 +4043,7 @@ namespace UnityEngine.InputSystem
 
             // If we have enough ButtonControls being checked for wasPressedThisFrame/wasReleasedThisFrame,
             // use this path to find out which have actually changed here.
-            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
+            if (InputSystem.manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what
@@ -4318,6 +4361,7 @@ namespace UnityEngine.InputSystem
                 device.NotifyRemoved();
             }
         }
+
 #endif // !ENABLE_CORECLR
 
         // We have two general types of devices we need to care about when recreating devices
@@ -4372,6 +4416,7 @@ namespace UnityEngine.InputSystem
 
             return true;
         }
+
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
     }
 }

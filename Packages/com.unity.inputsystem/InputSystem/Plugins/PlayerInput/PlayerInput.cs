@@ -1649,6 +1649,7 @@ namespace UnityEngine.InputSystem
             m_Actions = InputSystem.actions;
             // TODO Need to monitor changes?
         }
+
 #endif
 
         private void OnEnable()

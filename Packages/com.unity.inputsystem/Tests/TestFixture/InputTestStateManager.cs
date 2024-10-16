@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem
     internal class InputTestStateManager
     {
         static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
-        
+
         public InputSystemState GetSavedState()
         {
             return m_SavedStateStack.Peek();

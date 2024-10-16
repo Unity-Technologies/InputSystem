@@ -145,7 +145,7 @@ namespace UnityEngine.InputSystem.Steam
             // Update controller state.
             api.RunFrame();
 
-            // Check if we have any new controllers have appeared.                
+            // Check if we have any new controllers have appeared.
             var numConnectedControllers = api.GetConnectedControllers(s_ConnectedControllers);
             for (var i = 0; i < numConnectedControllers; ++i)
             {

@@ -346,6 +346,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
     }
+
 #endif // !ENABLE_CORECLR
 
     [Test]

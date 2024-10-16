@@ -51,6 +51,7 @@ namespace UnityEngine.InputSystem
             InputSystem.s_PluginsInitialized = false;
             InputSystem.InitializeInEditor(true, runtime);
         }
+
 #endif
 #endif // UNITY_EDITOR
 

@@ -392,7 +392,7 @@ namespace UnityEngine.InputSystem.Editor
 
             public void OnPostprocessBuild(BuildReport report)
             {
-                InputSystem.s_Manager?.m_Runtime?.SendAnalytic(new InputBuildAnalytic(report));
+                InputSystem.manager?.runtime?.SendAnalytic(new InputBuildAnalytic(report));
             }
         }
     }
