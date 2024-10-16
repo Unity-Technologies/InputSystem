@@ -2789,11 +2789,6 @@ namespace UnityEngine.InputSystem
     {
         public int deferredCount => m_DeferredCount;
 
-        public void InvalidateBindings()
-        {
-            m_NeedToResolveBindings = true;
-        }
-
         public void Acquire()
         {
             ++m_DeferredCount;
@@ -2819,7 +2814,7 @@ namespace UnityEngine.InputSystem
             ++m_DeferredCount;
             try
             {
-                if (m_NeedToResolveBindings)
+                if (bindingsNeedResolving)
                 {
                     ref var globalList = ref InputActionState.s_GlobalState.globalList;
 
@@ -2841,7 +2836,7 @@ namespace UnityEngine.InputSystem
                         for (var n = 0; n < state.totalMapCount; ++n)
                             state.maps[n].ResolveBindingsIfNecessary();
                     }
-                    m_NeedToResolveBindings = false;
+                    bindingsNeedResolving = false;
                 }
             }
             finally
@@ -2851,6 +2846,6 @@ namespace UnityEngine.InputSystem
         }
 
         private int m_DeferredCount;
-        private bool m_NeedToResolveBindings; // TODO Revisit: Was previously static, but based on changes by Alex+Tim might no longer be needed?!
+        public bool bindingsNeedResolving; // TODO Revisit: Was previously static, but based on changes by Alex+Tim might no longer be needed?!
     }
 }

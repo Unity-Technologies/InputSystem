@@ -319,7 +319,7 @@ namespace UnityEngine.InputSystem
         public InputActionMap()
         {
             if (InputSystem.manager != null)
-                InputSystem.manager.InvalidateBindings();
+                InputSystem.manager.bindingsNeedResolving = true;
         }
 
         /// <summary>
@@ -1193,9 +1193,6 @@ namespace UnityEngine.InputSystem
             m_ControlsForEachAction = null;
             controlsForEachActionInitialized = false;
 
-            // Indicate that there is at least one action map that has a change
-            InputSystem.manager.InvalidateBindings();
-
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)
@@ -1987,7 +1984,7 @@ namespace UnityEngine.InputSystem
         {
             // Indicate that there is at least one action map that has a change
             if (InputSystem.manager != null)
-                InputSystem.manager.InvalidateBindings();
+                InputSystem.manager.bindingsNeedResolving = true;
 
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;

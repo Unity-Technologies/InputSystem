@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem
             newInstance.ApplyActions();
             #endif
             
-            newInstance.InvalidateBindings();
+            newInstance.bindingsNeedResolving = true;
             return newInstance;
         }
 
@@ -2230,12 +2230,12 @@ namespace UnityEngine.InputSystem
             return m_DeferBindingResolutionContext;
         }
 
-        internal void InvalidateBindings()
-        {
-            m_DeferBindingResolutionContext.InvalidateBindings();
-        }
-
         internal bool areDeferredBindingsToResolve => m_DeferBindingResolutionContext.deferredCount > 0;
+        public bool bindingsNeedResolving
+        {
+            get => m_DeferBindingResolutionContext.bindingsNeedResolving;
+            set => m_DeferBindingResolutionContext.bindingsNeedResolving = value;
+        }
 
         [Serializable]
         internal struct AvailableDevice
