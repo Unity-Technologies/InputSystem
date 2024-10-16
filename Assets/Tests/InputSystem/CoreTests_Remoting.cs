@@ -297,7 +297,7 @@ partial class CoreTests
         connectionToPlayer.Bind(fakeEditorConnection, true);
 
         // Bind a local remote on the player side.
-        var local = new InputRemoting(InputSystem.s_Manager);
+        var local = new InputRemoting(InputSystem.manager);
         local.Subscribe(connectionToEditor);
 
         connectionToEditor.Subscribe(local);
@@ -477,17 +477,13 @@ partial class CoreTests
         public FakeRemote()
         {
             runtime = new InputTestRuntime();
-            var manager = new InputManager();
-            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.InitializeData();
-            manager.InstallRuntime(runtime);
-            manager.ApplySettings();
+            var manager = InputManager.CreateAndInitialize(runtime, null, true);
 
-            local = new InputRemoting(InputSystem.s_Manager);
+            local = new InputRemoting(InputSystem.manager);
             remote = new InputRemoting(manager);
 
             var remoteInstaller = new GlobalsInstallerObserver(manager);
-            var localInstaller = new GlobalsInstallerObserver(InputSystem.s_Manager);
+            var localInstaller = new GlobalsInstallerObserver(InputSystem.manager);
 
             // The installers will ensure the globals environment is prepared right before
             // the receiver processes the message. There are some static fields, such as
@@ -505,14 +501,12 @@ partial class CoreTests
 
         public void SwitchToRemoteState()
         {
-            InputSystem.s_Manager = remoteManager;
-            InputStateBuffers.SwitchTo(remoteManager.m_StateBuffers, remoteManager.defaultUpdateType);
+            InputSystem.TestHook_SwitchToDifferentInputManager(remoteManager);
         }
 
         public void SwitchToLocalState()
         {
-            InputSystem.s_Manager = localManager;
-            InputStateBuffers.SwitchTo(localManager.m_StateBuffers, localManager.defaultUpdateType);
+            InputSystem.TestHook_SwitchToDifferentInputManager(localManager);
         }
 
         public void Dispose()
@@ -524,8 +518,8 @@ partial class CoreTests
             }
             if (remoteManager != null)
             {
-                Object.Destroy(remoteManager.m_Settings);
-                remoteManager.Destroy();
+                Object.Destroy(remoteManager.settings);
+                remoteManager.Dispose();
             }
         }
     }

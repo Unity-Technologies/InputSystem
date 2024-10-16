@@ -57,8 +57,8 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
-            lock (InputSystem.s_Manager)
-                InputSystem.s_Manager.onEvent += callback;
+            lock (InputSystem.manager)
+                InputSystem.manager.onEvent += callback;
             return default;
         }
 
@@ -82,8 +82,8 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
-            lock (InputSystem.s_Manager)
-                InputSystem.s_Manager.onEvent -= callback;
+            lock (InputSystem.manager)
+                InputSystem.manager.onEvent -= callback;
             return default;
         }
 
@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 s_ObserverState = new ObserverState();
 
             if (s_ObserverState.observers.length == 0)
-                InputSystem.s_Manager.onEvent += s_ObserverState.onEventDelegate;
+                InputSystem.manager.onEvent += s_ObserverState.onEventDelegate;
 
             s_ObserverState.observers.AppendWithCapacity(observer);
             return new DisposableObserver { observer = observer };
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (index >= 0)
                     s_ObserverState.observers.RemoveAtWithCapacity(index);
                 if (s_ObserverState.observers.length == 0)
-                    InputSystem.s_Manager.onEvent -= s_ObserverState.onEventDelegate;
+                    InputSystem.manager.onEvent -= s_ObserverState.onEventDelegate;
             }
         }
     }
