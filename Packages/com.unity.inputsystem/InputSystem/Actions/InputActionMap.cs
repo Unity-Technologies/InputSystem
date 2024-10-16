@@ -318,7 +318,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputActionMap()
         {
-            InputSystem.manager.InvalidateBindings();
+            if (InputSystem.manager != null)
+                InputSystem.manager.InvalidateBindings();
         }
 
         /// <summary>
@@ -1985,7 +1986,8 @@ namespace UnityEngine.InputSystem
         public void OnAfterDeserialize()
         {
             // Indicate that there is at least one action map that has a change
-            InputSystem.manager.InvalidateBindings();
+            if (InputSystem.manager != null)
+                InputSystem.manager.InvalidateBindings();
 
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;

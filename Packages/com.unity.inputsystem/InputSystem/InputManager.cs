@@ -95,6 +95,8 @@ namespace UnityEngine.InputSystem
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             newInstance.ApplyActions();
             #endif
+            
+            newInstance.InvalidateBindings();
             return newInstance;
         }
 
