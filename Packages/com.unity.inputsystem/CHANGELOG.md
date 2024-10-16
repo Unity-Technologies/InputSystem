@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.11.2] - 2024-10-16
+
+### Fixed
+- Fixed touch pointers being released twice causing an index out of bounds error. [ISXB-687](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-687)
+- Fixed `NullReferenceException` from disconnecting and reconnecting a GXDKGamepad.
+- Fixed wrong mapping of Xbox Series S|X and Xbox One wireless controllers "View" button on macOS.[ISXB-385](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-385)
+- Fixed "AnalyticsResult" errors on consoles [ISXB-1107]
+- Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
+- Fixed event handling when using Fixed Update processing where WasPressedThisFrame could appear to true for consecutive frames [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1006)
+
+### Added
+- Added the display of the device flag `CanRunInBackground` in device debug view.
+- Added analytics for programmatic `InputAction` setup via `InputActionSetupExtensions` when exiting play-mode.
+
+### Fixed
+- Removed a redundant warning when using fallback code to parse a HID descriptor. (UUM-71260)
+
+### Changed
+- Removed the InputManager to InputSystem project-wide asset migration code for performance improvement (ISX-2086)
+
 ## [1.11.1] - 2024-09-26
 
 ### Fixed
@@ -17,6 +37,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "MissingReferenceException" errors when closing an in-game dropdown field [ISXB-1081](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1081).
 - Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
+- Fixed simulated touch input not working with PlayerInput component [ISXB-483](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-483).
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
