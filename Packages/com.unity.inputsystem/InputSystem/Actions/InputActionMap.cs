@@ -1206,6 +1206,9 @@ namespace UnityEngine.InputSystem
             needToResolveBindings = true;
             bindingResolutionNeedsFullReResolve |= fullResolve;
 
+            // Indicate that there is at least one action map that has a change
+            InputSystem.manager.bindingsNeedResolving = true;
+
             if (InputSystem.manager.areDeferredBindingsToResolve)
                 return false;
 
