@@ -7,7 +7,7 @@ The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md)
 
 It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-It also alows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
+It also allows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
 ### Action Assets and Project-Wide Actions
 
@@ -32,12 +32,6 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 |**(B)&nbsp;Actions**|Displays all the actions defined in the currently selected Action Map, and the bindings associated with each Action.|
 |**(C)&nbsp;Properties**|Displays the properties of the currently selected Action or Binding from the Actions panel. The title of this panel changes depending on whether you have an Action or a Binding selected in the Actions panel.|
 
-### Configure Action Maps
-
-* To add a new Action Map, select the Add (+) icon in the header of the Action Map panel.
-* To rename an existing Action Map, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu. Note that Action Map names can't contain slashes  (`/`).
-* To delete an existing Action Map, right-click it and select __Delete__ from the context menu.
-* To duplicate an existing Action Map, right-click it and select __Duplicate__ from the context menu.
 
 ### Configure Actions
 
@@ -45,7 +39,11 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-*
+
+
+> **Note:**
+> Although you can reorder actions in this window, the ordering is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+
 
 
 ## Action type and Control type
