@@ -3930,7 +3930,6 @@ internal partial class UITests : CoreTestsFixture
 #if UNITY_TVOS || UNITY_ANDROID
     [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
-#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
         // Setup the Test Scene
