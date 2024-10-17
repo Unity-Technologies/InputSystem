@@ -3876,8 +3876,8 @@ internal partial class UITests : CoreTestsFixture
 #if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnScreenSpaceCanvas()
     {
@@ -3927,9 +3927,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
-#else
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
@@ -3980,8 +3979,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnScreenSpaceCanvas()
     {
@@ -4032,6 +4031,9 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+#if UNITY_ANDROID
+    [Ignore("Failing on Android https://jira.unity3d.com/browse/ISX-2029")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnOverlayCanvas()
     {
         // Setup the Test Scene
@@ -4082,8 +4084,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayMultiplePointers()
     {
