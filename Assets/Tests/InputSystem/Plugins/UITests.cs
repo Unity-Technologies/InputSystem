@@ -4162,8 +4162,6 @@ internal partial class UITests : CoreTestsFixture
         // Verify Clicks On Display 1 Are Ignored On Display 0
         Assert.AreEqual(0, scene.parentReceiver.events.Count);
     }
-
-#endif
     #endregion
 
     public class MyButton : UnityEngine.UI.Button
