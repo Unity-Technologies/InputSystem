@@ -23,18 +23,24 @@ namespace UnityEngine.InputSystem.LowLevel
         public static FourCC Format => new FourCC('M', 'O', 'U', 'S');
 
         /// <summary>
-        /// Screen-space position of the mouse in pixels. Updated independently from delta using WM. At high framerates, certain frames might not receive any new position data.
+        /// Screen-space position of the mouse in pixels. May be updated independently from delta depending on the platform. At high framerates, certain frames might not receive any new position data. If a delta is needed that correlates with position, compute it based on the last reported position.
         /// </summary>
         /// <value>Position of mouse on screen.</value>
+        /// <remarks>
+        /// On Windows, delta originates from RAWINPUT API.
+        /// </remarks>
         /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point", dontReset = true)] // Mouse should stay put when we reset devices.
         [FieldOffset(0)]
         public Vector2 position;
 
         /// <summary>
-        /// Screen-space motion delta of the mouse in pixels. Updated independently from position using raw mouse input. At high framerates, certain frames might not receive any new delta data.
+        /// Screen-space motion delta of the mouse in pixels. May be updated independently from position depending on the platform. At high framerates, certain frames might not receive any new delta data. If a delta is needed that correlates with position, compute it based on the last reported position.
         /// </summary>
         /// <value>Mouse movement.</value>
+        /// <remarks>
+        /// On Windows, delta originates from RAWINPUT API.
+        /// </remarks>
         /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion", layout = "Delta")]
         [FieldOffset(8)]
