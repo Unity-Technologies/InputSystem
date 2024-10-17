@@ -270,19 +270,42 @@ namespace UnityEngine.InputSystem.UI
             // the first shot.
             if (eventData.pointerType == UIPointerType.Tracked && TrackedDeviceRaycaster.s_Instances.length > 0)
             {
+                //Store the closest result
+                RaycastResult raycastResult = default;
+                //Store the closest graphic's distance
+                float distance = float.MaxValue;
+                //The current TrackedDeviceRaycaster we are looking at
+                TrackedDeviceRaycaster trackedDeviceRaycaster;
+                //Owning canvas of the new comparison
+                Canvas raycastCanvas;
+                //Owning canvas of current result
+                Canvas raycastResultCanvas;
                 for (var i = 0; i < TrackedDeviceRaycaster.s_Instances.length; ++i)
                 {
-                    var trackedDeviceRaycaster = TrackedDeviceRaycaster.s_Instances[i];
+                    trackedDeviceRaycaster = TrackedDeviceRaycaster.s_Instances[i];
                     m_RaycastResultCache.Clear();
                     trackedDeviceRaycaster.PerformRaycast(eventData, m_RaycastResultCache);
                     if (m_RaycastResultCache.Count > 0)
                     {
-                        var raycastResult = m_RaycastResultCache[0];
-                        m_RaycastResultCache.Clear();
-                        return raycastResult;
+                        //Iterate through the list of result to determine the closest hit graphic
+                        foreach (RaycastResult raycast in m_RaycastResultCache)
+                        {
+                            raycastCanvas = raycast.gameObject.GetComponentInParent<Canvas>();
+                            raycastResultCanvas = raycastResult.gameObject?.GetComponentInParent<Canvas>();
+                            //Update result if the the new raycast's owning canvas is of a higher sorting order OR if the sorting order is the same and the new raycast is closer
+                            if (raycastResultCanvas == null || (raycastCanvas.sortingOrder > raycastResultCanvas.sortingOrder || (raycastCanvas.sortingOrder == raycastResultCanvas.sortingOrder && raycast.distance < distance)))
+                            {
+                                //Update the closest distance
+                                distance = raycast.distance;
+                                //Store the result
+                                raycastResult = raycast;
+                            }
+                        }
                     }
                 }
-                return default;
+                m_RaycastResultCache.Clear();
+                //Return the closest result or default if none exist
+                return raycastResult;
             }
 
             // Otherwise pass it along to the normal raycasting logic.
