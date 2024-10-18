@@ -67,8 +67,6 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionMapButton.clicked += AddActionMap;
 
             ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
-            // Only bring up this context menu for the List when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, m_ListView, onlyShowIfListIsEmpty: true);
         }
 
         void OnDroppedHandler(int mapIndex)

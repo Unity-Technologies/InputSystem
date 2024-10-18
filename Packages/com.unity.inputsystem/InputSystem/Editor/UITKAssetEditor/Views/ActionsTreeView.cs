@@ -124,8 +124,6 @@ namespace UnityEngine.InputSystem.Editor
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
             ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
-            // Only bring up this context menu for the Tree when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, m_ActionsTreeView, onlyShowIfTreeIsEmpty: true);
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
