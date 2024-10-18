@@ -208,12 +208,11 @@ namespace UnityEngine.InputSystem.UI
                     if (m_IsPressed != value)
                     {
                         m_IsPressed = value;
-
                         if (m_FramePressState == PointerEventData.FramePressState.NotChanged && value)
                             m_FramePressState = PointerEventData.FramePressState.Pressed;
                         else if (m_FramePressState == PointerEventData.FramePressState.NotChanged && !value)
                             m_FramePressState = PointerEventData.FramePressState.Released;
-                        else if (m_FramePressState == PointerEventData.FramePressState.Pressed && !value)
+                        else if (m_FramePressState == PointerEventData.FramePressState.Pressed && !value || m_FramePressState == PointerEventData.FramePressState.Released && value)
                             m_FramePressState = PointerEventData.FramePressState.PressedAndReleased;
                     }
                 }

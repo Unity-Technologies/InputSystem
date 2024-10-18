@@ -520,6 +520,8 @@ namespace UnityEngine.InputSystem.UI
             if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
                 return;
 
+            var pressedAndReleasedInSameFrame = button.wasPressedThisFrame && button.wasReleasedThisFrame;
+            var cachedPointerPress = eventData.pointerPress;
             // Button press.
             if (button.wasPressedThisFrame)
             {
@@ -608,7 +610,19 @@ namespace UnityEngine.InputSystem.UI
                 }
 
                 // Invoke OnPointerUp.
-                ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+                // Invoke event only if the cached pointer press is a different object than the one entered.
+                var invokePointerUpForCachedObject = pressedAndReleasedInSameFrame &&
+                    cachedPointerPress != eventData.pointerEnter &&
+                    cachedPointerPress != null;
+
+                if (invokePointerUpForCachedObject)
+                {
+                    ExecuteEvents.Execute(cachedPointerPress, eventData, ExecuteEvents.pointerUpHandler);
+                }
+                else
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+                }
 
                 // Invoke OnPointerClick or OnDrop.
                 if (isClick)
@@ -623,8 +637,12 @@ namespace UnityEngine.InputSystem.UI
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
 
                 eventData.eligibleForClick = false;
-                eventData.pointerPress = null;
-                eventData.rawPointerPress = null;
+
+                if (!invokePointerUpForCachedObject)
+                {
+                    eventData.pointerPress = null;
+                    eventData.rawPointerPress = null;
+                }
 
                 if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.endDragHandler);
