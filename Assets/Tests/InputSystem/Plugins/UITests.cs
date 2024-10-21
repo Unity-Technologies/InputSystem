@@ -1729,6 +1729,9 @@ internal partial class UITests : CoreTestsFixture
         BeginTouch(1, firstPosition);
         yield return null;
 
+        var pointerIdTouch1 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 1);
+        var pointerIdTouch2 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 2);
+
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
@@ -1738,12 +1741,14 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1766,6 +1771,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
 
@@ -1773,6 +1779,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
@@ -1780,6 +1787,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
@@ -1799,6 +1807,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
 
@@ -1806,6 +1815,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
@@ -1825,6 +1835,7 @@ internal partial class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
     }
