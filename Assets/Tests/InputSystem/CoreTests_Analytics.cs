@@ -663,6 +663,55 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Analytics")]
+    public void Analytics_ShouldReportCodeAuthoringAnalytic()
+    {
+        CollectAnalytics(InputExitPlayModeAnalytic.kEventName);
+
+        // NOTE: We do not want to trigger entering/exiting play-mode for this small data-sanity check
+        //       so just stick to triggering it explicitly. A better test would have been an editor test
+        //       going in and out of play-mode for real but not clear if this is really possible.
+
+        // Pretend we are entering play-mode
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.ExitingEditMode);
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.EnteredPlayMode);
+
+        // Assert no data received
+        Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(0));
+
+        // Pretend we are exiting play-mode
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.ExitingPlayMode);
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.EnteredEditMode);
+
+        // Assert: Data received
+        Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputExitPlayModeAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputExitPlayModeAnalytic.Data>());
+
+        var data0 = (InputExitPlayModeAnalytic.Data)sentAnalyticsEvents[0].data;
+        Assert.That(data0.uses_code_authoring, Is.False);
+
+        // Pretend we are entering play-mode
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.ExitingEditMode);
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.EnteredPlayMode);
+
+        var action = new InputAction("Dance");
+        action.AddBinding("<Keyboard>/Space");
+
+        // Pretend we are exiting play-mode
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.ExitingPlayMode);
+        InputExitPlayModeAnalytic.OnPlayModeStateChange(PlayModeStateChange.EnteredEditMode);
+
+        // Assert: Data received
+        Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(2));
+        Assert.That(sentAnalyticsEvents[1].name, Is.EqualTo(InputExitPlayModeAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[1].data, Is.TypeOf<InputExitPlayModeAnalytic.Data>());
+
+        var data1 = (InputExitPlayModeAnalytic.Data)sentAnalyticsEvents[1].data;
+        Assert.That(data1.uses_code_authoring, Is.True);
+    }
+
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
     [Test]
     [Category("Analytics")]
