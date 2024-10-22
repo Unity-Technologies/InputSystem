@@ -1746,8 +1746,7 @@ namespace UnityEngine.InputSystem.UI
                 ref var pointerState = ref GetPointerStateForIndex(touchControlIndex);
 
                 if (!(pointerTouchControl is TouchControl) ||
-                    (pointerTouchControl is TouchControl &&
-                     pointerState.eventData.touchId == ((TouchControl)pointerTouchControl).touchId.value))
+                    (pointerState.eventData.touchId == ((TouchControl)pointerTouchControl).touchId.value))
                 {
                     // For touches, we cache a reference to the control of a pointer so that we don't
                     // have to continuously do ReadValue() on the touch ID control.

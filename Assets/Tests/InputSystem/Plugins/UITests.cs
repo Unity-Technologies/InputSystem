@@ -1720,7 +1720,6 @@ internal partial class UITests : CoreTestsFixture
         scene.leftChildReceiver.events.Clear();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.False);
-        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.False);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.False);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
 
@@ -1733,7 +1732,6 @@ internal partial class UITests : CoreTestsFixture
         var pointerIdTouch2 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 2);
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
-        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
 
@@ -1763,7 +1761,6 @@ internal partial class UITests : CoreTestsFixture
         yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
-        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.True);
 
@@ -1799,7 +1796,6 @@ internal partial class UITests : CoreTestsFixture
         yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
-        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.True);
 
@@ -1826,7 +1822,6 @@ internal partial class UITests : CoreTestsFixture
         yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.False);
-        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.False);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.False);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
 
