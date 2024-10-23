@@ -99,6 +99,9 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -120,6 +123,9 @@ run_ios_{{ editor.version }}_{{ category.name }}:
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem 
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
@@ -137,6 +143,9 @@ build_tvos_{{ editor.version }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -157,6 +166,9 @@ run_tvos_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
