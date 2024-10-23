@@ -10,7 +10,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105)
 
+### Changed
+- Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086)
 
 ## [1.11.2] - 2024-10-16
 
