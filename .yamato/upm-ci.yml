@@ -99,9 +99,6 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
-  after:
-    - {{ instabilities_install_nix }}
-    - {{ platform.instabilities_run }}
   artifacts:
     players:
         paths:
@@ -122,10 +119,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
-  after:
-    - {{ instabilities_install_nix }}
-    - {{ platform.instabilities_run }}
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem 
   artifacts:
     logs:
         paths:
@@ -143,9 +137,6 @@ build_tvos_{{ editor.version }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
-  after:
-    - {{ instabilities_install_nix }}
-    - {{ platform.instabilities_run }}
   artifacts:
     players:
         paths:
@@ -166,9 +157,6 @@ run_tvos_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
-  after:
-    - {{ instabilities_install_nix }}
-    - {{ platform.instabilities_run }}
   artifacts:
     logs:
         paths:
@@ -222,8 +210,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results
-    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
-  after:
+    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt  
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
   # Set uploadable artifact paths
