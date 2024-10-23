@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
 #if UNITY_2021_2_OR_NEWER
@@ -83,6 +84,8 @@ namespace UnityEngine.InputSystem.HID
 
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;
+
+        private static readonly ProfilerMarker k_HIDParseDescriptorFallback = new ProfilerMarker("HIDParseDescriptorFallback");
 
         // This is the workhorse for figuring out fallback options for HIDs attached to the system.
         // If the system cannot find a more specific layout for a given HID, this method will try
@@ -1130,8 +1133,10 @@ namespace UnityEngine.InputSystem.HID
                 }
                 catch (Exception)
                 {
-                    Debug.LogWarning($"Couldn't parse HID descriptor with fast parser. Using fallback");
-                    return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
+                    k_HIDParseDescriptorFallback.Begin();
+                    var descriptor = JsonUtility.FromJson<HIDDeviceDescriptor>(json);
+                    k_HIDParseDescriptorFallback.End();
+                    return descriptor;
                 }
 #else
                 return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
