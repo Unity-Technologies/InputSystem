@@ -13,7 +13,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using static System.Collections.Specialized.BitVector32;
 
 ////TODO: add test for domain reload logic
 
@@ -1104,22 +1103,25 @@ internal class CorePerformanceTests : CoreTestsFixture
 #endif
 
     #if UNITY_2022_3_OR_NEWER
+
+    // All the profiler markers in the package code.
+    // Needed for the tests below.
+    string[] allInputSystemProfilerMarkers =
+    {
+        "InputUpdate",
+        "InputSystem.onBeforeUpdate",
+        "InputSystem.onAfterUpdate",
+        "PreUpdate.NewInputUpdate",
+        "PreUpdate.InputForUIUpdate",
+        "FixedUpdate.NewInputFixedUpdate"
+    };
+
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
     [UnityTest, Performance]
     [Category("Performance")]
     public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_FPS()
     {
-        string[] markers =
-        {
-            "InputUpdate",
-            "InputSystem.onBeforeUpdate",
-            "InputSystem.onAfterUpdate",
-            "PreUpdate.NewInputUpdate",
-            "PreUpdate.InputForUIUpdate",
-            "FixedUpdate.NewInputFixedUpdate"
-        };
-
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -1151,7 +1153,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             performedCallCount++;
         };
 
-        using (Measure.ProfilerMarkers(markers))
+        using (Measure.ProfilerMarkers(allInputSystemProfilerMarkers))
         {
             Press(keyboard.wKey, queueEventOnly: true);
 
@@ -1189,21 +1191,11 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Category("Performance")]
     public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_DoingNothing()
     {
-        string[] markers =
-        {
-            "InputUpdate",
-            "InputSystem.onBeforeUpdate",
-            "InputSystem.onAfterUpdate",
-            "PreUpdate.NewInputUpdate",
-            "PreUpdate.InputForUIUpdate",
-            "FixedUpdate.NewInputFixedUpdate"
-        };
-
         yield return Measure.Frames()
             .WarmupCount(30)
             .DontRecordFrametime()
             .MeasurementCount(500)
-            .ProfilerMarkers(markers)
+            .ProfilerMarkers(allInputSystemProfilerMarkers)
             .Run();
     }
 
