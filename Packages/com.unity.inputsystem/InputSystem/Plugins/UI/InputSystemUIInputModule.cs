@@ -1789,18 +1789,15 @@ namespace UnityEngine.InputSystem.UI
             // NOTE: This is a linear search but m_PointerIds is only IDs and the number of concurrent pointers
             //       should be very low at any one point (in fact, we don't generally expect to have more than one
             //       which is why we are using InlinedArrays).
-            if (touchId == 0) // Not necessary for touches; see above.
+            for (var i = 0; i < m_PointerIds.length; i++)
             {
-                for (var i = 0; i < m_PointerIds.length; i++)
+                if (m_PointerIds[i] == pointerId)
                 {
-                    if (m_PointerIds[i] == pointerId)
-                    {
-                        // Existing entry found. Make it the current pointer.
-                        m_CurrentPointerId = pointerId;
-                        m_CurrentPointerIndex = i;
-                        m_CurrentPointerType = m_PointerStates[i].pointerType;
-                        return i;
-                    }
+                    // Existing entry found. Make it the current pointer.
+                    m_CurrentPointerId = pointerId;
+                    m_CurrentPointerIndex = i;
+                    m_CurrentPointerType = m_PointerStates[i].pointerType;
+                    return i;
                 }
             }
 
@@ -1946,7 +1943,6 @@ namespace UnityEngine.InputSystem.UI
 
             // Allocate state.
             m_PointerIds.AppendWithCapacity(pointerId);
-            m_PointerTouchControls.AppendWithCapacity(touchControl);
             return m_PointerStates.AppendWithCapacity(new PointerModel(eventData));
         }
 
@@ -1991,7 +1987,6 @@ namespace UnityEngine.InputSystem.UI
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
-            m_PointerTouchControls.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
 
@@ -2491,7 +2486,6 @@ namespace UnityEngine.InputSystem.UI
         [NonSerialized] private int m_CurrentPointerIndex = -1;
         [NonSerialized] internal UIPointerType m_CurrentPointerType = UIPointerType.None;
         internal InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
-        internal InlinedArray<InputControl> m_PointerTouchControls;
         internal InlinedArray<PointerModel> m_PointerStates;
 
         // Navigation-type input.
