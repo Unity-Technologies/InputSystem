@@ -98,6 +98,11 @@
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
         {
+            "name": "Unity",
+            "expression": "6000.1.0",
+            "define": "UNITY_INPUT_SYSTEM_UITKTRACKEDDEVICE"
+        },
+        {
             "name": "com.unity.modules.unityanalytics",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"

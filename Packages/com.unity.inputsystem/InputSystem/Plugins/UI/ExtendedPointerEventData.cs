@@ -168,6 +168,10 @@ namespace UnityEngine.InputSystem.UI
                 displayIndex = touchscreen.displayIndex.ReadValue();
                 #endif
             }
+            else if (control.parent is TrackedDevice trackedDevice)
+            {
+                uiToolkitPointerId = GetTrackedDevicePointerId(trackedDevice);
+            }
             else
             {
                 uiToolkitPointerId = UIElements.PointerId.mousePointerId;
@@ -195,6 +199,26 @@ namespace UnityEngine.InputSystem.UI
             var i = ((Touchscreen)touchControl.device).touches.IndexOfReference(touchControl);
             return UIElements.PointerId.touchPointerIdBase +
                 Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
+        }
+
+        private static int GetTrackedDevicePointerId(TrackedDevice trackedDevice)
+        {
+#if UNITY_INPUT_SYSTEM_UITKTRACKEDDEVICE
+            var n = 0;
+            foreach (var otherDevice in InputSystem.devices)
+                if (otherDevice is TrackedDevice otherTrackedDevice)
+                {
+                    if (trackedDevice == otherTrackedDevice)
+                    {
+                        return UIElements.PointerId.trackedPointerIdBase +
+                               Mathf.Min(n, UIElements.PointerId.trackedPointerCount - 1);
+                    }
+                    n++;
+                }
+            return UIElements.PointerId.trackedPointerIdBase;
+#else
+            return UIElements.PointerId.mousePointerId;
+#endif
         }
     }
 

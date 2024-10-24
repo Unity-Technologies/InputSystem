@@ -27,6 +27,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         InputActionReference m_MiddleClickAction;
         InputActionReference m_RightClickAction;
         InputActionReference m_ScrollWheelAction;
+        InputActionReference m_TrackedDevicePositionAction;
+        InputActionReference m_TrackedDeviceOrientationAction;
 
         InputAction m_NextPreviousAction;
 
@@ -39,6 +41,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         PointerState m_TouchState;
         bool m_SeenTouchEvents;
+
+        PointerState m_TrackedDeviceState;
 
         const float k_SmallestReportedMovementSqrDist = 0.01f;
 
@@ -266,7 +270,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void OnFocusChanged(bool focus)
         {
-            m_InputEventPartialProvider.OnFocusChanged(focus);
+            m_InputEventPartialProvider?.OnFocusChanged(focus);
         }
 
         public bool RequestCurrentState(Event.Type type)
@@ -368,6 +372,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     return ref m_TouchState;
                 case EventSource.Pen:
                     return ref m_PenState;
+                case EventSource.TrackedDevice:
+                    return ref m_TrackedDeviceState;
                 default:
                     return ref m_MouseState;
             }
@@ -376,6 +382,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         void DispatchFromCallback(in Event ev)
         {
             m_Events.Add(ev);
+        }
+
+        static int GetPointerIndex(InputAction.CallbackContext ctx)
+        {
+            var device = ctx.control.device;
+            if (device is Touchscreen touchscreen)
+                return FindTouchFingerIndex(touchscreen, ctx);
+            if (device is TrackedDevice trackedDevice)
+                return GetDeviceIndex(trackedDevice);
+            return 0;
         }
 
         static int FindTouchFingerIndex(Touchscreen touchscreen, InputAction.CallbackContext ctx)
@@ -397,6 +413,20 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 if (asTouchControl != null && asTouchControl == touchscreen.touches[i])
                     return i;
             }
+            return 0;
+        }
+
+        static int GetDeviceIndex<T>(T device)
+        {
+            int n = 0;
+            foreach (var otherDevice in InputSystem.devices)
+                if (otherDevice is T otherT)
+                {
+                    if (ReferenceEquals(device, otherT))
+                        return n;
+                    n++;
+                }
+
             return 0;
         }
 
@@ -495,7 +525,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
+            var pointerIndex = GetPointerIndex(ctx);
 
             m_ResetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
@@ -584,6 +614,56 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }));
         }
 
+        void OnTrackedDevicePositionPerformed(InputAction.CallbackContext ctx)
+        {
+            var eventSource = GetEventSource(ctx);
+            ref var pointerState = ref GetPointerStateForSource(eventSource);
+            var worldPosition = ctx.ReadValue<Vector3>();
+            var displayIndex = ctx.control.device is Pointer pointer ? pointer.displayIndex.ReadValue() : 0;
+
+            DispatchFromCallback(Event.From(new PointerEvent
+            {
+                type = PointerEvent.Type.PointerMoved,
+                worldPosition = worldPosition,
+                worldOrientation = pointerState.WorldOrientation,
+                pointerIndex = 0,
+                displayIndex = displayIndex,
+                buttonsState = pointerState.ButtonsState,
+                clickCount = 0,
+                timestamp = m_CurrentTime,
+                eventSource = eventSource,
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
+            }));
+
+            pointerState.OnTrackedDevicePositionChanged(m_CurrentTime, worldPosition, displayIndex);
+        }
+
+        void OnTrackedDeviceOrientationPerformed(InputAction.CallbackContext ctx)
+        {
+            var eventSource = GetEventSource(ctx);
+            ref var pointerState = ref GetPointerStateForSource(eventSource);
+            var worldOrientation = ctx.ReadValue<Quaternion>();
+            var displayIndex = ctx.control.device is Pointer pointer ? pointer.displayIndex.ReadValue() : 0;
+
+            DispatchFromCallback(Event.From(new PointerEvent
+            {
+                type = PointerEvent.Type.PointerMoved,
+                worldPosition = pointerState.WorldPosition,
+                worldOrientation = worldOrientation,
+                pointerIndex = 0,
+                displayIndex = displayIndex,
+                buttonsState = pointerState.ButtonsState,
+                clickCount = 0,
+                timestamp = m_CurrentTime,
+                eventSource = eventSource,
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
+            }));
+
+            pointerState.OnTrackedDeviceOrientationChanged(m_CurrentTime, worldOrientation, displayIndex);
+        }
+
         void RegisterNextPreviousAction()
         {
             m_NextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
@@ -617,6 +697,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
             m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
             m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
+            m_TrackedDevicePositionAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.TrackedDevicePositionAction));
+            m_TrackedDeviceOrientationAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.TrackedDeviceOrientationAction));
 
             if (m_PointAction != null && m_PointAction.action != null)
                 m_PointAction.action.performed += OnPointerPerformed;
@@ -638,6 +720,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
+
+            if (m_TrackedDevicePositionAction != null && m_TrackedDevicePositionAction.action != null)
+                m_TrackedDevicePositionAction.action.performed += OnTrackedDevicePositionPerformed;
+
+            if (m_TrackedDeviceOrientationAction != null && m_TrackedDeviceOrientationAction.action != null)
+                m_TrackedDeviceOrientationAction.action.performed += OnTrackedDeviceOrientationPerformed;
 
             // When adding new actions, don't forget to add them to UnregisterActions
 
@@ -677,6 +765,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
                 m_ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
 
+            if (m_TrackedDevicePositionAction != null && m_TrackedDevicePositionAction.action != null)
+                m_TrackedDevicePositionAction.action.performed -= OnTrackedDevicePositionPerformed;
+
+            if (m_TrackedDeviceOrientationAction != null && m_TrackedDeviceOrientationAction.action != null)
+                m_TrackedDeviceOrientationAction.action.performed -= OnTrackedDeviceOrientationPerformed;
+
             m_PointAction = null;
             m_MoveAction = null;
             m_SubmitAction = null;
@@ -685,6 +779,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_MiddleClickAction = null;
             m_RightClickAction = null;
             m_ScrollWheelAction = null;
+            m_TrackedDevicePositionAction = null;
+            m_TrackedDeviceOrientationAction = null;
 
             if (m_InputActionAsset != null)
                 m_InputActionAsset.Disable();
@@ -703,6 +799,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             public string MiddleClickAction;
             public string RightClickAction;
             public string ScrollWheelAction;
+            public string TrackedDevicePositionAction;
+            public string TrackedDeviceOrientationAction;
 
             public static Configuration GetDefaultConfiguration()
             {
@@ -727,6 +825,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     MiddleClickAction = "UI/MiddleClick",
                     RightClickAction = "UI/RightClick",
                     ScrollWheelAction = "UI/ScrollWheel",
+                    TrackedDevicePositionAction = "UI/TrackedDevicePosition",
+                    TrackedDeviceOrientationAction = "UI/TrackedDeviceOrientation",
                 };
             }
         }
