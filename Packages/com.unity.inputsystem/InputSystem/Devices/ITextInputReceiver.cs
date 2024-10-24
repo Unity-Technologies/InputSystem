@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// input through <see cref="TextEvent"/>.
     /// </remarks>
     /// <seealso cref="TextEvent"/>
-    /// <seealso cref="IMECompositionEvent"/>
+    /// <seealso cref="IMECompositionEventVariableSize"/>
     public interface ITextInputReceiver
     {
         /// <summary>
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Called when an IME composition is in-progress or finished.
         /// </summary>
         /// <param name="compositionString">The current composition.</param>
-        /// <seealso cref="IMECompositionEvent"/>
+        /// <seealso cref="IMECompositionEventVariableSize"/>
         /// <seealso cref="Keyboard.onIMECompositionChange"/>
         /// <remarks>
         /// The method will be repeatedly called with the current string while composition is in progress.
