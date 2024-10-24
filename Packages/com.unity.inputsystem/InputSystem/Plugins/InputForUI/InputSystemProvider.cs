@@ -356,6 +356,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 return EventSource.Pen;
             if (device is Mouse)
                 return EventSource.Mouse;
+            if (device is TrackedDevice)
+                return EventSource.TrackedDevice;
             if (device is Keyboard)
                 return EventSource.Keyboard;
             if (device is Gamepad)
