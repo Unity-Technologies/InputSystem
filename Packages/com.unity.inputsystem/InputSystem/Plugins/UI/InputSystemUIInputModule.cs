@@ -1721,27 +1721,9 @@ namespace UnityEngine.InputSystem.UI
             ////REVIEW: Any way we can cut down on the hops all over memory that we're doing here?
             var device = control.device;
 
-            ////TODO: We're repeatedly inspecting the control setup here. Do this once and only redo it if the control setup changes.
-
-            ////REVIEW: It seems wrong that we are picking up an input here that is *NOT* reflected in our actions. We just end
-            ////        up reading a touchId control implicitly instead of allowing actions to deliver IDs to us. On the other hand,
-            ////        making that setup explicit in actions may be quite awkward and not nearly as robust.
             // Determine the pointer (and touch) ID. We default the pointer ID to the device
             // ID of the InputDevice.
             var controlParent = control.parent;
-
-                if (!(pointerTouchControl is TouchControl) ||
-                    (pointerState.eventData.touchId == ((TouchControl)pointerTouchControl).touchId.value))
-                {
-                    // For touches, we cache a reference to the control of a pointer so that we don't
-                    // have to continuously do ReadValue() on the touch ID control.
-                    m_CurrentPointerId = m_PointerIds[touchControlIndex];
-                    m_CurrentPointerIndex = touchControlIndex;
-                    m_CurrentPointerType = UIPointerType.Touch;
-                    return touchControlIndex;
-                }
-            }
-
             var pointerId = device.deviceId;
             var touchId = 0;
             var touchPosition = Vector2.zero;
