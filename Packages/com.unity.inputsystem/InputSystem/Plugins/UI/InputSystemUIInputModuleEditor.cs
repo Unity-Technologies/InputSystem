@@ -144,6 +144,14 @@ namespace UnityEngine.InputSystem.UI.Editor
 
                 // reinitialize action types
                 OnEnable();
+                
+                if(actions == null)
+                {
+                    foreach (var i in m_ReferenceProperties)
+                    {
+                        i.objectReferenceValue = null;
+                    }
+                }
             }
 
             var numActions = s_ActionNames.Length;
