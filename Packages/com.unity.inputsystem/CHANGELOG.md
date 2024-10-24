@@ -27,7 +27,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "AnalyticsResult" errors on consoles [ISXB-1107]
 - Fixed wrong `Display Index` value for touchscreen events.[ISXB-1101](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1101)
 - Fixed event handling when using Fixed Update processing where WasPressedThisFrame could appear to true for consecutive frames [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1006)
-- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
 
 ### Added
 - Added the display of the device flag `CanRunInBackground` in device debug view.
