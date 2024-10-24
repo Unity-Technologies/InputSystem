@@ -74,21 +74,21 @@ namespace UnityEngine.InputSystem.Editor
                 var selectedFrameIndex = System.Convert.ToInt32(ProfilerWindow.selectedFrameIndex);
                 
                 var eventCount = ProfilerDriver.GetFormattedCounterValue(selectedFrameIndex, 
-                    InputStatistics.Category.Name, InputStatistics.kEventCountName);
+                    InputStatistics.Category.Name, InputStatistics.EventCountName);
                 var eventSizeBytes = ProfilerDriver.GetFormattedCounterValue(selectedFrameIndex,
-                    InputStatistics.Category.Name, InputStatistics.kEventSizeName);
+                    InputStatistics.Category.Name, InputStatistics.EventSizeName);
                 var averageLatency = ProfilerDriver.GetFormattedCounterValue(selectedFrameIndex,
-                    InputStatistics.Category.Name, InputStatistics.kAverageLatencyName);
+                    InputStatistics.Category.Name, InputStatistics.AverageLatencyName);
                 var maxLatency = ProfilerDriver.GetFormattedCounterValue(selectedFrameIndex,
-                    InputStatistics.Category.Name, InputStatistics.kMaxLatencyName);
+                    InputStatistics.Category.Name, InputStatistics.MaxLatencyName);
                 var eventProcessingTime = ProfilerDriver.GetFormattedCounterValue(selectedFrameIndex,
-                    InputStatistics.Category.Name, InputStatistics.kEventProcessingTimeName);
+                    InputStatistics.Category.Name, InputStatistics.EventProcessingTimeName);
 
-                m_EventCountLabel.text = $"{InputStatistics.kEventCountName}: {eventCount}";
-                m_EventSizeLabel.text = $"{InputStatistics.kEventSizeName}: {eventSizeBytes}";
-                m_AverageLatencyLabel.text = $"{InputStatistics.kAverageLatencyName}: {averageLatency}";
-                m_MaxLatencyLabel.text = $"{InputStatistics.kMaxLatencyName}: {maxLatency}";
-                m_EventProcessingTimeLabel.text = $"{InputStatistics.kEventProcessingTimeName}: {eventProcessingTime}";
+                m_EventCountLabel.text = $"{InputStatistics.EventCountName}: {eventCount}";
+                m_EventSizeLabel.text = $"{InputStatistics.EventSizeName}: {eventSizeBytes}";
+                m_AverageLatencyLabel.text = $"{InputStatistics.AverageLatencyName}: {averageLatency}";
+                m_MaxLatencyLabel.text = $"{InputStatistics.MaxLatencyName}: {maxLatency}";
+                m_EventProcessingTimeLabel.text = $"{InputStatistics.EventProcessingTimeName}: {eventProcessingTime}";
             }
             
             void OnSelectedFrameIndexChanged(long selectedFrameIndex)
@@ -99,11 +99,11 @@ namespace UnityEngine.InputSystem.Editor
         
         private static readonly ProfilerCounterDescriptor[] Counters = new ProfilerCounterDescriptor[]
         {
-            new (InputStatistics.kEventCountName, InputStatistics.Category),
-            new (InputStatistics.kEventSizeName, InputStatistics.Category),
-            new (InputStatistics.kAverageLatencyName, InputStatistics.Category),
-            new (InputStatistics.kMaxLatencyName, InputStatistics.Category),
-            new (InputStatistics.kEventProcessingTimeName, InputStatistics.Category),
+            new (InputStatistics.EventCountName, InputStatistics.Category),
+            new (InputStatistics.EventSizeName, InputStatistics.Category),
+            new (InputStatistics.AverageLatencyName, InputStatistics.Category),
+            new (InputStatistics.MaxLatencyName, InputStatistics.Category),
+            new (InputStatistics.EventProcessingTimeName, InputStatistics.Category),
         };
         
         public InputSystemProfilerModule()

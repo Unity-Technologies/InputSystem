@@ -3204,7 +3204,10 @@ namespace UnityEngine.InputSystem
             }
 
             var processingStartTime = Stopwatch.GetTimestamp();
+            var totalEventCount = 0;
+            var totalEventSizeBytes = 0;
             var totalEventLag = 0.0;
+            var maxEventLag = 0.0;
 
             #if UNITY_EDITOR
             var isPlaying = gameIsPlaying;
@@ -3465,9 +3468,14 @@ namespace UnityEngine.InputSystem
 
                     // Update metrics.
                     if (currentEventTimeInternal <= currentTime)
-                        totalEventLag += currentTime - currentEventTimeInternal;
-                    ++m_Metrics.totalEventCount;
-                    m_Metrics.totalEventBytes += (int)currentEventReadPtr->sizeInBytes;
+                    {
+                        var lag = currentTime - currentEventTimeInternal;
+                        totalEventLag += lag;
+                        if (lag > maxEventLag)
+                            maxEventLag = lag;
+                    }
+                    ++totalEventCount;
+                    totalEventSizeBytes += (int)currentEventReadPtr->sizeInBytes;
 
                     // Process.
                     switch (currentEventType)
@@ -3621,12 +3629,23 @@ namespace UnityEngine.InputSystem
                         break;
                 }
 
-                m_Metrics.totalEventProcessingTime +=
-                    ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
-                m_Metrics.totalEventLagTime += totalEventLag;
-
                 ResetCurrentProcessedEventBytesForDevices();
-
+                
+                // Update metrics (exposed via analytics and debugger)
+                var eventProcessingTime =
+                    ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
+                m_Metrics.totalEventCount += totalEventCount;
+                m_Metrics.totalEventBytes += totalEventSizeBytes;
+                m_Metrics.totalEventProcessingTime += eventProcessingTime;
+                m_Metrics.totalEventLagTime += totalEventLag;
+                
+                // Profiler counters
+                InputStatistics.EventCount.Value += totalEventCount;
+                InputStatistics.EventSize.Value += totalEventSizeBytes;
+                InputStatistics.AverageLatency.Value += ((totalEventLag / totalEventCount) * 1e9);
+                InputStatistics.MaxLatency.Value += (maxEventLag * 1e9);
+                InputStatistics.EventProcessingTime.Value += eventProcessingTime * 1e9; // TODO Possible to replace Stopwatch with marker somehow?
+                
                 m_InputEventStream.Close(ref eventBuffer);
             }
             catch (Exception)
