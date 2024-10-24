@@ -2,7 +2,8 @@
     "name": "Unity.InputSystem",
     "rootNamespace": "",
     "references": [
-        "Unity.ugui"
+        "Unity.ugui",
+        "Unity.Profiling.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
