@@ -12,7 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
-- Fixed `ArgumentN- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
+- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105)
 - Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
 
 ### Changed
