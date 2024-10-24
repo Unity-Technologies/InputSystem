@@ -36,13 +36,7 @@ internal class SteamTests : CoreTestsFixture
     public override void TearDown()
     {
         base.TearDown();
-        m_SteamAPI = null;
-
-        SteamSupport.s_API = null;
-        SteamSupport.s_InputDevices = null;
-        SteamSupport.s_ConnectedControllers = null;
-        SteamSupport.s_InputDeviceCount = 0;
-        SteamSupport.s_HooksInstalled = false;
+        SteamSupport.Shutdown();
     }
 
     [Test]

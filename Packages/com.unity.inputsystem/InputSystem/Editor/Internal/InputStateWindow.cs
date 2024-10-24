@@ -152,7 +152,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static unsafe void* TryGetDeviceState(InputDevice device, BufferSelector selector)
         {
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             var deviceIndex = device.m_DeviceIndex;
 
             switch (selector)

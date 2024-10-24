@@ -570,7 +570,7 @@ namespace UnityEngine.InputSystem
             var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
 
             // Give callbacks first shot.
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             manager.m_DeviceCommandCallbacks.LockForChanges();
             for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {

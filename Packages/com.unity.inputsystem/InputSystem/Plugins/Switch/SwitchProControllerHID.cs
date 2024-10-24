@@ -253,7 +253,7 @@ namespace UnityEngine.InputSystem.Switch
                     || newState->buttons2 != currentState->buttons2;
 
                 if (!actuated)
-                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+                    InputSystem.manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
 
             InputState.Change(this, eventPtr);

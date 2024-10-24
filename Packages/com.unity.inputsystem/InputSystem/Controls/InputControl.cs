@@ -929,7 +929,7 @@ namespace UnityEngine.InputSystem
         private void SetOptimizedControlDataType()
         {
             // setting check need to be inline so we clear optimizations if setting is disabled after the fact
-            m_OptimizedControlDataType = InputSystem.s_Manager.optimizedControlsFeatureEnabled
+            m_OptimizedControlDataType = InputSystem.manager.optimizedControlsFeatureEnabled
                 ? CalculateOptimizedControlDataType()
                 : (FourCC)InputStateBlock.kFormatInvalid;
         }
@@ -957,7 +957,7 @@ namespace UnityEngine.InputSystem
         [Conditional("UNITY_EDITOR")]
         internal void EnsureOptimizationTypeHasNotChanged()
         {
-            if (!InputSystem.s_Manager.optimizedControlsFeatureEnabled)
+            if (!InputSystem.manager.optimizedControlsFeatureEnabled)
                 return;
 
             var currentOptimizedControlDataType = CalculateOptimizedControlDataType();
@@ -1182,7 +1182,7 @@ namespace UnityEngine.InputSystem
 
                 if (
                     // if feature is disabled we re-evaluate every call
-                    !InputSystem.s_Manager.readValueCachingFeatureEnabled
+                    !InputSystem.manager.readValueCachingFeatureEnabled
                     // if cached value is stale we re-evaluate and clear the flag
                     || m_CachedValueIsStale
                     // if a processor in stack needs to be re-evaluated, but unprocessedValue is still can be cached
@@ -1193,7 +1193,7 @@ namespace UnityEngine.InputSystem
                     m_CachedValueIsStale = false;
                 }
 #if DEBUG
-                else if (InputSystem.s_Manager.paranoidReadValueCachingChecksEnabled)
+                else if (InputSystem.manager.paranoidReadValueCachingChecksEnabled)
                 {
                     var oldUnprocessedValue = m_UnprocessedCachedValue;
                     var newUnprocessedValue = unprocessedValue;
@@ -1249,7 +1249,7 @@ namespace UnityEngine.InputSystem
 
                 if (
                     // if feature is disabled we re-evaluate every call
-                    !InputSystem.s_Manager.readValueCachingFeatureEnabled
+                    !InputSystem.manager.readValueCachingFeatureEnabled
                     // if cached value is stale we re-evaluate and clear the flag
                     || m_UnprocessedCachedValueIsStale
                 )
@@ -1258,7 +1258,7 @@ namespace UnityEngine.InputSystem
                     m_UnprocessedCachedValueIsStale = false;
                 }
 #if DEBUG
-                else if (InputSystem.s_Manager.paranoidReadValueCachingChecksEnabled)
+                else if (InputSystem.manager.paranoidReadValueCachingChecksEnabled)
                 {
                     var currentUnprocessedValue = ReadUnprocessedValueFromState(currentStatePtr);
                     if (CompareValue(ref currentUnprocessedValue, ref m_UnprocessedCachedValue))

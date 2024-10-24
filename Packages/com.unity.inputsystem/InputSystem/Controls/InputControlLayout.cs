@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.Layouts
     /// </remarks>
     public class InputControlLayout
     {
-        private static InternedString s_DefaultVariant = new InternedString("Default");
+        private static readonly InternedString s_DefaultVariant = new InternedString("Default");
         public static InternedString DefaultVariant => s_DefaultVariant;
 
         public const string VariantSeparator = ";";

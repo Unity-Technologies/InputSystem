@@ -246,7 +246,7 @@ namespace UnityEngine.InputSystem.Editor
         // If our layout data is outdated, rescan all the layouts in the system.
         private static void Refresh()
         {
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             if (manager.m_LayoutRegistrationVersion == s_LayoutRegistrationVersion)
                 return;
 
