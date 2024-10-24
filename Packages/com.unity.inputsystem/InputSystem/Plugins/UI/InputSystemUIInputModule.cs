@@ -1729,21 +1729,6 @@ namespace UnityEngine.InputSystem.UI
             // Determine the pointer (and touch) ID. We default the pointer ID to the device
             // ID of the InputDevice.
             var controlParent = control.parent;
-            // NOTE: m_PointerTouchControls stores references to TouchControl instances. e.g. this means that "touch0"
-            // in the same frame can have different touchId values.
-            var touchControlIndex = m_PointerTouchControls.IndexOfReference(controlParent);
-            if (touchControlIndex != -1)
-            {
-                // Pointers are deallocated in the frame after their release (unpressed), which means the pointer state
-                // and the m_PointerTouchControls entry is only removed in the next frame
-                // (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
-                // To accomodate for cases when touch is released and pressed in the same frame, the pointer
-                // state touchId needs to be checked against the cached touch control touchId (in m_PointerTouchControls)
-                // This is because the pointer state of the released touch (unpressed) still exists.
-                // If touchIDs are different, a new pointer should be allocated. Otherwise, a cached reference will
-                // be used.
-                var pointerTouchControl = m_PointerTouchControls[touchControlIndex];
-                ref var pointerState = ref GetPointerStateForIndex(touchControlIndex);
 
                 if (!(pointerTouchControl is TouchControl) ||
                     (pointerState.eventData.touchId == ((TouchControl)pointerTouchControl).touchId.value))
