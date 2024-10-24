@@ -9,8 +9,10 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
-- Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127)
 
+### Fixed
+- Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
+- Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127)
 
 ## [1.11.2] - 2024-10-16
 
