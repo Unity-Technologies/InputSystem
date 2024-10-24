@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -224,6 +225,29 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Control representing the mouse click count.</value>
         public IntegerControl clickCount { get; protected set;  }
+        
+        /// <summary>
+        /// Retrieve a mouse button by its <see cref="MouseButton"/> enumeration constant.
+        /// </summary>
+        /// <param name="button">Button to retrieve.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="button"/> is not a valid mouse
+        /// button value.</exception>
+        public ButtonControl this[MouseButton button]
+        {
+            get
+            {
+                switch (button)
+                {
+                    case MouseButton.Left: return leftButton;
+                    case MouseButton.Right: return rightButton;
+                    case MouseButton.Middle: return middleButton;
+                    case MouseButton.Forward: return forwardButton;
+                    case MouseButton.Back: return backButton;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(button), button, null);
+                }
+            }
+        }
 
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
