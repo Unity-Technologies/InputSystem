@@ -123,15 +123,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly ProfilerCounterDescriptor[] Counters = new ProfilerCounterDescriptor[]
         {
-            new(InputStatistics.UpdateCountName, InputStatistics.Category),
-            new(InputStatistics.EventCountName, InputStatistics.Category),
-            new(InputStatistics.EventSizeName, InputStatistics.Category),
-            new(InputStatistics.StateBufferSizeBytesName, InputStatistics.Category),
-            new(InputStatistics.AverageLatencyName, InputStatistics.Category),
-            new(InputStatistics.MaxLatencyName, InputStatistics.Category),
-            new(InputStatistics.EventProcessingTimeName, InputStatistics.Category),
-            new(InputStatistics.DeviceCountName, InputStatistics.Category),
-            new(InputStatistics.ControlCountName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.UpdateCountName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.EventCountName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.EventSizeName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.StateBufferSizeBytesName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.AverageLatencyName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.MaxLatencyName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.EventProcessingTimeName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.DeviceCountName, InputStatistics.Category),
+            new ProfilerCounterDescriptor(InputStatistics.ControlCountName, InputStatistics.Category),
         };
 
         public InputSystemProfilerModule()
