@@ -80,6 +80,13 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
         static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
 
+        private int CountControls()
+        {
+            var count = m_DevicesCount;
+            for (var i = 0; i < m_DevicesCount; ++i)
+                count += m_Devices[i].allControls.Count;
+            return count;
+        }
 
         public InputMetrics metrics
         {
@@ -89,11 +96,7 @@ namespace UnityEngine.InputSystem
 
                 result.currentNumDevices = m_DevicesCount;
                 result.currentStateSizeInBytes = (int)m_StateBuffers.totalSize;
-
-                // Count controls.
-                result.currentControlCount = m_DevicesCount;
-                for (var i = 0; i < m_DevicesCount; ++i)
-                    result.currentControlCount += m_Devices[i].allControls.Count;
+                result.currentControlCount = CountControls();
 
                 // Count layouts.
                 result.currentLayoutCount = m_Layouts.layoutTypes.Count;
@@ -3055,6 +3058,10 @@ namespace UnityEngine.InputSystem
             return (updateType & mask) != 0;
         }
 
+        struct UpdateMetrics
+        {
+        }
+
         /// <summary>
         /// Process input events.
         /// </summary>
@@ -3072,8 +3079,25 @@ namespace UnityEngine.InputSystem
         /// which buffers we activate in the update and write the event data into.
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
+        {
+            try
+            {
+                DoUpdate(updateType, ref eventBuffer);
+            }
+            finally
+            {
+                // According to documentation, profile counter calls should be stripped out automatically in
+                // non-development builds.
+                InputStatistics.DeviceCount.Sample(m_DevicesCount);
+                InputStatistics.StateBufferSizeBytes.Sample((int)m_StateBuffers.totalSize);
+                InputStatistics.ControlCount.Sample(CountControls());
+                ++InputStatistics.UpdateCount.Value;
+            }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
+        private unsafe void DoUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
@@ -3630,7 +3654,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 ResetCurrentProcessedEventBytesForDevices();
-                
+
                 // Update metrics (exposed via analytics and debugger)
                 var eventProcessingTime =
                     ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
@@ -3638,14 +3662,14 @@ namespace UnityEngine.InputSystem
                 m_Metrics.totalEventBytes += totalEventSizeBytes;
                 m_Metrics.totalEventProcessingTime += eventProcessingTime;
                 m_Metrics.totalEventLagTime += totalEventLag;
-                
+
                 // Profiler counters
                 InputStatistics.EventCount.Value += totalEventCount;
                 InputStatistics.EventSize.Value += totalEventSizeBytes;
                 InputStatistics.AverageLatency.Value += ((totalEventLag / totalEventCount) * 1e9);
                 InputStatistics.MaxLatency.Value += (maxEventLag * 1e9);
                 InputStatistics.EventProcessingTime.Value += eventProcessingTime * 1e9; // TODO Possible to replace Stopwatch with marker somehow?
-                
+
                 m_InputEventStream.Close(ref eventBuffer);
             }
             catch (Exception)
