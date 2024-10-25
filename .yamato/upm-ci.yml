@@ -34,6 +34,9 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
     - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   artifacts:
     UTR_Output.zip:
       paths:
@@ -72,6 +75,9 @@
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
     - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ platform.instabilities_run }}
   artifacts:
     UTR_Output.zip:
       paths:
@@ -93,6 +99,9 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -113,7 +122,10 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem 
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
@@ -131,6 +143,9 @@ build_tvos_{{ editor.version }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -151,6 +166,9 @@ run_tvos_{{ editor.version }}:
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
@@ -169,6 +187,9 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   artifacts:
     players:
         paths:
@@ -201,7 +222,9 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results
-    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
+    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt  
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   # Set uploadable artifact paths
   artifacts:
     logs:

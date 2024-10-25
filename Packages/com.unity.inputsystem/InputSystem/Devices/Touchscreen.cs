@@ -374,6 +374,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
+        [InputControl(name = "displayIndex", useStateFrom = "primaryTouch/displayIndex", format = "BYTE")] // added format to override the Pointer's USHT value
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
@@ -559,7 +560,6 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
 
             primaryTouch = GetChildControl<TouchControl>("primaryTouch");
-            displayIndex = primaryTouch.displayIndex;
 
             // Find out how many touch controls we have.
             var touchControlCount = 0;
