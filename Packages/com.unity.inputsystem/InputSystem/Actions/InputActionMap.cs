@@ -318,7 +318,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputActionMap()
         {
-            s_NeedToResolveBindings = true;
+            if (InputSystem.manager != null)
+                InputSystem.manager.bindingsNeedResolving = true;
         }
 
         /// <summary>
@@ -810,9 +811,6 @@ namespace UnityEngine.InputSystem
             BindingsForEachActionInitialized = 1 << 3,
         }
 
-        internal static int s_DeferBindingResolution;
-        internal static bool s_NeedToResolveBindings;
-
         internal struct DeviceArray
         {
             private bool m_HaveValue;
@@ -1195,9 +1193,6 @@ namespace UnityEngine.InputSystem
             m_ControlsForEachAction = null;
             controlsForEachActionInitialized = false;
 
-            // Indicate that there is at least one action map that has a change
-            s_NeedToResolveBindings = true;
-
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)
@@ -1211,7 +1206,10 @@ namespace UnityEngine.InputSystem
             needToResolveBindings = true;
             bindingResolutionNeedsFullReResolve |= fullResolve;
 
-            if (s_DeferBindingResolution > 0)
+            // Indicate that there is at least one action map that has a change
+            InputSystem.manager.bindingsNeedResolving = true;
+
+            if (InputSystem.manager.areDeferredBindingsToResolve)
                 return false;
 
             // Have to do it straight away.
@@ -1230,7 +1228,7 @@ namespace UnityEngine.InputSystem
             {
                 if (m_State != null && m_State.isProcessingControlStateChange)
                 {
-                    Debug.Assert(s_DeferBindingResolution > 0, "While processing control state changes, binding resolution should be suppressed");
+                    Debug.Assert(InputSystem.manager.areDeferredBindingsToResolve, "While processing control state changes, binding resolution should be suppressed");
                     return false;
                 }
 
@@ -1988,7 +1986,8 @@ namespace UnityEngine.InputSystem
         public void OnAfterDeserialize()
         {
             // Indicate that there is at least one action map that has a change
-            s_NeedToResolveBindings = true;
+            if (InputSystem.manager != null)
+                InputSystem.manager.bindingsNeedResolving = true;
 
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
