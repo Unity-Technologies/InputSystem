@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             ////FIXME: with ExpandHeight(false), editor still expands height for some reason....
-            EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(170));// GUILayout.ExpandHeight(false));
+            EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(130));// GUILayout.ExpandHeight(false));
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Layout", m_Device.layout);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
@@ -137,14 +137,37 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
             if (!string.IsNullOrEmpty(m_DeviceUsagesString))
                 EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
-            if (!string.IsNullOrEmpty(m_DeviceFlagsString))
-                EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
             EditorGUILayout.EndVertical();
-
+            
+            DrawFlags();
             DrawControlTree();
             DrawEventList();
+        }
+
+        private void DrawFlags()
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Flags", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
+            m_DeviceFlagsTree.OnGUI(rect);
+            
+            /*const string kTrue = "true";
+            const string kFalse = "false";
+            EditorGUILayout.LabelField("Native", m_Device.native ? kTrue : kFalse);
+            EditorGUILayout.LabelField("Remote", m_Device.remote ? kTrue : kFalse);
+            EditorGUILayout.LabelField("UpdateBeforeRender", m_Device.updateBeforeRender ? kTrue : kFalse);
+            EditorGUILayout.LabelField("HasStateCallbacks", m_Device.hasStateCallbacks ? kTrue : kFalse);
+            EditorGUILayout.LabelField("HasEventMerger", m_Device.hasEventMerger ? kTrue : kFalse);
+            EditorGUILayout.LabelField("HasEventPreProcessor", m_Device.hasEventPreProcessor ? kTrue : kFalse);
+            EditorGUILayout.LabelField("DisabledInFrontend", m_Device.disabledInFrontend ? kTrue : kFalse);
+            EditorGUILayout.LabelField("DisabledInRuntime", m_Device.disabledInRuntime ? kTrue : kFalse);
+            EditorGUILayout.LabelField("DisabledWWhileInBackground", m_Device.disabledWhileInBackground ? kTrue : kFalse);
+            EditorGUILayout.LabelField("CanRunInBackground", m_Device.canDeviceRunInBackground ? kTrue : kFalse);*/
         }
 
         private void DrawControlTree()
@@ -287,6 +310,11 @@ namespace UnityEngine.InputSystem.Editor
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
             UpdateDeviceFlags();
+            
+            // Setup flags
+            m_DeviceFlagsTree = DeviceFlagsTreeView.Create(m_Device, ref m_DeviceFlagsTreeState, ref m_DeviceFlagsHeaderState);
+            m_DeviceFlagsTree.Reload();
+            m_DeviceFlagsTree.ExpandAll();
 
             // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
@@ -326,6 +354,8 @@ namespace UnityEngine.InputSystem.Editor
             EditorApplication.playModeStateChanged += OnPlayModeChange;
         }
 
+        //private List<ValueTuple<string, bool>> m_Flags = new List<ValueTuple<string, bool>>(); 
+        
         private void UpdateDeviceFlags()
         {
             var flags = new List<string>();
@@ -397,6 +427,7 @@ namespace UnityEngine.InputSystem.Editor
         private InputDevice.DeviceFlags m_DeviceFlags;
         private InputControlTreeView m_ControlTree;
         private InputEventTreeView m_EventTree;
+        private DeviceFlagsTreeView m_DeviceFlagsTree;
         private bool m_NeedControlValueRefresh;
         private bool m_ReloadEventTree;
         private InputEventTrace.ReplayController m_ReplayController;
@@ -406,8 +437,10 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private TreeViewState m_EventTreeState;
+        [SerializeField] private TreeViewState m_DeviceFlagsTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
+        [SerializeField] private MultiColumnHeaderState m_DeviceFlagsHeaderState;
         [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
