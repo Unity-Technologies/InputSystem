@@ -1721,26 +1721,9 @@ namespace UnityEngine.InputSystem.UI
             ////REVIEW: Any way we can cut down on the hops all over memory that we're doing here?
             var device = control.device;
 
-            ////TODO: We're repeatedly inspecting the control setup here. Do this once and only redo it if the control setup changes.
-
-            ////REVIEW: It seems wrong that we are picking up an input here that is *NOT* reflected in our actions. We just end
-            ////        up reading a touchId control implicitly instead of allowing actions to deliver IDs to us. On the other hand,
-            ////        making that setup explicit in actions may be quite awkward and not nearly as robust.
             // Determine the pointer (and touch) ID. We default the pointer ID to the device
             // ID of the InputDevice.
             var controlParent = control.parent;
-            var touchControlIndex = m_PointerTouchControls.IndexOfReference(controlParent);
-            if (touchControlIndex != -1)
-            {
-                // For touches, we cache a reference to the control of a pointer so that we don't
-                // have to continuously do ReadValue() on the touch ID control.
-                m_CurrentPointerId = m_PointerIds[touchControlIndex];
-                m_CurrentPointerIndex = touchControlIndex;
-                m_CurrentPointerType = UIPointerType.Touch;
-
-                return touchControlIndex;
-            }
-
             var pointerId = device.deviceId;
             var touchId = 0;
             var touchPosition = Vector2.zero;
@@ -1773,18 +1756,15 @@ namespace UnityEngine.InputSystem.UI
             // NOTE: This is a linear search but m_PointerIds is only IDs and the number of concurrent pointers
             //       should be very low at any one point (in fact, we don't generally expect to have more than one
             //       which is why we are using InlinedArrays).
-            if (touchId == 0) // Not necessary for touches; see above.
+            for (var i = 0; i < m_PointerIds.length; i++)
             {
-                for (var i = 0; i < m_PointerIds.length; i++)
+                if (m_PointerIds[i] == pointerId)
                 {
-                    if (m_PointerIds[i] == pointerId)
-                    {
-                        // Existing entry found. Make it the current pointer.
-                        m_CurrentPointerId = pointerId;
-                        m_CurrentPointerIndex = i;
-                        m_CurrentPointerType = m_PointerStates[i].pointerType;
-                        return i;
-                    }
+                    // Existing entry found. Make it the current pointer.
+                    m_CurrentPointerId = pointerId;
+                    m_CurrentPointerIndex = i;
+                    m_CurrentPointerType = m_PointerStates[i].pointerType;
+                    return i;
                 }
             }
 
@@ -1930,7 +1910,6 @@ namespace UnityEngine.InputSystem.UI
 
             // Allocate state.
             m_PointerIds.AppendWithCapacity(pointerId);
-            m_PointerTouchControls.AppendWithCapacity(touchControl);
             return m_PointerStates.AppendWithCapacity(new PointerModel(eventData));
         }
 
@@ -1975,7 +1954,6 @@ namespace UnityEngine.InputSystem.UI
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
-            m_PointerTouchControls.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
 
@@ -2475,7 +2453,6 @@ namespace UnityEngine.InputSystem.UI
         [NonSerialized] private int m_CurrentPointerIndex = -1;
         [NonSerialized] internal UIPointerType m_CurrentPointerType = UIPointerType.None;
         internal InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
-        internal InlinedArray<InputControl> m_PointerTouchControls;
         internal InlinedArray<PointerModel> m_PointerStates;
 
         // Navigation-type input.
