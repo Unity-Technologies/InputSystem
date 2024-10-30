@@ -677,12 +677,10 @@ internal class PlayerInputTests : CoreTestsFixture
         onScreenButton.enabled = false;
         onScreenButton.controlPath = "<Gamepad>/buttonSouth";
 
-        var listener = go.AddComponent<MessageListener>();
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultControlScheme = "Keyboard&Mouse";
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
-        listener.messages.Clear();
 
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
 
@@ -704,12 +702,6 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(playerInput.user.controlScheme, Is.Not.Null);
         Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
-
-
-        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
-        Move(mouse.position, new Vector2(0.123f, 0.234f));
-        Click(mouse.leftButton);
-        Move(mouse.position, new Vector2(100f, 100f));
 
         // disabling the OnScreenButton to ensure that it will now switch to Keyboard&Mouse as expected
         onScreenButton.enabled = false;

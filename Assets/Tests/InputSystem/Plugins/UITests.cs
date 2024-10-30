@@ -2590,9 +2590,9 @@ internal partial class UITests : CoreTestsFixture
         Assert.Fail();
     }
 
-    [Test]
+    [UnityTest]
     [Category("UI")]
-    public void UI_ClickDraggingMouseDoesNotAllocateGCMemory()
+    public IEnumerator UI_ClickDraggingMouseDoesNotAllocateGCMemory()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -2629,6 +2629,10 @@ internal partial class UITests : CoreTestsFixture
         scene.eventSystem.InvokeUpdate();
         Release(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
+
+        // Waiting for a frame to ensure that everythings was updated.
+        // Linux seems to require it when this test is run along a "brunch" of other tests.
+        yield return null;
 
         var kProfilerRegion = "UI_ClickDraggingDoesNotAllocateGCMemory";
 
