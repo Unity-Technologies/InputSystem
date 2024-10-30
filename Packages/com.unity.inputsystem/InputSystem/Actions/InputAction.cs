@@ -1186,6 +1186,16 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        private int ExpectedFrame()
+        {
+            // Used by the Was<XXX>ThisFrame() methods below.
+            // When processing events manually the event processing will happen one frame later.
+            //
+            int frameOffset = InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsManually ? 1 : 0;
+            int expectedFrame = Time.frameCount - frameOffset;
+            return expectedFrame;
+        }
+
         /// <summary>
         /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
         /// at any point in the frame.
@@ -1236,7 +1246,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
@@ -1285,7 +1295,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
@@ -1344,7 +1354,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
@@ -1417,7 +1427,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == Time.frameCount;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
