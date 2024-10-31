@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
 - Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141)
 - Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151)
+- Fixed pasting into an empty map list raising an exception. [ISXB-1150](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1150)
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086)
