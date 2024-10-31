@@ -244,7 +244,7 @@ namespace UnityEngine.InputSystem.Editor
             var copiedType = GetCopiedType(copyBufferString);
             int indexOffset = 0;
             // If the array is empty, make sure we insert at index 0
-            if(arrayToInsertInto.arraySize == 0)
+            if (arrayToInsertInto.arraySize == 0)
                 indexOffset = -1;
             foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length + k_TypeMarker[copiedType].Length)
                      .Split(new[] {k_EndOfTransmission}, StringSplitOptions.RemoveEmptyEntries))
