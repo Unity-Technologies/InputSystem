@@ -30,6 +30,34 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    // ISXB-925: Feature flag values should live with containing settings instance.
+    [TestCase(InputFeatureNames.kUseReadValueCaching)]
+    [TestCase(InputFeatureNames.kUseOptimizedControls)]
+    [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
+    [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
+    [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
+    #endif
+    public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
+    {
+        using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+        {
+            InputSystem.settings = settings.value;
+
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            settings.value.SetInternalFeatureFlag(featureName, true);
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.True);
+
+            using (var other = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+            {
+                InputSystem.settings = other.value;
+
+                Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            }
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
@@ -1441,6 +1469,46 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
         InputSystem.Update();
         Assert.That(receivedCalls, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnable_FromCallbackWhileOtherCompositeBindingIsProgress()
+    {
+        // Enables "Modifier must be pressed first" behavior on all Composite Bindings
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+
+        var withModiferReceivedCalls = 0;
+        var actionWithModifier = map.AddAction("OneModifier", type: InputActionType.Button);
+        actionWithModifier.AddCompositeBinding("OneModifier")
+            .With("Binding", "<Keyboard>/space")
+            .With("Modifier", "<Keyboard>/ctrl");
+        actionWithModifier.performed += _ => ++ withModiferReceivedCalls;
+
+        var actionWithoutModifier = map.AddAction("One", type: InputActionType.Button, binding: "<Keyboard>/space");
+        actionWithoutModifier.performed += _ => actionWithModifier.Disable();
+
+        map.Enable();
+
+        // Press the SPACE key used by both binding
+        // actionWithModifier : SPACE key binding state will have current time but without a preceding CTRL key it will not trigger
+        // actionWithoutModifier : SPACE key binding will trigger the performed lambda which will disable actionWithModifier
+        PressAndRelease(keyboard.spaceKey);
+        InputSystem.Update();
+        Assume.That(actionWithModifier.enabled, Is.False);
+
+        // Re-enable action which has been disabled by actionWithoutModifier
+        actionWithModifier.Enable();
+
+        // Press the CTRL+SPACE to trigger actionWithModifier and not actionWithoutModifier
+        Press(keyboard.leftCtrlKey, queueEventOnly: true);
+        Press(keyboard.spaceKey);
+        InputSystem.Update();
+        Assert.That(withModiferReceivedCalls, Is.EqualTo(1));
+        Assert.That(actionWithModifier.enabled, Is.True);
     }
 
     [Test]
@@ -3164,14 +3232,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(gamepad.leftTrigger, 0.123f);
 
@@ -3181,14 +3249,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0.123f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0.123f).Within(0.00001));
 
         Set(gamepad.leftTrigger, 0f);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3202,14 +3270,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
 
@@ -3218,14 +3286,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftStick));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(expectedValue.magnitude));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(expectedValue.magnitude));
 
         Set(gamepad.leftStick, Vector2.zero);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3247,14 +3315,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Press(keyboard.dKey);
 
@@ -3264,7 +3332,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Release(keyboard.dKey);
         Press(keyboard.aKey);
@@ -3272,14 +3340,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.aKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(-expectedValue).Within(0.00001));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Release(keyboard.aKey);
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3303,14 +3371,14 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Press(keyboard.sKey);
 
@@ -3320,7 +3388,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.sKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(1f).Within(0.00001));
 
         Press(keyboard.dKey);
 
@@ -3329,7 +3397,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(new Vector2(1f, -1f).magnitude).Within(0.00001));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(new Vector2(1f, -1f).magnitude).Within(0.00001));
 
         Release(keyboard.dKey);
         Release(keyboard.sKey);
@@ -3337,7 +3405,7 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -3356,35 +3424,35 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         action.Enable();
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
 
         Set(sensor.attitude, Quaternion.Euler(30f, 60f, 45f));
 
         Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.Euler(30f, 60f, 45f)).Using(QuaternionEqualityComparer.Instance));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(-1f));
 
         Set(sensor.attitude, Quaternion.identity);
 
         Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.identity));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(-1f));
 
         Set(sensor.attitude, default(Quaternion));
 
         Assert.That(action.activeControl, Is.Null);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
-        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+        Assert.That(action.GetControlMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
@@ -4980,6 +5048,80 @@ partial class CoreTests
         Assert.That(asset.controlSchemes[1].deviceRequirements[2].isOR, Is.True);
     }
 
+    static string MinimalJson(string name = null)
+    {
+        if (name != null)
+            return "{\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+        return "{\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameIsSetToNameFromJson_IfCreatedFromJsonWithName()
+    {
+        // When constructed from JSON containing name, ScriptableObject.name is set based on name property
+        const string name = "My Actions";
+        var json = MinimalJson(name);
+        var asset = InputActionAsset.FromJson(json);
+        var assetName = asset.name;
+        ScriptableObject.Destroy(asset);
+        Assert.That(asset.name, Is.EqualTo(name));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameIsSetToEmptyString_IfCreatedFromJsonWithoutName()
+    {
+        // When constructed from JSON without a name, ScriptableObject.name is set to empty string.
+        var json = MinimalJson();
+        var asset = InputActionAsset.FromJson(json);
+        var name = asset.name;
+        ScriptableObject.Destroy(asset);
+        Assert.That(asset.name, Is.EqualTo(string.Empty));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToObjectName_IfCreatedFromObjectWithGivenName()
+    {
+        // When serializing JSON from object with a given name, name is preserved in JSON.
+        var json = MinimalJson("Your Actions");
+        var asset = InputActionAsset.FromJson(json);
+        var content = asset.ToJson();
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(json));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithEmptyName()
+    {
+        // When serializing JSON from object empty string as given name, name property is set to empty string.
+        var asset = InputActionAsset.FromJson(MinimalJson());
+        asset.name = string.Empty; // null is not allowed when converting to JSON
+        var content = asset.ToJson();
+        var expected = MinimalJson(string.Empty);
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_NameInJsonIsSetToEmptyString_IfCreatedFromObjectWithNullName()
+    {
+        // When serializing JSON from object without a given name, Unity forces the name to be an empty string.
+        // Basically Unity prevents us from doing serialization an omit optional members in a convenient way.
+        // Hence this test just verifies this behavior since its expected.
+        // Hence its not possible in an easy way to provide bidirectional transformation to/from JSON.
+        // Also note that any additional user augmentation in JSON is currently not supported.
+        var asset = InputActionAsset.FromJson(MinimalJson());
+        asset.name = null;
+        var content = asset.ToJson();
+        var expected = MinimalJson(string.Empty);
+        ScriptableObject.Destroy(asset);
+        Assert.That(content, Is.EqualTo(expected));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()
@@ -5108,6 +5250,36 @@ partial class CoreTests
         composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
         composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
 
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Description("ISXB-494 Changing composite of action inside a map triggered exception that wasn't caught by previous test.")]
+    public void Actions_CanChangeBindingPart_ToExistingCompositeInActionMap()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actionMap = new InputActionMap("Map");
+        var action = actionMap.AddAction("Action", InputActionType.Value, expectedControlLayout: "Axis");
+
+        action.AddCompositeBinding("Axis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+
+        Assert.That(action.bindings, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey, keyboard.dKey }));
+
+        var composite = action.ChangeCompositeBinding("Axis");
+
+        composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
+        composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
+
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    private void ValidateCompositeBindingsOnAction(InputAction action)
+    {
         Assert.That(action.bindings, Has.Count.EqualTo(5));
         Assert.That(action.bindings,
             Has.Exactly(1).With.Property("isComposite").EqualTo(true).And.With.Property("isPartOfComposite").EqualTo(false).And.With
@@ -7749,6 +7921,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Description("ISXB-895 Can attempt to lookup non-existent action in asset by path")]
+    public void Actions_CanAttemptToLookUpNonExistentActionInAssetByPath()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null);
+
+        var map = asset.AddActionMap("Map");
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null); // ISXB-895 using a path to find non-existent (NullReferenceException)
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanLookUpActionInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -9457,6 +9642,165 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateComposite_WithMultipleBindingsPerPart()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control and additional arrow key support on the same composite.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S, Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow, Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftArrow, Key.DownArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow, Key.UpArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -9695,6 +10039,112 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
+    }
+
+    // Ensure that https://jira.unity3d.com/browse/ISXB-619 regress
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithCompositeWithMultipleInteractions_Works()
+    {
+        // Will ensure that :
+        // PressRelease AW trigger a tap
+        // Long PressRelease AW trigger a hold
+        // PressRelease AW trigger a tap
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad", interactions: "tap,hold(duration=2)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        IInputInteraction performedInteraction = null;
+        IInputInteraction canceledInteraction = null;
+        action.performed += ctx =>
+        {
+            performedInteraction = ctx.interaction;
+        };
+        action.canceled += ctx =>
+        {
+            canceledInteraction = ctx.interaction;
+        };
+
+        // PressRelease AW trigger a tap
+        currentTime = 0;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f; // half of the tap time to ensure that it performs.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Long PressRelease AW trigger a hold
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // tap should be canceled
+        currentTime += InputSystem.settings.defaultTapTime * 4.0;
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(TapInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // After (defaultTapTime*4 + 2) seconds hold should be performed with duration=2
+        currentTime += 2;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        performedInteraction = null;
+
+        // hold should be canceled
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 5;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        // PressRelease AW trigger a tap to ensure that is still working
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 100;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
     }
 
     [Test]
@@ -11922,5 +12372,37 @@ partial class CoreTests
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
         Assert.Fail();
+    }
+
+    // Validate OnAfterDeserialize() completely disables ActionMap
+    // https://jira.unity3d.com/browse/ISXB-737
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapDisabledDuringOnAfterSerialization()
+    {
+        var map = new InputActionMap("MyMap");
+        var action = map.AddAction("MyAction");
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        map.Enable();
+
+        Assert.That(map.enabled, Is.True);
+        Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
+        Assert.Throws<System.InvalidOperationException>(() => map.AddAction("Something"));
+
+        // Calling this directly is contrived (and not supported usage) but it should
+        // effectively cover this regression scenario.
+        map.OnAfterDeserialize();
+
+        Assert.That(map.enabled, Is.False);
+
+        map.Enable();
+
+        Assert.That(map.enabled, Is.True);
+        Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
     }
 }

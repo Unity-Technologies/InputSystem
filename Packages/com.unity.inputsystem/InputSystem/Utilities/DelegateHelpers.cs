@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -8,11 +8,11 @@ namespace UnityEngine.InputSystem.Utilities
         // InvokeCallbacksSafe protects both against the callback getting removed while being called
         // and against exceptions being thrown by the callback.
 
-        public static void InvokeCallbacksSafe(ref CallbackArray<Action> callbacks, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe(ref CallbackArray<Action> callbacks, ProfilerMarker marker, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
-            Profiler.BeginSample(callbackName);
+            marker.Begin();
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -30,14 +30,14 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            marker.End();
         }
 
         public static void InvokeCallbacksSafe<TValue>(ref CallbackArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
-            Profiler.BeginSample(callbackName);
+            Profiling.Profiler.BeginSample(callbackName);
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -55,14 +55,14 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            Profiling.Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref CallbackArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref CallbackArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, ProfilerMarker marker, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
-            Profiler.BeginSample(callbackName);
+            marker.Begin();
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            marker.End();
         }
 
         public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref CallbackArray<Func<TValue1, TValue2, bool>> callbacks,
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             if (callbacks.length == 0)
                 return true;
-            Profiler.BeginSample(callbackName);
+            Profiling.Profiler.BeginSample(callbackName);
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Utilities
                     if (callbacks[i](argument1, argument2))
                     {
                         callbacks.UnlockForChanges();
-                        Profiler.EndSample();
+                        Profiling.Profiler.EndSample();
                         return true;
                     }
                 }
@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            Profiling.Profiler.EndSample();
             return false;
         }
 
@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
 
-            Profiler.BeginSample(callbackName);
+            Profiling.Profiler.BeginSample(callbackName);
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            Profiling.Profiler.EndSample();
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return false;
 
-            Profiler.BeginSample(callbackName);
+            Profiling.Profiler.BeginSample(callbackName);
             callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem.Utilities
                     if (ret != null)
                     {
                         callbacks.UnlockForChanges();
-                        Profiler.EndSample();
+                        Profiling.Profiler.EndSample();
                         return true;
                     }
                 }
@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
-            Profiler.EndSample();
+            Profiling.Profiler.EndSample();
             return false;
         }
     }

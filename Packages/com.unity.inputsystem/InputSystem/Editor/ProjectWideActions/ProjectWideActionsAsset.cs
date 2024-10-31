@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -10,192 +11,340 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ProjectWideActionsAsset
     {
-        internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
-        internal const string kAssetPath = "ProjectSettings/InputManager.asset";
-        internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
+        private const string kDefaultAssetName = "InputSystem_Actions";
+        private const string kDefaultAssetPath = "Assets/" + kDefaultAssetName + ".inputactions";
+        private const string kDefaultTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
 
-        static string s_DefaultAssetPath = kDefaultAssetPath;
-        static string s_AssetPath = kAssetPath;
-
-#if UNITY_INCLUDE_TESTS
-        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
+        internal static class ProjectSettingsProjectWideActionsAssetConverter
         {
-            s_DefaultAssetPath = defaultAssetPath;
-            s_AssetPath = assetPath;
-        }
+            private const string kAssetPathInputManager = "ProjectSettings/InputManager.asset";
+            private const string kAssetNameProjectWideInputActions = "ProjectWideInputActions";
 
-        internal static void Reset()
-        {
-            s_DefaultAssetPath = kDefaultAssetPath;
-            s_AssetPath = kAssetPath;
-        }
+            class ProjectSettingsPostprocessor : AssetPostprocessor
+            {
+                private static bool migratedInputActionAssets = false;
 
+#if UNITY_2021_2_OR_NEWER
+                private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+#else
+                private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
 #endif
-
-        [InitializeOnLoadMethod]
-        internal static void InstallProjectWideActions()
-        {
-            GetOrCreate();
-        }
-
-        internal static InputActionAsset GetOrCreate()
-        {
-            var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
-            if (objects != null)
-            {
-                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
-                if (inputActionsAsset != null)
-                    return inputActionsAsset;
-            }
-
-            return CreateNewActionAsset();
-        }
-
-        internal static InputActionAsset CreateNewActionAsset()
-        {
-            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
-
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.LoadFromJson(json);
-            asset.name = kAssetName;
-
-            AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
-
-            // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
-            var maps = asset.actionMaps;
-            foreach (var map in maps)
-            {
-                // Make sure action map has GUID.
-                if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
-                    map.GenerateId();
-
-                // Make sure all actions have GUIDs.
-                foreach (var action in map.actions)
                 {
-                    var actionId = action.m_Id;
-                    if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
-                        action.GenerateId();
-                }
+                    if (!migratedInputActionAssets && importedAssets.Contains(kAssetPathInputManager))
+                    {
+                        MoveInputManagerAssetActionsToProjectWideInputActionAsset();
+                        migratedInputActionAssets = true;
+                    }
 
-                // Make sure all bindings have GUIDs.
-                for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
-                {
-                    var bindingId = map.m_Bindings[i].m_Id;
-                    if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
-                        map.m_Bindings[i].GenerateId();
+                    if (!Application.isPlaying)
+                    {
+                        // If the Library folder is deleted, InputSystem will fail to retrieve the assigned Project-wide Asset because this look-up occurs
+                        // during initialization while the Library is being rebuilt. So, afterwards perform another check and assign PWA asset if needed.
+                        var pwaAsset = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+                        if (InputSystem.actions == null && pwaAsset != null)
+                            InputSystem.actions = pwaAsset;
+                    }
                 }
             }
 
-            CreateInputActionReferences(asset);
-
-            AssetDatabase.SaveAssets();
-
-            return asset;
-        }
-
-        internal static InputActionMap GetDefaultUIActionMap()
-        {
-            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
-            var actionMaps = InputActionMap.FromJson(json);
-            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
-        }
-
-        private static void CreateInputActionReferences(InputActionAsset asset)
-        {
-            var maps = asset.actionMaps;
-            foreach (var map in maps)
+            private static void MoveInputManagerAssetActionsToProjectWideInputActionAsset(bool allowRetry = true)
             {
-                foreach (var action in map.actions)
-                {
-                    var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
-                    actionReference.Set(action);
-                    AssetDatabase.AddObjectToAsset(actionReference, asset);
-                }
-            }
-        }
-
-        #if UNITY_2023_2_OR_NEWER
-        /// <summary>
-        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
-        /// break the UI input at runtime, when using the UI Toolkit.
-        /// </summary>
-        internal static void CheckForDefaultUIActionMapChanges()
-        {
-            var asset = GetOrCreate();
-            if (asset != null)
-            {
-                var defaultUIActionMap = GetDefaultUIActionMap();
-                var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
-
-                // "UI" action map has been removed or renamed.
-                if (uiMapIndex == -1)
-                {
-                    Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
-                        "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
+                var objects = AssetDatabase.LoadAllAssetsAtPath(EditorHelpers.GetPhysicalPath(kAssetPathInputManager));
+                if (objects == null)
                     return;
-                }
-                var uiMap = asset.m_ActionMaps[uiMapIndex];
-                foreach (var action in defaultUIActionMap.actions)
+
+                var inputActionsAssets = objects.Where(o => o != null && o.name == kAssetNameProjectWideInputActions && o is InputActionAsset);
+
+                if (!inputActionsAssets.Any()) return;
+
+                Debug.Log("Migrating Project-wide Input Actions from InputManager.asset to InputSystem_Actions.inputactions asset");
+
+                // workarround for serialization bug with ScriptableObject in ProjectSettings during reimporting all asset, it should not be null
+                if (allowRetry)
                 {
-                    // "UI" actions have been modified.
-                    if (uiMap.FindAction(action.name) == null)
+                    foreach (InputActionAsset inputActionsAsset in inputActionsAssets)
                     {
-                        Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
-                            $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
+                        if (inputActionsAsset.m_ActionMaps == null)
+                        {
+                            // unload asset to avoid serialization bug and will try again later
+                            Resources.UnloadAsset(inputActionsAsset);
+                            Debug.Log($"Unexpected null action map encounted during the migration, will try again once later");
+                            EditorApplication.delayCall += () => { MoveInputManagerAssetActionsToProjectWideInputActionAsset(allowRetry: false); };
+                            return;
+                        }
                     }
+                }
+
+                foreach (InputActionAsset inputActionsAsset in inputActionsAssets)
+                {
+                    if (inputActionsAsset != default)
+                    {
+                        // sanity check to avoid saving a badly serialized asset or empty asset
+                        if (inputActionsAsset.m_ActionMaps.LengthSafe() == 0)
+                        {
+                            continue;
+                        }
+                        string path = ProjectWideActionsAsset.kDefaultAssetPath;
+
+                        if (File.Exists(EditorHelpers.GetPhysicalPath(path)))
+                        {
+                            // We already have a path containing inputactions, find a new unique filename
+                            //
+                            //  eg  Assets/InputSystem_Actions.inputactions ->
+                            //      Assets/InputSystem_Actions (1).inputactions ->
+                            //      Assets/InputSystem_Actions (2).inputactions ...
+                            //
+                            string[] files = Directory.GetFiles("Assets", "*.inputactions");
+                            List<string> names = new List<string>();
+                            for (int i = 0; i < files.Length; i++)
+                            {
+                                names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
+                            }
+                            string unique = ObjectNames.GetUniqueName(names.ToArray(), kDefaultAssetName);
+                            path = "Assets/" + unique + ".inputactions";
+                        }
+
+                        var json = inputActionsAsset.ToJson();
+                        InputActionAssetManager.SaveAsset(EditorHelpers.GetPhysicalPath(path), json);
+
+                        Debug.Log($"Migrated Project-wide Input Actions from '{kAssetPathInputManager}' to '{path}' asset");
+
+                        // Update current project-wide settings if needed (don't replace if already set to something else)
+                        //
+                        if (InputSystem.actions == null || InputSystem.actions.name == kAssetNameProjectWideInputActions)
+                        {
+                            InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
+                            Debug.Log($"Loaded Project-wide Input Actions from '{path}' asset");
+                        }
+                    }
+                }
+
+
+                bool hasChanged = false;
+                // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
+                foreach (var obj in objects)
+                {
+                    if (obj is InputActionReference)
+                    {
+                        var actionReference = obj as InputActionReference;
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                        Object.DestroyImmediate(actionReference);
+                        hasChanged = true;
+                    }
+                    else if (obj is InputActionAsset)
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(obj);
+                        hasChanged = true;
+                    }
+                }
+
+                if (hasChanged == true)
+                {
+                    AssetDatabase.SaveAssets();
                 }
             }
         }
 
-        #endif
+        // Returns the default asset path for where to create project-wide actions asset.
+        internal static string defaultAssetPath => kDefaultAssetPath;
+
+        // Returns the default template JSON content.
+        internal static string GetDefaultAssetJson()
+        {
+            return File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath));
+        }
+
+        // Creates an asset at the given path containing the default template JSON.
+        internal static InputActionAsset CreateDefaultAssetAtPath(string assetPath = kDefaultAssetPath)
+        {
+            return CreateAssetAtPathFromJson(assetPath, File.ReadAllText(EditorHelpers.GetPhysicalPath(kDefaultTemplateAssetPath)));
+        }
+
+        // These may be moved out to internal types if decided to extend validation at a later point.
 
         /// <summary>
-        /// Updates the input action references in the asset by updating names, removing dangling references
-        /// and adding new ones.
+        /// Interface for reporting asset verification errors.
         /// </summary>
-        /// <param name="asset"></param>
-        internal static void UpdateInputActionReferences()
+        internal interface IReportInputActionAssetVerificationErrors
         {
-            var asset = GetOrCreate();
-            var existingReferences = InputActionImporter.LoadInputActionReferencesFromAsset(asset).ToList();
+            /// <summary>
+            /// Reports a failure to comply to requirements with a message meaningful to the user.
+            /// </summary>
+            /// <param name="message">User-friendly error message.</param>
+            void Report(string message);
+        }
 
-            // Check if referenced input action exists in the asset and remove the reference if it doesn't.
-            foreach (var actionReference in existingReferences)
+        /// <summary>
+        /// Interface for asset verification.
+        /// </summary>
+        internal interface IInputActionAssetVerifier
+        {
+            /// <summary>
+            /// Verifies the given asset.
+            /// </summary>
+            /// <param name="asset">The asset to be verified</param>
+            /// <param name="reporter">The reporter to be used to report failure to meet requirements.</param>
+            public void Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter);
+        }
+
+        /// <summary>
+        /// Verifier managing verification and reporting of asset compliance with external requirements.
+        /// </summary>
+        class Verifier : IReportInputActionAssetVerificationErrors
+        {
+            private readonly IReportInputActionAssetVerificationErrors m_Reporter;
+
+            // Default verification error reporter which generates feedback as debug warnings.
+            private class DefaultInputActionAssetVerificationReporter : IReportInputActionAssetVerificationErrors
             {
-                if (actionReference.action != null && asset.FindAction(actionReference.action.id) == null)
+                public void Report(string message)
                 {
-                    actionReference.Set(null);
-                    AssetDatabase.RemoveObjectFromAsset(actionReference);
+                    Debug.LogWarning(message);
                 }
             }
 
-            // Check if all actions have a reference
-            foreach (var action in asset)
+            /// <summary>
+            /// Constructs a an instance associated with the given reporter.
+            /// </summary>
+            /// <param name="reporter">The associated reporter instance. If null, a default reporter will be constructed.</param>
+            public Verifier(IReportInputActionAssetVerificationErrors reporter = null)
             {
-                // Catch error that's possible to appear in previous versions of the package.
-                if (action.actionMap.m_Asset == null)
-                    action.actionMap.m_Asset = asset;
+                m_Reporter = reporter ?? new DefaultInputActionAssetVerificationReporter();
+                errors = 0;
+            }
 
-                var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
-                // The input action doesn't have a reference, create a new one.
-                if (actionReference == null)
+            #region IReportInputActionAssetVerificationErrors interface
+
+            /// <inheritdoc cref="IReportInputActionAssetVerificationErrors"/>
+            public void Report(string message)
+            {
+                ++errors;
+
+                try
                 {
-                    var actionReferenceNew = ScriptableObject.CreateInstance<InputActionReference>();
-                    actionReferenceNew.Set(action);
-                    AssetDatabase.AddObjectToAsset(actionReferenceNew, asset);
+                    m_Reporter.Report(message);
                 }
-                else
+                catch (Exception e)
                 {
-                    // Update the name of the reference if it doesn't match the action name.
-                    if (actionReference.name != InputActionReference.GetDisplayName(action))
+                    // Only log unexpected but non-fatal exception
+                    Debug.LogException(e);
+                }
+            }
+
+            #endregion
+
+            /// <summary>
+            /// Returns the total number of errors seen in verification (accumulative).
+            /// </summary>
+            public int errors { get; private set; }
+
+            /// <summary>
+            /// Returns <c>true</c> if the number of reported errors in verification is zero, else <c>false</c>.
+            /// </summary>
+            public bool isValid => errors == 0;
+
+            private static List<Func<IInputActionAssetVerifier>> s_VerifierFactories;
+
+            /// <summary>
+            /// Registers a factory instance.
+            /// </summary>
+            /// <param name="factory">The factory instance.</param>
+            /// <returns>true if successfully added, <c>false</c> if the factory have already been registered.</returns>
+            public static bool RegisterFactory(Func<IInputActionAssetVerifier> factory)
+            {
+                if (s_VerifierFactories == null)
+                    s_VerifierFactories = new List<Func<IInputActionAssetVerifier>>(1);
+                if (s_VerifierFactories.Contains(factory))
+                    return false;
+                s_VerifierFactories.Add(factory);
+                return true;
+            }
+
+            /// <summary>
+            /// Unregisters a factory instance that has previously been registered.
+            /// </summary>
+            /// <param name="factory">The factory instance to be removed.</param>
+            /// <returns>true if successfully unregistered, <c>false</c> if the given factory instance could not be found.</returns>
+            public static bool UnregisterFactory(Func<IInputActionAssetVerifier> factory)
+            {
+                return s_VerifierFactories.Remove(factory);
+            }
+
+            /// <summary>
+            /// Verifies the given project-wide input action asset using all registered verifiers.
+            /// </summary>
+            /// <param name="asset">The asset to be verified.</param>
+            /// <returns><c>true</c> if no verification errors occurred, else <c>false</c>.</returns>
+            /// <remarks>
+            /// Throws <c>System.ArgumentNullException</c> if <c>asset</c> is <c>null</c>.
+            ///
+            /// If any registered factory and/or verifier instance throws an exception this will be evaluated
+            /// as a verification error since the execution of the verifier could not continue. However, any
+            /// exceptions thrown will be caught and logged but not stop execution of the calling thread.
+            /// </remarks>
+            bool Verify(InputActionAsset asset)
+            {
+                if (asset == null)
+                    throw new ArgumentNullException(nameof(asset));
+
+                if (s_VerifierFactories == null || s_VerifierFactories.Count == 0)
+                    return true;
+
+                var instance = new Verifier(m_Reporter);
+                foreach (var factory in s_VerifierFactories)
+                {
+                    try
                     {
-                        AssetDatabase.RemoveObjectFromAsset(actionReference);
-                        actionReference.name = InputActionReference.GetDisplayName(action);
-                        AssetDatabase.AddObjectToAsset(actionReference, asset);
+                        factory.Invoke().Verify(asset, instance);
+                    }
+                    catch (Exception e)
+                    {
+                        // Only log unexpected but non-fatal exception and count to fail verification
+                        ++errors;
+                        Debug.LogException(e);
                     }
                 }
+
+                return errors == 0;
             }
+
+            /// <summary>
+            /// Verifies the given project-wide input action asset using all registered verifiers.
+            /// </summary>
+            /// <param name="asset">The asset to be verified.</param>
+            /// <param name="reporter">The reporter to be used. If this argument is <c>null</c> the default reporter will be used.</param>
+            /// <returns><c>true</c> if no verification errors occurred, else <c>false</c>.</returns>
+            /// <remarks>Throws <c>System.ArgumentNullException</c> if <c>asset</c> is <c>null</c>.</remarks>
+            public static bool Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter = null)
+            {
+                return (s_VerifierFactories == null || s_VerifierFactories.Count == 0) || new Verifier(reporter).Verify(asset);
+            }
+        }
+
+        internal static bool Verify(InputActionAsset asset, IReportInputActionAssetVerificationErrors reporter = null)
+        {
+            return Verifier.Verify(asset, reporter);
+        }
+
+        internal static bool RegisterInputActionAssetVerifier(Func<IInputActionAssetVerifier> factory)
+        {
+            return Verifier.RegisterFactory(factory);
+        }
+
+        internal static bool UnregisterInputActionAssetVerifier(Func<IInputActionAssetVerifier> factory)
+        {
+            return Verifier.UnregisterFactory(factory);
+        }
+
+        // Creates an asset at the given path containing the given JSON content.
+        private static InputActionAsset CreateAssetAtPathFromJson(string assetPath, string json)
+        {
+            // Note that the extra work here is to override the JSON name from the source asset
+            var inputActionAsset = InputActionAsset.FromJson(json);
+            inputActionAsset.name = InputActionImporter.NameFromAssetPath(assetPath);
+            InputActionAssetManager.SaveAsset(assetPath, inputActionAsset.ToJson());
+            return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
     }
 }
-#endif
+#endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

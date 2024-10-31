@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                 "Asset Input Actions",
                 // Show the asset path in the description.
                 (obj) => AssetDatabase.GetAssetPath((obj as InputActionReference).asset),
-                () => InputActionImporter.LoadInputActionReferencesFromAssetDatabase());
+                () => InputActionImporter.LoadInputActionReferencesFromAssetDatabase(skipProjectWide: true));
         }
 
         // Search provider for InputActionReferences for project-wide actions
@@ -42,7 +42,14 @@ namespace UnityEngine.InputSystem.Editor
             return CreateInputActionReferenceSearchProvider(k_ProjectWideActionsSearchProviderId,
                 "Project-Wide Input Actions",
                 (obj) => "(Project-Wide Input Actions)",
-                () => InputActionImporter.LoadInputActionReferencesFromAsset(ProjectWideActionsAsset.GetOrCreate()));
+                () =>
+                {
+                    var asset = InputSystem.actions;
+                    if (asset == null)
+                        return Array.Empty<Object>();
+                    var assetPath = AssetDatabase.GetAssetPath(asset);
+                    return InputActionImporter.LoadInputActionReferencesFromAsset(assetPath);
+                });
         }
 
         private static SearchProvider CreateInputActionReferenceSearchProvider(string id, string displayName,

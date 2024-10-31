@@ -280,7 +280,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 {
                     var intValue = parameter.value.value.ToInt32();
                     var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), intValue);
-                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, field.index, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
@@ -350,6 +350,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 return;
             }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // handled by OnDrawVisualElements with UI Toolkit
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+#endif
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;

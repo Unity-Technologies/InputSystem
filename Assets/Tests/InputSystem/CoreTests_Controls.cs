@@ -15,7 +15,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
-using UnityEngine.Scripting;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 
@@ -476,6 +475,9 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    // NOTE! Value caching will never be true for ButtonControls where users call wasPressedThisFrame/wasReleasedThisFrame
+    // following the first frame where either of those are called.
+    // This doesn't apply to this test, but just in case it gets edited/duplicated in future...
     public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

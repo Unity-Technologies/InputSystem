@@ -102,7 +102,7 @@ public class ExternalSamplesUtility
         UnityEngine.Debug.Log($"Created package at {packagePath}");
 
         RunGitCommannd($"tag {InputSystem.version}");
-        RunGitCommannd($"push --tags https://jechter:{token}@github.com/Unity-Technologies/InputSystem.git");
+        RunGitCommannd($"push --tags https://stefanunity:{token}@github.com/Unity-Technologies/InputSystem.git");
 
         string uploadUrl;
 

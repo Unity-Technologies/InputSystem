@@ -19,8 +19,9 @@ namespace UnityEngine.InputSystem.Editor
 
     internal abstract class ViewBase<TViewState> : IView
     {
-        protected ViewBase(StateContainer stateContainer)
+        protected ViewBase(VisualElement root, StateContainer stateContainer)
         {
+            this.rootElement = root;
             this.stateContainer = stateContainer;
             m_ChildViews = new List<IView>();
         }
@@ -48,6 +49,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 view.UpdateView(state);
             }
+
+            // We can execute UI Commands now that the UI is fully updated
+            // NOTE: This isn't used with Input Commands
+            allowUICommandExecution = true;
         }
 
         public TView CreateChildView<TView>(TView view) where TView : IView
@@ -109,7 +114,10 @@ namespace UnityEngine.InputSystem.Editor
             m_ViewStateSelector = new ViewStateSelector<T1, T2, T3, TViewState>(func1, func2, func3, selector);
         }
 
+        protected readonly VisualElement rootElement;
         protected readonly StateContainer stateContainer;
+        protected bool allowUICommandExecution { get; set; } = true;
+
         protected IViewStateSelector<TViewState> ViewStateSelector => m_ViewStateSelector;
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;

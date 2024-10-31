@@ -10,13 +10,12 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
-        private readonly VisualElement m_Root;
         private readonly Foldout m_ParentFoldout;
+        private readonly int m_DropdownLabelWidth = 90;
 
         public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             m_ParentFoldout = foldout;
 
             // TODO: Consider IEquatable<T> and how to compare selector data
@@ -37,22 +36,34 @@ namespace UnityEngine.InputSystem.Editor
             m_ParentFoldout.text = "Action";
             var inputAction = viewState.Item1.Value;
 
-            m_Root.Clear();
+            rootElement.Clear();
 
             var actionType = new EnumField("Action Type", inputAction.type)
             {
                 tooltip = inputAction.actionTypeTooltip
             };
+
+            // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
+            var actionLabel = actionType.Q<Label>();
+            actionLabel.style.minWidth = m_DropdownLabelWidth;
+            actionLabel.style.width = m_DropdownLabelWidth;
+
             actionType.RegisterValueChangedCallback(evt =>
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
             });
-            m_Root.Add(actionType);
+            rootElement.Add(actionType);
 
             if (inputAction.type != InputActionType.Button)
             {
                 var controlTypes = viewState.Item2;
                 var controlType = new DropdownField("Control Type");
+
+                // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
+                var controlLabel = controlType.Q<Label>();
+                controlLabel.style.minWidth = m_DropdownLabelWidth;
+                controlLabel.style.width = m_DropdownLabelWidth;
+
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
@@ -65,7 +76,17 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
                 });
-                m_Root.Add(controlType);
+
+                // ISX-1916 - When changing ActionType to a non-Button type, we must also update the ControlType
+                // to the currently selected value; the ValueChangedCallback is not fired in this scenario.
+                Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
+
+                rootElement.Add(controlType);
+            }
+            else
+            {
+                // ISX-1916 - When changing ActionType to a Button, we must also reset the ControlType
+                Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
             if (inputAction.type != InputActionType.Value)
@@ -79,7 +100,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
                 });
-                m_Root.Add(initialStateCheck);
+                rootElement.Add(initialStateCheck);
             }
         }
     }

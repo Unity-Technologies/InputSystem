@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 ////FIXME: this performs horribly; the constant rebuilding on every single event makes the debug view super slow when device is noisy
 
@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly InputEventTrace m_EventTrace;
         private readonly InputControl m_RootControl;
+        private static readonly ProfilerMarker k_InputEventTreeBuildRootMarker = new ProfilerMarker("InputEventTreeView.BuildRoot");
 
         private enum ColumnId
         {
@@ -177,7 +178,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            Profiler.BeginSample("InputEventTreeView.BuildRoot");
+            k_InputEventTreeBuildRootMarker.Begin();
 
             var root = new TreeViewItem
             {
@@ -217,7 +218,7 @@ namespace UnityEngine.InputSystem.Editor
                 root.children.Reverse();
             }
 
-            Profiler.EndSample();
+            k_InputEventTreeBuildRootMarker.End();
             return root;
         }
 

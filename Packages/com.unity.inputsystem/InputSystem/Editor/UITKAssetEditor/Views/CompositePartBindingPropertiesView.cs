@@ -9,7 +9,6 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class CompositePartBindingPropertiesView : ViewBase<CompositePartBindingPropertiesView.ViewState>
     {
-        private readonly VisualElement m_Root;
         private readonly DropdownField m_CompositePartField;
         private readonly IMGUIContainer m_PathEditorContainer;
 
@@ -18,12 +17,11 @@ namespace UnityEngine.InputSystem.Editor
             InputActionsEditorConstants.CompositePartBindingPropertiesViewUxml;
 
         public CompositePartBindingPropertiesView(VisualElement root, StateContainer stateContainer)
-            : base(stateContainer)
+            : base(root, stateContainer)
         {
-            m_Root = root;
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UxmlName);
             var container = visualTreeAsset.CloneTree();
-            m_Root.Add(container);
+            rootElement.Add(container);
 
             m_PathEditorContainer = container.Q<IMGUIContainer>("path-editor-container");
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");

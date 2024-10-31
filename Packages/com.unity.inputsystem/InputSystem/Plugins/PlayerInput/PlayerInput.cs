@@ -1463,7 +1463,15 @@ namespace UnityEngine.InputSystem
                     {
                         var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_Actions.controlSchemes);
                         if (controlScheme != null)
+                        {
                             TryToActivateControlScheme(controlScheme.Value);
+                        }
+                        else
+                        {
+                            // The device count check is here to allow the unit tests to pass (and not trigger this error message)
+                            if (InputSystem.devices.Count > 0 && availableDevices.Count == 0)
+                                Debug.LogWarning($"Cannot find matching control scheme for {this.name} (all control schemes are already paired to matching devices)", this);
+                        }
                     }
                 }
             }
@@ -1615,7 +1623,8 @@ namespace UnityEngine.InputSystem
         void Reset()
         {
             // Set default actions to project wide actions.
-            m_Actions = ProjectWideActionsAsset.GetOrCreate();
+            m_Actions = InputSystem.actions;
+            // TODO Need to monitor changes?
         }
 
         #endif

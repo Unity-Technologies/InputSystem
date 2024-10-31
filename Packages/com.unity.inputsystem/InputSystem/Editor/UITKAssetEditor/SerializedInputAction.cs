@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
             type = (InputActionType)serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
             interactions = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions)).stringValue;
             processors = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Processors)).stringValue;
+            propertyPath = wrappedProperty.propertyPath;
             initialStateCheck = ReadInitialStateCheck(serializedProperty);
             actionTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).GetTooltip();
             expectedControlTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).GetTooltip();
@@ -29,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionType type { get; }
         public string interactions { get; }
         public string processors { get; }
+        public string propertyPath { get; }
         public bool initialStateCheck { get; }
         public string actionTypeTooltip { get; }
         public string expectedControlTypeTooltip { get; }
@@ -59,7 +61,8 @@ namespace UnityEngine.InputSystem.Editor
                 && processors == other.processors
                 && initialStateCheck == other.initialStateCheck
                 && actionTypeTooltip == other.actionTypeTooltip
-                && expectedControlTypeTooltip == other.expectedControlTypeTooltip;
+                && expectedControlTypeTooltip == other.expectedControlTypeTooltip
+                && propertyPath == other.propertyPath;
         }
 
         public override bool Equals(object obj)
@@ -69,15 +72,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(
-                name,
-                expectedControlType,
-                (int)type,
-                interactions,
-                processors,
-                initialStateCheck,
-                actionTypeTooltip,
-                expectedControlTypeTooltip);
+            var hashCode = new HashCode();
+            hashCode.Add(name);
+            hashCode.Add(expectedControlType);
+            hashCode.Add((int)type);
+            hashCode.Add(interactions);
+            hashCode.Add(processors);
+            hashCode.Add(initialStateCheck);
+            hashCode.Add(actionTypeTooltip);
+            hashCode.Add(expectedControlTypeTooltip);
+            hashCode.Add(propertyPath);
+            return hashCode.ToHashCode();
         }
     }
 }

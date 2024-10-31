@@ -461,12 +461,15 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
     }
 
-    // The way we keep state does not allow observing the state change on the final
-    // state of the button. However, actions will still see the change.
     [Test]
     [Category("State")]
-    public void State_PressingAndReleasingButtonInSameFrame_DoesNotShowStateChange()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange(bool usesReadValueCaching)
     {
+        var originalSetting = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, usesReadValueCaching);
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
@@ -477,9 +480,45 @@ partial class CoreTests
 
         InputSystem.Update();
 
+        // We don't listen for inter-frame press/releases until we see them being requested, so the first time we try
+        // to detect it for a given device+ButtonControl, we'll miss the event.
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, originalSetting);
     }
 
     [Test]

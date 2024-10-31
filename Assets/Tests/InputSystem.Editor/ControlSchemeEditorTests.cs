@@ -1,11 +1,24 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
+using System;
+using System.Text.RegularExpressions;
 
 public class ControlSchemesEditorTests
 {
+    [SetUp]
+    public void SetUp()
+    {
+        TestUtils.MockDialogs();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        TestUtils.RestoreDialogs();
+    }
+
     [Test]
     [Category("AssetEditor")]
     public void AddRequirementCommand_AddsDeviceRequirements()
@@ -206,16 +219,65 @@ public class ControlSchemesEditorTests
 
     [Test]
     [Category("AssetEditor")]
-    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueName()
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnString()
     {
-        var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme).Generate();
+        var asset = TestData.inputActionAsset
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test")))
+            .Generate();
+
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
         state.serializedObject.Update();
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
 
+        //If ControlScheme name ends on a string a "1" will get added to the duplicate
         Assert.That(newState.selectedControlScheme.name, Is.EqualTo(state.selectedControlScheme.name + "1"));
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
+    }
+
+    [Test]
+    [Category("AssetEditor")]
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnInt()
+    {   //If ControlScheme name ends on int it will get incremented by 1
+        var asset = TestData.inputActionAsset
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("Test" + new System.Random().Next(100).ToString())))
+            .Generate();
+        var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
+
+        state.serializedObject.Update();
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
+        string pattern = @"\d+$"; //number at the end of a string
+        string oldControlSchemeNamePlusOne = "";
+
+        int intAtEndOfOldControlSchemeName = Convert.ToInt16(Regex.Match(state.selectedControlScheme.name, pattern).Value);
+        intAtEndOfOldControlSchemeName += 1;
+
+        oldControlSchemeNamePlusOne = Regex.Replace(state.selectedControlScheme.name, pattern, intAtEndOfOldControlSchemeName.ToString());
+
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo(oldControlSchemeNamePlusOne));
+        Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));
+    }
+
+    [Test(Description = "Verifies that when duplicating Control Scheme ending on an Int it increments that Int and jumps already existing Int names")]
+    [Category("AssetEditor")]
+    public void DuplicateControlSchemeCommand_CreatesCopyOfControlSchemeWithUniqueNameEndingOnIntJumpsExistingNumbers()
+    {
+        var asset = TestData.inputActionAsset.Generate();
+
+        asset.AddControlScheme(new InputControlScheme(("Test")));
+        asset.AddControlScheme(new InputControlScheme(("Test1")));
+
+        //select "Test" Control Scheme
+        var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
+
+        state.serializedObject.Update();
+
+        //duplicate "Test"
+        var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
+
+        //duplicated Control Scheme should be names "Test2", skipping "Test1"
+        Assert.That(newState.selectedControlScheme.name, Is.EqualTo("Test2"));
     }
 
     [Test]
