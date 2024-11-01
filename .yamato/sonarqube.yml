@@ -9,7 +9,7 @@ Windows-Dotnet-SonarScanner:
     EDITOR_VERSION: "2021.3"
     SONAR_HOST_URL: "https://sonar-staging.internal.unity3d.com"
     SONARQUBE_PROJECT_NAME: "SonarProject"
-    SONAR_PROJECT_PATH: SonarProject
+    SONAR_PROJECT_PATH:
     SONAR_PROJECT_KEY: "input:com.unity.inputsystem"    
     RIDER_VERSION: "3.0.12" 
     DEBUG: "0"
