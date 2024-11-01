@@ -17,6 +17,9 @@ namespace UnityEngine.InputSystem.Editor
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
 
+        // for testing purposes to know if the item is focused to accept input
+        internal bool IsFocused { get; private set; } = false;
+
         private bool m_IsEditing;
         private static InputActionsTreeViewItem s_EditingItem = null;
 
@@ -34,9 +37,13 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
-
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
+            renameTextfield.RegisterCallback<FocusInEvent>(e => IsFocused = true);
+            renameTextfield.RegisterCallback<FocusOutEvent>(e =>
+            {
+                OnEditTextFinished();
+                IsFocused = false;
+            });
         }
 
         public Label label => this.Q<Label>();
