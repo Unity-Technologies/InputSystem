@@ -4,34 +4,33 @@ Windows-Dotnet-SonarScanner:
   agent:
     type: Unity::VM
     flavor: b1.large
-    image: package-ci/win10-sonar:stable
+    image: package-ci/win10:v4
   variables:    
     EDITOR_VERSION: "2021.3"
     SONAR_HOST_URL: "https://sonar-staging.internal.unity3d.com"
     SONARQUBE_PROJECT_NAME: "SonarProject"
+    SONAR_PROJECT_PATH: SonarProject
     SONAR_PROJECT_KEY: "input:com.unity.inputsystem"    
-    RIDER_VERSION: "3.0.12"    
+    RIDER_VERSION: "3.0.12" 
+    DEBUG: "0"
+    SONAR_V1_BAT_URL: "https://artifactory.prd.it.unity3d.com/artifactory/pets-internal/sonarqube/sonar_1.bat"
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1" 
+    SONAR_QUALITY_GATE_WAIT: false    
   commands:    
     - |
       cd %YAMATO_WORK_DIR%
       unity-downloader-cli -u %EDITOR_VERSION% -c Editor --fast --wait
+    - cmd /v /s /c ".Editor\Unity.exe -projectPath %SONAR_PROJECT_PATH% -batchmode -acceptsoftwareterms -quit -nographics -logFile Editor.log -upmNoDefaultPackages -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
     - |
-      unity-config project create %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%
-      unity-config settings project-path %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%
-      unity-config project add dependency com.unity.ide.rider@%RIDER_VERSION%
-      move %YAMATO_SOURCE_DIR%\Packages\com.unity.inputsystem %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%\Packages\com.unity.inputsystem      
-    - start /W %YAMATO_WORK_DIR%\.Editor\Unity.exe -projectPath %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME% -batchmode -quit -nographics -logFile %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%\Editor.log -executeMethod "Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
-    - |
-      # If not triggered by a PR pass branch name, otherwise PR parameters
-      IF "%YAMATO_PR_ID%" == "" ( set SONAR_ANALYSIS_TYPE_PARAM=/d:sonar.branch.name=%GIT_BRANCH% ) ELSE ( set SONAR_ANALYSIS_TYPE_PARAM=/d:sonar.pullrequest.key=%YAMATO_PR_ID% /d:sonar.pullrequest.branch=%GIT_BRANCH% /d:sonar.pullrequest.base=%YAMATO_PR_TARGET_BRANCH% )
-      cmd /v /s /c "dotnet sonarscanner begin /k:"%SONAR_PROJECT_KEY%" /d:sonar.token=!SONAR_TOKEN_STAGING! /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.projectBaseDir=%YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%\Packages\com.unity.inputsystem /d:sonar.sourceEncoding="UTF-8" %SONAR_ANALYSIS_TYPE_PARAM% /d:sonar.scm.provider=git /d:sonar.log.level=DEBUG /d:sonar.verbose=true /d:sonar.qualitygate.wait=true"
-      dotnet build %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%\%SONARQUBE_PROJECT_NAME%.sln /t:Rebuild /p:SonarQubeTestProject=false
-      cmd /v /s /c "dotnet sonarscanner end /d:sonar.token=!SONAR_TOKEN_STAGING!"      
+      curl -fsSL %SONAR_V1_BAT_URL% --output sonar.bat --retry 3
+      sonar.bat /s:%YAMATO_SOURCE_DIR%\.yamato\SonarQube.Analysis.xml
   artifacts:
     logs:
       paths:
         - "**/*.log"
-  triggers:
+   after:
+    - pets_ant
+  triggers:    
     pull_requests:
       - targets:
           only:

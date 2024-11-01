@@ -1,0 +1,10 @@
+<SonarQubeAnalysisProperties  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
+  <Property Name="sonar.sourceEncoding">UTF-8</Property>
+  <Property Name="sonar.sources">com.unity.inputsystem</Property>
+  <Property Name="sonar.inclusions">com.unity.inputsystem/**/*</Property>
+  <Property Name="sonar.exclusions">InputSystem/Assets/**/*</Property>
+  <Property Name="sonar.tests">com.unity.inputsystem/Tests/</Property>
+  <Property Name="sonar.cs.nunit.reportsPaths">test_results~/annotation/**/TestResults.xml</Property>
+  <Property Name="sonar.cs.opencover.reportsPaths">test_results~/annotation/**/*-opencov/*/*.xml</Property>
+  <Property Name="sonar.coverage.exclusions">com.unity.inputsystem/Tests/**/*</Property>
+</SonarQubeAnalysisProperties>
