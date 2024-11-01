@@ -24,7 +24,7 @@ Windows-Dotnet-SonarScanner:
       unity-config settings project-path %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%
       unity-config project add dependency com.unity.ide.rider@%RIDER_VERSION%
       move %YAMATO_SOURCE_DIR%\Packages\com.unity.inputsystem %YAMATO_SOURCE_DIR%\%SONARQUBE_PROJECT_NAME%\Packages\com.unity.inputsystem 
-    - cmd /v /s /c ".Editor\Unity.exe -projectPath %SONAR_PROJECT_PATH% -batchmode -acceptsoftwareterms -quit -nographics -logFile Editor.log -upmNoDefaultPackages -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
+    - cmd /v /s /c "%YAMATO_SOURCE_DIR%\.Editor\Unity.exe -projectPath %SONAR_PROJECT_PATH% -batchmode -acceptsoftwareterms -quit -nographics -logFile Editor.log -upmNoDefaultPackages -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
     - |
       curl -fsSL %SONAR_V1_BAT_URL% --output sonar.bat --retry 3
       sonar.bat /s:%YAMATO_SOURCE_DIR%\.yamato\SonarQube.Analysis.xml
