@@ -17,6 +17,7 @@ using UnityEngine.TestTools.Constraints;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using UnityEngine.InputSystem.OnScreen;
 
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
@@ -661,6 +662,58 @@ internal class PlayerInputTests : CoreTestsFixture
             new Message("OnControlsChanged", playerInput), // Control scheme switch.
             new Message("OnFire", 1f)
         }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_AutoSwitchControlSchemesInSinglePlayerWithOnScreenControl_AutoSwitchToTargetDeviceAndIgnoreMouse()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+
+        var onScreenButton = go.AddComponent<OnScreenButton>();
+        onScreenButton.enabled = false;
+        onScreenButton.controlPath = "<Gamepad>/buttonSouth";
+
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        // enable the OnScreenButton, it should switch to Gamepad
+        onScreenButton.enabled = true;
+        var gamepad = onScreenButton.control.device;
+        Assert.That(gamepad, Is.TypeOf<Gamepad>());
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+        InputSystem.Update();
+
+        // The controlScheme shouldn't have changed
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // disabling the OnScreenButton to ensure that it will now switch to Keyboard&Mouse as expected
+        onScreenButton.enabled = false;
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Keyboard&Mouse"));
     }
 
     [Test]
