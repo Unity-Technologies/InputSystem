@@ -2630,6 +2630,11 @@ internal partial class UITests : CoreTestsFixture
         Release(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
 
+#if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
+        // Process all queued UI events to ensure that next events will not make the events list capacity growing
+        UnityEngine.InputForUI.EventProvider.NotifyUpdate();
+#endif
+
         var kProfilerRegion = "UI_ClickDraggingDoesNotAllocateGCMemory";
 
         // Now for real.
