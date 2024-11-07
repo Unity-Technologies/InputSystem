@@ -4,6 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.OnScreen;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -1867,7 +1868,8 @@ namespace UnityEngine.InputSystem
         {
             // Early out if the device isn't usable with any of our control schemes.
             var actions = all[0].actions;
-            return actions != null && actions.IsUsableWithDevice(device);
+            // Skip Pointer device if any OnScreenControl is active since they will use it to generate device event
+            return actions != null && (!OnScreenControl.HasAnyActive || !(device is Pointer)) && actions.IsUsableWithDevice(device);
         }
 
         private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)

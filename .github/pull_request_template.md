@@ -1,18 +1,22 @@
 ### Description
 
-_Please fill this section with a description what the pull request is trying to address._
+_Please fill this section with a description what the pull request is trying to address and what changes were made._
 
-### Changes made
 
-_Please write down a short description of what changes were made._
-
-### Testing
+### Testing status & QA
 
 _Please describe the testing already done by you and what testing you request/recommend QA to execute. If you used or created any testing project please link them here too for QA._
 
-### Risk
+### Overall Product Risks
 
-_Please describe the potential risks of your changes for the reviewers._
+_Please rate the potential complexity and halo effect from low to high for the reviewers. Note down potential risks to specific Editor branches if any._
+
+- Complexity: 
+- Halo Effect: 
+
+### Comments to reviewers
+
+_Please describe any additional information such as what to focus on, or historical info for the reviewers._
 
 ### Checklist
 

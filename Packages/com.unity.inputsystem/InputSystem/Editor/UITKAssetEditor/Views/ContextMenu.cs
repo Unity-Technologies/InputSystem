@@ -47,19 +47,16 @@ namespace UnityEngine.InputSystem.Editor
 
         // Add "Add Action Map" option to empty space under the ListView. Matches with old IMGUI style (ISX-1519).
         // Include Paste here as well, since it makes sense for adding ActionMaps.
-        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement element, bool onlyShowIfListIsEmpty = false)
+        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement element)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                if (!onlyShowIfListIsEmpty || mapView.GetMapCount() == 0)
-                {
-                    var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                        menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+                var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
 
-                    menuEvent.menu.AppendSeparator();
-                    menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
-                }
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
             }) { target = element };
         }
 
