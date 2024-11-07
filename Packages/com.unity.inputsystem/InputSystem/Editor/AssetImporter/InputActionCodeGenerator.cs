@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         private const string kClassExample = @"using namespace UnityEngine;
 using UnityEngine.InputSystem;
 
-// Example of using an InputActionMap named ""Player"" from a MonoBehavior implementing callback interface.
+// Example of using an InputActionMap named ""Player"" from a UnityEngine.MonoBehaviour implementing callback interface.
 public class Example : MonoBehaviour, MyActions.IPlayerActions
 {
     private MyActions_Actions m_Actions;                  // Source code representation of asset.
