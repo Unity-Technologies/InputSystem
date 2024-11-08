@@ -3,13 +3,12 @@ uid: input-system-touch
 ---
 # Touch support
 
-- [Touch support](#touch-support)
-  - [`Touchscreen` Device](#touchscreen-device)
-    - [Controls](#controls)
-    - [Using touch with Actions](#using-touch-with-actions)
-  - [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
-  - [Touch Simulation](#touch-simulation)
-  - [Reading all touches](#reading-all-touches)
+- [`Touchscreen` Device](#touchscreen-device)
+  - [Controls](#controls)
+  - [Using touch with Actions](#using-touch-with-actions)
+- [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
+- [Touch Simulation](#touch-simulation)
+- [Reading all touches](#reading-all-touches)
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
@@ -19,7 +18,7 @@ Touch support is divided into:
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
->__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
+>__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](debugging.md#unity-remote).
 
 ## `Touchscreen` Device
 
@@ -101,7 +100,7 @@ Touch input can be simulated from input on other kinds of [Pointer](./Pointers.m
     }
 ```
 
-In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./Debugging.md).
+In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./debugging.md).
 
 [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) will add a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirror input on any [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.
 

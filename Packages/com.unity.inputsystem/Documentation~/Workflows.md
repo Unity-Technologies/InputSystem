@@ -13,6 +13,7 @@ You can choose to configure Actions and Bindings in the Editor UI, or you can se
 The descriptions below describe these main workflows and link to more detailed description of them.
 
 
+
 |   |   |
 |---|---|
 |[**Using Actions**](Workflow-Actions.md)<br/><br/>This is the **recommended** workflow for most situations. In this workflow, you use the [Actions Editor window](./ActionsEditor.md) to configure sets of actions and bindings, then set up references and read the values for those actions in your code [(read more)](Workflow-Actions.md).<br/><br/>|![image alt text](Images/Workflow-Actions.png)|

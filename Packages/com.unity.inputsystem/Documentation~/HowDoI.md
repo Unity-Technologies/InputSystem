@@ -49,8 +49,8 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](W
 
 - [give my head tracking an extra update before rendering?](../api/UnityEngine.InputSystem.XR.XRHMD.html)
 
-- [record events flowing through the system?](Debugging.md#other-tips)
+- [record events flowing through the system?](debugging.md#other-tips)
 
-- [see events as they're processed?](Debugging.md#other-tips)
+- [see events as they're processed?](debugging.md#other-tips)
 
 - [see what Devices I have and what state they're in?](Debugging.html#debugging-devices)

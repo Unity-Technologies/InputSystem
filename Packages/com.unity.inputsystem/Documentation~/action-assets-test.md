@@ -29,6 +29,7 @@ Don't use headings below H3 level.
 
 --------------------------------------------
 
+[link](##bind)
 
 - [Descriptive heading](#descriptive-heading)
   - [Detailed heading](#detailed-heading)

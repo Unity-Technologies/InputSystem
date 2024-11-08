@@ -10,7 +10,10 @@ uid: input-system-settings
 - [Compensate Orientation](#compensate-orientation)
 - [Default value properties](#default-value-properties)
 - [Supported Devices](#supported-devices)
+  - [Override in Editor](#override-in-editor)
 - [Platform-specific settings](#platform-specific-settings)
+  - [iOS/tvOS](#iostvos)
+  - [Editor](#editor)
 
 
 To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
@@ -123,7 +126,7 @@ To add Devices to the list, click the Add (+) icon and choose a Device from the 
 
 In the Editor, you might want to use input Devices that the application doesn't support. For example, you might want to use a tablet in the Editor even if your application only supports gamepads.
 
-To force the Editor to add all locally available Devices, even if they're not in the list of __Supported Devices__, open the [Input Debugger](Debugging.md) (menu: __Window > Analysis > Input Debugger__), and select __Options > Add Devices Not Listed in 'Supported Devices'__.
+To force the Editor to add all locally available Devices, even if they're not in the list of __Supported Devices__, open the [Input Debugger](debugging.md) (menu: __Window > Analysis > Input Debugger__), and select __Options > Add Devices Not Listed in 'Supported Devices'__.
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 

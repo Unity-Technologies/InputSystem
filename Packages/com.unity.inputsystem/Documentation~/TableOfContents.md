@@ -61,7 +61,7 @@
   * [On-screen Controls](OnScreen.md)
 * [Editor Features](EditorFeatures.md)
   * [Using Input in the Editor](UseInEditor.md)
-  * [Debugging](Debugging.md)
+  * [Debugging](debugging.md)
   * [Input testing](Testing.md)
 * [How do I...?](HowDoI.md)
 * [Architecture](Architecture.md)
