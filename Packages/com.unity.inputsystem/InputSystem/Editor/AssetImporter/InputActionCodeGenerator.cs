@@ -546,7 +546,10 @@ public class Example : MonoBehaviour, MyActions.IPlayerActions
 
             private void DocComment(string text)
             {
-                WriteLine(string.Concat("/// ", text));
+                if (string.IsNullOrEmpty(text))
+                    WriteLine("///");
+                else
+                    WriteLine(string.Concat("/// ", text));
             }
 
             private void DocElement(string tag, string text)
