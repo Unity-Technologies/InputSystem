@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ScrollView m_PropertiesScrollview;
 
         private bool m_RenameOnActionAdded;
+        private bool m_FocusOnRenameActionFinish;
         private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
 
         //save TreeView element id's of individual input actions and bindings to ensure saving of expanded state
@@ -215,6 +216,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Don't want to show action properties if there's no actions.
             m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
+            
+            FinishActionRename(viewState.newElementID);
         }
 
         private void OnDraggedItem(DragPerformEvent evt)
@@ -307,6 +310,17 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.ScrollToItem(index);
             m_ActionsTreeView.GetRootElementForIndex(index)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
         }
+        
+        private void FinishActionRename(int id)
+        {
+            if (!m_FocusOnRenameActionFinish || id == -1)
+                return;
+            m_ActionsTreeView.ScrollToItemById(id);
+            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id)?.Q<InputActionsTreeViewItem>();
+            treeViewItem?.FocusOnRenameFinish();
+
+            m_FocusOnRenameActionFinish = false;
+        }
 
         internal void AddAction()
         {
@@ -369,6 +383,8 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
             else if (data.isComposite)
                 Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
+
+            m_FocusOnRenameActionFinish = true;
         }
 
         internal int GetMapCount()

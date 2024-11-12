@@ -105,6 +105,18 @@ namespace UnityEngine.InputSystem.Editor
         {
             s_EditingItem?.OnEditTextFinished();
         }
+        
+        public void FocusOnRenameFinish()
+        {
+            if (m_IsEditing)
+                return;
+
+            //FocusOnRenameTextField() changes the focus to the renameTextfield explicitly, the focus needs to
+            //get moved again using a similar workaround when finished editing text
+            //Everything else has already been taken restored in OnEditTextFinished() but this has to happen after
+            //listView/treeView reclaims the focus in RedrawUI
+            label.Q<Label>().Focus();
+        }
 
         async void DelayCall()
         {
