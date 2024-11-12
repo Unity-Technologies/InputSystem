@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue with The "Add Control Scheme..." popup window so that it now persists until any changes are explicitly Saved or Cancelled [case ISXB-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1131).
 - Fixed missing documentation for source generated Input Action Assets. This is now generated as part of the source code generation step when "Generate C# Class" is checked in the importer inspector settings.
 - Fixed pasting into an empty map list raising an exception. [ISXB-1150](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1150)
+- Fixed pasting bindings into empty Input Action asset. [ISXB-1180](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1180)
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
