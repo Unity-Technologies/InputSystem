@@ -13,16 +13,17 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
 - Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
-- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105)
-- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
-- Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141)
-- Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151)
+- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105).
+- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845).
+- Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141).
+- Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151).
+- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656).
+- Fixed an issue with The "Add Control Scheme..." popup window so that it now persists until any changes are explicitly Saved or Cancelled [case ISXB-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1131).
+- Fixed missing documentation for source generated Input Action Assets. This is now generated as part of the source code generation step when "Generate C# Class" is checked in the importer inspector settings.
 - Fixed pasting into an empty map list raising an exception. [ISXB-1150](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1150)
-- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656)
-- Fixed an issue with The "Add Control Scheme..." popup window so that it now persists until any changes are explicitly Saved or Cancelled [case ISXB-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1131)
 
 ### Changed
-- Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086)
+- Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
 - Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
 
 ## [1.11.2] - 2024-10-16
