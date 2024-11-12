@@ -19,6 +19,9 @@ however, it has to be formatted properly to pass verification tests.
 - Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
 - Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
 
+### Added
+- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+
 ## [1.12.0] - 2025-01-15
 
 ### Fixed

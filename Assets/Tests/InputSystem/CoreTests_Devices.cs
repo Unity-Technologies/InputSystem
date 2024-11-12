@@ -2674,7 +2674,7 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(IMESelected: true));
         InputSystem.Update();
 
         Assert.That(keyboard.anyKey.isPressed, Is.False);
