@@ -216,7 +216,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Don't want to show action properties if there's no actions.
             m_PropertiesScrollview.visible = m_ActionsTreeView.GetTreeCount() > 0;
-            
+
             FinishActionRename(viewState.newElementID);
         }
 
@@ -310,7 +310,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.ScrollToItem(index);
             m_ActionsTreeView.GetRootElementForIndex(index)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
         }
-        
+
         private void FinishActionRename(int id)
         {
             if (!m_FocusOnRenameActionFinish || id == -1)

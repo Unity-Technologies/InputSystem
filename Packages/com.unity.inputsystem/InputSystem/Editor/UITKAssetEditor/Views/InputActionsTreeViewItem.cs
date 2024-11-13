@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             s_EditingItem?.OnEditTextFinished();
         }
-        
+
         public void FocusOnRenameFinish()
         {
             if (m_IsEditing)
