@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         public event EventCallback<string> EditTextFinished;
 
         // for testing purposes to know if the item is focused to accept input
-        internal bool IsFocused { get; private set; } = false;
+        internal bool IsTextFieldFocused { get; private set; } = false;
 
         private bool m_IsEditing;
         private static InputActionsTreeViewItem s_EditingItem = null;
@@ -38,11 +38,11 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnMouseUp = false;
 
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.RegisterCallback<FocusInEvent>(e => IsFocused = true);
+            renameTextfield.RegisterCallback<FocusInEvent>(e => IsTextFieldFocused = true);
             renameTextfield.RegisterCallback<FocusOutEvent>(e =>
             {
                 OnEditTextFinished();
-                IsFocused = false;
+                IsTextFieldFocused = false;
             });
         }
 
@@ -116,6 +116,7 @@ namespace UnityEngine.InputSystem.Editor
             //Everything else has already been taken restored in OnEditTextFinished() but this has to happen after
             //listView/treeView reclaims the focus in RedrawUI
             label.Q<Label>().Focus();
+            IsTextFieldFocused = false;
         }
 
         async void DelayCall()

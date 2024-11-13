@@ -63,7 +63,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         return WaitUntil(() =>
         {
             var actionItems = m_Window.rootVisualElement.Q("actions-container").Query<InputActionsTreeViewItem>().ToList();
-            if (actionItems.Count > index && actionItems[index].IsFocused == isActive)
+            if (actionItems.Count > index && actionItems[index].IsTextFieldFocused == isActive)
             {
                 return true;
             }
@@ -211,7 +211,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         // Click twice to start the rename
         SimulateClickOn(actionItem[1]);
         // If the item is already focused, don't click again
-        if (!actionItem[1].IsFocused)
+        if (!actionItem[1].IsTextFieldFocused)
         {
             SimulateClickOn(actionItem[1]);
         }
