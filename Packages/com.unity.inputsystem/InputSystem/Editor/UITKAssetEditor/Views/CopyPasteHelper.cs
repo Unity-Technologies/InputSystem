@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-
+            if (bindingsArray == null) return;
             int newBindingIndex;
             if (state.selectionType == SelectionType.Action)
                 newBindingIndex = Selectors.GetLastBindingIndexForSelectedAction(state);
