@@ -114,7 +114,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
         {
-            Debug.Assert(indexToInsert >= 0 && indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
+            // Need to guard against this case, as there is different behaviour when pasting actions vs actionmaps
+            if (indexToInsert < 0)
+            {
+                return -1;
+            }
+            Debug.Assert(indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
             var offset = 1; //previous action offset
             while (indexToInsert - offset >= 0)
             {
