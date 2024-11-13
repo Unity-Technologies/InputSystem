@@ -79,7 +79,8 @@ namespace UnityEngine.InputSystem.Composites
         /// still trigger. Default is false.
         /// </summary>
         /// <remarks>
-        /// By default, <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
         /// goes into pressed state for the composite as a whole to trigger. This means that binding to, for example, <c>Shift+B</c>,
         /// the <c>shift</c> key has to be pressed before pressing the <c>B</c> key. This is the behavior usually expected with
         /// keyboard shortcuts.
@@ -87,6 +88,7 @@ namespace UnityEngine.InputSystem.Composites
         /// This parameter can be used to bypass this behavior and allow any timing between <see cref="modifier"/> and <see cref="button"/>.
         /// The only requirement is for them both to concurrently be in pressed state.
         /// </remarks>
+        [Tooltip("If checked, it will bypass the InputSettings.shortcutKeysConsumeInput setting and the modifier can be pressed after and the composite will still trigger")]
         public bool overrideModifiersNeedToBePressedFirst;
 
         /// <summary>

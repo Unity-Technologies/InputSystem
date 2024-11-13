@@ -88,7 +88,8 @@ namespace UnityEngine.InputSystem.Composites
         /// Default value is <c>false</c>.
         /// </summary>
         /// <remarks>
-        /// By default, if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
         /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
         /// with keyboard shortcuts.
@@ -101,6 +102,7 @@ namespace UnityEngine.InputSystem.Composites
         /// is bound to, any press sequence is acceptable. For the example binding to <c>Ctrl+B</c>, it would mean that pressing <c>B</c> and
         /// only then pressing <c>Ctrl</c> will still trigger the binding.
         /// </remarks>
+        [Tooltip("If checked, it will bypass the InputSettings.shortcutKeysConsumeInput setting and the modifier can be pressed after and the composite will still trigger")]
         public bool overrideModifiersNeedToBePressedFirst;
 
         private int m_ValueSizeInBytes;
