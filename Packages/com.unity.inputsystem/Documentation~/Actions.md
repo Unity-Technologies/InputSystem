@@ -21,5 +21,5 @@ Actions also make it simpler to create a system that lets your players [customiz
 >**Notes:**
 > - Actions are a runtime only feature. You can't use them in [Editor window code](https://docs.unity3d.com/ScriptReference/EditorWindow.html).
 >
-> - You can read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
+> - You can read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](using-direct-workflow.md).
 >

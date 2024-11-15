@@ -5,7 +5,7 @@ When you set up callbacks for your Action, the Action informs your code that a c
 
 There are several ways to do this:
 
-1. You can use the [PlayerInput component](Workflow-PlayerInput.md) to set up callbacks in the inspector.
+1. You can use the [PlayerInput component](using-playerinput-workflow.md) to set up callbacks in the inspector.
 1. Each Action has a [`started`, `performed`, and `canceled` callback](#action-callbacks).
 1. Each Action Map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
 1. The Input System has a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
@@ -13,7 +13,7 @@ There are several ways to do this:
 
 #### The PlayerInput component
 
-The PlayerInput component is the simplest way to set up Action callbacks. It provides an interface in the inspector that allows you set up callbacks directly to your methods without requiring intermediate code. [Read more about the PlayerInput component](Workflow-PlayerInput.md).
+The PlayerInput component is the simplest way to set up Action callbacks. It provides an interface in the inspector that allows you set up callbacks directly to your methods without requiring intermediate code. [Read more about the PlayerInput component](using-playerinput-workflow.md).
 
 Alternatively, you can implement callbacks entirely from your own code using the following workflow:
 

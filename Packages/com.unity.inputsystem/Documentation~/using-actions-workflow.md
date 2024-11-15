@@ -105,4 +105,4 @@ This is the recommended workflow with the Input System Package, providing a flex
 
 You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](ActionBindings.html#interactive-rebinding).
 
-This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions & PlayerInput](./Workflow-PlayerInput.md) workflow.
+This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions & PlayerInput](./using-playerinput-workflow.md) workflow.

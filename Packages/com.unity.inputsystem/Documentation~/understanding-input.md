@@ -1,7 +1,9 @@
 ---
-uid: basic-concepts
+uid: understanding-input
 ---
-# Basic Concepts
+# Understanding input
+
+Input refers to signals sent by users of your game or app from an input device, such as a keyboard, mouse, touchscreen, gamepad, or joystick. Almost all Unity projects require input of some form, and the Input system package provides a flexible set of features which allow you to configure and respond to input in a way that suits your project.
 
 This page introduces the basic concepts that relate to working with the Input System. They relate to the steps in the sequence of events that occur when a user sends input to your game or app. The Input System provides features which implement these steps, or you can choose to implement some of them yourself.
 
