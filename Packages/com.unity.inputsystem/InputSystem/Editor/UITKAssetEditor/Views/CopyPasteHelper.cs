@@ -265,9 +265,18 @@ namespace UnityEngine.InputSystem.Editor
             else
             {
                 var actionName = Selectors.GetSelectedBinding(s_State)?.wrappedProperty.FindPropertyRelative("m_Action")
-                    .stringValue;
+                                 .stringValue;
+
                 if (s_State.selectionType == SelectionType.Action)
-                    actionName = PropertyName(Selectors.GetSelectedAction(s_State)?.wrappedProperty);
+                {
+                    SerializedProperty property = Selectors.GetSelectedAction(s_State)?.wrappedProperty;
+                    if (property == null)
+                        return;
+                    actionName = PropertyName(property);
+                }
+                if (actionName == null)
+                    return;
+
                 PasteBindingOrComposite(arrayToInsertInto, block, indexToInsert, actionName);
             }
         }
