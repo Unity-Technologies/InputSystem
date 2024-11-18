@@ -143,6 +143,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <summary>
         /// If set to <c>Ordered</c> or <c>Unordered</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
         /// </summary>
+        /// <remarks>
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,

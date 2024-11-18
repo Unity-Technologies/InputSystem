@@ -130,6 +130,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <summary>
         /// If set to <c>Ordered</c> or <c>Unordered</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
         /// </summary>
+        /// <remarks>
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
         /// goes into pressed state for the composite as a whole to trigger. This means that binding to, for example, <c>Shift+B</c>,
