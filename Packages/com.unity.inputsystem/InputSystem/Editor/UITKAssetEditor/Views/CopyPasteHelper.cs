@@ -265,7 +265,7 @@ namespace UnityEngine.InputSystem.Editor
             else
             {
                 var actionName = Selectors.GetSelectedBinding(s_State)?.wrappedProperty.FindPropertyRelative("m_Action")
-                                 .stringValue;
+                    .stringValue;
 
                 if (s_State.selectionType == SelectionType.Action)
                 {
