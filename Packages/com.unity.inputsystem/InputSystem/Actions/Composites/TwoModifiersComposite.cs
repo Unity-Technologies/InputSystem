@@ -136,7 +136,7 @@ namespace UnityEngine.InputSystem.Composites
             Ordered = 1,
 
             /// <summary>
-            /// <see cref="modifier1"/> and/or <see cref="modifier2"/> can be pressed after <see cref="button"/>
+            /// <see cref="modifier1"/> and/or <see cref="modifier2"/> can be pressed after <see cref="binding"/>
             /// and the composite will still trigger. The only requirement is for all of them to concurrently be in pressed state.
             /// </summary>
             Unordered = 2
