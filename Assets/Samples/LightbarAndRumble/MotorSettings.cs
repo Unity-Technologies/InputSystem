@@ -4,8 +4,8 @@ using UnityEngine.InputSystem.DualShock;
 
 public class MotorSettings : MonoBehaviour
 {
-    [Range(0, 1)] public float lowFrequencyMotorSpeed; 
-    [Range(0, 1)] public float highFrequencyMotorSpeed; 
+    [Range(0, 1)] public float lowFrequencyMotorSpeed;
+    [Range(0, 1)] public float highFrequencyMotorSpeed;
 
     public void SetMotorSpeeds()
     {
