@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem.Composites
         ///
         /// This field allows you to explicitly override this default inference.
         /// </remarks>
-        [Tooltip("By default it follow the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
         public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
 
         /// <summary>

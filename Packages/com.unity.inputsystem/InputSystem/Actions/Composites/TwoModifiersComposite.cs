@@ -128,10 +128,10 @@ namespace UnityEngine.InputSystem.Composites
             Default = 0,
 
             /// <summary>
-            /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
-            /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-            /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
-            /// This is the behavior usually expected with keyboard shortcuts.
+            /// if <see cref = "binding" /> is bound to only <see cref = "Controls.ButtonControl" /> s, then the composite requires
+            /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
+            /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed
+            /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.
             /// </summary>
             Ordered = 1,
 
@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <c>B</c> and only then pressing <c>Ctrl</c> and <c>Shift</c> will still trigger the binding.
         ///
         /// </remarks>
-        [Tooltip("By default it follow the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
         public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
 
         /// <summary>

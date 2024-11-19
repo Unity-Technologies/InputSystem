@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Composites
         /// This parameter can be used to bypass this behavior and enforce the timing order or allow any timing between <see cref="modifier"/> and <see cref="button"/>.
         /// The only requirement is for them both to concurrently be in pressed state.
         /// </remarks>
-        [Tooltip("By default it follow the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
         public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
 
         /// <summary>

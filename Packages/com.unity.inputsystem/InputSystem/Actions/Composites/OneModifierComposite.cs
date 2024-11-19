@@ -126,15 +126,15 @@ namespace UnityEngine.InputSystem.Composites
             Default = 0,
 
             /// <summary>
-            /// <see cref="modifier"/> is required to be in pressed state before or at the same
-            /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-            /// for example, <c>Ctrl+B</c>, the <c>ctrl</c> key have to be pressed before pressing the <c>B</c> key.
-            /// This is the behavior usually expected with keyboard shortcuts.
+            /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+            /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
+            /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+            /// with keyboard shortcuts.
             /// </summary>
             Ordered = 1,
 
             /// <summary>
-            /// <see cref="modifier"/> can be pressed after <see cref="button"/>
+            /// <see cref="modifier"/> can be pressed after <see cref="binding"/>
             /// and the composite will still trigger. The only requirement is for all of them to concurrently be in pressed state.
             /// </summary>
             Unordered = 2
@@ -161,7 +161,7 @@ namespace UnityEngine.InputSystem.Composites
         /// is bound to, any press sequence is acceptable. For the example binding to <c>Ctrl+B</c>, it would mean that pressing <c>B</c> and
         /// only then pressing <c>Ctrl</c> will still trigger the binding.
         /// </remarks>
-        [Tooltip("By default it follow the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
         public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
 
         private int m_ValueSizeInBytes;
