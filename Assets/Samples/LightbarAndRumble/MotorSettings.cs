@@ -9,7 +9,7 @@ public class MotorSettings : MonoBehaviour
 
     public void SetMotorSpeeds()
     {
-        var gamepad = DualShockGamepad.current;
+        var gamepad = Gamepad.current;
         if (gamepad != null)
         {
             Debug.Log("Current gamepad: " + gamepad);
@@ -19,7 +19,7 @@ public class MotorSettings : MonoBehaviour
 
     private void OnDisable()
     {
-        var gamepad = DualShockGamepad.current;
+        var gamepad = Gamepad.current;
         if (gamepad != null)
         {
             gamepad.SetMotorSpeeds(0, 0);
