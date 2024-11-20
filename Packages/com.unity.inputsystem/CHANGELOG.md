@@ -28,7 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
 - Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
-- Changed paremeter `overrideModifiersNeedToBePressedFirst` to obsolete for `ButtonWithOneModifier`, `ButtonWithTwoModifiers`, `OneModifierComposite` and `TwoModifiersComposite` in favour the the new `modifiersOrder` parameter which is more explicit.
+- Changed paremeter `overrideModifiersNeedToBePressedFirst` to obsolete for `ButtonWithOneModifier`, `ButtonWithTwoModifiers`, `OneModifierComposite` and `TwoModifiersComposite` in favour the new `modifiersOrder` parameter which is more explicit.
 
 ## [1.11.2] - 2024-10-16
 
