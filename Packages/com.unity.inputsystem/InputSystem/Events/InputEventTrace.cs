@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -270,6 +271,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 writer.Write(device.stateFormat);
                 writer.Write(device.stateSizeInBytes);
                 writer.Write(device.m_FullLayoutJson ?? string.Empty);
+                writer.Write(string.Join(device.m_Usages, ','));
             }
 
             // Write offset of device list.
@@ -392,7 +394,8 @@ namespace UnityEngine.InputSystem.LowLevel
                             layout = reader.ReadString(),
                             stateFormat = reader.ReadInt32(),
                             stateSizeInBytes = reader.ReadInt32(),
-                            m_FullLayoutJson = reader.ReadString()
+                            m_FullLayoutJson = reader.ReadString(),
+                            m_Usages = reader.ReadString()
                         };
                     }
 
@@ -928,7 +931,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         // when saving traces for this kind of input, we can recreate the device.
                         m_FullLayoutJson = InputControlLayout.s_Layouts.IsGeneratedLayout(device.m_Layout)
                             ? InputSystem.LoadLayout(device.layout).ToJson()
-                            : null
+                            : null,
+                        m_Usages = string.Join(",", device.usages.ToArray())
                     });
             }
 
@@ -1500,6 +1504,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
                             // Create device.
                             var device = InputSystem.AddDevice(layoutName);
+                            foreach (var u in deviceInfo.m_Usages.Split(','))
+                            {
+                                InputSystem.SetDeviceUsage(device, u);
+                            }
+
                             WithDeviceMappedFromTo(originalDeviceId, device.deviceId);
                             m_CreatedDevices.AppendWithCapacity(device);
                             return device.deviceId;
@@ -1567,6 +1576,7 @@ namespace UnityEngine.InputSystem.LowLevel
             [SerializeField] internal FourCC m_StateFormat;
             [SerializeField] internal int m_StateSizeInBytes;
             [SerializeField] internal string m_FullLayoutJson;
+            [SerializeField] internal string m_Usages;
         }
     }
 }
