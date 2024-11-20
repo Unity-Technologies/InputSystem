@@ -42,6 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added new API `InputSystem.settings.useIMGUIEditorForAssets` that should be used in custom `InputParameterEditor` that use both IMGUI and UI Toolkit.
+- Added ProfilerMakers to `InputAction.Enable()` and `InputActionMap.ResolveBindings()` to enable gathering of profiling data.
 
 ## [1.11.2] - 2024-10-16
 

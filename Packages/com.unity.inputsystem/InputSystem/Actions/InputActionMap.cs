@@ -317,7 +317,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// ProfilerMarker to measure how long it takes to resolve bindings.
         /// </summary>
-        static readonly ProfilerMarker k_ResolveBindingsProfilerMarker = new("InputActionMap.ResolveBindings");
+        static readonly ProfilerMarker k_ResolveBindingsProfilerMarker = new ProfilerMarker("InputActionMap.ResolveBindings");
 
         /// <summary>
         /// Construct an action map with default values.
