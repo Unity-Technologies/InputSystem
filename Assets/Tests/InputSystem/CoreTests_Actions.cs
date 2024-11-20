@@ -60,6 +60,113 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WithMultipleBindingsAndMultipleInteractions_Works()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(interactions: "tap,hold(duration=2)");
+        action.AddBinding("<Keyboard>/w");
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        IInputInteraction performedInteraction = null;
+        IInputInteraction canceledInteraction = null;
+        action.performed += ctx =>
+        {
+            performedInteraction = ctx.interaction;
+        };
+        action.canceled += ctx =>
+        {
+            canceledInteraction = ctx.interaction;
+        };
+
+        // PressRelease AW trigger a tap
+        currentTime = 0;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime = 0.01;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Should be no other remaining events
+        currentTime = 10;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+
+
+        // PressRelease AW trigger a tap
+        currentTime = 11;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime = 11.01;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        currentTime = 11.02;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Should be no other remaining events
+        currentTime = 20;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        // PressRelease AW trigger a tap
+        currentTime = 21;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime = 21.01;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        currentTime = 21.02;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Should be no other remaining events
+        currentTime = 30;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();

@@ -10,6 +10,7 @@ using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 using ProfilerMarker = Unity.Profiling.ProfilerMarker;
+using UnityEngine.InputSystem.Interactions;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
 
@@ -1510,6 +1511,8 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    var previousTrigger = trigger;
+                    var previousBindingStatePtr = bindingStatePtr;
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
                     // one of higher magnitude) or may even lead us to switch to processing a different binding
@@ -1528,6 +1531,11 @@ namespace UnityEngine.InputSystem
                     if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
                     {
                         ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
+                        // We still need to process hold interactions. If we don't, then we risk having a danling hold which triggers after all buttons are unpressed. 
+                        if (previousBindingStatePtr != bindingStatePtr)
+                        {
+                            ProcessHoldInteractions(ref previousTrigger, previousBindingStatePtr->interactionStartIndex, previousBindingStatePtr->interactionCount);
+                        }
                     }
                     else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
@@ -2039,6 +2047,32 @@ namespace UnityEngine.InputSystem
                 var index = interactionStartIndex + i;
                 var state = interactionStates[index];
                 var interaction = interactions[index];
+
+                context.m_TriggerState.phase = state.phase;
+                context.m_TriggerState.startTime = state.startTime;
+                context.m_TriggerState.interactionIndex = index;
+
+                interaction.Process(ref context);
+            }
+        }
+
+        private void ProcessHoldInteractions(ref TriggerState trigger, int interactionStartIndex, int interactionCount)
+        {
+            var context = new InputInteractionContext
+            {
+                m_State = this,
+                m_TriggerState = trigger
+            };
+
+            for (var i = 0; i < interactionCount; ++i)
+            {
+                var index = interactionStartIndex + i;
+                var state = interactionStates[index];
+                var interaction = interactions[index];
+                if (interaction is not HoldInteraction)
+                {
+                    continue;
+                }
 
                 context.m_TriggerState.phase = state.phase;
                 context.m_TriggerState.startTime = state.startTime;
