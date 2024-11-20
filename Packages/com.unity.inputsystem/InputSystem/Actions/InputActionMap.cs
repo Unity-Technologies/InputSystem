@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: given we have the global ActionPerformed callback, do we really need the per-map callback?
@@ -312,6 +313,11 @@ namespace UnityEngine.InputSystem
             add => m_ActionCallbacks.AddCallback(value);
             remove => m_ActionCallbacks.RemoveCallback(value);
         }
+
+        /// <summary>
+        /// ProfilerMarker to measure how long it takes to resolve bindings.
+        /// </summary>
+        static readonly ProfilerMarker k_ResolveBindingsProfilerMarker = new("InputActionMap.ResolveBindings");
 
         /// <summary>
         /// Construct an action map with default values.
@@ -1299,6 +1305,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
+            k_ResolveBindingsProfilerMarker.Auto();
             // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
             // we don't trigger a re-resolve while we're already resolving bindings.
             using (InputActionRebindingExtensions.DeferBindingResolution())
