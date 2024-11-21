@@ -22,9 +22,12 @@ public class InputSystemSettings : AnnotatedSettingsBase
     {
         Wrench = new WrenchSettings(
             PackagesRootPaths,
-            PackageOptions
-        );      
+            PackageOptions,
+            useLocalPvpExemptions: true
+        ); 
+        
+        Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
     }
-
+    
     public WrenchSettings Wrench { get; private set; }
 }
