@@ -16,8 +16,8 @@ package_pack_-_inputsystem:
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
-  - command: mv /Y ./Assets/Samples ./Packages/com.unity.inputsystem
-  - command: mv /Y ./Assets/Samples.meta ./Packages/com.unity.inputsystem
+  - command: mv ./Assets/Samples ./Packages/com.unity.inputsystem
+  - command: mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
   - command: upm-ci package pack --package-path Packages/com.unity.inputsystem
   - command: cp upm-ci~/packages/packages.json upm-ci~/packages/com.unity.inputsystem_packages.json
   after:
