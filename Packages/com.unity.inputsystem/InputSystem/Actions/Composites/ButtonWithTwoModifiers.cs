@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Composites
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
         /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-        /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
+        /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,  before pressing the <c>B</c> key.
         /// This is the behavior usually expected with keyboard shortcuts.
         ///
         /// This parameter can be used to bypass this behavior and allow any timing between <see cref="modifier1"/>, <see cref="modifier2"/>,
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.Composites
             /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
             /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
             /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-            /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
+            /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, before pressing the <c>B</c> key.
             /// This is the behavior usually expected with keyboard shortcuts.
             ///
             /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem.Composites
             /// <summary>
             /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
             /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-            /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
+            /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,  before pressing the <c>B</c> key.
             /// This is the behavior usually expected with keyboard shortcuts.
             /// </summary>
             Ordered = 1,
@@ -149,7 +149,7 @@ namespace UnityEngine.InputSystem.Composites
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
         /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
-        /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
+        /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,  before pressing the <c>B</c> key.
         /// This is the behavior usually expected with keyboard shortcuts.
         ///
         /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,

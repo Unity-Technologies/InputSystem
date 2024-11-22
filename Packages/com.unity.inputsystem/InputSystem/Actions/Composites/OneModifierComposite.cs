@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.Composites
             /// <summary>
             /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
             /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
-            /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+            /// <c>Ctrl+B</c>, the <c>ctrl</c> key have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
             /// with keyboard shortcuts.
             /// </summary>
             Ordered = 1,
