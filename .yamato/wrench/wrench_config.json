@@ -4,7 +4,10 @@
   "packages": {
     "com.unity.inputsystem": {
       "directory": "Packages/com.unity.inputsystem/",
-      "prePackCommands": [],
+      "prePackCommands": [
+        "move /Y .\\Assets\\Samples .\\Packages\\com.unity.inputsystem",
+        "move /Y .\\Assets\\Samples.meta .\\Packages\\com.unity.inputsystem"
+      ],
       "preTestCommands": {
         "MacOS": [],
         "Ubuntu": [],

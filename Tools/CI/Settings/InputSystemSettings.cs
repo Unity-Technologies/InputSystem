@@ -1,4 +1,5 @@
-﻿using RecipeEngine.Api.Settings;
+﻿using RecipeEngine.Api.Commands;
+using RecipeEngine.Api.Settings;
 using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Modules.Wrench.Settings;
 
@@ -14,7 +15,20 @@ public class InputSystemSettings : AnnotatedSettingsBase
     {
         {
             "com.unity.inputsystem",
-            new PackageOptions() { ReleaseOptions = new ReleaseOptions() { IsReleasing = true } }
+            new PackageOptions()
+            {
+                ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
+                PackJobOptions = new PackJobOptions()
+                {
+                    PrePackCommands = new List<Command>()
+                    {
+                        // We keep the samples in Assets/ as they otherwise won't get imported and you can't
+                        // really work with them. Move them into the package for when we pack the package.
+                        new Command("move /Y .\\Assets\\Samples .\\Packages\\com.unity.inputsystem"),
+                        new Command("move /Y .\\Assets\\Samples.meta .\\Packages\\com.unity.inputsystem"),
+                    }
+                }
+            }
         }
     };
 
@@ -24,7 +38,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             PackagesRootPaths,
             PackageOptions,
             useLocalPvpExemptions: true
-        ); 
+        );
         
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
     }
