@@ -24,8 +24,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
                     {
                         // We keep the samples in Assets/ as they otherwise won't get imported and you can't
                         // really work with them. Move them into the package for when we pack the package.
-                        new Command("move /Y .\\Assets\\Samples .\\Packages\\com.unity.inputsystem"),
-                        new Command("move /Y .\\Assets\\Samples.meta .\\Packages\\com.unity.inputsystem"),
+                        new Command("mv /Y ./Assets/Samples ./Packages/com.unity.inputsystem"),
+                        new Command("mv /Y ./Assets/Samples.meta ./Packages/com.unity.inputsystem"),
                     }
                 }
             }
