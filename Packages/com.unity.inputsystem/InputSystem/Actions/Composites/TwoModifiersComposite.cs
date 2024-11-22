@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Composites
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
-        /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, 
+        /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,
         /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.
         ///
         /// However, when binding, for example, <c>Ctrl+Shift+MouseDelta</c>, it should be possible to press <c>ctrl</c> and <c>shift</c>
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.Composites
             /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
             /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
             /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
-            /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, 
+            /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,
             /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.
             ///
             /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem.Composites
             /// <summary>
             /// if <see cref = "binding" /> is bound to only <see cref = "Controls.ButtonControl" /> s, then the composite requires
             /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
-            /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, 
+            /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,
             /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.
             /// </summary>
             Ordered = 1,
@@ -149,7 +149,7 @@ namespace UnityEngine.InputSystem.Composites
         /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
         /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
-        /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, 
+        /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,
         /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.
         ///
         /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
