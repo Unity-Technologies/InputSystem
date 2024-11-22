@@ -8,8 +8,8 @@ using UnityEditor.PackageManager;
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
-    /// Force restart if InputSystem package is added to activate and initialize it on managed side.
-    /// Set Project Settings input handling to reflect the presence of the Input System package, since it is not available in the UI.
+    /// Force restart if InputSystem package is removed to activate and initialize it on managed side.
+    /// Set Project Settings input handling to InputManager once the package is removed.
     /// </summary>
     internal class InputSystemPackageControl
     {
@@ -24,11 +24,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CheckForInputSystemPackageRemoved(PackageRegistrationEventArgs packageArgs)
         {
-            if (InputSystemAddedRemoved(packageArgs.removed))
+            if (IsInputSystemRemoved(packageArgs.removed))
                 HandleInputSystemRemoved();
         }
 
-        private static bool InputSystemAddedRemoved(ReadOnlyCollection<UnityEditor.PackageManager.PackageInfo> packages)
+        private static bool IsInputSystemRemoved(ReadOnlyCollection<UnityEditor.PackageManager.PackageInfo> packages)
         {
             foreach (var package in packages)
             {
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void HandleInputSystemRemoved()
         {
-            //set input handling to none
+            //set input handling to InputManager
             EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
             if (EditorUtility.DisplayDialog("Unity editor restart required", "You've removed the input system package. This requires a restart of the Editor.", "Restart Editor", "Ignore (Not recommended)"))
                 EditorApplication.OpenProject(Environment.CurrentDirectory);
