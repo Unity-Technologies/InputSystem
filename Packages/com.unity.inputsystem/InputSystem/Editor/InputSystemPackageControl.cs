@@ -2,7 +2,8 @@
 using System;
 using System.Collections.ObjectModel;
 using UnityEditor;
-
+using UnityEditor.PackageManager;
+using PackageInfo = UnityEditor.PackageInfo;
 
 namespace UnityEngine.InputSystem.Editor
 {
