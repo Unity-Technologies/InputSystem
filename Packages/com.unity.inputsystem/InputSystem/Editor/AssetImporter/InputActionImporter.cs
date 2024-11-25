@@ -260,7 +260,7 @@ namespace UnityEngine.InputSystem.Editor
                 // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
                 // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
                 // changed/added script, and trigger a new import.
-                EditorApplication.delayCall += AssetDatabase.Refresh;
+                // TODO Temporary disabled, reenable: EditorApplication.delayCall += AssetDatabase.Refresh;
             }
         }
 
