@@ -3,7 +3,6 @@ using System;
 using System.Collections.ObjectModel;
 using UnityEditor;
 using UnityEditor.PackageManager;
-using PackageInfo = UnityEditor.PackageInfo;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -22,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
             UnityEditor.PackageManager.Events.registeringPackages += CheckForInputSystemPackageRemoved;
         }
 
-        private static void CheckForInputSystemPackageRemoved(UnityEditor.PackageManager.PackageRegistrationEventArgs packageArgs)
+        private static void CheckForInputSystemPackageRemoved(PackageRegistrationEventArgs packageArgs)
         {
             if (IsInputSystemRemoved(packageArgs.removed))
                 HandleInputSystemRemoved();
