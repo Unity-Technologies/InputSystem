@@ -686,6 +686,7 @@ namespace UnityEngine.InputSystem
         /// ProfilerMarker for measuring the enabling/disabling of InputActions.
         /// </summary>
         static readonly ProfilerMarker k_InputActionEnableProfilerMarker = new ProfilerMarker("InputAction.Enable");
+        static readonly ProfilerMarker k_InputActionDisableProfilerMarker = new ProfilerMarker("InputAction.Disable");
 
         /// <summary>
         /// Construct an unnamed, free-standing action that is not part of any map or asset
@@ -905,19 +906,21 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="enabled"/>
         public void Enable()
         {
-            if (enabled)
-                return;
+            using (k_InputActionEnableProfilerMarker.Auto())
+            {
+                if (enabled)
+                    return;
 
-            k_InputActionEnableProfilerMarker.Auto();
-            // For singleton actions, we create an internal-only InputActionMap
-            // private to the action.
-            var map = GetOrCreateActionMap();
+                // For singleton actions, we create an internal-only InputActionMap
+                // private to the action.
+                var map = GetOrCreateActionMap();
 
-            // First time we're enabled, find all controls.
-            map.ResolveBindingsIfNecessary();
+                // First time we're enabled, find all controls.
+                map.ResolveBindingsIfNecessary();
 
-            // Go live.
-            map.m_State.EnableSingleAction(this);
+                // Go live.
+                map.m_State.EnableSingleAction(this);
+            }
         }
 
         /// <summary>
@@ -935,10 +938,13 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Enable"/>
         public void Disable()
         {
-            if (!enabled)
-                return;
+            using (k_InputActionDisableProfilerMarker.Auto())
+            {
+                if (!enabled)
+                    return;
 
-            m_ActionMap.m_State.DisableSingleAction(this);
+                m_ActionMap.m_State.DisableSingleAction(this);
+            }
         }
 
         ////REVIEW: is *not* cloning IDs here really the right thing to do?
