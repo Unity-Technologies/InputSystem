@@ -691,7 +691,7 @@ namespace UnityEngine.InputSystem.Editor
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
                 var isMatchingDevice = true;
-                if (deviceIndex >= 0)
+                if (deviceIndex >= 0 && deviceIndex < currentControlScheme.Value.deviceRequirements.Count)
                 {
                     var devicePathToMatch = InputControlPath.TryGetDeviceLayout(currentControlScheme.Value.deviceRequirements.ElementAt(deviceIndex).controlPath);
                     var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);

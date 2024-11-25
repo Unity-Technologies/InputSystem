@@ -8,7 +8,7 @@ promote:
     image: package-ci/win10:default
     flavor: b1.large
   dependencies:
-    - .yamato/publish-samples.yml 
+    - .yamato/publish-samples.yml#test_sample_projects
   variables:
     UPMCI_PROMOTION: 1
   commands:
