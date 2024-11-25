@@ -27,7 +27,7 @@ To query the set of all currently present Devices, you can use [`InputSystem.dev
 
 ## Device descriptions
 
-An [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) describes a Device. The Input System uses this primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the report contains a Device description. Based on the description, the system then attempts to find a Device [layout](Layouts.md) that matches the description. This process is based on [Device matchers](#matching).
+An [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) describes a Device. The Input System uses this primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the report contains a Device description. Based on the description, the system then attempts to find a Device [layout](layouts.md) that matches the description. This process is based on [Device matchers](#matching).
 
 After a Device has been created, you can retrieve the description it was created from through the [`InputDevice.description`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_description) property.
 
@@ -78,9 +78,9 @@ You can overrule the internal matching process from outside to select a differen
 
 #### Device creation
 
-Once the system has chosen a [layout](Layouts.md) for a device, it instantiates an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populates it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as the layout dictates. This process is internal and happens automatically.
+Once the system has chosen a [layout](layouts.md) for a device, it instantiates an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populates it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as the layout dictates. This process is internal and happens automatically.
 
->__Note__: You can't create valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) by manually instantiating them with `new`. To guide the creation process, you must use [layouts](Layouts.md).
+>__Note__: You can't create valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) by manually instantiating them with `new`. To guide the creation process, you must use [layouts](layouts.md).
 
 After the Input System assembles the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), it calls [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. Use this to finalize the setup of the Controls.
 
@@ -125,8 +125,8 @@ There are two types of resets as determined by the second parameter to [`InputSy
 
 |Type|Description|
 |----|-----------|
-|"Soft" Resets|This is the default. With this type, only controls that are *not* marked as [`dontReset`](Layouts.md#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
-|"Hard" Resets|In this type, *all* controls are reset to their default value regardless of whether they have [`dontReset`](Layouts.md#control-items) set or not.|
+|"Soft" Resets|This is the default. With this type, only controls that are *not* marked as [`dontReset`](layouts.md#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
+|"Hard" Resets|In this type, *all* controls are reset to their default value regardless of whether they have [`dontReset`](layouts.md#control-items) set or not.|
 
 Resetting Controls this way is visible on [Actions](Actions.md). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) Actions (e.g. a button that was pressed would not appear to have been released), a reset will force clean cancellation.
 
@@ -154,7 +154,7 @@ The Input System may automatically disable and re-enable Devices in certain situ
 
 #### Background and focus change behavior
 
-In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](Actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](Layouts.md#control-items) to their default state.
+In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](Actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](layouts.md#control-items) to their default state.
 
 On platforms such as iOS and Android, that do not support running Unity applications in the background, this is the only supported behavior.
 
@@ -165,7 +165,7 @@ If the application is configured to run while in the background (that is, not ha
 
 If the application is configured this way to keep running while in the background, the player loop and thus the Input System, too, will keep running even when the application does not have focus. What happens with respect to input then depends on two factors:
 
-1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](../api/UnityEngine.InputSystem.TrackedDevice.html)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](Layouts.md#control-items).
+1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](../api/UnityEngine.InputSystem.TrackedDevice.html)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](layouts.md#control-items).
 2. On two settings you can find in the project-wide [Input Settings](Settings.md). Specifically, [`InputSettings.backgroundBehavior`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_backgroundBehavior) and [`InputSettings.editorInputBehaviorInPlayMode`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_editorInputBehaviorInPlayMode). The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
 
 >__Note__: [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) is overridden by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
@@ -186,7 +186,7 @@ Devices that the [native backend](Architecture.md#native-backend) reports are co
 
 The Input System remembers native Devices. For example, if the system has no matching layout when the Device is first reported, but a layout which matches the device is registered later, the system uses this layout to recreate the Device.
 
-You can force the Input System to use your own [layout](Layouts.md) when the native backend discovers a specific Device, by describing the Device in the layout, like this:
+You can force the Input System to use your own [layout](layouts.md) when the native backend discovers a specific Device, by describing the Device in the layout, like this:
 
 ```
      {
@@ -294,7 +294,7 @@ This allows you to create your own Devices, which can be useful for testing purp
 
 ### Creating custom Devices
 
->__Note__: This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](Layouts.md#generated-layouts) to build Device layouts from information you obtain at runtime.
+>__Note__: This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](layouts.md#generated-layouts) to build Device layouts from information you obtain at runtime.
 
 There are two main situations in which you might need to create a custom Device:
 
@@ -344,7 +344,7 @@ public struct MyDeviceState : IInputStateTypeInfo
 }
 ```
 
-The Input System's layout mechanism uses [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) annotations to add Controls to the layout of your Device. For details, see the [layout system](Layouts.md) documentation.
+The Input System's layout mechanism uses [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) annotations to add Controls to the layout of your Device. For details, see the [layout system](layouts.md) documentation.
 
 With the state struct in place, you now have a way to send input data to the Input System and store it there. The next thing you need is an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) that uses your custom state struct and represents your custom Device.
 

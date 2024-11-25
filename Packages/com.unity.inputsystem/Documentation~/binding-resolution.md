@@ -29,7 +29,7 @@ Modifying the [binding mask](../api/UnityEngine.InputSystem.InputActionAsset.htm
 
 ## Choosing which Devices to use
 
->__Note__: [`InputUser`](UserManagement.md) and [`PlayerInput`](PlayerInput.md) make use of this facility automatically. They set [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) automatically based on the Devices that are paired to the user.
+>__Note__: [`InputUser`](UserManagement.md) and [`PlayerInput`](player-input-component.md) make use of this facility automatically. They set [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) automatically based on the Devices that are paired to the user.
 
 By default, Actions resolve their Bindings against all Devices present in the Input System (that is, [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads present in the system, a Binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the Action to be used from either.
 

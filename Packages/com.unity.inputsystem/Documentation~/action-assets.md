@@ -55,7 +55,7 @@ Unless you have specific project requirements that require more than one Action 
 
 ### Using Action Assets with `PlayerInput`
 
-The [Player Input](PlayerInput.md) component provides a convenient way to handle input for one or multiple players. You can assign your Action Asset to the Player Input component so that it can then automatically handle activating Action Maps and selecting Control Schemes for you.
+The [Player Input](player-input-component.md) component provides a convenient way to handle input for one or multiple players. You can assign your Action Asset to the Player Input component so that it can then automatically handle activating Action Maps and selecting Control Schemes for you.
 
 ![PlayerInput](Images/PlayerInput.png)
 

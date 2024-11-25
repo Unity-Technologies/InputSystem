@@ -3,7 +3,7 @@ uid: input-system-mouse
 ---
 # Mouse support
 
-The Input System represents mouse input with the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
+The Input System represents mouse input with the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](pointers.md) layout.
 
 To query the last used or last added mouse, use [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
 
@@ -17,7 +17,7 @@ To query the last used or last added mouse, use [`Mouse.current`](../api/UnityEn
 
 ## Controls
 
-In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), Mouse devices implement the following Controls:
+In addition to the [Controls inherited from `Pointer`](pointers.md#controls), Mouse devices implement the following Controls:
 
 |Control|Type|Description|
 |-------|----|-----------|
