@@ -1,0 +1,40 @@
+{
+  "project_path": "Tools\\CI",
+  "schema_version": 0.6,
+  "packages": {
+    "com.unity.inputsystem": {
+      "directory": "Packages/com.unity.inputsystem/",
+      "prePackCommands": [
+        "mv ./Assets/Samples ./Packages/com.unity.inputsystem",
+        "mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem"
+      ],
+      "preTestCommands": {
+        "MacOS": [],
+        "Ubuntu": [],
+        "Windows": []
+      },
+      "InternalOnly": false,
+      "NeverPublish": false,
+      "MaxEditorVersion": "",
+      "coverageEnabled": false,
+      "coverageCommands": [
+        "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:ASSEMBLY_NAME;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:YAMATO_SOURCE_DIR/Packages;"
+      ],
+      "dependantsToIgnoreInPreviewApv": {}
+    }
+  },
+  "releasing_packages": [
+    "com.unity.inputsystem"
+  ],
+  "jobs_to_monitor": {
+    "com.unity.inputsystem": [
+      ".yamato/wrench/api-validation-jobs.yml#api_validation_-_inputsystem_-_2019_4_-_windows",
+      ".yamato/wrench/preview-a-p-v.yml#all_preview_apv_jobs",
+      ".yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem"
+    ]
+  },
+  "publishing_job": ".yamato/wrench/promotion-jobs.yml#publish_inputsystem",
+  "branch_pattern": "ReleaseSlash",
+  "wrench_version": "0.10.27.0",
+  "pvp_exemption_path": ".yamato/wrench/pvp-exemptions.json"
+}
