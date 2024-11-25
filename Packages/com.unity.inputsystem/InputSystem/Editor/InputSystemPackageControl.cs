@@ -2,7 +2,6 @@
 using System;
 using System.Collections.ObjectModel;
 using UnityEditor;
-using UnityEditor.PackageManager;
 
 
 namespace UnityEngine.InputSystem.Editor
@@ -18,11 +17,11 @@ namespace UnityEngine.InputSystem.Editor
         [InitializeOnLoadMethod]
         static void  SubscribePackageManagerEvent()
         {
-            //there's a number of cases where it might not be called, for instance if the user changed the project manifest and deleted the Library folder before opening the project
+            //There's a number of cases where it might not be called, for instance if the user changed the project manifest and deleted the Library folder before opening the project
             UnityEditor.PackageManager.Events.registeringPackages += CheckForInputSystemPackageRemoved;
         }
 
-        private static void CheckForInputSystemPackageRemoved(PackageRegistrationEventArgs packageArgs)
+        private static void CheckForInputSystemPackageRemoved(UnityEditor.PackageManager.PackageRegistrationEventArgs packageArgs)
         {
             if (IsInputSystemRemoved(packageArgs.removed))
                 HandleInputSystemRemoved();
@@ -40,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void HandleInputSystemRemoved()
         {
-            //set input handling to InputManager
+            //Set input handling to InputManager
             EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
             if (EditorUtility.DisplayDialog("Unity editor restart required", "You've removed the input system package. This requires a restart of the Editor.", "Restart Editor", "Ignore (Not recommended)"))
                 EditorApplication.OpenProject(Environment.CurrentDirectory);
