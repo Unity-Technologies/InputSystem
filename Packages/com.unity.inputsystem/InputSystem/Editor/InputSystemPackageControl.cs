@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             //Set input handling to InputManager
             EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
-            if (EditorUtility.DisplayDialog("Unity editor restart required", "You've removed the input system package. This requires a restart of the Editor.", "Restart Editor", "Ignore (Not recommended)"))
+            if (EditorUtility.DisplayDialog("The Unity Editor needs to be restarted", "You've removed the Input System package. This requires a restart of the Unity Editor.", "Restart the Editor", "Ignore (Not recommended)"))
                 EditorApplication.OpenProject(Environment.CurrentDirectory);
         }
     }
