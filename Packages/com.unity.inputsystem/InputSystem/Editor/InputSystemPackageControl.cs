@@ -7,8 +7,8 @@ using UnityEditor;
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
-    /// Force restart if InputSystem package is removed to activate and initialize it on managed side.
-    /// Set Project Settings input handling to InputManager once the package is removed.
+    /// Forces the Editor to restart if the InputSystem package is removed to activate and initialize it on the managed side.
+    /// Automatically sets "Project Settings > Player > Active Input Handling" to "Input Manager" once the package is removed.
     /// </summary>
     internal class InputSystemPackageControl
     {
