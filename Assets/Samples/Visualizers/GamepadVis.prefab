@@ -54,7 +54,7 @@ MonoBehaviour:
     width: 187.5
     height: 62.5
   m_Visualization: 1
-  m_ControlPath: <DualSenseGamepadHID>/touchpadButton
+  m_ControlPath: <DualShockGamepad>/touchpadButton
   m_ControlIndex: 0
 --- !u!1 &5430831073950378571
 GameObject:
