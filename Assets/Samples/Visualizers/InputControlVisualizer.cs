@@ -138,12 +138,29 @@ namespace UnityEngine.InputSystem.Samples
             + "which of the controls to visualize.")]
         [InputControl, SerializeField] private string m_ControlPath;
         [Tooltip("If multiple controls match 'Control Path' at runtime, this property decides "
-            + "which control to visualize from the list of candidates. It is a zero-based index.")]
+            + "which control to visualize from the list of candidates. It is a zero-based index. " +
+            "This is ignored if using current device instead.")]
         [SerializeField] private int m_ControlIndex;
+
+        [Tooltip("If set, ignores control index and maps a control of the current device (if it exist) or none.")]
+        [SerializeField] private bool m_UseCurrentDevice;
 
         [NonSerialized] private InputControl m_Control;
 
         private static List<InputControlVisualizer> s_EnabledInstances;
+
+        private static InputControl ResolveCurrentControl(InputControlList<InputControl> candidates)
+        {
+            // Only accept control that belongs to the current device of the same device type as candidate control device type.
+            foreach (var candidate in candidates)
+            {
+                if (candidate.device == GetCurrentDevice(candidate.device)) ;
+                {
+                    return candidate;
+                }
+            }
+            return null;
+        }
 
         private void ResolveControl()
         {
@@ -154,13 +171,26 @@ namespace UnityEngine.InputSystem.Samples
             using (var candidates = InputSystem.FindControls(m_ControlPath))
             {
                 var numCandidates = candidates.Count;
-                if (numCandidates > 1 && m_ControlIndex < numCandidates && m_ControlIndex >= 0)
+                if (m_UseCurrentDevice)
+                    m_Control = ResolveCurrentControl(candidates);
+                else if (numCandidates > 1 && m_ControlIndex < numCandidates && m_ControlIndex >= 0)
                     m_Control = candidates[m_ControlIndex];
                 else if (numCandidates > 0)
                     m_Control = candidates[0];
             }
 
             SetupVisualizer();
+        }
+
+        private static InputDevice GetCurrentDevice(InputDevice device)
+        {
+            if (device is Gamepad) return Gamepad.current;
+            if (device is Mouse) return Mouse.current;
+            if (device is Pen) return Pen.current;
+            if (device is Pointer) return Pointer.current; // should be last, because it's a base class for Mouse and Pen
+
+            throw new ArgumentException(
+                $"Expected device type that implements .current, but got '{device.name}' (deviceId: {device.deviceId}) instead ");
         }
 
         private static VisualizationHelpers.Visualizer CreateVisualizer(Mode mode, InputControl control, int historySamples)
@@ -172,7 +202,7 @@ namespace UnityEngine.InputSystem.Samples
                     // This visualization mode requires a control
                     if (control == null)
                         return null;
-                    
+
                     VisualizationHelpers.Visualizer visualizer = null;
                     var valueType = control.valueType;
                     if (valueType == typeof(Vector2))
@@ -249,7 +279,7 @@ namespace UnityEngine.InputSystem.Samples
                     throw new ArgumentOutOfRangeException(mode.ToString());
             }
         }
-        
+
         private void SetupVisualizer()
         {
             m_Visualizer = CreateVisualizer(m_Visualization, m_Control, m_HistorySamples);
