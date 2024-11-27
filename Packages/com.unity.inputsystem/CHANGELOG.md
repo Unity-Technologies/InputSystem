@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed icon scaling in Input Actions window.
 - Fixed an issue where removing the InputSystem package could lead to invalid input handling settings.
 - Fixed `ArgumentOutOfRangeException` when adding a new Control Scheme with any Device selected. [ISXB-1129](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1129)
+- Fixed a CS0105 compiler warning due to duplicate using statement in test source code (ISXB-1247).
 - Fixed an issue in `Samples/Visualizers/GamepadVisualizer.unity` sample where the visualization wouldn't handle device disconnects or current device changes properly (ISXB-1243).
 
 ### Changed
