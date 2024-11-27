@@ -3,7 +3,7 @@ uid: input-system-actions
 ---
 # Actions
 
-**Actions** allow you to separate the purpose of an input from the device controls which perform that input. Actions allow you to associate the purpose and device controls together in a flexible way.
+**Actions** allow you to separate the purpose of an input from the device controls which perform that input, and associate the purpose and device controls together in a flexible way.
 
 For example, the purpose of an input in a game might be to make the player's character move. The device control associated with that action might be the left gamepad stick.
 
