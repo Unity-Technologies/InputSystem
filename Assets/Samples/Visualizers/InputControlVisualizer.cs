@@ -154,7 +154,7 @@ namespace UnityEngine.InputSystem.Samples
             // Only accept control that belongs to the current device of the same device type as candidate control device type.
             foreach (var candidate in candidates)
             {
-                if (candidate.device == GetCurrentDevice(candidate.device)) ;
+                if (candidate.device == GetCurrentDevice(candidate.device))
                 {
                     return candidate;
                 }
