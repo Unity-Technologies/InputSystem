@@ -154,11 +154,11 @@ namespace UnityEngine.InputSystem.Samples
             // Only accept control that belongs to the current device of the same device type as candidate control device type.
             foreach (var candidate in candidates)
             {
-                if (candidate.device == GetCurrentDevice(candidate.device))
-                {
+                var currentDevice = GetCurrentDevice(candidate.device);
+                if (candidate.device == currentDevice)
                     return candidate;
-                }
             }
+
             return null;
         }
 
@@ -180,6 +180,13 @@ namespace UnityEngine.InputSystem.Samples
             }
 
             SetupVisualizer();
+        }
+
+        void Update()
+        {
+            // There is currently no callback when current device changes so we will reattempt to resolve control
+            if (m_UseCurrentDevice && m_Control == null)
+                ResolveControl();
         }
 
         private static InputDevice GetCurrentDevice(InputDevice device)
