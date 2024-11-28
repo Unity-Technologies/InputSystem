@@ -27,11 +27,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where removing the InputSystem package could lead to invalid input handling settings.
 - Fixed `ArgumentOutOfRangeException` when adding a new Control Scheme with any Device selected. [ISXB-1129](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1129)
 - Fixed a CS0105 compiler warning due to duplicate using statement in test source code (ISXB-1247).
+- Fixed tooltip support in the UI Toolkit version of the Input Actions Asset editor.
+- Fixed documentation to clarify bindings with modifiers `overrideModifiersNeedToBePressedFirst` configuration [ISXB-806](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-806).
 - Fixed an issue in `Samples/Visualizers/GamepadVisualizer.unity` sample where the visualization wouldn't handle device disconnects or current device changes properly (ISXB-1243).
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
 - Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
+- Changed paremeter `overrideModifiersNeedToBePressedFirst` to obsolete for `ButtonWithOneModifier`, `ButtonWithTwoModifiers`, `OneModifierComposite` and `TwoModifiersComposite` in favour the new `modifiersOrder` parameter which is more explicit.
 - Changed `Samples/Visualizers/GamepadVisualizer.unity` to visualize the control values of the current device instead of the first device.
 
 ## [1.11.2] - 2024-10-16
