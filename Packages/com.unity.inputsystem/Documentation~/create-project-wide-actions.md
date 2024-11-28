@@ -1,8 +1,4 @@
-# Create an action asset
-
-In most cases, you only need one Action Asset, assigned as the project-wide actions. The input package provides a convenient way to create a set of useful default actions and assign them as project-wide. In other cases, you might want to start with an empty actions asset, or create more than one actions asset.
-
-## Create and assign a default project-wide actions asset
+# Create and assign a default project-wide actions asset
 
 Follow these steps to create an actions asset that contains the built-in [default actions](./TheDefaultActions.md), and assign them as project-wide.
 
@@ -30,12 +26,3 @@ When you create an action asset this way, the new asset contains a set of defaul
 *The Input System Package Project Settings after creating and assigning the default actions*
 
 Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
-
-## Create a new empty input action asset
-
-In some situations you might want to start with an empty action asset, or create additional action assets.
-
-To do this, go to __Assets > Create > Input Actions__ from Unity's main menu, or select **Input Actions** the Project window's **Add (+)** button menu.
-
-When you create an action asset this way, the new action asset is empty, containing no actions, action maps, or control schemes. You must [add](./CreateActions.md) and [configure](./ConfigureActions.md) new actions to use it. The new action asset is also not assigned as [project-wide](./ProjectWideActions.md).
-
