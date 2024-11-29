@@ -88,7 +88,8 @@ namespace UnityEngine.InputSystem.Composites
         /// Default value is <c>false</c>.
         /// </summary>
         /// <remarks>
-        /// By default, if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
         /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
         /// with keyboard shortcuts.
@@ -100,8 +101,68 @@ namespace UnityEngine.InputSystem.Composites
         /// This field allows you to explicitly override this default inference and make it so that regardless of what <see cref="binding"/>
         /// is bound to, any press sequence is acceptable. For the example binding to <c>Ctrl+B</c>, it would mean that pressing <c>B</c> and
         /// only then pressing <c>Ctrl</c> will still trigger the binding.
+        ///
+        /// To don't depends on the setting please consider using <see cref="modifiersOrder"/> instead.
         /// </remarks>
+        [Tooltip("Obsolete please use modifiers Order. If enabled, this will override the Input Consumption setting, allowing the modifier keys to be pressed after the button and the composite will still trigger.")]
+        [Obsolete("Use ModifiersOrder.Unordered with 'modifiersOrder' instead")]
         public bool overrideModifiersNeedToBePressedFirst;
+
+        /// <summary>
+        /// Determines how a <c>modifiers</c> keys need to be pressed in order or not.
+        /// </summary>
+        public enum ModifiersOrder
+        {
+            /// <summary>
+            /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+            /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+            /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
+            /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+            /// with keyboard shortcuts.
+            ///
+            /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+            /// modifiers can be pressed after the button and the composite will still trigger.
+            /// </summary>
+            Default = 0,
+
+            /// <summary>
+            /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+            /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
+            /// <c>Ctrl+B</c>, the <c>ctrl</c> key have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+            /// with keyboard shortcuts.
+            /// </summary>
+            Ordered = 1,
+
+            /// <summary>
+            /// <see cref="modifier"/> can be pressed after <see cref="binding"/>
+            /// and the composite will still trigger. The only requirement is for all of them to concurrently be in pressed state.
+            /// </summary>
+            Unordered = 2
+        }
+
+        /// <summary>
+        /// If set to <c>Ordered</c> or <c>Unordered</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
+        /// </summary>
+        /// <remarks>
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+        /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
+        /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+        /// with keyboard shortcuts.
+        ///
+        /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+        /// modifiers can be pressed after the button and the composite will still trigger.
+        ///
+        /// However, when binding, for example, <c>Ctrl+MouseDelta</c>, it should be possible to press <c>ctrl</c> at any time. The default
+        /// logic will automatically detect the difference between this binding and the button binding in the example above and behave
+        /// accordingly.
+        ///
+        /// This field allows you to explicitly override this default inference and make the order mandatory or make it so that regardless of what <see cref="binding"/>
+        /// is bound to, any press sequence is acceptable. For the example binding to <c>Ctrl+B</c>, it would mean that pressing <c>B</c> and
+        /// only then pressing <c>Ctrl</c> will still trigger the binding.
+        /// </remarks>
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
 
         private int m_ValueSizeInBytes;
         private Type m_ValueType;
@@ -128,7 +189,7 @@ namespace UnityEngine.InputSystem.Composites
             var modifierDown = context.ReadValueAsButton(modifier);
 
             // When the modifiers are gating a button, we require the modifiers to be pressed *first*.
-            if (modifierDown && m_BindingIsButton && !overrideModifiersNeedToBePressedFirst)
+            if (modifierDown && m_BindingIsButton && modifiersOrder == ModifiersOrder.Ordered)
             {
                 var timestamp = context.GetPressTime(binding);
                 var timestamp1 = context.GetPressTime(modifier);
@@ -144,8 +205,17 @@ namespace UnityEngine.InputSystem.Composites
         {
             DetermineValueTypeAndSize(ref context, binding, out m_ValueType, out m_ValueSizeInBytes, out m_BindingIsButton);
 
-            if (!overrideModifiersNeedToBePressedFirst)
-                overrideModifiersNeedToBePressedFirst = !InputSystem.settings.shortcutKeysConsumeInput;
+            if (modifiersOrder == ModifiersOrder.Default)
+            {
+                // Legacy. We need to reference the obsolete member here so temporarily
+                // turn off the warning.
+#pragma warning disable CS0618
+                if (overrideModifiersNeedToBePressedFirst)
+#pragma warning restore CS0618
+                    modifiersOrder = ModifiersOrder.Unordered;
+                else
+                    modifiersOrder = InputSystem.settings.shortcutKeysConsumeInput ? ModifiersOrder.Ordered : ModifiersOrder.Unordered;
+            }
         }
 
         public override object ReadValueAsObject(ref InputBindingCompositeContext context)
