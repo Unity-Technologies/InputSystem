@@ -185,8 +185,13 @@ namespace UnityEngine.InputSystem.Samples
         void Update()
         {
             // There is currently no callback when current device changes so we will reattempt to resolve control
-            if (m_UseCurrentDevice && m_Control == null)
-                ResolveControl();
+            if (m_UseCurrentDevice)
+            {
+                if (m_Control != null && m_Control.device != GetCurrentDevice(m_Control.device))
+                    m_Control = null;
+                if (m_Control == null)
+                    ResolveControl();
+            }
         }
 
         private static InputDevice GetCurrentDevice(InputDevice device)
