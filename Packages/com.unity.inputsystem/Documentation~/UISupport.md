@@ -30,7 +30,7 @@ The three main UI solutions are **UI Toolkit**, **Unity UI**, and **IMGUI**. The
 
 **For [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html), also known as "UI Elements" (an XML/CSS style UI solution):**
 
-- From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./ProjectWideActions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
+- From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./about-project-wide-actions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
 - In versions of Unity prior to 2023.2, you must use the UI Input Module component to define which actions are passed through from the Input System to the UI.
 
 **For [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI" (a GameObject and Component style UI solution):**
@@ -53,7 +53,7 @@ IMGUI|No|n/a
 
 ## Setting up UI input
 
-The default [project-wide actions](./ProjectWideActions.md) comes with a "**UI**" Action Map, that contains all the actions required for UI interaction (shown in the image below). You can configure the bindings for these actions in the [Actions Editor](./ActionsEditor.md). Go to **Project Settings > Input System Package**, then select "**UI**" in the Action Maps column.
+The default [project-wide actions](./about-project-wide-actions.md) comes with a "**UI**" Action Map, that contains all the actions required for UI interaction (shown in the image below). You can configure the bindings for these actions in the [Actions Editor](./ActionsEditor.md). Go to **Project Settings > Input System Package**, then select "**UI**" in the Action Maps column.
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 

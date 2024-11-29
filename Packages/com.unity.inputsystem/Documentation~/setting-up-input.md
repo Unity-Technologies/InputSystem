@@ -10,8 +10,8 @@ Once you have set up input, you can then [respond to input](respond-to-input.md)
 | :------------------------------ | :------------------------------- |
 | **[Actions](actions.md)** | Actions allow you to separate the purpose of an input from the device controls which perform that input, and associate the purpose and device controls together in a flexible way. |
 | **[Action Assets](action-assets.md)** | The Input System stores your configuration of Input Actions and their associated Bindings, Action Maps and Control Schemes in an Action Asset file. |
-| **[Create Action Maps](create-action-maps.md)** | Action maps provide a way to group collections of Actions that represent different input scenarios in your project (such as UI navigation, gameplay, etc.) |
-| **[Create Actions](create-actions.md)** | Create actions using the Input Actions editor |
+| **[Create Action Maps](create-edit-delete-action-maps.md)** | Action maps provide a way to group collections of Actions that represent different input scenarios in your project (such as UI navigation, gameplay, etc.) |
+| **[Create Actions](create-edit-delete-actions.md)** | Create actions using the Input Actions editor |
 | **[Configure Actions](configure-actions.md)** | Summary |
 | **[Action Properties](action-properties.md)** | Summary |
 | **[Bindings](bindings.md)** | Summary |

@@ -2,7 +2,7 @@
 
 Actions have an **enabled** state, meaning you can enable or disable them to suit different situations.
 
-If you have an Action Asset assigned as [project-wide](./ProjectWideActions.md), the actions it contains are enabled by default and ready to use.
+If you have an Action Asset assigned as [project-wide](./about-project-wide-actions.md), the actions it contains are enabled by default and ready to use.
 
 For actions defined elsewhere, such as in an Action Asset not assigned as project-wide, or defined your own code, they begin in a disabled state, and you must enable them before they will respond to input.
 

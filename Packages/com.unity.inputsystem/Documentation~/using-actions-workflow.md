@@ -13,7 +13,7 @@ In this workflow, you configure Actions in the [**Input Actions** editor](Action
 
 Open the Input System settings by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**.
 
-If you have not yet created and assigned the default [project-wide actions](ProjectWideActions.md), the Input System settings window displays a button to do this.
+If you have not yet created and assigned the default [project-wide actions](about-project-wide-actions.md), the Input System settings window displays a button to do this.
 
 Once you have created and assigned the default project-wide actions, the Actions Editor is displayed:
 
@@ -97,7 +97,7 @@ public class Example : MonoBehaviour
 
 > **Note:** You should avoid using `FindAction` in your Update() loop, because it performs a string-based lookup which could impact performance. This is why the Action refeferences in the example above are found during the Start() functionm, and stored in variables after finding them.
 
-> **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you wish to access.
+> **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](about-project-wide-actions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you wish to access.
 
 ## Pros and Cons
 

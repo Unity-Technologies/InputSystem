@@ -11,7 +11,7 @@ It also allows you to define [Control Schemes](ActionBindings.md#control-schemes
 
 ### Action Assets and Project-Wide Actions
 
-The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](ProjectWideActions.md).
+The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](about-project-wide-actions.md).
 
 ### Opening the Actions Editor
 

@@ -1,27 +1,30 @@
 # Type-safe C# API Generation
 
-Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
+Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. 
 
-### Auto-generating script code for Actions
+This removes the need to manually look up Actions and Action Maps using their names, and also provides an easy way to set up callbacks.
 
-One of the most convenient ways to work with `.inputactions` Assets in scripts is to automatically generate a C# wrapper class for them. This removes the need to manually look up Actions and Action Maps using their names, and also provides an easier way to set up callbacks.
+> **Note**: This is an alternative workflow to [project-wide actions](./about-project-wide-actions.md), and provides a different way to access the actions defined in your action asset.
 
-To enable this option, tick the __Generate C# Class__ checkbox in the importer properties in the Inspector of the `.inputactions` Asset, then select __Apply__.
+
+To enable type-safe C# API generation:
+
+1. Select the action asset in the Project window.
+2. In the Inpsector window, enable the __Generate C# Class__ option.
+3. Select __Apply__.
 
 ![MyPlayerControls Importer Settings](Images/FireActionInputAssetInspector.png)
 
 You can optionally choose a path name, class name, and namespace for the generated script, or keep the default values.
 
-This generates a C# script that simplifies working with the Asset.
+Once applied, the Input System creates a C# script containing API that matches the actions defined in the asset which you can access directly in code. The following example demonstrates this, assuming there is an action map named "gameplay" containing two actions, "use" and "move" defined in the action asset:
 
 ```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// IGameplayActions is an interface generated from the "gameplay" action map
-// we added (note that if you called the action map differently, the name of
-// the interface will be different). This was triggered by the "Generate Interfaces"
-// checkbox.
+// IGameplayActions is an interface generated from the "gameplay" action map.
+// Your interface name will match the name you chose for your action map.
 public class MyPlayerScript : MonoBehaviour, IGameplayActions
 {
     // MyPlayerControls is the C# class that Unity generated.

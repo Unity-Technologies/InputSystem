@@ -1,4 +1,4 @@
-# Create Action Maps
+# Create, Edit and Delete Action Maps
 
 Action maps provide a way to group collections of Actions that represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
