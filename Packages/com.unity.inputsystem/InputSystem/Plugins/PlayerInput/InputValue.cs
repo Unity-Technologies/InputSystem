@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem
     public class InputValue
     {
         /// <summary>
-        /// Read the value as an object.
+        /// Read the current value as an object.
         /// </summary>
         /// <remarks>
         /// This method allocates GC memory and will thus create garbage. If used during gameplay,
@@ -36,13 +36,13 @@ namespace UnityEngine.InputSystem
 
         ////TODO: add automatic conversions
         /// <summary>
-        /// Read the value of the action.
+        /// Read the current value of the action.
         /// </summary>
         /// <returns>The current value from the action cast to the specified type.</returns>
         /// <typeparam name="TValue">Type of value to read. This must correspond to the
         /// expected by either <see cref="control"/> or, if it is a composite, by the
         /// <see cref="InputBindingComposite"/> in use.
-        /// The type depends on what type of controls the action is bound to. Common types are float and Vector2</typeparam>
+        /// The type depends on what type of controls the action is bound to. Common types are <c>float</c> and <see cref="UnityEngine.Vector2"/></typeparam>
         /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
         /// does not match the value type expected by the control or binding composite.</exception>
         /// <remarks>
@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// The given InputValue is only valid for the duration of the callback. Storing the InputValue references somewhere and calling Get&lt;T&gt;() later does not work correctly.
+        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
         /// </remarks>
         /// <seealso cref="CallbackContext.ReadValue{TValue}"/>
         public TValue Get<TValue>()
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem
 
         ////TODO: proper message if value type isn't right
         /// <summary>
-        /// Check if the action button is pressed
+        /// Check if the action button is pressed.
         /// </summary>
         /// <returns>True if the button is activated over the button threshold. False otherwise</returns>
         /// <remarks>
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// The given InputValue is only valid for the duration of the callback. Storing the InputValue references somewhere and calling Get&lt;T&gt;() later does not work correctly.
+        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
         /// </remarks>
         /// <seealso cref="ButtonControl.pressPointOrDefault"/>
         public bool isPressed => Get<float>() >= ButtonControl.s_GlobalDefaultButtonPressPoint;
