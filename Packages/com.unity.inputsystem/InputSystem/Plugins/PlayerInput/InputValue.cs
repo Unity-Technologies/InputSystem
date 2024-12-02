@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
         /// </remarks>
-        /// <seealso cref="CallbackContext.ReadValue{TValue}"/>
+        /// <seealso cref="InputAction.CallbackContext.ReadValue{TValue}"/>
         public TValue Get<TValue>()
             where TValue : struct
         {
