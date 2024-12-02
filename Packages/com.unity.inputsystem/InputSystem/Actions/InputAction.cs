@@ -2169,6 +2169,40 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
             /// <seealso cref="ReadValue(void*,int)"/>
             /// <seealso cref="ReadValueAsObject"/>
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // Note: Assumes the underlying value type is Vector2.
+            ///                 Vector2 value = context.ReadValue&lt;Vector2&gt;();
+            ///                 Debug.Log($"Value is: {value}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         move.action?.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         move.action?.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -2192,6 +2226,40 @@ namespace UnityEngine.InputSystem
             /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
             /// of the button will be taken into account (if set). If there is no custom button press point, the
             /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference fire;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (fire.action != null)
+            ///         {
+            ///             fire.action.performed += context =>
+            ///             {
+            ///                 // ReadValueAsButton attempts to interpret the value as a button.
+            ///                 bool value = context.ReadValueAsButton();
+            ///                 Debug.Log($"Button state is: {value}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         fire.action?.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         fire.action?.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             /// </remarks>
             /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
             /// <seealso cref="ButtonControl.pressPoint"/>
@@ -2204,14 +2272,51 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to
-            /// know the type of value at compile time.
+            /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to know the type of the value
+            /// at compile time.
             /// </summary>
             /// <returns>The current value from the binding that triggered the action or <c>null</c> if the action
             /// is not currently in progress.</returns>
             /// <remarks>
-            /// This method allocates GC heap memory. Using it during normal gameplay will lead
+            /// This method allocates GC heap memory due to boxing. Using it during normal gameplay will lead
             /// to frame-rate instabilities.
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // ReadValueAsObject allows reading the associated value as a boxed reference type.
+            ///                 object obj = context.ReadValueAsObject();
+            ///                 if (obj is Vector2)
+            ///                     Debug.Log($"Current value is Vector2 type: {obj}");
+            ///                 else
+            ///                     Debug.Log($"Current value is of another type: {context.valueType}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         move.action?.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         move.action?.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             /// </remarks>
             /// <seealso cref="ReadValue{TValue}"/>
             /// <seealso cref="InputAction.ReadValueAsObject"/>
