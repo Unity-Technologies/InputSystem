@@ -1792,27 +1792,27 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// The callback context represents the current state of an <see cref="action"/> associated with the callback
-        /// and provides information associated with the bound <see cref="control"/>, its value as well as its
+        /// and provides information associated with the bound <see cref="control"/>, its value, and its
         /// <see cref="phase"/>.
         ///
-        /// The callback context provides means to consume events (push-based input) as part of an update when using
-        /// input action callback notifications, e.g. <see cref="InputAction.started"/>,
+        /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
+        /// input action callback notifications. For example, <see cref="InputAction.started"/>,
         /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
         /// pull-based reading.
         ///
         /// Use this struct to read the current input value through any of the read-method overloads:
         /// <see cref="ReadValue{T}()"/>, <see cref="ReadValueAsButton"/>,
-        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue" /> (unsafe). If the expected value type is not
-        /// known, it maye be required to check <see cref="valueType"/> before reading the value.
+        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue" /> (unsafe). If you don't know the expected value type,
+        /// you might need to check <see cref="valueType"/> before reading the value.
         ///
         /// Use the <see cref="phase"/> property to get the current phase of the associated action or
-        /// evaluate it directly via any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
+        /// evaluate it directly using any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
         /// <see cref="canceled"/>.
         ///
-        /// To obtain information about the current timestamp of the associated event or reason about for how
-        /// long the action have been performing use <see cref="time"/> or <see cref="startTime"/> respectively.
+        /// To obtain information about the current timestamp of the associated event, or to check when the event
+        /// started, use <see cref="time"/> or <see cref="startTime"/> respectively.
         ///
-        /// This struct should not be held on to past the duration of the callback.
+        /// You should not use or keep this struct outside of the callback.
         ///
         /// <example>
         /// <code>
