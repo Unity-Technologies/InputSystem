@@ -42,12 +42,12 @@ namespace UnityEngine.InputSystem
         /// <typeparam name="TValue">Type of value to read. This must correspond to the
         /// expected by either <see cref="control"/> or, if it is a composite, by the
         /// <see cref="InputBindingComposite"/> in use.
-        /// Common types are float and Vector2, and depend on the type of the associated action</typeparam>
+        /// The type depends on what type of controls the action is bound to. Common types are float and Vector2</typeparam>
         /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
         /// does not match the value type expected by the control or binding composite.</exception>
         /// <remarks>
         /// The following example shows how to read a value from a <see cref="PlayerInput"/> message.
-        /// 
+        ///
         /// <example>
         /// <code>
         /// [RequireComponent(typeof(PlayerInput))]
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         ///         // Read value from control. The type depends on what type of controls the action is bound to.
         ///         m_Move = value.Get&lt;Vector2&gt;();
         ///     }
-        /// 
+        ///
         ///     public void OnUpdate()
         ///     {
         ///         // Update transform from m_Move
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the button is activated over the button threshold. False otherwise</returns>
         /// <remarks>
         /// The following example shows how to read a value from a <see cref="PlayerInput"/> message.
-        /// 
+        ///
         /// <example>
         /// <code>
         /// [RequireComponent(typeof(PlayerInput))]
@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem
         ///     {
         ///         m_Fire = value.isPressed;
         ///     }
-        /// 
+        ///
         ///     public void OnUpdate()
         ///     {
         ///         // Perform fire action if m_Fire is true
