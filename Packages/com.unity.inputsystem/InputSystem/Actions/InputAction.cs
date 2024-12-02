@@ -2186,6 +2186,9 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
             /// <seealso cref="ReadValue(void*,int)"/>
             /// <seealso cref="ReadValueAsObject"/>
+            /// <remarks>
+            /// The following example shows how to read the current value of a specific type:
+            /// 
             /// <example>
             /// <code>
             /// using UnityEngine;
@@ -2220,6 +2223,7 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
+            /// </remarks>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
