@@ -1791,7 +1791,80 @@ namespace UnityEngine.InputSystem
         /// Information provided to action callbacks about what triggered an action.
         /// </summary>
         /// <remarks>
+        /// The callback context represents the current state of an <see cref="action"/> associated with the callback
+        /// and provides information associated with the bound <see cref="control"/>, its value as well as its
+        /// <see cref="phase"/>.
+        ///
+        /// The callback context provides means to consume events (push-based input) as part of an update when using
+        /// input action callback notifications, e.g. <see cref="InputAction.started"/>,
+        /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
+        /// pull-based reading.
+        ///
+        /// Use this struct to read the current input value through any of the read-method overloads:
+        /// <see cref="ReadValue{T}()"/>, <see cref="ReadValueAsButton"/>,
+        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue" /> (unsafe). If the expected value type is not
+        /// known, it maye be required to check <see cref="valueType"/> before reading the value.
+        ///
+        /// Use the <see cref="phase"/> property to get the current phase of the associated action or
+        /// evaluate it directly via any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
+        /// <see cref="canceled"/>.
+        ///
+        /// To obtain information about the current timestamp of the associated event or reason about for how
+        /// long the action have been performing use <see cref="time"/> or <see cref="startTime"/> respectively.
+        ///
         /// This struct should not be held on to past the duration of the callback.
+        ///
+        /// <example>
+        /// <code>
+        /// public class MyController : MonoBehavior
+        /// {
+        ///     [SerializeFiled] Character target;
+        ///     [SerializeField] InputActionReference move;
+        ///     [SerializeField] InputActionReference fire;
+        ///
+        ///     void Awake()
+        ///     {
+        ///         // Get reference to an associated character behavior
+        ///         character = GetComponent&lt;Character&gt;();
+        ///
+        ///         // Receive notifications when move or fire actions are performed
+        ///         move.action.performed += MovePerformed;
+        ///         fire.action.performed += FirePerformed;
+        ///     }
+        ///
+        ///     void OnEnable()
+        ///     {
+        ///         // Enable actions as part of enabling this behavior.
+        ///         move.Enable();
+        ///         fire.Enable();
+        ///     }
+        ///
+        ///     void OnDisable()
+        ///     {
+        ///         // Disable actions as part of disabling this behavior.
+        ///         move.Disable();
+        ///         fire.Disable();
+        ///     }
+        ///
+        ///     void MovePerformed(InputAction.CallbackContext context)
+        ///     {
+        ///         // Read the current 2D vector value reported by the associated input action.
+        ///         var direction = context.ReadValue&lt;Vector2&gt;();
+        ///         target.Move( direction );
+        ///     }
+        ///
+        ///     void FirePerformed(InputAction.CallbackContext context)
+        ///     {
+        ///         // If underlying interaction is a slow-tap fire charged projectile, otherwise fire regular
+        ///         // projectile.
+        ///         if (context.interaction is SlowTapInteraction)
+        ///             target.FireChargedProjectile();
+        ///         else
+        ///             target.FireProjectile();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
