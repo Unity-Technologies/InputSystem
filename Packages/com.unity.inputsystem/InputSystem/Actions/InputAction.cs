@@ -1816,53 +1816,53 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
-        /// public class MyController : MonoBehavior
-        /// {
-        ///     [SerializeFiled] Character target;
-        ///     [SerializeField] InputActionReference move;
-        ///     [SerializeField] InputActionReference fire;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Interactions;
         ///
-        ///     void Awake()
-        ///     {
-        ///         // Get reference to an associated character behavior
-        ///         character = GetComponent&lt;Character&gt;();
+        /// public class MyController : MonoBehaviour
+        ///  {
+        ///      [SerializeField] InputActionReference move;
+        ///      [SerializeField] InputActionReference fire;
         ///
-        ///         // Receive notifications when move or fire actions are performed
-        ///         move.action.performed += MovePerformed;
-        ///         fire.action.performed += FirePerformed;
-        ///     }
+        ///      void Awake()
+        ///      {
+        ///          /// Receive notifications when move or fire actions are performed
+        ///          move.action.performed += MovePerformed;
+        ///          fire.action.performed += FirePerformed;
+        ///      }
         ///
-        ///     void OnEnable()
-        ///     {
-        ///         // Enable actions as part of enabling this behavior.
-        ///         move.Enable();
-        ///         fire.Enable();
-        ///     }
+        ///      void OnEnable()
+        ///      {
+        ///          /// Enable actions as part of enabling this behavior.
+        ///          move.action?.Enable();
+        ///          move.action?.Enable();
+        ///      }
         ///
-        ///     void OnDisable()
-        ///     {
-        ///         // Disable actions as part of disabling this behavior.
-        ///         move.Disable();
-        ///         fire.Disable();
-        ///     }
+        ///      void OnDisable()
+        ///      {
+        ///          /// Disable actions as part of disabling this behavior.
+        ///          move.action?.Disable();
+        ///          move.action?.Disable();
+        ///      }
         ///
-        ///     void MovePerformed(InputAction.CallbackContext context)
-        ///     {
-        ///         // Read the current 2D vector value reported by the associated input action.
-        ///         var direction = context.ReadValue&lt;Vector2&gt;();
-        ///         target.Move( direction );
-        ///     }
+        ///      void MovePerformed(InputAction.CallbackContext context)
+        ///      {
+        ///          /// Read the current 2D vector value reported by the associated input action.
+        ///          var direction = context.ReadValue<Vector2>();
+        ///          Debug.Log("Move: " + direction * Time.deltaTime);
+        ///      }
         ///
-        ///     void FirePerformed(InputAction.CallbackContext context)
-        ///     {
-        ///         // If underlying interaction is a slow-tap fire charged projectile, otherwise fire regular
-        ///         // projectile.
-        ///         if (context.interaction is SlowTapInteraction)
-        ///             target.FireChargedProjectile();
-        ///         else
-        ///             target.FireProjectile();
-        ///     }
-        /// }
+        ///      void FirePerformed(InputAction.CallbackContext context)
+        ///      {
+        ///          /// If underlying interaction is a slow-tap fire charged projectile, otherwise fire regular
+        ///          /// projectile.
+        ///          if (context.interaction is SlowTapInteraction)
+        ///              Debug.Log("Fire charged projectile");
+        ///          else
+        ///              Debug.Log("Fire projectile");
+        ///      }
+        ///  }
         /// </code>
         /// </example>
         /// </remarks>
@@ -1954,14 +1954,31 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// <example>
             /// <code>
-            /// void FirePerformed(InputAction.CallbackContext context)
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            /// using UnityEngine.InputSystem.Interactions;
+            ///
+            /// class Example : MonoBehaviour
             /// {
-            ///     // If SlowTap interaction was performed, perform a charged
-            ///     // firing. Otherwise, fire normally.
-            ///     if (context.interaction is SlowTapInteraction)
-            ///         FireChargedProjectile();
-            ///     else
-            ///         FireNormalProjectile();
+            ///     public InputActionReference fire;
+            ///
+            ///     public void Awake()
+            ///     {
+            ///         fire.action.performed += FirePerformed;
+            ///     }
+            ///
+            ///     void OnEnable() => fire.action.Enable();
+            ///     void OnDisable() => fire.action.Disable();
+            ///
+            ///     void FirePerformed(InputAction.CallbackContext context)
+            ///     {
+            ///          /// If SlowTap interaction was performed, perform a charged
+            ///          /// firing. Otherwise, fire normally.
+            ///          if (context.interaction is SlowTapInteraction)
+            ///              Debug.Log("Fire charged projectile");
+            ///          else
+            ///              Debug.Log("Fire projectile");
+            ///     }
             /// }
             /// </code>
             /// </example>
