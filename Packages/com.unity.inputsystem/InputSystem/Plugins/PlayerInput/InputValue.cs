@@ -40,9 +40,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>The current value from the action cast to the specified type.</returns>
         /// <typeparam name="TValue">Type of value to read. This must correspond to the
-        /// expected by either <see cref="control"/> or, if it is a composite, by the
-        /// <see cref="InputBindingComposite"/> in use.
-        /// The type depends on what type of controls the action is bound to. Common types are <c>float</c> and <see cref="UnityEngine.Vector2"/></typeparam>
+        /// <see cref="InputControl.valueType"/> of the action or, if it is a composite, by the
+        /// <see cref="InputBindingComposite.valueType"/>.
+        /// The type depends on what type of controls the action is bound to.
+        /// Common types are <c>float</c> and <see cref="UnityEngine.Vector2"/></typeparam>
         /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
         /// does not match the value type expected by the control or binding composite.</exception>
         /// <remarks>
@@ -62,7 +63,7 @@ namespace UnityEngine.InputSystem
         ///         m_Move = value.Get&lt;Vector2&gt;();
         ///     }
         ///
-        ///     public void OnUpdate()
+        ///     public void Update()
         ///     {
         ///         // Update transform from m_Move
         ///     }
@@ -87,24 +88,23 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the button is activated over the button threshold. False otherwise</returns>
         /// <remarks>
-        /// The following example shows how to read a value from a <see cref="PlayerInput"/> message.
+        /// The following example check if a button is pressed when receiving a <see cref="PlayerInput"/> message.
         ///
         /// <example>
         /// <code>
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
         /// {
-        ///     private bool m_Fire;
-        ///
         ///     // 'Fire' input action has been triggered.
         ///     public void OnFire(InputValue value)
         ///     {
-        ///         m_Fire = value.isPressed;
+        ///         if (value.isPressed)
+        ///             FireWeapon();
         ///     }
         ///
-        ///     public void OnUpdate()
+        ///     public void FireWeapon()
         ///     {
-        ///         // Perform fire action if m_Fire is true
+        ///         // Weapon firing code
         ///     }
         /// }
         /// </code>
