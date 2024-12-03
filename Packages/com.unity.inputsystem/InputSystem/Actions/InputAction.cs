@@ -1077,14 +1077,16 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Magnitudes do not make sense for all types of controls. Controls that have no meaningful magnitude
         /// will return -1 when calling this method. Any negative magnitude value should be considered an invalid value.
-        /// <br />
+        /// <para>
         /// The magnitude returned by an action is usually determined by the
         /// <see cref="InputControl"/> that triggered the action, i.e. by the
         /// control referenced from <see cref="activeControl"/>.
-        /// <br />
+        /// </para>
+        /// <para>
         /// However, if the binding that triggered is a composite, then the composite
         /// will determine the magnitude and not the individual control that triggered.
         /// Instead, the value of the control that triggered the action will be fed into the composite magnitude calculation.
+        /// </para>
         /// </remarks>
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
@@ -1369,10 +1371,13 @@ namespace UnityEngine.InputSystem
         /// Although <see cref="InputActionPhase.Disabled"/> is technically a phase, this method does not consider disabling
         /// the action while the action is in <see cref="InputActionPhase.Performed"/> to be "completed".
         ///
+        /// <para>
         /// This method is different from <see cref="WasReleasedThisFrame"/> in that it depends directly on the
         /// interaction(s) driving the action (including the default interaction if no specific interaction
         /// has been added to the action or binding).
+        /// </para>
         ///
+        /// <para>
         /// For example, let's say the action is bound to the space bar and that the binding has a
         /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
         /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
@@ -1383,7 +1388,9 @@ namespace UnityEngine.InputSystem
         /// the phase will change to and stay <see cref="InputActionPhase.Performed"/> and <see cref="WasPerformedThisFrame"/>
         /// will be true for one frame as it meets the duration threshold. Once released, <c>WasCompletedThisFrame</c> will be true
         /// (because the action is no longer performed) and only in the frame where the hold transitioned away from Performed.
+        /// </para>
         ///
+        /// <para>
         /// For another example where the action could be considered pressed but also completed, let's say the action
         /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
         /// to it such that it only performs in the forward sector area past a button press threshold. In the frame where the
@@ -1395,11 +1402,12 @@ namespace UnityEngine.InputSystem
         /// the thumbstick was no longer within the forward sector. For more details about the Sector interaction, see
         /// <a href="https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@2.5/api/UnityEngine.XR.Interaction.Toolkit.Inputs.Interactions.SectorInteraction.html"><c>SectorInteraction</c></a>
         /// in the XR Interaction Toolkit Scripting API documentation.
-        /// <br />
+        /// </para>
+        /// <para>
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
-        ///
+        /// </para>
         /// <example>
         /// <code>
         /// var teleport = playerInput.actions["Teleport"];
@@ -1794,25 +1802,30 @@ namespace UnityEngine.InputSystem
         /// The callback context represents the current state of an <see cref="action"/> associated with the callback
         /// and provides information associated with the bound <see cref="control"/>, its value, and its
         /// <see cref="phase"/>.
-        /// <br/>
+        /// <para>
         /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
         /// input action callback notifications. For example, <see cref="InputAction.started"/>,
         /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
         /// pull-based reading.
-        /// <br/>
+        /// </para>
+        /// <para>
         /// Use this struct to read the current input value through any of the read-method overloads:
         /// <see cref="ReadValue{T}()"/>, <see cref="ReadValueAsButton"/>,
-        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue" /> (unsafe). If you don't know the expected value type,
+        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue"/> (unsafe). If you don't know the expected value type,
         /// you might need to check <see cref="valueType"/> before reading the value.
-        /// <br/>
+        /// </para>
+        /// <para>
         /// Use the <see cref="phase"/> property to get the current phase of the associated action or
         /// evaluate it directly using any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
         /// <see cref="canceled"/>.
-        /// <br/>
+        /// </para>
+        /// <para>
         /// To obtain information about the current timestamp of the associated event, or to check when the event
         /// started, use <see cref="time"/> or <see cref="startTime"/> respectively.
-        /// <br/>
+        /// </para>
+        /// <para>
         /// You should not use or keep this struct outside of the callback.
+        /// </para>
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -2081,10 +2094,11 @@ namespace UnityEngine.InputSystem
             /// The type of value returned by an action is usually determined by the
             /// <see cref="InputControl"/> that triggered the action, i.e. by the
             /// control referenced from <see cref="control"/>.
-            ///
+            /// <para>
             /// However, if the binding that triggered is a composite, then the composite
             /// will determine values and not the individual control that triggered (that
             /// one just feeds values into the composite).
+            /// </para>
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
@@ -2099,9 +2113,10 @@ namespace UnityEngine.InputSystem
             /// i.e. they cannot contain references, cannot be heap objects themselves, and
             /// must be trivially mem-copyable. This means that any value can be read out
             /// and retained in a raw byte buffer.
-            ///
+            /// <para>
             /// The value of this property determines how many bytes will be written
             /// by <see cref="ReadValue(void*,int)"/>.
+            /// </para>
             /// </remarks>
             /// <seealso cref="InputControl.valueSizeInBytes"/>
             /// <seealso cref="InputBindingComposite.valueSizeInBytes"/>
