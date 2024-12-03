@@ -2093,12 +2093,9 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// The type of value returned by an action is usually determined by the
             /// <see cref="InputControl"/> that triggered the action, i.e. by the
-            /// control referenced from <see cref="control"/>.
-            /// <para>
-            /// However, if the binding that triggered is a composite, then the composite
-            /// will determine values and not the individual control that triggered (that
-            /// one just feeds values into the composite).
-            /// </para>
+            /// control referenced from <see cref="control"/>. However, if the binding that
+            /// triggered is a composite, then the composite will determine values and
+            /// not the individual control that triggered (that one just feeds values into the composite).
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
