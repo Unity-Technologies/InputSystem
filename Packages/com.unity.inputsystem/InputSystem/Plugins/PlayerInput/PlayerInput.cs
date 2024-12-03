@@ -72,6 +72,8 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
     /// // Component to sit next to PlayerInput.
     /// [RequireComponent(typeof(PlayerInput))]
     /// public class MyPlayerLogic : MonoBehaviour
