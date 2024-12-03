@@ -1794,26 +1794,25 @@ namespace UnityEngine.InputSystem
         /// The callback context represents the current state of an <see cref="action"/> associated with the callback
         /// and provides information associated with the bound <see cref="control"/>, its value, and its
         /// <see cref="phase"/>.
-        ///
+        /// <br/>
         /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
         /// input action callback notifications. For example, <see cref="InputAction.started"/>,
         /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
         /// pull-based reading.
-        ///
+        /// <br/>
         /// Use this struct to read the current input value through any of the read-method overloads:
         /// <see cref="ReadValue{T}()"/>, <see cref="ReadValueAsButton"/>,
         /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue" /> (unsafe). If you don't know the expected value type,
         /// you might need to check <see cref="valueType"/> before reading the value.
-        ///
+        /// <br/>
         /// Use the <see cref="phase"/> property to get the current phase of the associated action or
         /// evaluate it directly using any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
         /// <see cref="canceled"/>.
-        ///
+        /// <br/>
         /// To obtain information about the current timestamp of the associated event, or to check when the event
         /// started, use <see cref="time"/> or <see cref="startTime"/> respectively.
-        ///
+        /// <br/>
         /// You should not use or keep this struct outside of the callback.
-        ///
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -1905,34 +1904,32 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Whether the <see cref="action"/> has just been started.
             /// </summary>
-            /// <value>If true, the action was just started.</value>
+            /// <remarks>If true, the action was just started.</remarks>
             /// <seealso cref="InputAction.started"/>
             public bool started => phase == InputActionPhase.Started;
 
             /// <summary>
             /// Whether the <see cref="action"/> has just been performed.
             /// </summary>
-            /// <value>If true, the action was just performed.</value>
+            /// <remarks>If true, the action was just performed.</remarks>
             /// <seealso cref="InputAction.performed"/>
             public bool performed => phase == InputActionPhase.Performed;
 
             /// <summary>
             /// Whether the <see cref="action"/> has just been canceled.
             /// </summary>
-            /// <value>If true, the action was just canceled.</value>
+            /// <remarks>If true, the action was just canceled.</remarks>
             /// <seealso cref="InputAction.canceled"/>
             public bool canceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
-            /// The action that got triggered.
+            /// The associated action that triggered the callback.
             /// </summary>
-            /// <value>Action that got triggered.</value>
             public InputAction action => m_State?.GetActionOrNull(bindingIndex);
 
             /// <summary>
             /// The control that triggered the action.
             /// </summary>
-            /// <value>Control that triggered the action.</value>
             /// <remarks>
             /// In case of a composite binding, this is the control of the composite that activated the
             /// composite as a whole. For example, in case of a WASD-style binding, it could be the W key.
@@ -1950,7 +1947,6 @@ namespace UnityEngine.InputSystem
             /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
             /// have any particular interaction set on it.
             /// </summary>
-            /// <value>Interaction that triggered the callback.</value>
             /// <remarks>
             /// <example>
             /// <code>
@@ -2001,9 +1997,10 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// The time at which the action got triggered.
             /// </summary>
-            /// <value>Time relative to <c>Time.realtimeSinceStartup</c> at which
-            /// the action got triggered.</value>
             /// <remarks>
+            /// Time is relative to <see cref="UnityEngine.Time.realtimeSinceStartup"/> at which the action got
+            /// triggered.
+            ///
             /// This is usually determined by the timestamp of the input event that activated a control
             /// bound to the action. What this means is that this is normally <em>not</em> the
             /// value of <c>Time.realtimeSinceStartup</c> when the input system calls the
@@ -2022,10 +2019,8 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Time at which the action was started.
+            /// Time at which the action was <see cref="started"/> with relation to <c>Time.realtimeSinceStartup</c>.
             /// </summary>
-            /// <value>Value relative to <c>Time.realtimeSinceStartup</c> when the action
-            /// changed to <see cref="started"/>.</value>
             /// <remarks>
             /// This is only relevant for actions that go through distinct a <see cref="InputActionPhase.Started"/>
             /// cycle as driven by <see cref="IInputInteraction">interactions</see>.
@@ -2047,7 +2042,6 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Time difference between <see cref="time"/> and <see cref="startTime"/>.
             /// </summary>
-            /// <value>Difference between <see cref="time"/> and <see cref="startTime"/>.</value>
             /// <remarks>
             /// This property can be used, for example, to determine how long a button
             /// was held down.
@@ -2083,7 +2077,6 @@ namespace UnityEngine.InputSystem
             /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
             /// by <see cref="ReadValue{TValue}"/>.
             /// </summary>
-            /// <value>Type of object returned when reading a value.</value>
             /// <remarks>
             /// The type of value returned by an action is usually determined by the
             /// <see cref="InputControl"/> that triggered the action, i.e. by the
@@ -2099,9 +2092,8 @@ namespace UnityEngine.InputSystem
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
             /// <summary>
-            /// Size of values returned by <see cref="ReadValue(void*,int)"/>.
+            /// Size of values returned by <see cref="ReadValue(void*,int)"/> in bytes.
             /// </summary>
-            /// <value>Size of value returned when reading.</value>
             /// <remarks>
             /// All input values passed around by the system are required to be "blittable",
             /// i.e. they cannot contain references, cannot be heap objects themselves, and
