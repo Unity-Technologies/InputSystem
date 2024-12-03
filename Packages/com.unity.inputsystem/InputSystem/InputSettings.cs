@@ -978,6 +978,10 @@ namespace UnityEngine.InputSystem
             MultilineBoth,
         }
 
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel >0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+#endif
+
         private static bool CompareFloats(float a, float b)
         {
             return (a - b) <= float.Epsilon;
