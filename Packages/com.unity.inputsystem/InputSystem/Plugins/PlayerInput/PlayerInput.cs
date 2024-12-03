@@ -520,7 +520,7 @@ namespace UnityEngine.InputSystem
         /// This array is only used if <see cref="notificationBehavior"/> is set to
         /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         ///
-        /// The list of actions will be dependent on the <see cref="InputActionAsset"/> specified in the <see cref="PlayerInputEditor"/> UI. 
+        /// The list of actions will be dependent on the <see cref="InputActionAsset"/> specified in the <see cref="PlayerInput"/> Editor UI. 
         /// </remarks>
         public ReadOnlyArray<ActionEvent> actionEvents
         {
