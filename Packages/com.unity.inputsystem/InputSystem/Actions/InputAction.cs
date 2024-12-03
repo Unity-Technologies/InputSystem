@@ -2191,11 +2191,11 @@ namespace UnityEngine.InputSystem
             /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
             /// does not match the value type expected by the control or binding composite.</exception>
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
-            /// <seealso cref="ReadValue(void*,int)"/>
+            /// <seealso cref="ReadValue"/>
             /// <seealso cref="ReadValueAsObject"/>
             /// <remarks>
             /// The following example shows how to read the current value of a specific type:
-            ///
+            /// </remarks>
             /// <example>
             /// <code>
             /// using UnityEngine;
@@ -2229,7 +2229,6 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -2253,6 +2252,7 @@ namespace UnityEngine.InputSystem
             /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
             /// of the button will be taken into account (if set). If there is no custom button press point, the
             /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// </remarks>
             /// <example>
             /// <code>
             /// using UnityEngine;
@@ -2286,7 +2286,6 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
             /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
             /// <seealso cref="ButtonControl.pressPoint"/>
             public bool ReadValueAsButton()
@@ -2306,6 +2305,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// This method allocates GC heap memory due to boxing. Using it during normal gameplay will lead
             /// to frame-rate instabilities.
+            /// </remarks>
             /// <example>
             /// <code>
             /// using UnityEngine;
@@ -2343,7 +2343,6 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
             /// <seealso cref="ReadValue{TValue}"/>
             /// <seealso cref="InputAction.ReadValueAsObject"/>
             public object ReadValueAsObject()
@@ -2360,7 +2359,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// The following example illustrates how to log callback context to console when a callback is received
             /// for debugging purposes:
-            ///
+            /// </remarks>
             /// <example>
             /// <code>
             /// using UnityEngine;
@@ -2388,7 +2387,6 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
             public override string ToString()
             {
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
