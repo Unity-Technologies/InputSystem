@@ -48,7 +48,8 @@ namespace UnityEngine.InputSystem
         /// does not match the value type expected by the control or binding composite.</exception>
         /// <remarks>
         /// The following example shows how to read a value from a <see cref="PlayerInput"/> message.
-        ///
+        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
+        /// </remarks>
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -72,8 +73,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
-        /// </remarks>
         /// <seealso cref="InputAction.CallbackContext.ReadValue{TValue}"/>
         public TValue Get<TValue>()
             where TValue : struct
@@ -88,10 +87,11 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Check if the action button is pressed.
         /// </summary>
-        /// <returns>True if the button is activated over the button threshold. False otherwise</returns>
         /// <remarks>
+        /// True if the button is activated over the button threshold. False otherwise
         /// The following example check if a button is pressed when receiving a <see cref="PlayerInput"/> message.
-        ///
+        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
+        /// </remarks>
         /// <example>
         /// <code>
         /// [RequireComponent(typeof(PlayerInput))]
@@ -111,8 +111,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// The given <c>InputValue</c> is only valid for the duration of the callback. Storing the <c>InputValue</c> references somewhere and calling Get&lt;T&gt;() later does not work correctly.
-        /// </remarks>
         /// <seealso cref="ButtonControl.pressPointOrDefault"/>
         public bool isPressed => Get<float>() >= ButtonControl.s_GlobalDefaultButtonPressPoint;
 
