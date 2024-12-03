@@ -1987,6 +1987,21 @@ namespace UnityEngine.InputSystem
         /// Represents an event invoked in response to actions being triggered.
         ///
         /// Contains the ID and name of the <see cref="InputAction"/> being triggered and the associated <see cref="UnityAction"/> to handle the action response.
+        ///
+        /// The list of action events is specified in <see cref="PlayerInput"/> Editor UI based on the selected <see cref="InputActionAsset"/>.
+        /// The individual action callbacks are then specified in a <see cref="MonoBehaviour"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// public class MyPlayerScript : MonoBehaviour
+        /// {
+        ///     void OnFireEvent(InputAction.CallbackContext context)
+        ///     {
+        ///         // Handle fire event
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="PlayerInput.actionEvents"/>
         [Serializable]
@@ -2011,6 +2026,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// The event will not have an associated action.
             /// </remarks>
+            /// <seealso cref="PlayerInput.actionEvents"/>
             public ActionEvent()
             {
             }
@@ -2024,6 +2040,7 @@ namespace UnityEngine.InputSystem
             /// <param name="action">The action to associate with the event. The action must be part of an action asset.</param>
             /// <exception cref="ArgumentNullException">The action is <c>null</c>.</exception>
             /// <exception cref="ArgumentException">The action is not part of an action asset.</exception>
+            /// <seealso cref="PlayerInput.actionEvents"/>
             public ActionEvent(InputAction action)
             {
                 if (action == null)
@@ -2045,6 +2062,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <param name="actionGUID">Action GUID</param>
             /// <param name="name">Name of the action</param>
+            /// <seealso cref="PlayerInput.actionEvents"/>
             public ActionEvent(Guid actionGUID, string name = null)
             {
                 m_ActionId = actionGUID.ToString();
