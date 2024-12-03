@@ -1836,14 +1836,14 @@ namespace UnityEngine.InputSystem
         ///      {
         ///          /// Enable actions as part of enabling this behavior.
         ///          move.action?.Enable();
-        ///          move.action?.Enable();
+        ///          fire.action?.Enable();
         ///      }
         ///
         ///      void OnDisable()
         ///      {
         ///          /// Disable actions as part of disabling this behavior.
         ///          move.action?.Disable();
-        ///          move.action?.Disable();
+        ///          fire.action?.Disable();
         ///      }
         ///
         ///      void MovePerformed(InputAction.CallbackContext context)
@@ -2188,7 +2188,7 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="ReadValueAsObject"/>
             /// <remarks>
             /// The following example shows how to read the current value of a specific type:
-            /// 
+            ///
             /// <example>
             /// <code>
             /// using UnityEngine;
