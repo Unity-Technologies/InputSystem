@@ -120,6 +120,8 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
     /// // Component to sit next to PlayerInput.
     /// [RequireComponent(typeof(PlayerInput))]
     /// public class MyPlayerLogic : MonoBehaviour
@@ -615,6 +617,8 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
         /// // Component to sit next to PlayerInput.
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
@@ -665,6 +669,8 @@ namespace UnityEngine.InputSystem
         /// The argument is the player that lost its device (i.e. the player on which the callback is installed).
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
         /// // Component to sit next to PlayerInput.
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
@@ -712,6 +718,8 @@ namespace UnityEngine.InputSystem
         /// The argument is the player that regained a device (i.e. the player on which the callback is installed).
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
         /// // Component to sit next to PlayerInput.
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
@@ -759,6 +767,8 @@ namespace UnityEngine.InputSystem
         /// keyboard layout (see <see cref="Keyboard.keyboardLayout"/>) changes.
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
         /// // Component to sit next to PlayerInput.
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
@@ -1899,6 +1909,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
         /// // Component to sit next to PlayerInput.
         /// [RequireComponent(typeof(PlayerInput))]
         /// public class MyPlayerLogic : MonoBehaviour
