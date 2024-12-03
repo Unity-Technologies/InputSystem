@@ -55,6 +55,7 @@ namespace UnityEngine.InputSystem
     /// to the player and a set of paired device.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// PlayerInput is a high-level wrapper around much of the input system's functionality
     /// which is meant to help getting set up with the new input system quickly. It takes
     /// care of <see cref="InputAction"/> bookkeeping and has a custom UI(requires the "Unity UI" package) to help
@@ -76,12 +77,14 @@ namespace UnityEngine.InputSystem
     /// or <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/>. This also makes it possible
     /// to assign the same device to two different players, e.g. for split-keyboard play.
     ///
+    /// </para>
     /// <code>
     /// var p1 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardLeft", device: Keyboard.current);
     /// var p2 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardRight", device: Keyboard.current);
     /// </code>
+    /// <para>
     ///
     /// If no specific devices are given to a PlayerInput, the component will look for compatible
     /// devices present in the system and pair them to itself automatically. If the PlayerInput's
@@ -132,6 +135,7 @@ namespace UnityEngine.InputSystem
     ///
     /// Both behaviors described in the previous two paragraphs are automatically disabled if more than one
     /// PlayerInput is active.
+    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
