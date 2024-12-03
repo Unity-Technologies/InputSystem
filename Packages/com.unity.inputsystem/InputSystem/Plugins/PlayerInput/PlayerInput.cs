@@ -520,7 +520,7 @@ namespace UnityEngine.InputSystem
         /// This array is only used if <see cref="notificationBehavior"/> is set to
         /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         ///
-        /// The list of actions will be dependent on the <see cref="InputActionAsset"/> specified in the <see cref="PlayerInput"/> Editor UI. 
+        /// The list of actions will be dependent on the <see cref="InputActionAsset"/> specified in the <see cref="PlayerInput"/> Editor UI.
         /// </remarks>
         public ReadOnlyArray<ActionEvent> actionEvents
         {
@@ -785,7 +785,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>True if the player is missing devices required by the control scheme.</value>
         /// <remarks>
-        /// This can happen, for example, if the a device is unplugged during the game.
+        /// This can happen, for example, if a device is unplugged during the game.
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         /// <seealso cref="InputUser.hasMissingRequiredDevices"/>
@@ -1986,12 +1986,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Represents an event invoked in response to actions being triggered.
         ///
-        /// Contains the Id and name of the action being triggered and the associated UnityAction to handle the action response.
+        /// Contains the ID and name of the <see cref="InputAction"/> being triggered and the associated <see cref="UnityAction"/> to handle the action response.
         /// </remarks>
-        /// <example>
-        /// <code>
-        /// </code>
-        /// </example>
         /// <seealso cref="PlayerInput.actionEvents"/>
         [Serializable]
         public class ActionEvent : UnityEvent<InputAction.CallbackContext>
@@ -2020,13 +2016,13 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Construct an action event and associated it with an action.
+            /// Construct an action event and associate it with an action.
             /// </summary>
             /// <remarks>
             /// The event will be associated with the specified action. The action must be part of an action asset.
             /// </remarks>
             /// <param name="action">The action to associate with the event. The action must be part of an action asset.</param>
-            /// <exception cref="ArgumentNullException">The action is null.</exception>
+            /// <exception cref="ArgumentNullException">The action is <c>null</c>.</exception>
             /// <exception cref="ArgumentException">The action is not part of an action asset.</exception>
             public ActionEvent(InputAction action)
             {
@@ -2045,10 +2041,10 @@ namespace UnityEngine.InputSystem
             /// Construct an action event and associated it with an action by GUID.
             /// </summary>
             /// <remarks>
-            /// The event will be associated with the specified action. 
+            /// The event will be associated with the specified action.
             /// </remarks>
             /// <param name="actionGUID">Action GUID</param>
-            /// <param name="name">name of the action</param>
+            /// <param name="name">Name of the action</param>
             public ActionEvent(Guid actionGUID, string name = null)
             {
                 m_ActionId = actionGUID.ToString();
