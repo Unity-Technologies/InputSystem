@@ -521,10 +521,24 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been removed.
-        /// </remarks>
         /// <seealso cref="InputSystem.devices"/>
         /// <seealso cref="InputDeviceChange.Removed"/>
         /// <seealso cref="OnRemoved"/>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     protected override void OnRemoved()
+        ///     {
+        ///         // use this context to unassign the current device for instance
+        ///         base.OnRemoved();
+        ///         if (current == this)
+        ///             current = null;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void OnRemoved()
         {
         }

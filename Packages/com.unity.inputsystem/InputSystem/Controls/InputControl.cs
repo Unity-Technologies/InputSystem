@@ -790,6 +790,60 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Refresh the configuration of the control. This is used to update the control's state (e.g. Keyboard Layout or display Name of Keys).
+        /// </summary>
+        /// <remarks>
+        /// The system will call this method automatically whenever change is made to one of the control's configuration properties.
+        /// See <seealso cref="RefreshConfigurationIfNeeded"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public enum Orientation
+        ///     {
+        ///         Horizontal,
+        ///         Vertical,
+        ///     }
+        ///     private Orientation m_Orientation;
+        ///
+        ///     public Orientation orientation
+        ///     {
+        ///         get
+        ///         {
+        ///             // Call RefreshOrientation if the configuration of the device has been
+        ///             // invalidated since last time we initialized m_Orientation.
+        ///             // Calling RefreshConfigurationIfNeeded() is sufficient in most cases, RefreshConfiguration() forces the refresh.
+        ///             RefreshConfiguration();
+        ///             return m_Orientation;
+        ///         }
+        ///     }
+        ///     protected override void RefreshConfiguration()
+        ///     {
+        ///         // Fetch the current orientation from the backend. How you do this
+        ///         // depends on your device. Using DeviceCommands is one way.
+        ///         var fetchOrientationCommand = new FetchOrientationCommand();
+        ///         ExecuteCommand(ref fetchOrientationCommand);
+        ///         m_Orientation = fetchOrientation;
+        ///
+        ///         // Reflect the orientation on the device.
+        ///         switch (m_Orientation)
+        ///         {
+        ///             case Orientation.Vertical:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Horizontal);
+        ///                 InputSystem.AddDeviceUsage(this, s_Vertical);
+        ///                 break;
+        ///
+        ///             case Orientation.Horizontal:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Vertical);
+        ///                 InputSystem.AddDeviceUsage(this, s_Horizontal);
+        ///                 break;
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void RefreshConfiguration()
         {
         }
