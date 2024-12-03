@@ -2182,12 +2182,12 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Read the value of the action.
+            /// Read the current value of the associated action.
             /// </summary>
             /// <typeparam name="TValue">Type of value to read. This must correspond to the
             /// expected by either <see cref="control"/> or, if it is a composite, by the
             /// <see cref="InputBindingComposite"/> in use.</typeparam>
-            /// <returns>The value read from the action.</returns>
+            /// <returns>The current value of type <typeparamref name="TValue"/> associated with the action.</returns>
             /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
             /// does not match the value type expected by the control or binding composite.</exception>
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
@@ -2212,20 +2212,19 @@ namespace UnityEngine.InputSystem
             ///             move.action.performed += context =>
             ///             {
             ///                 // Note: Assumes the underlying value type is Vector2.
-            ///                 Vector2 value = context.ReadValue&lt;Vector2&gt;();
-            ///                 Debug.Log($"Value is: {value}");
+            ///                 Debug.Log($"Value is: {context.ReadValue&lt;Vector2&gt;()}");
             ///             };
             ///         }
             ///     }
             ///
             ///     void OnEnable()
             ///     {
-            ///         move.action?.Enable();
+            ///         move.action.Enable();
             ///     }
             ///
             ///     void OnDisable()
             ///     {
-            ///         move.action?.Disable();
+            ///         move.action.Disable();
             ///     }
             /// }
             /// </code>
@@ -2270,20 +2269,19 @@ namespace UnityEngine.InputSystem
             ///             fire.action.performed += context =>
             ///             {
             ///                 // ReadValueAsButton attempts to interpret the value as a button.
-            ///                 bool value = context.ReadValueAsButton();
-            ///                 Debug.Log($"Button state is: {value}");
+            ///                 Debug.Log($"Is firing: {context.ReadValueAsButton()}");
             ///             };
             ///         }
             ///     }
             ///
             ///     void OnEnable()
             ///     {
-            ///         fire.action?.Enable();
+            ///         fire.action.Enable();
             ///     }
             ///
             ///     void OnDisable()
             ///     {
-            ///         fire.action?.Disable();
+            ///         fire.action.Disable();
             ///     }
             /// }
             /// </code>
@@ -2335,12 +2333,12 @@ namespace UnityEngine.InputSystem
             ///
             ///     void OnEnable()
             ///     {
-            ///         move.action?.Enable();
+            ///         move.action.Enable();
             ///     }
             ///
             ///     void OnDisable()
             ///     {
-            ///         move.action?.Disable();
+            ///         move.action.Disable();
             ///     }
             /// }
             /// </code>
@@ -2359,6 +2357,38 @@ namespace UnityEngine.InputSystem
             /// Return a string representation of the context useful for debugging.
             /// </summary>
             /// <returns>String representation of the context.</returns>
+            /// <remarks>
+            /// The following example illustrates how to log callback context to console when a callback is received
+            /// for debugging purposes:
+            ///
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // Outputs the associated callback context in its textual representation which may
+            ///                 // be useful for debugging purposes.
+            ///                 Debug.Log(context.ToString());
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable() => move.action.Enable();
+            ///     void OnDisable() => move.action.Disable();
+            /// }
+            /// </code>
+            /// </example>
+            /// </remarks>
             public override string ToString()
             {
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
