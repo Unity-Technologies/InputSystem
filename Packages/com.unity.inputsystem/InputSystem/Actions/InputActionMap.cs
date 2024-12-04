@@ -1305,7 +1305,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
-            // using (k_ResolveBindingsProfilerMarker.Auto())
+            using (k_ResolveBindingsProfilerMarker.Auto())
             {
                 // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
                 // we don't trigger a re-resolve while we're already resolving bindings.
