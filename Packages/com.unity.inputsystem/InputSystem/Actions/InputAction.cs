@@ -2113,11 +2113,11 @@ namespace UnityEngine.InputSystem
             /// <para>
             /// The value of this property determines how many bytes will be written
             /// by <see cref="ReadValue(void*,int)"/>.
+            ///
+            /// This property indirectly maps to the value of <see cref="InputControl.valueSizeInBytes"/> or
+            /// <see cref="InputBindingComposite{TValue}.valueSizeInBytes"/>.
             /// </para>
             /// </remarks>
-            /// <seealso cref="InputControl.valueSizeInBytes"/>
-            /// <seealso cref="InputBindingComposite.valueSizeInBytes"/>
-            /// <seealso cref="ReadValue(void*,int)"/>
             public int valueSizeInBytes
             {
                 get
@@ -2130,16 +2130,15 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Read the value of the action as a raw byte buffer. This allows reading
-            /// values without having to know value types but also, unlike <see cref="ReadValueAsObject"/>,
-            /// without allocating GC heap memory.
+            /// Read the value of the action as a raw byte buffer.
             /// </summary>
             /// <param name="buffer">Memory buffer to read the value into.</param>
             /// <param name="bufferSize">Size of buffer allocated at <paramref name="buffer"/>. Must be
             /// at least <see cref="valueSizeInBytes"/>.</param>
-            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
-            /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is too small.</exception>
             /// <remarks>
+            /// This allows reading values without having to know value types but also,
+            /// unlike <see cref="ReadValueAsObject"/>, without allocating GC heap memory.
+            /// </remarks>
             /// <example>
             /// <code>
             /// // Read a Vector2 using the raw memory ReadValue API.
@@ -2155,7 +2154,8 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
+            /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is too small.</exception>
             /// <seealso cref="InputControlExtensions.ReadValueIntoBuffer"/>
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
             /// <seealso cref="ReadValue{TValue}"/>
