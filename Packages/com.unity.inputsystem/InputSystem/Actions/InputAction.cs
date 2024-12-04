@@ -1847,21 +1847,21 @@ namespace UnityEngine.InputSystem
         ///      void OnEnable()
         ///      {
         ///          /// Enable actions as part of enabling this behavior.
-        ///          move.action?.Enable();
-        ///          fire.action?.Enable();
+        ///          move.action.Enable();
+        ///          fire.action.Enable();
         ///      }
         ///
         ///      void OnDisable()
         ///      {
         ///          /// Disable actions as part of disabling this behavior.
-        ///          move.action?.Disable();
-        ///          fire.action?.Disable();
+        ///          move.action.Disable();
+        ///          fire.action.Disable();
         ///      }
         ///
         ///      void MovePerformed(InputAction.CallbackContext context)
         ///      {
         ///          /// Read the current 2D vector value reported by the associated input action.
-        ///          var direction = context.ReadValue<Vector2>();
+        ///          var direction = context.ReadValue&lt;Vector2&gt;();
         ///          Debug.Log("Move: " + direction * Time.deltaTime);
         ///      }
         ///
