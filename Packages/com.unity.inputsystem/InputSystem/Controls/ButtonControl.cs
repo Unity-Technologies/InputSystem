@@ -107,6 +107,7 @@ namespace UnityEngine.InputSystem.Controls
         /// The default format for the control is <see cref="InputStateBlock.FormatBit"/>.
         /// The control's minimum value is set to 0 and the maximum value to 1.
         /// See <see cref="InputSettings.defaultButtonPressPoint"/> for the default press point.
+        /// </remarks>
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -133,7 +134,6 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool IsValueConsideredPressed(float value)
         {
@@ -318,8 +318,8 @@ namespace UnityEngine.InputSystem.Controls
         /// {
         ///     void Update()
         ///     {
-        ///         bool buttonPressed = Gamepad.current.aButton.wasReleasedThisFrame;
-        ///         bool spaceKeyPressed = Keyboard.current.spaceKey.wasReleasedThisFrame;
+        ///         bool buttonReleased = Gamepad.current.aButton.wasReleasedThisFrame;
+        ///         bool spaceKeyReleased = Keyboard.current.spaceKey.wasReleasedThisFrame;
         ///     }
         /// }
         /// </code>
