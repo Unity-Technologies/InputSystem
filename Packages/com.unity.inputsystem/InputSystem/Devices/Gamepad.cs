@@ -102,7 +102,6 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Button bit mask.
         /// </summary>
-        /// <value>Button bit mask.</value>
         /// <seealso cref="GamepadButton"/>
         /// <seealso cref="Gamepad.buttonSouth"/>
         /// <seealso cref="Gamepad.buttonNorth"/>
@@ -132,20 +131,18 @@ namespace UnityEngine.InputSystem.LowLevel
         public uint buttons;
 
         /// <summary>
-        /// Left stick position. Each axis goes from -1 to 1 with
-        /// 0 being center position.
+        /// Left stick position.
         /// </summary>
-        /// <value>Left stick position.</value>
+        /// <remarks>Each axis goes from -1 to 1 with 0 being center position.</remarks>
         /// <seealso cref="Gamepad.leftStick"/>
         [InputControl(layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
-        /// Right stick position. Each axis from -1 to 1 with
-        /// 0 being center position.
+        /// Right stick position.
         /// </summary>
-        /// <value>Right stick position.</value>
+        /// <remarks>Each axis from -1 to 1 with 0 being center position.</remarks>
         /// <seealso cref="Gamepad.rightStick"/>
         [InputControl(layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
@@ -154,18 +151,18 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: should left and right trigger get deadzones?
 
         /// <summary>
-        /// Position of the left trigger. Goes from 0 (not pressed) to 1 (fully pressed).
+        /// Position of the left trigger.
         /// </summary>
-        /// <value>Position of left trigger.</value>
+        /// <remarks>Goes from 0 (not pressed) to 1 (fully pressed).</remarks>
         /// <seealso cref="Gamepad.leftTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
-        /// Position of the right trigger. Goes from 0 (not pressed) to 1 (fully pressed).
+        /// Position of the right trigger.
         /// </summary>
-        /// <value>Position of right trigger.</value>
+        /// <remarks>Goes from 0 (not pressed) to 1 (fully pressed).</remarks>
         /// <seealso cref="Gamepad.rightTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
@@ -174,7 +171,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// State format tag for GamepadState.
         /// </summary>
-        /// <value>Returns "GPAD".</value>
+        /// <remarks>Returns "GPAD".</remarks>
         public FourCC format => Format;
 
         /// <summary>
@@ -402,106 +399,146 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
-    /// // Show all gamepads in the system.
-    /// Debug.Log(string.Join("\n", Gamepad.all));
     ///
-    /// // Check whether the X button on the current gamepad is pressed.
-    /// if (Gamepad.current.xButton.wasPressedThisFrame)
-    ///     Debug.Log("Pressed");
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
     ///
-    /// // Rumble the left motor on the current gamepad slightly.
-    /// Gamepad.current.SetMotorSpeeds(0.2f, 0.
+    /// public class Example : MonoBehaviour
+    /// {
+    ///     void Start()
+    ///     {
+    ///         // Print all connected gamepads
+    ///         Debug.Log(string.Join("\n", Gamepad.all));
+    ///     }
+    ///
+    ///     void Update()
+    ///     {
+    ///         var gamepad = Gamepad.current;
+    ///
+    ///         // No gamepad connected.
+    ///         if (gamepad == null)
+    ///         {
+    ///             return;
+    ///         }
+    ///
+    ///         // Check if "Button North" was pressed this frame
+    ///         if (gamepad.buttonNorth.wasPressedThisFrame)
+    ///         {
+    ///             Debug.Log("Button North was pressed");
+    ///         }
+    ///
+    ///         // Check if the button control is being continuously actuated and read its value
+    ///         if (gamepad.rightTrigger.IsActuated())
+    ///         {
+    ///             Debug.Log("Right trigger value: " + gamepad.rightTrigger.ReadValue());
+    ///         }
+    ///
+    ///         // Read left stick value and perform some code based on the value
+    ///         Vector2 move = gamepad.leftStick.ReadValue();
+    ///         {
+    ///             // Do 'move' code here
+    ///         }
+    ///
+    ///         // Creating haptic feedback while "Button South" is pressed and stopping it when released.
+    ///         if (gamepad.buttonSouth.wasPressedThisFrame)
+    ///         {
+    ///             gamepad.SetMotorSpeeds(0.2f, 1.0f);
+    ///
+    ///         } else if (gamepad.buttonSouth.wasReleasedThisFrame)
+    ///         {
+    ///             gamepad.ResetHaptics();
+    ///         }
+    ///     }
+    /// }
     /// </code>
     /// </example>
     /// </remarks>
+    /// <seealso cref="all"/>
+    /// <seealso cref="current"/>
+    /// <seealso cref="GamepadState"/>
+    /// <seealso cref="InputDevice"/>
+    /// <seealso cref="SetMotorSpeeds"/>
+    /// <seealso cref="ButtonControl.wasPressedThisFrame"/>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         /// <summary>
         /// The left face button of the gamepad.
         /// </summary>
-        /// <value>Control representing the X/Square face button.</value>
         /// <remarks>
-        /// On an Xbox controller, this is the X button and on the PS4 controller, this is the
-        /// square button.
+        /// Control representing the X/Square face button.
+        /// On an Xbox controller, this is the <see cref="xButton"/> and on the PS4 controller, this is the
+        /// <see cref="squareButton"/>.
         /// </remarks>
-        /// <seealso cref="xButton"/>
-        /// <seealso cref="squareButton"/>
         public ButtonControl buttonWest { get; protected set; }
 
         /// <summary>
         /// The top face button of the gamepad.
         /// </summary>
-        /// <value>Control representing the Y/Triangle face button.</value>
         /// <remarks>
-        /// On an Xbox controller, this is the Y button and on the PS4 controller, this is the
-        /// triangle button.
+        /// Control representing the Y/Triangle face button.
+        /// On an Xbox controller, this is the <see cref="yButton"/> and on the PS4 controller, this is the
+        /// <see cref="triangleButton"/>.
         /// </remarks>
-        /// <seealso cref="yButton"/>
-        /// <seealso cref="triangleButton"/>
         public ButtonControl buttonNorth { get; protected set; }
 
         /// <summary>
         /// The bottom face button of the gamepad.
         /// </summary>
-        /// <value>Control representing the A/Cross face button.</value>
         /// <remarks>
-        /// On an Xbox controller, this is the A button and on the PS4 controller, this is the
-        /// cross button.
+        /// Control representing the A/Cross face button.
+        /// On an Xbox controller, this is the <see cref="aButton"/> and on the PS4 controller, this is the
+        /// <see cref="crossButton"/>.
         /// </remarks>
-        /// <seealso cref="aButton"/>
-        /// <seealso cref="crossButton"/>
         public ButtonControl buttonSouth { get; protected set; }
 
         /// <summary>
         /// The right face button of the gamepad.
         /// </summary>
-        /// <value>Control representing the B/Circle face button.</value>
         /// <remarks>
-        /// On an Xbox controller, this is the B button and on the PS4 controller, this is the
-        /// circle button.
+        /// Control representing the B/Circle face button.
+        /// On an Xbox controller, this is the <see cref="bButton"/> and on the PS4 controller, this is the
+        /// <see cref="circleButton"/>.
         /// </remarks>
-        /// <seealso cref="bButton"/>
-        /// <seealso cref="circleButton"/>
         public ButtonControl buttonEast { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="leftStick"/> is pressed down.
         /// </summary>
-        /// <value>Control representing a click with the left stick.</value>
+        /// <remarks>Control representing a click with the left stick.</remarks>
         public ButtonControl leftStickButton { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="rightStick"/> is pressed down.
         /// </summary>
-        /// <value>Control representing a click with the right stick.</value>
+        /// <remarks>Control representing a click with the right stick.</remarks>
         public ButtonControl rightStickButton { get; protected set; }
 
         /// <summary>
         /// The right button in the middle section of the gamepad (called "menu" on Xbox
         /// controllers and "options" on PS4 controllers).
         /// </summary>
-        /// <value>Control representing the right button in midsection.</value>
+        /// <remarks>Control representing the right button in midsection.</remarks>
         public ButtonControl startButton { get; protected set; }
 
         /// <summary>
         /// The left button in the middle section of the gamepad (called "view" on Xbox
         /// controllers and "share" on PS4 controllers).
         /// </summary>
-        /// <value>Control representing the left button in midsection.</value>
+        /// <remarks>Control representing the left button in midsection.</remarks>
         public ButtonControl selectButton { get; protected set; }
 
         /// <summary>
         /// The 4-way directional pad on the gamepad.
         /// </summary>
-        /// <value>Control representing the d-pad.</value>
+        /// <remarks>Control representing the d-pad.</remarks>
         public DpadControl dpad { get; protected set; }
 
         /// <summary>
         /// The left shoulder/bumper button that sits on top of <see cref="leftTrigger"/>.
         /// </summary>
-        /// <value>Control representing the left shoulder button.</value>
         /// <remarks>
+        /// Control representing the left shoulder button.
         /// On Xbox controllers, this is usually called "left bumper" whereas on PS4
         /// controllers, this button is referred to as "L1".
         /// </remarks>
@@ -510,8 +547,8 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The right shoulder/bumper button that sits on top of <see cref="rightTrigger"/>.
         /// </summary>
-        /// <value>Control representing the right shoulder button.</value>
         /// <remarks>
+        /// Control representing the right shoulder button.
         /// On Xbox controllers, this is usually called "right bumper" whereas on PS4
         /// controllers, this button is referred to as "R1".
         /// </remarks>
@@ -520,20 +557,19 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The left thumbstick on the gamepad.
         /// </summary>
-        /// <value>Control representing the left thumbstick.</value>
+        /// <remarks>Control representing the left thumbstick.</remarks>
         public StickControl leftStick { get; protected set; }
 
         /// <summary>
         /// The right thumbstick on the gamepad.
         /// </summary>
-        /// <value>Control representing the right thumbstick.</value>
+        /// <remarks>Control representing the right thumbstick.</remarks>
         public StickControl rightStick { get; protected set; }
 
         /// <summary>
         /// The left trigger button sitting below <see cref="leftShoulder"/>.
         /// </summary>
-        /// <value>Control representing the left trigger button.</value>
-        /// <remarks>
+        /// <remarks>Control representing the left trigger button.
         /// On PS4 controllers, this button is referred to as "L2".
         /// </remarks>
         public ButtonControl leftTrigger { get; protected set; }
@@ -541,8 +577,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The right trigger button sitting below <see cref="rightShoulder"/>.
         /// </summary>
-        /// <value>Control representing the right trigger button.</value>
-        /// <remarks>
+        /// <remarks>Control representing the right trigger button.
         /// On PS4 controllers, this button is referred to as "R2".
         /// </remarks>
         public ButtonControl rightTrigger { get; protected set; }
@@ -550,49 +585,41 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Same as <see cref="buttonSouth"/>. Xbox-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonSouth"/>.</value>
         public ButtonControl aButton => buttonSouth;
 
         /// <summary>
         /// Same as <see cref="buttonEast"/>. Xbox-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonEast"/>.</value>
         public ButtonControl bButton => buttonEast;
 
         /// <summary>
         /// Same as <see cref="buttonWest"/> Xbox-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonWest"/>.</value>
         public ButtonControl xButton => buttonWest;
 
         /// <summary>
         /// Same as <see cref="buttonNorth"/>. Xbox-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonNorth"/>.</value>
         public ButtonControl yButton => buttonNorth;
 
         /// <summary>
         /// Same as <see cref="buttonNorth"/>. PS4-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonNorth"/>.</value>
         public ButtonControl triangleButton => buttonNorth;
 
         /// <summary>
         /// Same as <see cref="buttonWest"/>. PS4-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonWest"/>.</value>
         public ButtonControl squareButton => buttonWest;
 
         /// <summary>
         /// Same as <see cref="buttonEast"/>. PS4-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonEast"/>.</value>
         public ButtonControl circleButton => buttonEast;
 
         /// <summary>
         /// Same as <see cref="buttonSouth"/>. PS4-style alias.
         /// </summary>
-        /// <value>Same as <see cref="buttonSouth"/>.</value>
         public ButtonControl crossButton => buttonSouth;
 
         /// <summary>
@@ -637,28 +664,29 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// When added, a device is automatically made current (see <see cref="InputDevice.MakeCurrent"/>), so
         /// when connecting a gamepad, it will also become current. After that, it will only become current again
-        /// when input change on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
+        /// when input change on non-noisy controls (see <see cref="InputControl.noisy"/>) is received. It will also
+        /// be available once <see cref="all"/> is queried.
         ///
         /// For local multiplayer scenarios (or whenever there are multiple gamepads that need to be usable
         /// in a concurrent fashion), it is not recommended to rely on this property. Instead, it is recommended
         /// to use <see cref="PlayerInput"/> or <see cref="Users.InputUser"/>.
         /// </remarks>
-        /// <seealso cref="InputDevice.MakeCurrent"/>
-        /// <seealso cref="all"/>
         public static Gamepad current { get; private set; }
 
         /// <summary>
         /// A list of gamepads currently connected to the system.
         /// </summary>
-        /// <value>All currently connected gamepads.</value>
         /// <remarks>
+        /// Returns all currently connected gamepads.
+        ///
         /// Does not cause GC allocation.
         ///
         /// Do <em>not</em> hold on to the value returned by this getter but rather query it whenever
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
+        ///
+        /// Alternately, if you want a single gamepad, you can use <see cref="current"/> for example.
         /// </remarks>
-        /// <seealso cref="current"/>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         /// <inheritdoc />
@@ -695,7 +723,29 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called automatically by the system when there is input on a gamepad.
+        ///
+        /// More remarks are available in <see cref="InputDevice.MakeCurrent()"/> when it comes to devices with
+        /// <see cref="InputControl.noisy"/> controls.
         /// </remarks>
+        /// <example>
+        /// <code>
+        /// using System;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class MakeCurrentGamepadExample : MonoBehaviour
+        /// {
+        ///     void Update()
+        ///     {
+        ///         /// Make the first Gamepad always the current one
+        ///         if (Gamepad.all.Count > 0)
+        ///         {
+        ///             Gamepad.all[0].MakeCurrent();
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
@@ -705,6 +755,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Called when the gamepad is added to the system.
         /// </summary>
+        /// <remarks>
+        /// <inheritdoc cref="InputDevice.OnAdded()"/>
+        /// It will also add the gamepad to the list of <see cref="all"/> gamepads.
+        /// </remarks>
         protected override void OnAdded()
         {
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
@@ -713,6 +767,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Called when the gamepad is removed from the system.
         /// </summary>
+        /// <remarks>
+        /// <inheritdoc cref="InputDevice.OnRemoved()"/>
+        /// It will also remove the gamepad from the list of <see cref="all"/> gamepads.
+        /// </remarks>
         protected override void OnRemoved()
         {
             if (current == this)
@@ -730,9 +788,19 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Pause rumble effects on the gamepad. Resume with <see cref="ResumeHaptics"/>.
+        /// Pause rumble effects on the gamepad.
+        /// <inheritdoc cref="DualMotorRumble.PauseHaptics"/>
         /// </summary>
+        /// <remarks>
+        /// Resume with <see cref="ResumeHaptics"/>.
+        /// <inheritdoc cref="DualMotorRumble.PauseHaptics"/>
+        /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
+        /// <example>
+        /// <code>
+        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// </code>
+        /// </example>
         public virtual void PauseHaptics()
         {
             m_Rumble.PauseHaptics(this);
@@ -741,23 +809,87 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Resume rumble affects on the gamepad that have been paused with <see cref="PauseHaptics"/>.
         /// </summary>
+        /// <remarks>
+        /// <inheritdoc cref="DualMotorRumble.ResumeHaptics"/>
+        /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
+        /// <example>
+        /// <code>
+        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// </code>
+        /// </example>
         public virtual void ResumeHaptics()
         {
             m_Rumble.ResumeHaptics(this);
         }
 
         /// <summary>
-        /// Reset rumble effects on the gamepad. Puts the gamepad rumble motors back into their
-        /// default state.
+        /// Reset rumble effects on the gamepad.
         /// </summary>
+        /// <remarks>
+        /// <inheritdoc cref="DualMotorRumble.ResetHaptics"/>
+        /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
+        /// <example>
+        /// <code>
+        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// </code>
+        /// </example>
         public virtual void ResetHaptics()
         {
             m_Rumble.ResetHaptics(this);
         }
 
         /// <inheritdoc />
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class GamepadHapticsExample : MonoBehaviour
+        /// {
+        ///     bool hapticsArePaused = false;
+        ///
+        ///     void Update() {
+        ///         var gamepad = Gamepad.current;
+        ///
+        ///         // No gamepad connected, no need to continue.
+        ///         if (gamepad == null)
+        ///             return;
+        ///
+        ///         float leftTrigger = gamepad.leftTrigger.ReadValue();
+        ///         float rightTrigger = gamepad.rightTrigger.ReadValue();
+        ///
+        ///         // Only set motor speeds if haptics were not paused and if trigger is actuated.
+        ///         // Both triggers must be actuated past 0.2f to start haptics.
+        ///         if (!hapticsArePaused &amp;&amp;
+        ///             (gamepad.leftTrigger.IsActuated() || gamepad.rightTrigger.IsActuated()))
+        ///             gamepad.SetMotorSpeeds(
+        ///                 leftTrigger &lt; 0.2f ? 0.0f : leftTrigger,
+        ///                 rightTrigger &lt; 0.2f ? 0.0f : rightTrigger);
+        ///
+        ///         // Toggle haptics "playback" when "Button South" is pressed.
+        ///         // Notice that if you release the triggers after pausing,
+        ///         // and press the button again, haptics will resume.
+        ///         if (gamepad.buttonSouth.wasPressedThisFrame)
+        ///         {
+        ///             if (hapticsArePaused)
+        ///                 gamepad.ResumeHaptics();
+        ///             else
+        ///                 gamepad.PauseHaptics();
+        ///
+        ///             hapticsArePaused = !hapticsArePaused;
+        ///         }
+        ///
+        ///         // Notice that if you release the triggers after pausing,
+        ///         // and press the Start button, haptics will be reset.
+        ///         if (gamepad.startButton.wasPressedThisFrame)
+        ///             gamepad.ResetHaptics();
+        ///     }
+        /// }
+        ///
+        /// </code>
+        /// </example>
         public virtual void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);
