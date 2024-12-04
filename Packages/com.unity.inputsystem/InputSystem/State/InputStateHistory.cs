@@ -724,7 +724,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Identifies if the record is valid.
             /// </summary>
-            /// <returns>True if the record is a valid entry. False if invalid.</returns>
+            /// <value>True if the record is a valid entry. False if invalid.</value>
             /// <remarks>
             /// When the history is cleared with <see cref="Clear"/> the entries become invalid.
             /// </remarks>
@@ -733,7 +733,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Identifies the owning container for the record.
             /// </summary>
-            /// <returns>The owning <see cref="InputStateHistory"/> container for the record.</returns>
+            /// <value>The owning <see cref="InputStateHistory"/> container for the record.</value>
             /// <remarks>
             /// Identifies the owning <see cref="InputStateHistory"/> container for the record.
             /// </remarks>
@@ -742,9 +742,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The index of the input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The index of the input state record in the owning container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public int index
             {
@@ -758,10 +758,10 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The time stamp of the input state record.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The time stamp of the input state record in the owning container.
             /// <see cref="IInputRuntime.currentTime"/>
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public double time
             {
@@ -775,9 +775,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The control associated with the input state record.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The control associated with the input state record.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public InputControl control
             {
@@ -794,9 +794,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The next input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The next input state record in the owning <see cref="InputStateHistory"/>container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record next
             {
@@ -814,9 +814,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The previous input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The previous input state record in the owning <see cref="InputStateHistory"/>container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record previous
             {
@@ -841,6 +841,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Returns value from the control in the Record.
             /// </summary>
+            /// <typeparam name="TValue"></typeparam>
             /// <returns>Returns value from the Record.</returns>
             /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
             public TValue ReadValue<TValue>()
@@ -869,6 +870,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// </summary>
             /// <returns>The state memory for the record.</returns>
             /// <remarks>
+            /// Read the state memory for the record.
             /// </remarks>
             public void* GetUnsafeMemoryPtr()
             {
@@ -890,7 +892,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <remarks>
             /// Additional date can be stored in a record in the extra memory section.
             /// </remarks>
-            /// <see cref="InputStateHistory.extraMemoryPerRecord"/>
+            /// <seealso cref="InputStateHistory.extraMemoryPerRecord"/>
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
@@ -1117,7 +1119,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Record a state change for a specific control.
         /// </summary>
         /// <param name="control">The control to record the state change for.</param>
-        /// <param name="eventPtr">The current event data to record.</param>
+        /// <param name="value">The value to record.</param>
         /// <param name="time">Time stamp to apply (overriding the event timestamp)</param>
         /// <returns>The newly added record.</returns>
         /// <remarks>
@@ -1248,7 +1250,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Identifies if the record is valid.
             /// </summary>
-            /// <returns>True if the record is a valid entry. False if invalid.</returns>
+            /// <value>True if the record is a valid entry. False if invalid.</value>
             /// <remarks>
             /// When the history is cleared with <see cref="InputStateHistory.Clear"/> the entries become invalid.
             /// </remarks>
@@ -1257,7 +1259,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Identifies the owning container for the record.
             /// </summary>
-            /// <returns>The owning <see cref="InputStateHistory"/> container for the record.</returns>
+            /// <value>The owning <see cref="InputStateHistory"/> container for the record.</value>
             /// <remarks>
             /// Identifies the owning <see cref="InputStateHistory"/> container for the record.
             /// </remarks>
@@ -1266,9 +1268,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The index of the input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The index of the input state record in the owning container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public int index
             {
@@ -1282,10 +1284,10 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The time stamp of the input state record.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The time stamp of the input state record in the owning container.
             /// <see cref="IInputRuntime.currentTime"/>
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public double time
             {
@@ -1299,9 +1301,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The control associated with the input state record.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The control associated with the input state record.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public InputControl<TValue> control
             {
@@ -1318,9 +1320,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The next input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The next input state record in the owning <see cref="InputStateHistory{TValue}"/>container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record next
             {
@@ -1338,9 +1340,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The previous input state record in the owning container.
             /// </summary>
-            /// <returns>
+            /// <value>
             /// The previous input state record in the owning <see cref="InputStateHistory{TValue}"/>container.
-            /// </returns>
+            /// </value>
             /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record previous
             {
@@ -1385,6 +1387,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// </summary>
             /// <returns>The state memory for the record.</returns>
             /// <remarks>
+            /// Read the state memory for the record.
             /// </remarks>
             public void* GetUnsafeMemoryPtr()
             {
@@ -1406,7 +1409,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <remarks>
             /// Additional date can be stored in a record in the extra memory section.
             /// </remarks>
-            /// <see cref="InputStateHistory.extraMemoryPerRecord"/>
+            /// <seealso cref="InputStateHistory.extraMemoryPerRecord"/>
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
