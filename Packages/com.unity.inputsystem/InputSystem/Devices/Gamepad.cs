@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// State format tag for GamepadState.
         /// </summary>
-        /// <remarks>Returns "GPAD".</remarks>
+        /// <remarks> Holds the format tag for GamepadState ("GPAD")</remarks>
         public FourCC format => Format;
 
         /// <summary>
@@ -396,7 +396,7 @@ namespace UnityEngine.InputSystem
     /// to be mapped correctly and consistently. If, based on the set of supported devices available
     /// to the input system, this cannot be guaranteed, a given device is usually represented as a
     /// generic <see cref="Joystick"/> or as just a plain <see cref="HID.HID"/> instead.
-    ///
+    /// </remarks>
     /// <example>
     /// <code>
     ///
@@ -452,7 +452,6 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    /// </remarks>
     /// <seealso cref="all"/>
     /// <seealso cref="current"/>
     /// <seealso cref="GamepadState"/>
