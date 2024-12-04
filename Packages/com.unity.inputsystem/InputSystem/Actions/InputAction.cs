@@ -1408,6 +1408,7 @@ namespace UnityEngine.InputSystem
         /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
         /// </para>
+        /// </remarks>
         /// <example>
         /// <code>
         /// var teleport = playerInput.actions["Teleport"];
@@ -1425,7 +1426,6 @@ namespace UnityEngine.InputSystem
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </para>
-        /// </remarks>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1828,6 +1828,7 @@ namespace UnityEngine.InputSystem
         /// <para>
         /// You should not use or keep this struct outside of the callback.
         /// </para>
+        /// </remarks>
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -1879,7 +1880,6 @@ namespace UnityEngine.InputSystem
         ///  }
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
         /// <seealso cref="canceled"/>
