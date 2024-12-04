@@ -1417,12 +1417,14 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
-        ///
+        /// <para>
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
-        ///
+        /// </para>
+        /// <para>
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// </para>
         /// </remarks>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
@@ -2058,7 +2060,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// This property can be used, for example, to determine how long a button
             /// was held down.
-            ///
+            /// </remarks>
             /// <example>
             /// <code>
             /// // Let's create a button action bound to the A button
@@ -2083,7 +2085,6 @@ namespace UnityEngine.InputSystem
             ///     };
             /// </code>
             /// </example>
-            /// </remarks>
             public double duration => time - startTime;
 
             /// <summary>
@@ -2113,7 +2114,8 @@ namespace UnityEngine.InputSystem
             /// <para>
             /// The value of this property determines how many bytes will be written
             /// by <see cref="ReadValue(void*,int)"/>.
-            ///
+            /// </para>
+            /// <para>
             /// This property indirectly maps to the value of <see cref="InputControl.valueSizeInBytes"/> or
             /// <see cref="InputBindingComposite{TValue}.valueSizeInBytes"/>.
             /// </para>
