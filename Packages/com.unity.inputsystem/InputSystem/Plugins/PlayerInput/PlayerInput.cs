@@ -445,7 +445,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The currently enabled action map on the PlayerInput component.
         /// </summary>
-        /// <value>Reference to the currently enabled action or <c>null</c> if no action
+        /// <value>Reference to the currently enabled action map or <c>null</c> if no action
         /// map has been enabled by PlayerInput.</value>
         /// <remarks>
         /// Note that the concept of "current action map" is local to PlayerInput. You can still freely
