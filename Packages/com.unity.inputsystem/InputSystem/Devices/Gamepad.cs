@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Right stick position.
         /// </summary>
-        /// <remarks>Each axis from -1 to 1 with 0 being center position.</remarks>
+        /// <remarks>Each axis goes from -1 to 1 with 0 being center position.</remarks>
         /// <seealso cref="Gamepad.rightStick"/>
         [InputControl(layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
