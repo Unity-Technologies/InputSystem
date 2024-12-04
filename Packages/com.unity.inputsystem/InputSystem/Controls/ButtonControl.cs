@@ -73,6 +73,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The default format for the button control is <see cref="InputStateBlock.FormatBit"/>.
         /// The button control's minimum value is set to 0 and the maximum value to 1.
+        /// </remarks>
         /// <example>
         /// <code>
         /// using UnityEngine;
@@ -89,7 +90,6 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="AxisControl"/>
         public ButtonControl()
         {
