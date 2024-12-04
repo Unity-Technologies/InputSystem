@@ -796,9 +796,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <code>
         /// <inheritdoc cref="SetMotorSpeeds"/>
-        /// </code>
         /// </example>
         public virtual void PauseHaptics()
         {
@@ -813,9 +811,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <code>
         /// <inheritdoc cref="SetMotorSpeeds"/>
-        /// </code>
         /// </example>
         public virtual void ResumeHaptics()
         {
@@ -830,9 +826,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <code>
         /// <inheritdoc cref="SetMotorSpeeds"/>
-        /// </code>
         /// </example>
         public virtual void ResetHaptics()
         {
