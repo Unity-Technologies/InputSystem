@@ -131,18 +131,18 @@ namespace UnityEngine.InputSystem.LowLevel
         public uint buttons;
 
         /// <summary>
-        /// Left stick position.
+        /// A 2D vector representing the current position of the left stick on a gamepad.
         /// </summary>
-        /// <remarks>Each axis goes from -1 to 1 with 0 being center position.</remarks>
+        /// <remarks>Each axis of the 2D vector's range goes from -1 to 1. 0 represents the stick in its center position, and -1 or 1 represents the the stick pushed to its extent in each direction along the axis.</remarks>
         /// <seealso cref="Gamepad.leftStick"/>
         [InputControl(layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
-        /// Right stick position.
+        /// A 2D vector representing the current position of the right stick on a gamepad.
         /// </summary>
-        /// <remarks>Each axis goes from -1 to 1 with 0 being center position.</remarks>
+        /// <remarks>Each axis of the 2D vector's range goes from -1 to 1. 0 represents the stick in its center position, and -1 or 1 represents the the stick pushed to its extent in each direction along the axis.</remarks>
         /// <seealso cref="Gamepad.rightStick"/>
         [InputControl(layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
@@ -151,18 +151,18 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: should left and right trigger get deadzones?
 
         /// <summary>
-        /// Position of the left trigger.
+        /// The current position of the left trigger on a gamepad.
         /// </summary>
-        /// <remarks>Goes from 0 (not pressed) to 1 (fully pressed).</remarks>
+        /// <remarks>The value's range goes from 0 to 1, where 0 represents the trigger not pressed at all, and 1 represents the trigger in its fully pressed position.</remarks>
         /// <seealso cref="Gamepad.leftTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
-        /// Position of the right trigger.
+        /// The current position of the right trigger on a gamepad.
         /// </summary>
-        /// <remarks>Goes from 0 (not pressed) to 1 (fully pressed).</remarks>
+        /// <remarks>The value's range goes from 0 to 1, where 0 represents the trigger not pressed at all, and 1 represents the trigger in its fully pressed position.</remarks>
         /// <seealso cref="Gamepad.rightTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
