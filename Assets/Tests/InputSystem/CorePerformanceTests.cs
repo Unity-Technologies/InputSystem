@@ -1108,39 +1108,14 @@ internal class CorePerformanceTests : CoreTestsFixture
     // Needed for the tests below.
     string[] allInputSystemProfilerMarkers =
     {
-        "BuildControlTree",
-        "FixedUpdate.NewInputFixedUpdate",
-        "HIDParseDescriptorFallback",
-        "InitialActionStateCheck",
-        "InputActionCallback",
-        "InputActionResolveConflict",
-        "InputAction.Enable",
-        "InputAction.Disable",
-        "InputActionMap.ResolveBindings",
-        "InputCheckForUnpairedDeviceActivity",
-        "InputEventTrace",
-        "InputEventTreeView.BuildRoot",
-        "InputManager.RegisterCustomTypes",
-        "InputManager.RestoreDevicesAfterDomainReload",
         "InputUpdate",
-        "InputSystem.AddDevice",
-        "InputSystem.InitializeInEditor",
-        "InputSystem.onActionsChange",
-        "InputSystem.onActionChange",
-        "InputSystem.onAfterUpdate",
         "InputSystem.onBeforeUpdate",
-        "InputSystem.onDeviceSettingsChange",
-        "InputSystem.onEvent",
-        "InputSystem.onLayoutChange",
-        "InputSystem.onSettingsChange",
-        "InputSystem.onDeviceChange",
-        "InputSystem.Reset",
-        "InputSystem.TryFindMatchingControlLayout",
-        "InputUser.onChange",
-        "PreUpdate.InputForUIUpdate",
+        "InputSystem.onAfterUpdate",
         "PreUpdate.NewInputUpdate",
-        "TouchAllocate",
-        "Touchscreen.OnNextUpdate"
+        "PreUpdate.InputForUIUpdate",
+        "FixedUpdate.NewInputFixedUpdate",
+        "InputAction.Enable",
+        "InputActionMap.ResolveBindings"
     };
 
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
