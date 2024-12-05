@@ -145,7 +145,7 @@ namespace UnityEngine.InputSystem.Composites
             var rightIsPressed = context.ReadValueAsButton(right);
 
             // Legacy. We need to reference the obsolete member here so temporarily
-            // turn of the warning.
+            // turn off the warning.
             #pragma warning disable CS0618
             if (!normalize) // Was on by default.
                 mode = Mode.Digital;

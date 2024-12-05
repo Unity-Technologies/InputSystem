@@ -11,11 +11,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 #if UNITY_EDITOR
-using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
-using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
 using Is = NUnit.Framework.Is;
