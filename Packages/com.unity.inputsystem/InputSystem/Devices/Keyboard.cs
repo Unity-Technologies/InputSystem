@@ -1022,6 +1022,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <para>To subscribe to the onIMECompositionChange event, use the following sample code:</para>
+        ///
         /// <code>
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
