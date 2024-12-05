@@ -1114,6 +1114,7 @@ internal class CorePerformanceTests : CoreTestsFixture
         "PreUpdate.NewInputUpdate",
         "PreUpdate.InputForUIUpdate",
         "FixedUpdate.NewInputFixedUpdate",
+        "InputAction.Disable",
         "InputAction.Enable",
         "InputActionMap.ResolveBindings"
     };
