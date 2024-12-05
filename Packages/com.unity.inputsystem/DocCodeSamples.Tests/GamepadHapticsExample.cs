@@ -1,45 +1,48 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-internal class GamepadHapticsExample : MonoBehaviour
+namespace DocCodeSamples.Tests
 {
-    bool hapticsArePaused = false;
-
-    void Update()
+    internal class GamepadHapticsExample : MonoBehaviour
     {
-        var gamepad = Gamepad.current;
+        bool hapticsArePaused = false;
 
-        // No gamepad connected, no need to continue.
-        if (gamepad == null)
-            return;
-
-        float leftTrigger = gamepad.leftTrigger.ReadValue();
-        float rightTrigger = gamepad.rightTrigger.ReadValue();
-
-        // Only set motor speeds if haptics were not paused and if trigger is actuated.
-        // Both triggers must be actuated past 0.2f to start haptics.
-        if (!hapticsArePaused &&
-            (gamepad.leftTrigger.IsActuated() || gamepad.rightTrigger.IsActuated()))
-            gamepad.SetMotorSpeeds(
-                leftTrigger < 0.2f ? 0.0f : leftTrigger,
-                rightTrigger < 0.2f ? 0.0f : rightTrigger);
-
-        // Toggle haptics "playback" when "Button South" is pressed.
-        // Notice that if you release the triggers after pausing,
-        // and press the button again, haptics will resume.
-        if (gamepad.buttonSouth.wasPressedThisFrame)
+        void Update()
         {
-            if (hapticsArePaused)
-                gamepad.ResumeHaptics();
-            else
-                gamepad.PauseHaptics();
+            var gamepad = Gamepad.current;
 
-            hapticsArePaused = !hapticsArePaused;
+            // No gamepad connected, no need to continue.
+            if (gamepad == null)
+                return;
+
+            float leftTrigger = gamepad.leftTrigger.ReadValue();
+            float rightTrigger = gamepad.rightTrigger.ReadValue();
+
+            // Only set motor speeds if haptics were not paused and if trigger is actuated.
+            // Both triggers must be actuated past 0.2f to start haptics.
+            if (!hapticsArePaused &&
+                (gamepad.leftTrigger.IsActuated() || gamepad.rightTrigger.IsActuated()))
+                gamepad.SetMotorSpeeds(
+                    leftTrigger < 0.2f ? 0.0f : leftTrigger,
+                    rightTrigger < 0.2f ? 0.0f : rightTrigger);
+
+            // Toggle haptics "playback" when "Button South" is pressed.
+            // Notice that if you release the triggers after pausing,
+            // and press the button again, haptics will resume.
+            if (gamepad.buttonSouth.wasPressedThisFrame)
+            {
+                if (hapticsArePaused)
+                    gamepad.ResumeHaptics();
+                else
+                    gamepad.PauseHaptics();
+
+                hapticsArePaused = !hapticsArePaused;
+            }
+
+            // Notice that if you release the triggers after pausing,
+            // and press the Start button, haptics will be reset.
+            if (gamepad.startButton.wasPressedThisFrame)
+                gamepad.ResetHaptics();
         }
-
-        // Notice that if you release the triggers after pausing,
-        // and press the Start button, haptics will be reset.
-        if (gamepad.startButton.wasPressedThisFrame)
-            gamepad.ResetHaptics();
     }
 }

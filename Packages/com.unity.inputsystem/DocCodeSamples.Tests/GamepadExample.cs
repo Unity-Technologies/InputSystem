@@ -1,50 +1,53 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-internal class GamepadExample : MonoBehaviour
+namespace DocCodeSamples.Tests
 {
-    void Start()
+    internal class GamepadExample : MonoBehaviour
     {
-        // Print all connected gamepads
-        Debug.Log(string.Join("\n", Gamepad.all));
-    }
-
-    void Update()
-    {
-        var gamepad = Gamepad.current;
-
-        // No gamepad connected.
-        if (gamepad == null)
+        void Start()
         {
-            return;
+            // Print all connected gamepads
+            Debug.Log(string.Join("\n", Gamepad.all));
         }
 
-        // Check if "Button North" was pressed this frame
-        if (gamepad.buttonNorth.wasPressedThisFrame)
+        void Update()
         {
-            Debug.Log("Button North was pressed");
-        }
+            var gamepad = Gamepad.current;
 
-        // Check if the button control is being continuously actuated and read its value
-        if (gamepad.rightTrigger.IsActuated())
-        {
-            Debug.Log("Right trigger value: " + gamepad.rightTrigger.ReadValue());
-        }
+            // No gamepad connected.
+            if (gamepad == null)
+            {
+                return;
+            }
 
-        // Read left stick value and perform some code based on the value
-        Vector2 move = gamepad.leftStick.ReadValue();
-        {
-            // Do 'move' code here
-        }
+            // Check if "Button North" was pressed this frame
+            if (gamepad.buttonNorth.wasPressedThisFrame)
+            {
+                Debug.Log("Button North was pressed");
+            }
 
-        // Creating haptic feedback while "Button South" is pressed and stopping it when released.
-        if (gamepad.buttonSouth.wasPressedThisFrame)
-        {
-            gamepad.SetMotorSpeeds(0.2f, 1.0f);
-        }
-        else if (gamepad.buttonSouth.wasReleasedThisFrame)
-        {
-            gamepad.ResetHaptics();
+            // Check if the button control is being continuously actuated and read its value
+            if (gamepad.rightTrigger.IsActuated())
+            {
+                Debug.Log("Right trigger value: " + gamepad.rightTrigger.ReadValue());
+            }
+
+            // Read left stick value and perform some code based on the value
+            Vector2 move = gamepad.leftStick.ReadValue();
+            {
+                // Use the Vector2 move for the game logic here
+            }
+
+            // Creating haptic feedback while "Button South" is pressed and stopping it when released.
+            if (gamepad.buttonSouth.wasPressedThisFrame)
+            {
+                gamepad.SetMotorSpeeds(0.2f, 1.0f);
+            }
+            else if (gamepad.buttonSouth.wasReleasedThisFrame)
+            {
+                gamepad.ResetHaptics();
+            }
         }
     }
 }
