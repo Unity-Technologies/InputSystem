@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem
     /// which has APIs specific to the type of value of the control (e.g. <see cref="InputControl{TValue}.ReadValue()"/>.
     ///
     /// The following example demonstrates various common operations performed on input controls:
-    ///
+    /// </remarks>
     /// <example>
     /// <code>
     /// // Look up dpad/up control on current gamepad.
@@ -99,10 +99,7 @@ namespace UnityEngine.InputSystem
     /// leftStickHistory.Enable();
     /// </code>
     /// </example>
-    /// <example>
-    /// </example>
-    /// </remarks>
-    /// <see cref="InputControl{TValue}"/>
+    /// <seealso cref="InputControl{TValue}"/>
     /// <seealso cref="InputDevice"/>
     /// <seealso cref="InputControlPath"/>
     /// <seealso cref="InputStateBlock"/>
@@ -611,6 +608,8 @@ namespace UnityEngine.InputSystem
         /// Note that if the given path matches multiple child controls, only the first control
         /// encountered in the search will be returned.
         ///
+        /// This method is equivalent to calling <see cref="InputControlPath.TryFindChild"/>.
+        /// </remarks>
         /// <example>
         /// <code>
         /// // Returns the leftStick control of the current gamepad.
@@ -625,9 +624,6 @@ namespace UnityEngine.InputSystem
         /// Gamepad.current.TryGetChildControl("*stick");
         /// </code>
         /// </example>
-        ///
-        /// This method is equivalent to calling <see cref="InputControlPath.TryFindChild"/>.
-        /// </remarks>
         public InputControl TryGetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -689,7 +685,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method can be overridden to perform control- or device-specific setup work. The most
         /// common use case is for looking up child controls and storing them in local getters.
-        ///
+        /// </remarks>
         /// <example>
         /// <code>
         /// public class MyDevice : InputDevice
@@ -706,7 +702,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         protected virtual void FinishSetup()
         {
         }
@@ -723,7 +718,7 @@ namespace UnityEngine.InputSystem
         ///
         /// This method should be called if you are accessing cached data set up by
         /// <see cref="RefreshConfiguration"/>.
-        ///
+        /// </remarks>
         /// <example>
         /// <code>
         /// using UnityEngine.InputSystem;
@@ -782,7 +777,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="RefreshConfiguration"/>
         protected void RefreshConfigurationIfNeeded()
         {
@@ -798,7 +792,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// The system will call this method automatically whenever change is made to one of the control's configuration properties.
-        /// See <seealso cref="RefreshConfigurationIfNeeded"/>.
+        /// See <see cref="RefreshConfigurationIfNeeded"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -960,8 +954,6 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others), recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls and clear cached value.
         /// </summary>
-        /// <remarks>
-        /// </remarks>
         public void ApplyParameterChanges()
         {
             // First we go through all children of our own hierarchy

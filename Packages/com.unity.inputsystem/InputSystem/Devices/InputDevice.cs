@@ -41,19 +41,27 @@ namespace UnityEngine.InputSystem
     /// runtime. However, it is possible to manually add devices using methods such as <see
     /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
     ///
-    /// <example>
-    /// <code>
-    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
-    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
-    /// </code>
-    /// </example>
-    ///
     /// There are subclasses representing the most common types of devices, like <see cref="Mouse"/>,
     /// <see cref="Keyboard"/>, <see cref="Gamepad"/>, and <see cref="Touchscreen"/>.
     ///
     /// To create your own types of devices, you can derive from InputDevice and register your device
     /// as a new "layout".
     ///
+    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
+    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
+    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
+    ///
+    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
+    /// sample which you can install from the Unity package manager.
+    ///
+    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
+    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
+    /// </code>
+    /// </example>
     /// <example>
     /// <code>
     /// // InputControlLayoutAttribute attribute is only necessary if you want
@@ -131,16 +139,6 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    ///
-    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
-    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
-    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
-    ///
-    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
-    /// sample which you can install from the Unity package manager.
-    ///
-    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
-    /// </remarks>
     /// <seealso cref="InputControl"/>
     /// <seealso cref="Mouse"/>
     /// <seealso cref="Keyboard"/>
@@ -508,9 +506,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been added.
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Added"/>
-        /// <seealso cref="OnRemoved"/>
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Added"/>
+        /// <see cref="OnRemoved"/>
         /// </remarks>
         /// <example>
         /// <code>
@@ -537,9 +535,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been removed.
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Removed"/>
-        /// <seealso cref="OnAdded"/>
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Removed"/>
+        /// <see cref="OnAdded"/>
         /// </remarks>
         /// <example>
         /// <code>
@@ -575,7 +573,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputManager.OnUpdate"/>
         /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
-        /// <seealso cref="OnConfigurationChanged"/>///
+        /// <seealso cref="OnConfigurationChanged"/>
         protected virtual void OnConfigurationChanged()
         {
         }
@@ -593,8 +591,8 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
-        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl">ioctl</a>
         /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
