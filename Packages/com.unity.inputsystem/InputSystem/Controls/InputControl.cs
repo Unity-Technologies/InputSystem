@@ -726,6 +726,9 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
         /// // Let's say your device has an associated orientation which it can be held with
         /// // and you want to surface both as a property and as a usage on the device.
         /// // Whenever your backend code detects a change in orientation, it should send
@@ -799,6 +802,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
         /// public class MyDevice : InputDevice
         /// {
         ///     public enum Orientation
@@ -807,6 +813,8 @@ namespace UnityEngine.InputSystem
         ///         Vertical,
         ///     }
         ///     private Orientation m_Orientation;
+        ///     private static InternedString s_Vertical = new InternedString("Vertical");
+        ///     private static InternedString s_Horizontal = new InternedString("Horizontal");
         ///
         ///     public Orientation orientation
         ///     {
@@ -821,12 +829,8 @@ namespace UnityEngine.InputSystem
         ///     }
         ///     protected override void RefreshConfiguration()
         ///     {
-        ///         // Fetch the current orientation from the backend. How you do this
-        ///         // depends on your device. Using DeviceCommands is one way.
-        ///         var fetchOrientationCommand = new FetchOrientationCommand();
-        ///         ExecuteCommand(ref fetchOrientationCommand);
-        ///         m_Orientation = fetchOrientation;
-        ///
+        ///         // Set Orientation back to horizontal. Alternatively fetch from device.
+        ///         m_Orientation = Orientation.Horizontal;
         ///         // Reflect the orientation on the device.
         ///         switch (m_Orientation)
         ///         {

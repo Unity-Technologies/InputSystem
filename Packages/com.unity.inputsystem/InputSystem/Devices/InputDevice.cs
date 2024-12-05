@@ -527,8 +527,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class MyDevice : InputDevice
         /// {
+        ///     public static MyDevice current { get; private set; }
         ///     protected override void OnRemoved()
         ///     {
         ///         // use this context to unassign the current device for instance
