@@ -2114,9 +2114,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public static Keyboard current { get; private set; }
 
-        /// <summary>
-        /// Make a keyboard the current active keyboard.
-        /// </summary>
+        /// <inheritdoc cref="InputDevice.MakeCurrent"/>
         /// <remarks>
         /// A keyboard will automatically be made current when receiving input or when
         /// added to the input system.
