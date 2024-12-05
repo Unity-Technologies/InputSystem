@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     /// <remarks>
     /// Can be used to update the state of <see cref="Keyboard"/> devices.
-    ///
+    /// </remarks>
     /// <example>
     /// <code>
     /// using UnityEngine;
@@ -35,7 +35,6 @@ namespace UnityEngine.InputSystem.LowLevel
     /// }
     /// </code>
     /// </example>
-    /// </remarks>
     /// <see cref="Keyboard"/>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
@@ -919,7 +918,7 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    /// <see cref="InputDevice"/>
+    /// <seealso cref="InputDevice"/>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
@@ -1063,7 +1062,7 @@ namespace UnityEngine.InputSystem
         /// <see cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
         /// <param name="enabled">
-        ///     The IME composition enabled state. <see langword="true"/> to enable the IME, <see loanword="false"/> to disable it.
+        ///     The IME composition enabled state. <see langword="true"/> to enable the IME, <see langword="false"/> to disable it.
         /// </param>
         /// <example>
         /// <code>
@@ -2387,7 +2386,7 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// <see cref="keyboardLayout"/>
+        /// <seealso cref="keyboardLayout"/>
         public KeyControl FindKeyOnCurrentKeyboardLayout(string displayName)
         {
             var keys = allKeys;
@@ -2422,8 +2421,8 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// <see cref="IMECompositionString"/>
-        /// <see cref="onIMECompositionChange"/>
+        /// <seealso cref="IMECompositionString"/>
+        /// <seealso cref="onIMECompositionChange"/>
         public void OnIMECompositionChanged(IMECompositionString compositionString)
         {
             if (m_ImeCompositionListeners.length > 0)
