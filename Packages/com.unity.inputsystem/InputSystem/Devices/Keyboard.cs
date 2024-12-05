@@ -927,7 +927,6 @@ namespace UnityEngine.InputSystem
         /// Total number of key controls on a keyboard, i.e. the number of controls
         /// in <seealso cref="allKeys"/>.
         /// </summary>
-        /// <remarks>The integer value represents the total number of key controls.</remarks>
         public const int KeyCount = (int)Key.OEM5;
 
         /// <summary>
@@ -1022,7 +1021,6 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <para>To subscribe to the onIMECompositionChange event, use the following sample code:</para>
-        ///
         /// <code>
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
@@ -1065,7 +1063,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
         /// <param name="enabled">
-        ///     The new IME composition enabled state. True to enable the IME, false to disable it.
+        ///     The IME composition enabled state. <see langword="true"/> to enable the IME, <see loanword="false"/> to disable it.
         /// </param>
         /// <example>
         /// <code>
@@ -1637,6 +1635,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the backspace key.
+        ///
         /// On the Mac, this key may be labeled "delete" which however is a
         /// key different from <seealso cref="deleteKey"/>.
         /// </remarks>
@@ -1683,6 +1682,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the delete key.
+        ///
         /// On the Mac, the <seealso cref="backspaceKey"/> is also labeled "delete".
         /// However, this is not this key.
         /// </remarks>
@@ -1739,6 +1739,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad divide key.
+        ///
         /// PC keyboards usually have a 17-key numpad layout that differs from the 18-key layout
         /// we use for reference. The 18-key layout is usually found on Mac keyboards. The numpad
         /// divide key usually is the <seealso cref="numpadEqualsKey"/> on PC keyboards.
@@ -1752,6 +1753,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad multiply key.
+        ///
         /// PC keyboards usually have a 17-key numpad layout that differs from the 18-key layout
         /// we use for reference. The 18-key layout is usually found on Mac keyboards. The numpad
         /// multiply key usually is the <seealso cref="numpadMinusKey"/> on PC keyboards.
@@ -1764,6 +1766,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad minus key.
+        ///
         /// PC keyboards usually have a 17-key numpad layout that differs from the 18-key layout
         /// we use for reference. The 18-key layout is usually found on Mac keyboards. The numpad
         /// minus key is usually <em>not</em> present on PC keyboards. Instead, the 17-key layout
@@ -1777,6 +1780,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad plus key.
+        ///
         /// PC keyboards usually have a 17-key numpad layout that differs from the 18-key layout
         /// we use for reference. The 18-key layout is usually found on Mac keyboards.
         ///
@@ -1794,6 +1798,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad period key.
+        ///
         /// This key is the same in 17-key and 18-key numpad layouts.
         /// </remarks>
         public KeyControl numpadPeriodKey => this[Key.NumpadPeriod];
@@ -1804,6 +1809,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing the numpad equals key.
+        ///
         /// PC keyboards usually have a 17-key numpad layout that differs from the 18-key layout
         /// we use for reference. The 18-key layout is usually found on Mac keyboards.
         ///
@@ -1972,6 +1978,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing <seealso cref="Key.OEM1"/>.
+        ///
         /// Keyboards may have additional keys that are not part of the standardized 104-key keyboard layout
         /// (105 in the case of an 18-key numpad). For example, many non-English keyboard layouts have an additional
         /// key in-between <seealso cref="leftShiftKey"/> and <seealso cref="zKey"/>.
@@ -1987,6 +1994,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing <seealso cref="Key.OEM2"/>.
+        ///
         /// Keyboards may have additional keys that are not part of the standardized 104-key keyboard layout
         /// (105 in the case of an 18-key numpad). For example, many non-English keyboard layouts have an additional
         /// key in-between <seealso cref="leftShiftKey"/> and <seealso cref="zKey"/>.
@@ -2002,6 +2010,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing <seealso cref="Key.OEM3"/>.
+        ///
         /// Keyboards may have additional keys that are not part of the standardized 104-key keyboard layout
         /// (105 in the case of an 18-key numpad). For example, many non-English keyboard layouts have an additional
         /// key in-between <seealso cref="leftShiftKey"/> and <seealso cref="zKey"/>.
@@ -2017,6 +2026,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing <seealso cref="Key.OEM4"/>.
+        ///
         /// Keyboards may have additional keys that are not part of the standardized 104-key keyboard layout
         /// (105 in the case of an 18-key numpad). For example, many non-English keyboard layouts have an additional
         /// key in-between <seealso cref="leftShiftKey"/> and <seealso cref="zKey"/>.
@@ -2032,6 +2042,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="KeyControl"/> representing <seealso cref="Key.OEM5"/>.
+        ///
         /// Keyboards may have additional keys that are not part of the standardized 104-key keyboard layout
         /// (105 in the case of an 18-key numpad). For example, many non-English keyboard layouts have an additional
         /// key in-between <seealso cref="leftShiftKey"/> and <seealso cref="zKey"/>.
@@ -2047,6 +2058,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="ButtonControl"/> representing a combined left and right shift key.
+        ///
         /// This is a <seealso cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right shift key is pressed.
         /// </remarks>
@@ -2057,6 +2069,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="ButtonControl"/> representing a combined left and right ctrl key.
+        ///
         /// This is a <seealso cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right ctrl key is pressed.
         /// </remarks>
@@ -2067,6 +2080,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// <seealso cref="ButtonControl"/> representing a combined left and right alt key.
+        ///
         /// This is a <seealso cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right alt key is pressed.
         /// </remarks>
@@ -2076,9 +2090,8 @@ namespace UnityEngine.InputSystem
         /// True when IME composition is enabled.  Requires <seealso cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
-        /// <seealso cref="ButtonControl"/> representing a combined left and right alt key.
         /// Some languages use complex input methods which involve opening windows to insert characters.
-        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        /// Typically, this is not desirable while playing a game, as games may just interpret keystrokes as game input, not as text.
         ///
         /// See <seealso cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
@@ -2090,7 +2103,6 @@ namespace UnityEngine.InputSystem
         /// <param name="key">Key code of key control to return.</param>
         /// <exception cref="ArgumentOutOfRangeException">The given <paramref name="key"/> is not valid.</exception>
         /// <remarks>
-        /// <seealso cref="KeyControl"/> representing a combined left and right alt key.
         /// This is equivalent to <c>allKeys[(int)key - 1]</c>.
         /// </remarks>
         public KeyControl this[Key key]
@@ -2322,7 +2334,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Called when text input on the keyboard is received.
         /// </summary>
-        /// <param name="character">Char value that represents the character that has been entered.</param>
+        /// <param name="character">A char type value that represents the character that has been entered.</param>
         /// <remarks>
         /// The system will call this method automatically whenever a <seealso cref="TextEvent"/> is
         /// received that targets the keyboard device. Subscribe to this event by using <seealso cref="onTextInput"/>.
