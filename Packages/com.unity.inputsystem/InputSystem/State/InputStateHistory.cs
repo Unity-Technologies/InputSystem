@@ -388,7 +388,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Record a state change for a specific control.
         /// </summary>
         /// <param name="control">The control to record the state change for.</param>
-        /// <param name="eventPtr">The current event data to record.</param>
+        /// <param name="statePtr">The current state data to record.</param>
         /// <param name="time">Time stamp to apply (overriding the event timestamp)</param>
         /// <returns>The newly added record.</returns>
         /// <remarks>
@@ -841,7 +841,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// Returns value from the control in the Record.
             /// </summary>
-            /// <typeparam name="TValue"></typeparam>
+            /// <typeparam name="TValue">The type of the value being read</typeparam>
             /// <returns>Returns value from the Record.</returns>
             /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
             public TValue ReadValue<TValue>()
@@ -1025,6 +1025,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// Records value changes of a given control over time.
     /// </summary>
+    /// <typeparam name="TValue">The type of the record being stored</typeparam>
     /// <remarks>
     /// This class makes it easy to track input values over time. It will automatically retain input state up to a given
     /// maximum history depth (<see cref="InputStateHistory.historyDepth"/>). When the history is full, it will start overwriting the oldest
@@ -1033,7 +1034,6 @@ namespace UnityEngine.InputSystem.LowLevel
     /// The class listens to changes on the given controls by adding change monitors (<see cref="IInputStateChangeMonitor"/>)
     /// to each control.
     /// </remarks>
-    /// <typeparam name="TValue"></typeparam>
     public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<InputStateHistory<TValue>.Record>
         where TValue : struct
     {
