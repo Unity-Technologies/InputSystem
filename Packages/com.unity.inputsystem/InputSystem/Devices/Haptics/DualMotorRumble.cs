@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Haptics
             || !Mathf.Approximately(highFrequencyMotorSpeed, 0f);
 
         /// <summary>
-        /// Reset motor speeds to zero.
+        /// Stops haptics by setting motor speeds to zero.
         /// </summary>
         /// <remarks>
         /// Sets both motor speeds to zero while retaining the current values for <see cref="lowFrequencyMotorSpeed"/>

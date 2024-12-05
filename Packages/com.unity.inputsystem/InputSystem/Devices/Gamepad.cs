@@ -142,7 +142,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// A 2D vector representing the current position of the right stick on a gamepad.
         /// </summary>
-        /// <remarks>Each axis of the 2D vector's range goes from -1 to 1. 0 represents the stick in its center position, and -1 or 1 represents the the stick pushed to its extent in each direction along the axis.</remarks>
+        /// <remarks>Each axis of the 2D vector's range goes from -1 to 1.
+        /// 0 represents the stick in its center position.
+        /// -1 or 1 represents the stick pushed to its extent in each direction along the axis.</remarks>
         /// <seealso cref="Gamepad.rightStick"/>
         [InputControl(layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
@@ -153,7 +155,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// The current position of the left trigger on a gamepad.
         /// </summary>
-        /// <remarks>The value's range goes from 0 to 1, where 0 represents the trigger not pressed at all, and 1 represents the trigger in its fully pressed position.</remarks>
+        /// <remarks>The value's range goes from 0 to 1.
+        /// 0 represents the trigger in its neutral position.
+        /// 1 represents the trigger in its fully pressed position.</remarks>
         /// <seealso cref="Gamepad.leftTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
@@ -162,7 +166,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// The current position of the right trigger on a gamepad.
         /// </summary>
-        /// <remarks>The value's range goes from 0 to 1, where 0 represents the trigger not pressed at all, and 1 represents the trigger in its fully pressed position.</remarks>
+        /// <remarks>The value's range goes from 0 to 1.
+        /// 0 represents the trigger in its neutral position.
+        /// 1 represents the trigger in its fully pressed position.</remarks>
         /// <seealso cref="Gamepad.rightTrigger"/>
         [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
@@ -632,7 +638,7 @@ namespace UnityEngine.InputSystem
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         ///
-        /// Alternately, if you want a single gamepad, you can use <see cref="current"/> for example.
+        /// Alternately, for querying a single gamepad, you can use <see cref="current"/> for example.
         /// </remarks>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
