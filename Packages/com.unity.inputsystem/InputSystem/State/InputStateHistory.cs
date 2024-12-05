@@ -475,6 +475,12 @@ namespace UnityEngine.InputSystem.LowLevel
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Destroy the state history records.
+        /// </summary>
+        /// <remarks>
+        /// Deletes the state history records.
+        /// </remarks>
         protected void Destroy()
         {
             if (m_RecordBuffer.IsCreated)
@@ -506,6 +512,15 @@ namespace UnityEngine.InputSystem.LowLevel
                 NativeArrayOptions.UninitializedMemory);
         }
 
+        /// <summary>
+        /// Remap a records internal index to an index from the start of the recording in the circular buffer.
+        /// </summary>
+        /// <remarks>
+        /// Remap a records internal index, which is relative to the start of the record buffer,
+        /// to an index relative to the start of the recording in the circular buffer.
+        /// </remarks>
+        /// <param name="index">Record index (from the start of the record array).</param>
+        /// <returns>An index relative to the start of the recording in the circular buffer.</returns>
         protected internal int RecordIndexToUserIndex(int index)
         {
             if (index < m_HeadIndex)
@@ -513,11 +528,30 @@ namespace UnityEngine.InputSystem.LowLevel
             return index - m_HeadIndex;
         }
 
+        /// <summary>
+        /// Remap an index from the start of the recording in the circular buffer to a records internal index.
+        /// </summary>
+        /// <remarks>
+        /// Remap an index relative to the start of the recording in the circular buffer,
+        /// to a records internal index, which is relative to the start of the record buffer.
+        /// </remarks>
+        /// <param name="index">An index relative to the start of the recording in the circular buffer.</param>
+        /// <returns>Record index (from the start of the record array).</returns>
         protected internal int UserIndexToRecordIndex(int index)
         {
             return (m_HeadIndex + index) % m_HistoryDepth;
         }
 
+        /// <summary>
+        /// Retrieve a record from the input state history.
+        /// </summary>
+        /// <remarks>
+        /// Retrieve a record from the input state history by Record index.
+        /// </remarks>
+        /// <param name="index">Record index into the input state history records buffer.</param>
+        /// <returns>The record header for the specified index</returns>
+        /// <exception cref="InvalidOperationException">When the buffer is no longer valid as it has been disposed.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If the index is out of range of the history depth.</exception>
         protected internal unsafe RecordHeader* GetRecord(int index)
         {
             if (!m_RecordBuffer.IsCreated)
@@ -527,11 +561,27 @@ namespace UnityEngine.InputSystem.LowLevel
             return GetRecordUnchecked(index);
         }
 
+        /// <summary>
+        /// Retrieve a record from the input state history, without any bounds check.
+        /// </summary>
+        /// <remarks>
+        /// Retrieve a record from the input state history by record index, without any bounds check
+        /// </remarks>
+        /// <param name="index">Record index into the input state history records buffer.</param>
+        /// <returns>The record header for the specified index</returns>
         internal unsafe RecordHeader* GetRecordUnchecked(int index)
         {
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + index * bytesPerRecord);
         }
 
+        /// <summary>
+        /// Allocate a new record in the input state history.
+        /// </summary>
+        /// <remarks>
+        /// Allocate a new record in the input state history.
+        /// </remarks>
+        /// <param name="index">The index of the newly created record</param>
+        /// <returns>The header of the newly created record</returns>
         protected internal unsafe RecordHeader* AllocateRecord(out int index)
         {
             if (!m_RecordBuffer.IsCreated)
@@ -552,6 +602,13 @@ namespace UnityEngine.InputSystem.LowLevel
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + bytesPerRecord * index);
         }
 
+        /// <summary>
+        /// Returns value from the control in the specified record header.
+        /// </summary>
+        /// <param name="data">The record header to query.</param>
+        /// <typeparam name="TValue">The type of the value being read</typeparam>
+        /// <returns>The value from the record.</returns>
+        /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
         protected unsafe TValue ReadValue<TValue>(RecordHeader* data)
             where TValue : struct
         {
@@ -568,6 +625,15 @@ namespace UnityEngine.InputSystem.LowLevel
             return controlOfType.ReadValueFromState(statePtr);
         }
 
+        /// <summary>
+        /// Read the control's final, processed value from the given state and return the value as an object.
+        /// </summary>
+        /// <param name="data">The record header to query.</param>
+        /// <returns>The value of the control associated with the record header.</returns>
+        /// <remarks>
+        /// This method allocates GC memory and should not be used during normal gameplay operation.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">When the specified value is not present.</exception>
         protected unsafe object ReadValueAsObject(RecordHeader* data)
         {
             // Get control. If we only have a single one, the index isn't stored on the data.
@@ -675,16 +741,50 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>State change record header</summary>
+        /// <remarks>
+        /// Input State change record header containing the timestamp and other common record data.
+        /// Stored in the <see cref="InputStateHistory"/>.
+        /// </remarks>
+        /// <seealso cref="InputStateHistory"/>
         [StructLayout(LayoutKind.Explicit)]
         protected internal unsafe struct RecordHeader
         {
+            /// <summary>
+            /// The time stamp of the input state record.
+            /// </summary>
+            /// <remarks>
+            /// The time stamp of the input state record in the owning container.
+            /// <see cref="IInputRuntime.currentTime"/>
+            /// </remarks>
             [FieldOffset(0)] public double time;
+
+            /// <summary>
+            /// The version of the input state record.
+            /// </summary>
+            /// <remarks>
+            /// Current version stamp. See <see cref="InputStateHistory.version"/>.
+            /// </remarks>
             [FieldOffset(8)] public uint version;
+
+            /// <summary>
+            /// The index of the record.
+            /// </summary>
+            /// <remarks>
+            /// The index of the record relative to the start of the buffer.
+            /// See <see cref="InputStateHistory.RecordIndexToUserIndex"/> to remap this record index to a user index.
+            /// </remarks>
             [FieldOffset(12)] public int controlIndex;
 
             [FieldOffset(12)] private fixed byte m_StateWithoutControlIndex[1];
             [FieldOffset(16)] private fixed byte m_StateWithControlIndex[1];
 
+            /// <summary>
+            /// The state data including the control index.
+            /// </summary>
+            /// <remarks>
+            /// The state data including the control index.
+            /// </remarks>
             public byte* statePtrWithControlIndex
             {
                 get
@@ -694,6 +794,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The state data excluding the control index.
+            /// </summary>
+            /// <remarks>
+            /// The state data excluding the control index.
+            /// </remarks>
             public byte* statePtrWithoutControlIndex
             {
                 get
@@ -703,12 +809,25 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// Size of the state data including the control index.
+            /// </summary>
+            /// <remarks>
+            /// Size of the data including the control index.
+            /// </remarks>
             public const int kSizeWithControlIndex = 16;
+
+            /// <summary>
+            /// Size of the state data excluding the control index.
+            /// </summary>
+            /// <remarks>
+            /// Size of the data excluding the control index.
+            /// </remarks>
             public const int kSizeWithoutControlIndex = 12;
         }
 
         /// <summary>State change record</summary>
-        /// <remarks>Input State change record stored in the <see cref="InputStateHistory"/></remarks>
+        /// <remarks>Input State change record stored in the <see cref="InputStateHistory"/>.</remarks>
         /// <seealso cref="InputStateHistory"/>
         public unsafe struct Record : IEquatable<Record>
         {
@@ -839,10 +958,10 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
             /// <summary>
-            /// Returns value from the control in the Record.
+            /// Returns value from the control in the record.
             /// </summary>
             /// <typeparam name="TValue">The type of the value being read</typeparam>
-            /// <returns>Returns value from the Record.</returns>
+            /// <returns>Returns the value from the record.</returns>
             /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
             public TValue ReadValue<TValue>()
                 where TValue : struct
@@ -907,7 +1026,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
             /// <summary>Copy data from one record to another.</summary>
-            /// <param name="record">Source Record to copy from.</param>
+            /// <param name="record">Source record to copy from.</param>
             /// <remarks>
             /// Copy data from one record to another.
             /// </remarks>
