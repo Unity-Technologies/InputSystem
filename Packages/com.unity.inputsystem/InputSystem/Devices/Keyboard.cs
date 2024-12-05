@@ -1115,8 +1115,8 @@ namespace UnityEngine.InputSystem
         ///     void Update ()
         ///     {
         ///         // Set the IME cursor position to the mouse position
-        ///         var x = Input.GetAxis("Mouse X");
-        ///         var y = Input.GetAxis("Mouse Y");
+        ///         var x = Mouse.current.position.x.ReadValue();
+        ///         var y = Mouse.current.position.y.ReadValue();
         ///         cursorPosition = new Vector2(x, y);
         ///         Keyboard.current.SetIMECursorPosition(cursorPosition);
         ///     }
