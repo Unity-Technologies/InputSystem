@@ -398,59 +398,7 @@ namespace UnityEngine.InputSystem
     /// generic <see cref="Joystick"/> or as just a plain <see cref="HID.HID"/> instead.
     /// </remarks>
     /// <example>
-    /// <code>
-    ///
-    /// using UnityEngine;
-    /// using UnityEngine.InputSystem;
-    ///
-    /// public class Example : MonoBehaviour
-    /// {
-    ///     void Start()
-    ///     {
-    ///         // Print all connected gamepads
-    ///         Debug.Log(string.Join("\n", Gamepad.all));
-    ///     }
-    ///
-    ///     void Update()
-    ///     {
-    ///         var gamepad = Gamepad.current;
-    ///
-    ///         // No gamepad connected.
-    ///         if (gamepad == null)
-    ///         {
-    ///             return;
-    ///         }
-    ///
-    ///         // Check if "Button North" was pressed this frame
-    ///         if (gamepad.buttonNorth.wasPressedThisFrame)
-    ///         {
-    ///             Debug.Log("Button North was pressed");
-    ///         }
-    ///
-    ///         // Check if the button control is being continuously actuated and read its value
-    ///         if (gamepad.rightTrigger.IsActuated())
-    ///         {
-    ///             Debug.Log("Right trigger value: " + gamepad.rightTrigger.ReadValue());
-    ///         }
-    ///
-    ///         // Read left stick value and perform some code based on the value
-    ///         Vector2 move = gamepad.leftStick.ReadValue();
-    ///         {
-    ///             // Do 'move' code here
-    ///         }
-    ///
-    ///         // Creating haptic feedback while "Button South" is pressed and stopping it when released.
-    ///         if (gamepad.buttonSouth.wasPressedThisFrame)
-    ///         {
-    ///             gamepad.SetMotorSpeeds(0.2f, 1.0f);
-    ///
-    ///         } else if (gamepad.buttonSouth.wasReleasedThisFrame)
-    ///         {
-    ///             gamepad.ResetHaptics();
-    ///         }
-    ///     }
-    /// }
-    /// </code>
+    /// <code source="../../DocCodeSamples.Tests/GamepadExample.cs" />
     /// </example>
     /// <seealso cref="all"/>
     /// <seealso cref="current"/>
@@ -751,11 +699,11 @@ namespace UnityEngine.InputSystem
             current = this;
         }
 
+        /// <inheritdoc cref="InputDevice.OnAdded"/>
         /// <summary>
         /// Called when the gamepad is added to the system.
         /// </summary>
         /// <remarks>
-        /// <inheritdoc cref="InputDevice.OnAdded()"/>
         /// It will also add the gamepad to the list of <see cref="all"/> gamepads.
         /// </remarks>
         protected override void OnAdded()
@@ -763,11 +711,11 @@ namespace UnityEngine.InputSystem
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
         }
 
+        /// <inheritdoc cref="InputDevice.OnRemoved"/>
         /// <summary>
         /// Called when the gamepad is removed from the system.
         /// </summary>
         /// <remarks>
-        /// <inheritdoc cref="InputDevice.OnRemoved()"/>
         /// It will also remove the gamepad from the list of <see cref="all"/> gamepads.
         /// </remarks>
         protected override void OnRemoved()
@@ -788,15 +736,16 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Pause rumble effects on the gamepad.
-        /// <inheritdoc cref="DualMotorRumble.PauseHaptics"/>
         /// </summary>
         /// <remarks>
-        /// Resume with <see cref="ResumeHaptics"/>.
-        /// <inheritdoc cref="DualMotorRumble.PauseHaptics"/>
+        /// It will pause rumble effects and save the current motor speeds.
+        /// Resume from those speeds with <see cref="ResumeHaptics"/>.
+        /// Some devices such as <see cref="DualShock.DualSenseGamepadHID"/> and
+        /// <see cref="DualShock.DualShock4GamepadHID"/> can also set the LED color when this method is called.
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// <code source="../../DocCodeSamples.Tests/GamepadHapticsExample.cs"/>
         /// </example>
         public virtual void PauseHaptics()
         {
@@ -804,14 +753,17 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Resume rumble affects on the gamepad that have been paused with <see cref="PauseHaptics"/>.
+        /// Resume rumble effects on the gamepad.
         /// </summary>
         /// <remarks>
-        /// <inheritdoc cref="DualMotorRumble.ResumeHaptics"/>
+        /// It will resume rumble effects from the previously set motor speeds, such as motor speeds saved when
+        /// calling <see cref="PauseHaptics"/>.
+        /// Some devices such as <see cref="DualShock.DualSenseGamepadHID"/> and
+        /// <see cref="DualShock.DualShock4GamepadHID"/> can also set the LED color when this method is called.
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// <code source="../../DocCodeSamples.Tests/GamepadHapticsExample.cs"/>
         /// </example>
         public virtual void ResumeHaptics()
         {
@@ -819,14 +771,15 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Reset rumble effects on the gamepad.
+        /// Resets rumble effects on the gamepad by setting motor speeds to 0.
         /// </summary>
         /// <remarks>
-        /// <inheritdoc cref="DualMotorRumble.ResetHaptics"/>
+        /// Some devices such as <see cref="DualShock.DualSenseGamepadHID"/> and
+        /// <see cref="DualShock.DualShock4GamepadHID"/> can also set the LED color when this method is called.
         /// </remarks>
         /// <seealso cref="IDualMotorRumble"/>
         /// <example>
-        /// <inheritdoc cref="SetMotorSpeeds"/>
+        /// <code source="../../DocCodeSamples.Tests/GamepadHapticsExample.cs"/>
         /// </example>
         public virtual void ResetHaptics()
         {
@@ -835,53 +788,7 @@ namespace UnityEngine.InputSystem
 
         /// <inheritdoc />
         /// <example>
-        /// <code>
-        /// using UnityEngine;
-        /// using UnityEngine.InputSystem;
-        ///
-        /// public class GamepadHapticsExample : MonoBehaviour
-        /// {
-        ///     bool hapticsArePaused = false;
-        ///
-        ///     void Update() {
-        ///         var gamepad = Gamepad.current;
-        ///
-        ///         // No gamepad connected, no need to continue.
-        ///         if (gamepad == null)
-        ///             return;
-        ///
-        ///         float leftTrigger = gamepad.leftTrigger.ReadValue();
-        ///         float rightTrigger = gamepad.rightTrigger.ReadValue();
-        ///
-        ///         // Only set motor speeds if haptics were not paused and if trigger is actuated.
-        ///         // Both triggers must be actuated past 0.2f to start haptics.
-        ///         if (!hapticsArePaused &amp;&amp;
-        ///             (gamepad.leftTrigger.IsActuated() || gamepad.rightTrigger.IsActuated()))
-        ///             gamepad.SetMotorSpeeds(
-        ///                 leftTrigger &lt; 0.2f ? 0.0f : leftTrigger,
-        ///                 rightTrigger &lt; 0.2f ? 0.0f : rightTrigger);
-        ///
-        ///         // Toggle haptics "playback" when "Button South" is pressed.
-        ///         // Notice that if you release the triggers after pausing,
-        ///         // and press the button again, haptics will resume.
-        ///         if (gamepad.buttonSouth.wasPressedThisFrame)
-        ///         {
-        ///             if (hapticsArePaused)
-        ///                 gamepad.ResumeHaptics();
-        ///             else
-        ///                 gamepad.PauseHaptics();
-        ///
-        ///             hapticsArePaused = !hapticsArePaused;
-        ///         }
-        ///
-        ///         // Notice that if you release the triggers after pausing,
-        ///         // and press the Start button, haptics will be reset.
-        ///         if (gamepad.startButton.wasPressedThisFrame)
-        ///             gamepad.ResetHaptics();
-        ///     }
-        /// }
-        ///
-        /// </code>
+        /// <code source="../../DocCodeSamples.Tests/GamepadHapticsExample.cs"/>
         /// </example>
         public virtual void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
