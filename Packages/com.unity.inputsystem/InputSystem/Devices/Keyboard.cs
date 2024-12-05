@@ -2334,7 +2334,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Called when text input on the keyboard is received.
         /// </summary>
-        /// <param name="character">A char type value that represents the character that has been entered.</param>
+        /// <param name="character">A <see langword="char"/> type value that represents the character that has been entered.</param>
         /// <remarks>
         /// The system will call this method automatically whenever a <seealso cref="TextEvent"/> is
         /// received that targets the keyboard device. Subscribe to this event by using <seealso cref="onTextInput"/>.
