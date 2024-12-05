@@ -2091,7 +2091,7 @@ namespace UnityEngine.InputSystem
         ///     void Start()
         ///     {
         ///         // Add a keyboard and make it the current keyboard.
-        ///         var keyboard = InputSystem.AddDevice<Keyboard>();
+        ///         var keyboard = InputSystem.AddDevice("Keyboard");
         ///         keyboard.MakeCurrent();
         ///     }
         /// }
