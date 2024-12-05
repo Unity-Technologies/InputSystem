@@ -20,9 +20,19 @@ namespace UnityEngine.InputSystem.LowLevel
     ///
     /// <example>
     /// <code>
-    /// // Send input event with A key pressed on keyboard.
-    /// InputSystem.QueueStateEvent(Keyboard.current,
-    ///     new KeyboardState(Key.A));
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.LowLevel;
+    ///
+    /// public class Example : MonoBehaviour
+    /// {
+    ///     void Start()
+    ///     {
+    ///         // Send input event with A key pressed on keyboard.
+    ///         InputSystem.QueueStateEvent(Keyboard.current,
+    ///             new KeyboardState(Key.A));
+    ///     }
+    /// }
     /// </code>
     /// </example>
     /// </remarks>
@@ -222,11 +232,20 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
-    /// // Look up key by key code.
-    /// var aKey = Keyboard.current[Key.A];
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
     ///
-    /// // Find out which text is produced by the key.
-    /// Debug.Log($"The '{aKey.keyCode}' key produces '{aKey.displayName}' as text input");
+    /// public class Example : MonoBehaviour
+    /// {
+    ///     void LookUpTextInputByKey()
+    ///     {
+    ///         // Look up key by key code.
+    ///         var aKey = Keyboard.current[Key.A];
+    ///
+    ///         // Find out which text is produced by the key.
+    ///         Debug.Log($"The '{aKey.keyCode}' key produces '{aKey.displayName}' as text input");
+    ///     }
+    /// }
     /// </code>
     /// </example>
     /// </remarks>
@@ -877,6 +896,9 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <example>
     /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    ///
     /// public class InputExample : MonoBehaviour
     /// {
     ///     private string inputText = "";
@@ -914,6 +936,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <example>
         /// <code>
+        /// using System;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// // Let's say we want to do a typing game. We could define a component
         /// // something along those lines to match the typed input.
         /// public class MatchTextByTyping : MonoBehaviour
@@ -953,7 +979,7 @@ namespace UnityEngine.InputSystem
         ///         {
         ///             ++m_Position;
         ///             if (m_Position == m_Text.Length)
-        ///                 onTextTypeCorrectly?.Invoke();
+        ///                 onTextTypedCorrectly?.Invoke();
         ///         }
         ///         else
         ///         {
@@ -997,6 +1023,9 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <para>To subscribe to the onIMECompositionChange event, use the following sample code:</para>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class KeyboardUtils : MonoBehaviour
         /// {
         ///     private string compositionString = "";
@@ -1039,6 +1068,9 @@ namespace UnityEngine.InputSystem
         /// </param>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class KeyboardUtils : MonoBehaviour
         /// {
         ///     private string compositionString = "";
@@ -1073,6 +1105,9 @@ namespace UnityEngine.InputSystem
         /// </param>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class KeyboardUtils : MonoBehaviour
         /// {
         ///     private Vector2 cursorPosition;
@@ -2086,6 +2121,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class InputExample : MonoBehaviour
         /// {
         ///     void Start()
@@ -2121,6 +2159,9 @@ namespace UnityEngine.InputSystem
         ///</remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Controls;
+        ///
         /// public class MyKeyboard : Keyboard
         /// {
         ///     public ButtonControl button { get; private set; }
@@ -2128,7 +2169,7 @@ namespace UnityEngine.InputSystem
         ///     protected override void FinishSetup()
         ///     {
         ///         // Cache controls in getters.
-        ///         button = GetChildControl("button");
+        ///         button = (ButtonControl)GetChildControl("button");
         ///     }
         /// }
         /// </code>
@@ -2287,6 +2328,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class UserTest : MonoBehaviour
         /// {
         ///     // Simulate text input event on the current keyboard.
@@ -2317,6 +2361,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class KeyboardUtils : MonoBehaviour
         /// {
         ///     private void FindKey()
@@ -2346,14 +2393,17 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.LowLevel;
+        ///
         /// public class KeyboardUtils : MonoBehaviour
         /// {
         ///     private string compositionString = "";
-        ///
-        ///     void ChangeIMEComposition ()
+        ///     void ChangeIMEComposition()
         ///     {
         ///         // Manually creating an input event to change the IME composition
-        ///         var inputEvent = IMECompositionEvent.Create(Keyboard.current.deviceId, "CompositionTestCharacters! ɝ", InputRuntime.s_Instance.currentTime);
+        ///         var inputEvent = IMECompositionEvent.Create(Keyboard.current.deviceId, "CompositionTestCharacters! ɝ", Time.time);
         ///         Keyboard.current.OnIMECompositionChanged(inputEvent.compositionString);
         ///     }
         /// }
