@@ -39,9 +39,13 @@ namespace UnityEngine.InputSystem.Haptics
             || !Mathf.Approximately(highFrequencyMotorSpeed, 0f);
 
         /// <summary>
-        /// Reset motor speeds to zero but retain current values for <see cref="lowFrequencyMotorSpeed"/>
-        /// and <see cref="highFrequencyMotorSpeed"/>.
+        /// Stops haptics by setting motor speeds to zero.
         /// </summary>
+        /// <remarks>
+        /// Sets both motor speeds to zero while retaining the current values for <see cref="lowFrequencyMotorSpeed"/>
+        /// and <see cref="highFrequencyMotorSpeed"/>.
+        /// It will only send the command if <see cref="isRumbling"/> is true.
+        /// </remarks>
         /// <param name="device">Device to send command to.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         public void PauseHaptics(InputDevice device)
@@ -60,6 +64,9 @@ namespace UnityEngine.InputSystem.Haptics
         /// Resume haptics by setting motor speeds to the current values of <see cref="lowFrequencyMotorSpeed"/>
         /// and <see cref="highFrequencyMotorSpeed"/>.
         /// </summary>
+        /// <remarks>
+        /// It will only set motor speeds if <see cref="isRumbling"/> is true
+        /// </remarks>
         /// <param name="device">Device to send command to.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         public void ResumeHaptics(InputDevice device)
@@ -74,9 +81,12 @@ namespace UnityEngine.InputSystem.Haptics
         }
 
         /// <summary>
-        /// Reset haptics by setting both <see cref="lowFrequencyMotorSpeed"/> and <see cref="highFrequencyMotorSpeed"/>
-        /// to zero.
+        /// Reset haptics by setting motor speeds to zero.
         /// </summary>
+        /// <remarks>
+        /// Sets <see cref="lowFrequencyMotorSpeed"/> and <see cref="highFrequencyMotorSpeed"/> to zero.
+        /// It will only set motor speeds if <see cref="isRumbling"/> is true.
+        /// </remarks>
         /// <param name="device">Device to send command to.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         public void ResetHaptics(InputDevice device)

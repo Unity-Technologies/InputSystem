@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Controls
     /// An axis that has a trigger point beyond which it is considered to be pressed.
     /// </summary>
     /// <remarks>
-    /// By default stored as a single bit. In that format, buttons will only yield 0
+    /// By default, stored as a single bit. In that format, buttons will only yield 0
     /// and 1 as values. However, buttons return are <see cref="AxisControl"/>s and
     /// yield full floating-point values and may thus have a range of values. See
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
@@ -46,6 +46,9 @@ namespace UnityEngine.InputSystem.Controls
         ///
         /// <example>
         /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.Controls;
+        ///
         /// public class MyDevice : InputDevice
         /// {
         ///     [InputControl(parameters = "pressPoint=0.234")]
@@ -56,25 +59,38 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        /// <seealso cref="pressPointOrDefault"/>
-        /// <seealso cref="isPressed"/>
         public float pressPoint = -1;
 
         /// <summary>
         /// Return <see cref="pressPoint"/> if set, otherwise return <see cref="InputSettings.defaultButtonPressPoint"/>.
         /// </summary>
         /// <value>Effective value to use for press point thresholds.</value>
-        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         public float pressPointOrDefault => pressPoint > 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
-        /// Default-initialize the control.
+        /// Default-initialize the button control.
         /// </summary>
         /// <remarks>
-        /// The default format for the control is <see cref="InputStateBlock.FormatBit"/>.
-        /// The control's minimum value is set to 0 and the maximum value to 1.
+        /// The default format for the button control is <see cref="InputStateBlock.FormatBit"/>.
+        /// The button control's minimum value is set to 0 and the maximum value to 1.
         /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.Controls;
+        ///
+        /// public class ButtonControlExample : MonoBehaviour
+        /// {
+        ///     void Start()
+        ///     {
+        ///         var myButton = new ButtonControl();
+        ///     }
+        ///
+        ///     //...
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="AxisControl"/>
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.FormatBit;
@@ -85,10 +101,39 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Whether the given value would be considered pressed for this button.
         /// </summary>
-        /// <param name="value">Value for the button.</param>
+        /// <param name="value">Value to check for if the button would be considered pressed or not.</param>
         /// <returns>True if <paramref name="value"/> crosses the threshold to be considered pressed.</returns>
-        /// <seealso cref="pressPoint"/>
-        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+        /// <remarks>
+        /// The default format for the control is <see cref="InputStateBlock.FormatBit"/>.
+        /// The control's minimum value is set to 0 and the maximum value to 1.
+        /// See <see cref="InputSettings.defaultButtonPressPoint"/> for the default press point.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.Controls;
+        ///
+        /// public class IsValueConsideredPressedExample : MonoBehaviour
+        /// {
+        ///     void Start()
+        ///     {
+        ///         var myButton = new ButtonControl();
+        ///         var valueToTest = 0.5f;
+        ///
+        ///         if (myButton.IsValueConsideredPressed(valueToTest))
+        ///         {
+        ///             Debug.Log("myButton is considered pressed at: " + valueToTest.ToString());
+        ///         }
+        ///         else
+        ///         {
+        ///             Debug.Log("myButton is not considered pressed at: " + valueToTest.ToString());
+        ///         }
+        ///     }
+        ///
+        ///     //...
+        /// }
+        /// </code>
+        /// </example>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool IsValueConsideredPressed(float value)
         {
@@ -149,9 +194,6 @@ namespace UnityEngine.InputSystem.Controls
         /// ]]>
         /// </code>
         /// </example>
-        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        /// <seealso cref="pressPoint"/>
-        /// <seealso cref="InputSystem.onAnyButtonPress"/>
         public bool isPressed
         {
             get
@@ -276,8 +318,8 @@ namespace UnityEngine.InputSystem.Controls
         /// {
         ///     void Update()
         ///     {
-        ///         bool buttonPressed = Gamepad.current.aButton.wasReleasedThisFrame;
-        ///         bool spaceKeyPressed = Keyboard.current.spaceKey.wasReleasedThisFrame;
+        ///         bool buttonReleased = Gamepad.current.aButton.wasReleasedThisFrame;
+        ///         bool spaceKeyReleased = Keyboard.current.spaceKey.wasReleasedThisFrame;
         ///     }
         /// }
         /// </code>
