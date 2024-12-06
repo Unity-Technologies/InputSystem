@@ -2396,7 +2396,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// This is called to set the IME composition strings. Fired once for every change containing the entire string to date.
+        /// This is called to set the IME composition strings. Fired once for every change containing the entire string.
         /// </summary>
         /// <param name="compositionString">The <see cref="IMECompositionString"/> for the IME composition.</param>
         /// <remarks>
