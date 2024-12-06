@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem
     /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
     /// sample which you can install from the Unity package manager.
     ///
-    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
+    /// You can also find more information in the <a href="../manual/Devices.html">manual</a>.
     /// </remarks>
     /// <example>
     /// <code>
