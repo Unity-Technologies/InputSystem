@@ -2342,7 +2342,7 @@ namespace UnityEngine.InputSystem
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
         ///
-        /// public class UserTest : MonoBehaviour
+        /// public class OnTextInputExample : MonoBehaviour
         /// {
         ///     // Simulate text input event on the current keyboard.
         ///     private void FakeInput()
