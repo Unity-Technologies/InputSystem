@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// }
     /// </code>
     /// </example>
-    /// <see cref="Keyboard"/>
+    /// <seealso cref="Keyboard"/>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Memory format tag for KeyboardState. Returns "KEYS".
         /// </summary>
-        /// <see cref="InputStateBlock.format"/>
+        /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
 
         private const int kSizeInBits = Keyboard.KeyCount;

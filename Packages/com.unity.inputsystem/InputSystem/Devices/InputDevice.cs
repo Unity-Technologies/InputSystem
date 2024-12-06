@@ -58,12 +58,15 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <example>
     /// <code>
-    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
-    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
-    /// </code>
-    /// </example>
-    /// <example>
-    /// <code>
+    /// using System.Runtime.InteropServices;
+    /// using UnityEditor;
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.Controls;
+    /// using UnityEngine.InputSystem.Layouts;
+    /// using UnityEngine.InputSystem.LowLevel;
+    /// using UnityEngine.InputSystem.Utilities;
+    ///
     /// // InputControlLayoutAttribute attribute is only necessary if you want
     /// // to override default behavior that occurs when registering your device
     /// // as a layout.
@@ -77,6 +80,9 @@ namespace UnityEngine.InputSystem
     /// {
     ///     public ButtonControl button { get; private set; }
     ///     public AxisControl axis { get; private set; }
+    ///
+    ///     // This is an example on how to add a "synthetic" gamepad that isn't actually backed by hardware.
+    ///     Gamepad gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     ///
     ///     // Register the device.
     ///     static MyDevice()
@@ -121,7 +127,7 @@ namespace UnityEngine.InputSystem
     ///     // particular device is connected and fed into the input system.
     ///     // The format is a simple FourCC code that "tags" state memory blocks for the
     ///     // device to give a base level of safety checks on memory operations.
-    ///     public FourCC format => return new FourCC('H', 'I', 'D');
+    ///     public FourCC format => new FourCC('H', 'I', 'D');
     ///
     ///     // InputControlAttributes on fields tell the input system to create controls
     ///     // for the public fields found in the struct.
@@ -129,12 +135,12 @@ namespace UnityEngine.InputSystem
     ///     // Assume a 16bit field of buttons. Create one button that is tied to
     ///     // bit #3 (zero-based). Note that buttons do not need to be stored as bits.
     ///     // They can also be stored as floats or shorts, for example.
-    ///     [InputControl(name = "button", layout = "Button", bit = 3)]
+    ///     [InputControl(name = "button", layout = "Button", bit = 3)] [FieldOffset(0)]
     ///     public ushort buttons;
     ///
     ///     // Create a floating-point axis. The name, if not supplied, is taken from
     ///     // the field.
-    ///     [InputControl(layout = "Axis")]
+    ///     [InputControl(layout = "Axis")] [FieldOffset(0)]
     ///     public short axis;
     /// }
     /// </code>
