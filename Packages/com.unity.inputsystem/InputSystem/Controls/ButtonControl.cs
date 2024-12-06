@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The default format for the control is <see cref="InputStateBlock.FormatBit"/>.
         /// The control's minimum value is set to 0 and the maximum value to 1.
-        /// See <see cref="InputSettings.defaultButtonPressPoint"/> for the default press point.
+        /// See <see cref="InputSettings.defaultButtonPressPoint"/> and <see cref="pressPoint"/>for the (default) press point.
         /// </remarks>
         /// <example>
         /// <code>
@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <remarks>
         /// A button is considered pressed if its value is equal to or greater
-        /// than its button press threshold (<see cref="pressPointOrDefault"/>).
+        /// than its button press threshold (<see cref="pressPointOrDefault"/>, <see cref="pressPoint"/>).
         /// </remarks>
         /// <example>
         /// <para>You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:</para>
