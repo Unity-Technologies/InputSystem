@@ -176,8 +176,7 @@ namespace UnityEngine.InputSystem
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    /// <example>
-    /// <para>An example showing the use of this property on a gamepad button and a keyboard key:</para>
+    /// <example> 
     ///
     /// <code>
     /// using UnityEngine;
@@ -188,7 +187,7 @@ namespace UnityEngine.InputSystem
     ///     void Update()
     ///     {
     ///         // If there is a current mouse and the left button was pressed
-    ///         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+    ///         if (Mouse.current != null &amp;&amp; Mouse.current.leftButton.wasPressedThisFrame)
     ///         {
     ///              // handle left mouse button being pressed
     ///         }
@@ -293,8 +292,8 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
-        /// Move the operating system's mouse cursor by performing a device command in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
-        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// Move the operating system's mouse cursor by performing a device command in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" >
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" >ioctl</a>
         /// on UNIX-like systems.
         /// </summary>
         /// <param name="position">New position in player window space.</param>
