@@ -30,6 +30,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed tooltip support in the UI Toolkit version of the Input Actions Asset editor.
 - Fixed documentation to clarify bindings with modifiers `overrideModifiersNeedToBePressedFirst` configuration [ISXB-806](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-806).
 - Fixed an issue in `Samples/Visualizers/GamepadVisualizer.unity` sample where the visualization wouldn't handle device disconnects or current device changes properly (ISXB-1243).
+- Fixed an issue with default device selection when adding new Control Scheme.
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
