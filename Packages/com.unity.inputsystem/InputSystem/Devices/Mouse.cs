@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    /// <example> 
+    /// <example>
     ///
     /// <code>
     /// using UnityEngine;
