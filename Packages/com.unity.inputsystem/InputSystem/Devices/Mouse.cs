@@ -171,11 +171,31 @@ namespace UnityEngine.InputSystem
     /// An input device representing a mouse.
     /// </summary>
     /// <remarks>
-    /// Adds a scroll wheel and a typical 5-button setup with a left, middle, right, 
+    /// Adds a scroll wheel and a typical 5-button setup with a left, middle, right,
     /// forward and backward button.
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
+    /// <example>
+    /// <para>An example showing the use of this property on a gamepad button and a keyboard key:</para>
+    ///
+    /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    ///
+    /// public class ExampleScript : MonoBehaviour
+    /// {
+    ///     void Update()
+    ///     {
+    ///         // If there is a current mouse and the left button was pressed
+    ///         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+    ///         {
+    ///              // handle left mouse button being pressed
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// <seealso cref="Pointer"/>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
     public class Mouse : Pointer, IInputStateCallbackReceiver

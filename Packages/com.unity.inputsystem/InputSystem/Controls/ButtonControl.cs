@@ -305,11 +305,11 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <example>
         /// <para>An example showing the use of this property on a gamepad button and a keyboard key:</para>
-        /// 
+        ///
         /// <code>
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
-        /// 
+        ///
         /// public class ExampleScript : MonoBehaviour
         /// {
         ///     void Update()
