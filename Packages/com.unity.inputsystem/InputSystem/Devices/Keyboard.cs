@@ -1169,7 +1169,7 @@ namespace UnityEngine.InputSystem
         public KeyControl enterKey => this[Key.Enter];
 
         /// <summary>
-        /// The tab key, located on the left side above the <see cref="capsLockKey"/>.
+        /// The tab key, which is generally located on the left side above the <see cref="capsLockKey"/>.
         /// </summary>
         /// <remarks><see cref="KeyControl"/> representing the tab key.</remarks>
         public KeyControl tabKey => this[Key.Tab];
