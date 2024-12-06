@@ -47,8 +47,7 @@ namespace UnityEngine.InputSystem
     /// To create your own types of devices, you can derive from InputDevice and register your device
     /// as a new "layout".
     ///
-    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
-    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
+    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). However, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
     /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
     ///
     /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
