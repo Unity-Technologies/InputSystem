@@ -707,10 +707,10 @@ namespace UnityEngine.InputSystem
 
         /// <inheritdoc cref="InputDevice.OnAdded"/>
         /// <summary>
-        /// Called when the gamepad is added to the system.
+        /// Called when a gamepad is added to the system.
         /// </summary>
         /// <remarks>
-        /// It will also add the gamepad to the list of <see cref="all"/> gamepads.
+        /// Override this method if you want to do additional processing when a gamepad becomes connected. After this method is called, the gamepad is automatically added to the list of <see cref="all"/> gamepads.
         /// </remarks>
         protected override void OnAdded()
         {
@@ -722,7 +722,7 @@ namespace UnityEngine.InputSystem
         /// Called when the gamepad is removed from the system.
         /// </summary>
         /// <remarks>
-        /// It will also remove the gamepad from the list of <see cref="all"/> gamepads.
+        /// Override this method if you want to do additional processing when a gamepad becomes disconnected. After this method is called, the gamepad is automatically removed from the list of <see cref="all"/> gamepads.
         /// </remarks>
         protected override void OnRemoved()
         {
