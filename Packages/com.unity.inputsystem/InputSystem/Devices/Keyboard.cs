@@ -1002,7 +1002,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// An event that is fired to get IME composition strings. Fired once for every change containing the entire string to date.
+        /// When a user is entering text using IME composition, this event occurs each time the IME composition string changes, and provides the new composition string as a value.
         /// When using an IME, this event can be used to display the composition string while it is being edited.
         /// </summary>
         /// <remarks>
