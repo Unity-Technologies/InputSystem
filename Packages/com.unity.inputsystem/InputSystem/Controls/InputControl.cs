@@ -791,7 +791,7 @@ namespace UnityEngine.InputSystem
         /// Refresh the configuration of the control. This is used to update the control's state (e.g. Keyboard Layout or display Name of Keys).
         /// </summary>
         /// <remarks>
-        /// The system will call this method automatically whenever change is made to one of the control's configuration properties.
+        /// The system will call this method automatically whenever a change is made to one of the control's configuration properties.
         /// See <see cref="RefreshConfigurationIfNeeded"/>.
         /// </remarks>
         /// <example>
