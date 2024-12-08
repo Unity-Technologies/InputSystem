@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem
     ///     public ButtonControl button { get; private set; }
     ///     public AxisControl axis { get; private set; }
     ///
-    ///     // This is an example on how to add a "synthetic" gamepad that isn't actually backed by hardware.
+    ///     // This is an example of how to add a "synthetic" gamepad that isn't actually backed by hardware.
     ///     Gamepad gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     ///
     ///     // Register the device.
