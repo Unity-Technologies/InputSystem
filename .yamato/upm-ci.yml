@@ -25,7 +25,7 @@
     # Run upm-ci verification tests as well as tests contained in the package.
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} 
       --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
-      --extra-utr-arg="--coverage-results-path=yamato_source_dir_win/upm-ci~/test-results/CodeCoverage/Package"
+      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
     - {{ platform.installscript }} {{ editor.version }}
@@ -41,7 +41,7 @@
       {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
       --report-performance-data --performance-project-id=InputSystem 
       {% if platform.name == "win" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
-      --coverage-results-path=yamato_source_dir_win/upm-ci~/test-results/CodeCoverage/Project {% endif %}
+      --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
   after:
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
@@ -74,7 +74,7 @@
     # Run upm-ci verification tests as well as tests contained in the package.
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} 
       --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
-      --extra-utr-arg="--coverage-results-path=yamato_source_dir_nix/upm-ci~/test-results/CodeCoverage/Package"
+      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package"
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
     - {{ platform.installscript }} {{ editor.version }}
@@ -91,7 +91,7 @@
       {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
       --report-performance-data --performance-project-id=InputSystem 
       {% if platform.name == "mac" or platform.name == "linux" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
-      --coverage-results-path=yamato_source_dir_nix/upm-ci~/test-results/CodeCoverage/Project {% endif %}
+      --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ platform.instabilities_run }}
