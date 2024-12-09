@@ -209,7 +209,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Creates a new InputStateHistory to record a history of control state changes.
         ///
-        /// New controls are automatically added into the state history if there state is smaller than the threshold.
+        /// New controls are automatically added into the state history if their state is smaller than the threshold.
         /// </remarks>
         public InputStateHistory(int maxStateSizeInBytes)
         {
