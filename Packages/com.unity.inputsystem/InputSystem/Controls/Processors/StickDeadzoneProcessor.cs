@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Processors
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             m_MinSetting.OnGUI();
             m_MaxSetting.OnGUI();
