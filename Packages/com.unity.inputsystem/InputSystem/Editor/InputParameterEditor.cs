@@ -251,7 +251,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_DefaultToggle = new Toggle("Default")
                 {
-                    value = m_UseDefaultValue, 
+                    value = m_UseDefaultValue,
                     style =
                     {
                         flexDirection = FlexDirection.RowReverse
