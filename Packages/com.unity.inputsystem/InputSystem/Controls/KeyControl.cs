@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Controls
                 return m_ScanCode;
             }
         }
-
+        /// <inheritdoc/>
         protected override void RefreshConfiguration()
         {
             // Wipe our last cached set of data (if any).

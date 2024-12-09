@@ -803,6 +803,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
         /// // Let's say your device has an associated orientation which it can be held with
         /// // and you want to surface both as a property and as a usage on the device.
         /// // Whenever your backend code detects a change in orientation, it should send
@@ -867,15 +870,64 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Refreshes the controls configuration.
+        /// Refresh the configuration of the control. This is used to update the control's state (e.g. Keyboard Layout or display Name of Keys).
         /// </summary>
         /// <remarks>
+        /// The system will call this method automatically whenever a change is made to one of the control's configuration properties.
         /// This method is only relevant if you are implementing your own devices or new
         /// types of controls which are fetching configuration data from the devices (such
         /// as <see cref="KeyControl"/> which is fetching display names for individual keys
         /// from the underlying platform).
+        /// See <see cref="RefreshConfigurationIfNeeded"/>.
         /// </remarks>
-        /// <seealso cref="RefreshConfigurationIfNeeded"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public enum Orientation
+        ///     {
+        ///         Horizontal,
+        ///         Vertical,
+        ///     }
+        ///     private Orientation m_Orientation;
+        ///     private static InternedString s_Vertical = new InternedString("Vertical");
+        ///     private static InternedString s_Horizontal = new InternedString("Horizontal");
+        ///
+        ///     public Orientation orientation
+        ///     {
+        ///         get
+        ///         {
+        ///             // Call RefreshOrientation if the configuration of the device has been
+        ///             // invalidated since last time we initialized m_Orientation.
+        ///             // Calling RefreshConfigurationIfNeeded() is sufficient in most cases, RefreshConfiguration() forces the refresh.
+        ///             RefreshConfiguration();
+        ///             return m_Orientation;
+        ///         }
+        ///     }
+        ///     protected override void RefreshConfiguration()
+        ///     {
+        ///         // Set Orientation back to horizontal. Alternatively fetch from device.
+        ///         m_Orientation = Orientation.Horizontal;
+        ///         // Reflect the orientation on the device.
+        ///         switch (m_Orientation)
+        ///         {
+        ///             case Orientation.Vertical:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Horizontal);
+        ///                 InputSystem.AddDeviceUsage(this, s_Vertical);
+        ///                 break;
+        ///
+        ///             case Orientation.Horizontal:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Vertical);
+        ///                 InputSystem.AddDeviceUsage(this, s_Horizontal);
+        ///                 break;
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void RefreshConfiguration()
         {
         }
