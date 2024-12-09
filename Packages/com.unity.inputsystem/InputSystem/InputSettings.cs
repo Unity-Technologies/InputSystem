@@ -978,6 +978,17 @@ namespace UnityEngine.InputSystem
             MultilineBoth,
         }
 
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        /// <summary>
+        /// Determines if we should render the UI with IMGUI even if an UI Toolkit UI is available.
+        ///
+        /// This should be used when writing a custom <see cref="InputParameterEditor"/> to :
+        /// * support inspector view which only work in IMGUI for now.
+        /// * prevent the UI to be rendered in IMGUI and UI Toolkit in the Input Actions Editor window.
+        /// </summary>
+        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel > 0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+#endif
+
         private static bool CompareFloats(float a, float b)
         {
             return (a - b) <= float.Epsilon;
