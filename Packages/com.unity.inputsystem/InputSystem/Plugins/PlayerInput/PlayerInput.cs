@@ -965,16 +965,25 @@ namespace UnityEngine.InputSystem
         // Users can add and remove actions maps *after* assigning an InputActionAsset to the PlayerInput component.
         // This ensures "actionTriggered" delegates are assigned for new maps (case isxb-711)
         //
-        private int m_MapCount = 0;
+        private int m_AllMapsHashCode = 0;
         private void UpdateDelegates()
         {
             if (m_Actions == null)
+            {
+                m_AllMapsHashCode = 0;
                 return;
-            if (m_MapCount != m_Actions.actionMaps.Count)
+            }
+
+            int allMapsHashCode = 0;
+            foreach (var actionMap in m_Actions.actionMaps)
+            {
+                allMapsHashCode ^= actionMap.GetHashCode();
+            }
+            if (m_AllMapsHashCode != allMapsHashCode)
             {
                 InstallOnActionTriggeredHook();
                 CacheMessageNames();
-                m_MapCount = m_Actions.actionMaps.Count;
+                m_AllMapsHashCode = allMapsHashCode;
             }
         }
 
