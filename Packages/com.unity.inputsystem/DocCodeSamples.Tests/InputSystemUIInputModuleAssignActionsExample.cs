@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
+
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 
@@ -37,3 +39,4 @@ namespace DocCodeSamples.Tests
         }
     }
 }
+#endif
