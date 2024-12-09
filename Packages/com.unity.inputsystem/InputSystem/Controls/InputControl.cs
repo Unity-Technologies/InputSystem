@@ -307,11 +307,8 @@ namespace UnityEngine.InputSystem
             new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, m_AliasStartIndex, m_AliasCount);
 
         /// <summary>
-        /// Information about where the control stores its state.
-        /// </summary>
-        /// <value>
         /// Information about where the control stores its state, such as format, offset and size.
-        /// </value>
+        /// </summary>
         public InputStateBlock stateBlock => m_StateBlock;
 
         /// <summary>
