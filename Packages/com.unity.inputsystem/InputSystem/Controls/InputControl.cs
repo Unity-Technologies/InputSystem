@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem
         /// For nested controls, the short display name will include the short display names of all parent controls,
         /// that is, the display name will fully identify the control on the device. For example, the display
         /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
-        /// control has no short name, its long name will be used instead. See <see cref="displayName"/>
+        /// control has no short name, its long name will be used instead. See <see cref="displayName"/>.
         /// </remarks>
         public string shortDisplayName
         {
@@ -237,7 +237,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is the root of the control hierarchy. For the device at the root, this
-        /// will point to itself. (See <see cref="InputDevice.allControls"/>)
+        /// will point to itself (See <see cref="InputDevice.allControls"/>).
         /// </remarks>
         public InputDevice device => m_Device;
 
@@ -246,7 +246,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>
         /// The immediate parent of the control or null if the control has no parent
-        /// (which, once fully constructed, will only be the case for InputDevices). <see cref="children"/>
+        /// (which, once fully constructed, will only be the case for InputDevices).
+        /// See the related <see cref="children"/> field.
         /// </value>
         public InputControl parent => m_Parent;
 
@@ -255,7 +256,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Does not allocate.
-        /// <see cref="parent"/>
+        /// See the related <see cref="parent"/> field.
         /// </remarks>
         public ReadOnlyArray<InputControl> children =>
             new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, m_ChildStartIndex, m_ChildCount);
@@ -299,7 +300,8 @@ namespace UnityEngine.InputSystem
         /// List of alternate names for the control.
         /// </summary>
         /// <value>
-        /// List of aliased alternate names for the control. And example alias would be North for the Triangle button on a Playstation pad (or 'Y' button on Xbox pad).
+        /// List of aliased alternate names for the control.
+        /// An example of an alias would be '<c>North</c>' for the '<c>Triangle</c>' button on a Playstation pad (or '<c>Y</c>' button on Xbox pad).
         /// </value>
         public ReadOnlyArray<InternedString> aliases =>
             new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, m_AliasStartIndex, m_AliasCount);
@@ -382,7 +384,7 @@ namespace UnityEngine.InputSystem
         /// represents input from a made-up control. If, however, the "left" button is the only
         /// viable pick, it will be accepted.
         ///
-        /// A control layout will specific if it is synthetic using <see cref="InputControlLayout.ControlItem.isSynthetic"/>.
+        /// A control layout will specify if it is synthetic using <see cref="InputControlLayout.ControlItem.isSynthetic"/>.
         /// See <see cref="InputControlAttribute.synthetic"/>.
         /// </remarks>
         public bool synthetic
@@ -531,7 +533,7 @@ namespace UnityEngine.InputSystem
         /// Read the control's final, processed value from the given buffer and return the value as an object.
         /// </summary>
         /// <param name="buffer">Buffer to read the value from.</param>
-        /// <param name="bufferSize">Size of <paramref name="buffer"/> in bytes. which must be large enough to store the value.</param>
+        /// <param name="bufferSize">Size of <paramref name="buffer"/> in bytes, which must be large enough to store the value.</param>
         /// <returns>The control's value as stored in <paramref name="buffer"/>.</returns>
         /// <remarks>
         /// Read the control's final, processed value from the given buffer and return the value as an object.
@@ -865,7 +867,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Refresh Configuration
+        /// Refreshes the controls configuration.
         /// </summary>
         /// <remarks>
         /// This method is only relevant if you are implementing your own devices or new
@@ -978,7 +980,7 @@ namespace UnityEngine.InputSystem
         internal FourCC m_OptimizedControlDataType;
 
         /// <summary>
-        /// The type of the state memory associated with the control
+        /// The type of the state memory associated with the control.
         /// </summary>
         /// <remarks>
         /// For some types of control you can safely read/write state memory directly
@@ -1001,7 +1003,6 @@ namespace UnityEngine.InputSystem
         /// Calculates and returns an optimized data type that can represent a control's value in memory directly.
         /// </summary>
         /// <remarks>
-        /// Calculates and returns an optimized data type that can represent a control's value in memory directly.
         /// The value then is cached in <see cref="InputControl.optimizedControlDataType"/>.
         /// This method is for internal use only, you should not call this from your own code.
         /// </remarks>
@@ -1455,7 +1456,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Get the control's default value.
         /// </summary>
-        /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>.</param>
+        /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>.</param>
         /// <returns>The control's default value.</returns>
         /// <remarks>
         /// This is not necessarily equivalent to <c>default(TValue)</c>. A control's default value is determined
