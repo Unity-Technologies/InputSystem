@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.UI
     ///         var eventSystem = EventSystem.current;
     ///
     ///         // Get the InputSystemUIInputModule component
-    ///         uiModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+    ///         uiModule = eventSystem.GetComponent&lt;InputSystemUIInputModule&gt;();
     ///
     ///         // Using the default input actions just as an example. Another InputActionAsset can be used.
     ///         DefaultInputActions defaultInputActions = new DefaultInputActions();
