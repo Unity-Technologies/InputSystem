@@ -34,18 +34,18 @@ platforms_win:
 platforms_nix:
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
     runtime: StandaloneOSX
