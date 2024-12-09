@@ -204,7 +204,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
+            // UI toolkit doesn't behave the same on 6000.0 way when refreshing items
+            // On previous versions, we need to call Rebuild() to refresh the items since refreshItems() is less predicatable
+#if UNITY_6000_0_OR_NEWER
+            m_ActionsTreeView.RefreshItems();
+#else
             m_ActionsTreeView.Rebuild();
+#endif
             if (viewState.newElementID != -1)
             {
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
