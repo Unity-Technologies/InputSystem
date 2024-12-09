@@ -1,13 +1,11 @@
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.Serialization;
 
 namespace DocCodeSamples.Tests
 {
     internal class InputSystemUIInputModuleAssignActionsExample : MonoBehaviour
     {
         // Reference to the InputSystemUIInputModule component, needs to be provided in the Inspector
-        [FormerlySerializedAs("inputModule")]
         public InputSystemUIInputModule uiModule;
 
         void Start()
