@@ -222,6 +222,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         SimulateTypingText("New Name");
 
         // Wait for rename to end
+        yield return WaitForSchedulerLoop();
         yield return WaitForActionRename(1, isActive: false);
 
         // Check on the UI side
