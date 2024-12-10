@@ -58,28 +58,38 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.UnregisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
-        private float lastSingleClick;
+        private double lastSingleClick;
         private static InputActionsTreeViewItem selected;
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
         {
             if (e.clickCount != 1 || e.button != (int)MouseButton.LeftMouse || e.target == null)
                 return;
-
-            if (selected == this && Time.time - lastSingleClick < 3f)
+            var now = EditorApplication.timeSinceStartup;
+            if (selected == this && now - lastSingleClick < 3)
             {
                 FocusOnRenameTextField();
                 e.StopImmediatePropagation();
                 lastSingleClick = 0;
+                return;
             }
-            lastSingleClick = Time.time;
+            lastSingleClick = now;
             selected = this;
         }
 
         public void Reset()
         {
+            if (m_IsEditing)
+            {
+                lastSingleClick = 0;
+                delegatesFocus = false;
+
+                renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+                label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+                s_EditingItem = null;
+                m_IsEditing = false;
+            }
             EditTextFinished = null;
-            m_IsEditing = false;
         }
 
         public void FocusOnRenameTextField()
@@ -94,7 +104,7 @@ namespace UnityEngine.InputSystem.Editor
 
             //a bit hacky - e.StopImmediatePropagation() for events does not work like expected on ListViewItems or TreeViewItems because
             //the listView/treeView reclaims the focus - this is a workaround with less overhead than rewriting the events
-            DelayCall();
+            schedule.Execute(() => renameTextfield.Q<TextField>().Focus()).StartingIn(120);
             renameTextfield.SelectAll();
 
             s_EditingItem = this;
@@ -104,12 +114,6 @@ namespace UnityEngine.InputSystem.Editor
         public static void CancelRename()
         {
             s_EditingItem?.OnEditTextFinished();
-        }
-
-        async void DelayCall()
-        {
-            await Task.Delay(120);
-            renameTextfield.Q<TextField>().Focus();
         }
 
         private void OnEditTextFinished()
@@ -130,6 +134,7 @@ namespace UnityEngine.InputSystem.Editor
                 renameTextfield.schedule.Execute(() => renameTextfield.SetValueWithoutNotify(text));
                 return;
             }
+
             EditTextFinished?.Invoke(text);
         }
     }
