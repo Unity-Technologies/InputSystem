@@ -221,9 +221,9 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         // Rename the action
         SimulateTypingText("New Name");
 
-        // Wait for rename to end
+        // Wait for rename to end and focus to return from text field
         yield return WaitForSchedulerLoop();
-        yield return WaitForActionRename(1, isActive: false);
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
 
         // Check on the UI side
         actionContainer = m_Window.rootVisualElement.Q("actions-container");
