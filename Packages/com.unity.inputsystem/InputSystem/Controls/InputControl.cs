@@ -596,7 +596,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="value">Value for the control to store in the state.</param>
         /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>. Will receive
-        /// the state state as converted from the given value.</param>
+        /// the state as converted from the given value.</param>
         /// <remarks>
         /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
         /// from a control after it has been written to its state, the resulting value differs from what was
@@ -1342,7 +1342,7 @@ namespace UnityEngine.InputSystem
         ///
         /// Also note that this property returns the result as ref readonly. If custom control states are in use, i.e.
         /// any controls not shipped with the Input System package, be careful of accidental defensive copies
-        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
+        /// <a href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies">https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies</a>.
         /// </remarks>
         /// <seealso cref="ReadValue"/>
         public ref readonly TValue value
@@ -1634,7 +1634,20 @@ namespace UnityEngine.InputSystem
             WriteValueIntoState(valueOfType, statePtr);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write a value into state at the given memory.
+        /// </summary>
+        /// <param name="value">Value for the control to store in the state.</param>
+        /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>. Will receive
+        /// the state as converted from the given value.</param>
+        /// <remarks>
+        /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
+        /// from a control after it has been written to its state, the resulting value differs from what was
+        /// written.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">The control does not support writing. This is the case, for
+        /// example, that compute values (such as the magnitude of a vector).</exception>
+        /// <seealso cref="WriteValueFromBufferIntoState"/>
         public virtual unsafe void WriteValueIntoState(TValue value, void* statePtr)
         {
             ////REVIEW: should we be able to even tell from layouts which controls support writing and which don't?
