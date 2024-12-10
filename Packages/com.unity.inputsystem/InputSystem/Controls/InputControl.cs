@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem
     /// which has APIs specific to the type of value of the control (e.g. <see cref="InputControl{TValue}.ReadValue()"/>.
     ///
     /// The following example demonstrates various common operations performed on input controls:
-    ///
+    /// </remarks>
     /// <example>
     /// <code>
     /// // Look up dpad/up control on current gamepad.
@@ -99,10 +99,7 @@ namespace UnityEngine.InputSystem
     /// leftStickHistory.Enable();
     /// </code>
     /// </example>
-    /// <example>
-    /// </example>
-    /// </remarks>
-    /// <see cref="InputControl{TValue}"/>
+    /// <seealso cref="InputControl{TValue}"/>
     /// <seealso cref="InputDevice"/>
     /// <seealso cref="InputControlPath"/>
     /// <seealso cref="InputStateBlock"/>
@@ -611,6 +608,8 @@ namespace UnityEngine.InputSystem
         /// Note that if the given path matches multiple child controls, only the first control
         /// encountered in the search will be returned.
         ///
+        /// This method is equivalent to calling <see cref="InputControlPath.TryFindChild"/>.
+        /// </remarks>
         /// <example>
         /// <code>
         /// // Returns the leftStick control of the current gamepad.
@@ -625,9 +624,6 @@ namespace UnityEngine.InputSystem
         /// Gamepad.current.TryGetChildControl("*stick");
         /// </code>
         /// </example>
-        ///
-        /// This method is equivalent to calling <see cref="InputControlPath.TryFindChild"/>.
-        /// </remarks>
         public InputControl TryGetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -689,7 +685,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method can be overridden to perform control- or device-specific setup work. The most
         /// common use case is for looking up child controls and storing them in local getters.
-        ///
+        /// </remarks>
         /// <example>
         /// <code>
         /// public class MyDevice : InputDevice
@@ -706,7 +702,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         protected virtual void FinishSetup()
         {
         }
@@ -723,9 +718,12 @@ namespace UnityEngine.InputSystem
         ///
         /// This method should be called if you are accessing cached data set up by
         /// <see cref="RefreshConfiguration"/>.
-        ///
+        /// </remarks>
         /// <example>
         /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
         /// // Let's say your device has an associated orientation which it can be held with
         /// // and you want to surface both as a property and as a usage on the device.
         /// // Whenever your backend code detects a change in orientation, it should send
@@ -779,7 +777,6 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="RefreshConfiguration"/>
         protected void RefreshConfigurationIfNeeded()
         {
@@ -790,6 +787,61 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Refresh the configuration of the control. This is used to update the control's state (e.g. Keyboard Layout or display Name of Keys).
+        /// </summary>
+        /// <remarks>
+        /// The system will call this method automatically whenever a change is made to one of the control's configuration properties.
+        /// See <see cref="RefreshConfigurationIfNeeded"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Utilities;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public enum Orientation
+        ///     {
+        ///         Horizontal,
+        ///         Vertical,
+        ///     }
+        ///     private Orientation m_Orientation;
+        ///     private static InternedString s_Vertical = new InternedString("Vertical");
+        ///     private static InternedString s_Horizontal = new InternedString("Horizontal");
+        ///
+        ///     public Orientation orientation
+        ///     {
+        ///         get
+        ///         {
+        ///             // Call RefreshOrientation if the configuration of the device has been
+        ///             // invalidated since last time we initialized m_Orientation.
+        ///             // Calling RefreshConfigurationIfNeeded() is sufficient in most cases, RefreshConfiguration() forces the refresh.
+        ///             RefreshConfiguration();
+        ///             return m_Orientation;
+        ///         }
+        ///     }
+        ///     protected override void RefreshConfiguration()
+        ///     {
+        ///         // Set Orientation back to horizontal. Alternatively fetch from device.
+        ///         m_Orientation = Orientation.Horizontal;
+        ///         // Reflect the orientation on the device.
+        ///         switch (m_Orientation)
+        ///         {
+        ///             case Orientation.Vertical:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Horizontal);
+        ///                 InputSystem.AddDeviceUsage(this, s_Vertical);
+        ///                 break;
+        ///
+        ///             case Orientation.Horizontal:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Vertical);
+        ///                 InputSystem.AddDeviceUsage(this, s_Horizontal);
+        ///                 break;
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void RefreshConfiguration()
         {
         }
@@ -902,8 +954,6 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others), recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls and clear cached value.
         /// </summary>
-        /// <remarks>
-        /// </remarks>
         public void ApplyParameterChanges()
         {
             // First we go through all children of our own hierarchy
