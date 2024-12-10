@@ -39,22 +39,83 @@ namespace UnityEngine.InputSystem.UI
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// This module processes all UI input based on the Input System. It is the "glue" between UI systems (UGUI, UITK)
+    /// and the Input System.
+    /// </para>
+    /// <para>
+    /// When adding this component from code (such as through <c>GameObject.AddComponent</c>), the
+    /// resulting module will automatically have <see cref="DefaultInputActions"/> assigned to it.
+    /// If you want to use your own actions, you should create an <see cref="InputActionAsset"/> with the necessary
+    /// UI actions. You can copy the default actions and edit them as you need. To have editable Input Actions
+    /// out-of-the box you can use the project-wide actions through InputSystem.actions. More information about this
+    /// can be read in the <a href="../Manual/InputActions.html">manual</a> documentation.
+    /// </para>
+    /// <para>
+    /// This module can be configured in the Editor > Inspector when added as a component to a <c>GameObject</c>.
+    /// </para>
+    /// <para>
     /// This UI input module has the advantage over other such modules that it doesn't have to know
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
-    ///
-    /// When adding this component from code (such as through <c>GameObject.AddComponent</c>), the
-    /// resulting module will automatically have a set of default input actions assigned to it
-    /// (see <see cref="AssignDefaultActions"/>).
+    /// </para>
     /// </remarks>
+    /// <seealso cref="BaseInputModule"/>
+    /// <seealso cref="InputActionAsset"/>
+    /// <seealso cref="InputAction"/>
+    /// <seealso cref="EventSystem"/>
+    /// <seealso cref="AssignDefaultActions"/>
+    /// <example>
+    /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.UI;
+    /// using UnityEngine.EventSystems;
+    ///
+    /// class InputSystemUIInputModuleExample : MonoBehaviour
+    /// {
+    ///     private InputSystemUIInputModule uiModule;
+    ///
+    ///     // Configure the InputSystemUIInputModule component programmatically on Start()
+    ///     // But a lot of this could be done at runtime as well.
+    ///     void Start()
+    ///     {
+    ///         // Find the EventSystem in the scene
+    ///         var eventSystem = EventSystem.current;
+    ///
+    ///         // Get the InputSystemUIInputModule component
+    ///         uiModule = eventSystem.GetComponent&lt;InputSystemUIInputModule&gt;();
+    ///
+    ///         // Using the default input actions just as an example. Another InputActionAsset can be used.
+    ///         DefaultInputActions defaultInputActions = new DefaultInputActions();
+    ///         // Example on how to assign individual actions programmatically
+    ///         uiModule.actionsAsset = defaultInputActions.asset;
+    ///         uiModule.leftClick = InputActionReference.Create(defaultInputActions.UI.Click);
+    ///         uiModule.scrollWheel = InputActionReference.Create(defaultInputActions.UI.ScrollWheel);
+    ///
+    ///         // Set other fields programmatically
+    ///         uiModule.deselectOnBackgroundClick = true;
+    ///         uiModule.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+    ///         uiModule.cursorLockBehavior = InputSystemUIInputModule.CursorLockBehavior.ScreenCenter;
+    ///     }
+    ///
+    ///     // Example on how programmatically set the move repeat delay based on the move repeat rate
+    ///     void SetMoveRepeat(float value)
+    ///     {
+    ///         uiModule.moveRepeatRate = value;
+    ///         uiModule.moveRepeatDelay = value * (1.2f);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
         /// Whether to clear the current selection when a click happens that does not hit any <c>GameObject</c>.
         /// </summary>
-        /// <value>If true (default), clicking outside of any GameObject will reset the current selection.</value>
         /// <remarks>
+        /// If true (default), clicking outside of any GameObject will reset the current selection
         /// By toggling this behavior off, background clicks will keep the current selection. I.e.
         /// <c>EventSystem.currentSelectedGameObject</c> will not be changed.
         /// </remarks>
@@ -137,6 +198,35 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
+        /// <remarks>
+        /// There's no need to call this method directly unless for specific reasons.
+        /// It is called by <c>EventSystem</c> when the input module is made current.
+        /// It sets <see cref="EventSystem.currentSelectedGameObject"/> to
+        /// <see cref="EventSystem.firstSelectedGameObject"/>  if nothing is selected.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.EventSystems;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class ActivateModuleExample : MonoBehaviour
+        /// {
+        ///     private InputSystemUIInputModule uiModule;
+        ///     void Start()
+        ///     {
+        ///         // Find the EventSystem in the scene
+        ///         var eventSystem = EventSystem.current;
+        ///
+        ///         // Get the InputSystemUIInputModule component
+        ///         uiModule = eventSystem.GetComponent&lt;InputSystemUIInputModule&gt;();
+        ///
+        ///         // Manually activate the module
+        ///         uiModule.ActivateModule();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public override void ActivateModule()
         {
             base.ActivateModule();
@@ -177,7 +267,7 @@ namespace UnityEngine.InputSystem.UI
         /// Calling this method from within an <see cref="InputAction"/> callback (such as <see cref="InputAction.performed"/>)
         /// will result in a warning. See the "UI vs Game Input" sample shipped with the Input System package for
         /// how to deal with this fact.
-        ///
+        /// </remarks>
         /// <example>
         /// <code>
         /// // In general, the pointer ID corresponds to the device ID:
@@ -197,7 +287,6 @@ namespace UnityEngine.InputSystem.UI
         /// EventSystem.current.IsPointerOverGameObject(); // Equivalent.
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="ExtendedPointerEventData.touchId"/>
         /// <seealso cref="InputDevice.deviceId"/>
         public override bool IsPointerOverGameObject(int pointerOrTouchId)
@@ -252,6 +341,44 @@ namespace UnityEngine.InputSystem.UI
         /// </remarks>
         /// <seealso cref="ExtendedPointerEventData.touchId"/>
         /// <seealso cref="InputDevice.deviceId"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.EventSystems;
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class GetLastRaycastResultExample : MonoBehaviour
+        /// {
+        ///     public InputSystemUIInputModule uiModule;
+        ///
+        ///     void PrintLastRaycastResult(int pointerId)
+        ///     {
+        ///         if (uiModule)
+        ///         {
+        ///             // Retrieve the last raycast result for the given pointer ID
+        ///             RaycastResult raycastResult = uiModule.GetLastRaycastResult(pointerId);
+        ///
+        ///             // Check if the raycast result is valid
+        ///             if (raycastResult.isValid)
+        ///             {
+        ///                 // Print details about the raycast result
+        ///                 Debug.Log($"Pointer ID: {pointerId}");
+        ///                 Debug.Log($"Hit GameObject: {raycastResult.gameObject.name}");
+        ///                 Debug.Log($"Distance: {raycastResult.distance}");
+        ///                 Debug.Log($"World Position: {raycastResult.worldPosition}");
+        ///             }
+        ///         }
+        ///
+        ///     }
+        ///
+        ///     void Update()
+        ///     {
+        ///         PrintLastRaycastResult(Mouse.current.deviceId);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public RaycastResult GetLastRaycastResult(int pointerOrTouchId)
         {
             var stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
@@ -850,7 +977,6 @@ namespace UnityEngine.InputSystem.UI
         /// </remarks>
         /// <seealso cref="moveRepeatRate"/>
         /// <seealso cref="AxisEventData"/>
-        /// <see cref="move"/>
         public float moveRepeatDelay
         {
             get => m_MoveRepeatDelay;
@@ -867,9 +993,6 @@ namespace UnityEngine.InputSystem.UI
         /// Note that a maximum of one <see cref="AxisEventData"/> will be sent per frame. This means that even if multiple time
         /// increments of the repeat delay have passed since the last update, only one move repeat event will be generated.
         /// </remarks>
-        /// <seealso cref="moveRepeatDelay"/>
-        /// <seealso cref="AxisEventData"/>
-        /// <see cref="move"/>
         public float moveRepeatRate
         {
             get => m_MoveRepeatRate;
@@ -887,6 +1010,9 @@ namespace UnityEngine.InputSystem.UI
             get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground;
         }
 
+        /// <summary>
+        /// (Obsolete) <inheritdoc cref="moveRepeatRate"/>
+        /// </summary>
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
         public float repeatRate
         {
@@ -894,6 +1020,9 @@ namespace UnityEngine.InputSystem.UI
             set => moveRepeatRate = value;
         }
 
+        /// <summary>
+        /// (Obsolete) <inheritdoc cref="moveRepeatDelay"/>
+        /// </summary>
         [Obsolete("'repeatDelay' has been obsoleted; use 'moveRepeatDelay' instead. (UnityUpgradable) -> moveRepeatDelay", false)]
         public float repeatDelay
         {
@@ -903,10 +1032,14 @@ namespace UnityEngine.InputSystem.UI
 
         /// <summary>
         /// A <see cref="Transform"/> representing the real world origin for tracking devices.
-        /// This is used to convert real world positions and rotations for <see cref="UIPointerType.Tracked"/> pointers into Unity's global space.
-        /// When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.
         /// </summary>
-        /// <remarks>This will transform all tracked pointers. If unset, or set to null, the Unity world origin will be used as the basis for all tracked positions and rotations.</remarks>
+        /// <remarks>
+        /// This is used to convert real world positions and rotations for all <see cref="UIPointerType.Tracked"/>
+        /// pointers into Unity's global space.
+        /// When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.
+        /// If unset, or set to null, the Unity world origin will be used as the basis for all tracked positions and
+        /// rotations.
+        /// </remarks>
         public Transform xrTrackingOrigin
         {
             get => m_XRTrackingOrigin;
@@ -999,10 +1132,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
         public InputActionReference point
         {
             get => m_PointAction;
@@ -1044,10 +1173,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="point"/>
         public InputActionReference scrollWheel
         {
             get => m_ScrollWheelAction;
@@ -1090,10 +1215,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference leftClick
         {
             get => m_LeftClickAction;
@@ -1141,10 +1262,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference middleClick
         {
             get => m_MiddleClickAction;
@@ -1192,10 +1309,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference rightClick
         {
             get => m_RightClickAction;
@@ -1237,8 +1350,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="submit"/>
-        /// <seealso cref="cancel"/>
         public InputActionReference move
         {
             get => m_MoveAction;
@@ -1279,8 +1390,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="move"/>
-        /// <seealso cref="cancel"/>
         public InputActionReference submit
         {
             get => m_SubmitAction;
@@ -1321,8 +1430,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="move"/>
-        /// <seealso cref="submit"/>
         public InputActionReference cancel
         {
             get => m_CancelAction;
@@ -1364,7 +1471,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="trackedDevicePosition"/>
         public InputActionReference trackedDeviceOrientation
         {
             get => m_TrackedDeviceOrientationAction;
@@ -1406,7 +1512,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="trackedDeviceOrientation"/>
         public InputActionReference trackedDevicePosition
         {
             get => m_TrackedDevicePositionAction;
@@ -1424,26 +1529,10 @@ namespace UnityEngine.InputSystem.UI
         /// Note that if an <c>InputSystemUIInputModule</c> component is programmatically added to a <c>GameObject</c>,
         /// it will automatically receive the default actions as part of its <c>OnEnable</c> method. Use <see cref="UnassignActions"/>
         /// to remove these assignments.
-        ///
-        /// <example>
-        /// <code>
-        /// var go = new GameObject();
-        /// go.AddComponent&lt;EventSystem&gt;();
-        ///
-        /// // Adding the UI module like this will implicitly enable it and thus lead to
-        /// // automatic assignment of the default input actions.
-        /// var uiModule = go.AddComponent&lt;InputSystemUIInputModule&gt;();
-        ///
-        /// // Manually remove the default input actions.
-        /// uiModule.UnassignActions();
-        /// </code>
-        /// </example>
         /// </remarks>
-        /// <seealso cref="actionsAsset"/>
-        /// <seealso cref="DefaultInputActions"/>
-
-        private static DefaultInputActions defaultActions;
-
+        /// <example>
+        /// <code source="../../../DocCodeSamples.Tests/InputSystemUIInputModuleAssignActionsExample.cs"/>
+        /// </example>
         public void AssignDefaultActions()
         {
             if (defaultActions == null)
@@ -1463,14 +1552,24 @@ namespace UnityEngine.InputSystem.UI
             trackedDevicePosition = InputActionReference.Create(defaultActions.UI.TrackedDevicePosition);
         }
 
+        private static DefaultInputActions defaultActions;
+
         /// <summary>
-        /// Remove all action assignments, that is <see cref="actionsAsset"/> as well as all individual
-        /// actions such as <see cref="leftClick"/>.
+        /// Remove all action assignments.
         /// </summary>
         /// <remarks>
+        /// Resets <see cref="actionsAsset"/> reference as well as all individual
+        /// actions references, such as <see cref="leftClick"/> , and removes the correspondent callbacks hooked for
+        /// <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/>
+        ///
+        /// It also disposes <see cref="defaultActions"/>.
+        ///
         /// If the current actions were enabled by the UI input module, they will be disabled in the process.
         /// </remarks>
         /// <seealso cref="AssignDefaultActions"/>
+        /// <example>
+        /// <code source="../../../DocCodeSamples.Tests/InputSystemUIInputModuleAssignActionsExample.cs"/>
+        /// </example>
         public void UnassignActions()
         {
             defaultActions?.Dispose();
@@ -1488,6 +1587,10 @@ namespace UnityEngine.InputSystem.UI
             trackedDevicePosition = default;
         }
 
+        /// <summary>
+        /// (Obsolete) This API has been obsoleted; use <see cref="leftClick"/> instead.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
         public InputActionReference trackedDeviceSelect
         {
@@ -1496,6 +1599,7 @@ namespace UnityEngine.InputSystem.UI
         }
 
 #if UNITY_EDITOR
+        /// <inheritdoc/>
         protected override void Reset()
         {
             base.Reset();
@@ -1509,6 +1613,7 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
+        /// <inheritdoc/>
         protected override void Awake()
         {
             base.Awake();
@@ -1516,6 +1621,7 @@ namespace UnityEngine.InputSystem.UI
             m_NavigationState.Reset();
         }
 
+        /// <inheritdoc/>
         protected override void OnDestroy()
         {
             base.OnDestroy();
@@ -1523,6 +1629,7 @@ namespace UnityEngine.InputSystem.UI
             UnhookActions();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -1540,6 +1647,7 @@ namespace UnityEngine.InputSystem.UI
             EnableAllActions();
         }
 
+        /// <inheritdoc/>
         protected override void OnDisable()
         {
             ResetPointers();
@@ -2222,6 +2330,49 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        /// <inheritdoc cref="BaseInputModule.Process"/>
+        /// <remarks>
+        /// <para>This method is automatically called by <see cref="EventSystem.Update()"/> once per frame.
+        /// There is no need to call it manually. Unless for specific use cases.
+        /// </para>
+        /// It processes all <see cref="UIPointerType"/> and <see cref="UIPointerBehavior"/> pointer types,
+        /// as well as navigation input state from <see cref="m_PointerStates"/> and <see cref="m_NavigationState"/>.
+        /// These fields hold state based on the actions set up for the UI action map of <see cref="actionsAsset"/>.
+        /// The InputAction callbacks are responsible for updating their state, which means state can change multiple
+        /// times during a frame, even though it will only be processed once per frame. For example, in case there are
+        /// multiple clicks or touches in a single frame, they can allocate multiple pointers in the same frame, which
+        /// will all then be processed by frame when <see cref="EventSystem.Update()"/> calls this method.
+        /// <para>
+        /// Also, this method is responsible for purging stale pointers when a device is removed, and for filtering
+        /// pointer states
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class CustomInputModuleProcessor : MonoBehaviour
+        /// {
+        ///     // Reference to the InputSystemUIInputModule, set in the Inspector
+        ///     public InputSystemUIInputModule uiModule;
+        ///
+        ///     void Update()
+        ///     {
+        ///         // Process the input module in the Update loop for a specific case
+        ///         // if this needs to be called outside the EventSystem.Update() event
+        ///         if (uiModule != null)
+        ///         {
+        ///             uiModule.Process();
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="UIPointerType"/>
+        /// <seealso cref="UIPointerBehavior"/>
+        /// <seealso cref="BaseInputModule.Process"/>
+        /// <seealso cref="actionsAsset"/>
         public override void Process()
         {
             if (m_NeedToPurgeStalePointers)
@@ -2380,6 +2531,9 @@ namespace UnityEngine.InputSystem.UI
             return InputActionReference.Create(newAction);
         }
 
+        /// <summary>
+        ///  The <see cref="InputActionAsset"/> that contains the necessary UI actions used by the UI module.
+        /// </summary>
         public InputActionAsset actionsAsset
         {
             get => m_ActionsAsset;
