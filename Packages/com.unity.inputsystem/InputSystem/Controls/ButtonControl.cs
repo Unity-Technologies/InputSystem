@@ -34,7 +34,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// The minimum value the button has to reach for it to be considered pressed.
         /// </summary>
-        /// <value>Button press threshold.</value>
         /// <remarks>
         /// The button is considered pressed, if it has a value equal to or greater than
         /// this value.
@@ -64,7 +63,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Return <see cref="pressPoint"/> if set, otherwise return <see cref="InputSettings.defaultButtonPressPoint"/>.
         /// </summary>
-        /// <value>Effective value to use for press point thresholds.</value>
         public float pressPointOrDefault => pressPoint > 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
@@ -106,7 +104,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The default format for the control is <see cref="InputStateBlock.FormatBit"/>.
         /// The control's minimum value is set to 0 and the maximum value to 1.
-        /// See <see cref="InputSettings.defaultButtonPressPoint"/> for the default press point.
+        /// See <see cref="InputSettings.defaultButtonPressPoint"/> and <see cref="pressPoint"/>for the (default) press point.
         /// </remarks>
         /// <example>
         /// <code>
@@ -143,10 +141,9 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Whether the button is currently pressed.
         /// </summary>
-        /// <value>True if button is currently pressed.</value>
         /// <remarks>
         /// A button is considered pressed if its value is equal to or greater
-        /// than its button press threshold (<see cref="pressPointOrDefault"/>).
+        /// than its button press threshold (<see cref="pressPointOrDefault"/>, <see cref="pressPoint"/>).
         /// </remarks>
         /// <example>
         /// <para>You can use this to read whether specific keys are currently pressed by using isPressed on keys, as shown in the following examples:</para>
@@ -242,7 +239,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Whether the press started this frame.
         /// </summary>
-        /// <value>True if the current press of the button started this frame.</value>
         /// <remarks>
         /// The first time this function - or wasReleasedThisFrame - are called, it's possible that extremely fast
         /// inputs (or very slow frame update times) will result in presses/releases being missed.
@@ -304,12 +300,12 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Whether the press ended this frame.
         /// </summary>
-        /// <value>True if the current press of the button ended this frame.</value>
         /// <remarks>
         /// _Note_: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use <see cref="InputControl.displayName"/>.
         /// </remarks>
         /// <example>
         /// <para>An example showing the use of this property on a gamepad button and a keyboard key:</para>
+        ///
         /// <code>
         /// using UnityEngine;
         /// using UnityEngine.InputSystem;
