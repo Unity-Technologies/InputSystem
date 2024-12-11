@@ -1075,12 +1075,15 @@ namespace UnityEngine.InputSystem
         /// <returns>Returns the current level of control actuation (usually [0..1]) or -1 if
         /// the control is actuated but does not support computing magnitudes.</returns>
         /// <remarks>
+        /// <para>
         /// Magnitudes do not make sense for all types of controls. Controls that have no meaningful magnitude
         /// will return -1 when calling this method. Any negative magnitude value should be considered an invalid value.
+        /// </para>
         /// <para>
         /// The magnitude returned by an action is usually determined by the
         /// <see cref="InputControl"/> that triggered the action, i.e. by the
-        /// control referenced from <see cref="activeControl"/>.
+        /// control referenced from <see cref="activeControl"/>. See <see cref="InputControl.EvaluateMagnitude()"/> and
+        /// <see cref="InputBindingComposite.EvaluateMagnitude"/> for additional information.
         /// </para>
         /// <para>
         /// However, if the binding that triggered is a composite, then the composite
@@ -1088,8 +1091,6 @@ namespace UnityEngine.InputSystem
         /// Instead, the value of the control that triggered the action will be fed into the composite magnitude calculation.
         /// </para>
         /// </remarks>
-        /// <seealso cref="InputControl.EvaluateMagnitude()"/>
-        /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
         public unsafe float GetControlMagnitude()
         {
             var state = GetOrCreateActionMap().m_State;
@@ -1809,8 +1810,8 @@ namespace UnityEngine.InputSystem
         /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
         /// input action callback notifications. For example, <see cref="InputAction.started"/>,
         /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
-        /// pull-based reading. Also see <see href="https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/RespondingToActions.html">
-        /// Responding To Actions</see> for additional information on differences between callbacks and polling.
+        /// pull-based reading. Also see <a href="https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/RespondingToActions.html">
+        /// Responding To Actions</a> for additional information on differences between callbacks and polling.
         /// </para>
         /// <para>
         /// Use this struct to read the current input value through any of the read-method overloads:
