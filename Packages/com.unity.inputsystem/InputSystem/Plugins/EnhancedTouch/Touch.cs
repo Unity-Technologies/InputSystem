@@ -61,9 +61,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Whether this touch record holds valid data.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Touch data is stored in unmanaged memory as a circular input buffer. This means that when
         /// the buffer runs out of capacity, older touch entries will get reused. When this happens,
         /// existing <c>Touch</c> instances referring to the record become invalid.
+        /// </para>
         /// <para>
         /// This property can be used to determine whether the record held on to by the <c>Touch</c>
         /// instance is still valid.
@@ -82,7 +84,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// The finger used for the touch contact.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Note that this is only <c>null</c> for default-initialized instances of the struct.
+        /// </para>
         /// <para>
         /// See <see cref="activeFingers"/> for how to access all active fingers.
         /// </para>
@@ -109,9 +113,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Whether the touch has begun this frame, i.e. whether <see cref="phase"/> is <see cref="TouchPhase.Began"/>.
         /// </summary>
         /// <remarks>
-        /// <para>
         /// Use <see cref="isInProgress"/> to more conveniently evaluate whether this touch is currently active or not.
-        /// </para>
         /// </remarks>
         public bool began => phase == TouchPhase.Began;
 
@@ -134,8 +136,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Unique ID of the touch as (usually) assigned by the platform.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Each touch contact that is made with the screen receives its own unique, non-zero ID which is
         /// normally assigned by the underlying platform via <see cref="TouchControl.touchId"/>.
+        /// </para>
         /// <para>
         /// Note a platform may reuse touch IDs after their respective touches have finished.
         /// This means that the guarantee of uniqueness is only made with respect to <see cref="activeTouches"/>.
@@ -152,8 +156,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Normalized pressure of the touch against the touch surface.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Not all touchscreens are pressure-sensitive. If unsupported, this property will
         /// always return 0.
+        /// </para>
         /// <para>
         /// In general, touch pressure is supported on mobile platforms only.
         /// </para>
@@ -171,8 +177,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Screen-space radius of the touch which define its horizontal and vertical extents.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// If supported by the underlying device, this reports the size of the touch contact based on its
         /// <see cref="screenPosition"/> center point. If not supported, this will be <c>default(Vector2)</c>.
+        /// </para>
         /// <para>
         /// Touch radius may also be retrieved directly from the device control via <see cref="TouchControl.radius"/>.
         /// </para>
@@ -221,8 +229,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Screen-space motion delta of the touch.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Note that deltas have behaviors attached to them different from most other
         /// controls. See <see cref="Pointer.delta"/> for details.
+        /// </para>
         /// <para>
         /// Also see <see cref="TouchControl.delta"/> for retrieving delta directly from a device control.
         /// </para>
@@ -234,10 +244,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// </summary>
         /// <value>Indicates how many taps have been performed one after the other.</value>
         /// <remarks>
+        /// <para>
         /// Successive taps have to come within <see cref="InputSettings.multiTapDelayTime"/> for them
         /// to increase the tap count. I.e. if a new tap finishes within that time after <see cref="startTime"/>
         /// of the previous touch, the tap count is increased by one. If more than <see cref="InputSettings.multiTapDelayTime"/>
         /// passes after a tap with no successive tap, the tap count is reset to zero.
+        /// </para>
         /// <para>
         /// Also see <see cref="TouchControl.tapCount"/> for retrieving tap count directly from a device control.
         /// </para>
