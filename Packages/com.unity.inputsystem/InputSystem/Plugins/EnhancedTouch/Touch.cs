@@ -341,7 +341,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// case <see cref="phase"/> will be <see cref="TouchPhase.Ended"/> instead of <see cref="TouchPhase.Moved"/>).
         ///
         /// Note that the touches reported by this API do <em>not</em> necessarily have to match the contents of
-        /// <see href="https://docs.unity3d.com/ScriptReference/Input-touches.html">UnityEngine.Input.touches</see>.
+        /// <a href="https://docs.unity3d.com/ScriptReference/Input-touches.html">UnityEngine.Input.touches</a>.
         /// The reason for this is that the <c>UnityEngine.Input</c> API and the Input System API flush their input
         /// queues at different points in time and may thus have a different view on available input. In particular,
         /// the Input System event queue is flushed <em>later</em> in the frame than inputs for <c>UnityEngine.Input</c>
