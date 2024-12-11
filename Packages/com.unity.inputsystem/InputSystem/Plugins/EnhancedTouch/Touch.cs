@@ -33,6 +33,24 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// A Touch instance is a struct which only contains a reference to the actual data which is stored in unmanaged
     /// memory.
     /// </remarks>
+    /// <example>
+    /// <code>
+    /// void Awake()
+    /// {
+    ///     // Enable EnhancedTouch.
+    ///     EnhancedTouchSupport.Enable();
+    /// }
+    ///
+    /// void Update()
+    /// {
+    ///     foreach (var touch in Touch.activeTouches)
+    ///         if (touch.began)
+    ///             Debug.Log($"Touch {touch} started this frame");
+    ///         else if (touch.ended)
+    ///             Debug.Log($"Touch {touch} ended this frame");
+    /// }
+    /// </code>
+    /// </example>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public struct Touch : IEquatable<Touch>
     {
@@ -327,27 +345,55 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// Due to this setup, touch events that will reach <c>UnityEngine.Input</c> only in the next frame may have
         /// already reached the Input System.
         ///
+        /// In order to evaluate all active touches on a per-frame basis see <see cref="activeFingers"/>.
+        /// </remarks>
         /// <example>
         /// <code>
-        /// void Awake()
-        /// {
-        ///     // Enable EnhancedTouch.
-        ///     EnhancedTouchSupport.Enable();
-        /// }
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.EnhancedTouch;
         ///
-        /// void Update()
+        /// // Alias EnhancedTouch.Touch to "Touch" for less typing.
+        /// using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+        /// using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+        ///
+        /// public class Example : MonoBehaviour
         /// {
-        ///     foreach (var touch in Touch.activeTouches)
-        ///         if (touch.began)
-        ///             Debug.Log($"Touch {touch} started this frame");
-        ///         else if (touch.ended)
-        ///             Debug.Log($"Touch {touch} ended this frame");
+        ///     void Awake()
+        ///     {
+        ///         // Note that enhanced touch support needs to be explicitly enabled.
+        ///         EnhancedTouchSupport.Enable();
+        ///     }
+        ///
+        ///     void Update()
+        ///     {
+        ///         // Illustrates how to examine all active touches once per frame and show their last recorded position
+        ///         // in the associated screen-space.
+        ///         foreach (var touch in Touch.activeTouches)
+        ///         {
+        ///             switch (touch.phase)
+        ///             {
+        ///                 case TouchPhase.Began:
+        ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} started this frame at ({touch.screenPosition.x}, {touch.screenPosition.y})");
+        ///                     break;
+        ///                 case TouchPhase.Ended:
+        ///                     Debug.Log($"Frame {Time.frameCount}:Touch {touch} ended this frame at ({touch.screenPosition.x}, {touch.screenPosition.y})");
+        ///                     break;
+        ///                 case TouchPhase.Moved:
+        ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} moved this frame to ({touch.screenPosition.x}, {touch.screenPosition.y})");
+        ///                     break;
+        ///                 case TouchPhase.Canceled:
+        ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} was canceled this frame");
+        ///                     break;
+        ///                 case TouchPhase.Stationary:
+        ///                     Debug.Log($"Frame {Time.frameCount}: ouch {touch} was not updated this frame");
+        ///                     break;
+        ///             }
+        ///         }
+        ///     }
         /// }
         /// </code>
         /// </example>
-        /// </remarks>
         /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
-        /// <seealso cref="activeFingers"/>
         public static ReadOnlyArray<Touch> activeTouches
         {
             get
