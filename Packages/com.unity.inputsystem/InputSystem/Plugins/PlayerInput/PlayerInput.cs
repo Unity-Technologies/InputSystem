@@ -950,6 +950,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         public void ActivateInput()
         {
+            UpdateDelegates();
+
             m_InputActive = true;
 
             // If we have no current action map but there's a default
@@ -958,6 +960,31 @@ namespace UnityEngine.InputSystem
                 SwitchCurrentActionMap(m_DefaultActionMap);
             else
                 m_CurrentActionMap?.Enable();
+        }
+
+        // Users can add and remove actions maps *after* assigning an InputActionAsset to the PlayerInput component.
+        // This ensures "actionTriggered" delegates are assigned for new maps (case isxb-711)
+        //
+        private int m_AllMapsHashCode = 0;
+        private void UpdateDelegates()
+        {
+            if (m_Actions == null)
+            {
+                m_AllMapsHashCode = 0;
+                return;
+            }
+
+            int allMapsHashCode = 0;
+            foreach (var actionMap in m_Actions.actionMaps)
+            {
+                allMapsHashCode ^= actionMap.GetHashCode();
+            }
+            if (m_AllMapsHashCode != allMapsHashCode)
+            {
+                InstallOnActionTriggeredHook();
+                CacheMessageNames();
+                m_AllMapsHashCode = allMapsHashCode;
+            }
         }
 
         /// <summary>
@@ -1515,6 +1542,8 @@ namespace UnityEngine.InputSystem
 
         private void ClearCaches()
         {
+            if (m_ActionMessageNames != null)
+                m_ActionMessageNames.Clear();
         }
 
         /// <summary>
