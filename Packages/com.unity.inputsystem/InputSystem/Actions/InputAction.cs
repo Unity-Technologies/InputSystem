@@ -1808,7 +1808,8 @@ namespace UnityEngine.InputSystem
         /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
         /// input action callback notifications. For example, <see cref="InputAction.started"/>,
         /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
-        /// pull-based reading.
+        /// pull-based reading. Also see <see href="https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/RespondingToActions.html">
+        /// Responding To Actions</see> for additional information on differences between callbacks and polling.
         /// </para>
         /// <para>
         /// Use this struct to read the current input value through any of the read-method overloads:
