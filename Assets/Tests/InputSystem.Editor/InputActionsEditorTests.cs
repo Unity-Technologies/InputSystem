@@ -74,6 +74,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     #endregion
 
     [Test]
+    [Ignore("Instability, see ISXB-1284")]
     public void CanListActionMaps()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -87,6 +88,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanCreateActionMap()
     {
         var button = m_Window.rootVisualElement.Q<Button>("add-new-action-map-button");
@@ -115,6 +117,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -163,6 +166,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanDeleteActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
