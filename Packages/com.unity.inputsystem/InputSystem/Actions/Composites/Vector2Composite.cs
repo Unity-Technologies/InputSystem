@@ -200,7 +200,7 @@ namespace UnityEngine.InputSystem.Composites
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }

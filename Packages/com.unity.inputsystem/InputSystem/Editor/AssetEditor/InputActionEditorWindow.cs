@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
         public static bool OnOpenAsset(int instanceId, int line)
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return false;
 #endif
             var path = AssetDatabase.GetAssetPath(instanceId);
