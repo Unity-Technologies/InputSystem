@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         public Finger finger => m_Finger;
 
         /// <summary>
-        /// Current phase of the touch.
+        /// The current touch phase of the touch indicating its current state in the phase cycle.
         /// </summary>
         /// <remarks>
         /// Every touch goes through a predefined cycle that starts with <see cref="TouchPhase.Began"/>,
@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             ref *(ExtraDataPerTouchState*)m_TouchRecord.GetUnsafeExtraMemoryPtr();
 
         /// <summary>
-        /// History for this specific touch.
+        /// History touch readings for this specific touch contact.
         /// </summary>
         /// <remarks>
         /// Unlike <see cref="Finger.touchHistory"/>, this gives the history of this touch only.
@@ -581,7 +581,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             return $"{{id={touchId} finger={finger.index} phase={phase} position={screenPosition} delta={delta} time={time}}}";
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Compares this touch for equality with another instance <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">The other instance to compare with.</param>
+        /// <returns><c>true</c> if this touch and <paramref name="other"/> represents the same finger and maps to the
+        /// same touch record, otherwise <c>false</c></returns>
         public bool Equals(Touch other)
         {
             return Equals(m_Finger, other.m_Finger) && m_TouchRecord.Equals(other.m_TouchRecord);
