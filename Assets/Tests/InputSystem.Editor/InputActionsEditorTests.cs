@@ -195,6 +195,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameAction()
     {
         var actionContainer = m_Window.rootVisualElement.Q("actions-container");
