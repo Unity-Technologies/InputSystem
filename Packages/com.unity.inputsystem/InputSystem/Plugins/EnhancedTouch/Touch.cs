@@ -97,9 +97,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// The current touch phase of the touch indicating its current state in the phase cycle.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Every touch goes through a predefined cycle that starts with <see cref="TouchPhase.Began"/>,
         /// then potentially <see cref="TouchPhase.Moved"/> and/or <see cref="TouchPhase.Stationary"/>,
         /// and finally concludes with either <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>.
+        /// </para>
         /// <para>
         /// This property indicates where in the cycle the touch is and is based on <see cref="TouchControl.phase"/>.
         /// </para>
