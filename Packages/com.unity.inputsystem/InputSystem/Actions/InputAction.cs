@@ -1368,15 +1368,15 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action completed this frame.</returns>
         /// <remarks>
+        /// <para>
         /// Although <see cref="InputActionPhase.Disabled"/> is technically a phase, this method does not consider disabling
         /// the action while the action is in <see cref="InputActionPhase.Performed"/> to be "completed".
-        ///
+        /// </para>
         /// <para>
         /// This method is different from <see cref="WasReleasedThisFrame"/> in that it depends directly on the
         /// interaction(s) driving the action (including the default interaction if no specific interaction
         /// has been added to the action or binding).
         /// </para>
-        ///
         /// <para>
         /// For example, let's say the action is bound to the space bar and that the binding has a
         /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
@@ -1389,7 +1389,6 @@ namespace UnityEngine.InputSystem
         /// will be true for one frame as it meets the duration threshold. Once released, <c>WasCompletedThisFrame</c> will be true
         /// (because the action is no longer performed) and only in the frame where the hold transitioned away from Performed.
         /// </para>
-        ///
         /// <para>
         /// For another example where the action could be considered pressed but also completed, let's say the action
         /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
@@ -1408,6 +1407,14 @@ namespace UnityEngine.InputSystem
         /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
         /// </para>
+        /// <para>
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        /// </para>
+        /// <para>
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// </para>
         /// </remarks>
         /// <example>
         /// <code>
@@ -1418,14 +1425,6 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
-        /// <para>
-        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
-        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
-        /// </para>
-        /// <para>
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
-        /// </para>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1801,9 +1800,11 @@ namespace UnityEngine.InputSystem
         /// Information provided to action callbacks about what triggered an action.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The callback context represents the current state of an <see cref="action"/> associated with the callback
         /// and provides information associated with the bound <see cref="control"/>, its value, and its
         /// <see cref="phase"/>.
+        /// </para>
         /// <para>
         /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
         /// input action callback notifications. For example, <see cref="InputAction.started"/>,
@@ -2108,10 +2109,12 @@ namespace UnityEngine.InputSystem
             /// Size of values returned by <see cref="ReadValue(void*,int)"/> in bytes.
             /// </summary>
             /// <remarks>
+            /// <para>
             /// All input values passed around by the system are required to be "blittable",
             /// i.e. they cannot contain references, cannot be heap objects themselves, and
             /// must be trivially mem-copyable. This means that any value can be read out
             /// and retained in a raw byte buffer.
+            /// </para>
             /// <para>
             /// The value of this property determines how many bytes will be written
             /// by <see cref="ReadValue(void*,int)"/>.
