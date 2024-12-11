@@ -1075,19 +1075,22 @@ namespace UnityEngine.InputSystem
         /// <returns>Returns the current level of control actuation (usually [0..1]) or -1 if
         /// the control is actuated but does not support computing magnitudes.</returns>
         /// <remarks>
+        /// <para>
         /// Magnitudes do not make sense for all types of controls. Controls that have no meaningful magnitude
         /// will return -1 when calling this method. Any negative magnitude value should be considered an invalid value.
-        /// <br />
+        /// </para>
+        /// <para>
         /// The magnitude returned by an action is usually determined by the
         /// <see cref="InputControl"/> that triggered the action, i.e. by the
-        /// control referenced from <see cref="activeControl"/>.
-        /// <br />
+        /// control referenced from <see cref="activeControl"/>. See <see cref="InputControl.EvaluateMagnitude()"/> and
+        /// <see cref="InputBindingComposite.EvaluateMagnitude"/> for additional information.
+        /// </para>
+        /// <para>
         /// However, if the binding that triggered is a composite, then the composite
         /// will determine the magnitude and not the individual control that triggered.
         /// Instead, the value of the control that triggered the action will be fed into the composite magnitude calculation.
+        /// </para>
         /// </remarks>
-        /// <seealso cref="InputControl.EvaluateMagnitude()"/>
-        /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
         public unsafe float GetControlMagnitude()
         {
             var state = GetOrCreateActionMap().m_State;
@@ -1366,13 +1369,16 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action completed this frame.</returns>
         /// <remarks>
+        /// <para>
         /// Although <see cref="InputActionPhase.Disabled"/> is technically a phase, this method does not consider disabling
         /// the action while the action is in <see cref="InputActionPhase.Performed"/> to be "completed".
-        ///
+        /// </para>
+        /// <para>
         /// This method is different from <see cref="WasReleasedThisFrame"/> in that it depends directly on the
         /// interaction(s) driving the action (including the default interaction if no specific interaction
         /// has been added to the action or binding).
-        ///
+        /// </para>
+        /// <para>
         /// For example, let's say the action is bound to the space bar and that the binding has a
         /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
         /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
@@ -1383,7 +1389,8 @@ namespace UnityEngine.InputSystem
         /// the phase will change to and stay <see cref="InputActionPhase.Performed"/> and <see cref="WasPerformedThisFrame"/>
         /// will be true for one frame as it meets the duration threshold. Once released, <c>WasCompletedThisFrame</c> will be true
         /// (because the action is no longer performed) and only in the frame where the hold transitioned away from Performed.
-        ///
+        /// </para>
+        /// <para>
         /// For another example where the action could be considered pressed but also completed, let's say the action
         /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
         /// to it such that it only performs in the forward sector area past a button press threshold. In the frame where the
@@ -1395,11 +1402,21 @@ namespace UnityEngine.InputSystem
         /// the thumbstick was no longer within the forward sector. For more details about the Sector interaction, see
         /// <a href="https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@2.5/api/UnityEngine.XR.Interaction.Toolkit.Inputs.Interactions.SectorInteraction.html"><c>SectorInteraction</c></a>
         /// in the XR Interaction Toolkit Scripting API documentation.
-        /// <br />
+        /// </para>
+        /// <para>
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
-        ///
+        /// </para>
+        /// <para>
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        /// </para>
+        /// <para>
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// </para>
+        /// </remarks>
         /// <example>
         /// <code>
         /// var teleport = playerInput.actions["Teleport"];
@@ -1409,13 +1426,6 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
-        ///
-        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
-        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
-        ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
-        /// </remarks>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1791,8 +1801,88 @@ namespace UnityEngine.InputSystem
         /// Information provided to action callbacks about what triggered an action.
         /// </summary>
         /// <remarks>
-        /// This struct should not be held on to past the duration of the callback.
+        /// <para>
+        /// The callback context represents the current state of an <see cref="action"/> associated with the callback
+        /// and provides information associated with the bound <see cref="control"/>, its value, and its
+        /// <see cref="phase"/>.
+        /// </para>
+        /// <para>
+        /// The callback context provides you with a way to consume events (push-based input) as part of an update when using
+        /// input action callback notifications. For example, <see cref="InputAction.started"/>,
+        /// <see cref="InputAction.performed"/>, <see cref="InputAction.canceled"/> rather than relying on
+        /// pull-based reading. Also see <a href="https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/RespondingToActions.html">
+        /// Responding To Actions</a> for additional information on differences between callbacks and polling.
+        /// </para>
+        /// <para>
+        /// Use this struct to read the current input value through any of the read-method overloads:
+        /// <see cref="ReadValue{T}()"/>, <see cref="ReadValueAsButton"/>,
+        /// <see cref="ReadValueAsObject()"/> or <see cref="ReadValue"/> (unsafe). If you don't know the expected value type,
+        /// you might need to check <see cref="valueType"/> before reading the value.
+        /// </para>
+        /// <para>
+        /// Use the <see cref="phase"/> property to get the current phase of the associated action or
+        /// evaluate it directly using any of the convenience methods <see cref="started"/>, <see cref="performed"/>,
+        /// <see cref="canceled"/>.
+        /// </para>
+        /// <para>
+        /// To obtain information about the current timestamp of the associated event, or to check when the event
+        /// started, use <see cref="time"/> or <see cref="startTime"/> respectively.
+        /// </para>
+        /// <para>
+        /// You should not use or keep this struct outside of the callback.
+        /// </para>
         /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.Interactions;
+        ///
+        /// public class MyController : MonoBehaviour
+        ///  {
+        ///      [SerializeField] InputActionReference move;
+        ///      [SerializeField] InputActionReference fire;
+        ///
+        ///      void Awake()
+        ///      {
+        ///          /// Receive notifications when move or fire actions are performed
+        ///          move.action.performed += MovePerformed;
+        ///          fire.action.performed += FirePerformed;
+        ///      }
+        ///
+        ///      void OnEnable()
+        ///      {
+        ///          /// Enable actions as part of enabling this behavior.
+        ///          move.action.Enable();
+        ///          fire.action.Enable();
+        ///      }
+        ///
+        ///      void OnDisable()
+        ///      {
+        ///          /// Disable actions as part of disabling this behavior.
+        ///          move.action.Disable();
+        ///          fire.action.Disable();
+        ///      }
+        ///
+        ///      void MovePerformed(InputAction.CallbackContext context)
+        ///      {
+        ///          /// Read the current 2D vector value reported by the associated input action.
+        ///          var direction = context.ReadValue&lt;Vector2&gt;();
+        ///          Debug.Log("Move: " + direction * Time.deltaTime);
+        ///      }
+        ///
+        ///      void FirePerformed(InputAction.CallbackContext context)
+        ///      {
+        ///          /// If underlying interaction is a slow-tap fire charged projectile, otherwise fire regular
+        ///          /// projectile.
+        ///          if (context.interaction is SlowTapInteraction)
+        ///              Debug.Log("Fire charged projectile");
+        ///          else
+        ///              Debug.Log("Fire projectile");
+        ///      }
+        ///  }
+        /// </code>
+        /// </example>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
         /// <seealso cref="canceled"/>
@@ -1832,34 +1922,32 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Whether the <see cref="action"/> has just been started.
             /// </summary>
-            /// <value>If true, the action was just started.</value>
+            /// <remarks>If true, the action was just started.</remarks>
             /// <seealso cref="InputAction.started"/>
             public bool started => phase == InputActionPhase.Started;
 
             /// <summary>
             /// Whether the <see cref="action"/> has just been performed.
             /// </summary>
-            /// <value>If true, the action was just performed.</value>
+            /// <remarks>If true, the action was just performed.</remarks>
             /// <seealso cref="InputAction.performed"/>
             public bool performed => phase == InputActionPhase.Performed;
 
             /// <summary>
             /// Whether the <see cref="action"/> has just been canceled.
             /// </summary>
-            /// <value>If true, the action was just canceled.</value>
+            /// <remarks>If true, the action was just canceled.</remarks>
             /// <seealso cref="InputAction.canceled"/>
             public bool canceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
-            /// The action that got triggered.
+            /// The associated action that triggered the callback.
             /// </summary>
-            /// <value>Action that got triggered.</value>
             public InputAction action => m_State?.GetActionOrNull(bindingIndex);
 
             /// <summary>
             /// The control that triggered the action.
             /// </summary>
-            /// <value>Control that triggered the action.</value>
             /// <remarks>
             /// In case of a composite binding, this is the control of the composite that activated the
             /// composite as a whole. For example, in case of a WASD-style binding, it could be the W key.
@@ -1877,18 +1965,34 @@ namespace UnityEngine.InputSystem
             /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
             /// have any particular interaction set on it.
             /// </summary>
-            /// <value>Interaction that triggered the callback.</value>
             /// <remarks>
             /// <example>
             /// <code>
-            /// void FirePerformed(InputAction.CallbackContext context)
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            /// using UnityEngine.InputSystem.Interactions;
+            ///
+            /// class Example : MonoBehaviour
             /// {
-            ///     // If SlowTap interaction was performed, perform a charged
-            ///     // firing. Otherwise, fire normally.
-            ///     if (context.interaction is SlowTapInteraction)
-            ///         FireChargedProjectile();
-            ///     else
-            ///         FireNormalProjectile();
+            ///     public InputActionReference fire;
+            ///
+            ///     public void Awake()
+            ///     {
+            ///         fire.action.performed += FirePerformed;
+            ///     }
+            ///
+            ///     void OnEnable() => fire.action.Enable();
+            ///     void OnDisable() => fire.action.Disable();
+            ///
+            ///     void FirePerformed(InputAction.CallbackContext context)
+            ///     {
+            ///          /// If SlowTap interaction was performed, perform a charged
+            ///          /// firing. Otherwise, fire normally.
+            ///          if (context.interaction is SlowTapInteraction)
+            ///              Debug.Log("Fire charged projectile");
+            ///          else
+            ///              Debug.Log("Fire projectile");
+            ///     }
             /// }
             /// </code>
             /// </example>
@@ -1911,9 +2015,10 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// The time at which the action got triggered.
             /// </summary>
-            /// <value>Time relative to <c>Time.realtimeSinceStartup</c> at which
-            /// the action got triggered.</value>
             /// <remarks>
+            /// Time is relative to <see cref="UnityEngine.Time.realtimeSinceStartup"/> at which the action got
+            /// triggered.
+            ///
             /// This is usually determined by the timestamp of the input event that activated a control
             /// bound to the action. What this means is that this is normally <em>not</em> the
             /// value of <c>Time.realtimeSinceStartup</c> when the input system calls the
@@ -1932,10 +2037,8 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Time at which the action was started.
+            /// Time at which the action was <see cref="started"/> with relation to <c>Time.realtimeSinceStartup</c>.
             /// </summary>
-            /// <value>Value relative to <c>Time.realtimeSinceStartup</c> when the action
-            /// changed to <see cref="started"/>.</value>
             /// <remarks>
             /// This is only relevant for actions that go through distinct a <see cref="InputActionPhase.Started"/>
             /// cycle as driven by <see cref="IInputInteraction">interactions</see>.
@@ -1957,11 +2060,10 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Time difference between <see cref="time"/> and <see cref="startTime"/>.
             /// </summary>
-            /// <value>Difference between <see cref="time"/> and <see cref="startTime"/>.</value>
             /// <remarks>
             /// This property can be used, for example, to determine how long a button
             /// was held down.
-            ///
+            /// </remarks>
             /// <example>
             /// <code>
             /// // Let's create a button action bound to the A button
@@ -1986,22 +2088,18 @@ namespace UnityEngine.InputSystem
             ///     };
             /// </code>
             /// </example>
-            /// </remarks>
             public double duration => time - startTime;
 
             /// <summary>
             /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
             /// by <see cref="ReadValue{TValue}"/>.
             /// </summary>
-            /// <value>Type of object returned when reading a value.</value>
             /// <remarks>
             /// The type of value returned by an action is usually determined by the
             /// <see cref="InputControl"/> that triggered the action, i.e. by the
-            /// control referenced from <see cref="control"/>.
-            ///
-            /// However, if the binding that triggered is a composite, then the composite
-            /// will determine values and not the individual control that triggered (that
-            /// one just feeds values into the composite).
+            /// control referenced from <see cref="control"/>. However, if the binding that
+            /// triggered is a composite, then the composite will determine values and
+            /// not the individual control that triggered (that one just feeds values into the composite).
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
@@ -2009,21 +2107,24 @@ namespace UnityEngine.InputSystem
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
             /// <summary>
-            /// Size of values returned by <see cref="ReadValue(void*,int)"/>.
+            /// Size of values returned by <see cref="ReadValue(void*,int)"/> in bytes.
             /// </summary>
-            /// <value>Size of value returned when reading.</value>
             /// <remarks>
+            /// <para>
             /// All input values passed around by the system are required to be "blittable",
             /// i.e. they cannot contain references, cannot be heap objects themselves, and
             /// must be trivially mem-copyable. This means that any value can be read out
             /// and retained in a raw byte buffer.
-            ///
+            /// </para>
+            /// <para>
             /// The value of this property determines how many bytes will be written
             /// by <see cref="ReadValue(void*,int)"/>.
+            /// </para>
+            /// <para>
+            /// This property indirectly maps to the value of <see cref="InputControl.valueSizeInBytes"/> or
+            /// <see cref="InputBindingComposite{TValue}.valueSizeInBytes"/>.
+            /// </para>
             /// </remarks>
-            /// <seealso cref="InputControl.valueSizeInBytes"/>
-            /// <seealso cref="InputBindingComposite.valueSizeInBytes"/>
-            /// <seealso cref="ReadValue(void*,int)"/>
             public int valueSizeInBytes
             {
                 get
@@ -2036,16 +2137,15 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Read the value of the action as a raw byte buffer. This allows reading
-            /// values without having to know value types but also, unlike <see cref="ReadValueAsObject"/>,
-            /// without allocating GC heap memory.
+            /// Read the value of the action as a raw byte buffer.
             /// </summary>
             /// <param name="buffer">Memory buffer to read the value into.</param>
             /// <param name="bufferSize">Size of buffer allocated at <paramref name="buffer"/>. Must be
             /// at least <see cref="valueSizeInBytes"/>.</param>
-            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
-            /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is too small.</exception>
             /// <remarks>
+            /// This allows reading values without having to know value types but also,
+            /// unlike <see cref="ReadValueAsObject"/>, without allocating GC heap memory.
+            /// </remarks>
             /// <example>
             /// <code>
             /// // Read a Vector2 using the raw memory ReadValue API.
@@ -2061,7 +2161,8 @@ namespace UnityEngine.InputSystem
             /// }
             /// </code>
             /// </example>
-            /// </remarks>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
+            /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is too small.</exception>
             /// <seealso cref="InputControlExtensions.ReadValueIntoBuffer"/>
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
             /// <seealso cref="ReadValue{TValue}"/>
@@ -2085,17 +2186,53 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Read the value of the action.
+            /// Read the current value of the associated action.
             /// </summary>
             /// <typeparam name="TValue">Type of value to read. This must correspond to the
             /// expected by either <see cref="control"/> or, if it is a composite, by the
             /// <see cref="InputBindingComposite"/> in use.</typeparam>
-            /// <returns>The value read from the action.</returns>
+            /// <returns>The current value of type <typeparamref name="TValue"/> associated with the action.</returns>
             /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
             /// does not match the value type expected by the control or binding composite.</exception>
             /// <seealso cref="InputAction.ReadValue{TValue}"/>
-            /// <seealso cref="ReadValue(void*,int)"/>
+            /// <seealso cref="ReadValue"/>
             /// <seealso cref="ReadValueAsObject"/>
+            /// <remarks>
+            /// The following example shows how to read the current value of a specific type:
+            /// </remarks>
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // Note: Assumes the underlying value type is Vector2.
+            ///                 Debug.Log($"Value is: {context.ReadValue&lt;Vector2&gt;()}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         move.action.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         move.action.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -2120,6 +2257,39 @@ namespace UnityEngine.InputSystem
             /// of the button will be taken into account (if set). If there is no custom button press point, the
             /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
             /// </remarks>
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference fire;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (fire.action != null)
+            ///         {
+            ///             fire.action.performed += context =>
+            ///             {
+            ///                 // ReadValueAsButton attempts to interpret the value as a button.
+            ///                 Debug.Log($"Is firing: {context.ReadValueAsButton()}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         fire.action.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         fire.action.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
             /// <seealso cref="ButtonControl.pressPoint"/>
             public bool ReadValueAsButton()
@@ -2131,15 +2301,52 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to
-            /// know the type of value at compile time.
+            /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to know the type of the value
+            /// at compile time.
             /// </summary>
             /// <returns>The current value from the binding that triggered the action or <c>null</c> if the action
             /// is not currently in progress.</returns>
             /// <remarks>
-            /// This method allocates GC heap memory. Using it during normal gameplay will lead
+            /// This method allocates GC heap memory due to boxing. Using it during normal gameplay will lead
             /// to frame-rate instabilities.
             /// </remarks>
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // ReadValueAsObject allows reading the associated value as a boxed reference type.
+            ///                 object obj = context.ReadValueAsObject();
+            ///                 if (obj is Vector2)
+            ///                     Debug.Log($"Current value is Vector2 type: {obj}");
+            ///                 else
+            ///                     Debug.Log($"Current value is of another type: {context.valueType}");
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable()
+            ///     {
+            ///         move.action.Enable();
+            ///     }
+            ///
+            ///     void OnDisable()
+            ///     {
+            ///         move.action.Disable();
+            ///     }
+            /// }
+            /// </code>
+            /// </example>
             /// <seealso cref="ReadValue{TValue}"/>
             /// <seealso cref="InputAction.ReadValueAsObject"/>
             public object ReadValueAsObject()
@@ -2153,6 +2360,37 @@ namespace UnityEngine.InputSystem
             /// Return a string representation of the context useful for debugging.
             /// </summary>
             /// <returns>String representation of the context.</returns>
+            /// <remarks>
+            /// The following example illustrates how to log callback context to console when a callback is received
+            /// for debugging purposes:
+            /// </remarks>
+            /// <example>
+            /// <code>
+            /// using UnityEngine;
+            /// using UnityEngine.InputSystem;
+            ///
+            /// public class Example : MonoBehaviour
+            /// {
+            ///     public InputActionReference move;
+            ///
+            ///     void Awake()
+            ///     {
+            ///         if (move.action != null)
+            ///         {
+            ///             move.action.performed += context =>
+            ///             {
+            ///                 // Outputs the associated callback context in its textual representation which may
+            ///                 // be useful for debugging purposes.
+            ///                 Debug.Log(context.ToString());
+            ///             };
+            ///         }
+            ///     }
+            ///
+            ///     void OnEnable() => move.action.Enable();
+            ///     void OnDisable() => move.action.Disable();
+            /// }
+            /// </code>
+            /// </example>
             public override string ToString()
             {
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
