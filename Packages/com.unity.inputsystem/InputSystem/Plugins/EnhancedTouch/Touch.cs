@@ -249,24 +249,29 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// </summary>
         /// <value>Indicates whether the touch has tapped the screen.</value>
         /// <remarks>
+        /// <para>
         /// A tap is defined as a touch that begins and ends within <see cref="InputSettings.defaultTapTime"/> and
         /// stays within <see cref="InputSettings.tapRadius"/> of its <see cref="startScreenPosition"/>. If this
         /// is the case for a touch, this button is set to 1 at the time the touch goes to <see cref="phase"/>
         /// <see cref="TouchPhase.Ended"/>.
+        /// </para>
         /// <para>
         /// Resets to 0 only when another touch is started on the control or when the control is reset.
         /// </para>
+        /// <para>
+        /// Use <see cref="tapCount"/> to determine if there were multiple taps occurring during the frame.
+        /// Also note that <see cref="TouchControl.tap"/> may be used to determine whether there was a tap.
+        /// </para>
         /// </remarks>
-        /// <seealso cref="tapCount"/>
-        /// <seealso cref="InputSettings.defaultTapTime"/>
-        /// <seealso cref="TouchControl.tap"/>
         public bool isTap => state.isTap;
 
         /// <summary>
         /// The index of the display containing the touch.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// A zero based number representing the display index of the <see cref="Display"/> that contains the touch.
+        /// </para>
         /// <para>
         /// Also see <see cref="TouchControl.displayIndex"/> for retrieving display index directly from a device
         /// control.
