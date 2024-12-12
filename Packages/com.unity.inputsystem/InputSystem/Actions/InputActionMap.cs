@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: given we have the global ActionPerformed callback, do we really need the per-map callback?
@@ -312,6 +313,11 @@ namespace UnityEngine.InputSystem
             add => m_ActionCallbacks.AddCallback(value);
             remove => m_ActionCallbacks.RemoveCallback(value);
         }
+
+        /// <summary>
+        /// ProfilerMarker to measure how long it takes to resolve bindings.
+        /// </summary>
+        static readonly ProfilerMarker k_ResolveBindingsProfilerMarker = new ProfilerMarker("InputActionMap.ResolveBindings");
 
         /// <summary>
         /// Construct an action map with default values.
@@ -1299,100 +1305,104 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
-            // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
-            // we don't trigger a re-resolve while we're already resolving bindings.
-            using (InputActionRebindingExtensions.DeferBindingResolution())
+            using (k_ResolveBindingsProfilerMarker.Auto())
             {
-                // In case we have actions that are currently enabled, we temporarily retain the
-                // UnmanagedMemory of our InputActionState so that we can sync action states after
-                // we have re-resolved bindings.
-                var oldMemory = new InputActionState.UnmanagedMemory();
-                try
+                // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
+                // we don't trigger a re-resolve while we're already resolving bindings.
+                using (InputActionRebindingExtensions.DeferBindingResolution())
                 {
-                    OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
-
-                    // Start resolving.
-                    var resolver = new InputBindingResolver();
-
-                    // If we're part of an asset, we share state and thus binding resolution with
-                    // all maps in the asset.
-                    var needFullResolve = m_State == null;
-                    if (m_Asset != null)
+                    // In case we have actions that are currently enabled, we temporarily retain the
+                    // UnmanagedMemory of our InputActionState so that we can sync action states after
+                    // we have re-resolved bindings.
+                    var oldMemory = new InputActionState.UnmanagedMemory();
+                    try
                     {
-                        actionMaps = m_Asset.actionMaps;
-                        Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
+                        OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
 
-                        // If there's a binding mask set on the asset, apply it.
-                        resolver.bindingMask = m_Asset.m_BindingMask;
+                        // Start resolving.
+                        var resolver = new InputBindingResolver();
 
-                        foreach (var map in actionMaps)
+                        // If we're part of an asset, we share state and thus binding resolution with
+                        // all maps in the asset.
+                        var needFullResolve = m_State == null;
+                        if (m_Asset != null)
                         {
-                            needFullResolve |= map.bindingResolutionNeedsFullReResolve;
-                            map.needToResolveBindings = false;
-                            map.bindingResolutionNeedsFullReResolve = false;
-                            map.controlsForEachActionInitialized = false;
+                            actionMaps = m_Asset.actionMaps;
+                            Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
+
+                            // If there's a binding mask set on the asset, apply it.
+                            resolver.bindingMask = m_Asset.m_BindingMask;
+
+                            foreach (var map in actionMaps)
+                            {
+                                needFullResolve |= map.bindingResolutionNeedsFullReResolve;
+                                map.needToResolveBindings = false;
+                                map.bindingResolutionNeedsFullReResolve = false;
+                                map.controlsForEachActionInitialized = false;
+                            }
                         }
-                    }
-                    else
-                    {
-                        // Standalone action map (possibly a hidden one created for a singleton action).
-                        // Gets its own private state.
+                        else
+                        {
+                            // Standalone action map (possibly a hidden one created for a singleton action).
+                            // Gets its own private state.
 
-                        actionMaps = this;
-                        needFullResolve |= bindingResolutionNeedsFullReResolve;
-                        needToResolveBindings = false;
-                        bindingResolutionNeedsFullReResolve = false;
-                        controlsForEachActionInitialized = false;
-                    }
+                            actionMaps = this;
+                            needFullResolve |= bindingResolutionNeedsFullReResolve;
+                            needToResolveBindings = false;
+                            bindingResolutionNeedsFullReResolve = false;
+                            controlsForEachActionInitialized = false;
+                        }
 
-                    // If we already have a state, re-use the arrays we have already allocated.
-                    // NOTE: We will install the arrays on the very same InputActionState instance below. In the
-                    //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
-                    //       here.
-                    var hasEnabledActions = false;
-                    InputControlList<InputControl> activeControls = default;
-                    if (m_State != null)
-                    {
-                        // Grab a clone of the current memory. We clone because disabling all the actions
-                        // in the map will alter the memory state and we want the state before we start
-                        // touching it.
-                        oldMemory = m_State.memory.Clone();
+                        // If we already have a state, re-use the arrays we have already allocated.
+                        // NOTE: We will install the arrays on the very same InputActionState instance below. In the
+                        //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
+                        //       here.
+                        var hasEnabledActions = false;
+                        InputControlList<InputControl> activeControls = default;
+                        if (m_State != null)
+                        {
+                            // Grab a clone of the current memory. We clone because disabling all the actions
+                            // in the map will alter the memory state and we want the state before we start
+                            // touching it.
+                            oldMemory = m_State.memory.Clone();
 
-                        m_State.PrepareForBindingReResolution(needFullResolve, ref activeControls, ref hasEnabledActions);
+                            m_State.PrepareForBindingReResolution(needFullResolve, ref activeControls, ref hasEnabledActions);
 
-                        // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
-                        resolver.StartWithPreviousResolve(m_State, isFullResolve: needFullResolve);
+                            // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
+                            resolver.StartWithPreviousResolve(m_State, isFullResolve: needFullResolve);
 
-                        // Throw away old memory.
-                        m_State.memory.Dispose();
-                    }
+                            // Throw away old memory.
+                            m_State.memory.Dispose();
+                        }
 
-                    // Resolve all maps in the asset.
-                    foreach (var map in actionMaps)
-                        resolver.AddActionMap(map);
-
-                    // Install state.
-                    if (m_State == null)
-                    {
-                        m_State = new InputActionState();
-                        m_State.Initialize(resolver);
-                    }
-                    else
-                    {
-                        m_State.ClaimDataFrom(resolver);
-                    }
-                    if (m_Asset != null)
-                    {
+                        // Resolve all maps in the asset.
                         foreach (var map in actionMaps)
-                            map.m_State = m_State;
-                        m_Asset.m_SharedStateForAllMaps = m_State;
-                    }
+                            resolver.AddActionMap(map);
 
-                    m_State.FinishBindingResolution(hasEnabledActions, oldMemory, activeControls, isFullResolve: needFullResolve);
-                }
-                finally
-                {
-                    oldMemory.Dispose();
+                        // Install state.
+                        if (m_State == null)
+                        {
+                            m_State = new InputActionState();
+                            m_State.Initialize(resolver);
+                        }
+                        else
+                        {
+                            m_State.ClaimDataFrom(resolver);
+                        }
+
+                        if (m_Asset != null)
+                        {
+                            foreach (var map in actionMaps)
+                                map.m_State = m_State;
+                            m_Asset.m_SharedStateForAllMaps = m_State;
+                        }
+
+                        m_State.FinishBindingResolution(hasEnabledActions, oldMemory, activeControls, isFullResolve: needFullResolve);
+                    }
+                    finally
+                    {
+                        oldMemory.Dispose();
+                    }
                 }
             }
         }

@@ -1793,6 +1793,7 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
+#if UNITY_2021_2_OR_NEWER
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerMove).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
@@ -1800,6 +1801,7 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+#endif
 
         // Pointer 3
         Assert.That(scene.rightChildReceiver.events,
