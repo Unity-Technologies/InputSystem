@@ -35,19 +35,47 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// </remarks>
     /// <example>
     /// <code>
-    /// void Awake()
-    /// {
-    ///     // Enable EnhancedTouch.
-    ///     EnhancedTouchSupport.Enable();
-    /// }
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem.EnhancedTouch;
     ///
-    /// void Update()
+    /// // Alias EnhancedTouch.Touch to "Touch" for less typing.
+    /// using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+    /// using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+    ///
+    /// public class Example : MonoBehaviour
     /// {
-    ///     foreach (var touch in Touch.activeTouches)
-    ///         if (touch.began)
-    ///             Debug.Log($"Touch {touch} started this frame");
-    ///         else if (touch.ended)
-    ///             Debug.Log($"Touch {touch} ended this frame");
+    ///     void Awake()
+    ///     {
+    ///         // Note that enhanced touch support needs to be explicitly enabled.
+    ///         EnhancedTouchSupport.Enable();
+    ///     }
+    ///
+    ///     void Update()
+    ///     {
+    ///         // Illustrates how to examine all active touches once per frame and show their last recorded position
+    ///         // in the associated screen-space.
+    ///         foreach (var touch in Touch.activeTouches)
+    ///         {
+    ///             switch (touch.phase)
+    ///             {
+    ///                 case TouchPhase.Began:
+    ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} started this frame at ({touch.screenPosition.x}, {touch.screenPosition.y})");
+    ///                     break;
+    ///                 case TouchPhase.Ended:
+    ///                     Debug.Log($"Frame {Time.frameCount}:Touch {touch} ended this frame at ({touch.screenPosition.x}, {touch.screenPosition.y})");
+    ///                     break;
+    ///                 case TouchPhase.Moved:
+    ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} moved this frame to ({touch.screenPosition.x}, {touch.screenPosition.y})");
+    ///                     break;
+    ///                 case TouchPhase.Canceled:
+    ///                     Debug.Log($"Frame {Time.frameCount}: Touch {touch} was canceled this frame");
+    ///                     break;
+    ///                 case TouchPhase.Stationary:
+    ///                     Debug.Log($"Frame {Time.frameCount}: ouch {touch} was not updated this frame");
+    ///                     break;
+    ///             }
+    ///         }
+    ///     }
     /// }
     /// </code>
     /// </example>
