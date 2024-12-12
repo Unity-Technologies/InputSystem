@@ -71,6 +71,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 - Fixed simulated touch input not working with PlayerInput component [ISXB-483](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-483).
+- Fixed unused PenState information to determine the displayIndex on platforms providing it. (PLAT-10123)
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
