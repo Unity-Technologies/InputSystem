@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
 
             viewState.parameterListView.onChange = () =>
             {
-                Dispatch(Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath));
+                Dispatch(Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath), UIRebuildMode.None);
             };
             viewState.parameterListView.OnDrawVisualElements(rootElement);
         }

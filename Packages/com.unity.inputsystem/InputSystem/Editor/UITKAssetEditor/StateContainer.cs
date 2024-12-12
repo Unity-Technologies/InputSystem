@@ -7,9 +7,16 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    // Enum used to dictate if a state change should rebuild the Input Actions editor UI
+    internal enum UIRebuildMode
+    {
+        None,
+        Rebuild,
+    }
+
     internal class StateContainer
     {
-        public event Action<InputActionsEditorState> StateChanged;
+        public event Action<InputActionsEditorState, UIRebuildMode> StateChanged;
 
         private VisualElement m_RootVisualElement;
         private InputActionsEditorState m_State;
@@ -21,7 +28,7 @@ namespace UnityEngine.InputSystem.Editor
             this.assetGUID = assetGUID;
         }
 
-        public void Dispatch(Command command)
+        public void Dispatch(Command command, UIRebuildMode editorRebuildMode = UIRebuildMode.Rebuild)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
@@ -36,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
                 // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
                 try
                 {
-                    StateChanged?.Invoke(m_State);
+                    StateChanged?.Invoke(m_State, editorRebuildMode);
                 }
                 catch (Exception e)
                 {
@@ -55,9 +62,9 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.Unbind();
             m_RootVisualElement.TrackSerializedObjectValue(m_State.serializedObject, so =>
             {
-                StateChanged?.Invoke(m_State);
+                StateChanged?.Invoke(m_State, UIRebuildMode.Rebuild);
             });
-            StateChanged?.Invoke(m_State);
+            StateChanged?.Invoke(m_State, UIRebuildMode.Rebuild);
             rootVisualElement.Bind(m_State.serializedObject);
         }
 
