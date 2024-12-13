@@ -94,6 +94,7 @@ namespace UnityEngine.InputSystem.Editor
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
 
                 e.SetEnabled(!item.isCut);
+                treeViewItem.isCut = item.isCut;
             };
 
             m_ActionsTreeView.itemsChosen += objects =>
