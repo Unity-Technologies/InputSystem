@@ -435,7 +435,7 @@ internal class OnScreenTests : CoreTestsFixture
         stickLeftTransform.sizeDelta = new Vector2(100, 100);
         stickLeft.controlPath = "<Gamepad>/leftStick";
         stickLeftGO.SetActive(true);
-        
+
         var stickRightGO = new GameObject("StickRight");
         stickRightGO.SetActive(false);
         var stickRightTransform = stickRightGO.AddComponent<RectTransform>();
@@ -506,7 +506,7 @@ internal class OnScreenTests : CoreTestsFixture
         InputSystem.Update(); // Button is feeding events when responding to UI events.
 
         Assert.That(Gamepad.all[0].buttonSouth.isPressed, Is.False);
-        
+
         // Touch the right stick and drag it downwards
         BeginTouch(2, new Vector2(550, 150));
         yield return null;
@@ -519,7 +519,7 @@ internal class OnScreenTests : CoreTestsFixture
 
         Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(new Vector2(0, 1)).Using(Vector2EqualityComparer.Instance));
         Assert.That(Gamepad.all[0].rightStick.ReadValue(), Is.EqualTo(new Vector2(0, -1)).Using(Vector2EqualityComparer.Instance));
-        
+
         // Release finger one and move second and ensure that it still works
         EndTouch(1, new Vector2(550, 200));
         MoveTouch(2, new Vector2(600, 150));
@@ -529,7 +529,7 @@ internal class OnScreenTests : CoreTestsFixture
 
         Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(new Vector2(0, 0)).Using(Vector2EqualityComparer.Instance));
         Assert.That(Gamepad.all[0].rightStick.ReadValue(), Is.EqualTo(new Vector2(1, 0)).Using(Vector2EqualityComparer.Instance));
-        
+
         // Release finger two
         EndTouch(2, new Vector2(600, 150));
         yield return null;
@@ -565,7 +565,7 @@ internal class OnScreenTests : CoreTestsFixture
         {
             uiTestScene.uiInputModule.actionsAsset.actionMaps[0].LazyResolveBindings(true);
         };
-        
+
         // Ensure that the OnScreenStick component has been started
         yield return null;
 

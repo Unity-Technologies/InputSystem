@@ -243,7 +243,7 @@ namespace UnityEngine.InputSystem.OnScreen
             {
                 screenPosition = pointer.position.ReadValue();
             }
-            
+
             m_PointerEventData.position = screenPosition;
             EventSystem.current.RaycastAll(m_PointerEventData, m_RaycastResults);
             if (m_RaycastResults.Count == 0)
@@ -267,11 +267,11 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_TouchControl = touchControl;
                 m_PointerMoveAction.ApplyBindingOverride($"{touchControl.path}/position", path: "<Touchscreen>/touch*/position");
             }
-           
+
             m_PointerMoveAction.performed += OnPointerMove;
             m_IsIsolationActive = true;
         }
-        
+
         private void OnPointerChanged(InputAction.CallbackContext ctx)
         {
             if (ctx.control.IsPressed())
@@ -285,8 +285,8 @@ namespace UnityEngine.InputSystem.OnScreen
             // only pointer devices are allowed
             Debug.Assert(ctx.control?.device is Pointer);
             Vector2 screenPosition;
-           
-            // If it's a finger take the value from the finger that initiated the change            
+
+            // If it's a finger take the value from the finger that initiated the change
             if (m_TouchControl != null)
             {
                 // if the finger is up ignore the move
@@ -307,15 +307,15 @@ namespace UnityEngine.InputSystem.OnScreen
         private void OnPointerUp(InputAction.CallbackContext ctx)
         {
             if (!m_IsIsolationActive) return;
-            
+
             // if it's a finger ensure that is the one that get released
             if (m_TouchControl != null)
             {
                 if (m_TouchControl.isInProgress) return;
-                m_PointerMoveAction.ApplyBindingOverride(null, path: "<Touchscreen>/touch*/position");    
+                m_PointerMoveAction.ApplyBindingOverride(null, path: "<Touchscreen>/touch*/position");
                 m_TouchControl = null;
             }
-            
+
             EndInteraction();
             m_PointerMoveAction.performed -= OnPointerMove;
             m_IsIsolationActive = false;
