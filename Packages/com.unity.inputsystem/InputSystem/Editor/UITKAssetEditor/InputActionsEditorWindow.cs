@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetEditor.RegisterType<InputActionsEditorWindow>();
         }
 
-        static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
+        static readonly Vector2 k_MinWindowSize = new Vector2(740, 450);
         // For UI testing purpose
         internal InputActionAsset currentAssetInEditor => m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;

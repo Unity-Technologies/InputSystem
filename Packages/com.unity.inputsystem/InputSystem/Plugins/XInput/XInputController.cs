@@ -148,20 +148,156 @@ namespace UnityEngine.InputSystem.XInput
         /// Controller subtype enumeration in <c>SubType</c> field of <c>XINPUT_CAPABILITIES</c>.
         /// </summary>
         /// <remarks>
-        /// See <a href="https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes">MSDN</a>.
+        /// Provides additional detail about the underlying hardware being used and how it maps physical to logical
+        /// controls.
+        ///
+        /// See <a href="https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes">MSDN</a>
+        /// for additional details.
         /// </remarks>
         public enum DeviceSubType
         {
+            /// <summary>
+            /// The controller type is unknown.
+            /// </summary>
             Unknown = 0x00,
+
+            /// <summary>
+            /// Gamepad controller.
+            /// </summary>
+            /// <remarks>
+            /// Includes left and right stick as <see cref="Gamepad.leftStick" /> and <see cref="Gamepad.rightStick"/>,
+            /// left and right trigger as <see cref="Gamepad.leftTrigger"/> and <see cref="Gamepad.rightTrigger"/>,
+            /// directional pad as <see cref="Gamepad.dpad"/>,
+            /// and all standard buttons (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
+            /// <see cref="Gamepad.buttonWest"/>, <see cref="Gamepad.buttonNorth"/>,
+            /// <see cref="Gamepad.startButton"/>, <see cref="Gamepad.selectButton"/>,
+            /// <see cref="Gamepad.leftShoulder"/>, <see cref="Gamepad.rightShoulder"/>,
+            /// <see cref="Gamepad.leftStickButton"/>, <see cref="Gamepad.rightStickButton"/>).
+            /// </remarks>
             Gamepad = 0x01,
+
+            /// <summary>
+            /// Racing wheel controller.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="UnityEngine.InputSystem.Gamepad.leftStick" /> x-axis reports the wheel rotation,
+            /// <see cref="Gamepad.rightTrigger"/> is the acceleration pedal, and
+            /// <see cref="Gamepad.leftTrigger"/>Left Trigger is the brake pedal.
+            /// Includes Directional Pad as <see cref="Gamepad.dpad"/> and most standard buttons
+            /// (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
+            /// <see cref="Gamepad.buttonWest"/>, <see cref="Gamepad.buttonNorth"/>,
+            /// <see cref="Gamepad.startButton"/>, <see cref="Gamepad.selectButton"/>,
+            /// <see cref="Gamepad.leftShoulder"/>, <see cref="Gamepad.rightShoulder"/>).
+            /// <see cref="Gamepad.leftStickButton"/> and <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             Wheel = 0x02,
+
+            /// <summary>
+            /// Arcade stick controller.
+            /// </summary>
+            /// <remarks>
+            /// Includes a Digital Stick that reports as a <see cref="Gamepad.dpad"/> (up, down, left, right),
+            /// and most standard buttons (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
+            /// <see cref="Gamepad.buttonWest"/>, <see cref="Gamepad.buttonNorth"/>,
+            /// <see cref="Gamepad.startButton"/>, <see cref="Gamepad.selectButton"/>).
+            /// The <see cref="Gamepad.leftTrigger"/> and <see cref="Gamepad.rightTrigger"/> are implemented as digital
+            /// buttons and report either 0.0f or 1.0f.
+            /// The <see cref="Gamepad.leftShoulder"/>, <see cref="Gamepad.rightShoulder"/> and
+            /// <see cref="Gamepad.leftStickButton"/>, <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             ArcadeStick = 0x03,
+
+            /// <summary>
+            /// Flight stick controller.
+            /// </summary>
+            /// <remarks>
+            /// Includes a pitch and roll stick that reports as the <see cref="Gamepad.leftStick"/>, a POV Hat which
+            /// reports as the <see cref="Gamepad.rightStick"/>, a rudder (handle twist or rocker) that reports as
+            /// <see cref="Gamepad.leftTrigger"/>, and a throttle control as the <see cref="Gamepad.rightTrigger"/>.
+            /// Includes support for a primary weapon (<see cref="Gamepad.buttonSouth"/>), secondary weapon
+            /// (<see cref="Gamepad.buttonEast"/>), and other standard buttons (<see cref="Gamepad.buttonWest"/>,
+            /// <see cref="Gamepad.buttonNorth"/>, <see cref="Gamepad.startButton"/>,
+            /// <see cref="Gamepad.selectButton"/>).
+            /// <see cref="Gamepad.leftShoulder"/>, <see cref="Gamepad.rightShoulder"/> and
+            /// <see cref="Gamepad.leftStickButton"/>, <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             FlightStick = 0x04,
+
+            /// <summary>
+            /// Dance pad controller.
+            /// </summary>
+            /// <remarks>
+            /// Includes the <see cref="Gamepad.dpad"/> and standard buttons (<see cref="Gamepad.buttonSouth"/>,
+            /// <see cref="Gamepad.buttonEast"/>, <see cref="Gamepad.buttonWest"/>,
+            /// <see cref="Gamepad.buttonNorth"/>) on the pad, plus <see cref="Gamepad.startButton"/> and
+            /// <see cref="Gamepad.selectButton"/>.
+            /// </remarks>
             DancePad = 0x05,
+
+            /// <summary>
+            /// Guitar controller.
+            /// </summary>
+            /// <remarks>
+            /// The strum bar maps to <see cref="Gamepad.dpad"/> (up and down), and the frets are assigned to
+            /// <see cref="Gamepad.buttonSouth"/> (green), <see cref="Gamepad.buttonEast"/> (red),
+            /// <see cref="Gamepad.buttonNorth"/> (yellow), <see cref="Gamepad.buttonWest"/> (blue), and
+            /// <see cref="Gamepad.leftShoulder"/> (orange).
+            /// <see cref="Gamepad.rightStick"/> y-axis is associated with a vertical orientation sensor;
+            /// <see cref="Gamepad.rightStick"/> x-axis is the whammy bar.
+            /// Includes support for <see cref="Gamepad.selectButton"/>, <see cref="Gamepad.startButton"/>,
+            /// <see cref="Gamepad.dpad"/> (left, right).
+            /// <see cref="Gamepad.leftTrigger"/> (pickup selector), <see cref="Gamepad.rightTrigger"/>,
+            /// <see cref="Gamepad.rightShoulder"/>, <see cref="Gamepad.leftStickButton"/> (fret modifier),
+            /// <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             Guitar = 0x06,
+
+            /// <summary>
+            /// Alternate guitar controller.
+            /// </summary>
+            /// <remarks>
+            /// Similar to <see cref="Guitar"/> but supports a larger range of movement for the vertical orientation
+            /// sensor.
+            /// </remarks>
             GuitarAlternate = 0x07,
+
+            /// <summary>
+            /// Drum kit controller.
+            /// </summary>
+            /// <remarks>
+            /// The drum pads are assigned to buttons: <see cref="Gamepad.buttonSouth"/> for green (Floor Tom),
+            /// <see cref="Gamepad.buttonEast"/> for red (Snare Drum),
+            /// <see cref="Gamepad.buttonWest"/> for blue (Low Tom),
+            /// <see cref="Gamepad.buttonNorth"/> for yellow (High Tom),
+            /// and <see cref="Gamepad.leftShoulder"/> for the pedal (Bass Drum).
+            /// Includes <see cref="Gamepad.dpad"/>, <see cref="Gamepad.selectButton"/>, and
+            /// <see cref="Gamepad.startButton"/>. <see cref="Gamepad.rightShoulder"/>,
+            /// <see cref="Gamepad.leftStickButton"/>, and <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             DrumKit = 0x08,
+
+            /// <summary>
+            /// Bass guitar controller.
+            /// </summary>
+            /// <remarks>
+            /// Identical to <see cref="Guitar" />, with the distinct subtype to simplify setup.
+            /// </remarks>
             GuitarBass = 0x0B,
+
+            /// <summary>
+            /// Arcade pad controller.
+            /// </summary>
+            /// <remarks>
+            /// Includes Directional Pad and most standard buttons
+            /// (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
+            /// <see cref="Gamepad.buttonWest"/>, <see cref="Gamepad.buttonNorth"/>,
+            /// <see cref="Gamepad.startButton"/>, <see cref="Gamepad.selectButton"/>,
+            /// <see cref="Gamepad.leftShoulder"/>, <see cref="Gamepad.rightShoulder"/>).
+            /// The <see cref="Gamepad.leftTrigger"/>, <see cref="Gamepad.rightTrigger"/> are implemented as digital
+            /// buttons and report either 0.0f or 1.0f.
+            /// <see cref="Gamepad.leftStick"/>, <see cref="Gamepad.rightStick"/>,
+            /// <see cref="Gamepad.leftStickButton"/> and <see cref="Gamepad.rightStickButton"/> are optional.
+            /// </remarks>
             ArcadePad = 0x13
         }
 

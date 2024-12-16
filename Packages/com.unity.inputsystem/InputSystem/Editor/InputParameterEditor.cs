@@ -249,8 +249,16 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
 
-                m_DefaultToggle = new Toggle("Default") { value = m_UseDefaultValue };
+                m_DefaultToggle = new Toggle("Default")
+                {
+                    value = m_UseDefaultValue,
+                    style =
+                    {
+                        flexDirection = FlexDirection.RowReverse
+                    }
+                };
                 m_DefaultToggle.RegisterValueChangedCallback(evt => ToggleUseDefaultValue(evt, onChangedCallback));
+                m_DefaultToggle.Q<Label>().style.minWidth = new StyleLength(StyleKeyword.Auto);
 
 
                 var buttonContainer = new VisualElement
