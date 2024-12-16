@@ -319,22 +319,67 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", true)]
     [TestCase("leftShift", null, "space", false)]
     [TestCase("leftShift", "leftAlt", "space", false)]
-    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
-        bool legacyComposites)
+    public void Actions_WhenShortcutsDisabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcutIfOverridden(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
         if (!string.IsNullOrEmpty(modifier2))
         {
-            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(modifiersOrder=1)")
                 .With("Modifier1", "<Keyboard>/" + modifier1)
                 .With("Modifier2", "<Keyboard>/" + modifier2)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
         else
         {
-            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(modifiersOrder=1)")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += _ => wasPerformed = true;
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+            Press((ButtonControl)keyboard[modifier2]);
+
+        Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space", true, true)]
+    [TestCase("leftShift", "leftAlt", "space", true, true)]
+    [TestCase("leftShift", null, "space", false, true)]
+    [TestCase("leftShift", "leftAlt", "space", false, true)]
+    [TestCase("leftShift", null, "space", true, false)]
+    [TestCase("leftShift", "leftAlt", "space", true, false)]
+    [TestCase("leftShift", null, "space", false, false)]
+    [TestCase("leftShift", "leftAlt", "space", false, false)]
+    public void Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
+        bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + (overrideModifiersNeedToBePressedFirst ? "(overrideModifiersNeedToBePressedFirst)" : "(modifiersOrder=2)"))
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + (overrideModifiersNeedToBePressedFirst ? "(overrideModifiersNeedToBePressedFirst)" : "(modifiersOrder=2)"))
                 .With("Modifier", "<Keyboard>/" + modifier1)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
