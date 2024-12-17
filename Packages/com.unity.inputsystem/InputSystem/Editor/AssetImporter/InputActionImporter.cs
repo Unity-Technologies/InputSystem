@@ -254,14 +254,15 @@ namespace UnityEngine.InputSystem.Editor
                 className = codeClassName,
             };
 
-            /*if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+            if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
             {
                 // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
                 // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
                 // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
                 // changed/added script, and trigger a new import.
+                AssetDatabase.ImportAsset(wrapperFilePath);
                 // TODO Temporary disabled, reenable: EditorApplication.delayCall += AssetDatabase.Refresh;
-            }*/
+            }
         }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
