@@ -119,11 +119,8 @@ namespace UnityEngine.InputSystem
         /// Lookup of names is case-insensitive.
         ///
         /// This is set from the name of the control in the layout.
+        /// See <see cref="path"/>, <see cref="aliases"/>, <see cref="InputControlAttribute.name"/> and <see cref="InputControlLayout.ControlItem.name"/>.
         /// </remarks>
-        /// <seealso cref="path"/>
-        /// <seealso cref="aliases"/>
-        /// <seealso cref="InputControlAttribute.name"/>
-        /// <seealso cref="InputControlLayout.ControlItem.name"/>
         public string name => m_Name;
 
         ////TODO: protect against empty strings
@@ -143,8 +140,9 @@ namespace UnityEngine.InputSystem
         /// For nested controls, the display name will include the display names of all parent controls,
         /// i.e. the display name will fully identify the control on the device. For example, the display
         /// name for the left D-Pad button on a gamepad is "D-Pad Left" and not just "Left".
+        ///
+        /// There is a short name version, see <see cref="shortDisplayName"/>.
         /// </remarks>
-        /// <seealso cref="shortDisplayName"/>
         public string displayName
         {
             get
@@ -173,9 +171,8 @@ namespace UnityEngine.InputSystem
         /// For nested controls, the short display name will include the short display names of all parent controls,
         /// that is, the display name will fully identify the control on the device. For example, the display
         /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
-        /// control has no short name, its long name will be used instead.
+        /// control has no short name, its long name will be used instead. See <see cref="displayName"/>.
         /// </remarks>
-        /// <seealso cref="displayName"/>
         public string shortDisplayName
         {
             get
@@ -202,11 +199,11 @@ namespace UnityEngine.InputSystem
         ///
         /// Allocates on first hit. Paths are not created until someone asks for them.
         ///
+        /// For more details on the path see <see cref="InputControlPath"/>.
+        /// </remarks>
         /// <example>
         /// Example: "/gamepad/leftStick/x"
         /// </example>
-        /// </remarks>
-        /// <seealso cref="InputControlPath"/>
         public string path
         {
             get
@@ -218,7 +215,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Layout the control is based on.
+        /// Layout name for the control it is based on.
         /// </summary>
         /// <remarks>
         /// This is the layout name rather than a reference to an <see cref="InputControlLayout"/> as
@@ -240,25 +237,27 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is the root of the control hierarchy. For the device at the root, this
-        /// will point to itself.
+        /// will point to itself (See <see cref="InputDevice.allControls"/>).
         /// </remarks>
-        /// <seealso cref="InputDevice.allControls"/>
         public InputDevice device => m_Device;
 
         /// <summary>
-        /// The immediate parent of the control or null if the control has no parent
-        /// (which, once fully constructed) will only be the case for InputDevices).
+        /// The immediate parent of the control.
         /// </summary>
-        /// <seealso cref="children"/>
+        /// <value>
+        /// The immediate parent of the control or null if the control has no parent
+        /// (which, once fully constructed, will only be the case for InputDevices).
+        /// See the related <see cref="children"/> field.
+        /// </value>
         public InputControl parent => m_Parent;
 
         /// <summary>
-        /// List of immediate children.
+        /// List of immediate child controls below this.
         /// </summary>
         /// <remarks>
         /// Does not allocate.
+        /// See the related <see cref="parent"/> field.
         /// </remarks>
-        /// <seealso cref="parent"/>
         public ReadOnlyArray<InputControl> children =>
             new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, m_ChildStartIndex, m_ChildCount);
 
@@ -278,34 +277,38 @@ namespace UnityEngine.InputSystem
         /// control to use for certain standardized situation without having to know the particulars of
         /// the device or platform.
         ///
-        /// <example>
-        /// <code>
-        /// // Bind to any control which is tagged with the "Back" usage on any device.
-        /// var backAction = new InputAction(binding: "*/{Back}");
-        /// </code>
-        /// </example>
-        ///
         /// Note that usages on devices work slightly differently than usages of controls on devices.
         /// They are also queried through this property but unlike the usages of controls, the set of
         /// usages of a device can be changed dynamically as the role of the device changes. For details,
         /// see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>. Controls, on the other hand,
         /// can currently only be assigned usages through layouts (<see cref="InputControlAttribute.usage"/>
         /// or <see cref="InputControlAttribute.usages"/>).
+        ///
+        /// <see cref="InputSystem.AddDeviceUsage(InputDevice,string)"/> can be used to add a device.
+        /// <see cref="InputSystem.RemoveDeviceUsage(InputDevice,string)"/> can be used to remove a device.
         /// </remarks>
-        /// <seealso cref="InputControlAttribute.usage"/>
-        /// <seealso cref="InputControlAttribute.usages"/>
-        /// <seealso cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="InputSystem.AddDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="InputSystem.RemoveDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <example>
+        /// <code>
+        /// // Bind to any control which is tagged with the "Back" usage on any device.
+        /// var backAction = new InputAction(binding: "*/{Back}");
+        /// </code>
+        /// </example>
         public ReadOnlyArray<InternedString> usages =>
             new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, m_UsageStartIndex, m_UsageCount);
 
-        // List of alternate names for the control.
+        /// <summary>
+        /// List of alternate names for the control.
+        /// </summary>
+        /// <value>
+        /// List of aliased alternate names for the control.
+        /// An example of an alias would be '<c>North</c>' for the '<c>Triangle</c>' button on a Playstation pad (or '<c>Y</c>' button on Xbox pad).
+        /// </value>
         public ReadOnlyArray<InternedString> aliases =>
             new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, m_AliasStartIndex, m_AliasCount);
 
-        // Information about where the control stores its state.
+        /// <summary>
+        /// Information about where the control stores its state, such as format, offset and size.
+        /// </summary>
         public InputStateBlock stateBlock => m_StateBlock;
 
         /// <summary>
@@ -377,9 +380,10 @@ namespace UnityEngine.InputSystem
         /// input from an actual physical control whereas <c>"&lt;Gamepad&gt;/leftStick/left"</c>
         /// represents input from a made-up control. If, however, the "left" button is the only
         /// viable pick, it will be accepted.
+        ///
+        /// A control layout will specify if it is synthetic using <see cref="InputControlLayout.ControlItem.isSynthetic"/>.
+        /// See <see cref="InputControlAttribute.synthetic"/>.
         /// </remarks>
-        /// <seealso cref="InputControlLayout.ControlItem.isSynthetic"/>
-        /// <seealso cref="InputControlAttribute.synthetic"/>
         public bool synthetic
         {
             get => (m_ControlFlags & ControlFlags.IsSynthetic) != 0;
@@ -395,8 +399,11 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Fetch a control from the control's hierarchy by name.
         /// </summary>
+        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
         /// <remarks>
-        /// Note that path matching is case-insensitive.
+        /// Note that <see cref="path"/> matching is case-insensitive.
+        /// (see <see cref="InputControlPath"/>).
+        /// An alternative method is <see cref="TryGetChildControl"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -406,9 +413,6 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// <exception cref="KeyNotFoundException"><paramref name="path"/> cannot be found.</exception>
-        /// <seealso cref="InputControlPath"/>
-        /// <seealso cref="path"/>
-        /// <seealso cref="TryGetChildControl"/>
         public InputControl this[string path]
         {
             get
@@ -427,30 +431,34 @@ namespace UnityEngine.InputSystem
         /// <value>Type of values produced by the control.</value>
         /// <remarks>
         /// This is the type of values that are returned when reading the current value of a control
-        /// or when reading a value of a control from an event.
+        /// or when reading a value of a control from an event with <see cref="ReadValueFromStateAsObject"/>.
+        /// The size can be determined with <see cref="valueSizeInBytes"/>.
         /// </remarks>
-        /// <seealso cref="valueSizeInBytes"/>
-        /// <seealso cref="ReadValueFromStateAsObject"/>
         public abstract Type valueType { get; }
 
         /// <summary>
         /// Size in bytes of values that the control returns.
         /// </summary>
-        /// <seealso cref="valueType"/>
+        /// <remarks>
+        /// The type can be determined with <see cref="valueType"/>.
+        /// </remarks>
         public abstract int valueSizeInBytes { get; }
 
         /// <summary>
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated. Shortcut for <see cref="EvaluateMagnitude()"/>.
         /// </summary>
-        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
-        /// <seealso cref="EvaluateMagnitude(void*)"/>
-        /// <seealso cref="EvaluateMagnitude()"/>
+        /// <value>
+        /// Amount of actuation of the control or -1 if it cannot be determined.
+        /// </value>
         public float magnitude => EvaluateMagnitude();
 
         /// <summary>
-        /// Return a string representation of the control useful for debugging.
+        /// Return a string representation of the control.
         /// </summary>
+        /// <remarks>
+        /// Return a string representation of the control. Useful for debugging.
+        /// </remarks>
         /// <returns>A string representation of the control.</returns>
         public override string ToString()
         {
@@ -500,23 +508,48 @@ namespace UnityEngine.InputSystem
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated in the given state.
         /// </summary>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
+        /// an enumeration of values (such as <see cref="TouchPhaseControl"/>), there is no meaningful
+        /// linear ordering of values (one could derive a linear ordering through the actual enum values but
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="TouchPhase.Canceled"/>
+        /// has a higher or lower "magnitude" as a state of <see cref="TouchPhase.Began"/>).
+        ///
+        /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
+        /// return value should be considered an invalid value.
+        /// </remarks>
         /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>.</param>
         /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
         /// <seealso cref="EvaluateMagnitude()"/>
-        /// <seealso cref="stateBlock"/>
         public virtual unsafe float EvaluateMagnitude(void* statePtr)
         {
             return -1;
         }
 
+        /// <summary>
+        /// Read the control's final, processed value from the given buffer and return the value as an object.
+        /// </summary>
+        /// <param name="buffer">Buffer to read the value from.</param>
+        /// <param name="bufferSize">Size of <paramref name="buffer"/> in bytes, which must be large enough to store the value.</param>
+        /// <returns>The control's value as stored in <paramref name="buffer"/>.</returns>
+        /// <remarks>
+        /// Read the control's final, processed value from the given buffer and return the value as an object.
+        ///
+        /// This method allocates GC memory and should not be used during normal gameplay operation.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is smaller than the size of the value to be read.</exception>
+        /// <seealso cref="ReadValueFromStateAsObject"/>
         public abstract unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize);
 
         /// <summary>
         /// Read the control's final, processed value from the given state and return the value as an object.
         /// </summary>
-        /// <param name="statePtr"></param>
+        /// <param name="statePtr">State to read the value for the control from.</param>
         /// <returns>The control's value as stored in <paramref name="statePtr"/>.</returns>
         /// <remarks>
+        /// Read the control's final, processed value from the given state and return the value as an object.
+        ///
         /// This method allocates GC memory and should not be used during normal gameplay operation.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="statePtr"/> is null.</exception>
@@ -539,7 +572,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Read a value from the given memory and store it as state.
         /// </summary>
-        /// <param name="bufferPtr">Memory containing value.</param>
+        /// <param name="bufferPtr">Memory containing value, to store into the state.</param>
         /// <param name="bufferSize">Size of <paramref name="bufferPtr"/> in bytes. Must be at least <see cref="valueSizeInBytes"/>.</param>
         /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>. Will receive the state
         /// as converted from the given value.</param>
@@ -561,9 +594,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Read a value object and store it as state in the given memory.
         /// </summary>
-        /// <param name="value">Value for the control.</param>
+        /// <param name="value">Value for the control to store in the state.</param>
         /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>. Will receive
-        /// the state state as converted from the given value.</param>
+        /// the state as converted from the given value.</param>
         /// <remarks>
         /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
         /// from a control after it has been written to its state, the resulting value differs from what was
@@ -631,6 +664,19 @@ namespace UnityEngine.InputSystem
             return InputControlPath.TryFindChild(this, path);
         }
 
+        /// <summary>
+        /// Try to find a child control matching the given path.
+        /// </summary>
+        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+        /// <typeparam name="TControl">The type of control to locate.</typeparam>
+        /// <returns>The first direct or indirect child control that matches the given <paramref name="path"/>
+        /// or null if no control was found to match.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="InvalidOperationException">No control found with the specified type.</exception>
+        /// <remarks>
+        /// Note that if the given path matches multiple child controls, only the first control
+        /// encountered in the search will be returned.
+        /// </remarks>
         public TControl TryGetChildControl<TControl>(string path)
             where TControl : InputControl
         {
@@ -649,6 +695,19 @@ namespace UnityEngine.InputSystem
             return controlOfType;
         }
 
+        /// <summary>
+        /// Find a child control matching the given path.
+        /// </summary>
+        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+        /// <returns>The first direct or indirect child control that matches the given <paramref name="path"/>
+        /// or null if no control was found to match.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="InvalidOperationException">No control found with the specified type.</exception>
+        /// <exception cref="ArgumentException">The control cannot be found.</exception>
+        /// <remarks>
+        /// Note that if the given path matches multiple child controls, only the first control
+        /// encountered in the search will be returned.
+        /// </remarks>
         public InputControl GetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -661,6 +720,20 @@ namespace UnityEngine.InputSystem
             return control;
         }
 
+        /// <summary>
+        /// Find a child control matching the given path.
+        /// </summary>
+        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+        /// <typeparam name="TControl">The type of control to locate.</typeparam>
+        /// <returns>The first direct or indirect child control that matches the given <paramref name="path"/>
+        /// or null if no control was found to match.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="InvalidOperationException">No control found with the specified type.</exception>
+        /// <exception cref="ArgumentException">The control cannot be found.</exception>
+        /// <remarks>
+        /// Note that if the given path matches multiple child controls, only the first control
+        /// encountered in the search will be returned.
+        /// </remarks>
         public TControl GetChildControl<TControl>(string path)
             where TControl : InputControl
         {
@@ -673,6 +746,12 @@ namespace UnityEngine.InputSystem
             return controlOfType;
         }
 
+        /// <summary>
+        /// Constructor for the InputControl
+        /// </summary>
+        /// <remarks>
+        /// Constructor for the InputControl
+        /// </remarks>
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
@@ -792,6 +871,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// The system will call this method automatically whenever a change is made to one of the control's configuration properties.
+        /// This method is only relevant if you are implementing your own devices or new
+        /// types of controls which are fetching configuration data from the devices (such
+        /// as <see cref="KeyControl"/> which is fetching display names for individual keys
+        /// from the underlying platform).
         /// See <see cref="RefreshConfigurationIfNeeded"/>.
         /// </remarks>
         /// <example>
@@ -847,13 +930,34 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: drop protected access
+        /// <summary>
+        /// Information about a memory region storing input state.
+        /// </summary>
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
+        /// <summary>
+        /// The state data buffer for the device.
+        /// </summary>
+        /// <value>
+        /// The state data buffer for the device.
+        /// </value>
         protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(GetDeviceIndex());
 
+        /// <summary>
+        /// The state data buffer for the device from the previous frame.
+        /// </summary>
+        /// <value>
+        /// The state data buffer for the device from the previous frame.
+        /// </value>
         protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(GetDeviceIndex());
 
+        /// <summary>
+        /// The default state data buffer
+        /// </summary>
+        /// <value>
+        /// Buffer that has state for each device initialized with default values.
+        /// </value>
         protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
 
         /// <summary>
@@ -868,8 +972,9 @@ namespace UnityEngine.InputSystem
         /// that is noise will be masked out whereas all state that isn't will come through unmodified. In other words,
         /// any bit that is set in the noise mask indicates that the corresponding bit in the control's state memory
         /// is noise.
+        ///
+        /// A control can be marked as <see cref="noisy"/>.
         /// </remarks>
-        /// <seealso cref="noisy"/>
         protected internal unsafe void* noiseMaskPtr => InputStateBuffers.s_NoiseMaskBuffer;
 
         /// <summary>
@@ -878,7 +983,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Once a device has been added to the system, its state block will get allocated
         /// in the global state buffers and the offset of the device's state block will
-        /// get baked into all of the controls on the device. This property always returns
+        /// get baked into all the controls on the device. This property always returns
         /// the "unbaked" offset.
         /// </remarks>
         protected internal uint stateOffsetRelativeToDeviceRoot
@@ -924,13 +1029,15 @@ namespace UnityEngine.InputSystem
         internal FourCC m_OptimizedControlDataType;
 
         /// <summary>
+        /// The type of the state memory associated with the control.
+        /// </summary>
+        /// <remarks>
         /// For some types of control you can safely read/write state memory directly
         /// which is much faster than calling ReadUnprocessedValueFromState/WriteValueIntoState.
         /// This method returns a type that you can use for reading/writing the control directly,
-        /// or it returns InputStateBlock.kFormatInvalid if it's not possible for this type of control.
-        /// </summary>
-        /// <remarks>
-        /// For example, AxisControl might be a "float" in state memory, and if no processing is applied during reading (e.g. no invert/scale/etc),
+        /// or it returns <see cref="InputStateBlock.FormatInvalid"/> if it's not possible for this type of control.
+        ///
+        /// For example, AxisControl <see cref="valueType"/> might be a "float" in state memory, and if no processing is applied during reading (e.g. no invert/scale/etc),
         /// then you could read it as float in memory directly without calling ReadUnprocessedValueFromState, which is faster.
         /// Additionally, if you have a Vector3Control which uses 3 AxisControls as consecutive floats in memory,
         /// you can cast the Vector3Control state memory directly to Vector3 without calling ReadUnprocessedValueFromState on x/y/z axes.
@@ -942,18 +1049,33 @@ namespace UnityEngine.InputSystem
         public FourCC optimizedControlDataType => m_OptimizedControlDataType;
 
         /// <summary>
-        /// Calculates and returns a optimized data type that can represent a control's value in memory directly.
+        /// Calculates and returns an optimized data type that can represent a control's value in memory directly.
+        /// </summary>
+        /// <remarks>
         /// The value then is cached in <see cref="InputControl.optimizedControlDataType"/>.
         /// This method is for internal use only, you should not call this from your own code.
-        /// </summary>
+        /// </remarks>
+        /// <returns>
+        /// An optimized data type that can represent a control's value in memory directly. <see cref="InputStateBlock"/>
+        /// </returns>
         protected virtual FourCC CalculateOptimizedControlDataType()
         {
             return InputStateBlock.kFormatInvalid;
         }
 
         /// <summary>
-        /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others), recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls and clear cached value.
+        /// Apply built-in parameters changes.
         /// </summary>
+        /// <remarks>
+        /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others).
+        /// Recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls and clear cached value
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// Gamepad.all[0].leftTrigger.WriteValueIntoState(0.5f, Gamepad.all[0].currentStatePtr);
+        /// Gamepad.all[0].ApplyParameterChanges();
+        /// </code>
+        /// </example>
         public void ApplyParameterChanges()
         {
             // First we go through all children of our own hierarchy
@@ -1194,14 +1316,16 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
+        /// <inheritdoc/>
         public override Type valueType => typeof(TValue);
 
+        /// <inheritdoc/>
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
         /// Returns the current value of the control after processors have been applied.
         /// </summary>
-        /// <returns>The controls current value.</returns>
+        /// <value>The controls current value.</value>
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
         ///
@@ -1218,7 +1342,7 @@ namespace UnityEngine.InputSystem
         ///
         /// Also note that this property returns the result as ref readonly. If custom control states are in use, i.e.
         /// any controls not shipped with the Input System package, be careful of accidental defensive copies
-        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
+        /// <a href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies">https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies</a>.
         /// </remarks>
         /// <seealso cref="ReadValue"/>
         public ref readonly TValue value
@@ -1340,7 +1464,7 @@ namespace UnityEngine.InputSystem
         /// in the processor and set it to <see cref="InputProcessor.CachingPolicy.EvaluateOnEveryRead"/>.
         ///
         /// To improve debugging try setting "PARANOID_READ_VALUE_CACHING_CHECKS" internal feature flag to check if cache value is still consistent.
-        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
+        /// <a href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies">https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies</a>.
         /// </remarks>
         /// <seealso cref="value"/>
         public TValue ReadValue()
@@ -1378,6 +1502,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Get the control's default value.
+        /// </summary>
+        /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>.</param>
+        /// <returns>The control's default value.</returns>
+        /// <remarks>
+        /// This is not necessarily equivalent to <c>default(TValue)</c>. A control's default value is determined
+        /// by reading its value from the default state (<see cref="InputControl.defaultStatePtr"/>) which in turn
+        /// is determined from settings in the control's registered layout (<see cref="InputControlLayout.ControlItem.defaultState"/>).
+        /// </remarks>
         public unsafe TValue ReadValueFromState(void* statePtr)
         {
             if (statePtr == null)
@@ -1413,11 +1547,28 @@ namespace UnityEngine.InputSystem
             return statePtr == currentStatePtr ? unprocessedValue : ReadUnprocessedValueFromState(statePtr);
         }
 
+        /// <summary>
+        /// Read value from control
+        /// </summary>
+        /// <returns>The controls current value.</returns>
+        /// <remarks>
+        /// This is the locally cached value. Use <see cref="ReadUnprocessedValueFromStateWithCaching"/>to get the uncached version.
+        /// </remarks>
+        /// <seealso cref="value"/>
         public TValue ReadUnprocessedValue()
         {
             return unprocessedValue;
         }
 
+        /// <summary>
+        /// Read value from provided <paramref name="statePtr"/>.
+        /// </summary>
+        /// <param name="statePtr">State pointer to read from.</param>
+        /// <returns>The controls current value.</returns>
+        /// <remarks>
+        /// Read value from provided <paramref name="statePtr"/> without any caching.
+        /// </remarks>
+        /// <seealso cref="value"/>
         public abstract unsafe TValue ReadUnprocessedValueFromState(void* statePtr);
 
         /// <inheritdoc />
@@ -1445,6 +1596,7 @@ namespace UnityEngine.InputSystem
             UnsafeUtility.MemCpy(bufferPtr, valuePtr, numBytes);
         }
 
+        /// <inheritdoc />
         public override unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
         {
             if (bufferPtr == null)
@@ -1482,6 +1634,20 @@ namespace UnityEngine.InputSystem
             WriteValueIntoState(valueOfType, statePtr);
         }
 
+        /// <summary>
+        /// Write a value into state at the given memory.
+        /// </summary>
+        /// <param name="value">Value for the control to store in the state.</param>
+        /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>. Will receive
+        /// the state as converted from the given value.</param>
+        /// <remarks>
+        /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
+        /// from a control after it has been written to its state, the resulting value differs from what was
+        /// written.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">The control does not support writing. This is the case, for
+        /// example, that compute values (such as the magnitude of a vector).</exception>
+        /// <seealso cref="WriteValueFromBufferIntoState"/>
         public virtual unsafe void WriteValueIntoState(TValue value, void* statePtr)
         {
             ////REVIEW: should we be able to even tell from layouts which controls support writing and which don't?
@@ -1520,6 +1686,12 @@ namespace UnityEngine.InputSystem
             return UnsafeUtility.MemCmp(firstValuePtr, secondValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
+        /// <summary>
+        /// Compared values in state buffers.
+        /// </summary>
+        /// <param name="firstStatePtr">The first state buffer to read value from.</param>
+        /// <param name="secondStatePtr">The second state buffer to read value from.</param>
+        /// <returns>True if the buffer values match. False if they differ.</returns>
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
             ////REVIEW: should we first compare state here? if there's no change in state, there can be no change in value and we can skip the rest
@@ -1530,6 +1702,14 @@ namespace UnityEngine.InputSystem
             return CompareValue(ref firstValue, ref secondValue);
         }
 
+        /// <summary>
+        /// Applies all control processors to the passed value.
+        /// </summary>
+        /// <param name="value">value to run processors on.</param>
+        /// <returns>The processed value.</returns>
+        /// <remarks>
+        /// Applies all control processors to the passed value.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue ProcessValue(TValue value)
         {
@@ -1540,7 +1720,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Applies all control processors to the passed value.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">value to run processors on.</param>
         /// <remarks>
         /// Use this overload when your state struct is large to avoid creating copies of the state.
         /// </remarks>
@@ -1622,6 +1802,7 @@ namespace UnityEngine.InputSystem
 
         internal bool evaluateProcessorsEveryRead = false;
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             foreach (var processor in m_ProcessorStack)

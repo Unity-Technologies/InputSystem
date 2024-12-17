@@ -32,6 +32,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in `Samples/Visualizers/GamepadVisualizer.unity` sample where the visualization wouldn't handle device disconnects or current device changes properly (ISXB-1243).
 - Fixed an issue when displaying Serialized InputAction's Processor properties inside the Inspector window. [ISXB-1269](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1269)
 - Fixed an issue with default device selection when adding new Control Scheme.
+- Fixed an issue where action map delegates were not updated when the asset already assigned to the PlayerInput component were changed [ISXB-711](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-711).
+- Fixed Action properties edition in the UI Toolkit version of the Input Actions Asset editor. [ISXB-1277](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1277)
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
@@ -41,6 +43,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added new API `InputSystem.settings.useIMGUIEditorForAssets` that should be used in custom `InputParameterEditor` that use both IMGUI and UI Toolkit.
+- Added ProfilerMakers to `InputAction.Enable()` and `InputActionMap.ResolveBindings()` to enable gathering of profiling data.
 
 ## [1.11.2] - 2024-10-16
 
@@ -70,6 +73,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 - Fixed simulated touch input not working with PlayerInput component [ISXB-483](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-483).
+- Fixed unused PenState information to determine the displayIndex on platforms providing it. (PLAT-10123)
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
