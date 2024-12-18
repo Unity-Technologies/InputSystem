@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
             if (device.deviceId != m_Control.device.deviceId)
                 return;
 
-            if (change == InputDeviceChange.Removed)            
+            if (change == InputDeviceChange.Removed)
                 Close();
         }
 
