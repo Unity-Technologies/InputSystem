@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDraggedItem);
+            
 
             // ISXB-748 - Scrolling the view causes a visual glitch with the rename TextField. As a work-around we
             // need to cancel the rename operation in this scenario.

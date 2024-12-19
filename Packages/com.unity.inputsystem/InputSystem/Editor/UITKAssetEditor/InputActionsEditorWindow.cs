@@ -36,7 +36,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
-        private string m_AssetJson;
         private bool m_IsDirty;
 
         private StateContainer m_StateContainer;
@@ -183,8 +182,6 @@ namespace UnityEngine.InputSystem.Editor
                     if (asset == null)
                         throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
 
-                    m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
-
                     if (m_AssetObjectForEditing == null)
                     {
                         workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
@@ -281,8 +278,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool HasContentChanged()
         {
             var editedAsset = GetEditedAsset();
-            var editedAssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(editedAsset);
-            return editedAssetJson != m_AssetJson;
+            return EditorUtility.GetDirtyCount(editedAsset) > 0;
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
@@ -384,7 +380,6 @@ namespace UnityEngine.InputSystem.Editor
 
             // Just copy trivial arguments
             window.m_AssetGUID = m_AssetGUID;
-            window.m_AssetJson = m_AssetJson;
             window.m_IsDirty = m_IsDirty;
 
             // Note that view and state container will get destroyed with this window instance
@@ -412,7 +407,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
                 workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
-                m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
                 m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
                 m_IsDirty = false;
             }
