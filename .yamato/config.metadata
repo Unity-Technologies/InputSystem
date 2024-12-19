@@ -17,16 +17,16 @@ upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactor
 platforms_win:
   - name: win
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     flavor: b1.large
   - name: win_standalone
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     flavor: b1.large
     runtime: StandaloneWindows64
   - name: win_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
@@ -34,18 +34,18 @@ platforms_win:
 platforms_nix:
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     flavor: m1.mac
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
     runtime: StandaloneOSX
@@ -85,3 +85,6 @@ instabilities_run_win: run_standalone_instability_detection-latest.bat 0.5.1 || 
 
 instabilities_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
 instabilities_run_mac: sh ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
+
+yamato_source_dir_win: "%YAMATO_SOURCE_DIR%"
+yamato_source_dir_nix: ${YAMATO_SOURCE_DIR}
