@@ -24,7 +24,7 @@ internal class SelectorsTests
         var actionTwo = actionMap.AddAction("Action2", binding: "<Keyboard>/d");
 
 
-        var treeViewData = Selectors.GetActionsAsTreeViewData(TestData.EditorStateWithAsset(asset).Generate(), new Dictionary<Guid, int>());
+        var treeViewData = Selectors.GetActionsAsTreeViewData(TestData.EditorStateWithAsset(asset).Generate());
 
 
         Assert.That(treeViewData.Count, Is.EqualTo(2));
