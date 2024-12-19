@@ -23,7 +23,9 @@
     - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} 
+      {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
+      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
     - {{ platform.installscript }} {{ editor.version }}
@@ -33,7 +35,7 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem {% if platform.name == "win" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
   after:
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
@@ -64,7 +66,7 @@
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
     - {{ platform.installscript }} {{ editor.version }}
@@ -74,7 +76,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" or platform.name == "linux"%} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ platform.instabilities_run }}
