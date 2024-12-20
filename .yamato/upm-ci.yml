@@ -56,6 +56,8 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
@@ -98,6 +100,8 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
@@ -121,6 +125,8 @@ run_ios_{{ editor.version }}_{{ category.name }}:
       image: {{ ios_and_tvos_macos_bokken_image }}
       model: SE
       flavor: b1.medium
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
@@ -142,6 +148,8 @@ build_tvos_{{ editor.version }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
@@ -164,6 +172,8 @@ run_tvos_{{ editor.version }}:
       type: Unity::mobile::appletv
       image: {{ ios_and_tvos_macos_bokken_image }}
       flavor: b1.medium
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
@@ -186,6 +196,8 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::VM
       image: package-ci/win10:default
       flavor: b1.xlarge
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
@@ -208,6 +220,8 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::mobile::shield
       image: package-ci/win10:default
       flavor: b1.medium
+  variables:
+    EDITOR_REVISION_OVERRIDE: none
   # Skip repository cloning
   skip_checkout: true
   # Set a dependency on the build job
