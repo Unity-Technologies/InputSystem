@@ -11,7 +11,7 @@
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
   variables:
-    EDITOR_REVISION_OVERRIDE:
+    EDITOR_REVISION_OVERRIDE: none
   commands:
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
