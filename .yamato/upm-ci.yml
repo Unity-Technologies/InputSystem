@@ -254,8 +254,6 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
 
 all_tests:
   name: All Tests
-  variables:
-    EDITOR_REVISION_OVERRIDE: none
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
@@ -285,8 +283,6 @@ all_tests:
             
 performance_tests_only:
   name: Performance Tests Only
-  variables:
-    EDITOR_REVISION_OVERRIDE: none
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
