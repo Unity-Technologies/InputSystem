@@ -376,7 +376,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             return Selectors.GetActionMapAtIndex(serializedObject, selectedActionMapIndex)?.wrappedProperty;
         }
-        
 
         private readonly InputControlScheme m_ControlScheme;
     }
