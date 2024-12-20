@@ -11,7 +11,7 @@
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
   variables:
-    EDITOR_REVISION_OVERRIDE: false
+    EDITOR_REVISION_OVERRIDE:
   commands:
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
@@ -25,7 +25,7 @@
     - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {% if EDITOR_REVISION_OVERRIDE == false %} {{ editor.version }} {% else %} EDITOR_REVISION_OVERRIDE {% endif %}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {% if EDITOR_REVISION_OVERRIDE != nil %} {{ editor.version }} {% else %} EDITOR_REVISION_OVERRIDE {% endif %}
       {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
       --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
