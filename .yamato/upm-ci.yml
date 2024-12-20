@@ -30,7 +30,7 @@
       --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {{ editor.version }}
+    - {{ platform.installscript }} {% if EDITOR_REVISION_OVERRIDE != none %} {{ editor.version }} {% else %} %EDITOR_REVISION_OVERRIDE% {% endif %}
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
