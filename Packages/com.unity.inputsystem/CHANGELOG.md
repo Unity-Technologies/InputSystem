@@ -34,6 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue with default device selection when adding new Control Scheme.
 - Fixed an issue where action map delegates were not updated when the asset already assigned to the PlayerInput component were changed [ISXB-711](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-711).
 - Fixed Action properties edition in the UI Toolkit version of the Input Actions Asset editor. [ISXB-1277](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1277)
+- Fixed an issue where batch jobs would fail with "Error: Error building Player because scripts are compiling" if a source generated .inputactions asset is out of sync with its generated source code (ISXB-1300).
 
 ### Changed
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
