@@ -73,7 +73,7 @@
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {% if EDITOR_REVISION_OVERRIDE == none %} {{ editor.version }} {% else %} $EDITOR_REVISION_OVERRIDE {% endif %} {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {% if EDITOR_REVISION_OVERRIDE != none %} {{ editor.version }} {% else %} $EDITOR_REVISION_OVERRIDE {% endif %}
+    - {{ platform.installscript }} {% if EDITOR_REVISION_OVERRIDE == none %} {{ editor.version }} {% else %} $EDITOR_REVISION_OVERRIDE {% endif %}
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
