@@ -46,19 +46,17 @@ namespace UnityEngine.InputSystem.Editor
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
             foreach (var package in registeredPackages)
             {
-                if (package.name.StartsWith(PlugInName)) 
+                if (package.name.StartsWith(PlugInName))
                     return true;
             }
             return false;
-            
-            
         }
 
         private static void ThrowWarningOnMissingPlugin()
         {
-            if(!BuildTargetNeedsPlugin())
+            if (!BuildTargetNeedsPlugin())
                 return;
-            Debug.Assert(IsPluginInstalled(),"Active Input Handling is set to InputSystem, but no Plugin for "+ EditorUserBuildSettings.activeBuildTarget+" was found. Please install the missing InputSystem package extensions.");
+            Debug.Assert(IsPluginInstalled(), "Active Input Handling is set to InputSystem, but no Plugin for " + EditorUserBuildSettings.activeBuildTarget + " was found. Please install the missing InputSystem package extensions.");
         }
     }
 }
