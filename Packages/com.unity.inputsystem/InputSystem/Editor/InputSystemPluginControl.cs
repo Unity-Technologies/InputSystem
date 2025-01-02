@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class InputSystemPluginControl
+    internal class InputSystemPluginControl
     {
         [InitializeOnLoadMethod]
         private static void CheckForExtension()
