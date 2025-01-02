@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 #if UNITY_2021_1_OR_NEWER
 using System;
-using NUnit.Framework;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
