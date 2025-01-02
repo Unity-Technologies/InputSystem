@@ -1,3 +1,4 @@
+#if UNITY_2021_1_OR_NEWER
 using System;
 using System.Linq;
 using NUnit.Framework;
@@ -27,9 +28,18 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget.LinuxHeadlessSimulation,
             BuildTarget.PS5,
             BuildTarget.EmbeddedLinux,
+            #if UNITY_2022_1_OR_NEWER
             BuildTarget.QNX,
+            #endif
+            #if UNITY_2023_3_OR_NEWER
             BuildTarget.VisionOS,
+            #endif
+            #if UNITY_6000_0_OR_NEWER
             BuildTarget.ReservedCFE,
+            #endif
+            #if UNITY_6000_0_7_OR_NEWER
+            BuildTarget.Kepler
+            #endif
             BuildTarget.NoTarget
         };
 
@@ -60,3 +70,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+#endif
