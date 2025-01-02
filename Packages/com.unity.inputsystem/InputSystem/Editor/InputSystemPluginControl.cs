@@ -1,6 +1,5 @@
 #if UNITY_2021_1_OR_NEWER
 using System;
-using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 
@@ -46,7 +45,11 @@ namespace UnityEngine.InputSystem.Editor
         static bool BuildTargetNeedsPlugin()
         {
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
-            return !TargetNoPluginNeeded.Contains(target);
+            foreach (var platform in TargetNoPluginNeeded)
+            {
+                if (platform == target) return true;
+            }
+            return false;
         }
 
         private const string PlugInName = "com.unity.inputsystem.";
