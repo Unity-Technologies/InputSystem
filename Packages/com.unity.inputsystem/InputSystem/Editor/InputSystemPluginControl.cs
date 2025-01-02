@@ -47,9 +47,9 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             foreach (var platform in TargetNoPluginNeeded)
             {
-                if (platform == target) return true;
+                if (platform == target) return false;
             }
-            return false;
+            return true;
         }
 
         private const string PlugInName = "com.unity.inputsystem.";
