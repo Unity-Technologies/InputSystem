@@ -981,7 +981,9 @@ namespace UnityEngine.InputSystem
             }
             if (m_AllMapsHashCode != allMapsHashCode)
             {
-                InstallOnActionTriggeredHook();
+                if (m_NotificationBehavior != PlayerNotifications.InvokeUnityEvents)
+                    InstallOnActionTriggeredHook();
+
                 CacheMessageNames();
                 m_AllMapsHashCode = allMapsHashCode;
             }
