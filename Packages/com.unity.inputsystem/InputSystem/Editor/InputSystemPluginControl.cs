@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSystemPluginControl
     {
+        //At the time of InitializeOnLoad the packages are compiled and registered
         [InitializeOnLoadMethod]
         private static void CheckForExtension()
         {
