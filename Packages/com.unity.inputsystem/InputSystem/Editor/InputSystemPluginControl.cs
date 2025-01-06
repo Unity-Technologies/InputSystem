@@ -25,7 +25,6 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget.StandaloneLinux64,
             BuildTarget.tvOS,
             BuildTarget.LinuxHeadlessSimulation,
-            BuildTarget.PS5,
             BuildTarget.EmbeddedLinux,
             #if UNITY_2022_1_OR_NEWER
             BuildTarget.QNX,
