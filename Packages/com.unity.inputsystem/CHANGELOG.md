@@ -38,6 +38,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
 
 ### Changed
+- Changed location of the link xml file (code stripping rules), from a temporary directory to the project Library folder (ISX-2140).
 - Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
 - Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
 - Changed paremeter `overrideModifiersNeedToBePressedFirst` to obsolete for `ButtonWithOneModifier`, `ButtonWithTwoModifiers`, `OneModifierComposite` and `TwoModifiersComposite` in favour the new `modifiersOrder` parameter which is more explicit.
