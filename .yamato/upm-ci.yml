@@ -10,6 +10,8 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
@@ -23,12 +25,12 @@
     - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} 
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION%
       {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" 
       --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {{ editor.version }}
+    - {{ platform.installscript }} %EDITOR_VERSION%
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
@@ -54,6 +56,8 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
+  variables:
+    EDITOR_VERSION: {{ editor.version }}  
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
@@ -66,10 +70,10 @@
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u $EDITOR_VERSION {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {{ editor.version }}
+    - {{ platform.installscript }} $EDITOR_VERSION
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
@@ -96,10 +100,12 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c iOS -u $EDITOR_VERSION --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   after:
     - {{ instabilities_install_nix }}
@@ -119,6 +125,8 @@ run_ios_{{ editor.version }}_{{ category.name }}:
       image: {{ ios_and_tvos_macos_bokken_image }}
       model: SE
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
@@ -140,10 +148,12 @@ build_tvos_{{ editor.version }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c AppleTV -u $EDITOR_VERSION --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   after:
     - {{ instabilities_install_nix }}
@@ -162,6 +172,8 @@ run_tvos_{{ editor.version }}:
       type: Unity::mobile::appletv
       image: {{ ios_and_tvos_macos_bokken_image }}
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
@@ -184,10 +196,12 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::VM
       image: package-ci/win10:default
       flavor: b1.xlarge
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c Android -u %EDITOR_VERSION% --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   after:
     - {{ instabilities_install_win }}
@@ -206,6 +220,8 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::mobile::shield
       image: package-ci/win10:default
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   # Skip repository cloning
   skip_checkout: true
   # Set a dependency on the build job
@@ -237,7 +253,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
 {% endfor %} # editors
 
 all_tests:
-  name: All Tests  
+  name: All Tests
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
