@@ -8,6 +8,9 @@ namespace UnityEngine.InputSystem.Editor
     /// <summary>
     /// This class controls all required plugins and extension packages are installed for the InputSystem.
     /// </summary>
+    /// <remarks>
+    /// For some platforms, the InputSystem requires additional plugins to be installed. This class checks if the required plugins are installed and throws a warning if they are not.
+    /// </remarks>
     public class InputSystemPluginControl
     {
         //At the time of InitializeOnLoad the packages are compiled and registered
@@ -15,6 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         private static void CheckForExtension()
         {
             ThrowWarningOnMissingPlugin();
+            m_pluginPackageRegistered = false;
         }
 
         private static readonly BuildTarget[] TargetNoPluginNeeded =
@@ -62,6 +66,9 @@ namespace UnityEngine.InputSystem.Editor
         /// <summary>
         /// Used to register extensions externally to the InputSystem, this is needed for all Platforms that require a plugin to be installed.
         /// </summary>
+        /// <remarks>
+        /// This method is internally called by the InputSystem package extensions to register the PlugIn. This can be called for custom extensions on custom platforms.
+        /// </remarks>
         public static void RegisterPluginPackage()
         {
             m_pluginPackageRegistered = true;
@@ -69,7 +76,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static bool IsPluginInstalled()
         {
-            if (!m_pluginPackageRegistered)
+            if (m_pluginPackageRegistered)
                 return true;
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
             var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString().ToLower();
