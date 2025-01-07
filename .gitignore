@@ -43,6 +43,9 @@ Packages/com.unity.inputsystem/**/*.api.meta
 Packages/com.unity.package-manager-ui/
 Packages/com.unity.package-manager-doctools/
 
+Tools/CI/[Bb]in
+Tools/CI/[Oo]bj
+
 .Editor
 .bin
 .download

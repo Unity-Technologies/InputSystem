@@ -24,12 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309930466035750405}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1309930466712146553}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1309930466035750407
 MonoBehaviour:
@@ -48,14 +49,13 @@ MonoBehaviour:
   m_TimeWindow: 4
   m_Rect:
     serializedVersion: 2
-    x: 225
-    y: 125
-    width: 150
-    height: 150
+    x: 281.25
+    y: 156.25
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ActionReference: {fileID: 0}
   m_ActionName: move
-  m_PlayerIndex: 0
   m_ShowControlName: 1
 --- !u!1 &1309930466250040071
 GameObject:
@@ -81,12 +81,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309930466250040071}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1309930466712146553}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1309930466250040121
 MonoBehaviour:
@@ -105,14 +106,13 @@ MonoBehaviour:
   m_TimeWindow: 4
   m_Rect:
     serializedVersion: 2
-    x: 50
-    y: 50
-    width: 50
-    height: 50
+    x: 62.5
+    y: 62.5
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ActionReference: {fileID: 0}
   m_ActionName: fire
-  m_PlayerIndex: 0
   m_ShowControlName: 1
 --- !u!1 &1309930466712146503
 GameObject:
@@ -138,16 +138,17 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309930466712146503}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 955.3655, y: 464.9797, z: -160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1309930466250040120}
   - {fileID: 1309930467610566051}
   - {fileID: 1309930467894820737}
   - {fileID: 1309930466035750406}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1309930466712146552
 MonoBehaviour:
@@ -173,7 +174,6 @@ MonoBehaviour:
   m_Visualization: 0
   m_ActionReference: {fileID: 0}
   m_ActionName: 
-  m_PlayerIndex: 0
   m_ShowControlName: 0
 --- !u!1 &1309930467610566049
 GameObject:
@@ -199,12 +199,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309930467610566049}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1309930466712146553}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1309930467610566050
 MonoBehaviour:
@@ -223,14 +224,13 @@ MonoBehaviour:
   m_TimeWindow: 4
   m_Rect:
     serializedVersion: 2
-    x: 110
-    y: 50
-    width: 200
-    height: 50
+    x: 137.5
+    y: 62.5
+    width: 250
+    height: 62.5
   m_Visualization: 2
   m_ActionReference: {fileID: 0}
   m_ActionName: fire
-  m_PlayerIndex: 0
   m_ShowControlName: 0
 --- !u!1 &1309930467894820736
 GameObject:
@@ -256,12 +256,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309930467894820736}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1309930466712146553}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1309930467894820738
 MonoBehaviour:
@@ -280,12 +281,11 @@ MonoBehaviour:
   m_TimeWindow: 4
   m_Rect:
     serializedVersion: 2
-    x: 50
-    y: 125
-    width: 150
-    height: 150
+    x: 62.5
+    y: 156.25
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ActionReference: {fileID: 0}
   m_ActionName: look
-  m_PlayerIndex: 0
   m_ShowControlName: 1

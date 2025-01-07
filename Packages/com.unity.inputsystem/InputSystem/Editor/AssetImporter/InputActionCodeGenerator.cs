@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,54 @@ namespace UnityEngine.InputSystem.Editor
     public static class InputActionCodeGenerator
     {
         private const int kSpacesPerIndentLevel = 4;
+
+        private const string kClassExample = @"using namespace UnityEngine;
+using UnityEngine.InputSystem;
+
+// Example of using an InputActionMap named ""Player"" from a UnityEngine.MonoBehaviour implementing callback interface.
+public class Example : MonoBehaviour, MyActions.IPlayerActions
+{
+    private MyActions_Actions m_Actions;                  // Source code representation of asset.
+    private MyActions_Actions.PlayerActions m_Player;     // Source code representation of action map.
+
+    void Awake()
+    {
+        m_Actions = new MyActions_Actions();              // Create asset object.
+        m_Player = m_Actions.Player;                      // Extract action map object.
+        m_Player.AddCallbacks(this);                      // Register callback interface IPlayerActions.
+    }
+
+    void OnDestroy()
+    {
+        m_Actions.Dispose();                              // Destroy asset object.
+    }
+
+    void OnEnable()
+    {
+        m_Player.Enable();                                // Enable all actions within map.
+    }
+
+    void OnDisable()
+    {
+        m_Player.Disable();                               // Disable all actions within map.
+    }
+
+    #region Interface implementation of MyActions.IPlayerActions
+
+    // Invoked when ""Move"" action is either started, performed or canceled.
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        Debug.Log($""OnMove: {context.ReadValue<Vector2>()}"");
+    }
+
+    // Invoked when ""Attack"" action is either started, performed or canceled.
+    public void OnAttack(InputAction.CallbackContext context)
+    {
+        Debug.Log($""OnAttack: {context.ReadValue<float>()}"");
+    }
+
+    #endregion
+}";
 
         public struct Options
         {
@@ -94,12 +143,22 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
+            writer.DocSummary($"Provides programmatic access to <see cref=\"InputActionAsset\" />, " +
+                "<see cref=\"InputActionMap\" />, <see cref=\"InputAction\" /> and " +
+                "<see cref=\"InputControlScheme\" /> instances defined " +
+                $"in asset \"{options.sourceAssetPath}\".");
+            writer.DocRemarks("This class is source generated and any manual edits will be discarded if the associated asset is reimported or modified.");
+            writer.DocExample(kClassExample);
+
             writer.WriteLine($"public partial class @{options.className}: IInputActionCollection2, IDisposable");
             writer.BeginBlock();
 
+            writer.DocSummary("Provides access to the underlying asset instance.");
             writer.WriteLine($"public InputActionAsset asset {{ get; }}");
+            writer.WriteLine();
 
             // Default constructor.
+            writer.DocSummary("Constructs a new instance.");
             writer.WriteLine($"public @{options.className}()");
             writer.BeginBlock();
             writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
@@ -131,12 +190,15 @@ namespace UnityEngine.InputSystem.Editor
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocSummary("Destroys this asset and all associated <see cref=\"InputAction\"/> instances.");
             writer.WriteLine("public void Dispose()");
             writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
             writer.EndBlock();
             writer.WriteLine();
 
+            var classNamePrefix = typeof(InputActionAsset).Namespace + "." + nameof(InputActionAsset) + ".";
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.bindingMask));
             writer.WriteLine("public InputBinding? bindingMask");
             writer.BeginBlock();
             writer.WriteLine("get => asset.bindingMask;");
@@ -144,6 +206,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.devices));
             writer.WriteLine("public ReadOnlyArray<InputDevice>? devices");
             writer.BeginBlock();
             writer.WriteLine("get => asset.devices;");
@@ -151,54 +214,64 @@ namespace UnityEngine.InputSystem.Editor
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.controlSchemes));
             writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;");
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.Contains) + "(InputAction)");
             writer.WriteLine("public bool Contains(InputAction action)");
             writer.BeginBlock();
             writer.WriteLine("return asset.Contains(action);");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.GetEnumerator) + "()");
             writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return asset.GetEnumerator();");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(nameof(IEnumerable) + "." + nameof(IEnumerable.GetEnumerator) + "()");
             writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return GetEnumerator();");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.Enable) + "()");
             writer.WriteLine("public void Enable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Enable();");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.Disable) + "()");
             writer.WriteLine("public void Disable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Disable();");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.bindings));
             writer.WriteLine("public IEnumerable<InputBinding> bindings => asset.bindings;");
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.FindAction) + "(string, bool)");
             writer.WriteLine("public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)");
             writer.BeginBlock();
             writer.WriteLine("return asset.FindAction(actionNameOrId, throwIfNotFound);");
             writer.EndBlock();
             writer.WriteLine();
 
+            writer.DocInherit(classNamePrefix + nameof(InputActionAsset.FindBinding) + "(InputBinding, out InputAction)");
             writer.WriteLine("public int FindBinding(InputBinding bindingMask, out InputAction action)");
             writer.BeginBlock();
             writer.WriteLine("return asset.FindBinding(bindingMask, out action);");
             writer.EndBlock();
 
             // Action map accessors.
+            var inputActionMapClassPrefix = typeof(InputActionMap).Namespace + "." + nameof(InputActionMap) + ".";
             foreach (var map in maps)
             {
                 writer.WriteLine();
@@ -219,34 +292,48 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 // Struct wrapping access to action set.
+                writer.DocSummary($"Provides access to input actions defined in input action map \"{map.name}\".");
                 writer.WriteLine($"public struct {mapTypeName}");
                 writer.BeginBlock();
 
-                // Constructor.
                 writer.WriteLine($"private @{options.className} m_Wrapper;");
+                writer.WriteLine();
+
+                // Constructor.
+                writer.DocSummary("Construct a new instance of the input action map wrapper class.");
                 writer.WriteLine($"public {mapTypeName}(@{options.className} wrapper) {{ m_Wrapper = wrapper; }}");
 
                 // Getter for each action.
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.DocSummary($"Provides access to the underlying input action \"{mapName}/{actionName}\".");
                     writer.WriteLine(
                         $"public InputAction @{actionName} => m_Wrapper.m_{mapName}_{actionName};");
                 }
 
                 // Action map getter.
+                writer.DocSummary("Provides access to the underlying input action map instance.");
                 writer.WriteLine($"public InputActionMap Get() {{ return m_Wrapper.m_{mapName}; }}");
 
                 // Enable/disable methods.
+                writer.DocInherit(inputActionMapClassPrefix + nameof(InputActionMap.Enable) + "()");
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
+                writer.DocInherit(inputActionMapClassPrefix + nameof(InputActionMap.Disable) + "()");
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
+                writer.DocInherit(inputActionMapClassPrefix + nameof(InputActionMap.enabled));
                 writer.WriteLine("public bool enabled => Get().enabled;");
 
                 // Implicit conversion operator.
+                writer.DocSummary($"Implicitly converts an <see ref=\"{mapTypeName}\" /> to an <see ref=\"InputActionMap\" /> instance.");
                 writer.WriteLine(
                     $"public static implicit operator InputActionMap({mapTypeName} set) {{ return set.Get(); }}");
 
                 // AddCallbacks method.
+                writer.DocSummary("Adds <see cref=\"InputAction.started\"/>, <see cref=\"InputAction.performed\"/> and <see cref=\"InputAction.canceled\"/> callbacks provided via <param cref=\"instance\" /> on all input actions contained in this map.");
+                writer.DocParam("instance", "Callback instance.");
+                writer.DocRemarks("If <paramref name=\"instance\" /> is <c>null</c> or <paramref name=\"instance\"/> have already been added this method does nothing.");
+                writer.DocSeeAlso(mapTypeName);
                 writer.WriteLine($"public void AddCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
 
@@ -268,6 +355,9 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
 
                 // UnregisterCallbacks method.
+                writer.DocSummary("Removes <see cref=\"InputAction.started\"/>, <see cref=\"InputAction.performed\"/> and <see cref=\"InputAction.canceled\"/> callbacks provided via <param cref=\"instance\" /> on all input actions contained in this map.");
+                writer.DocRemarks("Calling this method when <paramref name=\"instance\" /> have not previously been registered has no side-effects.");
+                writer.DocSeeAlso(mapTypeName);
                 writer.WriteLine($"private void UnregisterCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
                 foreach (var action in map.actions)
@@ -283,6 +373,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
 
                 // RemoveCallbacks method.
+                writer.DocSummary($"Unregisters <param cref=\"instance\" /> and unregisters all input action callbacks via <see cref=\"{mapTypeName}.UnregisterCallbacks(I{mapTypeName})\" />.");
+                writer.DocSeeAlso($"{mapTypeName}.UnregisterCallbacks(I{mapTypeName})");
                 writer.WriteLine($"public void RemoveCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
                 writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterfaces.Remove(instance))");
@@ -291,9 +383,13 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
 
                 // SetCallbacks method.
+                writer.DocSummary($"Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref=\"instance\" />.");
+                writer.DocRemarks($"If <paramref name=\"instance\" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.");
+                writer.DocSeeAlso($"{mapTypeName}.AddCallbacks(I{mapTypeName})");
+                writer.DocSeeAlso($"{mapTypeName}.RemoveCallbacks(I{mapTypeName})");
+                writer.DocSeeAlso($"{mapTypeName}.UnregisterCallbacks(I{mapTypeName})");
                 writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
                 writer.BeginBlock();
-
                 ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
 
                 writer.WriteLine($"foreach (var item in m_Wrapper.m_{mapTypeName}CallbackInterfaces)");
@@ -306,6 +402,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.EndBlock();
 
                 // Getter for instance of struct.
+                writer.DocSummary($"Provides a new <see cref=\"{mapTypeName}\" /> instance referencing this action map.");
                 writer.WriteLine($"public {mapTypeName} @{mapName} => new {mapTypeName}(this);");
             }
 
@@ -315,6 +412,8 @@ namespace UnityEngine.InputSystem.Editor
                 var identifier = CSharpCodeHelpers.MakeIdentifier(scheme.name);
 
                 writer.WriteLine($"private int m_{identifier}SchemeIndex = -1;");
+                writer.DocSummary("Provides access to the input control scheme.");
+                writer.DocSeeAlso(typeof(InputControlScheme).Namespace + "." + nameof(InputControlScheme));
                 writer.WriteLine($"public InputControlScheme {identifier}Scheme");
                 writer.BeginBlock();
                 writer.WriteLine("get");
@@ -326,15 +425,23 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Generate interfaces.
+            var inputActionClassReference = typeof(InputAction).Namespace + "." + nameof(InputAction) + ".";
             foreach (var map in maps)
             {
                 var typeName = CSharpCodeHelpers.MakeTypeName(map.name);
+                writer.DocSummary($"Interface to implement callback methods for all input action callbacks associated with input actions defined by \"{map.name}\" which allows adding and removing callbacks.");
+                writer.DocSeeAlso($"{typeName}Actions.AddCallbacks(I{typeName}Actions)");
+                writer.DocSeeAlso($"{typeName}Actions.RemoveCallbacks(I{typeName}Actions)");
                 writer.WriteLine($"public interface I{typeName}Actions");
                 writer.BeginBlock();
 
                 foreach (var action in map.actions)
                 {
                     var methodName = CSharpCodeHelpers.MakeTypeName(action.name);
+                    writer.DocSummary($"Method invoked when associated input action \"{action.name}\" is either <see cref=\"UnityEngine.InputSystem.InputAction.started\" />, <see cref=\"UnityEngine.InputSystem.InputAction.performed\" /> or <see cref=\"UnityEngine.InputSystem.InputAction.canceled\" />.");
+                    writer.DocSeeAlso(string.Concat(inputActionClassReference, "started"));
+                    writer.DocSeeAlso(string.Concat(inputActionClassReference, "performed"));
+                    writer.DocSeeAlso(string.Concat(inputActionClassReference, "canceled"));
                     writer.WriteLine($"void On{methodName}(InputAction.CallbackContext context);");
                 }
 
@@ -398,6 +505,68 @@ namespace UnityEngine.InputSystem.Editor
                     for (var n = 0; n < kSpacesPerIndentLevel; ++n)
                         buffer.Append(' ');
                 }
+            }
+
+            public void DocSummary(string text)
+            {
+                DocElement("summary", text);
+            }
+
+            public void DocParam(string paramName, string text)
+            {
+                WriteLine($"/// <param name=\"{paramName}\">{text}</param>");
+            }
+
+            public void DocRemarks(string text)
+            {
+                DocElement("remarks", text);
+            }
+
+            public void DocInherit(string cref)
+            {
+                DocReference("inheritdoc", cref);
+            }
+
+            public void DocSeeAlso(string cref)
+            {
+                DocReference("seealso", cref: cref);
+            }
+
+            public void DocExample(string code)
+            {
+                DocComment("<example>");
+                DocComment("<code>");
+
+                foreach (var line in code.Split('\n'))
+                    DocComment(line.Replace("<", "&lt;").Replace(">", "&gt;"));
+
+                DocComment("</code>");
+                DocComment("</example>");
+            }
+
+            private void DocComment(string text)
+            {
+                if (string.IsNullOrEmpty(text))
+                    WriteLine("///");
+                else
+                    WriteLine(string.Concat("/// ", text));
+            }
+
+            private void DocElement(string tag, string text)
+            {
+                DocComment($"<{tag}>");
+                DocComment(text);
+                DocComment($"</{tag}>");
+            }
+
+            private void DocReference(string tag, string cref)
+            {
+                DocInlineElement(tag, "cref", cref);
+            }
+
+            private void DocInlineElement(string tag, string property, string value)
+            {
+                DocComment($"<{tag} {property}=\"{value}\" />");
             }
         }
 
