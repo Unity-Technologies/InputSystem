@@ -5,7 +5,10 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputSystemPluginControl
+    /// <summary>
+    /// This class controls all required plugins and extension packages are installed for the InputSystem.
+    /// </summary>
+    public class InputSystemPluginControl
     {
         //At the time of InitializeOnLoad the packages are compiled and registered
         [InitializeOnLoadMethod]
@@ -42,6 +45,8 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget.NoTarget
         };
 
+        private static bool m_pluginPackageRegistered = false;
+
         static bool BuildTargetNeedsPlugin()
         {
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
@@ -54,12 +59,23 @@ namespace UnityEngine.InputSystem.Editor
 
         private const string PlugInName = "com.unity.inputsystem.";
 
+        /// <summary>
+        /// Used to register extensions externally to the InputSystem, this is needed for all Platforms that require a plugin to be installed.
+        /// </summary>
+        public static void RegisterPluginPackage()
+        {
+            m_pluginPackageRegistered = true;
+        }
+
         private static bool IsPluginInstalled()
         {
+            if (!m_pluginPackageRegistered)
+                return true;
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
+            var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString().ToLower();
             foreach (var package in registeredPackages)
             {
-                if (package.name.StartsWith(PlugInName))
+                if (package.name.Equals(plugInName))
                     return true;
             }
             return false;
