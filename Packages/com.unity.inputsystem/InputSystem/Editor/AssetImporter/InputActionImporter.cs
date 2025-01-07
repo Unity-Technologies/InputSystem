@@ -256,11 +256,11 @@ namespace UnityEngine.InputSystem.Editor
 
             if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
             {
-                // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
-                // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
-                // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
-                // changed/added script, and trigger a new import.
-                EditorApplication.delayCall += AssetDatabase.Refresh;
+                // This isn't ideal and may have side effects, but we cannot avoid compiling again.
+                // Previously we attempted to run a EditorApplication.delayCall += AssetDatabase.Refresh
+                // but this would lead to "error: Error building Player because scripts are compiling" in CI.
+                // Previous comment here warned against not being able to reimport here directly, but it seems it's ok.
+                AssetDatabase.ImportAsset(wrapperFilePath);
             }
         }
 
