@@ -32,6 +32,7 @@ The three main UI solutions are **UI Toolkit**, **Unity UI**, and **IMGUI**. The
 
 - From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./ProjectWideActions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
 - In versions of Unity prior to 2023.2, you must use the UI Input Module component to define which actions are passed through from the Input System to the UI.
+- Refer to UI Toolkit [Runtime UI event system and input handling](https://docs.unity3d.com/Manual/UIE-Runtime-Event-System.html) for more information on how to configure UI Toolkit input.
 
 **For [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI" (a GameObject and Component style UI solution):**
 
