@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 #if UNITY_2021_1_OR_NEWER
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -20,10 +21,10 @@ namespace UnityEngine.InputSystem.Editor
         private static void CheckForExtension()
         {
             ThrowWarningOnMissingPlugin();
-            m_pluginPackageRegistered = false;
         }
 
-        private static readonly BuildTarget[] TargetNoPluginNeeded =
+        //This static HashSet will be reset OnDomainReload and so it will be emptied and refilled every [InitializeOnLoad]]
+        private static HashSet<BuildTarget> s_targetNoPluginNeeded = new HashSet<BuildTarget>()
         {
             BuildTarget.StandaloneOSX,
             BuildTarget.StandaloneWindows,
@@ -51,12 +52,10 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget.NoTarget
         };
 
-        private static bool m_pluginPackageRegistered = false;
-
         static bool BuildTargetNeedsPlugin()
         {
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
-            foreach (var platform in TargetNoPluginNeeded)
+            foreach (var platform in s_targetNoPluginNeeded)
             {
                 if (platform == target) return false;
             }
@@ -73,13 +72,12 @@ namespace UnityEngine.InputSystem.Editor
         /// </remarks>
         public static void RegisterPlatform(BuildTarget target)
         {
-            m_pluginPackageRegistered = true;
+            if (EditorUserBuildSettings.activeBuildTarget == target)
+                s_targetNoPluginNeeded.Add(target);
         }
 
         private static bool IsPluginInstalled()
         {
-            if (m_pluginPackageRegistered)
-                return true;
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
             var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString().ToLower();
             foreach (var package in registeredPackages)
