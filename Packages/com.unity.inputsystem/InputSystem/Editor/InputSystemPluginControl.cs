@@ -14,6 +14,8 @@ namespace UnityEngine.InputSystem.Editor
     public class InputSystemPluginControl
     {
         //At the time of InitializeOnLoad the packages are compiled and registered
+        //InitializeOnLoad on classes (see GXDKSupport) and their static constructors are compiled before methods with InitializeOnLoadMethod attribute (like this one)
+        //Therefore the order of registering platforms from plugins is guaranteed
         [InitializeOnLoadMethod]
         private static void CheckForExtension()
         {
@@ -69,7 +71,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <remarks>
         /// This method is internally called by the InputSystem package extensions to register the PlugIn. This can be called for custom extensions on custom platforms.
         /// </remarks>
-        public static void RegisterPluginPackage()
+        public static void RegisterPlatform(BuildTarget target)
         {
             m_pluginPackageRegistered = true;
         }
