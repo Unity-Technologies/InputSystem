@@ -1,5 +1,4 @@
-#if UNITY_EDITOR
-#if UNITY_2021_1_OR_NEWER
+#if ((UNITY_EDITOR && UNITY_2021_1_OR_NEWER) || PACKAGE_DOCS_GENERATION)
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -96,5 +95,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
-#endif
 #endif
