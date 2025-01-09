@@ -13,17 +13,18 @@ namespace UnityEngine.InputSystem.Editor
     /// </remarks>
     public class InputSystemPluginControl
     {
-        //At the time of InitializeOnLoad the packages are compiled and registered
-        //InitializeOnLoad on classes (see GXDKSupport) and their static constructors are compiled before methods with InitializeOnLoadMethod attribute (like this one)
-        //Therefore the order of registering platforms from plugins is guaranteed
+        // Input system platform specific classes register with the input system via a class using InitializeOnLoad on static constructors.
+        // Static constructors in classes that are tagged with the InitializeOnLoad attribute are called before methods using the InitializeOnLoadMethod attribute.
+        // So the extra input system packages will be registered before this check which is done in InitializeOnLoadMethod.
         [InitializeOnLoadMethod]
         private static void CheckForExtension()
         {
             ThrowWarningOnMissingPlugin();
         }
 
-        //This static HashSet will be reset OnDomainReload and so it will be emptied and refilled every [InitializeOnLoad]]
-        private static HashSet<BuildTarget> s_targetNoPluginNeeded = new HashSet<BuildTarget>()
+        // This static HashSet will be reset OnDomainReload and so it will be reset every Domain Reload (at the time of InitializeOnLoad).
+        // This is pre-populated with the list of platforms that don't need a extra platform specific input system package to add platform specific functionality.
+        private static HashSet<BuildTarget> s_supportedBuildTargets = new HashSet<BuildTarget>()
         {
             BuildTarget.StandaloneOSX,
             BuildTarget.StandaloneWindows,
@@ -54,7 +55,7 @@ namespace UnityEngine.InputSystem.Editor
         static bool BuildTargetNeedsPlugin()
         {
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
-            foreach (var platform in s_targetNoPluginNeeded)
+            foreach (var platform in s_supportedBuildTargets)
             {
                 if (platform == target) return false;
             }
@@ -71,8 +72,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </remarks>
         public static void RegisterPlatform(BuildTarget target)
         {
-            if (EditorUserBuildSettings.activeBuildTarget == target)
-                s_targetNoPluginNeeded.Add(target);
+            s_supportedBuildTargets.Add(target);
         }
 
         private static bool IsPluginInstalled()
