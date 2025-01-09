@@ -94,6 +94,11 @@
         },
         {
             "name": "Unity",
+            "expression": "6000.1.0b2",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NON_KEYBOARD"
+        },
+        {
+            "name": "Unity",
             "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
