@@ -2911,9 +2911,12 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Right),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
+
+        Assert.That(scene.uiModule.IsNonKeyboardNavigationEvent(scene.leftChildReceiver.events[0].data));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -2924,6 +2927,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Left),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2937,6 +2941,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Up),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2950,6 +2955,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2964,6 +2970,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
 
@@ -2977,6 +2984,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.Move),
+                OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
 
@@ -2986,7 +2994,11 @@ internal partial class UITests : CoreTestsFixture
         PressAndRelease(gamepad.buttonSouth);
         yield return null;
 
-        Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Submit)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Submit),
+                OneEvent("device", gamepad)
+            ));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2995,7 +3007,11 @@ internal partial class UITests : CoreTestsFixture
         PressAndRelease(gamepad.buttonEast);
         yield return null;
 
-        Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Cancel)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Cancel),
+                OneEvent("device", gamepad)
+            ));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -4463,6 +4479,7 @@ internal partial class UITests : CoreTestsFixture
             public BaseEventData data { get; }
             public AxisEventData axisData => (AxisEventData)data;
             public ExtendedPointerEventData pointerData => (ExtendedPointerEventData)data;
+            public INavigationEventData navigationData => (INavigationEventData)data;
 
             public Event(EventType type, BaseEventData data)
             {
@@ -4521,12 +4538,12 @@ internal partial class UITests : CoreTestsFixture
 
         public void OnSubmit(BaseEventData eventData)
         {
-            events.Add(new Event(EventType.Submit, null));
+            events.Add(new Event(EventType.Submit, CloneSubmitCancelEventData(eventData)));
         }
 
         public void OnCancel(BaseEventData eventData)
         {
-            events.Add(new Event(EventType.Cancel, null));
+            events.Add(new Event(EventType.Cancel, CloneSubmitCancelEventData(eventData)));
         }
 
         public void OnSelect(BaseEventData eventData)
@@ -4579,8 +4596,17 @@ internal partial class UITests : CoreTestsFixture
         {
             return new ExtendedAxisEventData(EventSystem.current)
             {
+                device = (eventData as ExtendedAxisEventData)?.device,
                 moveVector = eventData.moveVector,
                 moveDir = eventData.moveDir
+            };
+        }
+
+        private static ExtendedSubmitCancelEventData CloneSubmitCancelEventData(BaseEventData eventData)
+        {
+            return new ExtendedSubmitCancelEventData(EventSystem.current)
+            {
+                device = (eventData as ExtendedSubmitCancelEventData)?.device
             };
         }
 
