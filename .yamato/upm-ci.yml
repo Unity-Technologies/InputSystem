@@ -77,7 +77,7 @@
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u $EDITOR_VERSION {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages" " --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u $EDITOR_VERSION {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
     - {{ platform.installscript }} $EDITOR_VERSION
