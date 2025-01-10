@@ -2457,10 +2457,14 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
-#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NON_KEYBOARD
-        public override bool IsNonKeyboardNavigationEvent(BaseEventData eventData)
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
+        public override NavigationDeviceType GetNavigationEventDeviceType(BaseEventData eventData)
         {
-            return eventData is INavigationEventData eed && eed.device is not Keyboard;
+            if (eventData is not INavigationEventData eed)
+                return NavigationDeviceType.Unknown;
+            if (eed.device is Keyboard)
+                return NavigationDeviceType.Keyboard;
+            return NavigationDeviceType.NonKeyboard;
         }
 #endif
 

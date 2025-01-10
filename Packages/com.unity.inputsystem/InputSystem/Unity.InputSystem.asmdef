@@ -95,7 +95,7 @@
         {
             "name": "Unity",
             "expression": "6000.1.0b2",
-            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NON_KEYBOARD"
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
         },
         {
             "name": "Unity",
