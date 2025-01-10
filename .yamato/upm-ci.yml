@@ -27,7 +27,7 @@
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION%
-      {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:Library/PackageCache,Packages" 
+      {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:Library/PackageCache,Packages,Library/PackageCache/com.unity.inputsystem@*,Library/PackageCache/com.unity.inputsystem" 
       --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
