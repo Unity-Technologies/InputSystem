@@ -18,7 +18,7 @@
     - echo true
     - echo "pretest"
     {% assign keep_temp = KEEP_TEMP_CODE_COVERAGE_REPORTS %}    
-    {% if keep_temp == "false" %}  
+    {% if keep_temp %}  
     - echo "test"    
     {% endif %}
     - {{ utr_install_win }}
