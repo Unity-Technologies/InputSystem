@@ -14,7 +14,7 @@
     EDITOR_VERSION: {{ editor.version }}
     KEEP_TEMP_CODE_COVERAGE_REPORTS: false
   commands:    
-    {% assign keep_temp_coverage_reports = KEEP_TEMP_CODE_COVERAGE_REPORTS %}    
+    {% assign keep_temp_coverage_reports = %KEEP_TEMP_CODE_COVERAGE_REPORTS% %}    
     - echo {{ keep_temp_coverage_reports }}
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
