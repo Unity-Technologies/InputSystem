@@ -88,5 +88,3 @@ instabilities_run_mac: sh ./run_standalone_instability_detection-latest.sh macos
 
 yamato_source_dir_win: "%YAMATO_SOURCE_DIR%"
 yamato_source_dir_nix: ${YAMATO_SOURCE_DIR}
-
-keep_temp_coverage_reports: true
