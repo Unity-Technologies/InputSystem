@@ -15,9 +15,11 @@
     KEEP_TEMP_CODE_COVERAGE_REPORTS: false
   commands:
     - echo %KEEP_TEMP_CODE_COVERAGE_REPORTS%
-    {% assign keep_temp = %KEEP_TEMP_CODE_COVERAGE_REPORTS% %}    
+    - echo true
+    - echo "pretest"
+    {% assign keep_temp = KEEP_TEMP_CODE_COVERAGE_REPORTS %}    
     {% if keep_temp == "false" %}  
-    - echo "test"
+    - echo "test"    
     {% endif %}
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
