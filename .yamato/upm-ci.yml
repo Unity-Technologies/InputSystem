@@ -95,6 +95,8 @@
     {% if platform.name == "linux" %}
     - '{{ yamato_source_dir_nix }}/.Editor/Unity -projectPath {{ yamato_source_dir_nix }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_nix }}/Packages/com.unity.inputsystem/" -quit' 
     {% endif %}
+    - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package
+    - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project  
   after:
     - {{ instabilities_install_nix }}
     - {{ platform.instabilities_run }}
