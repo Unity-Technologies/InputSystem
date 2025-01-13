@@ -10,7 +10,10 @@ uid: input-system-settings
 - [Compensate Orientation](#compensate-orientation)
 - [Default value properties](#default-value-properties)
 - [Supported Devices](#supported-devices)
+  - [Override in Editor](#override-in-editor)
 - [Platform-specific settings](#platform-specific-settings)
+  - [iOS/tvOS](#iostvos)
+  - [Editor](#editor)
 
 
 To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
@@ -58,7 +61,7 @@ In the Editor, "Run In Background" is considered to always be enabled as the pla
 |[`Reset And Disable All Devices`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_ResetAndDisableAllDevices)|When focus is lost, perform a [soft reset](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) on all Devices and also subsequently [disable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) them.<br><br>When focus is regained, [re-enable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_) all Devices and also issue a [sync request](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_TrySyncDevice_UnityEngine_InputSystem_InputDevice_) on each Device in order to update it to its current state. If a device does not respond to the sync request, [soft-reset](Devices.md#device-resets) it.|
 |[`Ignore Focus`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_IgnoreFocus)|Do nothing when focus is lost. When focus is regained, issue a [sync request](Devices.md#device-syncs) on all Devices.|
 
-Focus behavior has implications for how [Actions](./Actions.md) behave on focus changes. When a Device is reset, Actions bound to Controls on the device will be cancelled. This ensures, for example, that a user-controlled character in your game doesn't continue to move when focus is lost while the user is pressing one of the W, A, S or D keys. The cancellation happens in such a way that Actions are guaranteed to not trigger. That is, even if an Action is set to trigger on button release, it will not get triggered when a button is down and gets reset by a [Device reset](Devices.md#device-resets).
+Focus behavior has implications for how [Actions](./actions.md) behave on focus changes. When a Device is reset, Actions bound to Controls on the device will be cancelled. This ensures, for example, that a user-controlled character in your game doesn't continue to move when focus is lost while the user is pressing one of the W, A, S or D keys. The cancellation happens in such a way that Actions are guaranteed to not trigger. That is, even if an Action is set to trigger on button release, it will not get triggered when a button is down and gets reset by a [Device reset](Devices.md#device-resets).
 
 ## Filter Noise On Current
 
@@ -123,7 +126,7 @@ To add Devices to the list, click the Add (+) icon and choose a Device from the 
 
 In the Editor, you might want to use input Devices that the application doesn't support. For example, you might want to use a tablet in the Editor even if your application only supports gamepads.
 
-To force the Editor to add all locally available Devices, even if they're not in the list of __Supported Devices__, open the [Input Debugger](Debugging.md) (menu: __Window > Analysis > Input Debugger__), and select __Options > Add Devices Not Listed in 'Supported Devices'__.
+To force the Editor to add all locally available Devices, even if they're not in the list of __Supported Devices__, open the [Input Debugger](debugging.md) (menu: __Window > Analysis > Input Debugger__), and select __Options > Add Devices Not Listed in 'Supported Devices'__.
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 
@@ -144,7 +147,7 @@ __Play Mode Input Behavior__ determines how input is handled in the Editor when 
 
 |Setting|Description|
 |-------|-----------|
-|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](Pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
+|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
 |[`All Devices Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDevicesRespectGameViewFocus)|Focus on a Game View is required for all Devices. When no Game View window is focused, all input goes to the editor and not to the application. This allows other EditorWindows to receive these inputs (from gamepads, for example).|
 |[`All Device Input Always Goes To Game View`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDeviceInputAlwaysGoesToGameView)|All editor input is disabled and input is considered to be exclusive to Game Views. Also, [`Background Behavior`](#background-behavior) is to be taken literally and executed like in players. Meaning, if in a certain situation, a Device is disabled in the player, it will get disabled in the editor as well.<br><br>This setting most closely aligns player behavior with editor behavior. Be aware, however, that no EditorWindows will be able to see input from Devices (this does not effect IMGUI and UITK input in the Editor in general as they do not consume input from the Input System).|
 

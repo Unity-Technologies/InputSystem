@@ -3,13 +3,12 @@ uid: input-system-touch
 ---
 # Touch support
 
-- [Touch support](#touch-support)
-  - [`Touchscreen` Device](#touchscreen-device)
-    - [Controls](#controls)
-    - [Using touch with Actions](#using-touch-with-actions)
-  - [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
-  - [Touch Simulation](#touch-simulation)
-  - [Reading all touches](#reading-all-touches)
+- [`Touchscreen` Device](#touchscreen-device)
+  - [Controls](#controls)
+  - [Using touch with Actions](#using-touch-with-actions)
+- [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
+- [Touch Simulation](#touch-simulation)
+- [Reading all touches](#reading-all-touches)
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
@@ -19,24 +18,24 @@ Touch support is divided into:
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
->__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
+>__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](debugging.md#unity-remote).
 
 ## `Touchscreen` Device
 
-At the lowest level, a touch screen is represented by an [`InputSystem.Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) Device which captures the touch screen's raw state. Touch screens are based on the [`Pointer`](Pointers.md) layout.
+At the lowest level, a touch screen is represented by an [`InputSystem.Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) Device which captures the touch screen's raw state. Touch screens are based on the [`Pointer`](pointers.md) layout.
 
 To query the touch screen that was last used or last added, use [`Touchscreen.current`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_current).
 
 ### Controls
 
-Additional to the [Controls inherited from `Pointer`](Pointers.md#controls), touch screen Devices implement the following Controls:
+Additional to the [Controls inherited from `Pointer`](pointers.md#controls), touch screen Devices implement the following Controls:
 
 |Control|Type|Description|
 |-------|----|-----------|
-|[`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch)|[`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|A touch Control that represents the primary touch of the screen. The primary touch drives the [`Pointer`](Pointers.md) representation on the Device.|
+|[`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch)|[`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|A touch Control that represents the primary touch of the screen. The primary touch drives the [`Pointer`](pointers.md) representation on the Device.|
 |[`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches)|[`ReadOnlyArray<TouchControl>`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|An array of touch Controls that represents all the touches on the Device.|
 
-A touch screen Device consists of multiple [`TouchControls`](../api/UnityEngine.InputSystem.Controls.TouchControl.html). Each of these represents a potential finger touching the Device. The [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) Control represents the touch which is currently driving the [`Pointer`](Pointers.md) representation, and which should be used to interact with the UI. This is usually the first finger that touches the screen.
+A touch screen Device consists of multiple [`TouchControls`](../api/UnityEngine.InputSystem.Controls.TouchControl.html). Each of these represents a potential finger touching the Device. The [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) Control represents the touch which is currently driving the [`Pointer`](pointers.md) representation, and which should be used to interact with the UI. This is usually the first finger that touches the screen.
 
  [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) is always identical to one of the entries in the [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array. The [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array contains all the touches that the system can track. This array has a fixed size, regardless of how many touches are currently active. If you need an API that only represents active touches, see the higher-level [`EnhancedTouch.Touch` class](#enhancedtouchtouch-class).
 
@@ -58,7 +57,7 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 
 ### Using touch with Actions
 
-You can use touch input with Actions, like any other [`Pointer`](Pointers.md) Device. To do this, [bind](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This gets input from the primary touch, and any other non-touch pointer Devices.
+You can use touch input with Actions, like any other [`Pointer`](pointers.md) Device. To do this, [bind](ActionBindings.md) to the [pointer Controls](pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This gets input from the primary touch, and any other non-touch pointer Devices.
 
 However, if you want to get input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`. Alternatively, use a wildcard Binding to bind one Action to all touches: `<Touchscreen>/touch*/press`.
 
@@ -92,7 +91,7 @@ See [`EnhancedTouch.Touch` API documentation](../api/UnityEngine.InputSystem.Enh
 
 ## Touch Simulation
 
-Touch input can be simulated from input on other kinds of [Pointer](./Pointers.md) devices such as [Mouse](./Mouse.md) and [Pen](./Pen.md) devices. To enable this, you can either add the [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) `MonoBehaviour` to a `GameObject` in your scene or simply call [`TouchSimulation.Enable`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html#UnityEngine_InputSystem_EnhancedTouch_TouchSimulation_Enable) somewhere in your startup code.
+Touch input can be simulated from input on other kinds of [Pointer](./pointers.md) devices such as [Mouse](./Mouse.md) and [Pen](./Pen.md) devices. To enable this, you can either add the [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) `MonoBehaviour` to a `GameObject` in your scene or simply call [`TouchSimulation.Enable`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html#UnityEngine_InputSystem_EnhancedTouch_TouchSimulation_Enable) somewhere in your startup code.
 
 ```CSharp
     void OnEnable()
@@ -101,7 +100,7 @@ Touch input can be simulated from input on other kinds of [Pointer](./Pointers.m
     }
 ```
 
-In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./Debugging.md).
+In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./debugging.md).
 
 [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) will add a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirror input on any [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.
 

@@ -7,7 +7,7 @@ Pen support comprises both tablets on desktops (such as the various tablets prod
 
 Pens generally offer pressure sensitivity, in-range detection (being able to control the cursor while not yet touching the tablet/screen surface), and often the ability to flip the pen for eraser-like behavior.
 
-Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) Device layout implemented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) class. Pens are based on the [`Pointer`](Pointers.md) layout.
+Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) Device layout implemented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) class. Pens are based on the [`Pointer`](pointers.md) layout.
 
 You can query the last used or last added pen with [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current).
 
@@ -18,7 +18,7 @@ You can query the last used or last added pen with [`Pen.current`](../api/UnityE
 
 ## Controls
 
-In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), pen Devices implement the following Controls:
+In addition to the [Controls inherited from `Pointer`](pointers.md#controls), pen Devices implement the following Controls:
 
 |Control|Type|Description|
 |-------|----|-----------|

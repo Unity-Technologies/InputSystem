@@ -1,0 +1,2 @@
+# Binding properties panel
+

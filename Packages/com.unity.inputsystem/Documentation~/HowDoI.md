@@ -7,7 +7,7 @@ A collection of frequently asked questions, and where to find their answers in t
 
 > **Note:**
 >
-> If you're new to the Input System and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](QuickStartGuide.md), and the [Concepts](Concepts.md) and [Workflows](Workflows.md) pages, so that you can make sure you're choosing the best workflow for your project's input requirements.
+> If you're new to the Input System and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](quick-start-guide.md), and the [Concepts](understanding-input.md) and [Workflows](workflows.md) pages, so that you can make sure you're choosing the best workflow for your project's input requirements.
 >
 > This is because there are a number of different ways to read input using the Input System, and many of the answers on this page give you the quickest but least flexible solution, and may not be suitable for a project with more complex requirements.
 
@@ -27,7 +27,7 @@ How do I...?
 - [create my own custom devices?](HID.md#creating-a-custom-device-layout)
 
 - create a simple "Fire" type action?</br>
-Use the same techniques shown for the "Jump" action in the [Workflows section](Workflows.md)
+Use the same techniques shown for the "Jump" action in the [Workflows section](workflows.md)
 
 - [require a button to be held down for some duration before triggering an action?](Interactions.html#hold)
 
@@ -49,8 +49,8 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](W
 
 - [give my head tracking an extra update before rendering?](../api/UnityEngine.InputSystem.XR.XRHMD.html)
 
-- [record events flowing through the system?](Debugging.md#other-tips)
+- [record events flowing through the system?](debugging.md#other-tips)
 
-- [see events as they're processed?](Debugging.md#other-tips)
+- [see events as they're processed?](debugging.md#other-tips)
 
 - [see what Devices I have and what state they're in?](Debugging.html#debugging-devices)

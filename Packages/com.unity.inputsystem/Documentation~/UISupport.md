@@ -30,7 +30,7 @@ The three main UI solutions are **UI Toolkit**, **Unity UI**, and **IMGUI**. The
 
 **For [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html), also known as "UI Elements" (an XML/CSS style UI solution):**
 
-- From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./ProjectWideActions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
+- From Unity 2023.2 and onwards, the UI actions defined in the default [project-wide actions](./about-project-wide-actions.md) directly map to UI Toolkit input. You do not need to use the UI Input Module component.</br></br>
 - In versions of Unity prior to 2023.2, you must use the UI Input Module component to define which actions are passed through from the Input System to the UI.
 - Refer to UI Toolkit [Runtime UI event system and input handling](https://docs.unity3d.com/Manual/UIE-Runtime-Event-System.html) for more information on how to configure UI Toolkit input.
 
@@ -54,7 +54,7 @@ IMGUI|No|n/a
 
 ## Setting up UI input
 
-The default [project-wide actions](./ProjectWideActions.md) comes with a "**UI**" Action Map, that contains all the actions required for UI interaction (shown in the image below). You can configure the bindings for these actions in the [Actions Editor](./ActionsEditor.md). Go to **Project Settings > Input System Package**, then select "**UI**" in the Action Maps column.
+The default [project-wide actions](./about-project-wide-actions.md) comes with a "**UI**" Action Map, that contains all the actions required for UI interaction (shown in the image below). You can configure the bindings for these actions in the [Actions Editor](./ActionsEditor.md). Go to **Project Settings > Input System Package**, then select "**UI**" in the Action Maps column.
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 
@@ -222,7 +222,7 @@ The Input System can also handle multiple separate UI instances on the screen co
 
 ![MultiplayerEventSystem](Images/MultiplayerEventSystem.png)
 
-Unlike the Event System component, you can have multiple Multiplayer Event Systems active in the Scene at the same time. That way, you can have multiple players, each with their own UI Input Module and Multiplayer Event System components, and each player can have their own set of Actions driving their own UI instance. If you are using the [Player Input](PlayerInput.md) component, you can also set it to automatically configure the player's UI Input Module to use the player's Actions. See the documentation on [Player Input](PlayerInput.md#ui-input) to learn how.
+Unlike the Event System component, you can have multiple Multiplayer Event Systems active in the Scene at the same time. That way, you can have multiple players, each with their own UI Input Module and Multiplayer Event System components, and each player can have their own set of Actions driving their own UI instance. If you are using the [Player Input](player-input-component.md) component, you can also set it to automatically configure the player's UI Input Module to use the player's Actions. See the documentation on [Player Input](player-input-component.md#ui-input) to learn how.
 
 The properties of the Multiplayer Event System component are identical to those from the Event System component. Additionally, the Multplayer Event System component adds a [Player Root](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot) property, which you can set to a GameObject that contains all the UI [selectables](https://docs.unity3d.com/Manual/script-Selectable.html) this event system should handle in its hierarchy. Mouse input that this event system processes then ignores any UI selectables which are not on any GameObject in the Hierarchy under  [Player Root](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot).
 
@@ -283,7 +283,7 @@ When ambiguities arise, they do so differently for [pointer-type](#pointer-type-
 
 Input from pointers (mice, touchscreens, pens) can be ambiguous depending on whether or not the pointer is over a UI element when initiating an interaction. For example, if there is a button on screen, then clicking on the button may lead to a different outcome than clicking outside of the button and within the game scene.
 
-If all pointer input is handled via UI events, no ambiguities arise as the UI will implicitly route input to the respective receiver. If, however, input within the UI is handled via UI events and input in the game is handled via [Actions](./Actions.md), pointer input will by default lead to *both* being triggered.
+If all pointer input is handled via UI events, no ambiguities arise as the UI will implicitly route input to the respective receiver. If, however, input within the UI is handled via UI events and input in the game is handled via [Actions](./actions.md), pointer input will by default lead to *both* being triggered.
 
 The easiest way to resolve such ambiguities is to respond to in-game actions by [polling](RespondingToActions.md#polling-actions) from inside [`MonoBehaviour.Update`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html) methods and using [`EventSystem.IsPointerOverGameObject`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobject#UnityEngine_EventSystems_EventSystem_IsPointerOverGameObject) to find out whether the pointer is over UI or not. Another way is to use [`EventSystem.RaycastAll`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobj#UnityEngine_EventSystems_EventSystem_RaycastAll_UnityEngine_EventSystems_PointerEventData_System_Collections_Generic_List_UnityEngine_EventSystems_RaycastResult__) to determine if the pointer is currently over UI.
 
