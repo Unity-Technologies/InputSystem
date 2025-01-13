@@ -49,3 +49,6 @@ Tools/CI/[Oo]bj
 .Editor
 .bin
 .download
+
+!Tools/CI/InputSystem.Cookbook.csproj
+!Tools/CI/InputSystem-recipes.sln
