@@ -11,15 +11,7 @@ These default actions mean that in many cases, you can start scripting with the 
 
 ### The legacy default Actions Asset
 
-The Input System Package also comes with an asset called `DefaultInputActions.inputactions` containing a default setup of Actions. This default actions asset is older than, and entirely separate from the default project-wide actions described above. It is a legacy asset that remains included in the package for backward compatibility. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.
+The Input System Package also comes with an asset called `DefaultInputActions.inputactions` containing a default set of Actions. This default actions asset is older than, and entirely separate from the default project-wide actions described above. 
 
-```CSharp
-void Start()
-{
-    // Create an instance of the default actions.
-    var actions = new DefaultInputActions();
-    actions.Player.Look.performed += OnLook;
-    actions.Player.Move.performed += OnMove;
-    actions.Enable();
-}
-```
+This is a legacy asset that remains included in the package for backward compatibility only, and not recommended for use in new projects. It should not be confused with the default project-wide actions described above.
+
