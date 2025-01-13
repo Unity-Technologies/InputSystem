@@ -27,19 +27,18 @@ You can also delete all action maps, or reset all the actions back to the defaul
 
 ![The Input Actions **more** menu as displayed in the Project Settings window](images/InputActionsSettingsMoreMenu.png)
 
-> **Note:** this **more** (⋮) menu is only available in the Project Settings actions editor, and is not available when the Actions Editor is open in a separate window.
-
-
+> **Note:** this **more** (⋮) menu is only available when the Actions Editor is viewed within the Project Settings window. It isn't available when the Actions Editor is open in a separate window.
 
 
 ## Other ways to create Actions
 
 The simplest way to create actions is to use the [Input Actions editor](ActionsEditor.md) to configure a set of actions in an asset, as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you want to customize your project beyond the standard workflow.
 
+See:
 
-- Stand-alone actions
-- Loading actions from JSON
-- Creating actions in code
+- [Stand-alone actions](stand-alone-actions.md)
+- [Loading actions from JSON](load-actions-from-json.md)
+- [Creating actions in code](./create-actions-in-code.md)
 
 
 

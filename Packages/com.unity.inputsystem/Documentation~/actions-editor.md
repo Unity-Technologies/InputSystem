@@ -3,7 +3,7 @@ uid: input-system-configuring-input
 ---
 # Configuring Input with the Actions Editor
 
-The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md).
+The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](actions.md) and their associated [Bindings](ActionBindings.md).
 
 It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 

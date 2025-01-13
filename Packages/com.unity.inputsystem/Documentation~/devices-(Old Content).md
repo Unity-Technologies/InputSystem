@@ -128,7 +128,7 @@ There are two types of resets as determined by the second parameter to [`InputSy
 |"Soft" Resets|This is the default. With this type, only controls that are *not* marked as [`dontReset`](layouts.md#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
 |"Hard" Resets|In this type, *all* controls are reset to their default value regardless of whether they have [`dontReset`](layouts.md#control-items) set or not.|
 
-Resetting Controls this way is visible on [Actions](Actions.md). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) Actions (e.g. a button that was pressed would not appear to have been released), a reset will force clean cancellation.
+Resetting Controls this way is visible on [Actions](actions.md). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) Actions (e.g. a button that was pressed would not appear to have been released), a reset will force clean cancellation.
 
 Resets may be triggered automatically by the Input System depending on [application focus](#background-and-focus-change-behavior).
 
@@ -154,7 +154,7 @@ The Input System may automatically disable and re-enable Devices in certain situ
 
 #### Background and focus change behavior
 
-In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](Actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](layouts.md#control-items) to their default state.
+In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](layouts.md#control-items) to their default state.
 
 On platforms such as iOS and Android, that do not support running Unity applications in the background, this is the only supported behavior.
 
@@ -245,7 +245,7 @@ State changes are usually initiated through [state events](Events.md#state-event
 
 #### Monitoring state changes
 
-You can use [`InputState.AddChangeMonitor()`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_AddChangeMonitor_UnityEngine_InputSystem_InputControl_System_Action_UnityEngine_InputSystem_InputControl_System_Double_UnityEngine_InputSystem_LowLevel_InputEventPtr_System_Int64__System_Int32_System_Action_UnityEngine_InputSystem_InputControl_System_Double_System_Int64_System_Int32__) to register a callback to be called whenever the state of a Control changes. The Input System uses the same mechanism to implement [input Actions](Actions.md).
+You can use [`InputState.AddChangeMonitor()`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_AddChangeMonitor_UnityEngine_InputSystem_InputControl_System_Action_UnityEngine_InputSystem_InputControl_System_Double_UnityEngine_InputSystem_LowLevel_InputEventPtr_System_Int64__System_Int32_System_Action_UnityEngine_InputSystem_InputControl_System_Double_System_Int64_System_Int32__) to register a callback to be called whenever the state of a Control changes. The Input System uses the same mechanism to implement [input Actions](actions.md).
 
 #### Synthesizing state
 

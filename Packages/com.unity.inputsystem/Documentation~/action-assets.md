@@ -3,7 +3,7 @@ uid: input-system-action-assets
 ---
 # Input Action Assets
 
-The Input System stores your configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an **Action Asset**. 
+The Input System stores your configuration of [Input Actions](actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an **Action Asset**. 
 
 Learn how to create, assign and use them in this section.
 

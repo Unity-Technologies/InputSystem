@@ -36,7 +36,7 @@
 * [Using the Input System]()
   * [Project-Wide Actions](about-project-wide-actions.md)
   * [Configuring Input](ActionsEditor.md)
-  * [Actions](Actions.md)
+  * [Actions](actions.md)
   * [Enabling Actions](enable-actions.md)
   * [Responding to Actions](RespondingToActions.md)
   * [Input Action Assets](ActionAssets.md)
