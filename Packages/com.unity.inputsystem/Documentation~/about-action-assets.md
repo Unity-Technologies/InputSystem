@@ -3,11 +3,11 @@
 
 The Input System stores your configuration of [Input Actions](actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an [Action Asset](ActionAssets.md) file. These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
-The input system creates an Action Asset when you set up the [default project-wide actions](about-project-wide-actions.md), but you can also create new Action Assets directly in the Project window.
+## Project-wide action assets
 
-For most common scenarios, you do not need to use more than one Input Action Asset. This is because an Action Asset can contain multiple [Action Maps](ActionsEditor.html#configure-action-maps), which each containing a set of actions relevant to the various parts of your project (such as UI navigation, gameplay, etc).
+The Input System creates an Action Asset when you set up the [default project-wide actions](about-project-wide-actions.md), which is the most common and recommended workflow, but you can also [create new empty Action Assets](./create-empty-action-asset.md) directly in the Project window.
 
-## Modifying Input Action Assets at runtime
-There are several ways to modify an Input Action Asset at runtime. Any modifications that you make during Play mode to an Input Action Asset do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset. For examples on how to modify an Input Action Asset, see the documentation on [Creating Actions in code](actions.md#creating-actions-in-code) and [Changing Bindings](ActionBindings.md#changing-bindings).
+## Action maps
 
+Actions assets allow you to group sets of related actions into [action maps](./create-edit-delete-action-maps.md). For example, in an open-world city game, you might create separate action maps for different situations such as exploring on foot, driving a car, flying an aircraft, or navigating UI interfaces. This means, for most common scenarios, you don't need to use more than one Input Action Asset. 
 
