@@ -217,7 +217,12 @@ internal class XInputTests : CoreTestsFixture
         {
             interfaceName = "HID",
             product = "Xbox One Wireless Controller",
-            manufacturer = "Microsoft"
+            manufacturer = "Microsoft",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x045E,
+                productId = 0x02E0,
+            }.ToJson()
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
