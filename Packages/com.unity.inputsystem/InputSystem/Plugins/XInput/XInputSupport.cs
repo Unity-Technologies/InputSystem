@@ -16,15 +16,6 @@ namespace UnityEngine.InputSystem.XInput
     {
         public static void Initialize()
         {
-            void RegisterXboxOneWirelessFromProductAndVendorID(int vendorId, int productId)
-            {
-                InputSystem.RegisterLayout<XboxOneGampadMacOSWireless>(
-                    matches: new InputDeviceMatcher().WithInterface("HID")
-                        .WithProduct("Xbox.*Wireless Controller")
-                        .WithCapability("vendorId", vendorId)
-                        .WithCapability("productId", productId));
-            }
-
             // Base layout for Xbox-style gamepad.
             InputSystem.RegisterLayout<XInputController>();
 
@@ -57,6 +48,16 @@ namespace UnityEngine.InputSystem.XInput
             InputSystem.RegisterLayout<XboxGamepadMacOSWireless>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wireless Controller"));
+
+            void RegisterXboxOneWirelessFromProductAndVendorID(int vendorId, int productId)
+            {
+                InputSystem.RegisterLayout<XboxOneGampadMacOSWireless>(
+                    matches: new InputDeviceMatcher().WithInterface("HID")
+                        .WithProduct("Xbox.*Wireless Controller")
+                        .WithCapability("vendorId", vendorId)
+                        .WithCapability("productId", productId));
+            }
+
 #endif
         }
     }
