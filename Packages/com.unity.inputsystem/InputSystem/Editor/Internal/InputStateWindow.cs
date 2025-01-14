@@ -113,6 +113,26 @@ namespace UnityEngine.InputSystem.Editor
             PollBuffersFromControl(control, selectBuffer: true);
 
             titleContent = new GUIContent(control.displayName);
+
+            InputSystem.onDeviceChange += OnDeviceChange;
+        }
+
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (m_Control is null)
+                return;
+
+            if (device.deviceId != m_Control.device.deviceId)
+                return;
+
+            if (change == InputDeviceChange.Removed)
+                Close();
+        }
+
+        internal void OnDestroy()
+        {
+            if (m_Control != null)
+                InputSystem.onDeviceChange -= OnDeviceChange;
         }
 
         private unsafe void PollBuffersFromControl(InputControl control, bool selectBuffer = false)
@@ -286,6 +306,12 @@ namespace UnityEngine.InputSystem.Editor
         ////TODO: support dumping multiple state side-by-side when comparing
         private void DrawHexDump()
         {
+            if (m_StateBuffers is null)
+                return;
+
+            if (m_StateBuffers[m_SelectedStateBuffer] is null)
+                return;
+
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 
             var stateBuffer = m_StateBuffers[m_SelectedStateBuffer];
