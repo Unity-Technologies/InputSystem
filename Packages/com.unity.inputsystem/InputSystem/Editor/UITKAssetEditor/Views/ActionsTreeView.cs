@@ -659,9 +659,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private static int GetIdForGuid(Guid guid, Dictionary<Guid, int> idDictionary)
         {
+            // This method is used to ensure that the same Guid always gets the same id
+            // We use getHashCode instead of a counter, as we cannot guarantee that the same Guid will always be added in the same order
+            // There is a tiny chance of a collision, but it is it does happen it will only affect the expanded state of the tree view
             if (!idDictionary.TryGetValue(guid, out var id))
             {
-                id = idDictionary.Values.Count > 0 ? idDictionary.Values.Max() + 1 : 0;
+                id = guid.GetHashCode();
                 idDictionary.Add(guid, id);
             }
             return id;
