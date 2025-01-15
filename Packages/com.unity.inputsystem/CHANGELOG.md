@@ -34,7 +34,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue with default device selection when adding new Control Scheme.
 - Fixed an issue where action map delegates were not updated when the asset already assigned to the PlayerInput component were changed [ISXB-711](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-711).
 - Fixed Action properties edition in the UI Toolkit version of the Input Actions Asset editor. [ISXB-1277](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1277)
+- Fixed an editor crash caused by input debugger device state window reusing cached state when reconnecting Stadia controller. [ISXB-658](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-658)
 - Fixed an issue where batch jobs would fail with "Error: Error building Player because scripts are compiling" if a source generated .inputactions asset is out of sync with its generated source code (ISXB-1300).
+- Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
+- Fixed an issue in input actions editor window that caused certain fields in custom input composite bindings to require multiple clicks to action / focus. [ISXB-1171](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1171)
+- Fixed an editor/player hang in `InputSystemUIInputModule` due to an infinite loop. This was caused by the assumption that `RemovePointerAtIndex` would _always_ successfully remove the pointer, which is not the case with touch based pointers. [ISXB-1258](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1258)
 - Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
 
 ### Changed
@@ -47,6 +51,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Added new API `InputSystem.settings.useIMGUIEditorForAssets` that should be used in custom `InputParameterEditor` that use both IMGUI and UI Toolkit.
 - Added ProfilerMakers to `InputAction.Enable()` and `InputActionMap.ResolveBindings()` to enable gathering of profiling data.
+- Added throwing an error message when trying to use the Input System package on console without the extension package installed.
 
 ## [1.11.2] - 2024-10-16
 
