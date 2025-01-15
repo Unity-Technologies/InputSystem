@@ -1,5 +1,10 @@
 
-### Dealing with binding conflicts
+## Binding conflict resolution
+
+For Value type actions, the Input System continuously monitors all the Controls which are bound to the Action, and then chooses the one which is the most actuated to be the Control driving the Action, and report the values from that Control in callbacks, triggered whenever the value changes. If a different bound Control actuated more, then that Control becomes the Control driving the Action, and the Action starts reporting values from that Control. This process is called conflict resolution. This is useful if you want to allow different Controls to control an Action in the game, but only take input from one Control at the same time.
+
+For more information, see: [Dealing with binding conflicts](./dealing-with-binding-conflicts.md). 
+
 
 
 There are two situations where a given input may lead to ambiguity:

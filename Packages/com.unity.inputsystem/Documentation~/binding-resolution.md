@@ -26,18 +26,3 @@ This updating of Controls usually happens transparently in the background. Howev
 Adding or removing a device &ndash; either [globally](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices) or to/from the [device list](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) that is being removed. In this case, the Action will automatically be [cancelled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
 
 Modifying the [binding mask](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_bindingMask) or modifying any of the Bindings (such as through [rebinding](#interactive-rebinding) or by adding or removing bindings) will, however, lead to all enabled Actions being temporarily disabled and then re-enabled and resumed.
-
-## Choosing which Devices to use
-
->__Note__: [`InputUser`](UserManagement.md) and [`PlayerInput`](player-input-component.md) make use of this facility automatically. They set [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) automatically based on the Devices that are paired to the user.
-
-By default, Actions resolve their Bindings against all Devices present in the Input System (that is, [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads present in the system, a Binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the Action to be used from either.
-
-You can override this behavior by restricting [`InputActionAssets`](../api/UnityEngine.InputSystem.InputActionAsset.html) or individual [`InputActionMaps`](../api/UnityEngine.InputSystem.InputActionMap.html) to a specific set of Devices. If you do this, Binding resolution only takes the Controls of the given Devices into account.
-
-```
-    var actionMap = new InputActionMap();
-
-    // Restrict the action map to just the first gamepad.
-    actionMap.devices = new[] { Gamepad.all[0] };
-```
