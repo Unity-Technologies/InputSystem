@@ -5,7 +5,7 @@
 validate_-_inputsystem_-_2019_4_-_macos:
   name: Validate - inputsystem - 2019.4 - macos
   agent:
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
@@ -139,7 +139,7 @@ validate_-_inputsystem_-_2019_4_-_ubuntu:
 validate_-_inputsystem_-_2019_4_-_windows:
   name: Validate - inputsystem - 2019.4 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -206,7 +206,7 @@ validate_-_inputsystem_-_2019_4_-_windows:
 validate_-_inputsystem_-_2021_3_-_macos:
   name: Validate - inputsystem - 2021.3 - macos
   agent:
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
@@ -273,7 +273,7 @@ validate_-_inputsystem_-_2021_3_-_macos:
 validate_-_inputsystem_-_2021_3_-_ubuntu:
   name: Validate - inputsystem - 2021.3 - ubuntu
   agent:
-    image: package-ci/ubuntu-18.04:v4
+    image: package-ci/ubuntu-20.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -340,7 +340,7 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
 validate_-_inputsystem_-_2021_3_-_windows:
   name: Validate - inputsystem - 2021.3 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -407,7 +407,7 @@ validate_-_inputsystem_-_2021_3_-_windows:
 validate_-_inputsystem_-_2022_3_-_macos:
   name: Validate - inputsystem - 2022.3 - macos
   agent:
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
@@ -474,7 +474,7 @@ validate_-_inputsystem_-_2022_3_-_macos:
 validate_-_inputsystem_-_2022_3_-_ubuntu:
   name: Validate - inputsystem - 2022.3 - ubuntu
   agent:
-    image: package-ci/ubuntu-18.04:v4
+    image: package-ci/ubuntu-20.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -541,7 +541,7 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
 validate_-_inputsystem_-_2022_3_-_windows:
   name: Validate - inputsystem - 2022.3 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -608,7 +608,7 @@ validate_-_inputsystem_-_2022_3_-_windows:
 validate_-_inputsystem_-_6000_0_-_macos:
   name: Validate - inputsystem - 6000.0 - macos
   agent:
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
@@ -675,7 +675,7 @@ validate_-_inputsystem_-_6000_0_-_macos:
 validate_-_inputsystem_-_6000_0_-_ubuntu:
   name: Validate - inputsystem - 6000.0 - ubuntu
   agent:
-    image: package-ci/ubuntu-18.04:v4
+    image: package-ci/ubuntu-20.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -742,7 +742,7 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
 validate_-_inputsystem_-_6000_0_-_windows:
   name: Validate - inputsystem - 6000.0 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -809,7 +809,7 @@ validate_-_inputsystem_-_6000_0_-_windows:
 validate_-_inputsystem_-_6000_1_-_macos:
   name: Validate - inputsystem - 6000.1 - macos
   agent:
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:v4
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
@@ -876,7 +876,7 @@ validate_-_inputsystem_-_6000_1_-_macos:
 validate_-_inputsystem_-_6000_1_-_ubuntu:
   name: Validate - inputsystem - 6000.1 - ubuntu
   agent:
-    image: package-ci/ubuntu-18.04:v4
+    image: package-ci/ubuntu-20.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -943,7 +943,7 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
 validate_-_inputsystem_-_6000_1_-_windows:
   name: Validate - inputsystem - 6000.1 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:

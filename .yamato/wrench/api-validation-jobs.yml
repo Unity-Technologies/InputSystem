@@ -5,7 +5,7 @@
 api_validation_-_inputsystem_-_2019_4_-_windows:
   name: API Validation - inputsystem - 2019.4 - windows
   agent:
-    image: package-ci/win10:default
+    image: package-ci/win10:v4
     type: Unity::VM
     flavor: b1.large
   commands:
