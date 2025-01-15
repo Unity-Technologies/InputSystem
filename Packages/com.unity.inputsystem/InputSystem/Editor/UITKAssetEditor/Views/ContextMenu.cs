@@ -151,14 +151,14 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForActionItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
         {
-            _ = new ContextualMenuManipulator(menuEvent =>
+            treeViewItem.OnContextualMenuPopulateEvent = (menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => treeView.AddBinding(index));
                 AppendCompositeMenuItems(treeView, controlLayout, index, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, treeView, index);
                 AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
-            }) { target = treeViewItem };
+            });
         }
 
         public static Action GetContextMenuForActionAddItem(ActionsTreeView treeView, string controlLayout, int index)

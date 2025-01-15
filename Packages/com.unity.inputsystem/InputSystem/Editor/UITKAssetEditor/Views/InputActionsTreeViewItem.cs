@@ -1,6 +1,7 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -16,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
+        public Action<ContextualMenuPopulateEvent> OnContextualMenuPopulateEvent;
 
         // for testing purposes to know if the item is focused to accept input
         internal bool IsFocused { get; private set; } = false;
@@ -44,6 +46,11 @@ namespace UnityEngine.InputSystem.Editor
                 OnEditTextFinished();
                 IsFocused = false;
             });
+            _ = new ContextualMenuManipulator(menuBuilder =>
+            {
+                OnContextualMenuPopulateEvent?.Invoke(menuBuilder);
+            })
+            { target = this };
         }
 
         public Label label => this.Q<Label>();
