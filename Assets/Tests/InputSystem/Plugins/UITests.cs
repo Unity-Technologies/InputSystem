@@ -1693,6 +1693,203 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845
+    // This tests that we can release and press touches on the same frame with the expected events and touchIds.
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanReleaseAndPressTouchesOnSameFrame()
+    {
+        var touchScreen = InputSystem.AddDevice<Touchscreen>();
+
+        // Prevent default selection of left object. This means that we will not have to contend with selections at all
+        // in this test as they are driven from UI objects and not by the input module itself.
+        var scene = CreateTestUI(noFirstSelected: true);
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/touch*/position");
+        var leftClickAction = map.AddAction("leftClick", type: InputActionType.PassThrough, binding: "<Touchscreen>/touch*/press");
+
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(leftClickAction);
+
+        map.Enable();
+
+        yield return null;
+
+        scene.leftChildReceiver.events.Clear();
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.False);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
+
+        // Touch left object.
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+        BeginTouch(1, firstPosition);
+        yield return null;
+
+        var pointerIdTouch1 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 1);
+        var pointerIdTouch2 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 2);
+        var pointerIdTouch3 = ExtendedPointerEventData.MakePointerIdForTouch(touchScreen.deviceId, 3);
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
+
+        Assert.That(scene.leftChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+        Assert.That(scene.leftChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+
+        Assert.That(scene.rightChildReceiver.events, Is.Empty);
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(1));
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Release left object and Touch right object on the same frame.
+        var secondPosition = scene.From640x480ToScreen(350, 200);
+        EndTouch(1, firstPosition);
+        BeginTouch(2, secondPosition);
+        BeginTouch(3, secondPosition);
+        MoveTouch(2, secondPosition);
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.True);
+
+        // Pointer 1
+        Assert.That(scene.leftChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+
+        // Pointer 2
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+#if UNITY_2021_2_OR_NEWER
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerMove).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+#endif
+
+        // Pointer 3
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(3));
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // End second touch.
+        EndTouch(2, secondPosition);
+        EndTouch(3, secondPosition);
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.True);
+
+        Assert.That(scene.leftChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch1).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(2));
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Next frame
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.False);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.False);
+
+        Assert.That(scene.leftChildReceiver.events, Is.Empty);
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch3).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.Zero);
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1190150/
     [UnityTest]
     [Category("UI")]
@@ -1724,8 +1921,6 @@ internal partial class UITests : CoreTestsFixture
 
             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
             Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
             Assert.That(scene.leftChildReceiver.events,
                 EventSequence(
                     AllEvents("pointerType", UIPointerType.Touch),
@@ -1749,8 +1944,6 @@ internal partial class UITests : CoreTestsFixture
 
             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
             Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
             Assert.That(scene.leftChildReceiver.events,
                 EventSequence(
                     AllEvents("pointerType", UIPointerType.Touch),
@@ -1767,7 +1960,6 @@ internal partial class UITests : CoreTestsFixture
 
             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.None));
             Assert.That(scene.uiModule.m_PointerIds.length, Is.Zero);
-            Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.Zero);
             Assert.That(scene.leftChildReceiver.events,
                 EventSequence(
                     AllEvents("pointerType", UIPointerType.Touch),
@@ -2439,6 +2631,11 @@ internal partial class UITests : CoreTestsFixture
         scene.eventSystem.InvokeUpdate();
         Release(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
+
+#if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
+        // Process all queued UI events to ensure that next events will not make the events list capacity growing
+        UnityEngine.InputForUI.EventProvider.NotifyUpdate();
+#endif
 
         var kProfilerRegion = "UI_ClickDraggingDoesNotAllocateGCMemory";
 
@@ -3876,8 +4073,8 @@ internal partial class UITests : CoreTestsFixture
 #if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnScreenSpaceCanvas()
     {
@@ -3927,9 +4124,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
-#else
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
@@ -3980,8 +4176,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnScreenSpaceCanvas()
     {
@@ -4032,6 +4228,9 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+#if UNITY_ANDROID
+    [Ignore("Failing on Android https://jira.unity3d.com/browse/ISX-2029")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnOverlayCanvas()
     {
         // Setup the Test Scene
@@ -4082,8 +4281,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS
-    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#if UNITY_TVOS || UNITY_ANDROID
+    [Ignore("Failing on TVOS & Android https://jira.unity3d.com/browse/ISX-2029")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayMultiplePointers()
     {

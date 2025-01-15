@@ -17,6 +17,7 @@ using UnityEngine.TestTools.Constraints;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using UnityEngine.InputSystem.OnScreen;
 
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
@@ -661,6 +662,58 @@ internal class PlayerInputTests : CoreTestsFixture
             new Message("OnControlsChanged", playerInput), // Control scheme switch.
             new Message("OnFire", 1f)
         }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_AutoSwitchControlSchemesInSinglePlayerWithOnScreenControl_AutoSwitchToTargetDeviceAndIgnoreMouse()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+
+        var onScreenButton = go.AddComponent<OnScreenButton>();
+        onScreenButton.enabled = false;
+        onScreenButton.controlPath = "<Gamepad>/buttonSouth";
+
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        // enable the OnScreenButton, it should switch to Gamepad
+        onScreenButton.enabled = true;
+        var gamepad = onScreenButton.control.device;
+        Assert.That(gamepad, Is.TypeOf<Gamepad>());
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+        InputSystem.Update();
+
+        // The controlScheme shouldn't have changed
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // disabling the OnScreenButton to ensure that it will now switch to Keyboard&Mouse as expected
+        onScreenButton.enabled = false;
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Keyboard&Mouse"));
     }
 
     [Test]
@@ -2352,6 +2405,39 @@ internal class PlayerInputTests : CoreTestsFixture
         player.SetActive(false); // Should cause full rebinding and not assert
     }
 
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_DelegatesAreUpdate_WhenActionMapAddedAfterAssignment()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "Other";
+        var actionAsset = InputActionAsset.FromJson(kActions);
+        playerInput.actions = actionAsset;
+
+        // Disable the asset while adding another action map to it as none
+        // of the actions in the asset can be enabled during modification
+        //
+        actionAsset.Disable();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var newActionMap = actionAsset.AddActionMap("NewMap");
+        var newAction = newActionMap.AddAction("NewAction");
+        newAction.AddBinding("<Keyboard>/k", groups: "Keyboard");
+        actionAsset.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        actionAsset.Enable();
+
+        playerInput.currentActionMap = newActionMap;
+        playerInput.ActivateInput();
+        listener.messages.Clear();
+
+        Press(keyboard.kKey);
+
+        Assert.That(listener.messages, Has.Exactly(1).With.Property("name").EqualTo("OnNewAction"));
+    }
+
     private struct Message : IEquatable<Message>
     {
         public string name { get; set; }
@@ -2422,6 +2508,11 @@ internal class PlayerInputTests : CoreTestsFixture
         public void OnOtherAction(InputValue value)
         {
             messages?.Add(new Message { name = "OnOtherAction", value = value.Get<float>() });
+        }
+
+        public void OnNewAction(InputValue value)
+        {
+            messages?.Add(new Message { name = "OnNewAction", value = value.Get<float>() });
         }
 
         // ReSharper disable once UnusedMember.Local

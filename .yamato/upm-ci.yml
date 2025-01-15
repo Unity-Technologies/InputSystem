@@ -10,7 +10,9 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
-  commands:
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
+  commands:        
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
     # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
@@ -23,17 +25,29 @@
     - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION%
+      {% if platform.name == "win" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages" 
+      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {{ editor.version }}
+    - {{ platform.installscript }} %EDITOR_VERSION%
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem {% if platform.name == "win" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
+    # Merge all the code coverage results into one report.
+    {% if platform.name == "win" %}
+    - '{{ yamato_source_dir_win }}/.Editor/Unity.exe -projectPath {{ yamato_source_dir_win }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_win }}/Packages/com.unity.inputsystem/" -quit' 
+    #delete the reports from the two runs and only keep the final merged one
+    - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
+    - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project"   
+    {% endif %}
+  after:
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   artifacts:
     UTR_Output.zip:
       paths:
@@ -49,6 +63,8 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
+  variables:
+    EDITOR_VERSION: {{ editor.version }}  
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
@@ -61,17 +77,29 @@
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u $EDITOR_VERSION {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
     {% if platform.installscript %}
     - {{ unity_downloader_install }}
-    - {{ platform.installscript }} {{ editor.version }}
+    - {{ platform.installscript }} $EDITOR_VERSION
     {% endif %}
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" %} --suite=editor {% endif %} {% if platform.name == "linux" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" or platform.name == "linux"%} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem {% if platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project {% endif %}
+    # Merge all the code coverage results into one report.
+    {% if platform.name == "mac" %}
+    - '{{ yamato_source_dir_nix }}/.Editor/Unity.app/Contents/MacOS/Unity -projectPath {{ yamato_source_dir_nix }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_nix }}/Packages/com.unity.inputsystem/" -quit' 
+    {% endif %}
+    {% if platform.name == "linux" %}
+    - '{{ yamato_source_dir_nix }}/.Editor/Unity -projectPath {{ yamato_source_dir_nix }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_nix }}/Packages/com.unity.inputsystem/" -quit' 
+    {% endif %}
+    - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package
+    - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project  
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ platform.instabilities_run }}
   artifacts:
     UTR_Output.zip:
       paths:
@@ -88,11 +116,16 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c iOS -u $EDITOR_VERSION --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -108,12 +141,17 @@ run_ios_{{ editor.version }}_{{ category.name }}:
       image: {{ ios_and_tvos_macos_bokken_image }}
       model: SE
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem 
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
@@ -126,11 +164,16 @@ build_tvos_{{ editor.version }}:
     type: Unity::VM::osx
     image: {{ ios_and_tvos_macos_bokken_image }}
     flavor: b1.large
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c AppleTV -u $EDITOR_VERSION --fast --wait
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     players:
         paths:
@@ -145,12 +188,17 @@ run_tvos_{{ editor.version }}:
       type: Unity::mobile::appletv
       image: {{ ios_and_tvos_macos_bokken_image }}
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   skip_checkout: true
   dependencies:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_nix }}
+    - {{ instabilities_run_mac }}
   artifacts:
     logs:
         paths:
@@ -164,11 +212,16 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::VM
       image: package-ci/win10:default
       flavor: b1.xlarge
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
-    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast --wait
+    - unity-downloader-cli -c Editor -c Android -u %EDITOR_VERSION% --fast --wait
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
+  after:
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   artifacts:
     players:
         paths:
@@ -183,6 +236,8 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       type: Unity::mobile::shield
       image: package-ci/win10:default
       flavor: b1.medium
+  variables:
+    EDITOR_VERSION: {{ editor.version }}
   # Skip repository cloning
   skip_checkout: true
   # Set a dependency on the build job
@@ -201,7 +256,9 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results
-    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
+    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt  
+    - {{ instabilities_install_win }}
+    - {{ instabilities_run_win }}  
   # Set uploadable artifact paths
   artifacts:
     logs:
@@ -212,7 +269,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
 {% endfor %} # editors
 
 all_tests:
-  name: All Tests  
+  name: All Tests
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}

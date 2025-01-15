@@ -1,7 +1,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEditor;
 
@@ -92,7 +91,6 @@ namespace UnityEngine.InputSystem.Editor
             int selectedActionIndex = 0,
             int selectedBindingIndex = 0,
             SelectionType selectionType = SelectionType.Action,
-            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
             InputControlScheme selectedControlScheme = default,
             int selectedControlSchemeIndex = -1,
             int selectedDeviceRequirementIndex = -1,
@@ -112,9 +110,6 @@ namespace UnityEngine.InputSystem.Editor
             m_selectedControlSchemeIndex = selectedControlSchemeIndex;
             m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
 
-            m_ExpandedCompositeBindings = expandedBindingIndices == null ?
-                new Dictionary<(string, string), HashSet<int>>() :
-                new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
             m_CutElements = cutElements;
         }
 
@@ -201,12 +196,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_ControlScheme = new InputControlScheme();
             }
 
-            // Editor may leave these as null after domain reloads, so recreate them in that case.
-            // If they exist, we attempt to just preserve the same expanded items based on name for now for simplicity.
-            m_ExpandedCompositeBindings = other.m_ExpandedCompositeBindings == null ?
-                new Dictionary<(string, string), HashSet<int>>() :
-                new Dictionary<(string, string), HashSet<int>>(other.m_ExpandedCompositeBindings);
-
             m_CutElements = other.cutElements;
         }
 
@@ -218,7 +207,6 @@ namespace UnityEngine.InputSystem.Editor
             InputControlScheme? selectedControlScheme = null,
             int? selectedControlSchemeIndex = null,
             int? selectedDeviceRequirementIndex = null,
-            Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
             List<CutElement> cutElements = null)
         {
             return new InputActionsEditorState(
@@ -228,7 +216,6 @@ namespace UnityEngine.InputSystem.Editor
                 selectedActionIndex ?? this.selectedActionIndex,
                 selectedBindingIndex ?? this.selectedBindingIndex,
                 selectionType ?? this.selectionType,
-                expandedBindingIndices ?? m_ExpandedCompositeBindings,
 
                 // Control schemes
                 selectedControlScheme ?? this.selectedControlScheme,
@@ -248,7 +235,6 @@ namespace UnityEngine.InputSystem.Editor
                 selectedActionIndex,
                 selectedBindingIndex,
                 selectionType,
-                m_ExpandedCompositeBindings,
                 selectedControlScheme,
                 selectedControlSchemeIndex,
                 selectedDeviceRequirementIndex,
@@ -260,39 +246,6 @@ namespace UnityEngine.InputSystem.Editor
             return serializedObject
                 .FindProperty(nameof(InputActionAsset.m_ActionMaps))
                 .FirstOrDefault(p => p.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue == actionMapName);
-        }
-
-        public InputActionsEditorState ExpandCompositeBinding(SerializedInputBinding binding)
-        {
-            var key = GetSelectedActionMapAndActionKey();
-
-            var expandedCompositeBindings = new Dictionary<(string, string), HashSet<int>>(m_ExpandedCompositeBindings);
-            if (!expandedCompositeBindings.TryGetValue(key, out var expandedStates))
-            {
-                expandedStates = new HashSet<int>();
-                expandedCompositeBindings.Add(key, expandedStates);
-            }
-
-            expandedStates.Add(binding.indexOfBinding);
-
-            return With(expandedBindingIndices: expandedCompositeBindings);
-        }
-
-        public InputActionsEditorState CollapseCompositeBinding(SerializedInputBinding binding)
-        {
-            var key = GetSelectedActionMapAndActionKey();
-
-            if (m_ExpandedCompositeBindings.ContainsKey(key) == false)
-                throw new InvalidOperationException("Trying to collapse a composite binding tree that was never expanded.");
-
-            // do the dance of C# immutability
-            var oldExpandedCompositeBindings = m_ExpandedCompositeBindings;
-            var expandedCompositeBindings = oldExpandedCompositeBindings.Keys.Where(dictKey => dictKey != key)
-                .ToDictionary(dictKey => dictKey, dictKey => oldExpandedCompositeBindings[dictKey]);
-            var newHashset = new HashSet<int>(m_ExpandedCompositeBindings[key].Where(index => index != binding.indexOfBinding));
-            expandedCompositeBindings.Add(key, newHashset);
-
-            return With(expandedBindingIndices: expandedCompositeBindings);
         }
 
         public InputActionsEditorState SelectAction(string actionName)
@@ -419,47 +372,10 @@ namespace UnityEngine.InputSystem.Editor
             return m_CutElements;
         }
 
-        public ReadOnlyCollection<int> GetOrCreateExpandedState()
-        {
-            return new ReadOnlyCollection<int>(GetOrCreateExpandedStateInternal().ToList());
-        }
-
-        private HashSet<int> GetOrCreateExpandedStateInternal()
-        {
-            var key = GetSelectedActionMapAndActionKey();
-
-            if (m_ExpandedCompositeBindings.TryGetValue(key, out var expandedStates))
-                return expandedStates;
-
-            expandedStates = new HashSet<int>();
-            m_ExpandedCompositeBindings.Add(key, expandedStates);
-            return expandedStates;
-        }
-
-        internal (string, string) GetSelectedActionMapAndActionKey()
-        {
-            var selectedActionMap = GetSelectedActionMap();
-
-            var selectedAction = selectedActionMap
-                .FindPropertyRelative(nameof(InputActionMap.m_Actions))
-                .GetArrayElementAtIndex(selectedActionIndex);
-
-            var key = (
-                selectedActionMap.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue,
-                selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue
-            );
-            return key;
-        }
-
         private SerializedProperty GetSelectedActionMap()
         {
             return Selectors.GetActionMapAtIndex(serializedObject, selectedActionMapIndex)?.wrappedProperty;
         }
-
-        /// <summary>
-        /// Expanded states for the actions tree view. These are stored per InputActionMap
-        /// </summary>
-        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
 
         private readonly InputControlScheme m_ControlScheme;
     }

@@ -67,8 +67,6 @@ namespace UnityEngine.InputSystem.Editor
             m_AddActionMapButton.clicked += AddActionMap;
 
             ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
-            // Only bring up this context menu for the List when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, m_ListView, onlyShowIfListIsEmpty: true);
         }
 
         void OnDroppedHandler(int mapIndex)
@@ -90,7 +88,13 @@ namespace UnityEngine.InputSystem.Editor
                 if (actionMapData.HasValue)
                     m_ListView.SetSelection(viewState.actionMapData.IndexOf(actionMapData.Value));
             }
+            // UI toolkit doesn't behave the same on 6000.0 way when refreshing items
+            // On previous versions, we need to call Rebuild() to refresh the items since refreshItems() is less predicatable
+#if UNITY_6000_0_OR_NEWER
             m_ListView.RefreshItems();
+#else
+            m_ListView.Rebuild();
+#endif
             RenameNewActionMaps();
         }
 

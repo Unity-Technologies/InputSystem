@@ -25,6 +25,21 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_Binding_String = "Add Binding";
 
         #region ActionMaps
+        // Determine whether current clipboard contents can can pasted into the ActionMaps view
+        //
+        //  can always paste an ActionMap
+        //  need an existing map to be able to paste an Action
+        //
+        private static bool CanPasteIntoActionMaps(ActionMapsView mapView)
+        {
+            bool haveMap = mapView.GetMapCount() > 0;
+            var copiedType = CopyPasteHelper.GetCopiedClipboardType();
+            bool copyIsMap = copiedType == typeof(InputActionMap);
+            bool copyIsAction = copiedType == typeof(InputAction);
+            bool hasPastableData = (copyIsMap || (copyIsAction && haveMap));
+            return hasPastableData;
+        }
+
         public static void GetContextMenuForActionMapItem(ActionMapsView mapView, InputActionMapsTreeViewItem treeViewItem, int index)
         {
             treeViewItem.OnContextualMenuPopulateEvent = (menuEvent =>
@@ -39,42 +54,78 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
                 menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
 
-                var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+                if (CanPasteIntoActionMaps(mapView))
+                {
+                    bool copyIsAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                        menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copyIsAction));
+                }
+
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
             });
         }
 
         // Add "Add Action Map" option to empty space under the ListView. Matches with old IMGUI style (ISX-1519).
         // Include Paste here as well, since it makes sense for adding ActionMaps.
-        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement element, bool onlyShowIfListIsEmpty = false)
+        public static void GetContextMenuForActionMapsEmptySpace(ActionMapsView mapView, VisualElement element)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                if (!onlyShowIfListIsEmpty || mapView.GetMapCount() == 0)
+                if (CanPasteIntoActionMaps(mapView))
                 {
-                    var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                        menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
-
+                    bool copyIsAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copyIsAction));
                     menuEvent.menu.AppendSeparator();
-                    menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
                 }
+                menuEvent.menu.AppendAction(add_Action_Map_String, _ => mapView.AddActionMap());
             }) { target = element };
         }
 
         #endregion
 
         #region Actions
+        // Determine whether current clipboard contents can pasted into the Actions TreeView
+        //
+        //  item selected   => can paste either Action or Binding (depends on selected item context)
+        //  empty view      => can only paste Action
+        //  no selection    => can only paste Action
+        //
+        private static bool CanPasteIntoActions(TreeView treeView)
+        {
+            bool hasPastableData = false;
+            bool selected = treeView.selectedIndex != -1;
+            if (selected)
+            {
+                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
+                var itemType = item.isAction ? typeof(InputAction) : typeof(InputBinding);
+                hasPastableData = CopyPasteHelper.HasPastableClipboardData(itemType);
+            }
+            else
+            {
+                // Cannot paste Binding when no Action is selected or into an empty view
+                bool copyIsBinding = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputBinding);
+                hasPastableData = !copyIsBinding && CopyPasteHelper.HasPastableClipboardData(typeof(InputAction));
+            }
+            return hasPastableData;
+        }
+
         // Add the "Paste" option to all elements in the Action area.
         public static void GetContextMenuForActionListView(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
-                var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
-                if (hasPastableData)
-                    menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
+                bool haveMap = actionsTreeView.GetMapCount() > 0;
+                if (haveMap)
+                {
+                    bool hasPastableData = CanPasteIntoActions(treeView);
+                    if (hasPastableData)
+                    {
+                        menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
+                    }
+                    menuEvent.menu.AppendSeparator();
+                    menuEvent.menu.AppendAction(add_Action_String, _ => actionsTreeView.AddAction());
+                }
             }) { target = target };
         }
 
@@ -84,13 +135,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             _ = new ContextualMenuManipulator(menuEvent =>
             {
-                if (actionsTreeView.GetMapCount() > 0 && (!onlyShowIfTreeIsEmpty || treeView.GetTreeCount() == 0))
+                bool haveMap = actionsTreeView.GetMapCount() > 0;
+                if (haveMap && (!onlyShowIfTreeIsEmpty || treeView.GetTreeCount() == 0))
                 {
-                    var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
-                    if (CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding)))
+                    bool hasPastableData = CanPasteIntoActions(treeView);
+                    if (hasPastableData)
+                    {
                         menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
-
-                    menuEvent.menu.AppendSeparator();
+                        menuEvent.menu.AppendSeparator();
+                    }
                     menuEvent.menu.AppendAction(add_Action_String, _ => actionsTreeView.AddAction());
                 }
             }) { target = target };

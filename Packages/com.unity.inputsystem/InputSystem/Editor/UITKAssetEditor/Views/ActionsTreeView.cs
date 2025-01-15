@@ -124,8 +124,6 @@ namespace UnityEngine.InputSystem.Editor
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
             ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
-            // Only bring up this context menu for the Tree when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, m_ActionsTreeView, onlyShowIfTreeIsEmpty: true);
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
@@ -661,9 +659,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private static int GetIdForGuid(Guid guid, Dictionary<Guid, int> idDictionary)
         {
+            // This method is used to ensure that the same Guid always gets the same id
+            // We use getHashCode instead of a counter, as we cannot guarantee that the same Guid will always be added in the same order
+            // There is a tiny chance of a collision, but it is it does happen it will only affect the expanded state of the tree view
             if (!idDictionary.TryGetValue(guid, out var id))
             {
-                id = idDictionary.Values.Count > 0 ? idDictionary.Values.Max() + 1 : 0;
+                id = guid.GetHashCode();
                 idDictionary.Add(guid, id);
             }
             return id;
@@ -693,7 +694,7 @@ namespace UnityEngine.InputSystem.Editor
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
                 var isMatchingDevice = true;
-                if (deviceIndex >= 0)
+                if (deviceIndex >= 0 && deviceIndex < currentControlScheme.Value.deviceRequirements.Count)
                 {
                     var devicePathToMatch = InputControlPath.TryGetDeviceLayout(currentControlScheme.Value.deviceRequirements.ElementAt(deviceIndex).controlPath);
                     var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);
