@@ -11,7 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
-- Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets. 
+- Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
 
 ## [1.12.0] - 2025-01-15
 
