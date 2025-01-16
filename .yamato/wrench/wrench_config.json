@@ -1,6 +1,5 @@
 {
-  "project_path": "Tools\\CI",
-  "schema_version": 0.6,
+  "schema_version": 0.7,
   "packages": {
     "com.unity.inputsystem": {
       "directory": "Packages/com.unity.inputsystem/",
@@ -35,6 +34,7 @@
   },
   "publishing_job": ".yamato/wrench/promotion-jobs.yml#publish_inputsystem",
   "branch_pattern": "ReleaseSlash",
-  "wrench_version": "0.10.27.0",
-  "pvp_exemption_path": ".yamato/wrench/pvp-exemptions.json"
+  "wrench_version": "0.10.33.0",
+  "pvp_exemption_path": ".yamato/wrench/pvp-exemptions.json",
+  "cs_project_path": "Tools/CI/InputSystem.Cookbook.csproj"
 }
