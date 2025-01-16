@@ -24,7 +24,7 @@
     * [Load actions from JSON](load-actions-from-json.md)
     * [Create actions in code](create-actions-in-code.md)
     * [Action properties](action-and-control-types.md)
-    * [Bindings](action-bindings.md)
+    * [Bindings](ActionBindings-Old-Content.md)
     * [Controls](controls.md)
     * [Controls schemes](control-schemes.md)
     * [Interactions](interactions.md)

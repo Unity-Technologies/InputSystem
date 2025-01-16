@@ -6,7 +6,7 @@ The second of these properties is the Control Type.
 
 ![Action Properties](Images/ActionProperties.png)
 
-The Control Type setting allows you to select the type of control expected by the action. This limits the types of controls shown when setting up bindings in the UI and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate controls when setting up bindings.
+The Control Type setting allows you to select the type of control expected by the action. This limits the types of [composite bindings](composite-bindings.md) and [control types](control-types) shown when setting up bindings in the UI, and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate options when setting up bindings.
 
 For example, if you select **2D axis** as the control type, only those types of controls that can supply a 2D vector as value are available as options for the binding control path, such as a thumb stick or Dpad.
 
