@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
+
 ## [1.12.0] - 2025-01-15
 
 ### Fixed
@@ -41,7 +44,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
 - Fixed an issue in input actions editor window that caused certain fields in custom input composite bindings to require multiple clicks to action / focus. [ISXB-1171](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1171)
 - Fixed an editor/player hang in `InputSystemUIInputModule` due to an infinite loop. This was caused by the assumption that `RemovePointerAtIndex` would _always_ successfully remove the pointer, which is not the case with touch based pointers. [ISXB-1258](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1258)
-- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
 
 ### Changed
 - Changed location of the link xml file (code stripping rules), from a temporary directory to the project Library folder (ISX-2140).
