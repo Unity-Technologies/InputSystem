@@ -1653,9 +1653,9 @@ namespace UnityEngine.InputSystem.UI
             ResetPointers();
 
             InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
-
             DisableAllActions();
             UnhookActions();
+            UnassignActions();
 
             base.OnDisable();
         }
