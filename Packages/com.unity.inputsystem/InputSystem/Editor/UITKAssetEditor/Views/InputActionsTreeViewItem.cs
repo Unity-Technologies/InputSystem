@@ -25,6 +25,8 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsEditing;
         private static InputActionsTreeViewItem s_EditingItem = null;
 
+        internal bool isCut { get; set; }
+
         public InputActionsTreeViewItem()
         {
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -55,7 +57,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
-
 
         public void UnregisterInputField()
         {
@@ -101,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void FocusOnRenameTextField()
         {
-            if (m_IsEditing)
+            if (m_IsEditing || isCut)
                 return;
             delegatesFocus = true;
 

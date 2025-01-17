@@ -11,6 +11,11 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
+
+## [1.12.0] - 2025-01-15
+
+### Fixed
 - Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
 - Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
 - Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105).
