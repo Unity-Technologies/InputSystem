@@ -5,7 +5,7 @@ Open the [Actions Editor window](actions-editor.md) to add, duplicate, or delete
 To add a new Binding:
 
 1. Select the Add (+) icon on the action you want to add it to
-2. Select the [binding type](binding-types.md) from the menu that appears.
+2. Select the appropriate [binding type](binding-types.md) from the menu that appears.
 
 To delete an existing Binding:
 
@@ -21,3 +21,4 @@ You can add multiple bindings to an action, which is generally useful for suppor
 
 ![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
 _The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
+

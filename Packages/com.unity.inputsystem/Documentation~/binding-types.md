@@ -1,15 +1,17 @@
 # Binding types
 
-The simplest type of binding is where a single control maps directly to the action. For example, a gamepad stick to a "move" action, or a gamepad button to a "jump" action.
+Bindings have a **type** which can be **simple** or **composite**.
 
-Other types of bindings are possible, which are referred to as composite bindings. These types allow you to construct a composite binding from multiple simple bindings.
+A simple binding is where a single control maps directly to an action. For example, a gamepad stick to a "move" action, or a gamepad button to a "jump" action.
 
-Some examples of this are:
+Composite bindings allow you to construct a binding from multiple simple bindings.
 
+When you [add a binding](add-duplicate-delete-binding.md) you must select the appropriate binding type for your action.
 
-- You can create a positive/negative composite binding so that two separate controls form an axis, where one control represents the positive direction of the axis, and the other represents the negative. For example, to make the left and right triggers of a gamepad control a single axis used to accelerate and decelerate a vehicle.
+Some examples of composite bindings are:
 
-- You can create a four-way composite binding to map four keyboard keys to an action whose [control type](control-types.md) is a 2D vector, so that each of the keys maps to up, down, left, and right respectively.
+- A **four-way** composite binding, where four keyboard keys map to an action whose [control type](control-types.md) is a 2D vector, so that each of the keys maps to up, down, left, and right respectively. In this scenario, the four key bindings are simple bindings grouped together into into the composite four-way binding.
 
-- You can create a modifier composite binding ...
+- You can create a **modifier** composite binding, where one control represents the main binding, and a second control represents a "modifier key" to alter the effect of the main binding - such as colding down the control key on a keyboard before also pressing a letter key. In this scenario, the two separate key bindings are simple bindings grouped together into the composite modifier binding.
 
+For a full list of composite binding types, see [Composite bindings](composite-bindings.md).
