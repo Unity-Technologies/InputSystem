@@ -1931,6 +1931,15 @@ namespace UnityEngine.InputSystem.UI
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
                     eventData.trackedDevicePosition = default;
+
+                    // We only have a single pointer state and current frame press state values was based on previous eventData.
+                    // Make sure these get updated when we switch.
+                    if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                    {
+                        pointer.leftButton.OnEndFrame();
+                        pointer.rightButton.OnEndFrame();
+                        pointer.middleButton.OnEndFrame();
+                    }
                 }
 
                 if (pointerType == UIPointerType.Touch)
