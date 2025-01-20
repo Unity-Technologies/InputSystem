@@ -26,6 +26,8 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_IsEditing;
         private static InputActionMapsTreeViewItem s_EditingItem = null;
 
+        internal bool isDisabledActionMap { get; set; }
+
         public InputActionMapsTreeViewItem()
         {
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -98,7 +100,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void FocusOnRenameTextField()
         {
-            if (m_IsEditing)
+            if (m_IsEditing || isDisabledActionMap)
                 return;
             delegatesFocus = true;
 
