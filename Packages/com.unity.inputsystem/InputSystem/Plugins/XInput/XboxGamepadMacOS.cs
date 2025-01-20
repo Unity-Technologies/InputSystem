@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerOSXState WithButton(Button button)
         {
-            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            Debug.Assert((int)button < 16, $"A maximum of 16 buttons is supported for this layout.");
             buttons |= (ushort)(1U << (int)button);
             return this;
         }
@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWirelessOSXState WithButton(Button button)
         {
-            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert((int)button < 32, $"A maximum of 32 buttons is supported for this layout.");
             buttons |= 1U << (int)button;
             return this;
         }
@@ -267,7 +267,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWirelessOSXStateV2 WithButton(Button button)
         {
-            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert((int)button < 32, $"A maximum of 32 buttons is supported for this layout.");
             buttons |= 1U << (int)button;
             return this;
         }
