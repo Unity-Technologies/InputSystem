@@ -202,19 +202,19 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForCompositeItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem, int index)
         {
-            _ = new ContextualMenuManipulator(menuEvent =>
+            treeViewItem.OnContextualMenuPopulateEvent = (menuEvent =>
             {
                 AppendRenameAction(menuEvent, treeView, index);
                 AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
-            }) { target = treeViewItem };
+            });
         }
 
         public static void GetContextMenuForBindingItem(ActionsTreeView treeView, InputActionsTreeViewItem treeViewItem, int index)
         {
-            _ = new ContextualMenuManipulator(menuEvent =>
+            treeViewItem.OnContextualMenuPopulateEvent = (menuEvent =>
             {
                 AppendDuplicateDeleteCutAndCopyActionsSection(menuEvent, treeView, index);
-            }) { target = treeViewItem };
+            });
         }
 
         private static void AppendRenameAction(ContextualMenuPopulateEvent menuEvent, ActionsTreeView treeView, int index)
