@@ -77,36 +77,19 @@ namespace UnityEngine.InputSystem.Editor
             SetEnumDisplayNames(enumNamesAndValues);
         }
 
+        // Sorts the values so that they get displayed consistently, and assigns them for being drawn. 
         private void SetEnumDisplayNames(Dictionary<string, int> enumNamesAndValues)
         {
             m_EnumValues = new int[enumNamesAndValues.Count];
+            enumNamesAndValues.Values.CopyTo(m_EnumValues, 0);
 
             m_EnumDisplayNames = new string[enumNamesAndValues.Count];
-            int currentIndex = 0;
+            enumNamesAndValues.Keys.CopyTo(m_EnumDisplayNames, 0);
 
-            int tempInt;
-            string tempString;
-
-            foreach (KeyValuePair<string, int> kvp in enumNamesAndValues)
-            {
-                int tempIndex = currentIndex;
-                m_EnumDisplayNames[currentIndex] = kvp.Key;
-                m_EnumValues[currentIndex] = kvp.Value;
-                while (tempIndex != 0 && m_EnumValues[currentIndex] < m_EnumValues[tempIndex - 1])
-                {
-                    tempInt = m_EnumValues[tempIndex - 1];
-                    m_EnumValues[tempIndex - 1] = m_EnumValues[currentIndex];
-                    m_EnumValues[currentIndex] = tempInt;
-
-                    tempString = m_EnumDisplayNames[tempIndex - 1];
-                    m_EnumDisplayNames[tempIndex - 1] = m_EnumDisplayNames[currentIndex];
-                    m_EnumDisplayNames[currentIndex] = tempString;
-                    tempIndex--;
-                }
-                currentIndex++;
-            }
+            Array.Sort(m_EnumValues, m_EnumDisplayNames);
         }
- 
+
+        // Ensures mapping between displayed value and actual value is consistent. Issues arise when there are gaps in the enum values (ie 0, 1, 13). 
         private int GetEnumIndex(int enumValue)
         {
             for (int i = 0; i<m_EnumValues.Length; i++)
