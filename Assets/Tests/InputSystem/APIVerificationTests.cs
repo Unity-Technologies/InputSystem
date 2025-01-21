@@ -183,6 +183,7 @@ class APIVerificationTests
 #if UNITY_EDITOR_OSX
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOSWireless).FullName ||
 #endif
 #if UNITY_EDITOR_WIN
             fullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
