@@ -237,7 +237,7 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
 
-        private void OnStateChanged(InputActionsEditorState newState)
+        private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
         {
             DirtyInputActionsEditorWindow(newState);
             m_State = newState;

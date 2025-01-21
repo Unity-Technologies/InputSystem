@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 
 #if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
@@ -23,7 +24,7 @@ internal class XInputTests : CoreTestsFixture
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XboxGamepadMacOS")]
-    [TestCase("Xbox One Wireless Controller", "Microsoft", "HID", "XboxOneGampadMacOSWireless")]
+    [TestCase("Xbox Series Wireless Controller", "Microsoft", "HID", "XboxGamepadMacOSWireless")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
@@ -148,6 +149,64 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
 
+    [TestCase(0x045E, 0x02E0, 16, 11)] // Xbox One Wireless Controller
+    [TestCase(0x045E, 0x0B20, 10, 11)] // Xbox Series X|S Wireless Controller
+    // This test is used to establish the correct button map layout based on the PID and VIDs. The usual difference
+    // is around the select and start button bits.
+    // If the layout is changed this test will fail and will need to be adapted either with a new device/layout or
+    // a new button map.
+    public void Devices_SupportWirelessXboxOneAndSeriesControllerOnOSX(int vendorId, int productId, int selectBit, int startBit)
+    {
+        // Fake a real Xbox Wireless Controller
+        var xboxGamepad = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            product = "Xbox Wireless Controller",
+            manufacturer = "Microsoft",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = vendorId,
+                productId = productId,
+            }.ToJson()
+        });
+
+
+        Assert.That(xboxGamepad, Is.AssignableTo<XInputController>());
+
+        var gamepad = (XInputController)xboxGamepad;
+        Assert.That(gamepad.selectButton.isPressed, Is.False);
+
+        // Check if the controller is an Xbox One from a particular type where we know the select and start buttons are
+        // different
+        if (productId == 0x02e0)
+        {
+            Assert.That(xboxGamepad, Is.AssignableTo<XboxOneGampadMacOSWireless>());
+
+            InputSystem.QueueStateEvent(gamepad,
+                new XInputControllerWirelessOSXState
+                {
+                    buttons = (uint)(1 << selectBit |
+                        1 << startBit)
+                });
+            InputSystem.Update();
+        }
+        else
+        {
+            Assert.That(xboxGamepad, Is.AssignableTo<XboxGamepadMacOSWireless>());
+
+            InputSystem.QueueStateEvent(gamepad,
+                new XInputControllerWirelessOSXState
+                {
+                    buttons = (uint)(1 << selectBit |
+                        1 << startBit)
+                });
+            InputSystem.Update();
+        }
+
+        Assert.That(gamepad.selectButton.isPressed);
+        Assert.That(gamepad.startButton.isPressed);
+    }
+
 // Disable tests in standalone builds from 2022.1+ see UUM-19622
 #if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
     [Test]
@@ -158,7 +217,12 @@ internal class XInputTests : CoreTestsFixture
         {
             interfaceName = "HID",
             product = "Xbox One Wireless Controller",
-            manufacturer = "Microsoft"
+            manufacturer = "Microsoft",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x045E,
+                productId = 0x02E0,
+            }.ToJson()
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
