@@ -58,6 +58,11 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
+                    // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                    // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                    // it must be re-registered here.
+                    treeViewItem.RegisterInputField();
+
                     Action action = ContextMenu.GetContextMenuForActionAddItem(this, item.controlLayout, i);
                     addBindingButton.clicked += action;
                     addBindingButton.userData = action; // Store to use in unbindItem
@@ -76,6 +81,11 @@ namespace UnityEngine.InputSystem.Editor
                         treeViewItem.UnregisterInputField();
                     else
                     {
+                        // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                        // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                        // it must be re-registered here.
+                        treeViewItem.RegisterInputField();
+
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
                             ChangeActionOrCompositName(item, newName);

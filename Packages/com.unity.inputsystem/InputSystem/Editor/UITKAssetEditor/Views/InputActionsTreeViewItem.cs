@@ -38,16 +38,9 @@ namespace UnityEngine.InputSystem.Editor
             focusable = true;
             delegatesFocus = false;
 
-            renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
-            RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.RegisterCallback<FocusInEvent>(e => IsFocused = true);
-            renameTextfield.RegisterCallback<FocusOutEvent>(e =>
-            {
-                OnEditTextFinished();
-                IsFocused = false;
-            });
+            RegisterInputField();
             _ = new ContextualMenuManipulator(menuBuilder =>
             {
                 OnContextualMenuPopulateEvent?.Invoke(menuBuilder);
@@ -57,6 +50,19 @@ namespace UnityEngine.InputSystem.Editor
 
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
+
+        public void RegisterInputField()
+        {
+            renameTextfield.SetEnabled(true);
+            renameTextfield.selectAllOnFocus = true;
+            RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
+            renameTextfield.RegisterCallback<FocusInEvent>(e => IsFocused = true);
+            renameTextfield.RegisterCallback<FocusOutEvent>(e =>
+            {
+                OnEditTextFinished();
+                IsFocused = false;
+            });
+        }
 
         public void UnregisterInputField()
         {
