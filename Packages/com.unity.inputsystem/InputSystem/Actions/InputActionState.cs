@@ -1563,7 +1563,7 @@ namespace UnityEngine.InputSystem
             var actionState = &actionStates[actionIndex];
             if (!actionState->isPressed && actuation >= pressPoint)
             {
-                actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
+                actionState->pressedInUpdate = Time.frameCount;
                 actionState->isPressed = true;
                 actionState->frame = Time.frameCount;
             }
@@ -1572,7 +1572,7 @@ namespace UnityEngine.InputSystem
                 var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                 if (actuation <= releasePoint)
                 {
-                    actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
+                    actionState->releasedInUpdate = Time.frameCount;
                     actionState->isPressed = false;
                     actionState->frame = Time.frameCount;
                 }
@@ -2436,7 +2436,7 @@ namespace UnityEngine.InputSystem
             newState.frame = Time.frameCount;
             if (newPhase == InputActionPhase.Performed)
             {
-                newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.lastPerformedInUpdate = Time.frameCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
@@ -2464,7 +2464,7 @@ namespace UnityEngine.InputSystem
             // To replicate the behavior of releasedInUpdate where it doesn't get updated when the action is disabled
             // from being performed, we skip updating lastCompletedInUpdate if Disabled is the phase after Canceled.
             if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed && !isDisablingAction)
-                newState.lastCompletedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.lastCompletedInUpdate = Time.frameCount;
             else
                 newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
 
@@ -3635,11 +3635,11 @@ namespace UnityEngine.InputSystem
             [FieldOffset(24)] private ushort m_BindingIndex;
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
-            [FieldOffset(32)] private uint m_LastPerformedInUpdate;
+            [FieldOffset(32)] private int m_LastPerformedInUpdate;
             [FieldOffset(36)] private uint m_LastCanceledInUpdate;
-            [FieldOffset(40)] private uint m_PressedInUpdate;
-            [FieldOffset(44)] private uint m_ReleasedInUpdate;
-            [FieldOffset(48)] private uint m_LastCompletedInUpdate;
+            [FieldOffset(40)] private int m_PressedInUpdate;
+            [FieldOffset(44)] private int m_ReleasedInUpdate;
+            [FieldOffset(48)] private int m_LastCompletedInUpdate;
             [FieldOffset(52)] private int m_Frame;
 
             /// <summary>
@@ -3790,7 +3790,7 @@ namespace UnityEngine.InputSystem
             /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
             /// Zero if the action did not trigger yet. Also reset to zero when the action is hard reset.
             /// </summary>
-            public uint lastPerformedInUpdate
+            public int lastPerformedInUpdate
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
@@ -3806,7 +3806,7 @@ namespace UnityEngine.InputSystem
             /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action completed last.
             /// Zero if the action did not become completed yet. Also reset to zero when the action is hard reset.
             /// </summary>
-            public uint lastCompletedInUpdate
+            public int lastCompletedInUpdate
             {
                 get => m_LastCompletedInUpdate;
                 set => m_LastCompletedInUpdate = value;
@@ -3818,13 +3818,13 @@ namespace UnityEngine.InputSystem
                 set => m_LastCanceledInUpdate = value;
             }
 
-            public uint pressedInUpdate
+            public int pressedInUpdate
             {
                 get => m_PressedInUpdate;
                 set => m_PressedInUpdate = value;
             }
 
-            public uint releasedInUpdate
+            public int releasedInUpdate
             {
                 get => m_ReleasedInUpdate;
                 set => m_ReleasedInUpdate = value;

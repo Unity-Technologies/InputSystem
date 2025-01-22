@@ -1261,8 +1261,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->pressedInUpdate == ExpectedFrame();
             }
 
             return false;
@@ -1310,8 +1309,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->releasedInUpdate == ExpectedFrame();
             }
 
             return false;
@@ -1369,8 +1367,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->lastPerformedInUpdate == ExpectedFrame();
             }
 
             return false;
@@ -1449,8 +1446,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->lastCompletedInUpdate == ExpectedFrame();
             }
 
             return false;
