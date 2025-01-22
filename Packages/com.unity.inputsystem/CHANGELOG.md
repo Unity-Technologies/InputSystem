@@ -14,8 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
 - Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
 - Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
-- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost.  
-
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost.
 
 ## [1.12.0] - 2025-01-15
 
