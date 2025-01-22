@@ -1,11 +1,10 @@
 # Restrict bindings to specific devices
 
-By default, Actions resolve their Bindings against all Devices present in the Input System (that is, [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads present in the system, a Binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the Action to be used from either.
+By default, actions [resolve their bindings](./binding-resolution.md) against all devices present that the Input System is aware of (that is, those listed in [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads connected, a binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the action to be performed from either gamepad.
 
-You can override this behavior by restricting [`InputActionAssets`](../api/UnityEngine.InputSystem.InputActionAsset.html) or individual [`InputActionMaps`](../api/UnityEngine.InputSystem.InputActionMap.html) to a specific set of Devices. If you do this, Binding resolution only takes the Controls of the given Devices into account.
+You can override this behavior by restricting an [action asset](./action-assets.md) or individual [action maps](./create-edit-delete-action-maps.md) to a specific set of Devices. If you do this, binding resolution only takes the controls of the specified devices into account.
 
->__Note__: [`InputUser`](user-management.md) and [`PlayerInput`](player-input-component.md) make use of this facility automatically. They set [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) automatically based on the Devices that are paired to the user.
-
+>__Note__: The Input System's [user management](user-management.md) feature and [Player Input component](player-input-component.md) make use of this automatically. They set the [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) for each player automatically, based on the device that is paired to each user.
 
 To restrict an action map to just the first gamepad:
 
