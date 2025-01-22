@@ -1,8 +1,8 @@
- using System;
- using System.Collections.Generic;
- using UnityEngine.InputSystem.LowLevel;
- using UnityEditor;
- using UnityEngine.UIElements;
+using System;
+using System.Collections.Generic;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEditor;
+using UnityEngine.UIElements;
 
 #if UNITY_EDITOR
 namespace UnityEngine.InputSystem.Editor
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
             SetEnumDisplayNames(enumNamesAndValues);
         }
 
-        // Sorts the values so that they get displayed consistently, and assigns them for being drawn. 
+        // Sorts the values so that they get displayed consistently, and assigns them for being drawn.
         private void SetEnumDisplayNames(Dictionary<string, int> enumNamesAndValues)
         {
             m_EnumValues = new int[enumNamesAndValues.Count];
@@ -89,10 +89,10 @@ namespace UnityEngine.InputSystem.Editor
             Array.Sort(m_EnumValues, m_EnumDisplayNames);
         }
 
-        // Ensures mapping between displayed value and actual value is consistent. Issues arise when there are gaps in the enum values (ie 0, 1, 13). 
+        // Ensures mapping between displayed value and actual value is consistent. Issues arise when there are gaps in the enum values (ie 0, 1, 13).
         private int GetEnumIndex(int enumValue)
         {
-            for (int i = 0; i<m_EnumValues.Length; i++)
+            for (int i = 0; i < m_EnumValues.Length; i++)
             {
                 if (enumValue == m_EnumValues[i])
                 {
@@ -104,6 +104,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private int[] m_EnumValues;
         private string[] m_EnumDisplayNames;
-     }
- }
+    }
+}
  #endif // UNITY_EDITOR
