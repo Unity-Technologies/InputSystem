@@ -580,7 +580,7 @@ namespace UnityEngine.InputSystem
         /// Equivalent to <see cref="WasPerformedThisFrame"/>.
         /// </summary>
         /// <seealso cref="WasPerformedThisFrame"/>
-        public bool triggered => WasPerformedThisFrame();
+        public bool triggered => WasPerformed();
 
         /// <summary>
         /// The currently active control that is driving the action. <see langword="null"/> while the action
@@ -1248,10 +1248,11 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasPressed"/> instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressed"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasPerformedThisFrame"/>
@@ -1261,7 +1262,44 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->pressedInUpdate == ExpectedFrame();
+                return actionStatePtr->frame == ExpectedFrame();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// in this InputSystem Update cycle.
+        /// </summary>
+        /// <returns>True if the action was pressed in this InputSystem Update cycle.</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the action was pressed in the current InputSystem Update cycle.
+        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPressedThisFrame"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressed() &amp;&amp; fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleasedThisFrame())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasPressed()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
             }
 
             return false;
@@ -1296,10 +1334,11 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasReleased"/> instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasReleased"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
@@ -1310,6 +1349,44 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->releasedInUpdate == ExpectedFrame();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
+        /// at any point in this InputSystem Update cycle.
+        /// </summary>
+        /// <returns>True if the action was released in this InputSystem Update cycle.</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the action was released in the current InputSystem Update cycle.
+        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressed() &amp;&amp; fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleased())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="CallbackContext.ReadValueAsButton"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasReleased()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
             }
 
             return false;
@@ -1354,9 +1431,10 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasPerformed"/> instead.
         /// </remarks>
+        /// <seealso cref="WasPerformed"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1368,6 +1446,42 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->lastPerformedInUpdate == ExpectedFrame();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in this InputSystem Update cycle.
+        /// </summary>
+        /// <returns>True if the action performed in this InputSystem Update cycle.</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the action was performed in the current InputSystem Update cycle.
+        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var warp = playerInput.actions["Warp"];
+        /// if (warp.WasPerformed())
+        ///     InitiateWarp();
+        /// </code>
+        /// </example>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasPerformed()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
             }
 
             return false;
@@ -1422,10 +1536,8 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         /// </para>
-        /// <para>
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
-        /// </para>
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasCompleted"/> instead.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1436,6 +1548,7 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
+        /// <seealso cref="WasCompleted"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1447,6 +1560,42 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->lastCompletedInUpdate == ExpectedFrame();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
+        /// value at least once in the InputSystem Update cycle.
+        /// </summary>
+        /// <returns>True if the action completed in this InputSystem Update cycle.</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the action was completed in the current InputSystem Update cycle.
+        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var warp = playerInput.actions["Warp"];
+        /// if (warp.WasPerformed())
+        ///     InitiateWarp();
+        /// </code>
+        /// </example>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasCompleted()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
