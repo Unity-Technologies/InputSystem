@@ -316,10 +316,7 @@ namespace UnityEngine.InputSystem.Editor
             var nameAndParameters = NameAndParameters.Parse(path);
             nameAndParameters.parameters = m_CompositeParameters.GetParameters();
 
-            m_PathProperty.stringValue = nameAndParameters.ToString();
-            m_PathProperty.serializedObject.ApplyModifiedProperties();
-
-            OnPathChanged();
+            OnPathChanged(nameAndParameters.ToString());
         }
 
         private void OnBindingGroupsChanged()
@@ -330,8 +327,9 @@ namespace UnityEngine.InputSystem.Editor
             onChange?.Invoke(k_GroupsChanged);
         }
 
-        private void OnPathChanged()
+        private void OnPathChanged(string path)
         {
+            m_PathProperty.stringValue = path;
             m_BindingProperty.serializedObject.ApplyModifiedProperties();
             onChange?.Invoke(k_PathChanged);
         }

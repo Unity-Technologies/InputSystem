@@ -59,7 +59,11 @@ namespace UnityEngine.InputSystem.Editor
             else
             {
                 var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
-                    () => { Dispatch(Commands.ApplyModifiedProperties()); });
+                    (path) =>
+                    {
+                        viewState.selectedBindingPath.stringValue = path;
+                        Dispatch(Commands.ApplyModifiedProperties());
+                    });
                 controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
 
                 var inputAction = viewState.selectedInputAction;

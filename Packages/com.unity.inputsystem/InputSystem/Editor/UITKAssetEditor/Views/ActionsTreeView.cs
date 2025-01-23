@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(root, stateContainer)
         {
+            Debug.Log("Rebuilding TreeView");
             m_ActionMapsListView = root.Q<ListView>("action-maps-list-view");
             m_AddActionButton = root.Q<Button>("add-new-action-button");
             m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
@@ -104,6 +105,12 @@ namespace UnityEngine.InputSystem.Editor
                     return;
                 var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex).Q<InputActionsTreeViewItem>();
                 item.FocusOnRenameTextField();
+            };
+
+            m_ActionsTreeView.selectionChanged += objects =>
+            {
+                var data = (ActionOrBindingData)objects.FirstOrDefault();
+                Debug.Log($"Selection Changed {data.actionIndex} . {data.bindingIndex}");
             };
 
             m_ActionsTreeView.unbindItem = (element, i) =>

@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <param name="onModified">Delegate that is called when the path has been modified.</param>
         /// <param name="label">Optional label to display instead of display name of <paramref name="pathProperty"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="pathProperty"/> is <c>null</c>.</exception>
-        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified, GUIContent label = null)
+        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action<string> onModified, GUIContent label = null)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action modifiedCallback = null)
+        public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action<string> modifiedCallback = null)
         {
             var pathLabel = label ?? m_PathLabel;
             var serializedProperty = property ?? pathProperty;
@@ -141,7 +141,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     serializedProperty.stringValue = path;
                     serializedProperty.serializedObject.ApplyModifiedProperties();
-                    (modifiedCallback ?? onModified).Invoke();
+                    (modifiedCallback ?? onModified).Invoke(path);
                 }
             }
             else
@@ -151,7 +151,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     SetExpectedControlLayoutFromAttribute(serializedProperty);
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowDropdown(bindingTextRect, serializedProperty, modifiedCallback ?? onModified);
+                    ShowDropdown(bindingTextRect, modifiedCallback ?? onModified);
                 }
             }
 
@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorStyles.miniButton);
         }
 
-        private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
+        private void ShowDropdown(Rect rect, Action<string> modifiedCallback)
         {
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
@@ -171,19 +171,16 @@ namespace UnityEngine.InputSystem.Editor
                     m_PickerState,
                     path =>
                     {
-                        serializedProperty.stringValue = path;
                         m_PickerState.manualPathEditMode = false;
-                        modifiedCallback();
+                        modifiedCallback(path);
                     });
             }
 
             m_PickerDropdown.SetPickedCallback(path =>
             {
                 //At this point, the serialized property can sometines be referencing the old input actions asset
-                Debug.Log(serializedProperty.serializedObject.targetObject.GetInstanceID());
-                serializedProperty.stringValue = path;
                 m_PickerState.manualPathEditMode = false;
-                modifiedCallback();
+                modifiedCallback(path);
             });
 
             m_PickerDropdown.SetControlPathsToMatch(m_ControlPathsToMatch);
@@ -204,7 +201,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         public SerializedProperty pathProperty { get; }
-        public Action onModified { get; }
+        public Action<string> onModified { get; }
 
         private GUIContent m_PathLabel;
         private string m_ExpectedControlLayout;
@@ -215,6 +212,7 @@ namespace UnityEngine.InputSystem.Editor
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
+
     }
 }
  #endif // UNITY_EDITOR
