@@ -1348,7 +1348,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->releasedInUpdate == ExpectedFrame();
+                return actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
@@ -1445,7 +1445,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->lastPerformedInUpdate == ExpectedFrame();
+                return actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
@@ -1559,7 +1559,7 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->lastCompletedInUpdate == ExpectedFrame();
+                return actionStatePtr->frame == ExpectedFrame();
             }
 
             return false;
