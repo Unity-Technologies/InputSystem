@@ -10,7 +10,5 @@ By default, actions whose [Action Type](./configure-action-type.md) is set to **
 
 However, you can manually enable initial state checks on these types of actions by doing the following:
 
-1. Select the action in the Actions panel of the [Actions Editor window](./actions-editor.md)
-2. Enable the **Initial State Check** option in the **Actions Properties** panel.
-
-![Initial State Check](./Images/InitialStateCheck.png)
+1. Select the action in the [Actions panel](./actions-panel.md) of the [Actions Editor window](./actions-editor.md)
+2. Enable the **Initial State Check** option in the [Actions Properties panel](./action-properties-panel.md) to the right.
