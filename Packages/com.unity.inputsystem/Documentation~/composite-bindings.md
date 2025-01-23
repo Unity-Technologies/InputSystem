@@ -18,11 +18,5 @@ The **Add binding (+)** menu contains the following options.
 | **Add Up/Down/Left/Right/Forward/Backward Composite** | Adds a 3D composite binding that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html) class. The output is a `Vector3`. <br/><br/> This composite's [**mode** property](./binding-properties-panel.md) allows you to choose whether the inputs should be treated as digital or analog controls. |
 | **Add Binding With One Modifier** | Adds a composite with two sub-bindings, named **Binding** and **Modifier**, which requires the user to hold down the **modifier** button in addition to another control from which the actual value of the binding is determined. This can be used, for example, for bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.<br/><br/>The output is a [value of the same type](control-types.md) as the control bound to the sub-binding named **Binding**. |
 | **Add Binding With Two Modifiers** | Adds a composite with three sub-bindings, named **Binding**, **Modifier 1** and **Modifier 2**, which requires the user to hold down two modifier buttons in addition to another control from which the actual value of the binding is determined. This can be used, for example, for bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.<br/><br/>The output is a [value of the same type](control-types.md) as the control bound to the sub-binding named **Binding**. |
-| **Add Composite Asking For Source Control Composite**           | *TODO* |
-| **Add Composite With Parameters Composite**           | *TODO* |
-| **Add Composite With Vector 2 Part Composite**           | *TODO* |
-| **Add Custom Composite**           | *TODO* |
-| **Add Pointer Input Composite**           | *TODO* |
-
 
 > **Note**: You can also [create custom composite bindings from code](./create-custom-composite-binding.md)

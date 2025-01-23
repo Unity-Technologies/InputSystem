@@ -13,7 +13,7 @@ To assign bindings to each part of the composite:
 1. In the Actions panel, select the Action whose composite binding you want to edit.
 2. Expand the Action's hierarchy as necessary to display the composite binding and its parts.
 3. Select the part you want to configure
-4. In the Binding Properties panel, [pick a control for this part](./pick-control-binding.md) using the Path field.
+4. In the Binding Properties panel, [select a control for this part](./select-control-binding.md) using the Path field.
  
 ## Change a composite's type
 

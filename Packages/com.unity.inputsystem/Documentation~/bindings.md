@@ -8,7 +8,7 @@ A **binding** represents a connection between an [Action](actions.md) and one or
 | :------------------------------ | :------------------------------- |
 | **[Introduction to Bindings](introduction-to-bindings.md)** | Learn the basic concepts of bindings. |
 | **[Add, Duplicate or Delete a Binding](add-duplicate-delete-binding.md)** | Learn how to add, duplicate or delete bindings. |
-| **[Pick a control for Binding](pick-control-binding.md)** | Learn how to choose a specific control that a binding is bound to, such as a specific button or stick on a gamepad, or a specific keyboard key. |
+| **[Select a control for Binding](select-control-binding.md)** | Learn how to choose a specific control that a binding is bound to, such as a specific button or stick on a gamepad, or a specific keyboard key. |
 | **[Composite Bindings](composite-bindings.md)** | Bindings made up of multiple simple bindings acting together. |
 | **[Group bindings to control schemes](group-binding-to-control-scheme.md)** | Group types of related bindings together according to their control type, so that you can enable or disable groups of bindings |
 | **[Binding resolution](binding-resolution.md)** | Learn how the Input Systems resolves binding configurations to currently-connected input devices. |
