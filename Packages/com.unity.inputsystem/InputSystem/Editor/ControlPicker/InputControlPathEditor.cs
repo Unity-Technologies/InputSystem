@@ -179,6 +179,8 @@ namespace UnityEngine.InputSystem.Editor
 
             m_PickerDropdown.SetPickedCallback(path =>
             {
+                //At this point, the serialized property can sometines be referencing the old input actions asset
+                Debug.Log(serializedProperty.serializedObject.targetObject.GetInstanceID());
                 serializedProperty.stringValue = path;
                 m_PickerState.manualPathEditMode = false;
                 modifiedCallback();
