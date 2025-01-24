@@ -1,3 +1,4 @@
+using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Samples.RebindUI;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 public class RebindingUITests : CoreTestsFixture
@@ -84,9 +86,9 @@ public class RebindingUITests : CoreTestsFixture
     }
 
     // https://fogbugz.unity3d.com/f/cases/1271591/
-    [Test]
+    [UnityTest]
     [Category("Samples")]
-    public void Samples_RebindingUI_SuppressingEventsDoesNotInterfereWithUIInput()
+    public IEnumerator Samples_RebindingUI_SuppressingEventsDoesNotInterfereWithUIInput()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -135,6 +137,8 @@ public class RebindingUITests : CoreTestsFixture
         // UI should be fine with that.
         PressAndRelease(keyboard.enterKey);
         eventSystem.InvokeUpdate();
+        yield return null;
+
 
         Assert.That(rebind.ongoingRebind, Is.Not.Null);
         Assert.That(rebind.ongoingRebind.started, Is.True);
@@ -142,12 +146,9 @@ public class RebindingUITests : CoreTestsFixture
         Assert.That(bindingLabel.text, Is.EqualTo("<Waiting...>"));
         Assert.That(inputActions["submit"].inProgress, Is.False);
 
-        // This is an ugly workaround because the Time.frameCount is not updated in the test environment.
-        // The accurate frameCount is needed for InputSystemUIInputModule and InputAction.WasPerformedThisFrame() to identify when the submit key was pressed.
-        inputActions["submit"].Reset();
-
         Press(keyboard.bKey);
         eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(rebind.ongoingRebind, Is.Not.Null);
         Assert.That(rebind.ongoingRebind.started, Is.True);
@@ -166,6 +167,7 @@ public class RebindingUITests : CoreTestsFixture
         // Start another rebind via "Submit".
         PressAndRelease(keyboard.enterKey);
         eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(rebind.ongoingRebind, Is.Not.Null);
         Assert.That(rebind.ongoingRebind.started, Is.True);
