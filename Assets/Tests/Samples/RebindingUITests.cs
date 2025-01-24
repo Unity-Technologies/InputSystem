@@ -142,6 +142,10 @@ public class RebindingUITests : CoreTestsFixture
         Assert.That(bindingLabel.text, Is.EqualTo("<Waiting...>"));
         Assert.That(inputActions["submit"].inProgress, Is.False);
 
+        // This is an ugly workaround because the Time.frameCount is not updated in the test environment.
+        // The accurate frameCount is needed for InputSystemUIInputModule and InputAction.WasPerformedThisFrame() to identify when the submit key was pressed.
+        inputActions["submit"].Reset();
+
         Press(keyboard.bKey);
         eventSystem.InvokeUpdate();
 
