@@ -559,6 +559,10 @@ namespace UnityEngine.InputSystem
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
+                newActionState.framePerformed = oldActionState.framePerformed;
+                newActionState.frameCompleted = oldActionState.frameCompleted;
+                newActionState.framePressed = oldActionState.framePressed;
+                newActionState.frameReleased = oldActionState.frameReleased;
                 newActionState.bindingIndex = oldActionState.bindingIndex;
                 newActionState.frame = oldActionState.frame;
 
@@ -2460,10 +2464,12 @@ namespace UnityEngine.InputSystem
             {
                 newState.lastCanceledInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+                newState.framePerformed = actionState->framePerformed;
             }
             else
             {
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+                newState.framePerformed = actionState->framePerformed;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
             }
 
@@ -2479,10 +2485,13 @@ namespace UnityEngine.InputSystem
             else
             {
                 newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
+                newState.frameCompleted = actionState->frameCompleted;
             }
 
             newState.pressedInUpdate = actionState->pressedInUpdate;
+            newState.framePressed = actionState->framePressed;
             newState.releasedInUpdate = actionState->releasedInUpdate;
+            newState.frameReleased = actionState->frameReleased;
             if (newPhase == InputActionPhase.Started)
                 newState.startTime = newState.time;
             *actionState = newState;
@@ -3654,10 +3663,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
             [FieldOffset(52)] private int m_Frame;
-            [FieldOffset(52)] private int m_FramePerformed;
-            [FieldOffset(52)] private int m_FramePressed;
-            [FieldOffset(52)] private int m_FrameReleased;
-            [FieldOffset(52)] private int m_FrameCompleted;
+            [FieldOffset(56)] private int m_FramePerformed;
+            [FieldOffset(60)] private int m_FramePressed;
+            [FieldOffset(64)] private int m_FrameReleased;
+            [FieldOffset(68)] private int m_FrameCompleted;
 
             /// <summary>
             /// Phase being triggered by the control value change.
