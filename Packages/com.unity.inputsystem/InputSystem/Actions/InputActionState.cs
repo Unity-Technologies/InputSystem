@@ -564,7 +564,6 @@ namespace UnityEngine.InputSystem
                 newActionState.framePressed = oldActionState.framePressed;
                 newActionState.frameReleased = oldActionState.frameReleased;
                 newActionState.bindingIndex = oldActionState.bindingIndex;
-                newActionState.frame = oldActionState.frame;
 
                 if (oldActionState.phase != InputActionPhase.Disabled)
                 {
@@ -893,7 +892,6 @@ namespace UnityEngine.InputSystem
                 actionState->frameCompleted = default;
                 actionState->framePressed = default;
                 actionState->frameReleased = default;
-                actionState->frame = default;
             }
 
             Debug.Assert(!actionState->isStarted, "Cannot reset an action to started phase");
@@ -1574,7 +1572,6 @@ namespace UnityEngine.InputSystem
                 actionState->framePressed = Time.frameCount;
                 actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
                 actionState->isPressed = true;
-                actionState->frame = Time.frameCount;
             }
             else if (actionState->isPressed)
             {
@@ -1584,7 +1581,6 @@ namespace UnityEngine.InputSystem
                     actionState->frameReleased = Time.frameCount;
                     actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
                     actionState->isPressed = false;
-                    actionState->frame = Time.frameCount;
                 }
             }
         }
@@ -2443,7 +2439,6 @@ namespace UnityEngine.InputSystem
                 newState.magnitude = 0f;
 
             newState.phase = newPhase;
-            newState.frame = Time.frameCount;
             if (newPhase == InputActionPhase.Performed)
             {
                 newState.framePerformed = Time.frameCount;
@@ -3820,12 +3815,6 @@ namespace UnityEngine.InputSystem
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
-            }
-
-            internal int frame
-            {
-                get => m_Frame;
-                set => m_Frame = value;
             }
 
             internal int framePerformed

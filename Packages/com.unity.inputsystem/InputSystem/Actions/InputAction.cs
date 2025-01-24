@@ -1299,7 +1299,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1386,7 +1386,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1481,7 +1481,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame(); // TODO maybe remove frame check?
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1595,7 +1595,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
