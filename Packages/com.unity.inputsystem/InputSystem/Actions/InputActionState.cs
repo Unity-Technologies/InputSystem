@@ -885,6 +885,10 @@ namespace UnityEngine.InputSystem
                 actionState->lastCompletedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
+                actionState->framePerformed = default;
+                actionState->frameCompleted = default;
+                actionState->framePressed = default;
+                actionState->frameReleased = default;
                 actionState->frame = default;
             }
 
@@ -1563,6 +1567,7 @@ namespace UnityEngine.InputSystem
             var actionState = &actionStates[actionIndex];
             if (!actionState->isPressed && actuation >= pressPoint)
             {
+                actionState->framePressed = Time.frameCount;
                 actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
                 actionState->isPressed = true;
                 actionState->frame = Time.frameCount;
@@ -1572,6 +1577,7 @@ namespace UnityEngine.InputSystem
                 var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                 if (actuation <= releasePoint)
                 {
+                    actionState->frameReleased = Time.frameCount;
                     actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
                     actionState->isPressed = false;
                     actionState->frame = Time.frameCount;
@@ -2436,6 +2442,7 @@ namespace UnityEngine.InputSystem
             newState.frame = Time.frameCount;
             if (newPhase == InputActionPhase.Performed)
             {
+                newState.framePerformed = Time.frameCount;
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
@@ -2463,10 +2470,16 @@ namespace UnityEngine.InputSystem
             // When we go from Performed to Disabling, we take a detour through Canceled.
             // To replicate the behavior of releasedInUpdate where it doesn't get updated when the action is disabled
             // from being performed, we skip updating lastCompletedInUpdate if Disabled is the phase after Canceled.
-            if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed && !isDisablingAction)
+            if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed &&
+                !isDisablingAction)
+            {
+                newState.frameCompleted = Time.frameCount;
                 newState.lastCompletedInUpdate = InputUpdate.s_UpdateStepCount;
+            }
             else
+            {
                 newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
+            }
 
             newState.pressedInUpdate = actionState->pressedInUpdate;
             newState.releasedInUpdate = actionState->releasedInUpdate;
@@ -3641,6 +3654,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
             [FieldOffset(52)] private int m_Frame;
+            [FieldOffset(52)] private int m_FramePerformed;
+            [FieldOffset(52)] private int m_FramePressed;
+            [FieldOffset(52)] private int m_FrameReleased;
+            [FieldOffset(52)] private int m_FrameCompleted;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3800,6 +3817,27 @@ namespace UnityEngine.InputSystem
             {
                 get => m_Frame;
                 set => m_Frame = value;
+            }
+
+            internal int framePerformed
+            {
+                get => m_FramePerformed;
+                set => m_FramePerformed = value;
+            }
+            internal int framePressed
+            {
+                get => m_FramePressed;
+                set => m_FramePressed = value;
+            }
+            internal int frameReleased
+            {
+                get => m_FrameReleased;
+                set => m_FrameReleased = value;
+            }
+            internal int frameCompleted
+            {
+                get => m_FrameCompleted;
+                set => m_FrameCompleted = value;
             }
 
             /// <summary>
