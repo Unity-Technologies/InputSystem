@@ -3657,11 +3657,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
-            [FieldOffset(52)] private int m_Frame;
-            [FieldOffset(56)] private int m_FramePerformed;
-            [FieldOffset(60)] private int m_FramePressed;
-            [FieldOffset(64)] private int m_FrameReleased;
-            [FieldOffset(68)] private int m_FrameCompleted;
+            [FieldOffset(52)] private int m_FramePerformed;
+            [FieldOffset(56)] private int m_FramePressed;
+            [FieldOffset(60)] private int m_FrameReleased;
+            [FieldOffset(64)] private int m_FrameCompleted;
 
             /// <summary>
             /// Phase being triggered by the control value change.
