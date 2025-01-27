@@ -15,7 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
 - Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
-
+- Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
 
 ## [1.12.0] - 2025-01-15
 
