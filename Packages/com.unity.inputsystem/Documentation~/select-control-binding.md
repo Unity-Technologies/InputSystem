@@ -35,7 +35,7 @@ The Device and Control tree is organized hierarchically from generic to specific
 
 Instead of browsing the tree to find the Control you want, if you have the device connected that you want to bind, it can be easier to let the Input System listen for input from that device. To do this:
 
-1. select the __Listen__ button.
+1. Select the __Listen__ button.
 2. Press the button or actuate the control on the device you want to bind to.
 3. While the control picker is in listen mode, all buttons or controls you actuate appear in a list.
 4. Select the binding from the list to finalise the binding.

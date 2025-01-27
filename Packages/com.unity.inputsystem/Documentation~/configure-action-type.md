@@ -4,7 +4,7 @@ When you select an action in the [actions panel](./actions-panel.md) of the [Act
 
 The first of these properties is the **Action Type**.
 
-The action type influences how the Input System processes state changes for the action, and relate to whether this action represents a discrete on/off button-style interaction or a value that can change gradually over time.
+The action type influences how the Input System processes state changes for the action, and relates to whether this action represents a discrete on/off button-style interaction or a value that can change gradually over time.
 
 ## Action types
 
