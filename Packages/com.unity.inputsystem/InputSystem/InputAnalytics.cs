@@ -47,13 +47,10 @@ namespace UnityEngine.InputSystem
         {
             InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
 
-#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-            // ISXB-1203 TryGatherData is defined by base. Note that UNITY_EDITOR is not defined when
-            // compiling addressables even when running in editor.
-#else
+#if !UNITY_EDITOR || !UNITY_2023_2_OR_NEWER
             // Conditionally mimic UnityEngine.Analytics.IAnalytic
             bool TryGatherData(out IInputAnalyticData data, out Exception error);
-#endif // !UNITY_2023_2_OR_NEWER
+#endif // !UNITY_EDITOR || !UNITY_2023_2_OR_NEWER
         }
 
         public static void Initialize(InputManager manager)
