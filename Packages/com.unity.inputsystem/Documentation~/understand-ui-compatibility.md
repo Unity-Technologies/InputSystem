@@ -38,25 +38,21 @@ However, the following script invokes the handler in both cases:
  ```
 
 ### UI Toolkit XR support
->XR ([tracked-type input](#tracked-type-input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
+XR ([tracked-type input](#tracked-type-input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
 
 ### UI Toolkit raycasting
-
 UI Toolkit handles raycasting internally. No separate raycaster component is necessary. This means that UI Toolkit does not support [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html).
-
-
 
 ## Unity UI (uGUI) compatibility
 [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI", is a GameObject and Component-based UI solution).
 
 When using uGUI, you always need to use the [UI Input Module component](using-ui-input-module) to pass actions from the Input System to the UI.
 
-The uGUI package contains an older equivalent module called "**[Standalone Input Module](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html)**" which performs the same kind of integration between the Unity UI and the legacy Input Manager system.
+The uGUI package contains an older equivalent module called **[Standalone Input Module](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html)**, which performs the same kind of integration between the Unity UI and the legacy Input Manager system.
 
 If you have one of these older Standalone Input Module components on a GameObject in your project, and the Input System is installed, Unity displays a button in the Inspector offering to automatically replace it with the equivalent newer Input System UI Input Module for you.
+
 ## IMGUI compatibility
 [**IMGUI**](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) is a script-based "Immediate Mode" UI which uses the [`OnGUI`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnGUI.html) method.
 
 The Input System package is not compatible with IMGUI. However you can still use the Input System for other parts of your project, such as gameplay. For more information, refer to [Use IMGUI alongside the Input System package](#immediate-mode-gui).
-
-## 
