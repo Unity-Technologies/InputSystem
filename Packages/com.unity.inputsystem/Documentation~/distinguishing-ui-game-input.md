@@ -10,7 +10,7 @@ Whether such ambiguities exist depends on *how* UIs are used. For example, you c
 * Place UI over a 2D/3D scene, but don’t let the user directly interact with the UI.
 * Place UI over a 2D/3D scene, but create a clear "mode" switch that determines whether interaction applies to the UI or the scene. For example, a first-person game on desktop might employ a [cursor lock](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) which directs input to the game when it is engaged, and to the UI when it is not engaged.
 
-There are specific ambiguities that can arise for [pointer input](#pointer-type-input) and [navigation input](#navigation-type-input).
+There are specific ambiguities that can arise for [pointer input](supported-ui-input-types-pointer.md) and [navigation input](supported-ui-input-types-navigation.md).
 
 >[!NOTE]
 >The Input System package includes a sample project called "**UI vs Game Input**". The sample demonstrates how to deal with ambiguities between inputs for UI and inputs for the game.

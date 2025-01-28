@@ -1,6 +1,6 @@
 # Introduction to multiplayer UI input
 
-The Input System can handle multiple separate UI instances on the screen controlled separately by different [Input Bindings](ActionBindings.md). This is useful if you want to have multiple local players share a single screen with different controllers, so that every player can control their own UI instance.
+The Input System can handle multiple separate UI instances on the screen controlled separately by different [Input Bindings](action-bindings.md). This is useful if you want to have multiple local players share a single screen with different controllers, so that every player can control their own UI instance.
 
 To implement multiplayer UI, the Input System uses the Multiplayer Event System.
 

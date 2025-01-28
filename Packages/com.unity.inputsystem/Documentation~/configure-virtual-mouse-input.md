@@ -10,7 +10,7 @@ To configure the Virtual Mouse component with the Unity UI system:
 7. Drag the **Rect Transform** component of the pointer GameObject to the **Cursor Transform** field of the Virtual Mouse component.
 
 >[!NOTE]
-> Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using the Virtual Mouse component.  If, for example, the Virtual Mouse component is configured to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels, and triggers the input twice.
+> Do not set up gamepads and joysticks for [navigation input](supported-ui-input-types-navigation.md) while using the Virtual Mouse component.  If, for example, the Virtual Mouse component is configured to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels, and triggers the input twice.
 
 If you want the virtual mouse to control the system mouse cursor:
 Set [Cursor Mode](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to **Hardware Cursor If Available**. In this mode, the **Cursor Graphic** is hidden when a system mouse is present and you use [Mouse.WarpCursorPosition](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_) to move the system mouse cursor instead of the software cursor. The transform linked through **Cursor Transform** is not updated in that case.

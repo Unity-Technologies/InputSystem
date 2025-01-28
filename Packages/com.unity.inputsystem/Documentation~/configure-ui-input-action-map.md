@@ -1,6 +1,6 @@
 # Configure the UI Input Action Map
 
-The default [Project-Wide Actions asset](./about-project-wide-actions.md) comes with a "**UI**" Action Map, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./ActionsEditor.md). 
+The default [Project-Wide Actions asset](./about-project-wide-actions.md) comes with a "**UI**" Action Map, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./actions-editor.md). 
 
 To open the Actions Editor:
 
