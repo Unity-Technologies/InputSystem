@@ -31,57 +31,7 @@
     * [Processors](processors.md)
     * [Configure sctions](configure-actions.md)
     * [The actions editor window](actions-editor.md)
-* [Devices](devices.md)
-  * [Devices introduction]
-  * [Supported devices reference](supported-devices.md)
-  * 2D surface devices
-  * [Pointers](pointers.md)
-    * [Touch support](Touch.md)
-      * Use touch with actions
-      * Simulate touches
-      * Read all touches
-    * [Mouse support](Mouse.md)
-    * [Pen, tablet, and stylus support](Pen.md)
-      * Read pressure, tilt, and twist
-  * [Keyboard support](Keyboard.md)
-    * Read keyboard input
-    * Read text input
-    * Read keyboard layout
-  * [Gamepad support](Gamepad.md)
-    * Read gamepad controls
-    * Deadzones
-    * Set a deadzone on a gamepad
-    * Rumble and haptics
-    * Control haptics
-    * Playstaton controllers
-    * Xbox controllers
-    * Switch controllers
-    * Cursor control
-  * [Joystick support](Joystick.md)
-  * [Sensor support](Sensors.md)		
-	  * Supported sensors	
-	  * Read a sensor	
-	  * Sampling Frequency	
-		  * Accelerometer
-		  * Gyroscope
-		  * GravitySensor
-		  * AttitudeSensor
-		  * LinearAccelerationSensor
-		  * MagneticFieldSensor
-		  * LightSensor
-		  * PressureSensor
-		  * ProximitySensor
-		  * HumiditySensor
-		  * AmbientTemperatureSensor
-		  * StepCounter
-  * [HID support](HID.md)
-    * HID Descriptors
-    * Auto-generated Layouts
-    * Resolve HID layout problems
-    * Send HID Output
-    * Custom Device layouts
-    * Create a custom device layout
-  * [Programming with devices]
+  * [Devices](devices.md)
     * [Get information about devices](get-information-about-devices.md)
 * [Using the Input System]()
   * [Project-Wide Actions](about-project-wide-actions.md)
@@ -109,6 +59,16 @@
         * [Optimize for fixed update](timing-optimize-fixed-update.md)
         * [Avoid missed or duplicate events](timing-missed-duplicate-events.md)
         * [Mixed timing scenarios](timing-mixed-scenarios.md)
+* [Supported Input Devices](SupportedDevices.md)
+  * [Pointers](pointers.md)
+      * [Touch support](Touch.md)
+      * [Mouse support](Mouse.md)
+      * [Pen, tablet, and stylus support](Pen.md)
+  * [Keyboard support](Keyboard.md)
+  * [Gamepad support](Gamepad.md)
+  * [Joystick support](Joystick.md)
+  * [Sensor support](Sensors.md)
+  * [HID support](HID.md)
 * [UI support](UISupport.md)
   * [On-screen Controls](OnScreen.md)
 * [Editor Features](EditorFeatures.md)
