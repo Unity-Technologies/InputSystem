@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed GamepadButton.LeftTrigger and GamepadButton.RightTrigger enum values not matching displayed dropdown values in editor when using GamepadButtonPropertyDrawer [ISXB-1270](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1270).
 - Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
 - Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
+- Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
 
 ## [1.12.0] - 2025-01-15
 
