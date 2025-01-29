@@ -1,7 +1,7 @@
 
 # Configure Control type
 
-The **Control Type** setting allows you to select the type of control expected by the action. This limits the types of [composite bindings](composite-bindings.md) and [control types](control-types.md) shown when setting up bindings in the UI, and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate options when setting up bindings.
+The **Control Type** setting allows you to select the type of control expected by the action. This limits the types of [composite bindings](composite-bindings-reference.md) and [control types](control-types.md) shown when setting up bindings in the UI, and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate options when setting up bindings.
 
 Configuring an action's **Control Type** is typically done when you create a new action, however you can also change the control type of an existing action.
 

@@ -1,12 +1,12 @@
-# Pick a control for a binding
+# Select a control for a binding
 
 The [control path](control-paths.md) identifies the specific control that a binding is bound to, such as a specific button or stick on a gamepad, or a specific keyboard key.
 
 There are three ways to specify the control path for a binding in the [Actions Editor window](./actions-editor.md). These are:
 
-- **Select the control path from a list**,
-- **Select the control path using the listen feature**,
-- or **Enter the path directly by typing text**
+- Select the control path from a list,
+- Select the control path using the listen feature, or
+- Enter the path directly by typing text
 
 All three options are described below. For all these options, you must first:
 

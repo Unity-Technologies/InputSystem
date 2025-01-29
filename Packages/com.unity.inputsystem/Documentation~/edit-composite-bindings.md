@@ -1,6 +1,6 @@
 # Edit composite bindings
 
-You can add, edit, and delete [composite bindings](composite-bindings.md) in the [Actions Editor window](actions-editor.md).
+You can add, edit, and delete [composite bindings](composite-bindings-reference.md) in the [Actions Editor window](actions-editor.md).
 
 When you [add a composite binding](./add-duplicate-delete-binding.md), the Input System creates a set of individual sub-bindings, or **parts** to match the type of composite. For example, a 2D Vector composite has four parts, up, down, left and right. These are visible in the hierarchy of the selected action in the Actions panel. Each part is a **simple binding** as described in [binding types](./binding-types.md).
 

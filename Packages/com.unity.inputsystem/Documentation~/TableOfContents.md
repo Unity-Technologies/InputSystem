@@ -28,7 +28,7 @@
     * [Bindings](bindings.md)
       * [Introduction to bindings](introduction-to-bindings.md)
       * [Binding types](binding-types.md)
-      * [Composite bindings](composite-bindings.md)
+      * [Composite bindings](composite-bindings-reference.md)
       * [Add, duplicate or delete a binding](add-duplicate-delete-binding.md)
       * [Select a control for binding](select-control-binding.md)
       * [Edit composite bindings](edit-composite-bindings.md)
