@@ -1,15 +1,16 @@
-# Configure Control Type
 
-When you select an Action in the [Actions Editor window](./actions-editor.md), you can edit its properties in the right-hand pane of the window.
+# Configure Control type
 
-The second of these properties is the Control Type.
+The **Control Type** setting allows you to select the type of control expected by the action. This limits the types of [composite bindings](composite-bindings.md) and [control types](control-types.md) shown when setting up bindings in the UI, and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate options when setting up bindings.
 
-![Action Properties](Images/ActionProperties.png)
+Configuring an action's **Control Type** is typically done when you create a new action, however you can also change the control type of an existing action.
 
-The Control Type setting allows you to select the type of control expected by the action. This limits the types of [composite bindings](composite-bindings.md) and [control types](control-types.md) shown when setting up bindings in the UI, and also limits which controls can be bound interactively to the action. This makes it simpler to select appropriate options when setting up bindings.
+To configure an action's action type:
 
-For example, if you select **2D axis** as the control type, only those types of controls that can supply a 2D vector as value are available as options for the binding control path, such as a thumb stick or Dpad.
+1. [Create a new action](./create-edit-delete-actions.md) or select an existing in the [Actions Editor window](./actions-editor.md).
+2. With the action selected, in the right-hand [Action Properties panel](./action-properties-panel.md), under **Action**, click the **Action Type** dropdown menu.
+3. Select the action type from the available [action type options](action-type-reference.md).
 
-There are more specific control types available which further filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you [select a binding for your action](add-duplicate-delete-binding.md).
+## Additional resources
+[Control types reference](./control-types.md)
 
-To configure your action's control type, select an option from the **Control Type** drop-down menu.
