@@ -1,11 +1,15 @@
 # Write custom Interactions
 
-You can also write a custom Interaction to use in your Project. You can use custom Interactions in the UI and code the same way you use built-in Interactions. Add a class implementing the [`IInputInteraction`](../api/UnityEngine.InputSystem.IInputInteraction.html) interface, like this:
+You can write a custom Interaction and use it the same way you use built-in Interactions. 
+
+To write a custom Interaction:
+
+**1.** Add a class that implements the [`IInputInteraction`](../api/UnityEngine.InputSystem.IInputInteraction.html) interface. For example:
 
 ```CSharp
 // Interaction which performs when you quickly move an
 // axis all the way from extreme to the other.
-public class MyWiggleInteraction : IInputInteraction
+public class MyExampleInteraction : IInputInteraction
 {
     public float duration = 0.2;
 
@@ -44,14 +48,16 @@ public class MyWiggleInteraction : IInputInteraction
 }
 ```
 
-Now, you need to tell the Input System about your Interaction. Call this method in your initialization code:
+**2.** Add your Interaction to the Input System. Call the following method in your initialization code:
 
 ```CSharp
-InputSystem.RegisterInteraction<MyWiggleInteraction>();
+InputSystem.RegisterInteraction<MyExampleInteraction>();
 ```
 
-Your new Interaction is now available in the [Input Action Asset Editor window](ActionAssets.md). You can also add it in code like this:
+Your new Interaction is now available in the [Input Action Asset Editor window](ActionAssets.md).
+
+Alternatively, you can add it this way:
 
 ```CSharp
-var Action = new InputAction(Interactions: "MyWiggle(duration=0.5)");
+var Action = new InputAction(Interactions: "MyExample(duration=0.5)");
 ```
