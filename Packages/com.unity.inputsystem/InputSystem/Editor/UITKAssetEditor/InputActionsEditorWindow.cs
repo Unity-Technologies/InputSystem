@@ -282,7 +282,12 @@ namespace UnityEngine.InputSystem.Editor
         {
             var editedAsset = GetEditedAsset();
             var editedAssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(editedAsset);
-            return editedAssetJson != m_AssetJson;
+            var hasContentChanged = editedAssetJson != m_AssetJson;
+            if (hasContentChanged)
+            {
+                Debug.LogError("Content Changed");
+            }
+            return hasContentChanged;
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
