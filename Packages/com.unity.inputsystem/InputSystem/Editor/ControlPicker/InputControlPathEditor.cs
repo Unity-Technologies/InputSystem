@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Editor
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
             Debug.Log($"New Path Property on {pathProperty.serializedObject.targetObject.GetInstanceID()}");
-            this.pathProperty = pathProperty;
+            InputControlPathEditor.pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
             m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.GetTooltip());
@@ -159,8 +159,8 @@ namespace UnityEngine.InputSystem.Editor
                     m_PickerState,
                     path =>
                     {
-                        Debug.Log($"Saving path to property on {pathProperty.serializedObject.targetObject.GetInstanceID()}");
                         pathProperty.stringValue = path;
+                        pathProperty.serializedObject.ApplyModifiedProperties();
                         m_PickerState.manualPathEditMode = false;
                         modifiedCallback();
                     });
@@ -183,7 +183,12 @@ namespace UnityEngine.InputSystem.Editor
                 SetExpectedControlLayout(attribute.layout);
         }
 
-        public SerializedProperty pathProperty { get; }
+        // This static variable is a hack. Because the editor is rebuilt at unpredictable times with a new serializedObject, we need to keep updating
+        // This variable with most up to date serializedProperty, so that the picker dropdown can access the correct serializedProperty.
+        // The picker dropdown is a separate window and does not have access to the changed serializedObject reference.
+        // This is a temporary solution until the InputControlPathEditor is converted to UITK or there is away to have a stable, persistent serializedObject backing this editor.
+        // This property will be shared among multiple asset editor windows.
+        public static SerializedProperty pathProperty { get; private set; }
         public Action onModified { get; }
 
         private GUIContent m_PathLabel;
