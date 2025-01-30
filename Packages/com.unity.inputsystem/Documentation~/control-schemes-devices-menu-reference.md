@@ -6,8 +6,10 @@ Use the Control Scheme and Device drop-down menus to manage [control schemes](co
 
 Use the Control Scheme drop-down menu to filter the **Action Maps** and **Actions** panels to only show actions and bindings relevant to that control scheme.
 
-* **All control schemes**: Show actions and bindings for all devices.
-* Specific control scheme names: Only show actions and bindings that are applicable to the selected control scheme.
+|Option|Description|
+|-|-|
+|**All control schemes**|Show actions and bindings for all control schemes.|
+|Specific control scheme names|Only show actions and bindings that are applicable to the selected control scheme.|
 
 The Control Scheme drop-down menu also contains properties for creating, editing, and removing control schemes:
 
@@ -31,7 +33,9 @@ The following properties appear in a window when you select **Add Control Scheme
 
 Use the Devices drop-down menu to filter the **Action Maps** and **Actions** panels to only show actions and bindings relevant to that device.
 
-* **All devices**: Show actions and bindings for all devices.
-* Specific device names: Only show actions and bindings that are applicable to the selected device.
+|Option|Description|
+|-|-|
+|**All devices**|Show actions and bindings for all devices.|
+|Specific device names|Only show actions and bindings that are applicable to the selected device.|
 
 The Devices menu only displays devices that are in the selected control scheme. If the Control Scheme menu is set to **All Control Schemes**, the Devices drop-down menu is greyed out.

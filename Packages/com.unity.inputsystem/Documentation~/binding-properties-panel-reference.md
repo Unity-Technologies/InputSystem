@@ -1,6 +1,9 @@
-# Binding properties panel reference
+# Binding Properties panel reference
 
-The Binding Properties panel changes depending on whether you are configuring a single [binding](bindings.md) or a [composite binding](comopsite-bindings.md).
+Use the Binding Properties panel to configure [bindings](bindings.md) and [composite bindings](composite-bindings.md), and their associated [interactions](interactions.md) and [processors](processors.md).
+
+
+The Binding Properties panel changes depending on whether you are configuring a single [binding](bindings.md) or a [composite binding](composite-bindings.md).
 
 ## Binding properties
 
@@ -13,15 +16,15 @@ For each [binding](bindings.md), the Binding Properties panel displays the follo
 
 ## Composite binding properties
 
-When you create a [composite binding](comopsite-bindings.md), the Binding Properties panel displays the following properties by default:
+When you create a [composite binding](composite-bindings.md), the Binding Properties panel displays the following properties by default:
 
 |Property|Description|
 |-|-|
-|**Composite Type**|Select the [composite type](comopsite-bindings.md) of the selected binding. The options are: <br/>- **1D Axis**: Create a composite binding made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. <br/>- **2D Vector**: Create a composite binding that represents a 4-way button setup like the D-pad on gamepads. <br/>- **3D Vector**: Create a composite binding that represents a 6-way button where two combinations each control one axis of a 3D vector. <br/>- **One Modifier**: Create a composite binding that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. <br/>- **Two Modifiers**: Create a composite binding that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. |
+|**Composite Type**|Select the [composite type](composite-bindings.md) of the selected binding. The options are: <br/>- **1D Axis**: Create a composite binding made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. <br/>- **2D Vector**: Create a composite binding that represents a 4-way button setup like the D-pad on gamepads. <br/>- **3D Vector**: Create a composite binding that represents a 6-way button where two combinations each control one axis of a 3D vector. <br/>- **One Modifier**: Create a composite binding that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. <br/>- **Two Modifiers**: Create a composite binding that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. |
 
 For more information on the composite types that are available by default, refer to scripting documentation on [`InputSystem.Composites`](../api/UnityEngine.InputSystem.Composites). Others might also be available if your project contains custom composite binding types.
 
-### 1D Axis binding reference
+### Axis binding reference
 
 When **Composite Type** is set to **1D Axis**, the Binding Properties panel displays the following properties by default:
 
