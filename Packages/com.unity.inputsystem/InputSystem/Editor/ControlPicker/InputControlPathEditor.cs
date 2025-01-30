@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
-            // Update the static pathProperty variable to the most recent serializedProperty. 
+            // Update the static pathProperty variable to the most recent serializedProperty.
             // See comment on pathProperty for more information.
             InputControlPathEditor.pathProperty = pathProperty;
             this.onModified = onModified;
