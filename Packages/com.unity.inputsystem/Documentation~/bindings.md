@@ -2,7 +2,7 @@
 
 ![](Images/ConceptsOverview.png)
 
-A **binding** represents a connection between an [Action](actions.md) and one or more [Controls](Controls.md) identified by a [Control path](./control-paths.md). 
+A **binding** represents a connection between an [Action](actions.md) and one or more [Controls](controls.md) identified by a [Control path](./control-paths.md). 
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |

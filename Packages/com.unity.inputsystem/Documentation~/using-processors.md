@@ -1,6 +1,6 @@
 ## Using Processors
 
-You can install Processors on [bindings](ActionBindings.md), [actions](actions.md) or on [controls](Controls.md).
+You can install Processors on [bindings](ActionBindings.md), [actions](actions.md) or on [controls](controls.md).
 
 Each Processor is [registered](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) using a unique name. To replace an existing Processor, register your own Processor under an existing name.
 

@@ -60,7 +60,7 @@
   * [Input Bindings](ActionBindings.md)
   * [Interactions](Interactions.md)
   * [Devices](Devices.md)
-  * [Controls](Controls.md)
+  * [Controls](controls.md)
   * [Processors](Processors.md)
   * [Player Input Component](player-input-component.md)
   * [Player Input Manager Component](PlayerInputManager.md)
