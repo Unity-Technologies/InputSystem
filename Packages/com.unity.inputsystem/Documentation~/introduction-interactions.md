@@ -21,33 +21,50 @@ Not every Interaction triggers every phase, and the pattern in which specific In
 
 While `Performed` is typically the phase that triggers the actual response to an Interaction, `Started` and `Canceled` can be  useful for providing UI feedback while the Interaction is in progress. For example, when a [hold](built-in-interactions.md#hold) is `Started`, the app can display a progress bar that fills up until the hold time has been reached. If, however, the hold is `Canceled` before it completes, the app can reset the progress bar to the beginning.
 
-The following example demonstrates this kind of setup with a fire Action that the user can tap to fire immediately, or hold to charge:
+
+The following example demonstrates this using a [Slow Tap interaction](./built-in-interactions.md#slowtap) on a `Jump` action so that the user can tap to jump immediately, or hold down the jump button to charge up a higher powered jump, displaying a UI to show the amount charged:
 
 ```CSharp
-var fireAction = new InputAction("fire");
-fireAction.AddBinding("<Gamepad>/buttonSouth")
-    // Tap fires, slow tap charges. Both act on release.
-    .WithInteractions("tap,slowTap");
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
-fireAction.started +=
-    context =>
+public class ExampleScript : MonoBehaviour
+{
+    InputAction jumpAction;
+
+    private void Start()
     {
-        if (context.interaction is SlowTapInteraction)
-            ShowChargingUI();
-    };
+        jumpAction = InputSystem.actions.FindAction("Jump");
 
-fireAction.performed +=
-    context =>
-    {
-        if (context.interaction is SlowTapInteraction)
-            ChargedFire();
-        else
-            Fire();
-    };
 
-fireAction.canceled +=
-    _ => HideChargingUI();
-fireAction.Enable();
+        jumpAction.started += context =>
+        {
+            if (context.interaction is SlowTapInteraction)
+            {
+                // Show "charging" UI
+            }
+        };
+
+        jumpAction.performed += context =>
+        {
+            if (context.interaction is SlowTapInteraction)
+            {
+                // call "charged jump" code
+            }
+            else
+            {
+                // call "regular jump" code
+            };
+        };
+
+        jumpAction.canceled += context =>
+        {
+            // Hide "charging" UI
+        };
+
+    }
+}
 ```
 
 ## Multiple Controls on an Action
