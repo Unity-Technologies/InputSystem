@@ -67,17 +67,6 @@ namespace UnityEngine.InputSystem.Editor
             m_PickerDropdown?.SetExpectedControlLayout(m_ExpectedControlLayout);
         }
 
-        public void SetExpectedControlLayoutFromAttribute()
-        {
-            var field = pathProperty.GetField();
-            if (field == null)
-                return;
-
-            var attribute = field.GetCustomAttribute<InputControlAttribute>();
-            if (attribute != null)
-                SetExpectedControlLayout(attribute.layout);
-        }
-
         public void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
@@ -176,13 +165,6 @@ namespace UnityEngine.InputSystem.Editor
                         modifiedCallback();
                     });
             }
-
-            m_PickerDropdown.SetPickedCallback(path =>
-            {
-                serializedProperty.stringValue = path;
-                m_PickerState.manualPathEditMode = false;
-                modifiedCallback();
-            });
 
             m_PickerDropdown.SetControlPathsToMatch(m_ControlPathsToMatch);
             m_PickerDropdown.SetExpectedControlLayout(m_ExpectedControlLayout);
