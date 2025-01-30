@@ -1,8 +1,8 @@
 # Using a custom class to create a layout
 
-You can create your own [InputDevice](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputDevice.html) class and state layouts in C\# to create a custom layout as follows:
+You can create your own [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) class and state layouts in C# to create a custom layout as follows:
 
-```c
+```c#
 
    public struct MyDeviceState : IInputStateTypeInfo
     {
@@ -36,7 +36,7 @@ You can create your own [InputDevice](http://localhost:57437/com.unity.inputsyst
 
 To create an instance of your device, register it as a layout and then instantiate it:
 
-```c
+```c#
 
    InputSystem.RegisterControlLayout("MyDevice", typeof(MyDevice));
     InputSystem.AddDevice("MyDevice");
@@ -49,13 +49,20 @@ This example workflow uses the same technique as the previous example, but provi
 
 The following example assumes that the Input System doesn't already have a custom layout for the PS4 DualShock controller, and that you want to add such a layout.
 
-In this example, you want to expose the controller as a [Gamepad](http://localhost:57437/com.unity.inputsystem@1.12/manual/Gamepad.html) and you roughly know the HID data format used by the Device.
+In this example, you want to expose the controller as a [gamepad](gamepads-introduction.md) and you roughly know the HID data format used by the Device.
 
-If you don't know the format of a given HID you want to support, open the Input Debugger with the Device plugged in and pop up both the debugger view for the Device and the window showing the HID descriptor. Then, you can go through the Controls one by one, see what happens in the debug view, and correlate that to the Controls in the HID descriptor. You can also double-click individual events and compare the raw data coming in from the Device. If you select two events in the event trace, you can then right-click them and choose Compare to open a window that shows only the differences between the two events.
+If you don't know the format of a given HID you want to support:
+
+1. Plug the device into your computer
+1. Open the Input Debugger (**Window** > **Analysis** > **Input Debugger**) 
+1. Open both the debugger view for the device and the window showing the HID descriptor
+1. Go through the controls one by one, refer to the debug view, and correlate that to the controls in the HID descriptor. 
+
+You can also double-click individual events and compare the raw data coming in from the device. If you select two events in the event trace, you can then right-click them and choose **Compare** to open a window that shows only the differences between the two events.
 
 ### Define the input data
 
-The first step is to describe in detail what format that input data for the device comes in, as well as the [InputControl](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputControl.html) instances that should read out individual pieces of information from that data.
+The first step is to describe in detail what format that input data for the device comes in, and the [`InputControl`](xref:UnityEngine.InputSystem.InputControl) instances that should read out individual pieces of information from that data.
 
 The HID input reports from the PS4 controller look approximately like this:
 
@@ -92,7 +99,7 @@ struct PS4InputReport
 
 You can translate this into a C\# struct:
 
-```c
+```c#
 
 // We receive data as raw HID input reports. This struct
 // describes the raw binary format of such a report.
@@ -179,13 +186,13 @@ struct DualShock4HIDInputReport : IInputStateTypeInfo
 
 ```
 
-#### Create an InputDevice instance to represent your device
+### Create an InputDevice instance to represent your device
 
-Next, you need an InputDevice to represent your device. Because you're dealing with a gamepad, you must create a new subclass of Gamepad.
+Next, you need an `InputDevice` to represent your device. Because you're dealing with a gamepad, you must create a new subclass of Gamepad.
 
-For simplicity, this example ignores the fact that there is a DualShockGamepad class that the actual DualShockGamepadHID is based on.
+For simplicity, this example ignores the fact that there is a `DualShockGamepad` class that the actual `DualShockGamepadHID` is based on.
 
-```c
+```c#
 
 // Using InputControlLayoutAttribute, we tell the system about the state
 // struct we created, which includes where to find all the InputControl
@@ -198,15 +205,15 @@ public DualShock4GamepadHID : Gamepad
 
 ```
 
-#### Register your device
+### Register your device
 
-The last step is to register your new type of Device and set up the Input System so that when a PS4 controller is connected, the Input System generates your custom Device instead of using the default HID fallback.
+The last step is to register your new type of device and set up the Input System so that when a PlayStation 4 controller is connected, the Input System generates your custom Device instead of using the default HID fallback.
 
-This requires a call to [InputSystem.RegisterLayout\<T\>](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout__1_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__), giving it an [InputDeviceMatcher](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) that matches the description for a PS4 DualShock HID. In theory, you can place this call anywhere, but the best point for registering layouts is generally during startup. Doing so ensures that your custom layout is visible to the Unity Editor and therefore exposed, for example, in the Input Control picker.
+This requires a call to [`InputSystem.RegisterLayout<T>`](xref:UnityEngine.InputSystem.InputSystem.RegisterLayout``1(System.String,System.Nullable{UnityEngine.InputSystem.Layouts.InputDeviceMatcher})), giving it an [`InputDeviceMatcher`](xref:UnityEngine.InputSystem.Layouts.InputDeviceMatcher) that matches the description for a PlayStation 4 DualShock HID. In theory, you can place this call anywhere, but the best point for registering layouts is generally during startup. Doing so ensures that your custom layout is visible to the Unity Editor and therefore exposed, for example, in the Input Control picker.
 
-You can insert your registration into the startup sequence by modifying the code for your DualShock4GamepadHID Device as follows:
+You can insert your registration into the startup sequence by modifying the code for your `DualShock4GamepadHID` device as follows:
 
-```c
+```c#
 
 [InputControlLayout(stateType = typeof(DualShock4HIDInputReport)]
 #if UNITY_EDITOR
@@ -240,6 +247,6 @@ public DualShock4GamepadHID : Gamepad
 
 ```
 
-Your custom layout now picks up any Device that matches the manufacturer and product name strings, or the vendor and product IDs in its HID descriptor. The Input System now represents a DualShock4GamepadHID Device instance.
+Your custom layout now picks up any device that matches the manufacturer and product name strings, or the vendor and product IDs in its HID descriptor. The Input System now represents a `DualShock4GamepadHID` device instance.
 
-For more information, refer to the [Device matching](http://localhost:57437/com.unity.inputsystem@1.12/manual/Devices.html#matching) documentation.
+For more information, refer to the [device matching](Devices.md#matching) documentation.

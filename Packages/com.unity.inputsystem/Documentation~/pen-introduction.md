@@ -4,6 +4,6 @@ The Input System supports pen devices on tablets and desktops, such as the vario
 
 Pens offer input features such as pressure sensitivity, in-range detection (being able to control the cursor while not yet touching the tablet or screen surface), and the ability to flip the pen for eraser-like behavior.
 
-For a list of platforms that support pen devices, refer to \[Platform support\].
+For a list of platforms that support pen devices, refer to [Supported devices reference](supported-devices-reference.md).
 
-Pens are represented by the [Pen](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Pen.html) device layout implemented by the [Pen](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Pen.html) class. Pens are based on the [Pointer](http://localhost:57437/com.unity.inputsystem@1.12/manual/pointers.html) layout. As well as inheriting the controls from the Pointer layout, the Pen class has some additional controls. For more information, refer to the Pen class
+Pens are represented by the [`Pen`](xref:UnityEngine.InputSystem.Pen) device layout implemented by the `Pen` class. Pens are based on the [pointer layout](pointers-introduction.md). The `Pen` class inherits the controls from the `Pointer` layout, and also implements some additional controls. For more information, refer to the [Pen class API documentation](xref:UnityEngine.InputSystem.Pen).

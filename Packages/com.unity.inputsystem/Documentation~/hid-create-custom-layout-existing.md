@@ -1,8 +1,8 @@
 # Use an existing input device to create a layout
 
-To use one of the existing C\# [InputDevice](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with a device, you can build on an existing layout using JSON:
+To use one of the existing C# [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) classes in code to interface with a device, you can build on an existing layout using JSON:
 
-```
+```json
 
    {
         "name" : "MyDevice",
@@ -36,7 +36,7 @@ To use one of the existing C\# [InputDevice](http://localhost:57437/com.unity.in
 
 You then register your layout with the system and then instantiate it:
 
-```c
+```c#
 
    InputSystem.RegisterControlLayout(myDeviceJson);
     var device = InputSystem.AddDevice("MyDevice");

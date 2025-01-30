@@ -4,9 +4,9 @@ You can use the methods in the Gamepad class to access information about the gam
 
 ## Discover all connected devices
 
-There are various ways to discover the currently connected devices. To query a list of all connected devices (does not allocate; read-only access) use the following:
+There are various ways to discover the currently connected devices. To query a list of all connected devices (doesn't allocate; read-only access) use the following:
 
-```c
+```c#
 
 InputSystem.devices
 
@@ -14,7 +14,7 @@ InputSystem.devices
 
 To get notified when a device is added or removed:
 
-```c
+```c#
 
 InputSystem.onDeviceChange +=
     (device, change) =>
@@ -29,7 +29,7 @@ InputSystem.onDeviceChange +=
 
 To find all gamepads and joysticks:
 
-```c
+```c#
 
 var devices = InputSystem.devices;
 for (var i = 0; i < devices.Count; ++i)
@@ -44,15 +44,15 @@ for (var i = 0; i < devices.Count; ++i)
 
 ## Access gamepad buttons
 
-To access gamepad buttons, you can use the indexer property on [Gamepad](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_Item_UnityEngine_InputSystem_LowLevel_GamepadButton_) and the [GamepadButton](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.LowLevel.GamepadButton.html) enumeration:
+To access gamepad buttons, you can use the indexer property on [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad.Item(UnityEngine.InputSystem.LowLevel.GamepadButton)) and the [`GamepadButton`](xref:UnityEngine.InputSystem.LowLevel.GamepadButton) enumeration:
 
-```c
+```c#
 
 Gamepad.current[GamepadButton.LeftShoulder];
 
 ```
 
-Gamepads have both Xbox-style and PlayStation-style aliases on buttons. For example, the following four accessors all retrieve the same "north" face button:
+Gamepads have both Xbox-style and PlayStation-style aliases on buttons. For example, the following four accessors all retrieve the same north face button:
 
 ```c
 
@@ -65,11 +65,11 @@ Gamepad.current["Triangle"]
 
 ## Add a deadzone to a gamepad
 
-Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
+Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their center point. They allow a certain small inner area where the input is considered to be zero even if the input is slightly off from the zero position.
 
-To add a deadzone to gamepad stick, put a [stick deadzone Processor](http://localhost:57437/com.unity.inputsystem@1.12/manual/Processors.html#stick-deadzone) on the sticks, like this:
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
 
-```c
+```json
 
     {
         "name" : "MyGamepad",
@@ -88,9 +88,9 @@ To add a deadzone to gamepad stick, put a [stick deadzone Processor](http://loca
 
 ```
 
-You can do the same in your C\# state structs.
+You can do the same in your C# state structs:
 
-```c
+```c#
 
    public struct MyDeviceState
     {
@@ -102,10 +102,10 @@ You can do the same in your C\# state structs.
 
 ```
 
-The gamepad layout already adds stick deadzone processors which take their minimum and maximum values from [InputSettings.defaultDeadzoneMin](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [InputSettings.defaultDeadzoneMax](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
+The gamepad layout already adds stick deadzone processors which take their minimum and maximum values from [`InputSettings.defaultDeadzoneMin`](xref:UnityEngine.InputSystem.InputSettings.defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](xref:UnityEngine.InputSystem.InputSettings.defaultDeadzoneMax).
 
 ## Using gamepads for mouse input
 
 To use a gamepad for driving mouse input, refer to the sample called Gamepad Mouse Cursor. To access the sample, open the Package Manager window, and select the Input System package. Then select the Samples tab. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
-You can also use the [VirtualMouseInput](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component to control the hardware or software cursor. For more information, refer to [VirtualMouseInput component](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.12/manual/UISupport.html#virtual-mouse-cursor-control).
+You can also use the [`VirtualMouseInput`](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component to control the hardware or software cursor. For more information, refer to [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control).

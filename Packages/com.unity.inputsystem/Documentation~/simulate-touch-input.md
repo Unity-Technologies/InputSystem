@@ -1,16 +1,27 @@
 # Simulate touch input
 
-You can simulate touch input on other kinds of [Pointer](http://localhost:57437/com.unity.inputsystem@1.12/manual/pointers.html) devices such as [Mouse](http://localhost:57437/com.unity.inputsystem@1.12/manual/Mouse.html) and [Pen](http://localhost:57437/com.unity.inputsystem@1.12/manual/Pen.html) devices. 
+You can simulate touch input on other kinds of [pointer devices](pointers-introduction.md) such as [mouse](devices-mouse.md) and [pen](devices-pen.md) devices in the following ways:
 
-To enable simulating touch input, perform one of the following:
+* [Enable touch simulation in the Unity Editor](#add-touch-simulation-to-a-gameobject).
+* [Add touch simulation to a GameObject](#add-touch-simulation-to-a-gameobject).
+* [Enable touch simulation in startup code](#enable-touch-simulation-in-the-unity-editor).
 
-* In the Unity Editor:  
-  1. Open the [Input Debugger](http://localhost:57437/com.unity.inputsystem@1.12/manual/Debugging.html).  
-  2. In the Options dropdown, select **Simulate Touch Input From Mouse or Pen.**  
-* Add the [TouchSimulation](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) MonoBehaviour to a GameObject in your scene. [TouchSimulation](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) adds a [Touchscreen](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirrors input on any [Pointer](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.  
-* Call [TouchSimulation.Enable](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html#UnityEngine_InputSystem_EnhancedTouch_TouchSimulation_Enable) somewhere in your startup code:
+## Enable touch simulation in the Unity Editor
 
-```c
+To enable touch simulation in the Unity Editor, perform the following steps:
+
+1. Open the [Input Debugger](the-input-debugger-window.md) (**Window** > **Analysis** > **Input Debugger**)  
+1. Select the **Options** dropdown, and enable **Simulate Touch Input From Mouse or Pen**.
+
+## Add touch simulation to a GameObject
+
+Add the [`TouchSimulation`](xref:UnityEngine.InputSystem.EnhancedTouch.TouchSimulation) MonoBehaviour to a GameObject in your scene. `TouchSimulation` adds a [`Touchscreen`](xref:UnityEngine.InputSystem.Touchscreen) device and automatically mirrors input on any [Pointer](xref:UnityEngine.InputSystem.Pointer) device to the virtual touchscreen device.
+
+## Enable touch simulation in startup code
+
+Call [`TouchSimulation.Enable`](xref:UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.Enable) somewhere in your startup code:
+
+```c#
 
    void OnEnable()
     {

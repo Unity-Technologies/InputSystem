@@ -8,7 +8,7 @@ This section outlines the types of devices that each platform supports. The devi
 * [Generic devices](#generic-devices): pointers, keyboards, and joysticks which don't require specialized support of particular products.  
 * [Gamepads](#gamepads): devices with two thumbsticks, a D-pad, four face buttons, two shoulder buttons, and two trigger buttons which might require specialized platform support.
 
-## Generic devices {#generic-devices}
+## Generic devices
 
 The following table outlines the generic devices that each platform supports.
 
@@ -28,11 +28,11 @@ The following table outlines the generic devices that each platform supports.
 
 ### Other gamepads, joysticks, and racing wheels
 
-The Input System supports any device which implements the \[USB HID specification\](). However, for devices which don't have specific [layouts](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Layouts.html) implemented in the Input System, the system can only surface the information available from the HID descriptor of the device, which limits how precisely it can describe a control. These devices often work best when you [manually remap the controls](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/api/UnityEngine.InputSystem.InputActionRebindingExtensions.html). If you need to support a specific device, you can also [add your own mapping for it](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/HID.html#creating-a-custom-device-layout). For more information, refer to the [HID](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/HID.html) documentation.
+The Input System supports any device which implements the [USB HID specification](hid-specification.md). However, for devices which don't have specific [layouts](Layouts.md) implemented in the Input System, the system can only surface the information available from the HID descriptor of the device, which limits how precisely it can describe a control. These devices often work best when you [manually remap the controls](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). If you need to support a specific device, you can also [add your own mapping for it](hid-create-custom-layout.md). For more information, refer to the [Human Interface Device specification](hid-specification.md) documentation.
 
-iOS: The double-tap interaction on the side of the Apple Pencil is not surfaced as input at the moment. Also, no in-range detection is supported and [inRange](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange) will remain at its default value.
+The double-tap interaction on the side of the Apple Pencil isn't surfaced as input at the moment. Also, no in-range detection is supported and [`inRange`](xref:UnityEngine.InputSystem.Pen.inRange) will remain at its default value.
 
-## Gamepads {#gamepads}
+## Gamepads 
 
 The reference tables are organized by platform type:
 
@@ -41,7 +41,7 @@ The reference tables are organized by platform type:
 * [Consoles](#console-device-support): Xbox, PlayStation, Switch  
 * [WebGL](#webgl-device-support): Windows, macOS, Linux
 
-### Desktop device support {#desktop-device-support}
+### Desktop device support
 
 The following table indicates whether Unity supports an input device:
 
@@ -96,7 +96,7 @@ Switch Joy-Cons aren't supported on Windows and macOS. The following official ac
 
 To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
 
-### Mobile device support {#mobile-device-support}
+### Mobile device support
 
 The following table indicates whether Unity supports an input device:
 
@@ -131,7 +131,7 @@ The following table indicates whether Unity supports an input device:
 | **Trust Gaming Series GXT 555 Predator Joystick (wired)** | Not supported | Not supported | Not compatible |
 | **Apple Horipad (wireless)** | Partially | Supported | Supported |
 
-### Console device support {#console-device-support}
+### Console device support
 
 For information on developing for PlayStation®4, PlayStation®5, Xbox One, Xbox Series S|X, and Nintendo Switch™, refer to the [Game Development For Console Platforms](https://unity.com/solutions/console) page.
 
@@ -158,11 +158,11 @@ The following table indicates whether Unity supports an input device:
 | **Nintendo Switch Pro Controller (wired)** | Not compatible | Not compatible | Not supported |
 | **Nintendo Switch Pro Controller (wireless)** | Not compatible | Not compatible | Not supported |
 
-## WebGL device support {#webgl-device-support}
+## WebGL device support
 
 The Input System supports the Standard Gamepad mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but this support is limited to detecting the axes and buttons which are present, without any context as to what they mean. 
 
-This means gamepads and joysticks are generally only useful if you [manually remap them](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/api/UnityEngine.InputSystem.InputActionRebindingExtensions.html). The Input System reports these devices as generic [Joysticks](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/api/UnityEngine.InputSystem.Joystick.html).
+This means gamepads and joysticks are generally only useful if you [manually remap them](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). The Input System reports these devices as generic [Joysticks](xref:UnityEngine.InputSystem.Joystick).
 
 Support varies between browsers, devices, and operating systems, and further differs for different browser versions, so it's not feasible to provide an up-to-date compatibility list.The following table is a guideline for what gamepads work in WebGL builds.
 

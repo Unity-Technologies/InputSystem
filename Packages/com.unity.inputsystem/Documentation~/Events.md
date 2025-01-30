@@ -68,7 +68,7 @@ There are three types of Device events:
 
 ### Text events
 
-[Keyboard](Keyboard.md) devices send these events to handle text input. If you're interested in these events, it's usually more convenient to subscribe to the higher-level [callbacks on the Keyboard class](Keyboard.md#text-input) rather than processing [`InputEvents`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html) yourself.
+[Keyboard](devices-keyboard.md) devices send these events to handle text input. If you're interested in these events, it's usually more convenient to subscribe to the higher-level [callbacks on the Keyboard class](read-keyboard-text-input.md) rather than processing [`InputEvents`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html) yourself.
 
 There are two types of text events:
 

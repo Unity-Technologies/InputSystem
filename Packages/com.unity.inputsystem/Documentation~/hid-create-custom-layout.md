@@ -6,5 +6,5 @@ When you set up a custom device layout specifically for your device it overrides
 
 You can create a custom device layout in the following ways:
 
-* Use an existing C\# InputDevice  
-* Create your own InputDevice class
+* [Use an existing C# `InputDevice`](hid-create-custom-layout-existing.md)
+* [Create your own `InputDevice` class](hid-create-custom-layout-class.md)
