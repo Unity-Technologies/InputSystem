@@ -127,7 +127,6 @@ namespace UnityEngine.InputSystem.Editor
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(false, true);
             #endif
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
-            Debug.Log("Picked: " + path);
             m_OnPickCallback(path);
         }
 

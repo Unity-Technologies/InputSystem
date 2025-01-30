@@ -36,11 +36,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             // TODO: Persist control picker state
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
-                (path) =>
-                {
-                    viewState.selectedBindingPath.stringValue = path;
-                    Dispatch(Commands.ApplyModifiedProperties());
-                });
+                () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
             controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
             controlPathEditor.SetExpectedControlLayout(viewState.expectedControlLayoutName);
