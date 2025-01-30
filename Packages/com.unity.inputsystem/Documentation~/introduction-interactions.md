@@ -1,6 +1,10 @@
 # Introduction to interactions
 
-An Interaction represents a specific input pattern. For example, a [hold](built-in-interactions.md#hold) Interaction is an Interaction that requires a Control to be held for a minimum amount of time.
+An Interaction represents a specific pattern of [control actuation](control-actuation.md) that determines how an action is started, performed, or canceled.
+
+An action with no explicit interaction applied behaves according the [default interaction](default-interactions.md) for its [action type](about-action-control-types.md). For example, a button action's default interaction is to immediately perform the action when the button is pressed.
+
+When you apply an interaction to an action, it overrides the default interaction behavior and changes how the action is performed. This allows you, for example, to implement a [hold](built-in-interactions.md#hold) interaction that requires a control to be held for a minimum amount of time, or a [multi-tap](built-in-interactions.md#multitap) interaction that requires the control to be quickly tapped multiple times to perform the action.
 
 Interactions trigger responses on Actions. You can place them on individual Bindings, or on Actions, in which case they apply to every Binding on the Action. At runtime, when a particular interaction completes, this triggers the Action.
 
