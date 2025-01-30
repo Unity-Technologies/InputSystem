@@ -149,7 +149,7 @@ namespace UnityEngine.InputSystem.Editor
         private void DrawMatchingControlPaths()
         {
             bool controlPathUsagePresent = false;
-            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(InputControlPathEditor.pathProperty.stringValue, showMatchingLayouts, ref controlPathUsagePresent);
+            List<MatchingControlPath> matchingControlPaths = MatchingControlPath.CollectMatchingControlPaths(m_ControlPathEditor.pathProperty.stringValue, showMatchingLayouts, ref controlPathUsagePresent);
             if (matchingControlPaths == null || matchingControlPaths.Count != 0)
             {
                 EditorGUILayout.BeginVertical();
