@@ -2,7 +2,7 @@
 
 Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. You can use this instead of manually adding the same Interaction(s) to multiple Bindings.
 
-To apply Interactions to individual Bindings, refer to [Apply Interactions to Bindings](apply-interactions-bindings).
+To apply Interactions to individual Bindings, refer to [Apply Interactions to Bindings](apply-interactions-bindings.md).
 
 If you apply Interactions to both an Action and its Bindings, then the effect is the same as if the Action's Interactions are on the list of Interactions on each of the Bindings. This means that the Input System applies the Binding's Interactions first, and then the Action's Interactions.
 

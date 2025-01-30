@@ -2,7 +2,7 @@
 
 When you create Bindings for your [Actions](actions.md), you can choose to add Interactions to the Bindings via the Editor, or via code.
 
-To apply Interactions to all Bindings on an Action, refer to [Apply Interactions to Actions](apply-interactions-sctions).
+To apply Interactions to all Bindings on an Action, refer to [Apply Interactions to Actions](apply-interactions-actions.md).
 
 ## Apply Interactions to Bindings via the Editor
 
@@ -15,7 +15,7 @@ If you're using [project-wide actions](ActionsEditor.md), or [Input Action Asset
 
 ![Binding Processors](Images/BindingProcessors.png)
 
-To remove an Interaction, select the minus (-) button next to it. To change the [order of Interactions](#multiple-interactions-on-a-binding), select the up and down arrows.
+To remove an Interaction, select the minus (-) button next to it. To change the [order of Interactions](introduction-interactions.md#multiple-interactions-on-a-binding), select the up and down arrows.
 
 ## Apply Interactions to Bindings via code
 
