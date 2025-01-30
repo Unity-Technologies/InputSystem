@@ -30,7 +30,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
-            Debug.Log($"New Path Property on {pathProperty.serializedObject.targetObject.GetInstanceID()}");
+            // Update the static pathProperty variable to the most recent serializedProperty. 
+            // See comment on pathProperty for more information.
             InputControlPathEditor.pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
@@ -184,6 +185,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // This static variable is a hack. Because the editor is rebuilt at unpredictable times with a new serializedObject, we need to keep updating
+        // This variable with most up to date serializedProperty, so that the picker dropdown can access the correct serializedProperty.
         // This variable with most up to date serializedProperty, so that the picker dropdown can access the correct serializedProperty.
         // The picker dropdown is a separate window and does not have access to the changed serializedObject reference.
         // This is a temporary solution until the InputControlPathEditor is converted to UITK or there is away to have a stable, persistent serializedObject backing this editor.
