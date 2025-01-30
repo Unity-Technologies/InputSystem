@@ -1,43 +1,40 @@
 
 # Binding resolution
 
-When the Input System accesses the [Controls](Controls.md) bound to an Action for the first time, the Action resolves its Bindings to match them to existing Controls on existing Devices. In this process, the Action calls [`InputSystem.FindControls<>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls__1_System_String_UnityEngine_InputSystem_InputControlList___0___) (filtering for devices assigned to the InputActionMap, if there are any) for the Binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
+Binding resolution refers to when the Input System looks up which actual controls on connected devices should be used by each action, based on their binding control paths.
 
-Note that a single [Binding path](Controls.md#control-paths) can match multiple Controls:
+## Why bindings are resolved
 
-* A specific Device path such as `<DualShockGamepad>/buttonEast` matches the "Circle" button on a [PlayStation controller](Gamepad.md#playstation-controllers). If you have multiple PlayStation controllers connected, it resolves to the "Circle" button on each of these controllers.
+Each [simple binding](./binding-types.md) has a [control path](./control-paths.md), which determines which [control](controls.md) (or controls) should be associated with the action. For [composite bindings](./composite-bindings-reference.md), each of the composites sub-bindings (or **parts**) has a control path.
 
-* An abstract Device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](Gamepad.md#xbox-controllers) connected, it resolves to the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
+Control paths are stored as a string that describes where to find the relevant control or controls for the binding. For example, a control path "`<Gamepad>/buttonEast`" refers to the right action button on any connected gamepad.
 
-* A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any Control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any Control tagged with the "Submit" [usage](Controls.md#control-usages) on any Device.
+Because control paths can refer to specific devices, or more broadly to a device type, and can also contain wildcard characters, and there may be any combinations of input hardware connected, the Input System must **resolve** the bindings at runtime to work out which controls on connected devices are valid for each action. This occurs when the Input System accesses an action for the first time.
 
-If there are multiple Bindings on the same Action that all reference the same Control(s), the Control will effectively feed into the Action multiple times. This is to allow, for example, a single Control to produce different input on the same Action by virtue of being bound in a different fashion (composites, processors, interactions, etc). However, regardless of how many times a Control is bound on any given action, it will only be mentioned once in the Action's [array of `controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls).
+## What happens during resolution
+
+During binding resolution, the action automatically calls [`InputSystem.FindControls<>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls__1_System_String_UnityEngine_InputSystem_InputControlList___0___) (filtering for devices assigned to the InputActionMap, if there are any) for the Binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
+
+Note that a single [binding control path](control-paths.md) can match multiple Controls. For example:
+
+* A device-specific path such as `<DualShockGamepad>/buttonEast` matches the "Circle" button on a [PlayStation controller](Gamepad.md#playstation-controllers). If you have multiple PlayStation controllers connected, it resolves to the "Circle" button on each of these controllers.
+
+* An abstract device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](Gamepad.md#xbox-controllers) connected, it resolves to the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
+
+* A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any control tagged with the "Submit" [usage](Controls.md#control-usages) on any device.
+
+If there are multiple bindings on the same action that all reference the same control(s), the control will effectively feed into the action multiple times. This is to allow, for example, a single control to produce different input on the same action by virtue of being bound in a different fashion ([composites](./composite-bindings-reference.md), [processors](./processors-on-actions.md), [interactions](./interactions.md), etc). However, regardless of how many times a control is bound on any given action, it will only appear once in the action's [array of `controls`](xref:UnityEngine.InputSystem.InputAction.controls).
 
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
 
-To be notified when binding resolution happens, you can listen to [`InputSystem.onActionChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onActionChange) which triggers [`InputActionChange.BoundControlsAboutToChange`](../api/UnityEngine.InputSystem.InputActionChange.html#UnityEngine_InputSystem_InputActionChange_BoundControlsAboutToChange) before modifying Control lists and triggers [`InputActionChange.BoundControlsChanged`](../api/UnityEngine.InputSystem.InputActionChange.html#UnityEngine_InputSystem_InputActionChange_BoundControlsChanged) after having updated them.
+To be notified when binding resolution happens, you can listen to [`InputSystem.onActionChange`](xref:UnityEngine.InputSystem.InputSystem.onActionChange) which triggers [`InputActionChange.BoundControlsAboutToChange`](xref:UnityEngine.InputSystem.InputActionChange.BoundControlsAboutToChange) before modifying Control lists and triggers [`InputActionChange.BoundControlsChanged`](xref:UnityEngine.InputSystem.InputActionChange.BoundControlsChanged) after having updated them.
 
-## Binding resolution while Actions are enabled
+## Binding resolution while actions are enabled
 
-In certain situations, the [Controls](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls) bound to an Action have to be updated more than once. For example, if a new [Device](Devices.md) becomes usable with an Action, the Action may now pick up input from additional controls. Also, if Bindings are added, removed, or modified, Control lists will need to be updated.
+In certain situations, the controls bound to an action have to be updated more than once. For example, if a new device is plugged in and becomes usable with an action, the action may now pick up input from additional controls. Also, if bindings are added, removed, or modified, control lists will need to be updated.
 
-This updating of Controls usually happens transparently in the background. However, when an Action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled) and especially when it is [in progress](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsInProgress_), there may be a noticeable effect on the Action.
+This updating of controls usually happens transparently in the background. However, when an action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled) and especially when it is [in progress](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsInProgress_), there may be a noticeable effect on the Action.
 
-Adding or removing a device &ndash; either [globally](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices) or to/from the [device list](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) that is being removed. In this case, the Action will automatically be [cancelled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
+Adding or removing a device &ndash; either [globally](xref:UnityEngine.InputSystem.InputSystem.devices) or to/from the [device list](xref:UnityEngine.InputSystem.InputActionAsset.devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](xref:UnityEngine.InputSystem.InputAction.activeControl) that is being removed. In this case, the Action will automatically be [cancelled](xref:UnityEngine.InputSystem.InputAction.canceled).
 
-Modifying the [binding mask](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_bindingMask) or modifying any of the Bindings (such as through [rebinding](#interactive-rebinding) or by adding or removing bindings) will, however, lead to all enabled Actions being temporarily disabled and then re-enabled and resumed.
-
-## Choosing which Devices to use
-
->__Note__: [`InputUser`](UserManagement.md) and [`PlayerInput`](player-input-component.md) make use of this facility automatically. They set [`InputActionMap.devices`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_devices) automatically based on the Devices that are paired to the user.
-
-By default, Actions resolve their Bindings against all Devices present in the Input System (that is, [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads present in the system, a Binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the Action to be used from either.
-
-You can override this behavior by restricting [`InputActionAssets`](../api/UnityEngine.InputSystem.InputActionAsset.html) or individual [`InputActionMaps`](../api/UnityEngine.InputSystem.InputActionMap.html) to a specific set of Devices. If you do this, Binding resolution only takes the Controls of the given Devices into account.
-
-```
-    var actionMap = new InputActionMap();
-
-    // Restrict the action map to just the first gamepad.
-    actionMap.devices = new[] { Gamepad.all[0] };
-```
+Modifying the [binding mask](xref:UnityEngine.InputSystem.InputActionAsset.bindingMask) or modifying any of the Bindings (such as through [rebinding](./interactive-rebinding.md) or by adding or removing bindings) will, however, lead to all enabled actions being temporarily disabled and then re-enabled and resumed.
