@@ -1,8 +1,6 @@
 # Control types
 
-All controls are based on the [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) base class. Most concrete implementations are based on [`InputControl<TValue>`](../api/UnityEngine.InputSystem.InputControl-1.html).
-
-The Input System provides the following types of controls out of the box:
+The Input System provides the following types of controls:
 
 |Control Type|Description|Example|
 |------------|-----------|-------|
@@ -18,3 +16,6 @@ The Input System provides the following types of controls out of the box:
 |[`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|A control that represents all the properties of a touch on a [touch screen](Touch.md).|[`Touchscreen.primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch)|
 
 You can browse the set of all registered control layouts in the [input debugger](Debugging.md#debugging-layouts).
+
+All controls are based on the [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) base class. Most concrete implementations are based on [`InputControl<TValue>`](../api/UnityEngine.InputSystem.InputControl-1.html).
+
