@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
-
+            Debug.Log($"New Path Property on {pathProperty.serializedObject.targetObject.GetInstanceID()}");
             this.pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
@@ -78,10 +78,9 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action modifiedCallback = null)
+        public void OnGUI(Rect rect, GUIContent label = null, Action modifiedCallback = null)
         {
             var pathLabel = label ?? m_PathLabel;
-            var serializedProperty = property ?? pathProperty;
 
             var lineRect = rect;
             var labelRect = lineRect;
@@ -103,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
             var path = String.Empty;
             try
             {
-                path = serializedProperty.stringValue;
+                path = pathProperty.stringValue;
             }
             catch
             {
@@ -128,8 +127,8 @@ namespace UnityEngine.InputSystem.Editor
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    serializedProperty.stringValue = path;
-                    serializedProperty.serializedObject.ApplyModifiedProperties();
+                    pathProperty.stringValue = path;
+                    pathProperty.serializedObject.ApplyModifiedProperties();
                     (modifiedCallback ?? onModified).Invoke();
                 }
             }
@@ -138,9 +137,9 @@ namespace UnityEngine.InputSystem.Editor
                 // Dropdown that shows binding text and allows opening control picker.
                 if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
-                    SetExpectedControlLayoutFromAttribute(serializedProperty);
+                    SetExpectedControlLayoutFromAttribute(pathProperty);
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowDropdown(bindingTextRect, serializedProperty, modifiedCallback ?? onModified);
+                    ShowDropdown(bindingTextRect, modifiedCallback ?? onModified);
                 }
             }
 
@@ -149,7 +148,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorStyles.miniButton);
         }
 
-        private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
+        private void ShowDropdown(Rect rect, Action modifiedCallback)
         {
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
@@ -160,7 +159,8 @@ namespace UnityEngine.InputSystem.Editor
                     m_PickerState,
                     path =>
                     {
-                        serializedProperty.stringValue = path;
+                        Debug.Log($"Saving path to property on {pathProperty.serializedObject.targetObject.GetInstanceID()}");
+                        pathProperty.stringValue = path;
                         m_PickerState.manualPathEditMode = false;
                         modifiedCallback();
                     });
