@@ -189,10 +189,10 @@ namespace UnityEngine.InputSystem.Editor
         // This could be removed if the InputControlPathEditor is converted to UITK with a stable, persistent serializedObject backing this editor.
         // This property will be shared among multiple asset editor windows.
         private static SerializedProperty s_pathProperty { get; set; }
-        
+
         // This property will always return the most recent serializedProperty.
         public SerializedProperty pathProperty { get => s_pathProperty;}
-        
+
         public Action onModified { get; }
 
         private GUIContent m_PathLabel;
