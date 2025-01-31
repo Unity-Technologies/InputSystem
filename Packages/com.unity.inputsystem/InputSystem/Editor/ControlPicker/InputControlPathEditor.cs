@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ExpectedControlLayout = expectedControlLayout;
             m_PickerDropdown?.SetExpectedControlLayout(m_ExpectedControlLayout);
         }
-        
+
         public void SetExpectedControlLayoutFromAttribute()
         {
             var field = pathProperty.GetField();
