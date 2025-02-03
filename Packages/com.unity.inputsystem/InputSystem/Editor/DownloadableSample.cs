@@ -72,8 +72,8 @@ internal class DownloadableSampleInspector : Editor
             Rect rect = EditorGUILayout.GetControlRect(true, 20);
 
             GUI.Label(rect, new GUIContent(req), EditorStyles.label);
-            rect.width -= 160;
-            rect.x += 160;
+            rect.width -= 200;
+            rect.x += 200;
             if (add != null || !list.IsCompleted)
             {
                 using (new EditorGUI.DisabledScope(true))
