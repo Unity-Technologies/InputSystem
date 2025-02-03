@@ -21,7 +21,7 @@ public struct MyDeviceState : IInputStateTypeInfo
 
 If you [create a layout from JSON](layouts.md#layout-from-json), you can specify processors on your Controls like this:
 
-```CSharp
+```json
 {
     "name" : "MyDevice",
     "extend" : "Gamepad", // Or some other thing

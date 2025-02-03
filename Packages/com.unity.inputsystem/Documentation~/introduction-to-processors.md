@@ -20,11 +20,11 @@ Multiple processors can be chained together. The Input System processes them in 
 
 ## Processors on bindings and actions
 
-When you create bindings for your [actions](actions.md), you can choose to add processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For example, you could invert the `Vector2` values from the controls along the Y axis before passing the values to the associated Action. 
+When you create bindings for your [actions](actions.md), you can choose to add processors to the bindings. These process the values from the controls they bind to, before the system applies them to the action value. For example, you could invert the `Vector2` values from the controls along the Y axis before passing the values to the associated action. 
 
-Processors on Actions work the same way, but affect all bindings on an Action. 
+Processors on actions work the same way, but affect all bindings on an action. 
 
-If there are processors on both the Binding and the Action, the Input System processes the processors from the binding first.
+If there are processors on both the binding and the action, the Input System processes the processors from the binding first.
 
 To apply a processor to a binding or action, refer to [Add processors to bindings and actions](add-processors-bindings-actions.md).
 
