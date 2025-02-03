@@ -1,4 +1,4 @@
-## Interactions Editor reference
+# Interactions Editor reference
 
 The Interactions foldout contains properties for [interactions](interactions.md) that you can assign to actions and bindings.
 
@@ -14,14 +14,14 @@ By default, all Interactions have the following properties:
 
 Additionally, each Interaction type has unique properties.
 
-### Hold
+## Hold
 
 |Property|Description|
 |-|-|
 |**Hold Time**| Set the duration in seconds that the control must be pressed for the hold to register.|
 
 
-### MultiTap
+## MultiTap
 
 |Property|Description|
 |-|-|
@@ -29,19 +29,19 @@ Additionally, each Interaction type has unique properties.
 |**Max Tap Spacing**| Set the maximum amount of time (in seconds) that can pass between taps.|
 |**Max Tap Duration**| Set the maximum time (in seconds) within which the control needs to be pressed and released to perform the interaction.|
 
-### Press
+## Press
 
 |Property|Description|
 |-|-|
 |**Trigger behavior**|Define when the interaction triggers. The options available by default are: <br/>- **Press Only**: Trigger the action when the button enters a pressed state. <br/> **Release Only**: Trigger the action or binding when the button exits a pressed state.  <br/>- **Press and Release**: Trigger the action when the button enters a pressed state, and again when it exits a pressed state.  |
 
-### Slow Tap
+## Slow Tap
 
 |Property|Description|
 |-|-|
 |**Min Tap Duration**| Set the minimum time (in seconds) within which the control needs to be pressed and released to perform the interaction.|
 
-### Tap
+## Tap
 |Property|Description|
 |-|-|
 |**Max Tap Duration**| Set the maximum time (in seconds) within which the control needs to be pressed and released to perform the interaction.|
