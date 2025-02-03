@@ -2,8 +2,7 @@
 
 The **Input Actions Editor** is an Editor window that displays action maps, actions, bindings, and their properties.
 
-![The Input Actions editor, displaying the default actions](./Images/ActionsEditorCallout.png)
-*The Input Actions editor, displaying the default actions*
+![The Input Actions editor, displaying the default actions](./Images/ActionsEditorCallout.png)<br/>*The Input Actions editor, displaying the default actions*
 
 The Input Actions Editor is divided into three panels:
 

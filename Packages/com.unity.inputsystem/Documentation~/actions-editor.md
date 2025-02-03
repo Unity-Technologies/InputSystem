@@ -1,5 +1,7 @@
 # Input Actions Editor reference
 
+Use the Input Actions Editor to create action maps, configure actions and bindings, connect controls, and assign interactions and processors.
+
 |Topic|Description|
 |-|-|
 |[Input Actions Editor window reference](input-actions-editor-window-reference.md)| Access and navigate the Input Actions Editor window. |
