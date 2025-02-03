@@ -155,8 +155,8 @@ The following table indicates whether Unity supports an input device:
 | **DualShock 4 (wireless)** | Not compatible | Not supported | Not compatible |
 | **DualSense Edge (wired)** | Not compatible | Supported | Not compatible |
 | **DualSense Edge (wireless)** | Not compatible | Supported | Not compatible |
-| **Nintendo Switch Pro Controller (wired)** | Not compatible | Not compatible | Not supported |
-| **Nintendo Switch Pro Controller (wireless)** | Not compatible | Not compatible | Not supported |
+| **Nintendo Switch Pro Controller (wired)** | Not compatible | Not compatible | Supported |
+| **Nintendo Switch Pro Controller (wireless)** | Not compatible | Not compatible | Supported |
 
 ## WebGL device support
 
