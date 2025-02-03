@@ -2680,25 +2680,24 @@ partial class CoreTests
         Assert.That(keyboard.anyKey.isPressed, Is.False);
         Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
-    
+
     [Test]
     [Category("Devices")]
     [Obsolete("Test obsolete IMESelected Key")]
     public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
     {
-            var keyboard = InputSystem.AddDevice<Keyboard>();
-        
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
-            InputSystem.Update();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
-            Assert.That(keyboard.imeSelected.isPressed, Is.True);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
-    
+
     [Test]
     [Category("Devices")]
     public void Devices_ImeSelectedKeyOnKeyboard_IsBackwardCompatible()
     {
-        
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var oldKeyboardStateWithIMESelected = new KeyboardState(Key.None);
