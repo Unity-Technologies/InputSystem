@@ -1,8 +1,10 @@
-# Writing custom Processors
+# Writing custom processors
 
-You can also write custom Processors to use in your Project. Custom Processors are available in the UI and code in the same way as the built-in Processors. Add a class derived from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
+You can write custom processors to use use with [bindings](ActionBindings.md), [actions](actions.md) and [controls](controls.md) in your Project. Custom processors are available in the UI and code in the same way as the [built-in processors](built-in-processors.md). 
 
->__IMPORTANT__: Processors must be __stateless__. This means you cannot store local state in a processor that will change depending on the input being processed. The reason for this is because processors are not part of the [input state](./Controls.md#control-state) that the Input System keeps.
+To create a custom processor:
+
+**1.** Add a class derived from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
@@ -17,7 +19,10 @@ public class MyValueShiftProcessor : InputProcessor<float>
 }
 ```
 
-Now, you need to tell the Input System about your Processor. Call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) in your initialization code. You can do so locally within the Processor class like this:
+>[!IMPORTANT] 
+>Processors must be __stateless__, because they are not part of the [input state](./Controls.md#control-state) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
+
+**2.** Register the new processor to the Input System. Call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) in your initialization code. You can do this locally within the Processor class:
 
 ```CSharp
 #if UNITY_EDITOR
@@ -48,11 +53,11 @@ Your new Processor is now available in the in the [Input Actions Editor](Actions
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
 ```
 
-If you want to customize the UI for editing your Processor, create a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.Editor.InputParameterEditor-1.html) class for it:
+**3.** To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.Editor.InputParameterEditor-1.html) class for it:
 
 ```CSharp
 // No registration is necessary for an InputParameterEditor.
-// The system will automatically find subclasses based on the
+// The system automatically finds subclasses based on the
 // <..> type parameter.
 #if UNITY_EDITOR
 public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProcessor>
