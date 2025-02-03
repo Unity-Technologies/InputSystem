@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var lineRect = rect;
             var labelRect = lineRect;
-            labelRect.width = EditorGUIUtility.labelWidth;
+            labelRect.width = EditorStyles.label.CalcSize(pathLabel).x + 20; // Fit to label with some padding
             EditorGUI.LabelField(labelRect, pathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
@@ -104,10 +104,9 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            var bindingTextRectOffset = 80;
-            bindingTextRect.width += bindingTextRectOffset;
-            bindingTextRect.x -= bindingTextRectOffset + 20;
-            editButtonRect.x = bindingTextRect.x + bindingTextRect.width; // Place it directly after the textRect
+            bindingTextRect.x = labelRect.x + labelRect.width; // Place directly after labelRect
+            editButtonRect.x += lineRect.width - 20; // Place at the edge of the window to appear after bindingTextRect
+            bindingTextRect.width = editButtonRect.x - bindingTextRect.x; // bindingTextRect fills remaining space between label and editButton
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
