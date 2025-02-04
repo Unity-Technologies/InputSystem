@@ -1663,18 +1663,20 @@ namespace UnityEngine.InputSystem.UI
             ResetPointers();
 
             InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
-
             DisableAllActions();
             UnhookActions();
+            UnassignActions();
 
             base.OnDisable();
         }
 
         private void ResetPointers()
         {
-            var numPointers = m_PointerStates.length;
-            for (var i = 0; i < numPointers; ++i)
-                SendPointerExitEventsAndRemovePointer(0);
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                if (SendPointerExitEventsAndRemovePointer(i))
+                    --i;
+            }
 
             m_CurrentPointerId = -1;
             m_CurrentPointerIndex = -1;
@@ -2031,16 +2033,17 @@ namespace UnityEngine.InputSystem.UI
             return m_PointerStates.AppendWithCapacity(new PointerModel(eventData));
         }
 
-        private void SendPointerExitEventsAndRemovePointer(int index)
+        // Returns true if the pointer was successfully removed (ISXB-1258)
+        private bool SendPointerExitEventsAndRemovePointer(int index)
         {
             var eventData = m_PointerStates[index].eventData;
             if (eventData.pointerEnter != null)
                 ProcessPointerMovement(eventData, null);
 
-            RemovePointerAtIndex(index);
+            return RemovePointerAtIndex(index);
         }
 
-        private void RemovePointerAtIndex(int index)
+        private bool RemovePointerAtIndex(int index)
         {
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
@@ -2048,7 +2051,8 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateForIndex(index);
             if (state.pointerType == UIPointerType.Touch && (state.leftButton.isPressed || state.leftButton.wasReleasedThisFrame))
             {
-                return;
+                // The pointer was not removed
+                return false;
             }
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
@@ -2096,6 +2100,8 @@ namespace UnityEngine.InputSystem.UI
                 m_PointerStates.firstValue.eventData = eventData;
             else
                 m_PointerStates.additionalValues[m_PointerStates.length - 1].eventData = eventData;
+
+            return true;
         }
 
         // Remove any pointer that no longer has the ability to point.
@@ -2110,8 +2116,9 @@ namespace UnityEngine.InputSystem.UI
                      !HaveControlForDevice(device, trackedDevicePosition) &&
                      !HaveControlForDevice(device, trackedDeviceOrientation)))
                 {
-                    SendPointerExitEventsAndRemovePointer(i);
-                    --i;
+                    // Only decrement 'i' if the pointer was successfully removed
+                    if (SendPointerExitEventsAndRemovePointer(i))
+                        --i;
                 }
             }
 
@@ -2326,8 +2333,8 @@ namespace UnityEngine.InputSystem.UI
                         }
                         if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen && m_PointerStates[i].pointerType != UIPointerType.Touch || (m_PointerStates[i].pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame))
                         {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
                         }
                     }
                 }
@@ -2338,8 +2345,8 @@ namespace UnityEngine.InputSystem.UI
                     {
                         if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
                         {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
                         }
                     }
                 }

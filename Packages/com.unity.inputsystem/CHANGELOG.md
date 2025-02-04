@@ -11,6 +11,18 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
+- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
+- Fixed GamepadButton.LeftTrigger and GamepadButton.RightTrigger enum values not matching displayed dropdown values in editor when using GamepadButtonPropertyDrawer [ISXB-1270](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1270).
+- Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
+- Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
+- Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
+- Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
+- Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule.
+
+## [1.12.0] - 2025-01-15
+
+### Fixed
 - Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
 - Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
 - Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105).
@@ -38,7 +50,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where batch jobs would fail with "Error: Error building Player because scripts are compiling" if a source generated .inputactions asset is out of sync with its generated source code (ISXB-1300).
 - Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
 - Fixed an issue in input actions editor window that caused certain fields in custom input composite bindings to require multiple clicks to action / focus. [ISXB-1171](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1171)
-- Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule.
+- Fixed an editor/player hang in `InputSystemUIInputModule` due to an infinite loop. This was caused by the assumption that `RemovePointerAtIndex` would _always_ successfully remove the pointer, which is not the case with touch based pointers. [ISXB-1258](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1258)
+- Fixed wrong Xbox Series S|X and Xbox One wireless controllers "View" button mapping on macOS by expanding device PID and VID matching. [ISXB-1264](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1264)
 
 ### Changed
 - Changed location of the link xml file (code stripping rules), from a temporary directory to the project Library folder (ISX-2140).
@@ -50,6 +63,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Added new API `InputSystem.settings.useIMGUIEditorForAssets` that should be used in custom `InputParameterEditor` that use both IMGUI and UI Toolkit.
 - Added ProfilerMakers to `InputAction.Enable()` and `InputActionMap.ResolveBindings()` to enable gathering of profiling data.
+- Added throwing an error message when trying to use the Input System package on console without the extension package installed.
 
 ## [1.11.2] - 2024-10-16
 
