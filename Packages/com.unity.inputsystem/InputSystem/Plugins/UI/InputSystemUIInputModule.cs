@@ -904,9 +904,9 @@ namespace UnityEngine.InputSystem.UI
                 var cancelAction = m_CancelAction?.action;
 
                 var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasPerformedThisFrame())
+                if (cancelAction != null && cancelAction.WasPerformedThisRenderingFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPerformedThisRenderingFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }

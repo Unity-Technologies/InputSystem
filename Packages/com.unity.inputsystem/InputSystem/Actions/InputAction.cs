@@ -580,7 +580,7 @@ namespace UnityEngine.InputSystem
         /// Equivalent to <see cref="WasPerformedThisFrame"/>.
         /// </summary>
         /// <seealso cref="WasPerformedThisFrame"/>
-        public bool triggered => WasPerformed();
+        public bool triggered => WasPerformedThisFrame();
 
         /// <summary>
         /// The currently active control that is driving the action. <see langword="null"/> while the action
@@ -1249,10 +1249,10 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPressed"/> instead.
+        /// the dynamic Update, use <see cref="WasPressedThisRenderingFrame"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
-        /// <seealso cref="WasPressed"/>
+        /// <seealso cref="WasPressedThisRenderingFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasPerformedThisFrame"/>
@@ -1262,7 +1262,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->framePressed == ExpectedFrame();
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1270,12 +1271,12 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
-        /// in this InputSystem Update cycle.
+        /// in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
-        /// <returns>True if the action was pressed in this InputSystem Update cycle.</returns>
+        /// <returns>True if the action was pressed in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the action was pressed in the current InputSystem Update cycle.
-        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPressedThisFrame"/>.
         /// </remarks>
         /// <example>
@@ -1292,14 +1293,13 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasPressed()
+        public unsafe bool WasPressedThisRenderingFrame()
         {
             var state = GetOrCreateActionMap().m_State;
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->framePressed == ExpectedFrame();
             }
 
             return false;
@@ -1335,10 +1335,10 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasReleased"/> instead.
+        /// the dynamic Update, use <see cref="WasReleasedThisRenderingFrame"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
-        /// <seealso cref="WasReleased"/>
+        /// <seealso cref="WasReleasedThisRenderingFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
@@ -1348,7 +1348,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->frameReleased == ExpectedFrame();
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1356,12 +1357,12 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in this InputSystem Update cycle.
+        /// at any point in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
-        /// <returns>True if the action was released in this InputSystem Update cycle.</returns>
+        /// <returns>True if the action was released in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the action was released in the current InputSystem Update cycle.
-        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
         /// </remarks>
         /// <example>
@@ -1379,14 +1380,13 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasReleased()
+        public unsafe bool WasReleasedThisRenderingFrame()
         {
             var state = GetOrCreateActionMap().m_State;
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->frameReleased == ExpectedFrame();
             }
 
             return false;
@@ -1432,9 +1432,9 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPerformed"/> instead.
+        /// the dynamic Update, use <see cref="WasPerformedThisRenderingFrame"/> when trying to access in dynamic Update instead.
         /// </remarks>
-        /// <seealso cref="WasPerformed"/>
+        /// <seealso cref="WasPerformedThisRenderingFrame"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1445,7 +1445,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->framePerformed == ExpectedFrame();
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1453,13 +1454,13 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
-        /// in this InputSystem Update cycle.
+        /// in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
-        /// <returns>True if the action performed in this InputSystem Update cycle.</returns>
+        /// <returns>True if the action performed in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the action was performed in the current InputSystem Update cycle.
-        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
-        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPerformedThisFrame"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1473,15 +1474,14 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasPerformed()
+        public unsafe bool WasPerformedThisRenderingFrame()
         {
             var state = GetOrCreateActionMap().m_State;
 
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->framePerformed == ExpectedFrame();
             }
 
             return false;
@@ -1537,7 +1537,7 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         /// </para>
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasCompleted"/> instead.
+        /// the dynamic Update, use <see cref="WasCompletedThisRenderingFrame"/> to access this during dynamic Update instead.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1548,7 +1548,7 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
-        /// <seealso cref="WasCompleted"/>
+        /// <seealso cref="WasCompletedThisRenderingFrame"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1559,7 +1559,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                return actionStatePtr->frameCompleted == ExpectedFrame();
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1567,13 +1568,13 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
-        /// value at least once in the InputSystem Update cycle.
+        /// value at least once in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
-        /// <returns>True if the action completed in this InputSystem Update cycle.</returns>
+        /// <returns>True if the action completed in this MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the action was completed in the current InputSystem Update cycle.
-        /// This is desired if <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
-        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasCompletedThisFrame"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1587,15 +1588,14 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasCompleted()
+        public unsafe bool WasCompletedThisRenderingFrame()
         {
             var state = GetOrCreateActionMap().m_State;
 
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->frameCompleted == ExpectedFrame();
             }
 
             return false;
