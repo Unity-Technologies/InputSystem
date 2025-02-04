@@ -4,9 +4,9 @@ UI in Unity receives input through the same mechanisms as the input for the rest
 
 This can create ambiguities between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) of an Action bound to `<Mouse>/leftButton`.
 
-Whether such ambiguities exist depends on *how* UIs are used. For example, you can avoid ambiguities by implementing your UI in one of the following ways:
+Whether such ambiguities exist depends on how UIs are used. For example, you can avoid ambiguities by implementing your UI in one of the following ways:
 
-* Perform all interaction through UI elements. Render a 2D/3D scene in the background, but perform all interaction through UI events (including those such as 'background' clicks on the `Canvas`).
+* Perform all interaction through UI elements. Render a scene in the background, but perform all interaction through UI events (including those such as 'background' clicks on the `Canvas`).
 * Place UI over a 2D/3D scene, but don’t let the user directly interact with the UI.
 * Place UI over a 2D/3D scene, but create a clear "mode" switch that determines whether interaction applies to the UI or the scene. For example, a first-person game on desktop might employ a [cursor lock](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) which directs input to the game when it is engaged, and to the UI when it is not engaged.
 
@@ -28,7 +28,7 @@ The easiest way to resolve such ambiguities is to respond to in-game actions by 
 
 ## Handling navigation input ambiguities
 
-Ambiguities for navigation-type Devices such as gamepads and joysticks (but also keyboards) cannot arise the same way that it does for pointers. Instead, your application has to decide explicitly whether to use input for the UI's `Move`, `Submit`, and `Cancel` inputs or for the game. This can be done by either splitting control on a Device or by having an explicit mode switch.
+For navigation-type devices such as gamepads, joysticks, and keyboards, you must decide explicitly whether to use input for the UI's `Move`, `Submit`, and `Cancel` inputs or for the game. This can be done by either splitting control on a Device or by having an explicit mode switch.
 
 Splitting input on a Device is done by simply using certain controls for operating the UI while using others to operate the game. For example, you could use the d-pad on gamepads to operate UI selection while using the sticks for in-game character control. This setup requires adjusting the bindings used by the UI Actions accordingly.
 

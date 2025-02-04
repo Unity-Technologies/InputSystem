@@ -2,7 +2,8 @@
 
 Use a virtual mouse to allow gamepads and joysticks to control pointer inputs.
 
-**Note**: The Virtual Mouse component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit or IMGUI.
+>[!NOTE] 
+>The Virtual Mouse component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit or IMGUI.
 
 |**Topic**|**Description**|
 |--------|-----------|
