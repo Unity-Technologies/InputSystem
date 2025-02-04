@@ -2188,7 +2188,7 @@ partial class CoreTests
         Assert.That(action.WasReleasedThisFrame(), Is.False);
 
         // Disabling an action at this point should affect IsPressed() but should
-        // not affect WasPressedThisFrame() and .WasReleased().
+        // not affect WasPressedThisFrame() and WasReleasedThisFramme().
         action.Disable();
 
         Assert.That(action.IsPressed(), Is.False);
@@ -2196,7 +2196,7 @@ partial class CoreTests
         Assert.That(action.WasReleasedThisFrame(), Is.False);
 
         // Re-enabling it should have no effect on WasPressedThisFrame() and
-        // .WasReleased() either. Also IsPressed() should remain false
+        // WasReleasedThisFramme() either. Also IsPressed() should remain false
         // as the button may have been released and the action wouldn't see
         // the update while disabled.
         action.Enable();
@@ -2243,7 +2243,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasReleasedThisFrame(), Is.True);
 
-        // Disabling should not affect .WasReleasedThisFrame().
+        // Disabling should not affect WasReleasedThisFrame().
         action.Disable();
 
         Assert.That(action.IsPressed(), Is.False);
@@ -2257,7 +2257,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasReleasedThisFrame(), Is.True);
 
-        // Advance one frame. Should reset .WasReleased().
+        // Advance one frame. Should reset WasReleasedThisFrame().
         InputSystem.Update();
 
         Assert.That(action.IsPressed(), Is.False);
@@ -2303,7 +2303,7 @@ partial class CoreTests
         // This test is structured the same as Actions_CanReadValueFromAction_AsButton above,
         // but with additional testing that the phase changes are correct for the given action type and interaction,
         // and additionally test functionality of WasPerformedThisFrame() and WasCompletedThisFrame(), which can
-        // be different than WasPressedThisFrame() and .WasReleasedThisFrame().
+        // be different than WasPressedThisFrame() and WasReleasedThisFrame().
 
         // Set global press and release points to known values.
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
@@ -2429,7 +2429,7 @@ partial class CoreTests
             trace.Clear();
 
             // Disabling an action at this point should affect IsPressed() but should
-            // not affect WasPressedThisFrame() and .WasReleasedThisFrame().
+            // not affect WasPressedThisFrame() and WasReleasedThisFrame().
             action.Disable();
 
             Assert.That(action.IsPressed(), Is.False);
@@ -2457,7 +2457,7 @@ partial class CoreTests
             trace.Clear();
 
             // Re-enabling it should have no effect on WasPressedThisFrame() and
-            // .WasReleasedThisFrame() either. Also IsPressed() should remain false
+            // WasReleasedThisFrame() either. Also IsPressed() should remain false
             // as the button may have been released and the action wouldn't see
             // the update while disabled.
             action.Enable();
@@ -2687,7 +2687,7 @@ partial class CoreTests
 
             trace.Clear();
 
-            // Disabling should not affect .WasReleasedThisFrame().
+            // Disabling should not affect WasReleasedThisFrame().
             action.Disable();
 
             Assert.That(action.IsPressed(), Is.False);
@@ -2751,7 +2751,7 @@ partial class CoreTests
 
             trace.Clear();
 
-            // Advance one frame. Should reset .WasReleasedThisFrame().
+            // Advance one frame. Should reset WasReleasedThisFrame().
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
