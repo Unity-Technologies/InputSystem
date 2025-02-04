@@ -94,7 +94,7 @@
         },
         {
             "name": "Unity",
-            "expression": "6000.1.0b2",
+            "expression": "6000.2.0a4",
             "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
         },
         {
