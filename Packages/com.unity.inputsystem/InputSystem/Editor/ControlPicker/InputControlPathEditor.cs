@@ -90,7 +90,8 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        public void OnGUI(Rect rect, GUIContent label = null, Action modifiedCallback = null)
+        //TODO: on next major version remove property argument.
+        public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action modifiedCallback = null)
         {
             var pathLabel = label ?? m_PathLabel;
 
