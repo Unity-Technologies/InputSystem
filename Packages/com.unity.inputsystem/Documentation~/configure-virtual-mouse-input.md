@@ -17,7 +17,7 @@ To configure the Virtual Mouse component with the Unity UI system:
 To configure the input to drive the virtual mouse, do one of the following:
 
 * Add bindings on the various actions (such as **Stick Action**).
-* Enable **Use Reference** and link existing actions from an Input Actions asset.
+* Enable **Use Reference** and link existing actions from an input actions asset.
 
 ## Control the system mouse cursor with the virtual mouse
 

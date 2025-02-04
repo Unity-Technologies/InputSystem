@@ -8,5 +8,5 @@ The UI Input module is implemented in the class [`InputSystemUIInputModule`](../
 
 ## Input priority
 
-If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions. The UI Action Map is enabled, along with the default Action Map specified on any UI Input Module component in the scene.
+If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions. The UI action map is enabled, along with the default action map specified on any UI Input Module component in the scene.
 

@@ -1,6 +1,6 @@
 # Configure the UI Input Action Map
 
-The default [Project-Wide Actions asset](./about-project-wide-actions.md) comes with a "**UI**" Action Map, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./actions-editor.md). 
+The default [project-wide actions asset](./about-project-wide-actions.md) comes with a built-in action map named **UI**, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./actions-editor.md). 
 
 To open the Actions Editor:
 
@@ -9,7 +9,7 @@ To open the Actions Editor:
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 
-The default [Project-Wide Actions asset](./about-project-wide-actions.md) comes with all the required actions to be compatible with UI Toolkit and Unity UI.
+The default [project-wide actions asset](./about-project-wide-actions.md) comes with all the required actions to be compatible with UI Toolkit and Unity UI.
 
 ## Modify UI input actions
 
@@ -19,7 +19,7 @@ You can modify, add, or remove bindings to the named actions in the UI action ma
 * The names of the actions it contains
 * Their respective **Action Types**.
 
-To see the specific actions and types that the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class expects, refer to the [UI Action Map reference](ui-action-map-reference).
+To see the specific actions and types that the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class expects, refer to the [UI action map reference](ui-action-map-reference).
 
 ## Reset the UI action map
 
