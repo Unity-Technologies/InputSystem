@@ -1,0 +1,10 @@
+[
+    {
+      "id": "INP0001",
+      "type": "UnityEngine.Input",
+      "method": "GetAxis",
+      "areas": ["DeprecatedAPI"],
+      "description": "<b>Input.GetAxis()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+      "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_\">ReadValue</a> on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up.\n\nThis example shows a 2D axis:\n<b>Vector2 moveVector = moveAction.ReadValue<Vector2>();</b>"
+    },
+]
