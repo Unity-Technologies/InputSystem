@@ -6,8 +6,8 @@ Use the Multiplayer Event System component to configure input for a specific use
 
 |**Property**|**Description**|
 |--------|-----------|
-**First Selected**| The GameObject that was selected first. |
-|**Send Navigation Events**| Should the EventSystem allow navigation events (move / submit / cancel). |
-|**Drag Threshold**| The soft area for dragging in pixels. |
-|**Player Root**|Specify which part of the hierarchy belongs to the current user. |
+**First Selected**| Define which GameObject is selected first. |
+|**Send Navigation Events**| Define whether the Event System should send navigation events such as move, submit, and cancel. |
+|**Drag Threshold**| Define the soft area for dragging in pixels. |
+|**Player Root**| Define which part of the hierarchy belongs to the current user. |
 |**Add Default Input Modules**| Add the default Input System components to the same GameObject as this Multiplayer Event System component.|
