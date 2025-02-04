@@ -1,6 +1,14 @@
 # Control actuation
 
-A Control is considered actuated when it has moved away from its default state in such a way that it affects the actual value of the Control. You can query whether a Control is currently actuated using [`IsActuated`](../api/UnityEngine.InputSystem.InputControlExtensions.html#UnityEngine_InputSystem_InputControlExtensions_IsActuated_UnityEngine_InputSystem_InputControl_System_Single_).
+A control is considered actuated when it has moved away from its default state in such a way that it affects the value of the Control.
+
+The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly check whether a control is actuated. Instead, actuation of a control bound to an action causes the action to be performed (according to its [interaction pattern](interactions.md), if an interaction has been assigned).
+
+However in some scenarios you might want to directly read the actuation of a control.
+
+## Directly read the actuation of a control
+
+You can query whether a Control is currently actuated using [`IsActuated`](../api/UnityEngine.InputSystem.InputControlExtensions.html#UnityEngine_InputSystem_InputControlExtensions_IsActuated_UnityEngine_InputSystem_InputControl_System_Single_).
 
 ```CSharp
 // Check if leftStick is currently actuated.
@@ -20,7 +28,7 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
     Debug.Log("Left Stick actuated past 25%");
 ```
 
-There are two mechanisms that most notably make use of Control actuation:
+There are two mechanisms within the Input System that most notably make use of Control actuation:
 
-- [Interactive rebinding](ActionBindings.md#interactive-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
-- [Conflict resolution](ActionBindings.md#conflicting-inputs) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
+- [Interactive rebinding](interactive-rebinding.md) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable controls to find the one that is actuated the most.
+- [Conflict resolution](binding-conflicts.md) between multiple controls that are bound to the same action uses it to decide which Control gets to drive the action.

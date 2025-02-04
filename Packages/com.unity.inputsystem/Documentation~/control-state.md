@@ -1,4 +1,12 @@
-## Control state
+# Control state
+
+A control's **state** is the current value stored by the Input System based on the control's [actuation](control-actuation.md).
+
+The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly read control states.
+
+However, the documentation on this page gives information about the details of how controls states are stored, and how to directly access the state, which may be useful if you are using a different workflow.
+
+## Details 
 
 Each Control is connected to a block of memory that is considered the Control's "state". You can query the size, format, and location of this block of memory from a Control through the [`InputControl.stateBlock`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_stateBlock) property.
 

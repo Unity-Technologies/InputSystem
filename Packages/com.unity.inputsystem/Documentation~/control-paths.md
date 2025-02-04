@@ -1,17 +1,36 @@
 # Control paths
 
->Example: `<Gamepad>/leftStick/x` means "X Control on left stick of gamepad".
+Control paths represent they way to describe a control or group of controls on a device, for the purpose of [binding](bindings.md) it to an [action](actions.md).
 
-The Input System can look up Controls using textual paths. [Bindings](ActionBindings.md) on Input Actions rely on this feature to identify the Control(s) they read input from. However, you can also use them for lookup directly on Controls and Devices, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls_System_String_).
+An example of a control path is `<Gamepad>/leftStick/x`, which means "The X-axis of the left stick of any gamepad".
 
-```CSharp
-var gamepad = Gamepad.all[0];
-var leftStickX = gamepad["leftStick/x"];
-var submitButton = gamepad["{Submit}"];
-var allSubmitButtons = InputSystem.FindControls("*/{Submit}");
-```
+At runtime, the Input System performs a lookup of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md). 
 
-Control paths resemble file system paths. Each path consists of one or more components separated by a forward slash:
+
+## Specificity
+
+When [selecting a control path for binding](select-control-binding.md), there are various levels of specificity you can use. These are available in the **Control paths** menu, in the [Binding Properties panel](binding-properties-panel.md).
+
+These levels of specificity depend on whether you want to refer to a certain type of device, specific models of device, or certain usages of a control regardless of device type.
+
+### By generic device
+
+You can refer to a generic type of device, for example referring to a common control across all types of gamepad (such as the left stick on a gamepad). In this case, this matches the left stick on all types of gamepad which have a left stick.
+
+### By specific device
+
+You can refer to a specific control on a specific model of gamepad (such as the `A` button on an Xbox controller), or a specific control usage across all types of device (such as the control associated with `Back` on any type of device). In this case, the path does not match any controls on any other type of gamepad even if they're similar in position or usage.
+
+### By usage
+
+You can also refer to controls by usage, which allows you to use a variety of common names that controls are typically used for by convention, such as a `Back` button, or a `Submit` button. See [control usages](control-usages.md) for more information about these.
+
+The Device and Control tree is organized hierarchically from generic to specific. For example, the __Gamepad__ Control path `<Gamepad>/buttonSouth` matches the lower action button on any gamepad. Alternatively, if you navigate to __Gamepad__ > __More Specific Gamepads__ and select __PS4 Controller__, and then choose the Control path `<DualShockGamepad>/buttonSouth`, this only matches the "Cross" button on PlayStation gamepads, and doesn't match any other gamepads.
+
+
+## Format
+
+Control paths are strings, which resemble file system paths. Each path consists of one or more components separated by a forward slash:
 
     component/component...
 
@@ -28,6 +47,13 @@ The following table explains the use of each field:
 |`controlName`|Requires the Control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and aliases ([`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
 |`#(displayName)`|Requires the Control at the current level to have the given display name (i.e. [`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
 
+### Wildcard characters
+
+If you entering a control path as text, you can use the wildcard asterisk character (`*`) to match multiple controls in the hierarchy specified. For example, you can use `<Touchscreen>/touch*/press` to bind to any finger pressed on the touchscreen, instead of individually binding to `<Touchscreen>/touch0/press`, `<Touchscreen>/touch1/press` and each other numbered touch separately.
+
+
+## Access from code
+
 You can access the literal path of a given control via its [`InputControl.path`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_path) property.
 
 If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_Parse_System_String_) API.
@@ -41,4 +67,13 @@ Debug.Log(parsed[0].name); // Prints an empty string.
 Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
 Debug.Log(parsed[1].layout); // Prints null.
 Debug.Log(parsed[1].name); // Prints "trigger".
+```
+
+You can use control paths to directly reference controls, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls_System_String_).
+
+```CSharp
+var gamepad = Gamepad.all[0];
+var leftStickX = gamepad["leftStick/x"];
+var submitButton = gamepad["{Submit}"];
+var allSubmitButtons = InputSystem.FindControls("*/{Submit}");
 ```
