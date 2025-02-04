@@ -6,6 +6,7 @@ Learn about supported input devices and their unique features in this section.
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
+| **[Types of input devices](devices-overview.md)**|Connect devices to your application.|
 | **[Pointer devices](devices-pointers.md)** | Configure devices that track input on a 2D surface, such as mice, or pens. |
 | **[Keyboards](devices-keyboard.md)** | Configure devices that use a set of key controls.|
 | **[Joysticks](devices-joysticks.md)** | Configure devices that have at least one input stick and one button. |

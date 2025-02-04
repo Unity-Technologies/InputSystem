@@ -7,6 +7,6 @@ Keyboard devices are those with a set of keys for input, represented by the `Key
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Keyboards introduction](keyboards-introduction.md)** | How the Input System recognizes keyboards. |
-| **[Query keyboards in code](query-keyboards.md)** | Use the `Keyboard` API to access information about the keyboards connected to your application. |
+| **[Keyboards introduction](keyboards-introduction.md)** | Configure devices that use key controls. |
+| **[Query keyboards in code](query-keyboards.md)** | Access information about the keyboards connected to your application. |
 | **[Read text input](read-keyboard-text-input.md)** | Collect text input from keyboards.|

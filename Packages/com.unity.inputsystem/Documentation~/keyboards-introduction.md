@@ -1,4 +1,4 @@
-# Keyboards introduction
+# Introduction to keyboards
 
 The [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) class defines a device with a set of key controls defined by the [`Key`](xref:UnityEngine.InputSystem.Key) enumeration.
 

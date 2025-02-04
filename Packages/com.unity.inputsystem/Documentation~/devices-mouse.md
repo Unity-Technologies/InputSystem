@@ -7,6 +7,6 @@ The Input System represents mouse input with the [`Mouse`](xref:UnityEngine.Inpu
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Mouse devices introduction](mouse-introduction.md)** | How the Input System defines a mouse device. |
-| **[Query and control mouse devices in code](query-mouse-devices.md)** | Use the `Mouse` API to access information about the mice connected to your application. |
+| **[Mouse devices introduction](mouse-introduction.md)** | Configure mouse devices. |
+| **[Query and control mouse devices in code](query-mouse-devices.md)** | Access information about the mice connected to your application. |
 

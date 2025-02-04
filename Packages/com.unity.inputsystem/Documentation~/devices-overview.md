@@ -6,7 +6,7 @@ The Input package identifies and recognizes the following types of input devices
     * [Mouse](devices-mouse.md) 
     * [Touch](devices-touch.md) 
     * [Pen](devices-pen.md)  
-* [Keyboards](devices-keyboards.md): Devices with key input.
+* [Keyboards](devices-keyboard.md): Devices with key input.
 * [Joysticks](devices-joysticks.md): Devices with at least one input stick and button.  
 * [Gamepads](devices-gamepads.md): Devices with two thumbsticks, a D-pad, four face buttons, two shoulder buttons, and two trigger buttons. This category has the following devices:  
     * [PlayStation gamepads](gamepads-playstation.md)

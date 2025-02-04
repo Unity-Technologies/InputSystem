@@ -7,6 +7,6 @@ Sensors measure the environmental characteristics of the device that the applica
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Sensors introduction](gamepads-introduction.md)** | Use sensors to get information about environmental characteristics of devices. |
-| **[Query sensors in code](query-sensors.md)** | Use the `Sensors` API to access information about the sensors connected to your application.|
-| **[Supported sensors reference](supported-sensors-reference.md)** | Reference for the sensor types the Input System can access.|
+| **[Sensors introduction](gamepads-introduction.md)** | Configure sensors to get information about environmental characteristics of devices. |
+| **[Query sensors in code](query-sensors.md)** | Access information about the sensors connected to your application.|
+| **[Supported sensors reference](supported-sensors-reference.md)** | Explore the sensor types the Input System can access.|

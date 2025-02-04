@@ -1,4 +1,4 @@
-# Touch devices
+# Introduction to touch devices
 
 You can control touch devices with the following APIs:
 

@@ -8,10 +8,10 @@ A gamepad is narrowly defined as a device with two thumbsticks, a D-pad, and fou
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Gamepads introduction](gamepads-introduction.md)** | Introduction to the types of supported gamepads. |
-| **[PlayStation gamepads](gamepads-playstation.md)** | Use PlayStation controllers in your application. |
-| **[Switch gamepads](gamepads-switch.md)** | Use Switch controllers in your application. |
-| **[Xbox gamepads](gamepads-xbox.md)** | Use Xbox controllers in your application. |
-| **[Query and control gamepads in code](query-gamepads.md)** | Use the `Gamepad` API to access information about the gamepads connected to your application.|
+| **[Gamepads introduction](gamepads-introduction.md)** | Configure devices that have a D-pad and four face buttons.|
+| **[PlayStation gamepads](gamepads-playstation.md)** | Configure PlayStation controllers in your application. |
+| **[Switch gamepads](gamepads-switch.md)** | Configure Switch controllers in your application. |
+| **[Xbox gamepads](gamepads-xbox.md)** | Configure Xbox controllers in your application. |
+| **[Query and control gamepads in code](query-gamepads.md)** | Access information about the gamepads connected to your application.|
 | **[Polling gamepad input](gamepad-polling.md)** | Collect gamepad input on a frame-by-frame basis.|
 | **[Gamepad haptics](gamepad-haptics.md)** | Control the rumble and motor of gamepads.|

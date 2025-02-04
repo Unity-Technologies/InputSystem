@@ -7,8 +7,8 @@ Pointer devices track positions on a 2D surface. Supported pointer devices inclu
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Pointer devices introduction](pointers-introduction.md)** | Types of pointer devices. |
-| **[Touch devices](devices-touch.md)** | Devices that track input on a touch screen. |
+| **[Pointer devices introduction](pointers-introduction.md)** | Connect pointer devices to your application. |
+| **[Touch devices](devices-touch.md)** | Configure devices that track input on a touch screen. |
 | **[Mouse devices](devices-mouse.md)** | Query and control mouse devices.|
 | **[Pen devices](devices-pen.md)** | Query and control pen devices. |
 
