@@ -1,10 +1,90 @@
 [
-    {
-      "id": "INP0001",
-      "type": "UnityEngine.Input",
-      "method": "GetAxis",
-      "areas": ["DeprecatedAPI"],
-      "description": "<b>Input.GetAxis()</b> is part of the old Input Manager, and can be updated to the Input System package.",
-      "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_\">ReadValue</a> on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up.\n\nThis example shows a 2D axis:\n<b>Vector2 moveVector = moveAction.ReadValue<Vector2>();</b>"
-    },
+  {
+    "id": "INP0001",
+    "type": "UnityEngine.Input",
+    "method": "GetAxis",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetAxis()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/api/UnityEngine.InputSystem.InputBindingComposite-1.html#UnityEngine_InputSystem_InputBindingComposite_1_ReadValue_\">ReadValue</a> on the reference to the action to read the current value of the axis. In the new Input System, axes can be 1D, 2D or other value types. You must specify the correct value type that corresponds with how the action is set up.\n\nThis example shows a 2D axis:\n<b>Vector2 moveVector = moveAction.ReadValue<Vector2>();</b>"
+  },
+  {
+    "id": "INP0002",
+    "type": "UnityEngine.Input",
+    "method": "GetButton",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetButton()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_\">IsPressed</a> on the reference to the action to read the button value.\n\nExample:\n<b>bool jumpValue = jumpAction.IsPressed();</b>"
+  },
+  {
+    "id": "INP0003",
+    "type": "UnityEngine.Input",
+    "method": "GetButtonDown",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetButtonDown()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_\">WasPressedThisFrame</a> on the reference to the action to read if the button was pressed this frame.\n\nExample:\n<b>bool jumpValue = jumpAction.WasPressedThisFrame();</b>"
+  },
+  {
+    "id": "INP0004",
+    "type": "UnityEngine.Input",
+    "method": "GetButtonUp",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetButtonUp()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_\">WasReleasedThisFrame</a> on the reference to the action to read whether the button was released this frame.\n\nExample:\n<b>bool jumpValue = jumpAction.WasReleasedThisFrame();</b>"
+  },
+  {
+    "id": "INP0005",
+    "type": "UnityEngine.Input",
+    "method": "GetAxisRaw",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetAxisRaw()</b> is part of the old Input Manager.",
+    "recommendation": "No direct equivalent in the Input System, but if there are <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@1.12/manual/Processors.html\">processors</a> associated with the action, you can use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue\">InputControl<>.ReadUnprocessedValue()</a> to read unprocessed values.\n\nExample:\n<b>Vector2 moveVector = moveAction.ReadUnprocessedValue();</b>\nNote: his returns the same value as ReadValue when there are no processors on the action."
+  },
+  {
+    "id": "INP0006",
+    "type": "UnityEngine.Input",
+    "method": "Input.GetKey",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetKey()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed\">isPressed</a> on the corresponding key.\n\nExample:\n<b>InputSystem.Keyboard.current.spaceKey.isPressed();</b>"
+  },
+  {
+    "id": "INP0007",
+    "type": "UnityEngine.Input",
+    "method": "Input.GetKeyDown",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetKeyDown()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame\">wasPressedThisFrame</a> on the corresponding key.\n\nExample:\n<b>InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame();</b>"
+  },
+  {
+    "id": "INP0008",
+    "type": "UnityEngine.Input",
+    "method": "Input.GetKeyUp",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetKeyUp()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame\">wasReleasedThisFrame</a> on the corresponding key.\n\nExample:\n<b>InputSystem.Keyboard.current.spaceKey.wasReleasedThisFrame();</b>"
+  },
+  {
+    "id": "INP0009",
+    "type": "UnityEngine.Input",
+    "method": "Input.GetJoystickNames",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.GetJoystickNames()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "There is no API that corresponds to this exactly, but there are examples of <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/manual/Gamepad.html#discover-all-connected-devices\"> how to read all connected devices here.</a>"
+  },
+  {
+    "id": "INP0010",
+    "type": "UnityEngine.Input",
+    "method": "Input.IsJoystickPreconfigured",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.Input.IsJoystickPreconfigured()</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Not needed. Devices which derive from <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.Gamepad.html\">Gamepad</a> always correctly implement the mapping of axes and buttons to the corresponding <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputControl.html\">InputControl</a> members of the <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.Gamepad.html\">Gamepad</a> class."
+  },
+  {
+    "id": "INP0011",
+    "type": "UnityEngine.Input",
+    "method": "Input.anyKey",
+    "areas": [ "DeprecatedAPI" ],
+    "description": "<b>Input.anyKey</b> is part of the old Input Manager, and can be updated to the Input System package.",
+    "recommendation": "Use <a href=\"https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress\">onAnyButtonPress</a>. on the corresponding key.\nThis also includes gamepad buttons as well as keyboard keys."
+  }
 ]
