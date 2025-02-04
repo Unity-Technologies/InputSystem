@@ -2188,7 +2188,7 @@ partial class CoreTests
         Assert.That(action.WasReleasedThisFrame(), Is.False);
 
         // Disabling an action at this point should affect IsPressed() but should
-        // not affect WasPressedThisFrame() and WasReleasedThisFramme().
+        // not affect WasPressedThisFrame() and WasReleasedThisFrame().
         action.Disable();
 
         Assert.That(action.IsPressed(), Is.False);
@@ -2196,7 +2196,7 @@ partial class CoreTests
         Assert.That(action.WasReleasedThisFrame(), Is.False);
 
         // Re-enabling it should have no effect on WasPressedThisFrame() and
-        // WasReleasedThisFramme() either. Also IsPressed() should remain false
+        // WasReleasedThisFrame() either. Also IsPressed() should remain false
         // as the button may have been released and the action wouldn't see
         // the update while disabled.
         action.Enable();
