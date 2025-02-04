@@ -1,19 +1,25 @@
-# Distinguishing between UI and game input
+# Handling input target ambiguity
 
-UI in Unity receives input through the same mechanisms as the input for the rest of your game or app. There is no automatic mechanism that implicitly ensures that if a certain input (such as a mouse click) is consumed by the UI, it is not also received by your gameplay code.
+Understand how to manage ambiguities between input for your application's user interface (UI), and input for other parts of your application.
 
-This can create ambiguities between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) of an Action bound to `<Mouse>/leftButton`.
+>[!NOTE]
+>The Input System package includes a sample project called "**UI vs Game Input**". The sample demonstrates how to deal with ambiguities between inputs for UI and inputs for the game.
 
-Whether such ambiguities exist depends on how UIs are used. For example, you can avoid ambiguities by implementing your UI in one of the following ways:
+## How Unity processes UI input
+
+Unity processes UI input through the same mechanisms as the input for the rest of your application. There's no automatic mechanism that prevents the UI and the rest of your code from consuming the same input (such as a mouse click).
+
+## Strategies for avoiding ambiguity
+
+Ambiguities can appear between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) for an action bound to `<Mouse>/leftButton`.
+
+Whether such ambiguities exist depends on you implement the UI and the UI input. The following UI implementation strategies are examples of how you can avoid these ambiguities:
 
 * Perform all interaction through UI elements. Render a scene in the background, but perform all interaction through UI events (including those such as 'background' clicks on the `Canvas`).
 * Place UI over a 2D/3D scene, but don’t let the user directly interact with the UI.
 * Place UI over a 2D/3D scene, but create a clear "mode" switch that determines whether interaction applies to the UI or the scene. For example, a first-person game on desktop might employ a [cursor lock](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) which directs input to the game when it is engaged, and to the UI when it is not engaged.
 
-There are specific ambiguities that can arise for [pointer input](supported-ui-input-types-pointer.md) and [navigation input](supported-ui-input-types-navigation.md).
-
->[!NOTE]
->The Input System package includes a sample project called "**UI vs Game Input**". The sample demonstrates how to deal with ambiguities between inputs for UI and inputs for the game.
+There are also specific ambiguities that can arise for [pointer input](supported-ui-input-types-pointer.md) and [navigation input](supported-ui-input-types-navigation.md).
 
 ## Handling pointer input ambiguities
 

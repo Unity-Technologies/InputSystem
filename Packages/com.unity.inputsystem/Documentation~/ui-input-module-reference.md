@@ -6,7 +6,7 @@ The properties on the UI Input Module correspond to the [`InputSystemUIInputModu
 
 |**Property**|**Description**|
 |--------|-----------|
-|Send Pointer Hover to Parent | |
+<!-- |Send Pointer Hover to Parent | TODO: No description available | -->
 |**Move Repeat Delay**|The initial delay (in seconds) between generating an initial [IMoveHandler.OnMove](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.IMoveHandler.html) navigation event and generating repeated navigation events when the __Move__ action stays actuated.|
 |**Move Repeat Rate**|The interval (in seconds) between generating repeat navigation events when the __Move__ action stays actuated. Note that this is capped by the frame rate; there will not be more than one move repeat event each frame so if the frame rate dips below the repeat rate, the effective repeat rate will be lower than this setting.|
 |**XR Tracking Origin** | Define the transform that represents the real-world transform for tracking devices. |

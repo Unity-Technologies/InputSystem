@@ -1,7 +1,13 @@
 # Understand UI system compatibility
 Unity has [three major UI solutions](https://docs.unity3d.com/Manual/UIToolkits.html). The Input System package's compatibility and workflow with these solutions varies depending on which UI solution you are using, and which version of Unity you are using. 
 
-The three main UI systems are **UI Toolkit**, **Unity UI**, and **IMGUI**. Some systems and versions require that you use the Input System’s [UI Input Module component](using-ui-input-module.md) to pass actions from the Input System to the UI. 
+The three main UI systems are: 
+
+* **UI Toolkit**
+* **Unity UI**
+* **IMGUI** 
+
+Some systems and versions require that you use the Input System’s [UI Input Module component](using-ui-input-module.md) to pass actions from the Input System to the UI. 
 
 ## Compatibility summary
 UI system|Compatible|UI Input Module component
