@@ -2,20 +2,30 @@
 
 Open the [Actions Editor window](actions-editor.md) to add, duplicate, or delete bindings.
 
-To add a new Binding:
+## Add a binding 
 
-1. Select the Add (+) icon on the action you want to add it to
+To add a new binding to an action:
+
+1. Select the Add (+) icon on the action.
 2. Select the appropriate [binding type](binding-types.md) from the menu that appears.
 
-To delete an existing Binding:
+Once you have added a binding, the next step is usually to configure its [control path](./control-paths.md).
 
-1. Right-click the action
+## Delete a binding
+
+To delete an existing binding from an action:
+
+1. Right-click the action.
 2. Select __Delete__ from the context menu.
 
-To duplicate an existing Binding:
+## Duplicate a binding
 
-1. Right-click the action
+To duplicate an existing binding on an action:
+
+1. Right-click the action.
 2. Select __Duplicate__ from the context menu.
+
+## Multiple bindings
 
 You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
 
