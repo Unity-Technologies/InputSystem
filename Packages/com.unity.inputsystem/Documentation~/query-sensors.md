@@ -35,7 +35,7 @@ if (Gyroscope.current.enabled)
 
 ```
 
-# Sample sensor frequency
+## Sample sensor frequency
 
 Sensors sample continuously at a set interval. You can set or query the sampling frequency for each sensor using the [`samplingFrequency`](xref:UnityEngine.InputSystem.Sensor.samplingFrequency) property. The frequency is expressed in Hertz (number of samples per second).
 

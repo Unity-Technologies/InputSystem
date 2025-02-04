@@ -8,5 +8,5 @@ Unity supports pen input on tablets, desktop, and mobile devices. There are a ra
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Pen devices introduction](pen-introduction.md))** | Understand how pen devices are represented in the Input System. |
+| **[Pen devices introduction](pen-introduction.md)** | Understand how pen devices are represented in the Input System. |
 | **[Query pen devices in code](query-pen-devices.md)** | Use the `Pen` API to access information about the pens connected to your application. |
