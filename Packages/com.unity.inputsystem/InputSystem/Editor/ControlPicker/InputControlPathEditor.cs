@@ -40,6 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void Dispose()
         {
+            s_pathProperty = null;
             m_PickerDropdown?.Dispose();
         }
 
