@@ -9,7 +9,7 @@ publish_dry_run_inputsystem:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-55_0b53f03be6fe71c339ea32c633f3f517a5961ec4d29aa861372042a469eb3ee7.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -19,7 +19,7 @@ publish_dry_run_inputsystem:
   - command: python PythonScripts/run_publish_if_any_package_left.py --dry-run
   after:
   - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.0 || exit 0
+  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     timeout: 10
     retries: 1
   artifacts:
@@ -29,30 +29,6 @@ publish_dry_run_inputsystem:
       browsable: onNonSuccess
   dependencies:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_macos
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-macos
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-macos
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_ubuntu
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-ubuntu
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-ubuntu
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_windows
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-windows
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-windows
-        unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2021_3_-_macos
     specific_options:
       UTR:
@@ -151,13 +127,13 @@ publish_dry_run_inputsystem:
         unzip: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.33.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
   triggers:
     expression: push.branch match "^release/.*"
     cancel_old_ci: true
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.33.0
+    Wrench: 0.10.36.0
 
 # Publish  for inputsystem to https://artifactory-slo.bf.unity3d.com/artifactory/api/npm/upm-npm
 publish_inputsystem:
@@ -167,7 +143,7 @@ publish_inputsystem:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-55_0b53f03be6fe71c339ea32c633f3f517a5961ec4d29aa861372042a469eb3ee7.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -177,7 +153,7 @@ publish_inputsystem:
   - command: python PythonScripts/run_publish_if_any_package_left.py
   after:
   - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.0 || exit 0
+  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     timeout: 10
     retries: 1
   artifacts:
@@ -187,30 +163,6 @@ publish_inputsystem:
       browsable: onNonSuccess
   dependencies:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_macos
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-macos
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-macos
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_ubuntu
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-ubuntu
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-ubuntu
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2019_4_-_windows
-    specific_options:
-      UTR:
-        location: results/UTR/validate-inputsystem-2019.4-windows
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2019.4-windows
-        unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2021_3_-_macos
     specific_options:
       UTR:
@@ -309,8 +261,8 @@ publish_inputsystem:
         unzip: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.33.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.33.0
+    Wrench: 0.10.36.0
 

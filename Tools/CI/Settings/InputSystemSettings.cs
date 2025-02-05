@@ -62,7 +62,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             useLocalPvpExemptions: true
         );
         
-        // change default ubuntu image.
+        // change default images as per Dictionary above.
         Wrench.Packages["com.unity.inputsystem"].EditorPlatforms = ImageOverrides;
         
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
