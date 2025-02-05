@@ -2916,8 +2916,10 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
         Assert.That(scene.uiModule.GetNavigationEventDeviceType(scene.leftChildReceiver.events[0].data),
             Is.EqualTo(NavigationDeviceType.NonKeyboard));
+#endif
 
         scene.leftChildReceiver.events.Clear();
 
