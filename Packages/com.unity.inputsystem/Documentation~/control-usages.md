@@ -7,14 +7,12 @@ On a keyboard, the escape key that generally fulfills this role of `Back`, where
 
 Some devices might not have a control that generally fulfills this function and so might not have any control with the `Back` usage.
 
-By looking up controls by usage rather than by name, you can locate the correct control to use for certain standardized situation without needing to know the particulars of the device or platform.
-
-To bind a control to an action by usage:
-
-1. Follow the documentation to [add a binding to an action](./add-duplicate-delete-binding.md)
-2. When selecting a binding from the **Control Path** dropdown menu, select **Usages**
-3. Select a usage from the list of usages displayed.
+By looking up controls by usage rather than by name when [selecting a control for a binding](select-control-binding.md), you can locate the correct control to use for certain standardized situation without needing to know the specific details of the device or platform.
 
 You can access a Control's usages using the [`InputControl.usages`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_usages) property.
 
 Usages can be arbitrary strings. However, there is a particular set of common usages, which predefined in the API in the form of the [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) static class. See [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) for an overview.
+
+## Additional resources
+
+- [Select a control for binding](select-control-binding.md)

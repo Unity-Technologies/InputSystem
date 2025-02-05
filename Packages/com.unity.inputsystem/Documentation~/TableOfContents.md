@@ -40,7 +40,7 @@
     * [Controls](controls.md)
       * [About controls](about-controls.md)
       * [Control hierarchies](control-hierarchies.md)
-      * [Control types](control-types.md)
+      * [Control types reference](control-types-reference.md)
       * [Control usages](control-usages.md)
       * [Control paths](control-paths.md)
       * [Control state](control-state.md)

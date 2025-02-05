@@ -1,6 +1,8 @@
 # Control actuation
 
-A control is considered actuated when it has moved away from its default state in such a way that it affects the value of the Control.
+Control actuation refers to whether or not a [control](controls.md) is currently being used by the user.
+
+A control is considered actuated when it has moved away from its default state in such a way that it affects the value of the control.
 
 The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly check whether a control is actuated. Instead, actuation of a control bound to an action causes the action to be performed (according to its [interaction pattern](interactions.md), if an interaction has been assigned).
 
@@ -16,9 +18,9 @@ if (Gamepad.current.leftStick.IsActuated())
     Debug.Log("Left Stick is actuated");
 ```
 
-It can be useful to determine not just whether a Control is actuated at all, but also the amount by which it is actuated (that is, its magnitude). For example, for a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) this would be the length of the vector, whereas for a button it is the raw, absolute floating-point value.
+It can be useful to determine not just whether a Control is actuated at all, but also the amount by which it is actuated (that is, its magnitude). For example, for a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) this is the length of the vector, whereas for a button it is the raw, absolute floating-point value.
 
-In general, the current magnitude of a Control is always >= 0. However, a Control might not have a meaningful magnitude, in which case it returns -1. Any negative value should be considered an invalid magnitude.
+In general, the current magnitude of a Control is always greater than or equal to zero. However, a Control might not have a meaningful magnitude, in which case it returns -1. Any negative value should be considered an invalid magnitude.
 
 You can query the current amount of actuation using [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude).
 

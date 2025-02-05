@@ -2,7 +2,7 @@
 
 Noisy controls are those that can change value without any actual or intentional user interaction required. A good example of this is an accelerometer or gyroscope sensor in a cellphone. Even if the cellphone is at rest, there are usually fluctuations in the control's value readings. Another example are orientation readings from a head-mounted display.
 
-Some built-in control types are marked as **noisy**. You can query this using the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property.
+Some built-in control types are marked as **noisy**. You can query this using the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property, or by inspecting the control types in the [Input Debugger window](the-input-debugger-window.md).
 
 If a control is marked as noisy, it means:
 

@@ -4,7 +4,7 @@ A control's **state** is the current value stored by the Input System based on t
 
 The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly read control states.
 
-However, the documentation on this page gives information about the details of how controls states are stored, and how to directly access the state, which may be useful if you are using a different workflow.
+However, the documentation on this page gives information about the details of how controls states are stored, and how to directly access the state, which may be useful if you are using a different workflow for a specialized situation.
 
 ## Details 
 

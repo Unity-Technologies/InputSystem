@@ -1,10 +1,10 @@
 # Control paths
 
-Control paths represent they way to describe a control or group of controls on a device, for the purpose of [binding](bindings.md) it to an [action](actions.md).
+Control paths represent the way to describe a control or group of controls on a device, when [binding](bindings.md) them to an [action](actions.md).
 
-An example of a control path is `<Gamepad>/leftStick/x`, which means "The X-axis of the left stick of any gamepad".
+An example of a control path is `<Gamepad>/leftStick/x`, which refers to the X-axis of the left stick of any gamepad.
 
-At runtime, the Input System performs a lookup of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md). 
+At runtime, the Input System performs a look-up of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md). 
 
 
 ## Specificity
@@ -15,17 +15,19 @@ These levels of specificity depend on whether you want to refer to a certain typ
 
 ### By generic device
 
-You can refer to a generic type of device, for example referring to a common control across all types of gamepad (such as the left stick on a gamepad). In this case, this matches the left stick on all types of gamepad which have a left stick.
+You can refer to a generic type of device, for example referring to a common control across all types of gamepad (such as the left stick on a gamepad). In this case, this matches the left stick on all types of gamepad.
 
 ### By specific device
 
-You can refer to a specific control on a specific model of gamepad (such as the `A` button on an Xbox controller), or a specific control usage across all types of device (such as the control associated with `Back` on any type of device). In this case, the path does not match any controls on any other type of gamepad even if they're similar in position or usage.
+You can refer to a specific control on a specific model of gamepad (such as the `A` button on an Xbox controller). In this case, the path does not match any controls on any other type of gamepad even if they're similar in position or usage.
 
 ### By usage
 
-You can also refer to controls by usage, which allows you to use a variety of common names that controls are typically used for by convention, such as a `Back` button, or a `Submit` button. See [control usages](control-usages.md) for more information about these.
+You can also refer to controls by usage, which allows you to use a variety of common names that controls are associated with by convention, such as a `Back` button, or a `Submit` button. See [control usages](control-usages.md) for more information about these.
 
-The Device and Control tree is organized hierarchically from generic to specific. For example, the __Gamepad__ Control path `<Gamepad>/buttonSouth` matches the lower action button on any gamepad. Alternatively, if you navigate to __Gamepad__ > __More Specific Gamepads__ and select __PS4 Controller__, and then choose the Control path `<DualShockGamepad>/buttonSouth`, this only matches the "Cross" button on PlayStation gamepads, and doesn't match any other gamepads.
+## The device and control tree
+
+The device and control tree is organized hierarchically from generic to specific. For example, the __Gamepad__ Control path `<Gamepad>/buttonSouth` matches the lower action button on any gamepad. Alternatively, if you navigate to __Gamepad__ > __More Specific Gamepads__ and select __PS4 Controller__, and then choose the Control path `<DualShockGamepad>/buttonSouth`, this only matches the "Cross" button on PlayStation gamepads, and doesn't match any other gamepads.
 
 
 ## Format
