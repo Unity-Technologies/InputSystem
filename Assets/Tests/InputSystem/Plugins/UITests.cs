@@ -3001,7 +3001,8 @@ internal partial class UITests : CoreTestsFixture
             EventSequence(
                 OneEvent("type", EventType.Submit),
                 OneEvent("device", gamepad)
-            ));
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -3014,7 +3015,8 @@ internal partial class UITests : CoreTestsFixture
             EventSequence(
                 OneEvent("type", EventType.Cancel),
                 OneEvent("device", gamepad)
-            ));
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();

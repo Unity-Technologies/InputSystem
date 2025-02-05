@@ -2473,6 +2473,7 @@ namespace UnityEngine.InputSystem.UI
                 return NavigationDeviceType.Keyboard;
             return NavigationDeviceType.NonKeyboard;
         }
+
 #endif
 
         private void HookActions()
