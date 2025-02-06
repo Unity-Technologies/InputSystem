@@ -5,12 +5,12 @@ do
     ln -s ../../Packages ${Sample}Packages
     cp ExternalSampleProjects/ExternalSamplesUtility.cs ${Sample}Assets/ExternalSamplesUtility/Editor/
     cp -r ${Sample}ProjectSettings ${Sample}ProjectSettingsBackup
-    ${Editor} -batchmode -projectPath $Sample -executeMethod ExternalSamplesUtility.${Method} -logFile upm-ci~/${Sample}Editor.log
+    ${Editor} -accept-apiupdate -batchmode -projectPath $Sample -executeMethod ExternalSamplesUtility.${Method} -logFile upm-ci~/${Sample}Editor.log
     status=$?
     echo Editor returned $status
     rm ${Sample}Assets/ExternalSamplesUtility/Editor/ExternalSamplesUtility.cs
-    rm ${Sample}Packages
-    rm -r ${Sample}ProjectSettings
+    rm -rf ${Sample}Packages
+    rm -rf ${Sample}ProjectSettings
     mv ${Sample}ProjectSettingsBackup ${Sample}ProjectSettings
     if [ $? -eq $status ]; then
         echo Ok
