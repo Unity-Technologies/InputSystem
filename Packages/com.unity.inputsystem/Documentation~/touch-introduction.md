@@ -1,6 +1,6 @@
 # Introduction to touch devices
 
-You can control touch devices with the following APIs:
+You can receive and process touch input from touch devices with the following APIs:
 
 * [High-level support](#high-level-touch-support) implemented in the [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport) class. This class provides in-built functionality for finger and touch information, and you can also use it for [polling touch input](touch-polling.md).
 * [Low-level support](#low-level-touch-support) implemented in the [`Touchscreen`](xref:UnityEngine.InputSystem.Touchscreen) class. Use this class to implement custom functionality that `EnhancedTouch.Touch` doesn't have. 

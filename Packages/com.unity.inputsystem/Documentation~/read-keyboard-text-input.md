@@ -1,6 +1,6 @@
 # Read text input
 
-To listen to text input, hook into [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard.onTextInput). This delivers character-by-character input as reported by the platform, including input from on-screen keyboards. As a best practice, don't manually translate text input from key presses by trying to string together the characters corresponding to the keys.
+To receive text input from a keyboard, set up a callback on the [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard.onTextInput) event. This delivers character-by-character input as reported by the platform, including input from on-screen keyboards. As a best practice, don't manually translate text input from key presses by trying to string together the characters corresponding to the keys.
 
 The text input API doesn't allocate managed memory because it doesn't deliver fully composed strings.
 

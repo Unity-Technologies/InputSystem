@@ -1,6 +1,6 @@
 # Simulate touch input
 
-You can simulate touch input on other kinds of [pointer devices](pointers-introduction.md) such as [mouse](devices-mouse.md) and [pen](devices-pen.md) devices in the following ways:
+You can simulate touch input from [pointer devices](pointers-introduction.md) such as [mouse](devices-mouse.md) and [pen](devices-pen.md) devices in the following ways:
 
 * [Enable touch simulation in the Unity Editor](#add-touch-simulation-to-a-gameobject).
 * [Add touch simulation to a GameObject](#add-touch-simulation-to-a-gameobject).
