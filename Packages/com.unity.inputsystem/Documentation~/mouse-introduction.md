@@ -1,6 +1,6 @@
 # Introduction to mouse devices
 
-The Input System represents mouse input with the [`Mouse`](xref:UnityEngine.InputSystem.Mouse) device layout that the [`Mouse`](xref:UnityEngine.InputSystem.Mouse) class implements. 
+The Input System represents mouse input with the [Mouse device layout](layouts.md) that the [`Mouse`](xref:UnityEngine.InputSystem.Mouse) class implements. 
 
 >[!IMPORTANT]
 >The Input System doesn't support input from multiple mice at the platform level, or identifying the current display a mouse is on.
