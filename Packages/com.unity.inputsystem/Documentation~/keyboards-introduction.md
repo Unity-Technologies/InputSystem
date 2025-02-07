@@ -2,7 +2,7 @@
 
 The [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) class defines a device with a set of key controls defined by the [`Key`](xref:UnityEngine.InputSystem.Key) enumeration.
 
-The location of individual keys is agnostic to keyboard layout. This means that, for example, the **A** key is always the key to the right of the **Caps Lock** key, regardless of where the active keyboard layout places the key that generates the A character, or whether the layout doesn't have a key assigned to that character.
+The location of individual keys is agnostic to keyboard layout. This means that, for example, the **A** key is always the key to the right of the **Caps Lock** key, regardless of where the active keyboard layout places the key that generates the A character, or whether the layout has a key assigned to that character.
 
 For a list of platforms that support keyboard devices, refer to [Supported devices reference](supported-devices-reference.md).
 
