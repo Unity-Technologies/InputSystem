@@ -1275,7 +1275,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action was pressed in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was pressed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPressedThisFrame"/>.
         /// </remarks>
@@ -1361,7 +1361,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action was released in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was released in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
         /// </remarks>
@@ -1458,7 +1458,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action performed in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was performed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPerformedThisFrame"/>.
         /// </remarks>
@@ -1572,7 +1572,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action completed in this MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
-        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the action was performed in the current dynamic Update cycle.
+        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was completed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasCompletedThisFrame"/>.
         /// </remarks>
