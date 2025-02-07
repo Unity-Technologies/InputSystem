@@ -30,7 +30,7 @@ To select the control path for a binding from a list of available controls:
 
 ![Control Picker](Images/InputControlPicker.png)
 
-Unity filters this list by the Action's [`Control Type`](./control-types.md) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
+Unity filters this list by the Action's [`Control Type`](control-types-reference.md) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
 
 In this list, use the **Usages** section to [select a control by usage](./control-usages.md) (such as `Back`), rather than by physical endpoint (such as `Button South`).
 

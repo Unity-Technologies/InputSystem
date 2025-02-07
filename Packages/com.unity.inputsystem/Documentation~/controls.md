@@ -12,7 +12,7 @@ A **control** is a part of a [device](devices.md) that sends values to the Input
 | :------------------------------ | :------------------------------- |
 | **[About controls](about-controls.md)** | An introduction to the concept of controls. |
 | **[Control hierarchies](control-hierarchies.md)** | Summary |
-| **[Control types](control-types.md)** | Summary |
+| **[Control types](control-types-reference.md)** | Summary |
 | **[Control usages](control-usages.md)** | Summary |
 | **[Control paths](control-paths.md)** | Summary |
 | **[Control state](control-state.md)** | Summary |

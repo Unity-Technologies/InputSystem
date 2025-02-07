@@ -9,7 +9,7 @@ When you [add a binding](add-duplicate-delete-binding.md) you must select the ap
 
 Some examples of composite bindings are:
 
-- A **four-way** composite binding, where four keyboard keys map to an action whose [control type](control-types.md) is a 2D vector, so that each of the keys maps to up, down, left, and right respectively. In this scenario, the four key bindings are simple bindings grouped together into into the composite four-way binding.
+- A **four-way** composite binding, where four keyboard keys map to an action whose [control type](control-types-reference.md) is a 2D vector, so that each of the keys maps to up, down, left, and right respectively. In this scenario, the four key bindings are simple bindings grouped together into into the composite four-way binding.
 
 - A **modifier** composite binding, where one control represents the main binding, and a second control represents a modifier key which changes the effect of the main binding - such as holding down the control key on a keyboard before also pressing a letter key. In this scenario, the two separate key bindings are simple bindings grouped together into the composite modifier binding.
 
