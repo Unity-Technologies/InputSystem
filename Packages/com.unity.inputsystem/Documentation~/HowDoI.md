@@ -24,7 +24,7 @@ How do I...?
 
 - [know when a new device was plugged in?](Devices.md#monitoring-devices)
 
-- [create my own custom devices?](HID.md#creating-a-custom-device-layout)
+- [create my own custom devices?](hid-create-custom-layout.md)
 
 - create a simple "Fire" type action?</br>
 Use the same techniques shown for the "Jump" action in the [Workflows section](workflows.md)
@@ -45,7 +45,7 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [force the Input System to use my own layout when the native backend discovers a specific Device?](Devices.md#native-devices)
 
-- [add deadzoning to my gamepad sticks?](Gamepad.md#deadzones)
+- [add deadzoning to my gamepad sticks?](query-gamepads.md#add-a-deadzone-to-a-gamepad)
 
 - [give my head tracking an extra update before rendering?](../api/UnityEngine.InputSystem.XR.XRHMD.html)
 

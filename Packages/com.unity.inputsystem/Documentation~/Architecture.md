@@ -27,7 +27,7 @@ The low-level system code also contains structs which describe the data layout o
 
 ![High-Level Architecture](Images/InputArchitectureHighLevel.png)
 
-The high-level Input System code interprets the data in a Device's state buffers by using [layouts](layouts.md), which describe the data layout of a Device and its Controls in memory. The Input System creates layouts from either the pre-defined structs of commonly known Devices supplied by the low level system, or dynamically at runtime, as in the case of [generic HIDs](HID.md#auto-generated-layouts).
+The high-level Input System code interprets the data in a Device's state buffers by using [layouts](layouts.md), which describe the data layout of a Device and its Controls in memory. The Input System creates layouts from either the pre-defined structs of commonly known Devices supplied by the low level system, or dynamically at runtime, as in the case of [generic HIDs](hid-specification.md).
 
 Based on the information in the layouts, the Input System then creates [Control](Controls.md) representations for each of the Device's controls, which let you read the state of each individual Control in a Device.
 
