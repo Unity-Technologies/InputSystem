@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.13.0] - 2025-02-05
+
 ### Fixed
 - Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
 - Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
