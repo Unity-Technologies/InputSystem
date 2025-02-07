@@ -453,7 +453,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
-                var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
+                var action = Selectors.GetActionInMap(state, actionMapIndex, actionName)?.wrappedProperty;
                 var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 var isCut = state.IsActionCut(actionMapIndex, actionIndex);
@@ -638,10 +638,17 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
-                var action = Selectors.GetActionInMap(state, actionMapIndex, oldName).wrappedProperty;
-                InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
-                state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics?.RegisterActionEdit();
+                var action = Selectors.GetActionInMap(state, actionMapIndex, oldName)?.wrappedProperty;
+                // In an Asset Editor workflow, the serialized property might not exist in case a new action is created
+                // that is yet to be named, and it's deleted before it's named.
+                // This is a particular case when ActionTreeView::DeleteItem triggers
+                // Focus callback -> OnEditTextFinished -> ChangeActionName.
+                if (action != null)
+                {
+                    InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
+                    state.serializedObject.ApplyModifiedProperties();
+                    state.m_Analytics?.RegisterActionEdit();
+                }
                 return state;
             };
         }
