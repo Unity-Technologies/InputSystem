@@ -1,0 +1,2 @@
+# Read devices directly
+
