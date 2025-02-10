@@ -13,7 +13,7 @@ Unity processes UI input through the same mechanisms as the input for the rest o
 
 Ambiguities can appear between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) for an action bound to `<Mouse>/leftButton`.
 
-Whether such ambiguities exist depends on you implement the UI and the UI input. The following UI implementation strategies are examples of how you can avoid these ambiguities:
+Whether such ambiguities exist depends on how you implement the UI and the UI input. The following UI implementation strategies are examples of how you can avoid these ambiguities:
 
 * Perform all interaction through UI elements. Render a scene in the background, but perform all interaction through UI events (including those such as 'background' clicks on the `Canvas`).
 * Place UI over a 2D/3D scene, but don’t let the user directly interact with the UI.

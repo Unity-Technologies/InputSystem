@@ -3,9 +3,9 @@ Unity has [three major UI solutions](https://docs.unity3d.com/Manual/UIToolkits.
 
 The three main UI systems are: 
 
-* **UI Toolkit**
-* **Unity UI**
-* **IMGUI** 
+* [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html)
+* [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest)
+* [**IMGUI**](https://docs.unity3d.com/Manual/GUIScriptingGuide.html)
 
 Some systems and versions require that you use the Input System’s [UI Input Module component](using-ui-input-module.md) to pass actions from the Input System to the UI. 
 
