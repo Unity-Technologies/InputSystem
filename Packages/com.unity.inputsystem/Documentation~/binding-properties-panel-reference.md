@@ -44,7 +44,7 @@ When **Composite Type** is set to **2D Vector** or **3D Vector**, the Binding Pr
 
 For more details on each mode, refer to scripting reference documentation on  [`Vector2Composite.Mode`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode) and [`Vector3Composite.Mode`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode).
 
-### Modified binding reference
+### Binding with modifier reference
 
 When **Composite Type** is set to **One Modifier**, **Two Modifiers**, **Button With One Modifier**, or **Button with Two Modifiers**, the Binding Properties panel displays the following properties by default:
 
