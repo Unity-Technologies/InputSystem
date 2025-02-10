@@ -38,7 +38,7 @@
       * [Binding conflicts](binding-conflicts.md)
       * [Initial state checks](binding-initial-state-checks.md)
     * [Controls](controls.md)
-      * [About controls](about-controls.md)
+      * [Introduction to controls](introduction-to-controls.md)
       * [Control hierarchies](control-hierarchies.md)
       * [Control types reference](control-types-reference.md)
       * [Control usages](control-usages.md)

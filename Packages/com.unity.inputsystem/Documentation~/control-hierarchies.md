@@ -6,7 +6,9 @@ For example, the Dpad control of a gamepad has a  has child controls of left, ri
 
 ![The Dpad control as viewed in the Input Debugger window, showing its child controls of down, left, right, up, x, and y.](Images/control-hierarchy-example.png)<br/>*The Dpad control as viewed in the [Input Debugger window](the-input-debugger-window.md), showing its child controls of down, left, right, up, x, and y.*
 
-The setup of hierarchies is exclusively controlled through [layouts](layouts.md).
+The arrangement of control hierarchies are defined in [layouts](layouts.md).
+
+## Access hierarchies with code
 
 You can access the parent of a Control using [`InputControl.parent`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_parent), and its children using [`InputControl.children`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_children). To access the flattened hierarchy of all Controls on a Device, use [`InputDevice.allControls`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_allControls).
 
