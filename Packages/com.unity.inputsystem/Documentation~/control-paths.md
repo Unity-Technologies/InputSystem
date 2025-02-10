@@ -51,7 +51,7 @@ The following table explains the use of each field:
 
 ### Wildcard characters
 
-If you entering a control path as text, you can use the wildcard asterisk character (`*`) to match multiple controls in the hierarchy specified. For example, you can use `<Touchscreen>/touch*/press` to bind to any finger pressed on the touchscreen, instead of individually binding to `<Touchscreen>/touch0/press`, `<Touchscreen>/touch1/press` and each other numbered touch separately.
+If you enter a control path as text, you can use the wildcard asterisk character (`*`) to match multiple controls in the hierarchy specified. For example, you can use `<Touchscreen>/touch*/press` to bind to any finger pressed on the touchscreen, instead of individually binding to `<Touchscreen>/touch0/press`, `<Touchscreen>/touch1/press` and each other numbered touch separately.
 
 
 ## Access from code
