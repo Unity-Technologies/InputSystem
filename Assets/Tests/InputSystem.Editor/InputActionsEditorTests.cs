@@ -21,9 +21,12 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     {
         base.OneTimeSetUp();
         m_Asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
-        m_Asset.AddActionMap("First Name");
+        var actionMap = m_Asset.AddActionMap("First Name");
         m_Asset.AddActionMap("Second Name");
         m_Asset.AddActionMap("Third Name");
+
+        actionMap.AddAction("Action One");
+        actionMap.AddAction("Action Two");
     }
 
     public override void OneTimeTearDown()
@@ -53,6 +56,19 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
             }
             return false;
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
+    }
+
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 5.0)
+    {
+        return WaitUntil(() =>
+        {
+            var actionItems = m_Window.rootVisualElement.Q("actions-container").Query<InputActionsTreeViewItem>().ToList();
+            if (actionItems.Count > index && actionItems[index].IsFocused == isActive)
+            {
+                return true;
+            }
+            return false;
+        }, $"WaitForActionRename {index} {isActive}", timeoutSecs);
     }
 
     #endregion
@@ -176,6 +192,54 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         Assert.That(m_Window.currentAssetInEditor.actionMaps.Count, Is.EqualTo(2));
         Assert.That(m_Window.currentAssetInEditor.actionMaps[0].name, Is.EqualTo("First Name"));
         Assert.That(m_Window.currentAssetInEditor.actionMaps[1].name, Is.EqualTo("Third Name"));
+    }
+
+    [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
+    public IEnumerator CanRenameAction()
+    {
+        var actionContainer = m_Window.rootVisualElement.Q("actions-container");
+        var actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
+        Assume.That(actionItem[1].Q<Label>("name").text, Is.EqualTo("Action Two"));
+
+        m_Window.rootVisualElement.Q<TreeView>("actions-tree-view").Focus();
+        m_Window.rootVisualElement.Q<TreeView>("actions-tree-view").selectedIndex = 1;
+
+        // Selection change triggers a state change, wait for the scheduler to process the frame
+        yield return WaitForSchedulerLoop();
+        yield return WaitForNotDirty();
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
+
+        // Re-fetch the actions since the UI may have refreshed.
+        actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
+
+        // Click twice to start the rename
+        SimulateClickOn(actionItem[1]);
+        // If the item is already focused, don't click again
+        if (!actionItem[1].IsFocused)
+        {
+            SimulateClickOn(actionItem[1]);
+        }
+
+        yield return WaitForActionRename(1, isActive: true);
+
+        // Rename the action
+        SimulateTypingText("New Name");
+
+        // Wait for rename to end and focus to return from text field
+        yield return WaitForSchedulerLoop();
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
+
+        // Check on the UI side
+        actionContainer = m_Window.rootVisualElement.Q("actions-container");
+        Assume.That(actionContainer, Is.Not.Null);
+        actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
+        Assert.That(actionItem, Is.Not.Null);
+        Assert.That(actionItem.Count, Is.EqualTo(2));
+        Assert.That(actionItem[1].Q<Label>("name").text, Is.EqualTo("New Name"));
+
+        // Check on the asset side
+        Assert.That(m_Window.currentAssetInEditor.actionMaps[0].actions[1].name, Is.EqualTo("New Name"));
     }
 }
 #endif
