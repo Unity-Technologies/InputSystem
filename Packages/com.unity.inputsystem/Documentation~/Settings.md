@@ -6,7 +6,6 @@ uid: input-system-settings
 - [Create Settings Asset](#create-settings-asset)
 - [Update Mode](#update-mode)
 - [Background Behavior](#background-behavior)
-- [Filter Noise On Current](#filter-noise-on-current)
 - [Compensate Orientation](#compensate-orientation)
 - [Default value properties](#default-value-properties)
 - [Supported Devices](#supported-devices)
@@ -62,20 +61,6 @@ In the Editor, "Run In Background" is considered to always be enabled as the pla
 |[`Ignore Focus`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_IgnoreFocus)|Do nothing when focus is lost. When focus is regained, issue a [sync request](Devices.md#device-syncs) on all Devices.|
 
 Focus behavior has implications for how [Actions](./actions.md) behave on focus changes. When a Device is reset, Actions bound to Controls on the device will be cancelled. This ensures, for example, that a user-controlled character in your game doesn't continue to move when focus is lost while the user is pressing one of the W, A, S or D keys. The cancellation happens in such a way that Actions are guaranteed to not trigger. That is, even if an Action is set to trigger on button release, it will not get triggered when a button is down and gets reset by a [Device reset](Devices.md#device-resets).
-
-## Filter Noise On Current
-
-[//]: # (REVIEW: should this be enabled by default)
-
-This setting is disabled by default, and it's only relevant for apps that use the `.current` properties (such as [`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)) in the API. If your app doesn't use these properties, leave this setting disabled. Otherwise, it adds needless overhead.
-
-Whenever there is input on a Device, the system make the respective Device `.current`. For example, if a [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) receives new input, [`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current) is assigned to that gamepad.
-
-Some Devices have noise in their input, and receive input even if nothing is interacting with them. For example, the PS4 DualShock controller generates a constant stream of input because of its built-in gyro. This means that if both an Xbox and a PS4 controller are connected, and the user is using the Xbox controller, the PS4 controller still pushes itself to the front continuously and makes itself current.
-
-To counteract this, enable noise filtering. When this setting is enabled and your application receives input, the system determines whether the input comes from a Device that has noisy Controls ([`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy)). If it does, the system also determines whether the given input contains any state changes on a Control that isn't flagged as noisy. If so, that Device becomes current. Otherwise, your application still consumes the input, which is also visible on the Device, but the Device doesn't become current.
-
->__Note__: The system doesn't currently detect most forms of noise, but does detect those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves.
 
 ## Compensate Orientation
 
