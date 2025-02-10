@@ -1,6 +1,8 @@
-# Create a custom on-screen Control
+# Create a custom on-screen control
 
 To create custom [input controls](Controls.md), you can extend [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html).
+
+The following sample demonstrates one way to do this:
 
 ```CSharp
     [AddComponentMenu("Input/On-Screen Button")]
