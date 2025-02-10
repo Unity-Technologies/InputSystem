@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
 - Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
 - Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
+- Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
 
 ## [1.12.0] - 2025-01-15
 
