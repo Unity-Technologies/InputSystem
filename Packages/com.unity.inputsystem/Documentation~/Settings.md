@@ -64,7 +64,7 @@ Focus behavior has implications for how [Actions](./actions.md) behave on focus 
 
 ## Compensate Orientation
 
-If this setting is enabled, rotation values reported by [sensors](Sensors.md) are rotated around the Z axis as follows:
+If this setting is enabled, rotation values reported by [sensors](devices-sensors.md) are rotated around the Z axis as follows:
 
 |Screen orientation|Effect on rotation values|
 |---|---|
@@ -122,7 +122,7 @@ To force the Editor to add all locally available Devices, even if they're not in
 ### iOS/tvOS
 
 __Motion Usage__
-  Governs access to the [pedometer](Sensors.md#stepcounter) on the device. If you enable this setting, the __Description__ field becomes editable. The text you enter into the Description field is added to your application's `Info.plist`.
+  Governs access to the [pedometer](supported-sensors-reference.md) on the device. If you enable this setting, the __Description__ field becomes editable. The text you enter into the Description field is added to your application's `Info.plist`.
 
 ### Editor
 
@@ -132,7 +132,7 @@ __Play Mode Input Behavior__ determines how input is handled in the Editor when 
 
 |Setting|Description|
 |-------|-----------|
-|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
+|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](pointers.md) and [Keyboard](devices-keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](devices-gamepads.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
 |[`All Devices Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDevicesRespectGameViewFocus)|Focus on a Game View is required for all Devices. When no Game View window is focused, all input goes to the editor and not to the application. This allows other EditorWindows to receive these inputs (from gamepads, for example).|
 |[`All Device Input Always Goes To Game View`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDeviceInputAlwaysGoesToGameView)|All editor input is disabled and input is considered to be exclusive to Game Views. Also, [`Background Behavior`](#background-behavior) is to be taken literally and executed like in players. Meaning, if in a certain situation, a Device is disabled in the player, it will get disabled in the editor as well.<br><br>This setting most closely aligns player behavior with editor behavior. Be aware, however, that no EditorWindows will be able to see input from Devices (this does not effect IMGUI and UITK input in the Editor in general as they do not consume input from the Input System).|
 

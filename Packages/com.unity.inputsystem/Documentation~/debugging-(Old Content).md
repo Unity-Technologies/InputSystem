@@ -45,7 +45,7 @@ The top of the Device window displays general information about the specific Dev
 
 The __Controls__ section lists the Device's Controls and their individual states. This is useful when debugging input issues, because you can verify whether the data that the Input System receives from the Input Device is what you expect it to be. There are two buttons at the top of this panel:
 
-* __HID Descriptor__: Only displayed for devices that use the HID protocol to connect. This opens a window that displays the detailed [HID](HID.md) specifications for the Device and each of it's logical controls.
+* __HID Descriptor__: Only displayed for devices that use the HID protocol to connect. This opens a window that displays the detailed [HID](hid-specification-introduction.md) specifications for the Device and each of it's logical controls.
 
 * __State__: Display the current state of the Device in a new window. This is identical to the information displayed in this view, but doesn't update in real time, so you can take a snapshot of input state data and take the time to inspect it as needed.
 
