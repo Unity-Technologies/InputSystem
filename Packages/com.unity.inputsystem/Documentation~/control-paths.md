@@ -23,7 +23,7 @@ You can refer to a specific control on a specific model of gamepad (such as the 
 
 ### By usage
 
-You can also refer to controls by usage, which allows you to use a variety of common names that controls are associated with by convention, such as a `Back` button, or a `Submit` button. See [control usages](control-usages.md) for more information about these.
+You can also refer to controls by usage, which allows you to use a variety of common names that controls are associated with by convention, such as a `Back` button, or a `Submit` button. Refer to [control usages](control-usages.md) for more information about these.
 
 ## The device and control tree
 
@@ -45,7 +45,7 @@ The following table explains the use of each field:
 |Field|Description|Example|
 |-----|-----------|-------|
 |`<layoutName>`|Requires the control at the current level to be based on the given layout. The actual layout of the control may be the same or a layout *based* on the given layout.|`<Gamepad>/buttonSouth`|
-|`{usageName}`|Works differently for controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. See [Device usages](Devices.md#device-usages) for more details.<br><br>For looking up a control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the control on the Device that has the given usage. The control can be anywhere in the control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
+|`{usageName}`|Works differently for controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. Refer to [Device usages](Devices.md#device-usages) for more details.<br><br>For looking up a control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the control on the Device that has the given usage. The control can be anywhere in the control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
 |`controlName`|Requires the control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and aliases ([`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
 |`#(displayName)`|Requires the control at the current level to have the given display name (i.e. [`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
 

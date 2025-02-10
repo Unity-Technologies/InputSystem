@@ -1,5 +1,5 @@
 
-## Control usages
+# Control usages
 
 **Control usage** refers to the meaning of a control. In contrast to the name of a control which describes its physical end point on a device (such as `Button south`), the usage identifies the particular role of a control. For example, the usage `Back` identifies a control generally used to move backwards in the navigation history of a UI, and the usage `Submit` identifies a control generally used to confirm a selection in the UI.
 
@@ -11,7 +11,7 @@ By looking up controls by usage rather than by name when [selecting a control fo
 
 You can access a control's usages using the [`InputControl.usages`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_usages) property.
 
-Usages can be arbitrary strings. However, there is a particular set of common usages, which predefined in the API in the form of the [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) static class. See [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) for an overview.
+Usages can be arbitrary strings. However, there is a particular set of common usages, which predefined in the API in the form of the [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) static class. Refer to [`CommonUsages`](../api/UnityEngine.InputSystem.CommonUsages.html) for an overview.
 
 ## Additional resources
 

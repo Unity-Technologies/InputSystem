@@ -22,5 +22,5 @@ Gamepad.current.leftStick.x.ReadValue();
 
 Each type of control has a specific type of values that it returns, regardless of how many different types of formats it supports for its state. You can access this value type through the [`InputControl.valueType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_valueType) property.
 
-Reading a value from a control might apply one or more value Processors. See documentation on [Processors](Processors.md) for more information.
+Reading a value from a control might apply one or more value Processors. Refer to [Processors](Processors.md) for more information.
 
