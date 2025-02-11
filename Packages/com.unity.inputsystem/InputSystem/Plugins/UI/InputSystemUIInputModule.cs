@@ -861,7 +861,7 @@ namespace UnityEngine.InputSystem.UI
 
                     if (allow)
                     {
-                        var eventData = m_NavigationState.eventData;
+                        var eventData = m_NavigationState.eventData as ExtendedAxisEventData;
                         if (eventData == null)
                         {
                             eventData = new ExtendedAxisEventData(eventSystem);
@@ -871,6 +871,7 @@ namespace UnityEngine.InputSystem.UI
 
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
+                        eventData.device = navigationState.device;
 
                         if (IsMoveAllowed(eventData))
                         {
@@ -903,7 +904,16 @@ namespace UnityEngine.InputSystem.UI
                 var submitAction = m_SubmitAction?.action;
                 var cancelAction = m_CancelAction?.action;
 
-                var data = GetBaseEventData();
+                var data = m_SubmitCancelState.eventData as ExtendedSubmitCancelEventData;
+                if (data == null)
+                {
+                    data = new ExtendedSubmitCancelEventData(eventSystem);
+                    m_SubmitCancelState.eventData = data;
+                }
+                data.Reset();
+
+                data.device = m_SubmitCancelState.device;
+
                 if (cancelAction != null && cancelAction.WasPerformedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
                 if (!data.used && submitAction != null && submitAction.WasPerformedThisFrame())
@@ -1393,7 +1403,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference submit
         {
             get => m_SubmitAction;
-            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, null);
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -1433,7 +1443,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference cancel
         {
             get => m_CancelAction;
-            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, null);
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -2252,6 +2262,12 @@ namespace UnityEngine.InputSystem.UI
         {
             ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
+            m_NavigationState.device = context.control.device;
+        }
+
+        private void OnSubmitCancelCallback(InputAction.CallbackContext context)
+        {
+            m_SubmitCancelState.device = context.control.device;
         }
 
         private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
@@ -2448,6 +2464,18 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
+        public override NavigationDeviceType GetNavigationEventDeviceType(BaseEventData eventData)
+        {
+            if (eventData is not INavigationEventData eed)
+                return NavigationDeviceType.Unknown;
+            if (eed.device is Keyboard)
+                return NavigationDeviceType.Keyboard;
+            return NavigationDeviceType.NonKeyboard;
+        }
+
+#endif
+
         private void HookActions()
         {
             if (m_ActionsHooked)
@@ -2465,6 +2493,8 @@ namespace UnityEngine.InputSystem.UI
                 m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
                 m_OnMoveDelegate = OnMoveCallback;
+            if (m_OnSubmitCancelDelegate == null)
+                m_OnSubmitCancelDelegate = OnSubmitCancelCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
                 m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
@@ -2486,6 +2516,8 @@ namespace UnityEngine.InputSystem.UI
             m_ActionsHooked = install;
             SetActionCallback(m_PointAction, m_OnPointDelegate, install);
             SetActionCallback(m_MoveAction, m_OnMoveDelegate, install);
+            SetActionCallback(m_SubmitAction, m_OnSubmitCancelDelegate, install);
+            SetActionCallback(m_CancelAction, m_OnSubmitCancelDelegate, install);
             SetActionCallback(m_LeftClickAction, m_OnLeftClickDelegate, install);
             SetActionCallback(m_RightClickAction, m_OnRightClickDelegate, install);
             SetActionCallback(m_MiddleClickAction, m_OnMiddleClickDelegate, install);
@@ -2601,6 +2633,7 @@ namespace UnityEngine.InputSystem.UI
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
+        private Action<InputAction.CallbackContext> m_OnSubmitCancelDelegate;
         private Action<InputAction.CallbackContext> m_OnLeftClickDelegate;
         private Action<InputAction.CallbackContext> m_OnRightClickDelegate;
         private Action<InputAction.CallbackContext> m_OnMiddleClickDelegate;
@@ -2618,6 +2651,7 @@ namespace UnityEngine.InputSystem.UI
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+        private SubmitCancelModel m_SubmitCancelState;
 
         [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
 
