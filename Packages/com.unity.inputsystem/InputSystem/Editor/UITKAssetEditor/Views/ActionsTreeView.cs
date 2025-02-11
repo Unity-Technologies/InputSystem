@@ -58,6 +58,11 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
+                    // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                    // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                    // it must be re-registered here.
+                    treeViewItem.RegisterInputField();
+
                     Action action = ContextMenu.GetContextMenuForActionAddItem(this, item.controlLayout, i);
                     addBindingButton.clicked += action;
                     addBindingButton.userData = action; // Store to use in unbindItem
@@ -76,6 +81,11 @@ namespace UnityEngine.InputSystem.Editor
                         treeViewItem.UnregisterInputField();
                     else
                     {
+                        // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                        // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                        // it must be re-registered here.
+                        treeViewItem.RegisterInputField();
+
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
                             ChangeActionOrCompositName(item, newName);
@@ -205,7 +215,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
+            // UI toolkit doesn't behave the same on 6000.0 way when refreshing items
+            // On previous versions, we need to call Rebuild() to refresh the items since refreshItems() is less predicatable
+#if UNITY_6000_0_OR_NEWER
+            m_ActionsTreeView.RefreshItems();
+#else
             m_ActionsTreeView.Rebuild();
+#endif
             if (viewState.newElementID != -1)
             {
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
