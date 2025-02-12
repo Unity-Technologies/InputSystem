@@ -1202,5 +1202,45 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
+    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+    [UnityTest, Performance]
+    [Category("Performance")]
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_Touch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        EnhancedTouchSupport.Enable();
+       
+
+        using (Measure.ProfilerMarkers(allInputSystemProfilerMarkers))
+        {
+            BeginTouch(1, new Vector2(0.1f, 0.2f), queueEventOnly: true);
+            BeginTouch(2, new Vector2(0.3f, 0.4f), queueEventOnly: true);
+            
+            for (int i = 0; i < 500; ++i)
+            {
+                MoveTouch(1, new Vector2(0.1f+i, 0.2f+i), queueEventOnly: true);
+                MoveTouch(2, new Vector2(0.3f+i, 0.4f+i), queueEventOnly: true);
+                
+                BeginTouch(3, new Vector2(0.5f, 0.6f), queueEventOnly: true);
+                MoveTouch(3, new Vector2(0.5f+i, 0.6f+i), queueEventOnly: true); 
+                EndTouch(3, new Vector2(0.7f, 0.7f), queueEventOnly: true);
+                
+                if (i % 60 == 0)
+                {
+                    EndTouch(1, new Vector2(0.8f, 0.8f), queueEventOnly: true);
+                    EndTouch(2, new Vector2(0.9f, 0.9f), queueEventOnly: true);
+                    BeginTouch(1, new Vector2(0.1f, 0.2f), queueEventOnly: true);
+                    BeginTouch(2, new Vector2(0.3f, 0.4f), queueEventOnly: true);
+                }
+
+                InputSystem.Update();
+
+                yield return null;
+            }
+        }
+
+        EnhancedTouchSupport.Disable();
+    }
     #endif
 }
