@@ -94,6 +94,11 @@
         },
         {
             "name": "Unity",
+            "expression": "6000.2.0a4",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
             "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
