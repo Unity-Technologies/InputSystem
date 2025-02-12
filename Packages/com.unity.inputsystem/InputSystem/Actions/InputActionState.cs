@@ -3657,10 +3657,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
-            [FieldOffset(52)] private int m_FramePerformed;
-            [FieldOffset(56)] private int m_FramePressed;
-            [FieldOffset(60)] private int m_FrameReleased;
-            [FieldOffset(64)] private int m_FrameCompleted;
+            [FieldOffset(52)] internal int framePerformed;
+            [FieldOffset(56)] internal int framePressed;
+            [FieldOffset(60)] internal int frameReleased;
+            [FieldOffset(64)] internal int frameCompleted;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3814,27 +3814,6 @@ namespace UnityEngine.InputSystem
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
-            }
-
-            internal int framePerformed
-            {
-                get => m_FramePerformed;
-                set => m_FramePerformed = value;
-            }
-            internal int framePressed
-            {
-                get => m_FramePressed;
-                set => m_FramePressed = value;
-            }
-            internal int frameReleased
-            {
-                get => m_FrameReleased;
-                set => m_FrameReleased = value;
-            }
-            internal int frameCompleted
-            {
-                get => m_FrameCompleted;
-                set => m_FrameCompleted = value;
             }
 
             /// <summary>
