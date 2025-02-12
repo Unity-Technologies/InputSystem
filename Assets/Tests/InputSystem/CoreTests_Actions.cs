@@ -58,6 +58,120 @@ partial class CoreTests
         }
     }
 
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisRenderingFrameOperatesIndependentlyFromInputUpdateStep()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisRenderingFrame(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is called and the action state chenges
+
+        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasPerformedThisRenderingFrame
+
+        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisFrameOperatesIndependentlyFromRenderingFrame()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is not called and the action state does not change
+        yield return null;
+        yield return null;
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasXYZThisRenderingFrame but does affect the WasXYZThisFrame
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisFrameAndWasStateReachedThisRenderingFrameCanOperateSimultanously()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is not called and the action state does not change
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasXYZThisRenderingFrame but does affect the WasXYZThisFrame
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
+
+        yield return null;
+
+        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+
+        yield return null;
+
+        Assert.That(simpleAction.WasCompletedThisRenderingFrame(), Is.False);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
