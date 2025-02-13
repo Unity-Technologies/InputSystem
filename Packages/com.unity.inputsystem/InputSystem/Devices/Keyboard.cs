@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
 
-        private const int kSizeInBits = Keyboard.KeyCount + 1; // +1 for IMESelected.
+        private const int kSizeInBits = Keyboard.ExtendedKeyCount; // +1 for IMESelected.
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
 
         [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", bit = 1, sizeInBits = (int)Key.F24, synthetic = true)]
@@ -894,7 +894,7 @@ namespace UnityEngine.InputSystem
         /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
         /// Will be removed in the future.
         /// </summary>
-        [Obsolete("Don't use this. This is a dummy key that is only used internally to represent the IME selected state. Will be removed in the future.", true)]
+        //[Obsolete("Don't use this. This is a dummy key that is only used internally to represent the IME selected state. Will be removed in the future.", false)]
         IMESelected,
 
         /// <summary>
@@ -1035,7 +1035,8 @@ namespace UnityEngine.InputSystem
         /// in <see cref="allKeys"/>.
         /// </summary>
         /// <value>Total number of key controls.</value>
-        public const int KeyCount = (int)Key.F24 - 1; // without IMESelected
+        public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API //(int)Key.F24; // without IMESelected
+        internal const int ExtendedKeyCount = (int)Key.F24;
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
