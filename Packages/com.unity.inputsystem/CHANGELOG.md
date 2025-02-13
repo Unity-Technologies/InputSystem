@@ -11,13 +11,26 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed an issue where removing a newly created action in the Asset Editor would cause an exception. [UUM-95693](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-95693)
+- Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
+- Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
+- Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
+
+### Changed
+- Changed default input action asset name from New Controls to New Actions.
+
+## [1.13.0] - 2025-02-05
+
+### Fixed
 - Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
 - Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
 - Fixed GamepadButton.LeftTrigger and GamepadButton.RightTrigger enum values not matching displayed dropdown values in editor when using GamepadButtonPropertyDrawer [ISXB-1270](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1270).
 - Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
 - Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
 - Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
+- Fixed issue where a binding path is sometimes not saved when chosen from the binding path picker. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
+- Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
