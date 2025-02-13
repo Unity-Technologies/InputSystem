@@ -1,7 +1,16 @@
+# API Overview
 
-## API Overview
+When scripting with Actions in the Input System, there are number of important API you can use, listed here:
 
-When scripting with Actions in the Input System, there are number of important API you can use, which are described here:
+## Namespace
+
+The Input System's API is contained in the `UnityEngine.InputSystem` namespace. To use it, include the namespace as follows:
+
+```
+using UnityEngine.InputSystem;
+```
+
+## Important API
 
 |API name|Description|
 |-----|-----------|
@@ -12,8 +21,15 @@ When scripting with Actions in the Input System, there are number of important A
 
 ## Actions
 
+The [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) class represents an action in the Input System. These are the same actions that you [create in the actions editor](Actions.md).
+
+With a reference to an action, you can then read values and state changes using eeither the [polling](polling-actions.md) or [callbacks](set-callbacks-on-actions.md) workflow.
+
 Each action has a name ([`InputAction.name`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_name)), which must be unique within the Action Map that the Action belongs to, if any (see [`InputAction.actionMap`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_actionMap)). Each Action also has a unique ID ([`InputAction.id`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_id)), which you can use to reference the Action. The ID remains the same even if you rename the Action.
 
 ## Action maps
 
 Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_name)), which must also be unique with respect to the other Action Maps present, if any. Each Action Map also has a unique ID ([`InputActionMap.id`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_id)), which you can use to reference the Action Map. The ID remains the same even if you rename the Action Map.
+
+With a reference to an action map, you can then read all the [`actions`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_actions) which belong to that map.
+
