@@ -18,6 +18,7 @@
     # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
     # Automatically makes the documentation tests in APIVerification go live.
     - '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
+    - '%GSUDO% choco install dotnet'
     - dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%\.pmdt
     - git clone git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
