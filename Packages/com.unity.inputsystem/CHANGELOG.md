@@ -16,6 +16,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
 - Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
 
+### Changed
+- Changed default input action asset name from New Controls to New Actions.
+
 ## [1.13.0] - 2025-02-05
 
 ### Fixed
