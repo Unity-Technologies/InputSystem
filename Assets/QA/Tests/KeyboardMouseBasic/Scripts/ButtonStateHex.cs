@@ -44,21 +44,20 @@ public class ButtonStateHex : MonoBehaviour
         int workingInt = 0;
         int offset = 0;
         string retVal = "";
-        int nbKeys = (int)Key.F24;
 
-        for (int j = nbKeys / 16; j >= 0; j--)
+        for (int j = ((int)(Keyboard.KeyCount)) / 16; j >= 0; j--)
         {
             workingInt = 0;
             offset = j * 16;
             for (int i = 15; i >= 0; i--)
             {
-                if (i + offset != 0 && i + offset < nbKeys)
+                if (i + offset != 0 && i + offset < ((int)(Keyboard.KeyCount)))
                 {
                     workingInt |= _BoolHelper(keyboard[(Key)(offset + i)].ReadValue() != 0f) << (i);
                 }
             }
 
-            if (j != nbKeys / 16) { retVal += "."; } // Don't put a trailing period because it looks dumb
+            if (j != ((int)(Keyboard.KeyCount)) / 16) { retVal += "."; } // Don't put a trailing period because it looks dumb
             retVal += workingInt.ToString("X4");
         }
 

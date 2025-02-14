@@ -145,6 +145,7 @@ namespace UnityEngine.InputSystem
                 case Key.OEM3:
                 case Key.OEM4:
                 case Key.OEM5:
+                case Key.IMESelected:
                     return false;
             }
             return true;

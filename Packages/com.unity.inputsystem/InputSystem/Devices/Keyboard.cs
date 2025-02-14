@@ -46,10 +46,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
 
-        private const int kSizeInBits = Keyboard.ExtendedKeyCount; // +1 for IMESelected.
+        private const int kSizeInBits = Keyboard.ExtendedKeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
 
-        [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", bit = 1, sizeInBits = (int)Key.F24, synthetic = true)]
+        [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", bit = 1, sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", displayName = "Space", layout = "Key", bit = (int)Key.Space)]
         [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Submit", bit = (int)Key.Enter)]
@@ -195,7 +195,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 if (IMESelected)
                 {
-                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)KeyEx.IMESelected, true);
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)Key.IMESelected, true);
                 }
 
                 for (var i = 0; i < pressedKeys.Length; ++i)
@@ -894,7 +894,6 @@ namespace UnityEngine.InputSystem
         /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
         /// Will be removed in the future.
         /// </summary>
-        //[Obsolete("Don't use this. This is a dummy key that is only used internally to represent the IME selected state. Will be removed in the future.", false)]
         IMESelected,
 
         /// <summary>
@@ -968,7 +967,6 @@ namespace UnityEngine.InputSystem
 
     internal static class KeyEx
     {
-        internal const Key IMESelected = (Key)111; //IMESelected value
         internal const Key RemappedIMESelected = (Key)127; //IMESelected value
     }
 
@@ -2661,9 +2659,9 @@ namespace UnityEngine.InputSystem
                 if (stateEvent->stateFormat == KeyboardState.Format)
                 {
                     var keyboardState = ((KeyboardState*)(stateEvent->stateData));
-                    if (keyboardState->Get(KeyEx.IMESelected))
+                    if (keyboardState->Get(Key.IMESelected))
                     {
-                        keyboardState->Set(KeyEx.IMESelected, false);
+                        keyboardState->Set(Key.IMESelected, false);
                         keyboardState->Set(KeyEx.RemappedIMESelected, true);
                     }
                 }
