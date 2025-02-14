@@ -15,10 +15,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
 - Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
 - Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
 
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 
+### Added
+- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI. 
+  
 ## [1.13.0] - 2025-02-05
 
 ### Fixed
@@ -30,7 +34,6 @@ however, it has to be formatted properly to pass verification tests.
 - Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
 - Fixed issue where a binding path is sometimes not saved when chosen from the binding path picker. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
-- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
 - Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
 
 ## [1.12.0] - 2025-01-15
