@@ -21,7 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed default input action asset name from New Controls to New Actions.
 
 ### Added
-- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI. 
+- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
   
 ## [1.13.0] - 2025-02-05
 
