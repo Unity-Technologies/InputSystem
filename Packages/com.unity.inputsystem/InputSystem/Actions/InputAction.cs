@@ -1536,8 +1536,10 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         /// </para>
+        /// <para>
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
         /// the dynamic Update, use <see cref="WasCompletedThisRenderingFrame"/> to access this during dynamic Update instead.
+        /// </para>
         /// </remarks>
         /// <example>
         /// <code>
