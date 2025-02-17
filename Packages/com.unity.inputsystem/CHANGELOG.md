@@ -20,6 +20,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 
+### Added
+- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+
 ## [1.13.0] - 2025-02-05
 
 ### Fixed
@@ -32,9 +35,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue where a binding path is sometimes not saved when chosen from the binding path picker. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
 - Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
-
-### Added
-- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
 
 ## [1.12.0] - 2025-01-15
 
