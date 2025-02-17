@@ -301,7 +301,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed incorrect documentation in InputSystem.actions and InputSystem.onActionsChanged property API contract.
 - Fixed an issue where `InputSystem.actions` could be incorrectly evaluated if the associated asset was deleted.
 
-
 ## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed
