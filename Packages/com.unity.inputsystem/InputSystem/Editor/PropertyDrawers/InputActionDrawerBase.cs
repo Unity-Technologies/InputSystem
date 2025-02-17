@@ -180,9 +180,12 @@ namespace UnityEngine.InputSystem.Editor
                 window.ShowAsDropDown(btnRect, new Vector2(300, 350));
             }
 
+            private Vector2 m_ScrollPos;
             private void OnGUI()
             {
+                m_ScrollPos = EditorGUILayout.BeginScrollView(m_ScrollPos);
                 m_PropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
             }
 
             private PropertiesViewBase m_PropertyView;

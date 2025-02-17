@@ -138,6 +138,18 @@ namespace UnityEngine.InputSystem.Editor
             m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
+        private string SetupControlSchemeName(string name)
+        {
+            //On Windows the '&' is considered an accelerator character and will always be stripped.
+            //Since the ControlScheme menu isn't creating hotkeys, it can be safely assumed that they are meant to be text
+            //so we want to escape the character for MenuItem
+            if (Application.platform == RuntimePlatform.WindowsEditor)
+            {
+                name = name.Replace("&", "&&");
+            }
+            return name;
+        }
+
         private void SetUpControlSchemesMenu(ViewState viewState)
         {
             m_ControlSchemesToolbar.menu.MenuItems().Clear();
@@ -151,7 +163,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ControlSchemesToolbar.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
                     viewState.selectedControlSchemeIndex == -1 ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
                 viewState.controlSchemes.ForEach((scheme, i) =>
-                    m_ControlSchemesToolbar.menu.AppendAction(scheme.name, _ => SelectControlScheme(i),
+                    m_ControlSchemesToolbar.menu.AppendAction(SetupControlSchemeName(scheme.name), _ => SelectControlScheme(i),
                         viewState.selectedControlSchemeIndex == i ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal));
                 m_ControlSchemesToolbar.menu.AppendSeparator();
             }

@@ -11,19 +11,73 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
-- Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
-- Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
-- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105)
-- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845)
-- Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141)
-- Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151)
-- Fixed a bug that would case `TrackedBasedDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
-- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656)
-- Fixed an issue with The "Add Control Scheme..." popup window so that it now persists until any changes are explicitly Saved or Cancelled [case ISXB-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1131)
+- Fixed a problem with the logic to get the active player settings object that cause an infinit reimport loop. [ISXB-1430](https://jira.unity3d.com/browse/ISXB-1430)
+- Fixed an issue where removing a newly created action in the Asset Editor would cause an exception. [UUM-95693](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-95693)
+- Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
+- Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
+- Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
+- Fixed a bug that would case `TrackedPoseDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
 
 ### Changed
-- Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086)
+- Changed default input action asset name from New Controls to New Actions.
+
+## [1.13.0] - 2025-02-05
+
+### Fixed
+- Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
+- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
+- Fixed GamepadButton.LeftTrigger and GamepadButton.RightTrigger enum values not matching displayed dropdown values in editor when using GamepadButtonPropertyDrawer [ISXB-1270](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1270).
+- Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
+- Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
+- Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
+- Fixed issue where a binding path is sometimes not saved when chosen from the binding path picker. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
+- Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
+
+## [1.12.0] - 2025-01-15
+
+### Fixed
+- Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
+- Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
+- Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105).
+- Fixed pointerId staying the same when simultaneously releasing and then pressing in the same frame on mobile using touch. [ISXB-1006](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-845).
+- Fixed ISubmitHandler.OnSubmit event processing when operating in Manual Update mode (ISXB-1141).
+- Fixed Rename mode is not entered and name is autocompleted to default when creating a new Action Map on 2022.3. [ISXB-1151](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1151).
+- Fixed unexpected control scheme switch when using `OnScreenControl` and pointer based schemes which registed "Cancel" event on every frame.[ISXB-656](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-656).
+- Fixed an issue with The "Add Control Scheme..." popup window so that it now persists until any changes are explicitly Saved or Cancelled [case ISXB-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1131).
+- Fixed missing documentation for source generated Input Action Assets. This is now generated as part of the source code generation step when "Generate C# Class" is checked in the importer inspector settings.
+- Fixed pasting into an empty map list raising an exception. [ISXB-1150](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1150)
+- Fixed pasting bindings into empty Input Action asset. [ISXB-1180](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1180)
+- Fixed missing '&' symbol in Control Scheme dropdown on Windows platform. [ISXB-1109](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1109)
+- Fixed icon scaling in Input Actions window.
+- Fixed an issue where removing the InputSystem package could lead to invalid input handling settings.
+- Fixed `ArgumentOutOfRangeException` when adding a new Control Scheme with any Device selected. [ISXB-1129](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1129)
+- Fixed a CS0105 compiler warning due to duplicate using statement in test source code (ISXB-1247).
+- Fixed tooltip support in the UI Toolkit version of the Input Actions Asset editor.
+- Fixed documentation to clarify bindings with modifiers `overrideModifiersNeedToBePressedFirst` configuration [ISXB-806](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-806).
+- Fixed an issue in `Samples/Visualizers/GamepadVisualizer.unity` sample where the visualization wouldn't handle device disconnects or current device changes properly (ISXB-1243).
+- Fixed an issue when displaying Serialized InputAction's Processor properties inside the Inspector window. [ISXB-1269](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1269)
+- Fixed an issue with default device selection when adding new Control Scheme.
+- Fixed an issue where action map delegates were not updated when the asset already assigned to the PlayerInput component were changed [ISXB-711](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-711).
+- Fixed Action properties edition in the UI Toolkit version of the Input Actions Asset editor. [ISXB-1277](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1277)
+- Fixed an editor crash caused by input debugger device state window reusing cached state when reconnecting Stadia controller. [ISXB-658](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-658)
+- Fixed an issue where batch jobs would fail with "Error: Error building Player because scripts are compiling" if a source generated .inputactions asset is out of sync with its generated source code (ISXB-1300).
+- Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
+- Fixed an issue in input actions editor window that caused certain fields in custom input composite bindings to require multiple clicks to action / focus. [ISXB-1171](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1171)
+- Fixed an editor/player hang in `InputSystemUIInputModule` due to an infinite loop. This was caused by the assumption that `RemovePointerAtIndex` would _always_ successfully remove the pointer, which is not the case with touch based pointers. [ISXB-1258](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1258)
+- Fixed wrong Xbox Series S|X and Xbox One wireless controllers "View" button mapping on macOS by expanding device PID and VID matching. [ISXB-1264](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1264)
+
+### Changed
+- Changed location of the link xml file (code stripping rules), from a temporary directory to the project Library folder (ISX-2140).
+- Added back the InputManager to InputSystem project-wide asset migration code with performance improvement (ISX-2086).
 - Changed `OnScreenControl` to automaticaly switch, in Single Player with autoswitch enabled, to the target device control scheme when the first component is enabled to prevent bad interactions when it start.
+- Changed paremeter `overrideModifiersNeedToBePressedFirst` to obsolete for `ButtonWithOneModifier`, `ButtonWithTwoModifiers`, `OneModifierComposite` and `TwoModifiersComposite` in favour the new `modifiersOrder` parameter which is more explicit.
+- Changed `Samples/Visualizers/GamepadVisualizer.unity` to visualize the control values of the current device instead of the first device.
+
+### Added
+- Added new API `InputSystem.settings.useIMGUIEditorForAssets` that should be used in custom `InputParameterEditor` that use both IMGUI and UI Toolkit.
+- Added ProfilerMakers to `InputAction.Enable()` and `InputActionMap.ResolveBindings()` to enable gathering of profiling data.
+- Added throwing an error message when trying to use the Input System package on console without the extension package installed.
 
 ## [1.11.2] - 2024-10-16
 
@@ -53,6 +107,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed potential crash on Mac when using stale references to deleted InputDevice objects [ISXB-606](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-606).
 - Fixed conditional compilation for non-editor analytics on platforms not enabling analytics.
 - Fixed simulated touch input not working with PlayerInput component [ISXB-483](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-483).
+- Fixed unused PenState information to determine the displayIndex on platforms providing it. (PLAT-10123)
 
 ### Changed
 - Renamed editor Resources directories to PackageResources to fix package validation warnings.
