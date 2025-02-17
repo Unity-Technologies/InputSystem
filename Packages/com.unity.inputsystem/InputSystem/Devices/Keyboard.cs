@@ -186,7 +186,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <remarks>IMESelected state will not be set.</remarks>
         /// <param name="pressedKeys">pressed keys</param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException">If <paramref name="pressedKeys"/> is <c>null</c></exception>
         public KeyboardState(params Key[] pressedKeys) : this(false, pressedKeys)
         {
         }
@@ -196,7 +196,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <param name="IMESelected">true if IMESelected state is enable</param>
         /// <param name="pressedKeys">pressed keys</param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException">If <paramref name="pressedKeys"/> is <c>null</c></exception>
         public KeyboardState(bool IMESelected, params Key[] pressedKeys)
         {
             if (pressedKeys == null)
