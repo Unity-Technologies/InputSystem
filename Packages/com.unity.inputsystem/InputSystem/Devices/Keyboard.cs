@@ -181,10 +181,22 @@ namespace UnityEngine.InputSystem.LowLevel
         // will be the default in new editor [InputControl(name = "IMESelected", layout = "Button", bit = 0, sizeInBits = 1, synthetic = true)]
         //public byte modifiers;
 
+        /// <summary>
+        /// Create a new KeyboardState with the given keys pressed.
+        /// </summary>
+        /// <remarks>IMESelected state will not be set.</remarks>
+        /// <param name="pressedKeys">pressed keys</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public KeyboardState(params Key[] pressedKeys) : this(false, pressedKeys)
         {
         }
 
+        /// <summary>
+        /// Create a new KeyboardState with the given keys pressed.
+        /// </summary>
+        /// <param name="IMESelected">true if IMESelected state is enable</param>
+        /// <param name="pressedKeys">pressed keys</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public KeyboardState(bool IMESelected, params Key[] pressedKeys)
         {
             if (pressedKeys == null)
@@ -1033,7 +1045,7 @@ namespace UnityEngine.InputSystem
         /// in <see cref="allKeys"/>.
         /// </summary>
         /// <value>Total number of key controls.</value>
-        public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API //(int)Key.F24; // without IMESelected
+        public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API
         internal const int ExtendedKeyCount = (int)Key.F24;
 
         /// <summary>
@@ -2651,7 +2663,15 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public unsafe bool PreProcessEvent(InputEventPtr currentEventPtr)
+        /// <summary>
+        /// Preprocess the event for handling IME Selected state compatibility
+        /// </summary>
+        /// <remarks>
+        /// This will be removed when supported editor don't send anymore the compatibility IME Selected state
+        /// </remarks>
+        /// <param name="currentEventPtr">The event to preprocess.</param>
+        /// <returns>True if event should be processed further, false if event should be skipped and ignored.</returns>
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr currentEventPtr)
         {
             if (currentEventPtr.type == StateEvent.Type)
             {
