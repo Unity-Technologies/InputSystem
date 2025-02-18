@@ -260,11 +260,23 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             {
                 m_RebindOperation?.Dispose();
                 m_RebindOperation = null;
-                action.Enable();
+
+                action.actionMap.Enable();
+                m_UIInputActionMap?.Enable();
             }
 
-            //Fixes the "InvalidOperationException: Cannot rebind action x while it is enabled" error
-            action.Disable();
+            // An "InvalidOperationException: Cannot rebind action x while it is enabled" will
+            // be thrown if rebinding is attempted on an action that is enabled.
+            //
+            // On top of disabling the target action while rebinding, it is recommended to
+            // disable any actions (or action maps) that could interact with the rebinding UI
+            // or gameplay - it would be undesirable for rebinding to cause the player
+            // character to jump.
+            //
+            // In this example, we explicitly disable both the UI input action map and
+            // the action map containing the target action.
+            action.actionMap.Disable();
+            m_UIInputActionMap?.Disable();
 
             // Configure the rebind.
             m_RebindOperation = action.PerformInteractiveRebinding(bindingIndex)
@@ -329,6 +341,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             s_RebindActionUIs.Add(this);
             if (s_RebindActionUIs.Count == 1)
                 InputSystem.onActionChange += OnActionChange;
+            if (m_DefaultInputActions != null && m_UIInputActionMap == null)
+                m_UIInputActionMap = m_DefaultInputActions.FindActionMap("UI");
         }
 
         protected void OnDisable()
@@ -397,6 +411,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("Optional text label that will be updated with prompt for user input.")]
         [SerializeField]
         private Text m_RebindText;
+
+        [Tooltip("Optional reference to default input actions containing the UI action map. The UI action map is "
+            + "disabled when rebinding is in progress.")]
+        [SerializeField]
+        private InputActionAsset m_DefaultInputActions;
+        private InputActionMap m_UIInputActionMap;
 
         [Tooltip("Event that is triggered when the way the binding is display should be updated. This allows displaying "
             + "bindings in custom ways, e.g. using images instead of text.")]
