@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
+- Added disabling of action maps in rebinding UI sample.
 
 ## [1.13.0] - 2025-02-05
 
