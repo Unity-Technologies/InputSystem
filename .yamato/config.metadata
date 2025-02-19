@@ -8,6 +8,8 @@ editors:
     disable_tvos_run: true
   - version: trunk
     disable_tvos_run: true
+  - version: fc38dbaedb62ba7117f157b5c9823f2c8feaf8a0
+    disable_tvos_run: true
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
 utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
