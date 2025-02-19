@@ -146,9 +146,9 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
-            const string sampleFrequencyTooltip = "Displays the current average event or sample frequency of this device in Hertz (Hz). " + 
-                                                  "The target frequency is device and backend dependent and may not be supported by all devices nor backends. " + 
-                                                  "The Polling Frequency indicates system polling target frequency.";
+            const string sampleFrequencyTooltip = "Displays the current average event or sample frequency of this device in Hertz (Hz). " +
+                "The target frequency is device and backend dependent and may not be supported by all devices nor backends. " +
+                "The Polling Frequency indicates system polling target frequency.";
             if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
                 EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
             const string inputSystemLatencyTooltip = "Displays the average input system latency (Excluding OS, driver, firmware or transport latency) for data reported for this device.";
@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DeviceId = device.deviceId;
             m_DeviceIdString = device.deviceId.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
-            
+
             UpdateDeviceFlags();
 
             // Query the sampling frequency of the device.
@@ -311,7 +311,7 @@ namespace UnityEngine.InputSystem.Editor
             var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
             m_FrequencyCalculator = new FrequencyCalculator(targetFrequency, realtimeSinceStartup);
             m_LatencyCalculator = new LatencyCalculator(realtimeSinceStartup);
-            
+
             // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
@@ -380,7 +380,7 @@ namespace UnityEngine.InputSystem.Editor
             // Display achievable frequency for device
             const string frequencyFormat = "Average: 0.000 Hz";
             sb.Append(m_FrequencyCalculator.frequency.ToString(frequencyFormat, CultureInfo.InvariantCulture));
-                
+
             // Display target frequency reported for device
             sb.Append(" (Target @ ");
             sb.Append(float.IsNaN(m_FrequencyCalculator.targetFrequency)
@@ -409,7 +409,7 @@ namespace UnityEngine.InputSystem.Editor
                 ? (millis).ToString(latencyFormat, CultureInfo.InvariantCulture)
                 : ">1000.0 ms");
         }
-        
+
         private string CreateDeviceLatencyString(ref StringBuilder sb)
         {
             if (sb == null)
@@ -424,7 +424,7 @@ namespace UnityEngine.InputSystem.Editor
             FormatLatency(sb, m_LatencyCalculator.minLatencySeconds);
             sb.Append(", Max: ");
             FormatLatency(sb, m_LatencyCalculator.maxLatencySeconds);
-            
+
             return sb.ToString();
         }
 
@@ -586,19 +586,19 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             public void ProcessSample(InputEventPtr eventPtr) => ProcessSample(eventPtr, Time.realtimeSinceStartupAsDouble);
-            
+
             public void ProcessSample(InputEventPtr eventPtr, double realtimeSinceStartup)
             {
                 if (!eventPtr.valid)
                     return;
-                
+
                 var ageInSeconds = realtimeSinceStartup - eventPtr.time;
                 m_AccumulatedLatencySeconds += ageInSeconds;
                 if (++m_SampleCount == 1)
                 {
                     m_AccumulatedMinLatencySeconds = ageInSeconds;
                     m_AccumulatedMaxLatencySeconds = ageInSeconds;
-                } 
+                }
                 else if (ageInSeconds < m_AccumulatedMaxLatencySeconds)
                     m_AccumulatedMinLatencySeconds = ageInSeconds;
                 else if (ageInSeconds > m_AccumulatedMaxLatencySeconds)
@@ -629,16 +629,16 @@ namespace UnityEngine.InputSystem.Editor
                     minLatencySeconds = (float)m_AccumulatedMinLatencySeconds;
                     maxLatencySeconds = (float)m_AccumulatedMaxLatencySeconds;
                 }
-                
+
                 m_LastUpdateTime = realtimeSinceStartup;
                 m_SampleCount = 0;
-                
+
                 m_AccumulatedLatencySeconds = 0.0;
-                
+
                 return true;
             }
         }
-        
+
         private struct FrequencyCalculator
         {
             private double m_LastUpdateTime;
@@ -651,7 +651,7 @@ namespace UnityEngine.InputSystem.Editor
                 this.frequency = 0.0f;
                 this.m_LastUpdateTime = realtimeSinceStartup;
             }
-            
+
             public float targetFrequency { get; private set; }
             public float frequency { get; private set; }
 
@@ -663,9 +663,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (eventPtr != null)
                     ++m_SampleCount;
             }
-            
+
             public bool Update() => Update(Time.realtimeSinceStartupAsDouble);
-            
+
             public bool Update(double realtimeSinceStartup)
             {
                 var timeSinceLastUpdate = realtimeSinceStartup - m_LastUpdateTime;
@@ -675,11 +675,11 @@ namespace UnityEngine.InputSystem.Editor
                 m_LastUpdateTime = realtimeSinceStartup;
                 frequency = (float)(m_SampleCount / timeSinceLastUpdate);
                 m_SampleCount = 0;
-                
+
                 return true;
             }
         }
-        
+
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
             if (device == m_Device)
@@ -687,7 +687,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_LatencyCalculator.ProcessSample(eventPtr);
                 m_FrequencyCalculator.ProcessSample(eventPtr);
 
-                NeedControlValueRefresh();   
+                NeedControlValueRefresh();
             }
         }
 
