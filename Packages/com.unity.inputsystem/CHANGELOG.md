@@ -20,6 +20,10 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 
+### Added
+- Added achievable average frequency diagnostic to Input Debugger device window (along with sensor frequency and global polling frequency information).
+- Added processing delay input system latency (average, minimum, maximum) diagnostics to Input Bugger device window.
+
 ## [1.13.0] - 2025-02-05
 
 ### Fixed
