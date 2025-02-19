@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -90,6 +92,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.onSettingsChange -= NeedControlValueRefresh;
                 Application.focusChanged -= OnApplicationFocusChange;
                 EditorApplication.playModeStateChanged += OnPlayModeChange;
+                EditorApplication.update -= OnEditorUpdate;
             }
 
             m_EventTrace?.Dispose();
@@ -143,6 +146,14 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
+            const string sampleFrequencyTooltip = "Displays the current average event or sample frequency of this device in Hertz (Hz). " + 
+                                                  "The target frequency is device and backend dependent and may not be supported by all devices nor backends. " + 
+                                                  "The Polling Frequency indicates system polling target frequency.";
+            if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
+                EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
+            const string inputSystemLatencyTooltip = "Displays the average input system latency (Excluding OS, driver, firmware or transport latency) for data reported for this device.";
+            if (!string.IsNullOrEmpty(m_DeviceLatencyString))
+                EditorGUILayout.LabelField(new GUIContent("Input Latency", inputSystemLatencyTooltip), new GUIContent(m_DeviceLatencyString), EditorStyles.label);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -287,9 +298,20 @@ namespace UnityEngine.InputSystem.Editor
             m_DeviceId = device.deviceId;
             m_DeviceIdString = device.deviceId.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
-
+            
             UpdateDeviceFlags();
 
+            // Query the sampling frequency of the device.
+            // We do this synchronously here for simplicity.
+            var queryFrequency = QuerySamplingFrequencyCommand.Create();
+            var result = device.ExecuteCommand(ref queryFrequency);
+            var targetFrequency = float.NaN;
+            if (result >= 0)
+                targetFrequency = queryFrequency.frequency;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            m_FrequencyCalculator = new FrequencyCalculator(targetFrequency, realtimeSinceStartup);
+            m_LatencyCalculator = new LatencyCalculator(realtimeSinceStartup);
+            
             // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
@@ -326,6 +348,84 @@ namespace UnityEngine.InputSystem.Editor
             InputState.onChange += OnDeviceStateChange;
             Application.focusChanged += OnApplicationFocusChange;
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+            EditorApplication.update += OnEditorUpdate;
+        }
+
+        private void OnEditorUpdate()
+        {
+            StringBuilder sb = null;
+            bool needControlValueRefresh = false;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            if (m_FrequencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceFrequencyString = CreateDeviceFrequencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (m_LatencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceLatencyString = CreateDeviceLatencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (needControlValueRefresh)
+                NeedControlValueRefresh();
+        }
+
+        private string CreateDeviceFrequencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display achievable frequency for device
+            const string frequencyFormat = "Average: 0.000 Hz";
+            sb.Append(m_FrequencyCalculator.frequency.ToString(frequencyFormat, CultureInfo.InvariantCulture));
+                
+            // Display target frequency reported for device
+            sb.Append(" (Target @ ");
+            sb.Append(float.IsNaN(m_FrequencyCalculator.targetFrequency)
+                ? "n/a"
+                : m_FrequencyCalculator.targetFrequency.ToString(frequencyFormat));
+
+            // Display system-wide polling frequency
+            sb.Append(", Polling-Frequency @ ");
+            sb.Append(InputSystem.pollingFrequency.ToString(frequencyFormat));
+            sb.Append(')');
+
+            return sb.ToString();
+        }
+
+        private static void FormatLatency(StringBuilder sb, float value)
+        {
+            const string latencyFormat = "0.000 ms";
+            if (float.IsNaN(value))
+            {
+                sb.Append("n/a");
+                return;
+            }
+
+            var millis = 1000.0f * value;
+            sb.Append(millis <= 1000.0f
+                ? (millis).ToString(latencyFormat, CultureInfo.InvariantCulture)
+                : ">1000.0 ms");
+        }
+        
+        private string CreateDeviceLatencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display latency in seconds for device
+            sb.Append("Average: ");
+            FormatLatency(sb, m_LatencyCalculator.averageLatencySeconds);
+            sb.Append(", Min: ");
+            FormatLatency(sb, m_LatencyCalculator.minLatencySeconds);
+            sb.Append(", Max: ");
+            FormatLatency(sb, m_LatencyCalculator.maxLatencySeconds);
+            
+            return sb.ToString();
         }
 
         private void UpdateDeviceFlags()
@@ -396,6 +496,8 @@ namespace UnityEngine.InputSystem.Editor
         private string m_DeviceIdString;
         private string m_DeviceUsagesString;
         private string m_DeviceFlagsString;
+        private string m_DeviceFrequencyString;
+        private string m_DeviceLatencyString;
         private InputDevice.DeviceFlags m_DeviceFlags;
         private InputControlTreeView m_ControlTree;
         private InputEventTreeView m_EventTree;
@@ -404,6 +506,8 @@ namespace UnityEngine.InputSystem.Editor
         private InputEventTrace.ReplayController m_ReplayController;
         private InputEventTrace m_EventTrace;
         private InputUpdateType m_InputUpdateTypeShownInControlTree;
+        private LatencyCalculator m_LatencyCalculator;
+        private FrequencyCalculator m_FrequencyCalculator;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -461,10 +565,130 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private struct LatencyCalculator
+        {
+            private double m_LastUpdateTime;
+            private double m_AccumulatedLatencySeconds;
+            private double m_AccumulatedMinLatencySeconds;
+            private double m_AccumulatedMaxLatencySeconds;
+            private int m_SampleCount;
+
+            public LatencyCalculator(double realtimeSinceStartup)
+            {
+                m_LastUpdateTime = realtimeSinceStartup;
+                m_AccumulatedLatencySeconds = 0.0;
+                m_AccumulatedMinLatencySeconds = 0.0;
+                m_AccumulatedMaxLatencySeconds = 0.0;
+                m_SampleCount = 0;
+                averageLatencySeconds = float.NaN;
+                minLatencySeconds = float.NaN;
+                maxLatencySeconds = float.NaN;
+            }
+
+            public void ProcessSample(InputEventPtr eventPtr) => ProcessSample(eventPtr, Time.realtimeSinceStartupAsDouble);
+            
+            public void ProcessSample(InputEventPtr eventPtr, double realtimeSinceStartup)
+            {
+                if (!eventPtr.valid)
+                    return;
+                
+                var ageInSeconds = realtimeSinceStartup - eventPtr.time;
+                m_AccumulatedLatencySeconds += ageInSeconds;
+                if (++m_SampleCount == 1)
+                {
+                    m_AccumulatedMinLatencySeconds = ageInSeconds;
+                    m_AccumulatedMaxLatencySeconds = ageInSeconds;
+                } 
+                else if (ageInSeconds < m_AccumulatedMaxLatencySeconds)
+                    m_AccumulatedMinLatencySeconds = ageInSeconds;
+                else if (ageInSeconds > m_AccumulatedMaxLatencySeconds)
+                    m_AccumulatedMaxLatencySeconds = ageInSeconds;
+            }
+
+            public float averageLatencySeconds { get; private set; }
+            public float minLatencySeconds { get; private set; }
+            public float maxLatencySeconds { get; private set; }
+
+            public bool Update() => Update(Time.realtimeSinceStartupAsDouble);
+
+            public bool Update(double realtimeSinceStartup)
+            {
+                var timeSinceLastUpdate = realtimeSinceStartup - m_LastUpdateTime;
+                if (timeSinceLastUpdate < 1.0)
+                    return false; // Only update once per second (and avoid division by zero)
+
+                if (m_SampleCount == 0)
+                {
+                    averageLatencySeconds = float.NaN;
+                    minLatencySeconds = float.NaN;
+                    maxLatencySeconds = float.NaN;
+                }
+                else
+                {
+                    averageLatencySeconds = (float)(m_AccumulatedLatencySeconds / m_SampleCount);
+                    minLatencySeconds = (float)m_AccumulatedMinLatencySeconds;
+                    maxLatencySeconds = (float)m_AccumulatedMaxLatencySeconds;
+                }
+                
+                m_LastUpdateTime = realtimeSinceStartup;
+                m_SampleCount = 0;
+                
+                m_AccumulatedLatencySeconds = 0.0;
+                
+                return true;
+            }
+        }
+        
+        private struct FrequencyCalculator
+        {
+            private double m_LastUpdateTime;
+            private int m_SampleCount;
+
+            public FrequencyCalculator(float targetFrequency, double realtimeSinceStartup)
+            {
+                this.targetFrequency = targetFrequency;
+                this.m_SampleCount = 0;
+                this.frequency = 0.0f;
+                this.m_LastUpdateTime = realtimeSinceStartup;
+            }
+            
+            public float targetFrequency { get; private set; }
+            public float frequency { get; private set; }
+
+            public void ProcessSample(InputEventPtr eventPtr)
+            {
+                // Only count actual samples instead of device-state changes which may be reported anyway it seems.
+                // For determining frequency we at least absolute do not want to count state changes not driven
+                // by an associated event/sample.
+                if (eventPtr != null)
+                    ++m_SampleCount;
+            }
+            
+            public bool Update() => Update(Time.realtimeSinceStartupAsDouble);
+            
+            public bool Update(double realtimeSinceStartup)
+            {
+                var timeSinceLastUpdate = realtimeSinceStartup - m_LastUpdateTime;
+                if (timeSinceLastUpdate < 1.0)
+                    return false; // Only update once per second (and avoid division by zero)
+
+                m_LastUpdateTime = realtimeSinceStartup;
+                frequency = (float)(m_SampleCount / timeSinceLastUpdate);
+                m_SampleCount = 0;
+                
+                return true;
+            }
+        }
+        
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
             if (device == m_Device)
-                NeedControlValueRefresh();
+            {
+                m_LatencyCalculator.ProcessSample(eventPtr);
+                m_FrequencyCalculator.ProcessSample(eventPtr);
+
+                NeedControlValueRefresh();   
+            }
         }
 
         private static class Styles
