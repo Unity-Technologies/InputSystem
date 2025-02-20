@@ -282,7 +282,7 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_functional
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_functional
-    {% if editor.tvos_run_functional == "false" %}
+    {% if editor.run_tvos == "false" %}
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_functional
     {% else %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_functional
@@ -311,7 +311,7 @@ performance_tests_only:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_performance
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_performance
-    {% unless editor.tvos_run_performance == "false" %}
+    {% unless editor.run_tvos == "false" %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_performance    
     {% endunless %}
     {% endfor %} #editors
