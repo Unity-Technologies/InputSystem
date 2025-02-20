@@ -311,7 +311,7 @@ performance_tests_only:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_performance
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_performance
-    {% unless editor.tvos_run_performance == "true" %}
+    {% unless editor.tvos_run_performance == "false" %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_performance    
     {% endunless %}
     {% endfor %} #editors
