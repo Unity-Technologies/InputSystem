@@ -158,7 +158,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
           - "build/test-results/**"
 {% endfor %} # test_category
 
-build_tvos_{{ editor.version }}:
+build_tvos_{{ editor.version }}_{{ category.name }}:
   name: Build - {{ editor.version }} - tvOS, {{ category.name }} tests
   agent:
     type: Unity::VM::osx
@@ -182,7 +182,7 @@ build_tvos_{{ editor.version }}:
         paths:
           - "build/logs/**"
 
-run_tvos_{{ editor.version }}:
+run_tvos_{{ editor.version }}_{{ category.name }}:
   name: Run - {{ editor.version }} - tvOS, {{ category.name }} tests
   agent:
       type: Unity::mobile::appletv
@@ -192,7 +192,7 @@ run_tvos_{{ editor.version }}:
     EDITOR_VERSION: {{ editor.version }}
   skip_checkout: true
   dependencies:
-    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_{{ category.name }}
   commands:
     - {{ utr_install_nix }}
     - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
