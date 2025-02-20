@@ -269,7 +269,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
 {% endfor %} # editors
 
 all_tests:
-  name: Functional Tests
+  name: All Functional Tests
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
@@ -298,7 +298,7 @@ all_tests:
             
             
 performance_tests_only:
-  name: Performance Tests Only
+  name: All Performance Tests Only
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
