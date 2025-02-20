@@ -207,7 +207,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 if (IMESelected)
                 {
-                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)Key.IMESelected, true);
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)KeyEx.IMESelected, true);
                 }
 
                 for (var i = 0; i < pressedKeys.Length; ++i)
@@ -906,6 +906,7 @@ namespace UnityEngine.InputSystem
         /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
         /// Will be removed in the future.
         /// </summary>
+        [Obsolete("IMESelected is a dummy key and will be removed in the future.")]
         IMESelected,
 
         /// <summary>
@@ -979,7 +980,8 @@ namespace UnityEngine.InputSystem
 
     internal static class KeyEx
     {
-        internal const Key RemappedIMESelected = (Key)127; //IMESelected value
+        internal const Key IMESelected = (Key)111; // Key.IMESelected value
+        internal const Key RemappedIMESelected = (Key)127; // Remapped to the end of buffer of Key InternalForIMESelected
     }
 
     /// <summary>
@@ -2679,9 +2681,9 @@ namespace UnityEngine.InputSystem
                 if (stateEvent->stateFormat == KeyboardState.Format)
                 {
                     var keyboardState = ((KeyboardState*)(stateEvent->stateData));
-                    if (keyboardState->Get(Key.IMESelected))
+                    if (keyboardState->Get(KeyEx.IMESelected))
                     {
-                        keyboardState->Set(Key.IMESelected, false);
+                        keyboardState->Set(KeyEx.IMESelected, false);
                         keyboardState->Set(KeyEx.RemappedIMESelected, true);
                     }
                 }
