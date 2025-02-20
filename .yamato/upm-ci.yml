@@ -170,7 +170,7 @@ build_tvos_{{ editor.version }}:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c AppleTV -u $EDITOR_VERSION --fast --wait
-    - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
@@ -195,7 +195,7 @@ run_tvos_{{ editor.version }}:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
   commands:
     - {{ utr_install_nix }}
-    - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
