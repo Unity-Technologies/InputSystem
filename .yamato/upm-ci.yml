@@ -156,7 +156,6 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     logs:
         paths:
           - "build/test-results/**"
-{% endfor %} # test_category
 
 build_tvos_{{ editor.version }}_{{ category.name }}:
   name: Build - {{ editor.version }} - tvOS, {{ category.name }} tests
@@ -203,6 +202,7 @@ run_tvos_{{ editor.version }}_{{ category.name }}:
     logs:
         paths:
           - "build/test-results/**"
+{% endfor %} # test_category
 
 {% for backend in scripting_backends %}
 {% for category in test_category %}
@@ -282,11 +282,11 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_functional
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_functional
-{% if editor.disable_tvos_run_functional %}
+    {% if editor.tvos_run_functional == "false" %}
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_functional
-{% else %}
+    {% else %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_functional
-{% endif %}
+    {% endif %}
     {% endfor %}
     - .yamato/upm-ci.yml#publish_dryrun
   triggers:
@@ -311,11 +311,9 @@ performance_tests_only:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_performance
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_performance
-    {% if editor.disable_tvos_run_performance %}
-    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_performance
-    {% else %}
-    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_performance
-    {% endif %}
+    {% unless editor.tvos_run_performance == "true" %}
+    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_performance    
+    {% endunless %}
     {% endfor %} #editors
   triggers:
     recurring:
