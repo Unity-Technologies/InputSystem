@@ -298,7 +298,7 @@ all_tests:
             
             
 performance_tests_only:
-  name: All Performance Tests Only
+  name: All Performance Tests
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms_win %}
