@@ -768,7 +768,7 @@ internal class XRTests : CoreTestsFixture
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
 
-        // A Pose control parent was created based off subcontrols
+        // A Pose control parent was created based off sub-controls
         var pose = generatedLayout["PoseControl"];
         Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
     }
