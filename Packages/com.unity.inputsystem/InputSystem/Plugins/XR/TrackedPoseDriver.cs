@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -503,11 +504,11 @@ namespace UnityEngine.InputSystem.XR
                 var positionInputAction = m_PositionInput.action;
                 var hasPositionInputActionWithBindings =
                     positionInputAction != null && positionInputAction.m_BindingsCount > 0;
-                
+
                 var rotationInputAction = m_RotationInput.action;
                 var hasRotationInputActionWithBindings =
                     rotationInputAction != null && rotationInputAction.m_BindingsCount > 0;
-                
+
                 // Check if we have transform and rotation controls to drive the pose.
                 if (hasPositionInputActionWithBindings && hasRotationInputActionWithBindings)
                 {
