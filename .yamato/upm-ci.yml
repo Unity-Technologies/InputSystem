@@ -283,9 +283,9 @@ all_tests:
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_functional
 {% if editor.disable_tvos_run %}
-    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_functional
 {% else %}
-    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}
+    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_functional
 {% endif %}
     {% endfor %}
     - .yamato/upm-ci.yml#publish_dryrun
@@ -311,7 +311,12 @@ performance_tests_only:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}_performance
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}_performance
-    {% endfor %}
+    {% if editor.disable_tvos_run %}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_performance
+    {% else %}
+    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_performance
+    {% endif %}
+    {% endfor %} #editors
   triggers:
     recurring:
         - branch: develop
