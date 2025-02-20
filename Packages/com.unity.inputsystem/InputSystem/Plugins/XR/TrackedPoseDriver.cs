@@ -500,20 +500,24 @@ namespace UnityEngine.InputSystem.XR
             {
                 // Treat an Input Action Reference with no reference the same as
                 // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
-                // TODO Remove if suggested fix seems valid. m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
-
-                // Check if we have transform and rotation controls to drive the pose.
                 var positionInputAction = m_PositionInput.action;
+                var hasPositionInputActionWithBindings =
+                    positionInputAction != null && positionInputAction.m_BindingsCount > 0;
+                
                 var rotationInputAction = m_RotationInput.action;
-                if (positionInputAction != null && positionInputAction.m_BindingsCount > 0 && rotationInputAction != null && rotationInputAction.m_BindingsCount > 0)
+                var hasRotationInputActionWithBindings =
+                    rotationInputAction != null && rotationInputAction.m_BindingsCount > 0;
+                
+                // Check if we have transform and rotation controls to drive the pose.
+                if (hasPositionInputActionWithBindings && hasRotationInputActionWithBindings)
                 {
                     m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
                 }
-                else if (positionInputAction != null && positionInputAction.m_BindingsCount > 0)
+                else if (hasPositionInputActionWithBindings)
                 {
                     m_CurrentTrackingState = TrackingStates.Position;
                 }
-                else if (rotationInputAction != null && rotationInputAction.m_BindingsCount > 0)
+                else if (hasRotationInputActionWithBindings)
                 {
                     m_CurrentTrackingState = TrackingStates.Rotation;
                 }
