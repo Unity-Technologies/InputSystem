@@ -156,6 +156,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
     logs:
         paths:
           - "build/test-results/**"
+{% endfor %} # test_category
 
 build_tvos_{{ editor.version }}_{{ category.name }}:
   name: Build - {{ editor.version }} - tvOS, {{ category.name }} tests
@@ -204,6 +205,7 @@ run_tvos_{{ editor.version }}_{{ category.name }}:
           - "build/test-results/**"
 
 {% for backend in scripting_backends %}
+{% for category in test_category %}
 build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   name: Build - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
@@ -263,7 +265,6 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
       paths:
         - "build/test-results/**"
 {% endfor %} # test_category
-
 {% endfor %} # scripting_backends
 {% endfor %} # editors
 
