@@ -914,9 +914,9 @@ namespace UnityEngine.InputSystem.UI
 
                 data.device = m_SubmitCancelState.device;
 
-                if (cancelAction != null && cancelAction.WasPerformedThisRenderingFrame())
+                if (cancelAction != null && cancelAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisRenderingFrame())
+                if (!data.used && submitAction != null && submitAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }

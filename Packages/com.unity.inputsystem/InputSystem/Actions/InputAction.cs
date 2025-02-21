@@ -1249,10 +1249,10 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPressedThisRenderingFrame"/> during dynamic Update instead.
+        /// the dynamic Update, use <see cref="WasPressedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
-        /// <seealso cref="WasPressedThisRenderingFrame"/>
+        /// <seealso cref="WasPressedThisDynamicUpdate"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasPerformedThisFrame"/>
@@ -1293,7 +1293,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasPressedThisRenderingFrame()
+        public unsafe bool WasPressedThisDynamicUpdate()
         {
             var state = GetOrCreateActionMap().m_State;
             if (state != null)
@@ -1335,10 +1335,10 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasReleasedThisRenderingFrame"/> during dynamic Update instead.
+        /// the dynamic Update, use <see cref="WasReleasedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
-        /// <seealso cref="WasReleasedThisRenderingFrame"/>
+        /// <seealso cref="WasReleasedThisDynamicUpdate"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
@@ -1380,7 +1380,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasReleasedThisRenderingFrame()
+        public unsafe bool WasReleasedThisDynamicUpdate()
         {
             var state = GetOrCreateActionMap().m_State;
             if (state != null)
@@ -1432,9 +1432,9 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPerformedThisRenderingFrame"/> when trying to access in dynamic Update instead.
+        /// the dynamic Update, use <see cref="WasPerformedThisDynamicUpdate"/> when trying to access in dynamic Update instead.
         /// </remarks>
-        /// <seealso cref="WasPerformedThisRenderingFrame"/>
+        /// <seealso cref="WasPerformedThisDynamicUpdate"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1474,7 +1474,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasPerformedThisRenderingFrame()
+        public unsafe bool WasPerformedThisDynamicUpdate()
         {
             var state = GetOrCreateActionMap().m_State;
 
@@ -1538,7 +1538,7 @@ namespace UnityEngine.InputSystem
         /// </para>
         /// <para>
         /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasCompletedThisRenderingFrame"/> to access this during dynamic Update instead.
+        /// the dynamic Update, use <see cref="WasCompletedThisDynamicUpdate"/> to access this during dynamic Update instead.
         /// </para>
         /// </remarks>
         /// <example>
@@ -1550,7 +1550,7 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
-        /// <seealso cref="WasCompletedThisRenderingFrame"/>
+        /// <seealso cref="WasCompletedThisDynamicUpdate"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1590,7 +1590,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public unsafe bool WasCompletedThisRenderingFrame()
+        public unsafe bool WasCompletedThisDynamicUpdate()
         {
             var state = GetOrCreateActionMap().m_State;
 

@@ -69,24 +69,24 @@ partial class CoreTests
         var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
         simpleAction.Enable();
 
-        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.False);
-        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.False);
-        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.False);
-        Assert.That(simpleAction.WasCompletedThisRenderingFrame(), Is.False);
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisDynamicUpdate(), Is.False);
 
         PressAndRelease(gamepad.buttonSouth);
 
         yield return null; // InputSystem.Update is called and the action state chenges
 
-        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
 
         InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasPerformedThisRenderingFrame
 
-        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
 
         //Reset State
         InputSystem.settings.updateMode = updateMode;
@@ -160,13 +160,13 @@ partial class CoreTests
 
         yield return null;
 
-        Assert.That(simpleAction.WasPerformedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasPressedThisRenderingFrame(), Is.True);
-        Assert.That(simpleAction.WasReleasedThisRenderingFrame(), Is.True);
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
 
         yield return null;
 
-        Assert.That(simpleAction.WasCompletedThisRenderingFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisDynamicUpdate(), Is.False);
 
         //Reset State
         InputSystem.settings.updateMode = updateMode;
