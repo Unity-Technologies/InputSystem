@@ -152,12 +152,13 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
                 EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
             const string inputSystemLatencyTooltip =
-                "Displays the average/minimum/maximum observed input processing latency " +
-                "(Excluding OS, driver, firmware or transport latency) for data reported for this device. " +
-                "Note that additional experienced latency (a.k.a. input lag) will be introduced if any deferred " +
+                "Displays the average, minimum and maximum observed input processing delay from first reading the data " +
+                "(typically in native code) until event or sample is delivered as actionable input data to C# scripts for this device. " +
+                "Note that this generally excludes OS, driver, firmware or transport latency since device timestamps are typically not available. " +
+                "Note that additional experienced latency (a.k.a. input lag) will accumulate for any deferred " +
                 "processing and output delay (rendering, display refresh latency etc).";
             if (!string.IsNullOrEmpty(m_DeviceLatencyString))
-                EditorGUILayout.LabelField(new GUIContent("Input Latency", inputSystemLatencyTooltip), new GUIContent(m_DeviceLatencyString), EditorStyles.label);
+                EditorGUILayout.LabelField(new GUIContent("Processing Delay", inputSystemLatencyTooltip), new GUIContent(m_DeviceLatencyString), EditorStyles.label);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
