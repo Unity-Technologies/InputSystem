@@ -3035,7 +3035,8 @@ namespace UnityEngine.InputSystem
             if (actions == null)
                 return;
 
-            actions.Enable();
+            if (!actions.enabled)
+                actions.Enable();
         }
 
         private static void DisableActions(bool triggerSetupChanged = false)
