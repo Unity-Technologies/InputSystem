@@ -10,6 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
+
+### Added
+- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+
 ## [1.13.1] - 2025-02-18
 
 ### Fixed
@@ -21,9 +27,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
-
-### Added
-- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
 
 ## [1.13.0] - 2025-02-05
 

@@ -2683,6 +2683,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Obsolete("Test obsolete IMESelected Key")]
     public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
