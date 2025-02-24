@@ -320,7 +320,7 @@ performance_tests_only:
         - branch: develop
           frequency: daily
           rerun: always
-        - branch: stable
+        - branch: release/1.X
           frequency: weekly
           rerun: always
 
