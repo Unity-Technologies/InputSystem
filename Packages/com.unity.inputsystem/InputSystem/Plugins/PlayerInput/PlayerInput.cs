@@ -1373,18 +1373,11 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            // don't use project wide action asset for player input, but duplicate it
-            if (InputSystem.actions != null && InputSystem.actions.Equals(m_Actions))
-                DuplicateActionsForPlayer();
-
-            // Check if we need to duplicate our actions by looking at all other players. If any
-            // has the same actions, duplicate.
-            for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
-                {
-                    DuplicateActionsForPlayer();
-                    break;
-                }
+            // don't use original asset, duplicate it.
+            // this avoids operating on the project wide action asset
+            // this also avoids operating on assets that are shared between multiple players
+            // and to not change assets that are used in other places (InputSystemUIInputModule)
+            DuplicateActionsForPlayer();
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
