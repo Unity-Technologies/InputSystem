@@ -956,7 +956,8 @@ namespace UnityEngine.InputSystem
 
             // reset state to default, only one action map is enabled at the initial state
             // Project wide actions may have enabled action maps
-            actions.Disable();
+            if (m_Actions != null)
+                m_Actions.Disable();
 
             // If we have no current action map but there's a default
             // action map, make it current.
