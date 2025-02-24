@@ -149,11 +149,11 @@ internal class PlayerInputTests : CoreTestsFixture
         eventSystemGO.SetActive(true);
         playerGO.SetActive(true);
 
-        Assert.That(player.actions.FindActionMap("Gameplay").enabled, Is.True);
-        Assert.That(player.actions.FindActionMap("UI").enabled, Is.False);
-        Assert.That(uiModule.actionsAsset["UI/Navigate"].controls, Is.Empty);
-        Assert.That(uiModule.actionsAsset["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
-        Assert.That(uiModule.actionsAsset["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
+        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
+        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
+        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
     }
 
     [Test]
