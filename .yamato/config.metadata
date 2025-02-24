@@ -1,13 +1,13 @@
 editors:
   - version: 2021.3
   - version: 2022.3
-    disable_tvos_run: true
+    run_tvos: false
   - version: 6000.0
-    disable_tvos_run: true
+    run_tvos: false
   - version: 6000.1
-    disable_tvos_run: true
+    run_tvos: false
   - version: trunk
-    disable_tvos_run: true
+    run_tvos: false    
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
 utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
@@ -80,7 +80,7 @@ ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0
 
 test_category: 
   - name: performance
-  - name: all
+  - name: functional
   
 instabilities_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0
 instabilities_run_win: run_standalone_instability_detection-latest.bat 0.5.1 || exit 0
