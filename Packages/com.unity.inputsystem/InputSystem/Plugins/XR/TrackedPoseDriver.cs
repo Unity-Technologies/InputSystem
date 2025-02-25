@@ -525,8 +525,7 @@ namespace UnityEngine.InputSystem.XR
                 // Since the field initializes to allowing position and rotation,
                 // this allows for driving the Transform pose always when the device
                 // doesn't support reporting the tracking state.
-                if (HasResolvedControl(trackingStateAction))
-                    m_CurrentTrackingState = (TrackingStates)trackingStateAction.ReadValue<int>();
+                m_CurrentTrackingState = (TrackingStates)trackingStateAction.ReadValue<int>();
             }
         }
 
