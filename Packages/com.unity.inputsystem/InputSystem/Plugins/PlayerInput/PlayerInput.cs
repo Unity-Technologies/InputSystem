@@ -956,7 +956,7 @@ namespace UnityEngine.InputSystem
 
             // reset state to default, only one action map is enabled at the initial state
             // Project wide actions may have enabled action maps
-            if (m_Actions != null)
+            if (m_Actions)
                 m_Actions.Disable();
 
             // If we have no current action map but there's a default
@@ -1373,18 +1373,14 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            // don't use project wide action asset for player input, but duplicate it
-            if (InputSystem.actions != null && InputSystem.actions.Equals(m_Actions))
-                DuplicateActionsForPlayer();
-
-            // Check if we need to duplicate our actions by looking at all other players. If any
-            // has the same actions, duplicate.
-            for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
-                {
-                    DuplicateActionsForPlayer();
-                    break;
-                }
+            // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
+            var oldActions = m_Actions;
+            m_Actions = Instantiate(m_Actions);
+            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+            {
+                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+            }
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
@@ -1430,17 +1426,6 @@ namespace UnityEngine.InputSystem
             }
 
             m_ActionsInitialized = true;
-        }
-
-        private void DuplicateActionsForPlayer()
-        {
-            var oldActions = m_Actions;
-            m_Actions = Instantiate(m_Actions);
-            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
-            {
-                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
-            }
         }
 
         private void UninitializeActions()
