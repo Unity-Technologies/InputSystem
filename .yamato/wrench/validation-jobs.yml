@@ -9,7 +9,7 @@ validate_-_inputsystem_-_2021_3_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -21,7 +21,7 @@ validate_-_inputsystem_-_2021_3_-_macos:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -29,14 +29,11 @@ validate_-_inputsystem_-_2021_3_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -63,10 +60,10 @@ validate_-_inputsystem_-_2021_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -78,7 +75,7 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -90,7 +87,7 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -98,14 +95,11 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -132,10 +126,10 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -147,7 +141,7 @@ validate_-_inputsystem_-_2021_3_-_windows:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -159,7 +153,7 @@ validate_-_inputsystem_-_2021_3_-_windows:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -167,14 +161,11 @@ validate_-_inputsystem_-_2021_3_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: cmd.exe /c "curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0"
-  - command: cmd.exe /c "run_standalone_instability_detection-latest.bat 0.5.1 || exit 0"
-    timeout: 10
-    retries: 1
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     Crash Dumps:
       paths:
@@ -201,10 +192,10 @@ validate_-_inputsystem_-_2021_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -216,7 +207,7 @@ validate_-_inputsystem_-_2022_3_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -228,7 +219,7 @@ validate_-_inputsystem_-_2022_3_-_macos:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -236,14 +227,11 @@ validate_-_inputsystem_-_2022_3_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -270,10 +258,10 @@ validate_-_inputsystem_-_2022_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -285,7 +273,7 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -297,7 +285,7 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -305,14 +293,11 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -339,10 +324,10 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -354,7 +339,7 @@ validate_-_inputsystem_-_2022_3_-_windows:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -366,7 +351,7 @@ validate_-_inputsystem_-_2022_3_-_windows:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -374,14 +359,11 @@ validate_-_inputsystem_-_2022_3_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: cmd.exe /c "curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0"
-  - command: cmd.exe /c "run_standalone_instability_detection-latest.bat 0.5.1 || exit 0"
-    timeout: 10
-    retries: 1
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     Crash Dumps:
       paths:
@@ -408,10 +390,10 @@ validate_-_inputsystem_-_2022_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -423,7 +405,7 @@ validate_-_inputsystem_-_6000_0_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -435,7 +417,7 @@ validate_-_inputsystem_-_6000_0_-_macos:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -443,14 +425,11 @@ validate_-_inputsystem_-_6000_0_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -477,10 +456,10 @@ validate_-_inputsystem_-_6000_0_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -492,7 +471,7 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -504,7 +483,7 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -512,14 +491,11 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -546,10 +522,10 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -561,7 +537,7 @@ validate_-_inputsystem_-_6000_0_-_windows:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -573,7 +549,7 @@ validate_-_inputsystem_-_6000_0_-_windows:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -581,14 +557,11 @@ validate_-_inputsystem_-_6000_0_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: cmd.exe /c "curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0"
-  - command: cmd.exe /c "run_standalone_instability_detection-latest.bat 0.5.1 || exit 0"
-    timeout: 10
-    retries: 1
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     Crash Dumps:
       paths:
@@ -615,10 +588,10 @@ validate_-_inputsystem_-_6000_0_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -630,7 +603,7 @@ validate_-_inputsystem_-_6000_1_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -642,7 +615,7 @@ validate_-_inputsystem_-_6000_1_-_macos:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -650,14 +623,11 @@ validate_-_inputsystem_-_6000_1_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -684,10 +654,10 @@ validate_-_inputsystem_-_6000_1_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -699,7 +669,7 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -711,7 +681,7 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -719,14 +689,11 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -753,10 +720,10 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -768,7 +735,7 @@ validate_-_inputsystem_-_6000_1_-_windows:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -780,7 +747,7 @@ validate_-_inputsystem_-_6000_1_-_windows:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -788,14 +755,11 @@ validate_-_inputsystem_-_6000_1_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: cmd.exe /c "curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0"
-  - command: cmd.exe /c "run_standalone_instability_detection-latest.bat 0.5.1 || exit 0"
-    timeout: 10
-    retries: 1
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     Crash Dumps:
       paths:
@@ -822,10 +786,10 @@ validate_-_inputsystem_-_6000_1_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -837,7 +801,7 @@ validate_-_inputsystem_-_6000_2_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -849,7 +813,7 @@ validate_-_inputsystem_-_6000_2_-_macos:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -857,14 +821,11 @@ validate_-_inputsystem_-_6000_2_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh macos 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -891,10 +852,10 @@ validate_-_inputsystem_-_6000_2_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -906,7 +867,7 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -918,7 +879,7 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -926,14 +887,11 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.sh --output run_standalone_instability_detection-latest.sh --retry 5 || exit 0
-  - command: bash ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
-    timeout: 10
-    retries: 1
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     Crash Dumps:
       paths:
@@ -960,10 +918,10 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 
@@ -975,7 +933,7 @@ validate_-_inputsystem_-_6000_2_-_windows:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-56_236616cc910608f3016a29947795c2e53f0c0dbfa45128d551397825ed65689e.zip -o wrench-localapv.zip
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-58_ab06748e39f9b01f55b979c0c06d7c1f787e07cbca4dc6ae5eef274fd195612a.zip -o wrench-localapv.zip
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
@@ -987,7 +945,7 @@ validate_-_inputsystem_-_6000_2_-_windows:
     retries: 1
   - command: echo No internal packages to add.
   - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
-    timeout: 20
+    timeout: 40
     retries: 0
   - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 5
@@ -995,14 +953,11 @@ validate_-_inputsystem_-_6000_2_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
-    timeout: 30
+  - command: UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}"
+    timeout: 40
     retries: 1
   after:
-  - command: cmd.exe /c "curl -s https://artifactory-slo.bf.unity3d.com/artifactory/automation-and-tooling/infrastructure-instability-detection/standalone/setup/run_standalone_instability_detection-latest.bat --output run_standalone_instability_detection-latest.bat --retry 5 || exit 0"
-  - command: cmd.exe /c "run_standalone_instability_detection-latest.bat 0.5.1 || exit 0"
-    timeout: 10
-    retries: 1
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     Crash Dumps:
       paths:
@@ -1029,10 +984,10 @@ validate_-_inputsystem_-_6000_2_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.36.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.36.0
+    Wrench: 0.10.40.0
   labels:
   - Packages:inputsystem
 

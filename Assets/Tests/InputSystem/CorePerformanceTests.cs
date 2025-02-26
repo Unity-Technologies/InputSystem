@@ -123,8 +123,13 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         Measure.Method(() =>
         {
+            int keyIndex = 0;
             foreach (var key in keyboard.allKeys)
+            {
+                if (++keyIndex == (int)KeyEx.IMESelected)  // Skip IMESelected as it's not a real key.
+                    continue;
                 key.ReadValue();
+            }
         })
             .MeasurementCount(100)
             .WarmupCount(5)
