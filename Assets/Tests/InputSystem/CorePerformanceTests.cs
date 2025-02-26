@@ -1216,6 +1216,18 @@ internal class CorePerformanceTests : CoreTestsFixture
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
         EnhancedTouchSupport.Enable();
 
+        var clickAction = InputSystem.actions.FindAction("Click");
+        var pointAction = InputSystem.actions.FindAction("Point");
+
+        int performedCallCount = 0;
+
+        clickAction.performed += context => {
+            performedCallCount++;
+        };
+
+        pointAction.performed += context => {
+            performedCallCount++;
+        };
 
         using (Measure.ProfilerMarkers(allInputSystemProfilerMarkers))
         {
