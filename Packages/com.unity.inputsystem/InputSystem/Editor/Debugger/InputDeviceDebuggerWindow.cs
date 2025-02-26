@@ -151,14 +151,14 @@ namespace UnityEngine.InputSystem.Editor
                 "The Polling Frequency indicates system polling target frequency.";
             if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
                 EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
-            const string inputSystemLatencyTooltip =
-                "Displays the average, minimum and maximum observed input processing delay from first reading the data " +
-                "(typically in native code) until event or sample is delivered as actionable input data to C# scripts for this device. " +
-                "Note that this generally excludes OS, driver, firmware or transport latency since device timestamps are typically not available. " +
-                "Note that additional experienced latency (a.k.a. input lag) will accumulate for any deferred " +
-                "processing and output delay (rendering, display refresh latency etc).";
+            const string processingDelayTooltip =
+                "Displays the average, minimum and maximum observed input processing delay. This shows the time from " +
+                "when an input event is first created within Unity until its processed by the Input System. " +
+                "Note that this hence excludes additional input latency introduced by OS, driver or device communication. " +
+                "It also doesn't include output latency introduced by script processing, rendering, swap-chains, display refresh latency etc.";
             if (!string.IsNullOrEmpty(m_DeviceLatencyString))
-                EditorGUILayout.LabelField(new GUIContent("Processing Delay", inputSystemLatencyTooltip), new GUIContent(m_DeviceLatencyString), EditorStyles.label);
+                EditorGUILayout.LabelField(new GUIContent("Processing Delay", processingDelayTooltip),
+                    new GUIContent(m_DeviceLatencyString), EditorStyles.label);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
