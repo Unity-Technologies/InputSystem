@@ -1376,6 +1376,8 @@ namespace UnityEngine.InputSystem
                 return;
 
 
+            // Check if we need to duplicate our actions by looking at all other players. If any
+            // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
