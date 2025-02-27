@@ -471,17 +471,19 @@ namespace UnityEngine.InputSystem.XR
                 // Update current input values if this is the first update since becoming enabled
                 // since the performed callbacks may not have been executed. In case there is no bound control
                 // we preserve current transform by extracting transform values as initial values instead.
-                if (HasResolvedControl(m_PositionInput.action))
+                var hasResolvedPositionInputControl = HasResolvedControl(m_PositionInput.action);
+                if (hasResolvedPositionInputControl)
                     m_CurrentPosition = m_PositionInput.action.ReadValue<Vector3>();
                 else
                     m_CurrentPosition = transform.localPosition;
 
-                if (HasResolvedControl(m_RotationInput.action))
+                var hasResolvedRotationInputControl = HasResolvedControl(m_RotationInput.action);
+                if (hasResolvedRotationInputControl)
                     m_CurrentRotation = m_RotationInput.action.ReadValue<Quaternion>();
                 else
                     m_CurrentRotation = transform.localRotation;
 
-                ReadTrackingState();
+                ReadTrackingState(hasResolvedPositionInputControl, hasResolvedRotationInputControl);
 
                 m_IsFirstUpdate = false;
             }
@@ -492,7 +494,7 @@ namespace UnityEngine.InputSystem.XR
                 OnUpdate();
         }
 
-        void ReadTrackingState()
+        void ReadTrackingState(bool hasResolvedPositionInputControl, bool hasResolvedRotationInputControl)
         {
             var trackingStateAction = m_TrackingStateInput.action;
             if (trackingStateAction != null && !trackingStateAction.enabled)
@@ -506,15 +508,12 @@ namespace UnityEngine.InputSystem.XR
             {
                 // Treat an Input Action Reference with no reference the same as
                 // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
-                var hasPositionInputActionWithBindings = HasResolvedControl(positionInput.action);
-                var hasRotationInputActionWithBindings = HasResolvedControl(rotationInput.action);
-
                 // Check if we have transform and rotation controls to drive the pose.
-                if (hasPositionInputActionWithBindings && hasRotationInputActionWithBindings)
+                if (hasResolvedPositionInputControl && hasResolvedRotationInputControl)
                     m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
-                else if (hasPositionInputActionWithBindings)
+                else if (hasResolvedPositionInputControl)
                     m_CurrentTrackingState = TrackingStates.Position;
-                else if (hasRotationInputActionWithBindings)
+                else if (hasResolvedRotationInputControl)
                     m_CurrentTrackingState = TrackingStates.Rotation;
                 else
                     m_CurrentTrackingState = TrackingStates.None;
@@ -629,8 +628,10 @@ namespace UnityEngine.InputSystem.XR
                     ref var bindingState = ref state.bindingStates[i];
                     if (bindingState.actionIndex != actionIndex)
                         continue;
+
                     if (bindingState.isComposite)
                         continue;
+
                     if (bindingState.controlCount > 0)
                         return true;
                 }
