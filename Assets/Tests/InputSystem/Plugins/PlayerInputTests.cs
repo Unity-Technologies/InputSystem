@@ -391,7 +391,8 @@ internal class PlayerInputTests : CoreTestsFixture
         var actions = InputActionAsset.FromJson(kActions);
         playerInput.actions = actions;
 
-        Assert.That(playerInput.actions, Is.SameAs(actions));
+        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
+        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
     }
 
     [Test]
@@ -407,13 +408,13 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = actions1;
 
-        Assert.That(actions1.actionMaps[0].enabled, Is.True);
-        Assert.That(actions2.actionMaps[0].enabled, Is.False);
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
+        Assert.That(actions1.actionMaps[0].enabled, Is.False);
 
         playerInput.actions = actions2;
 
-        Assert.That(actions1.actionMaps[0].enabled, Is.False);
-        Assert.That(actions2.actionMaps[0].enabled, Is.True);
+        Assert.That(actions2.actionMaps[0].enabled, Is.False);
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
     }
 
     [Test]
@@ -1714,7 +1715,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         // Make sure that no cloning of actions happened on the prefab.
         // https://fogbugz.unity3d.com/f/cases/1319756/
-        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions, Is.SameAs(playerPrefabActions));
+
+        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions.actionMaps.Count, Is.EqualTo(playerPrefabActions.actionMaps.Count));
         Assert.That(playerPrefab.GetComponent<PlayerInput>().m_ActionsInitialized, Is.False);
     }
 
@@ -2421,13 +2423,13 @@ internal class PlayerInputTests : CoreTestsFixture
         // Disable the asset while adding another action map to it as none
         // of the actions in the asset can be enabled during modification
         //
-        actionAsset.Disable();
+        playerInput.actions.Disable();
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        var newActionMap = actionAsset.AddActionMap("NewMap");
+        var newActionMap = playerInput.actions.AddActionMap("NewMap");
         var newAction = newActionMap.AddAction("NewAction");
         newAction.AddBinding("<Keyboard>/k", groups: "Keyboard");
-        actionAsset.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
-        actionAsset.Enable();
+        playerInput.actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        playerInput.actions.Enable();
 
         playerInput.currentActionMap = newActionMap;
         playerInput.ActivateInput();

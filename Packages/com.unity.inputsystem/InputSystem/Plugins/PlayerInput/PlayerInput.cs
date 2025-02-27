@@ -344,6 +344,8 @@ namespace UnityEngine.InputSystem
 
                 m_Actions = value;
 
+                CopyActionAsset();
+
                 if (m_Enabled)
                 {
                     ClearCaches();
@@ -1373,14 +1375,13 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
-            var oldActions = m_Actions;
-            m_Actions = Instantiate(m_Actions);
-            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
-            {
-                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
-            }
+
+            for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
+                {
+                    CopyActionAsset();
+                    break;
+                }
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
@@ -1426,6 +1427,18 @@ namespace UnityEngine.InputSystem
             }
 
             m_ActionsInitialized = true;
+        }
+
+        private void CopyActionAsset()
+        {
+            // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
+            var oldActions = m_Actions;
+            m_Actions = Instantiate(m_Actions);
+            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+            {
+                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+            }
         }
 
         private void UninitializeActions()
