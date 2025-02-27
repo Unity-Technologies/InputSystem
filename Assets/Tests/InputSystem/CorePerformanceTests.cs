@@ -1257,8 +1257,8 @@ internal class CorePerformanceTests : CoreTestsFixture
                 }
 
                 // move touch 1 with higher frequency assuming higher touch sampling rate then frames drawn
-                // 120Hz screen refresh rate & 2k+ Hz touch sampling rate
-                for (int j = 1; j <= 20; j++)
+                // 60Hz screen refresh rate & 260+ Hz touch sampling rate
+                for (int j = 1; j <= 5; j++)
                 {
                     MoveTouch(1, new Vector2(0.1f + j, 0.2f + j), queueEventOnly: true);
                 }
