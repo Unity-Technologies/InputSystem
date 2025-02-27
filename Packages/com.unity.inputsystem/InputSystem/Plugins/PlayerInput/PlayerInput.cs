@@ -344,6 +344,7 @@ namespace UnityEngine.InputSystem
 
                 m_Actions = value;
 
+                // copy action asset for the first player too so that the original asset stays untouched
                 CopyActionAsset();
 
                 if (m_Enabled)
@@ -1374,7 +1375,6 @@ namespace UnityEngine.InputSystem
                 return;
             if (m_Actions == null)
                 return;
-
 
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
