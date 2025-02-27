@@ -46,10 +46,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
 
-        private const int kSizeInBits = Keyboard.KeyCount;
+        private const int kSizeInBits = Keyboard.ExtendedKeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
 
-        [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", sizeInBits = kSizeInBits - 1, synthetic = true)] // Exclude IMESelected.
+        [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", bit = 1, sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", displayName = "Space", layout = "Key", bit = (int)Key.Space)]
         [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Submit", bit = (int)Key.Enter)]
@@ -163,17 +163,53 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
-        [InputControl(name = "IMESelected", layout = "Button", bit = (int)Key.IMESelected, synthetic = true)]
+        [InputControl(name = "f13", displayName = "F13", layout = "Key", bit = (int)Key.F13)]
+        [InputControl(name = "f14", displayName = "F14", layout = "Key", bit = (int)Key.F14)]
+        [InputControl(name = "f15", displayName = "F15", layout = "Key", bit = (int)Key.F15)]
+        [InputControl(name = "f16", displayName = "F16", layout = "Key", bit = (int)Key.F16)]
+        [InputControl(name = "f17", displayName = "F17", layout = "Key", bit = (int)Key.F17)]
+        [InputControl(name = "f18", displayName = "F18", layout = "Key", bit = (int)Key.F18)]
+        [InputControl(name = "f19", displayName = "F19", layout = "Key", bit = (int)Key.F19)]
+        [InputControl(name = "f20", displayName = "F20", layout = "Key", bit = (int)Key.F20)]
+        [InputControl(name = "f21", displayName = "F21", layout = "Key", bit = (int)Key.F21)]
+        [InputControl(name = "f22", displayName = "F22", layout = "Key", bit = (int)Key.F22)]
+        [InputControl(name = "f23", displayName = "F23", layout = "Key", bit = (int)Key.F23)]
+        [InputControl(name = "f24", displayName = "F24", layout = "Key", bit = (int)Key.F24)]
+        [InputControl(name = "IMESelected", layout = "Button", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)] // Use the last bit to hold IME selected state.
         public fixed byte keys[kSizeInBytes];
 
-        public KeyboardState(params Key[] pressedKeys)
+        // will be the default in new editor [InputControl(name = "IMESelected", layout = "Button", bit = 0, sizeInBits = 1, synthetic = true)]
+        //public byte modifiers;
+
+        /// <summary>
+        /// Create a new KeyboardState with the given keys pressed.
+        /// </summary>
+        /// <remarks>IMESelected state will not be set.</remarks>
+        /// <param name="pressedKeys">pressed keys</param>
+        /// <exception cref="ArgumentNullException">If <paramref name="pressedKeys"/> is <c>null</c></exception>
+        public KeyboardState(params Key[] pressedKeys) : this(false, pressedKeys)
+        {
+        }
+
+        /// <summary>
+        /// Create a new KeyboardState with the given keys pressed.
+        /// </summary>
+        /// <param name="IMESelected">true if IMESelected state is enable</param>
+        /// <param name="pressedKeys">pressed keys</param>
+        /// <exception cref="ArgumentNullException">If <paramref name="pressedKeys"/> is <c>null</c></exception>
+        public KeyboardState(bool IMESelected, params Key[] pressedKeys)
         {
             if (pressedKeys == null)
                 throw new ArgumentNullException(nameof(pressedKeys));
-
             fixed(byte* keysPtr = keys)
             {
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
+
+                if (IMESelected)
+                {
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)KeyEx.IMESelected, true);
+                }
+
                 for (var i = 0; i < pressedKeys.Length; ++i)
                     MemoryHelpers.WriteSingleBit(keysPtr, (uint)pressedKeys[i], true);
             }
@@ -183,6 +219,14 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             fixed(byte* keysPtr = keys)
             MemoryHelpers.WriteSingleBit(keysPtr, (uint)key, state);
+        }
+
+        internal bool Get(Key key)
+        {
+            fixed(byte* keysPtr = keys)
+            {
+                return MemoryHelpers.ReadSingleBit(keysPtr, (uint)key);
+            }
         }
 
         public void Press(Key key)
@@ -858,9 +902,86 @@ namespace UnityEngine.InputSystem
         /// </summary>
         OEM5,
 
-        ////FIXME: This should never have been a Key but rather just an extra button or state on keyboard
-        // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
-        IMESelected
+        /// <summary>
+        /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
+        /// Will be removed in the future.
+        /// </summary>
+        [Obsolete("IMESelected is a dummy key and will be removed in the future. Please use ButtonControl imeSelected")]
+        IMESelected,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f13Key"/>.
+        /// </summary>
+        F13,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f14Key"/>.
+        /// </summary>
+        F14,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f15Key"/>.
+        /// </summary>
+        F15,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f16Key"/>.
+        /// </summary>
+        F16,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f17Key"/>.
+        /// </summary>
+        F17,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f18Key"/>.
+        /// </summary>
+        F18,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f19Key"/>.
+        /// </summary>
+        F19,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f20Key"/>.
+        /// </summary>
+        F20,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f21Key"/>.
+        /// </summary>
+        F21,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f22Key"/>.
+        /// </summary>
+        F22,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f23Key"/>.
+        /// </summary>
+        F23,
+
+        /// <summary>
+        /// The <see cref="Keyboard.f24Key"/>.
+        /// </summary>
+        F24,
+
+        /// <summary>
+        /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
+        /// Will be removed in the future.
+        /// FIXME: This should never have been a Key but rather just an extra button or state on keyboard
+        /// Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
+        /// </summary>
+        //InternalForIMESelected = 127,
+    }
+
+    internal static class KeyEx
+    {
+        internal const Key IMESelected = (Key)111; // Key.IMESelected value
+        internal const Key RemappedIMESelected = (Key)127; // Remapped to the end of buffer of Key InternalForIMESelected
     }
 
     /// <summary>
@@ -919,13 +1040,15 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// <seealso cref="InputDevice"/>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
-    public class Keyboard : InputDevice, ITextInputReceiver
+    public class Keyboard : InputDevice, ITextInputReceiver, IEventPreProcessor
     {
         /// <summary>
         /// Total number of key controls on a keyboard, i.e. the number of controls
         /// in <see cref="allKeys"/>.
         /// </summary>
-        public const int KeyCount = (int)Key.OEM5;
+        /// <value>Total number of key controls.</value>
+        public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API
+        internal const int ExtendedKeyCount = (int)Key.F24;
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
@@ -2052,6 +2175,102 @@ namespace UnityEngine.InputSystem
         public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
+        /// The F13 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F13"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f13Key => this[Key.F13];
+
+        /// <summary>
+        /// The F14 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F14"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f14Key => this[Key.F14];
+
+        /// <summary>
+        /// The F15 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F15"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f15Key => this[Key.F15];
+
+        /// <summary>
+        /// The F16 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F16"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f16Key => this[Key.F16];
+
+        /// <summary>
+        /// The F17 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F17"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f17Key => this[Key.F17];
+
+        /// <summary>
+        /// The F18 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F18"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f18Key => this[Key.F18];
+
+        /// <summary>
+        /// The F19 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F19"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f19Key => this[Key.F19];
+
+        /// <summary>
+        /// The F20 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F20"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f20Key => this[Key.F20];
+
+        /// <summary>
+        /// The F21 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F21"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f21Key => this[Key.F21];
+
+        /// <summary>
+        /// The F22 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F22"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f22Key => this[Key.F22];
+
+        /// <summary>
+        /// The F23 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F23"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f23Key => this[Key.F23];
+
+        /// <summary>
+        /// The F24 key on the keyboard
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.F24"/>.
+        /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
+        /// </remarks>
+        public KeyControl f24Key => this[Key.F24];
+
+        /// <summary>
         /// An artificial combination of <see cref="leftShiftKey"/> and <see cref="rightShiftKey"/> into one control.
         /// </summary>
         /// <remarks>
@@ -2299,17 +2518,32 @@ namespace UnityEngine.InputSystem
                 "oem3",
                 "oem4",
                 "oem5",
+                null, // IMESelected
+                "f13",
+                "f14",
+                "f15",
+                "f16",
+                "f17",
+                "f18",
+                "f19",
+                "f20",
+                "f21",
+                "f22",
+                "f23",
+                "f24",
             };
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
+                if (string.IsNullOrEmpty(keyStrings[i]))
+                    continue;
                 m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
                 m_Keys[i].keyCode = (Key)(i + 1);
             }
-            Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
+            Debug.Assert(keyStrings[(int)Key.F24 - 1] == "f24",
                 "keyString array layout doe not match Key enum layout");
             anyKey = GetChildControl<AnyKeyControl>("anyKey");
             shiftKey = GetChildControl<ButtonControl>("shift");
@@ -2429,6 +2663,33 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < m_ImeCompositionListeners.length; ++i)
                     m_ImeCompositionListeners[i](compositionString);
             }
+        }
+
+        /// <summary>
+        /// Preprocess the event for handling IME Selected state compatibility
+        /// </summary>
+        /// <remarks>
+        /// This will be removed when supported editor don't send anymore the compatibility IME Selected state
+        /// </remarks>
+        /// <param name="currentEventPtr">The event to preprocess.</param>
+        /// <returns>True if event should be processed further, false if event should be skipped and ignored.</returns>
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr currentEventPtr)
+        {
+            if (currentEventPtr.type == StateEvent.Type)
+            {
+                var stateEvent = StateEvent.FromUnchecked(currentEventPtr);
+                if (stateEvent->stateFormat == KeyboardState.Format)
+                {
+                    var keyboardState = ((KeyboardState*)(stateEvent->stateData));
+                    if (keyboardState->Get(KeyEx.IMESelected))
+                    {
+                        keyboardState->Set(KeyEx.IMESelected, false);
+                        keyboardState->Set(KeyEx.RemappedIMESelected, true);
+                    }
+                }
+            }
+
+            return true;
         }
 
         private InlinedArray<Action<char>> m_TextInputListeners;
