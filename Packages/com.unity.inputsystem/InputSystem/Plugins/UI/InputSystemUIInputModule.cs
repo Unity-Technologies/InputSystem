@@ -895,7 +895,7 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPerformedThisRenderingFrame() for
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPerformedThisDynamicUpdate() for
                 //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
                 //       a click will register on button *up*, but consistent with how other UI systems work where
                 //       click occurs on key press. This nuance in behavior becomes important in combination with

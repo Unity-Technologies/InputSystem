@@ -82,7 +82,7 @@ partial class CoreTests
         Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
         Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
 
-        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasPerformedThisRenderingFrame
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasPerformedThisDynamicUpdate
 
         Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
         Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
