@@ -1465,7 +1465,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var warp = playerInput.actions["Warp"];
-        /// if (warp.WasPerformed())
+        /// if (warp.WasPerformedThisDynamicUpdate())
         ///     InitiateWarp();
         /// </code>
         /// </example>
