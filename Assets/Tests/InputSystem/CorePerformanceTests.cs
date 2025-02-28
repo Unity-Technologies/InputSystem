@@ -1126,8 +1126,9 @@ internal class CorePerformanceTests : CoreTestsFixture
 
     [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
     [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
-    [UnityTest, Performance]
+    [UnityTest, Performance, Version("2")]
     [Category("Performance")]
+    // Simulate a FPS controller with WASD, mouse look and various key presses triggering actions
     public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_FPS()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1169,6 +1170,7 @@ internal class CorePerformanceTests : CoreTestsFixture
             {
                 if (i % 60 == 0)
                 {
+                    PressAndRelease(keyboard.wKey, queueEventOnly: true);
                     PressAndRelease(keyboard.aKey, queueEventOnly: true);
                     PressAndRelease(keyboard.sKey, queueEventOnly: true);
                     PressAndRelease(keyboard.dKey, queueEventOnly: true);
@@ -1205,6 +1207,69 @@ internal class CorePerformanceTests : CoreTestsFixture
             .MeasurementCount(500)
             .ProfilerMarkers(allInputSystemProfilerMarkers)
             .Run();
+    }
+
+    [PrebuildSetup(typeof(ProjectWideActionsBuildSetup))]
+    [PostBuildCleanup(typeof(ProjectWideActionsBuildSetup))]
+    [UnityTest, Performance]
+    [Category("Performance")]
+    // Simulate a touch FPS controller with one constantly moving touch as the WASD equivalent
+    // and taps/clicks for button presses. Actions from PWA getting triggered.
+    public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_Touch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        EnhancedTouchSupport.Enable();
+
+        var clickAction = InputSystem.actions.FindAction("Click");
+        var pointAction = InputSystem.actions.FindAction("Point");
+
+        int performedCallCount = 0;
+
+        clickAction.performed += context => {
+            performedCallCount++;
+        };
+
+        pointAction.performed += context => {
+            performedCallCount++;
+        };
+
+        using (Measure.ProfilerMarkers(allInputSystemProfilerMarkers))
+        {
+            // start touch 1
+            BeginTouch(1, new Vector2(0.1f, 0.2f), queueEventOnly: true);
+
+            for (int i = 0; i < 500; ++i)
+            {
+                // start touch 2
+                BeginTouch(2, new Vector2(0.3f, 0.4f), queueEventOnly: true);
+                MoveTouch(2, new Vector2(0.3f + i, 0.4f + i), queueEventOnly: true);
+
+                // tap touch 3 once per frame
+                BeginTouch(3, new Vector2(0.5f, 0.6f), queueEventOnly: true);
+                MoveTouch(3, new Vector2(0.5f + i, 0.6f + i), queueEventOnly: true);
+                EndTouch(3, new Vector2(0.7f, 0.7f), queueEventOnly: true);
+
+                if (i % 60 == 0)
+                {
+                    // end and restart touch 2 every 30 frames
+                    EndTouch(2, new Vector2(0.9f, 0.9f), queueEventOnly: true);
+                    BeginTouch(2, new Vector2(0.3f, 0.4f), queueEventOnly: true);
+                }
+
+                // move touch 1 with higher frequency assuming higher touch sampling rate then frames drawn
+                // 60Hz screen refresh rate & 260+ Hz touch sampling rate
+                for (int j = 1; j <= 5; j++)
+                {
+                    MoveTouch(1, new Vector2(0.1f + j, 0.2f + j), queueEventOnly: true);
+                }
+
+                InputSystem.Update();
+
+                yield return null;
+            }
+        }
+
+        EnhancedTouchSupport.Disable();
     }
 
     #endif
