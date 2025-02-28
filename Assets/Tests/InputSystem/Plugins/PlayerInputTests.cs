@@ -397,6 +397,21 @@ internal class PlayerInputTests : CoreTestsFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CopiesActionAssetForFirstPlayer()
+    {
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        var actions = InputActionAsset.FromJson(kActions);
+        playerInput.actions = actions;
+
+        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
+        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
+        Assert.That(playerInput.actions.GetInstanceID(), !Is.EqualTo(actions.GetInstanceID()));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_AssigningNewActionsToPlayer_DisablesExistingActions()
     {
         var go = new GameObject();
