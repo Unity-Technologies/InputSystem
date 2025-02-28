@@ -2674,10 +2674,59 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(IMESelected: true));
         InputSystem.Update();
 
         Assert.That(keyboard.anyKey.isPressed, Is.False);
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    [Obsolete("Test obsolete IMESelected Key")]
+    public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ImeSelectedKeyOnKeyboard_IsBackwardCompatible()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var oldKeyboardStateWithIMESelected = new KeyboardState(Key.None);
+        // Hard coded state from previous version that have IMESelected setted
+        unsafe
+        {
+            oldKeyboardStateWithIMESelected.keys[0] = 0;
+            oldKeyboardStateWithIMESelected.keys[1] = 0;
+            oldKeyboardStateWithIMESelected.keys[2] = 0;
+            oldKeyboardStateWithIMESelected.keys[3] = 0;
+            oldKeyboardStateWithIMESelected.keys[4] = 0;
+            oldKeyboardStateWithIMESelected.keys[5] = 0;
+            oldKeyboardStateWithIMESelected.keys[6] = 0;
+            oldKeyboardStateWithIMESelected.keys[7] = 0;
+
+            oldKeyboardStateWithIMESelected.keys[8] = 0;
+            oldKeyboardStateWithIMESelected.keys[9] = 0;
+            oldKeyboardStateWithIMESelected.keys[10] = 0;
+            oldKeyboardStateWithIMESelected.keys[11] = 0;
+            oldKeyboardStateWithIMESelected.keys[12] = 0;
+            oldKeyboardStateWithIMESelected.keys[13] = 128;
+            oldKeyboardStateWithIMESelected.keys[14] = 0;
+            oldKeyboardStateWithIMESelected.keys[15] = 0;
+        }
+
+        InputSystem.QueueStateEvent(keyboard, oldKeyboardStateWithIMESelected);
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
 
     [Test]
