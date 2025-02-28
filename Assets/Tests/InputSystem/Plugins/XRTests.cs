@@ -749,7 +749,7 @@ internal class XRTests : CoreTestsFixture
         var tpd = go.AddComponent<TrackedPoseDriver>();
         tpd.updateType = TrackedPoseDriver.UpdateType.Update;
         tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
-        tpd.ignoreTrackingState = false;
+        tpd.ignoreTrackingState = ignoreTrackingState;
 
         var transform = tpd.transform;
         Assert.That(transform.position, Is.EqualTo(position));
