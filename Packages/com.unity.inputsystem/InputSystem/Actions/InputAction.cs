@@ -1580,9 +1580,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <example>
         /// <code>
-        /// var warp = playerInput.actions["Warp"];
-        /// if (warp.WasPerformed())
-        ///     InitiateWarp();
+        /// var teleport = playerInput.actions["Teleport"];
+        /// if (teleport.WasPerformedThisDynamicUpdate())
+        ///     InitiateTeleport();
+        /// else if (teleport.WasCompletedThisDynamicUpdate())
+        ///     StopTeleport();
         /// </code>
         /// </example>
         /// <seealso cref="WasPerformedThisFrame"/>
