@@ -730,10 +730,12 @@ internal class XRTests : CoreTestsFixture
 
     [Test]
     [Category("Components")]
-    public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound(bool ignoreTrackingState)
     {
         // Tests/reproduces the scenario described in https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699
-        // i.e. that rotation and/or position is not updated if device is not connected and track state isn't ignored.
+        // i.e. that rotation and/or position is not updated if device is not connected.
 
         var position = new Vector3(1f, 2f, 3f);
         var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
