@@ -55,7 +55,7 @@ internal class PlayerInputTests : CoreTestsFixture
 
         Assert.That(player, Is.Not.Null);
         Assert.That(player.playerIndex, Is.EqualTo(0));
-        Assert.That(player.actions, Is.SameAs(prefabPlayerInput.actions));
+        Assert.That(player.actions.actionMaps.Count, Is.EqualTo(prefabPlayerInput.actions.actionMaps.Count));
         Assert.That(player.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(player.currentControlScheme, Is.EqualTo("Gamepad"));
     }
@@ -108,7 +108,6 @@ internal class PlayerInputTests : CoreTestsFixture
         var ui = prefab.AddComponent<InputSystemUIInputModule>();
         player.uiInputModule = ui;
         player.actions = InputActionAsset.FromJson(kActions);
-        ui.actionsAsset = player.actions;
 
         InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Keyboard>();
@@ -117,6 +116,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
+        ui.actionsAsset = instance.actions;
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
