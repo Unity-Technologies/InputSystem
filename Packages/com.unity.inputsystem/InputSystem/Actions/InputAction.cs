@@ -1368,9 +1368,9 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var fire = playerInput.actions["fire"];
-        /// if (fire.WasPressed() &amp;&amp; fire.IsPressed())
+        /// if (fire.WasPressedThisDynamicUpdate() &amp;&amp; fire.IsPressed())
         ///     StartFiring();
-        /// else if (fire.WasReleased())
+        /// else if (fire.WasReleasedThisDynamicUpdate())
         ///     StopFiring();
         /// </code>
         /// </example>
