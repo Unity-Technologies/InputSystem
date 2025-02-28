@@ -348,7 +348,7 @@ namespace UnityEngine.InputSystem
 
                 if (didChange || m_Enabled)
                     // copy action asset for the first player so that the original asset stays untouched
-                    CopyActionAsset();
+                    CopyActionAssetAndApplyBindingOverrides();
 
                 if (m_Enabled)
                 {
@@ -1379,7 +1379,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
-                    CopyActionAsset();
+                    CopyActionAssetAndApplyBindingOverrides();
                     break;
                 }
 
@@ -1429,7 +1429,7 @@ namespace UnityEngine.InputSystem
             m_ActionsInitialized = true;
         }
 
-        private void CopyActionAsset()
+        private void CopyActionAssetAndApplyBindingOverrides()
         {
             // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
             var oldActions = m_Actions;
@@ -1814,7 +1814,7 @@ namespace UnityEngine.InputSystem
         {
             // If an action asset is assigned copy it to avoid modifying the original asset.
             if (m_Actions != null)
-                CopyActionAsset();
+                CopyActionAssetAndApplyBindingOverrides();
         }
 
         private void OnEnable()
