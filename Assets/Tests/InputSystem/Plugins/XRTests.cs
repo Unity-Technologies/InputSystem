@@ -728,6 +728,7 @@ internal class XRTests : CoreTestsFixture
         }
     }
 
+    [Test]
     [Category("Components")]
     public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound()
     {
