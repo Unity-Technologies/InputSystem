@@ -729,6 +729,40 @@ internal class XRTests : CoreTestsFixture
     }
 
     [Test]
+    [Category("Components")]
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound(bool ignoreTrackingState)
+    {
+        // Tests/reproduces the scenario described in https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699
+        // i.e. that rotation and/or position is not updated if device is not connected.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        // Setup GameObject to have a position and rotation that is different from identity transform
+        var go = new GameObject();
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+
+        // Configure TrackedPoseDriver
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = ignoreTrackingState;
+
+        var transform = tpd.transform;
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+        // Ensure that position and/or rotation is not affected by update.
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
+    [Test]
     [Category("Layouts")]
     public void Layouts_PoseControlsCanBeCreatedBySubcontrols()
     {
@@ -739,7 +773,7 @@ internal class XRTests : CoreTestsFixture
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
 
-        // A Pose control parent was created based off subcontrols
+        // A Pose control parent was created based off sub-controls
         var pose = generatedLayout["PoseControl"];
         Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
     }
