@@ -60,10 +60,10 @@ validate_-_inputsystem_-_2021_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -126,10 +126,10 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -192,10 +192,10 @@ validate_-_inputsystem_-_2021_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -258,10 +258,10 @@ validate_-_inputsystem_-_2022_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -324,10 +324,10 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -390,10 +390,10 @@ validate_-_inputsystem_-_2022_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -456,10 +456,10 @@ validate_-_inputsystem_-_6000_0_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -522,10 +522,10 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -588,10 +588,10 @@ validate_-_inputsystem_-_6000_0_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -654,10 +654,10 @@ validate_-_inputsystem_-_6000_1_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -720,10 +720,10 @@ validate_-_inputsystem_-_6000_1_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -786,10 +786,10 @@ validate_-_inputsystem_-_6000_1_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -852,10 +852,10 @@ validate_-_inputsystem_-_6000_2_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -918,10 +918,10 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
@@ -984,10 +984,10 @@ validate_-_inputsystem_-_6000_2_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.10.40.0
+    UPMPVP_CONTEXT_WRENCH: 0.10.42.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.10.40.0
+    Wrench: 0.10.42.0
   labels:
   - Packages:inputsystem
 
