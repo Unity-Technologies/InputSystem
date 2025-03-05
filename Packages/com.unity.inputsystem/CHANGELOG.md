@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed an issue where all action maps were enabled initially for project wide actions, which overrode the PlayerInput action map configuration. [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920)
 - Fixed an issue where ButtonStates are not fully updated when switching SingleUnifiedPointer. [ISXB-1356](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1356)
 
 ### Changed
