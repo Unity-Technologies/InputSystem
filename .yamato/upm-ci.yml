@@ -1,9 +1,9 @@
 {% metadata_file .yamato/config.metadata %}
 ---
 
-{% for editor in editors %}
-{% for platform in platforms_win %}
-{% for category in test_category %}
+{% for editor in editors %}         # all supported editor versions
+{% for platform in platforms_win %} # Windows Editor, Standalone (Mono), Standalone (IL2CPP)
+{% for category in test_category %} # functional, performance
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
   name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
@@ -41,7 +41,7 @@
     # Merge all the code coverage results into one report.
     {% if platform.name == "win" and category.name == "functional" %}
     - '{{ yamato_source_dir_win }}/.Editor/Unity.exe -projectPath {{ yamato_source_dir_win }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_win }}/Packages/com.unity.inputsystem/" -quit' 
-    #delete the reports from the two runs and only keep the final merged one
+    # Delete the Package and Project reports, only keep the final merged one to keep Aritfacts.zip smaller
     - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
     - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project"   
     {% endif %}
@@ -55,8 +55,8 @@
 {% endfor %} # test_category
 {% endfor %} # platforms_win
 
-{% for platform in platforms_nix %}
-{% for category in test_category %}
+{% for platform in platforms_nix %} # Mac Editor, Standalone (Mono), Standalone (IL2CPP), Linux Editor, Standalone (Mono), Standalone (IL2CPP)
+{% for category in test_category %} # functional, performance
 {{ platform.name }}_{{ editor.version }}_{{ category.name }}:
   name : Build & Run {{ editor.version }} - {{ platform.name }}, {{ category.name }} tests
   agent:
@@ -95,6 +95,7 @@
     {% if platform.name == "linux" and category.name == "functional" %}
     - '{{ yamato_source_dir_nix }}/.Editor/Unity -projectPath {{ yamato_source_dir_nix }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_nix }}/Packages/com.unity.inputsystem/" -quit' 
     {% endif %}
+    # Delete the Package and Project reports, only keep the final merged one to keep Aritfacts.zip smaller
     - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package
     - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project  
   after:
@@ -108,13 +109,13 @@
 {% endfor %} # platforms_nix
 {% endfor %} # editors
 
-{% for editor in editors %}
-{% for category in test_category %}
+{% for editor in editors %}         # all supported editor versions
+{% for category in test_category %} # fucntional, performance
 build_ios_{{ editor.version }}_{{ category.name }}:
   name: Build - {{ editor.version }} - iOS, {{ category.name }} tests
   agent:
     type: Unity::VM::osx
-    image: {{ ios_and_tvos_macos_bokken_image }}
+    image: {{ ios_and_tvos_macos_bokken_image }} # image version pinned in config, because new Xcode keeps breaking us
     flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor.version }}
@@ -143,7 +144,9 @@ run_ios_{{ editor.version }}_{{ category.name }}:
       flavor: b1.medium
   variables:
     EDITOR_VERSION: {{ editor.version }}
+  # Skip repository cloning
   skip_checkout: true
+  # Set a dependency on the build job
   dependencies:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
@@ -189,7 +192,9 @@ run_tvos_{{ editor.version }}_{{ category.name }}:
       flavor: b1.medium
   variables:
     EDITOR_VERSION: {{ editor.version }}
+  # Skip repository cloning
   skip_checkout: true
+  # Set a dependency on the build job
   dependencies:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_{{ category.name }}
   commands:
@@ -204,8 +209,8 @@ run_tvos_{{ editor.version }}_{{ category.name }}:
           - "build/test-results/**"
 {% endfor %} # test_category
 
-{% for backend in scripting_backends %}
-{% for category in test_category %}
+{% for backend in scripting_backends %} # Mono, IL2CPP
+{% for category in test_category %}     # functional, performance
 build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   name: Build - {{ editor.version }} - Android {{ backend.name }}, {{ category.name }} tests
   agent:
@@ -288,14 +293,13 @@ all_tests:
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_functional
     {% endif %}
     {% endfor %}
-    - .yamato/upm-ci.yml#publish_dryrun
+    - .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
     cancel_old_ci: true
     pull_requests:
       - targets:
           only:
             - "develop"
-            
             
 performance_tests_only:
   name: All Performance Tests
@@ -323,28 +327,4 @@ performance_tests_only:
         - branch: release/1.X
           frequency: weekly
           rerun: always
-
-{% for run in (1..2) %}
-publish{% cycle "", "_dryrun" %}:
-  name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
-  agent:
-    type: Unity::VM
-    image: package-ci/win10:default
-    flavor: b1.large
-  variables:
-    UPMCI_ENABLE_PACKAGE_SIGNING: 1
-  commands:
-    - {{ upm_ci_install }}
-    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
-    - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
-    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2021.3
-    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
-    - upm-pvp xray --packages "upm-ci~/packages/*.tgz" --results upm-ci~/xray
-    - upm-pvp require "supported rme" --no-report --allow-missing --results upm-ci~/xray --exemptions upm-ci~/xray/new-exemptions.json
-    - upm-pvp require "supported rme ./.yamato/PVPexemptions.json" --allow-missing --results upm-ci~/xray    
-  artifacts:
-    artifacts:
-      paths:
-        - "upm-ci~/packages/*.tgz"
-{% endfor %}
+          
