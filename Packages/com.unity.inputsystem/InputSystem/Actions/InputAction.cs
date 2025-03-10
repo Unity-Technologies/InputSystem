@@ -1278,6 +1278,9 @@ namespace UnityEngine.InputSystem
         /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was pressed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPressedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPressedThisDynamicUpdate,
+        /// you may want to use WasPressedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1364,6 +1367,9 @@ namespace UnityEngine.InputSystem
         /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was released in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasReleasedThisDynamicUpdate,
+        /// you may want to use WasReleasedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1461,6 +1467,9 @@ namespace UnityEngine.InputSystem
         /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was performed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPerformedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPerformedThisDynamicUpdate,
+        /// you may want to use WasPerformedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1577,6 +1586,9 @@ namespace UnityEngine.InputSystem
         /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was completed in the current dynamic Update cycle (in between the previous and the current frame).
         /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
         /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasCompletedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasCompletedThisDynamicUpdate,
+        /// you may want to use WasCompletedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
         /// </remarks>
         /// <example>
         /// <code>
