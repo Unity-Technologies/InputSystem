@@ -55,7 +55,7 @@ internal class PlayerInputTests : CoreTestsFixture
 
         Assert.That(player, Is.Not.Null);
         Assert.That(player.playerIndex, Is.EqualTo(0));
-        Assert.That(player.actions, Is.SameAs(prefabPlayerInput.actions));
+        Assert.That(player.actions.actionMaps.Count, Is.EqualTo(prefabPlayerInput.actions.actionMaps.Count));
         Assert.That(player.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(player.currentControlScheme, Is.EqualTo("Gamepad"));
     }
@@ -108,7 +108,6 @@ internal class PlayerInputTests : CoreTestsFixture
         var ui = prefab.AddComponent<InputSystemUIInputModule>();
         player.uiInputModule = ui;
         player.actions = InputActionAsset.FromJson(kActions);
-        ui.actionsAsset = player.actions;
 
         InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Keyboard>();
@@ -117,6 +116,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
+        ui.actionsAsset = instance.actions;
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
@@ -149,11 +149,11 @@ internal class PlayerInputTests : CoreTestsFixture
         eventSystemGO.SetActive(true);
         playerGO.SetActive(true);
 
-        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
-        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
-        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
-        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
-        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
+        Assert.That(player.actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(uiModule.actionsAsset.FindActionMap("UI").enabled, Is.True);
+        Assert.That(uiModule.actionsAsset["UI/Navigate"].controls, Is.Empty);
+        Assert.That(uiModule.actionsAsset["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(uiModule.actionsAsset["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
     }
 
     [Test]
@@ -391,7 +391,23 @@ internal class PlayerInputTests : CoreTestsFixture
         var actions = InputActionAsset.FromJson(kActions);
         playerInput.actions = actions;
 
-        Assert.That(playerInput.actions, Is.SameAs(actions));
+        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
+        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CopiesActionAssetForFirstPlayer()
+    {
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        var actions = InputActionAsset.FromJson(kActions);
+        playerInput.actions = actions;
+
+        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
+        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
+        Assert.That(playerInput.actions.GetInstanceID(), !Is.EqualTo(actions.GetInstanceID()));
     }
 
     [Test]
@@ -407,13 +423,13 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = actions1;
 
-        Assert.That(actions1.actionMaps[0].enabled, Is.True);
-        Assert.That(actions2.actionMaps[0].enabled, Is.False);
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
+        Assert.That(actions1.actionMaps[0].enabled, Is.False);
 
         playerInput.actions = actions2;
 
-        Assert.That(actions1.actionMaps[0].enabled, Is.False);
-        Assert.That(actions2.actionMaps[0].enabled, Is.True);
+        Assert.That(actions2.actionMaps[0].enabled, Is.False);
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
     }
 
     [Test]
@@ -1714,7 +1730,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         // Make sure that no cloning of actions happened on the prefab.
         // https://fogbugz.unity3d.com/f/cases/1319756/
-        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions, Is.SameAs(playerPrefabActions));
+
+        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions.actionMaps.Count, Is.EqualTo(playerPrefabActions.actionMaps.Count));
         Assert.That(playerPrefab.GetComponent<PlayerInput>().m_ActionsInitialized, Is.False);
     }
 
@@ -2421,13 +2438,13 @@ internal class PlayerInputTests : CoreTestsFixture
         // Disable the asset while adding another action map to it as none
         // of the actions in the asset can be enabled during modification
         //
-        actionAsset.Disable();
+        playerInput.actions.Disable();
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        var newActionMap = actionAsset.AddActionMap("NewMap");
+        var newActionMap = playerInput.actions.AddActionMap("NewMap");
         var newAction = newActionMap.AddAction("NewAction");
         newAction.AddBinding("<Keyboard>/k", groups: "Keyboard");
-        actionAsset.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
-        actionAsset.Enable();
+        playerInput.actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        playerInput.actions.Enable();
 
         playerInput.currentActionMap = newActionMap;
         playerInput.ActivateInput();
