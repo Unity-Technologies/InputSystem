@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem.Editor
         private void CustomUpdateModeHelpBox()
         {
             var message =
-                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
+                "This is not recommended, the default update mode is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
             Uri link = new Uri("https://docs.unity3d.com/Packages/com.unity.inputsystem@1.13/manual/Settings.html#update-mode");
             GUILayout.BeginHorizontal(EditorStyles.helpBox);
             GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
