@@ -154,7 +154,7 @@ namespace UnityEngine.InputSystem.Editor
             const string processingDelayTooltip =
                 "Displays the average, minimum and maximum observed input processing delay. This shows the time from " +
                 "when an input event is first created within Unity until its processed by the Input System. " +
-                "Note that this hence excludes additional input latency introduced by OS, driver or device communication. " +
+                "Note that this excludes additional input latency introduced by OS, driver or device communication. " +
                 "It also doesn't include output latency introduced by script processing, rendering, swap-chains, display refresh latency etc.";
             if (!string.IsNullOrEmpty(m_DeviceLatencyString))
                 EditorGUILayout.LabelField(new GUIContent("Processing Delay", processingDelayTooltip),
