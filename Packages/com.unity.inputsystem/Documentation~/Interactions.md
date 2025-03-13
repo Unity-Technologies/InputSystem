@@ -3,26 +3,12 @@ uid: input-system-interactions
 ---
 # Interactions
 
-- [Operation](#operation)
-  - [Multiple Controls on an Action](#multiple-controls-on-an-action)
-  - [Multiple Interactions on a Binding](#multiple-interactions-on-a-binding)
-  - [Timeouts](#timeouts)
-- [Using Interactions](#using-interactions)
-  - [Interactions applied to Bindings](#interactions-applied-to-bindings)
-  - [Interactions applied to Actions](#interactions-applied-to-actions)
-- [Predefined Interactions](#predefined-interactions)
-  - [Default Interaction](#default-interaction)
-  - [Press](#press)
-  - [Hold](#hold)
-  - [Tap](#tap)
-  - [SlowTap](#slowtap)
-  - [MultiTap](#multitap)
-- [Writing custom Interactions](#writing-custom-interactions)
+Use Interactions to interpret specific input patterns from Controls that define Action behavior.
 
-An Interaction represents a specific input pattern. For example, a [hold](#hold) is an Interaction that requires a Control to be held for at least a minimum amount of time.
-
-Interactions drive responses on Actions. You can place them on individual Bindings or an Action as a whole, in which case they apply to every Binding on the Action. At runtime, when a particular interaction completes, this triggers the Action.
-
-![Interaction Properties](Images/InteractionProperties.png)
-
-
+|Topic|Description|
+|-----|-----------|
+|[Introduction to interactions](introduction-interactions.md)| Use Interactions on Bindings and Actions to read control input patterns and trigger Actions.|
+|[Apply interactions to Bindings](apply-interactions-bindings.md)| Apply Interactions to individual Bindings.|
+|[Apply Interactions to Actions](apply-interactions-actions.md)| Apply Interactions to Actions, and all the Bindings associated with that Action. |
+|[Predefined interactions](predefined-interactions.md)| Use the Input System's default and built-in Interactions on your Actions and Bindings.|
+|[Write custom interactions](write-custom-interactions.md)| Write your own custom Interactions for your Actions and Bindings.|

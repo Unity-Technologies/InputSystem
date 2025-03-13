@@ -189,7 +189,7 @@ The same layout as above looks like this in JSON format:
 
 ### Generated layouts
 
-Finally, the Input System can also build layouts on the fly in code. This is useful for Device interfaces such as [HID](HID.md) that supply descriptive information for each Device.
+Finally, the Input System can also build layouts on the fly in code. This is useful for Device interfaces such as [HID](hid-specification.md) that supply descriptive information for each Device.
 
 To build layouts dynamically in code, you can use the [`InputControlLayout.Builder`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.Builder.html) API.
 
@@ -276,19 +276,19 @@ The following table details the properties that a Control item can have. These c
 |[`layout`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_layout)|Layout to use for the Control.|
 |[`variants`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_variants)|Variants of the Control.|
 |[`aliases`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_aliases)|Aliases for the Control. These are alternative names the Control can be referred by.|
-|[`usages`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_usages)|[Usages](Controls.md#control-usages) of the Control.|
+|[`usages`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_usages)|[Usages](controls.md#control-usages) of the Control.|
 |[`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset)|The byte offset at which the state for the Control is found.|
 |[`bit`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_bit)|The bit offset at which the state of the Control is found within its byte.|
 |[`sizeInBits`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_sizeInBits)|The total size of the Control's state, in bits.|
 |[`arraySize`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_arraySize)|If this is set to a non-zero value, the system will create an array of Controls of this size.|
 |[`parameters`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_parameters)|Any parameters to be passed to the Control. The system will apply these to any fields the Control type might have, such as [`AxisControl.scaleFactor`](../api/UnityEngine.InputSystem.Controls.AxisControl.html#UnityEngine_InputSystem_Controls_AxisControl_scaleFactor).|
 |[`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors)|[Processors](Processors.md) to apply to the Control.|
-|[`noisy`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_noisy)|Whether the Control is to be considered [noisy](Controls.md#noisy-controls).|
-|[`synthetic`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_synthetic)|Whether the Control is to be considered [synthetic](Controls.md#synthetic-controls).|
+|[`noisy`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_noisy)|Whether the Control is to be considered [noisy](controls.md#noisy-controls).|
+|[`synthetic`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_synthetic)|Whether the Control is to be considered [synthetic](controls.md#synthetic-controls).|
 |[`defaultState`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_defaultState)|Default initial value of the state __memory__ Control.|
-|[`useStateFrom`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_useStateFrom)|For [synthetic](Controls.md#synthetic-controls) Controls, used to synthesize Control state.|
-|[`minValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_minValue)|The minimum value the Control can report. Used for evaluating [Control magnitude](Controls.md#control-actuation).|
-|[`maxValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_maxValue)|The maximum value the Control can report. Used for evaluating [Control magnitude](Controls.md#control-actuation).|
+|[`useStateFrom`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_useStateFrom)|For [synthetic](controls.md#synthetic-controls) Controls, used to synthesize Control state.|
+|[`minValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_minValue)|The minimum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
+|[`maxValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_maxValue)|The maximum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
 |[`dontReset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_dontReset)|When a device ["soft" reset](Devices.md#device-resets) is performed, the state of this control will not be reset. This is useful for controls such as pointer positions which should not go to `(0,0)` on a reset. When a "hard" reset is performed, the control will still be reset to its default value.|
 
 ## Layout overrides
@@ -367,7 +367,7 @@ InputSystem.AddDevice<MyDevice>();
 
 A precompiled layout will automatically be unregistered in the following cases:
 
-* A [layout override](#layout-overrides) is applied to one of the layouts used by the precompiled Device. This also extends to [controls](Controls.md) used by the Device.
+* A [layout override](#layout-overrides) is applied to one of the layouts used by the precompiled Device. This also extends to [controls](controls.md) used by the Device.
 * A layout with the same name as one of the layouts used by the precompiled Device is registered (which replaces the layout already registered under the name).
 * A [processor](Processors.md) is registered that replaces a processor used by the precompiled Device.
 

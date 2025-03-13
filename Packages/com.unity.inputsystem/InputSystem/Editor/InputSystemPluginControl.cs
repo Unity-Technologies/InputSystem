@@ -43,12 +43,6 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_2023_3_OR_NEWER
             BuildTarget.VisionOS,
             #endif
-            #if UNITY_6000_0_OR_NEWER
-            BuildTarget.ReservedCFE,
-            #endif
-            #if UNITY_6000_0_7_OR_NEWER
-            BuildTarget.Kepler
-            #endif
             BuildTarget.NoTarget
         };
 
@@ -91,7 +85,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!BuildTargetNeedsPlugin())
                 return;
-            Debug.Assert(IsPluginInstalled(), "Active Input Handling is set to InputSystem, but no Plugin for " + EditorUserBuildSettings.activeBuildTarget + " was found. Please install the missing InputSystem package extensions.");
+            if (!IsPluginInstalled())
+                Debug.LogError("Active Input Handling is set to InputSystem, but no Plugin for " + EditorUserBuildSettings.activeBuildTarget + " was found. Please install the missing InputSystem package extensions.");
         }
     }
 }

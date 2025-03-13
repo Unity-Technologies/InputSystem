@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -307,7 +308,7 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        private void RenameAndEnable(InputAction action, string name)
+        private static void RenameAndEnable(InputAction action, string name)
         {
 #if UNITY_EDITOR
             Editor.InputExitPlayModeAnalytic.suppress = true;
@@ -468,14 +469,21 @@ namespace UnityEngine.InputSystem.XR
             if (m_IsFirstUpdate)
             {
                 // Update current input values if this is the first update since becoming enabled
-                // since the performed callbacks may not have been executed
-                if (m_PositionInput.action != null)
+                // since the performed callbacks may not have been executed. In case there is no bound control
+                // we preserve current transform by extracting transform values as initial values instead.
+                var hasResolvedPositionInputControl = HasResolvedControl(m_PositionInput.action);
+                if (hasResolvedPositionInputControl)
                     m_CurrentPosition = m_PositionInput.action.ReadValue<Vector3>();
+                else
+                    m_CurrentPosition = transform.localPosition;
 
-                if (m_RotationInput.action != null)
+                var hasResolvedRotationInputControl = HasResolvedControl(m_RotationInput.action);
+                if (hasResolvedRotationInputControl)
                     m_CurrentRotation = m_RotationInput.action.ReadValue<Quaternion>();
+                else
+                    m_CurrentRotation = transform.localRotation;
 
-                ReadTrackingState();
+                ReadTrackingState(hasResolvedPositionInputControl, hasResolvedRotationInputControl);
 
                 m_IsFirstUpdate = false;
             }
@@ -486,7 +494,7 @@ namespace UnityEngine.InputSystem.XR
                 OnUpdate();
         }
 
-        void ReadTrackingState()
+        void ReadTrackingState(bool hasResolvedPositionInputControl, bool hasResolvedRotationInputControl)
         {
             var trackingStateAction = m_TrackingStateInput.action;
             if (trackingStateAction != null && !trackingStateAction.enabled)
@@ -500,46 +508,24 @@ namespace UnityEngine.InputSystem.XR
             {
                 // Treat an Input Action Reference with no reference the same as
                 // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
-                m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
-                return;
+                // Check if we have transform and rotation controls to drive the pose.
+                if (hasResolvedPositionInputControl && hasResolvedRotationInputControl)
+                    m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
+                else if (hasResolvedPositionInputControl)
+                    m_CurrentTrackingState = TrackingStates.Position;
+                else if (hasResolvedRotationInputControl)
+                    m_CurrentTrackingState = TrackingStates.Rotation;
+                else
+                    m_CurrentTrackingState = TrackingStates.None;
             }
-
-            // Grab state.
-            var actionMap = trackingStateAction.GetOrCreateActionMap();
-            actionMap.ResolveBindingsIfNecessary();
-            var state = actionMap.m_State;
-
-            // Get list of resolved controls to determine if a device actually has tracking state.
-            var hasResolvedControl = false;
-            if (state != null)
+            else if (HasResolvedControl(trackingStateAction))
             {
-                var actionIndex = trackingStateAction.m_ActionIndexInState;
-                var totalBindingCount = state.totalBindingCount;
-                for (var i = 0; i < totalBindingCount; ++i)
-                {
-                    unsafe
-                    {
-                        ref var bindingState = ref state.bindingStates[i];
-                        if (bindingState.actionIndex != actionIndex)
-                            continue;
-                        if (bindingState.isComposite)
-                            continue;
-
-                        if (bindingState.controlCount > 0)
-                        {
-                            hasResolvedControl = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Retain the current value if there is no resolved binding.
-            // Since the field initializes to allowing position and rotation,
-            // this allows for driving the Transform pose always when the device
-            // doesn't support reporting the tracking state.
-            if (hasResolvedControl)
+                // Retain the current value if there is no resolved binding.
+                // Since the field initializes to allowing position and rotation,
+                // this allows for driving the Transform pose always when the device
+                // doesn't support reporting the tracking state.
                 m_CurrentTrackingState = (TrackingStates)trackingStateAction.ReadValue<int>();
+            }
         }
 
         /// <summary>
@@ -585,6 +571,8 @@ namespace UnityEngine.InputSystem.XR
         /// <param name="newRotation">The new local rotation to possibly set.</param>
         protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation)
         {
+            // Note that tracking state will be set to reflect whether the position and/or rotation
+            // actions can provide applicable values.
             var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Position) != 0;
             var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Rotation) != 0;
 
@@ -614,6 +602,42 @@ namespace UnityEngine.InputSystem.XR
         bool HasStereoCamera(out Camera cameraComponent)
         {
             return TryGetComponent(out cameraComponent) && cameraComponent.stereoEnabled;
+        }
+
+        // Evaluates whether the given action has at least one resolved control and may generate input.
+        private static bool HasResolvedControl(InputAction action)
+        {
+            // Action cannot have controls if null.
+            if (action == null)
+                return false;
+
+            // Attempt to grab state and resolve bindings unless already resolved.
+            var actionMap = action.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+            var state = actionMap.m_State;
+            if (state == null)
+                return false;
+
+            // Get list of resolved controls to determine if a device actually has a tracking state.
+            var actionIndex = action.m_ActionIndexInState;
+            var totalBindingCount = state.totalBindingCount;
+            for (var i = 0; i < totalBindingCount; ++i)
+            {
+                unsafe
+                {
+                    ref var bindingState = ref state.bindingStates[i];
+                    if (bindingState.actionIndex != actionIndex)
+                        continue;
+
+                    if (bindingState.isComposite)
+                        continue;
+
+                    if (bindingState.controlCount > 0)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         #region DEPRECATED

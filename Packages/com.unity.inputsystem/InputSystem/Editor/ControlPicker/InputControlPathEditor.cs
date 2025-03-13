@@ -30,8 +30,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
-
-            this.pathProperty = pathProperty;
+            // Update the static pathProperty variable to the most recent serializedProperty.
+            // See comment on pathProperty for more information.
+            s_pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
             m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.GetTooltip());
@@ -39,6 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void Dispose()
         {
+            s_pathProperty = null;
             m_PickerDropdown?.Dispose();
         }
 
@@ -89,14 +91,14 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.EndHorizontal();
         }
 
+        //TODO: on next major version remove property argument.
         public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action modifiedCallback = null)
         {
             var pathLabel = label ?? m_PathLabel;
-            var serializedProperty = property ?? pathProperty;
 
             var lineRect = rect;
             var labelRect = lineRect;
-            labelRect.width = EditorGUIUtility.labelWidth;
+            labelRect.width = EditorStyles.label.CalcSize(pathLabel).x + 20; // Fit to label with some padding
             EditorGUI.LabelField(labelRect, pathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
@@ -104,17 +106,16 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            var bindingTextRectOffset = 80;
-            bindingTextRect.width += bindingTextRectOffset;
-            bindingTextRect.x -= bindingTextRectOffset + 20;
-            editButtonRect.x = bindingTextRect.x + bindingTextRect.width; // Place it directly after the textRect
+            bindingTextRect.x = labelRect.x + labelRect.width; // Place directly after labelRect
+            editButtonRect.x += lineRect.width - 20; // Place at the edge of the window to appear after bindingTextRect
+            bindingTextRect.width = editButtonRect.x - bindingTextRect.x; // bindingTextRect fills remaining space between label and editButton
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
             var path = String.Empty;
             try
             {
-                path = serializedProperty.stringValue;
+                path = pathProperty.stringValue;
             }
             catch
             {
@@ -139,8 +140,8 @@ namespace UnityEngine.InputSystem.Editor
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    serializedProperty.stringValue = path;
-                    serializedProperty.serializedObject.ApplyModifiedProperties();
+                    pathProperty.stringValue = path;
+                    pathProperty.serializedObject.ApplyModifiedProperties();
                     (modifiedCallback ?? onModified).Invoke();
                 }
             }
@@ -149,9 +150,9 @@ namespace UnityEngine.InputSystem.Editor
                 // Dropdown that shows binding text and allows opening control picker.
                 if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
-                    SetExpectedControlLayoutFromAttribute(serializedProperty);
+                    SetExpectedControlLayoutFromAttribute(pathProperty);
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowDropdown(bindingTextRect, serializedProperty, modifiedCallback ?? onModified);
+                    ShowDropdown(bindingTextRect, modifiedCallback ?? onModified);
                 }
             }
 
@@ -160,7 +161,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorStyles.miniButton);
         }
 
-        private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
+        private void ShowDropdown(Rect rect, Action modifiedCallback)
         {
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
@@ -171,18 +172,12 @@ namespace UnityEngine.InputSystem.Editor
                     m_PickerState,
                     path =>
                     {
-                        serializedProperty.stringValue = path;
+                        pathProperty.stringValue = path;
+                        pathProperty.serializedObject.ApplyModifiedProperties();
                         m_PickerState.manualPathEditMode = false;
                         modifiedCallback();
                     });
             }
-
-            m_PickerDropdown.SetPickedCallback(path =>
-            {
-                serializedProperty.stringValue = path;
-                m_PickerState.manualPathEditMode = false;
-                modifiedCallback();
-            });
 
             m_PickerDropdown.SetControlPathsToMatch(m_ControlPathsToMatch);
             m_PickerDropdown.SetExpectedControlLayout(m_ExpectedControlLayout);
@@ -201,7 +196,16 @@ namespace UnityEngine.InputSystem.Editor
                 SetExpectedControlLayout(attribute.layout);
         }
 
-        public SerializedProperty pathProperty { get; }
+        // This static variable is a hack. Because the editor is rebuilt at unpredictable times with a new serializedObject, we need to keep updating
+        // this variable with most up to date serializedProperty, so that the picker dropdown can access the correct serializedProperty.
+        // The picker dropdown is a separate window and does not have access to the changed serializedObject reference.
+        // This could be removed if the InputControlPathEditor is converted to UITK with a stable, persistent serializedObject backing this editor.
+        // This property will be shared among multiple asset editor windows.
+        private static SerializedProperty s_pathProperty { get; set; }
+
+        // This property will always return the most recent serializedProperty.
+        public SerializedProperty pathProperty { get => s_pathProperty;}
+
         public Action onModified { get; }
 
         private GUIContent m_PathLabel;

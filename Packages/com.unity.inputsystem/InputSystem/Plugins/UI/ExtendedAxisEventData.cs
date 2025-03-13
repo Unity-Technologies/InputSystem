@@ -3,10 +3,17 @@ using UnityEngine.EventSystems;
 
 namespace UnityEngine.InputSystem.UI
 {
-    // AxisEventData has no ToString. But that's the only thing we add so keeping
-    // it internal.
-    internal class ExtendedAxisEventData : AxisEventData
+    // AxisEventData has no ToString. Also added device info. Keeping
+    // it internal for now.
+    internal class ExtendedAxisEventData : AxisEventData, INavigationEventData
     {
+        /// <summary>
+        /// The <see cref="InputDevice"/> that generated the axis input.
+        /// </summary>
+        /// <seealso cref="Keyboard"/>
+        /// <seealso cref="Gamepad"/>
+        public InputDevice device { get; set; }
+
         public ExtendedAxisEventData(EventSystem eventSystem)
             : base(eventSystem)
         {

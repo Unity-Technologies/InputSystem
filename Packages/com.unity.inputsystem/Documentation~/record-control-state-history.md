@@ -1,9 +1,9 @@
 
-#### Record control state history
+# Record control state history
 
-You might want to access the history of value changes on a Control (for example, in order to compute exit velocity on a touch release).
+You might want to access the history of changes to a [control's state](control-state.md). For example, to compute exit velocity on a touch release.
 
-To record state changes over time, you can use [`InputStateHistory`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory.html) or [`InputStateHistory<TValue>`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory-1.html). The latter restricts Controls to those of a specific value type, which in turn simplifies some of the API.
+To record state changes over time, you can use [`InputStateHistory`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory.html) or [`InputStateHistory<TValue>`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory-1.html). The latter restricts controls to those of a specific value type, which in turn simplifies some of the API.
 
 ```CSharp
 // Create history that records Vector2 control value changes.
