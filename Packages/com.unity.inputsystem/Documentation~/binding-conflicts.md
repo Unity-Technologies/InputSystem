@@ -42,7 +42,7 @@ The way the Input System handles this, is that Bindings are processed in the ord
 
 In our example, this means that a **one-modifier composite** binding to **Shift** + **B** has a higher complexity than a Binding to  **B** and gets processed first.
 
-Additionally, the first Binding that results in the Action changing [phase](./set-callbacks-on-actions.md) will consume the input. This results in other Bindings to the same input not being processed. This means in our example, when the **Shift** + **B** binding consumes the **B** input, the Binding to **B** is skipped.
+Additionally, if the [Input Consumption](input-settings.md) setting is enabled, the first Binding that results in the Action changing [phase](./set-callbacks-on-actions.md) will consume the input. This results in other Bindings to the same input not being processed. This means in our example, when the **Shift** + **B** binding consumes the **B** input, the Binding to **B** is skipped.
 
 
 ## Disabling Conflict Resolution

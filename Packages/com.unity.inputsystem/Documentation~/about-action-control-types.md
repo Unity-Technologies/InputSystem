@@ -4,7 +4,7 @@ Each action has an **action type** and a **control type**. These settings are di
 
 ![The Action Properties panel in the Actions Editor Window](Images/ActionProperties.png)
 
-When you configure an action, you can select an action type and control type that best represents what your action is for, and how you want it to be activated by the [controls](./Controls.md) it is [bound](./bindings.md) to.
+When you configure an action, you can select an action type and control type that best represents what your action is for, and how you want it to be activated by the [controls](./controls.md) it is [bound](./bindings.md) to.
 
 ## Action type
 

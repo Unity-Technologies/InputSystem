@@ -1,0 +1,15 @@
+---
+uid: input-system-touch
+---
+
+# Touch devices
+
+Touch devices capture input from touchscreens, and inherit from the `Pointer` class.
+
+| **Topic**                       | **Description**                  |
+| :------------------------------ | :------------------------------- |
+| **[Touch devices introduction](touch-introduction.md)** | Configure devices that track touch input. |
+| **[Polling touch input](touch-polling.md)** | Query touch devices on a frame-by-frame basis. |
+| **[Simulate touch input](simulate-touch-input.md)** | Simulate touch input on other devices.|
+| **[Bind touch input to an action](bind-touch-input.md)** | Connect touch input to actions. |
+

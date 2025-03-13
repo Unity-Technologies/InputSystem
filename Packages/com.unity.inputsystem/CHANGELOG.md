@@ -11,6 +11,49 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed an issue where all action maps were enabled initially for project wide actions, which overrode the PlayerInput action map configuration. [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920)
+- Fixed an issue where ButtonStates are not fully updated when switching SingleUnifiedPointer. [ISXB-1356](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1356)
+
+### Changed
+- Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
+
+### Added
+- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+
+## [1.13.1] - 2025-02-18
+
+### Fixed
+- Fixed a problem with the logic to get the active player settings object that cause an infinit reimport loop. [ISXB-1430](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-96793)
+- Fixed an issue where removing a newly created action in the Asset Editor would cause an exception. [UUM-95693](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-95693)
+- Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
+- Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
+- Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
+- Fixed a bug that would cause `TrackedPoseDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
+
+### Changed
+- Changed default input action asset name from New Controls to New Actions.
+- Added disabling of action maps in rebinding UI sample.
+
+### Added
+- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
+
+## [1.13.0] - 2025-02-05
+
+### Fixed
+- Fixed an issue where the prompt to enable the InputSystem backends would interrupt the import of large assets.
+- Fixed Cut Mode for Action Maps and Actions to make renaming disabled. [ISXB-1155](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1155)
+- Fixed GamepadButton.LeftTrigger and GamepadButton.RightTrigger enum values not matching displayed dropdown values in editor when using GamepadButtonPropertyDrawer [ISXB-1270](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1270).
+- Fixed an issue causing InvalidOperationException when entering playmode with domain reload disabled. [ISXB-1208](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1208).
+- Fixed an issue where compiling Addressables with Input System package present would result in failed compilation due to `IInputAnalytic.TryGatherData` not being defined [ISXB-1203](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1203).
+- Pinned Touch Samples sample package dependencies to avoid errors with Cinemachine 3.x and Probuilder 6.x. [ISXB-1245](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1245)
+- Fixed issue where a binding path is sometimes not saved when chosen from the binding path picker. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Fixed an issue where dropdown menu for Path in Input Actions Editor could not be selected from any button position. [ISXB-1309](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1309)
+- Fixed an issue where changing Input System default parameter settings with the editor open would result in changes in the editor. [ISXB-1351](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1351)
+
+## [1.12.0] - 2025-01-15
+
+### Fixed
 - Fixed an issue causing the Action context menu to not show on right click when right clicking an action in the Input Action Editor [ISXB-1134](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1134).
 - Reverted changes from 0ddd534d8 (ISXB-746) which introduced a regression [ISXB-1127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1127).
 - Fixed `ArgumentNullException: Value cannot be null.` during the migration of Project-wide Input Actions from `InputManager.asset` to `InputSystem_Actions.inputactions` asset which lead do the lost of the configuration [ISXB-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1105).
@@ -38,6 +81,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where batch jobs would fail with "Error: Error building Player because scripts are compiling" if a source generated .inputactions asset is out of sync with its generated source code (ISXB-1300).
 - Fixed multiple `OnScreenStick` Components that does not work together when using them simultaneously in isolation mode. [ISXB-813](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-813)
 - Fixed an issue in input actions editor window that caused certain fields in custom input composite bindings to require multiple clicks to action / focus. [ISXB-1171](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1171)
+- Fixed an editor/player hang in `InputSystemUIInputModule` due to an infinite loop. This was caused by the assumption that `RemovePointerAtIndex` would _always_ successfully remove the pointer, which is not the case with touch based pointers. [ISXB-1258](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1258)
+- Fixed wrong Xbox Series S|X and Xbox One wireless controllers "View" button mapping on macOS by expanding device PID and VID matching. [ISXB-1264](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1264)
 
 ### Changed
 - Changed location of the link xml file (code stripping rules), from a temporary directory to the project Library folder (ISX-2140).

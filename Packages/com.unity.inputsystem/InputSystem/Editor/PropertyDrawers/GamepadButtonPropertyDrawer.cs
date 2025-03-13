@@ -1,12 +1,10 @@
-#if UNITY_EDITOR
-
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.UIElements;
 
+#if UNITY_EDITOR
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -32,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
 
             if (property.propertyType == SerializedPropertyType.Enum)
             {
-                property.intValue = EditorGUI.Popup(position, label.text, property.intValue, m_EnumDisplayNames);
+                property.intValue = m_EnumValues[EditorGUI.Popup(position, label.text, GetEnumIndex(property.intValue), m_EnumDisplayNames)];
             }
 
             EditorGUI.EndProperty();
@@ -40,9 +38,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void CreateEnumList()
         {
-            var enumNamesAndValues = new Dictionary<string, int>();
-            var enumDisplayNames = Enum.GetNames(typeof(GamepadButton));
-            var enumValues = Enum.GetValues(typeof(GamepadButton)).Cast<GamepadButton>().ToArray();
+            string[] enumDisplayNames = Enum.GetNames(typeof(GamepadButton));
+            var enumValues = Enum.GetValues(typeof(GamepadButton));
+            var enumNamesAndValues = new Dictionary<string, int>(enumDisplayNames.Length);
 
             for (var i = 0; i < enumDisplayNames.Length; ++i)
             {
@@ -76,12 +74,36 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 enumNamesAndValues.Add(enumName, (int)enumValues.GetValue(i));
             }
-            var sortedEntries = enumNamesAndValues.OrderBy(x => x.Value);
-
-            m_EnumDisplayNames = sortedEntries.Select(x => x.Key).ToArray();
+            SetEnumDisplayNames(enumNamesAndValues);
         }
 
+        // Sorts the values so that they get displayed consistently, and assigns them for being drawn.
+        private void SetEnumDisplayNames(Dictionary<string, int> enumNamesAndValues)
+        {
+            m_EnumValues = new int[enumNamesAndValues.Count];
+            enumNamesAndValues.Values.CopyTo(m_EnumValues, 0);
+
+            m_EnumDisplayNames = new string[enumNamesAndValues.Count];
+            enumNamesAndValues.Keys.CopyTo(m_EnumDisplayNames, 0);
+
+            Array.Sort(m_EnumValues, m_EnumDisplayNames);
+        }
+
+        // Ensures mapping between displayed value and actual value is consistent. Issues arise when there are gaps in the enum values (ie 0, 1, 13).
+        private int GetEnumIndex(int enumValue)
+        {
+            for (int i = 0; i < m_EnumValues.Length; i++)
+            {
+                if (enumValue == m_EnumValues[i])
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        private int[] m_EnumValues;
         private string[] m_EnumDisplayNames;
     }
 }
-#endif // UNITY_EDITOR
+ #endif // UNITY_EDITOR

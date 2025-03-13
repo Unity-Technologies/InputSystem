@@ -10,4 +10,4 @@ Actions have an **Action Type** and **Control Type** which you can configure in 
 | **[Configure control type](./configure-control-type.md.md)** | Select the type of control expected by the action. |
 
 ## Additional resources
-[Control types reference](./control-types.md)
+[Control types reference](control-types-reference.md)
