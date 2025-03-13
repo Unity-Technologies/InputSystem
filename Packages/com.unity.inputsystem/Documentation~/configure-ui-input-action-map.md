@@ -2,7 +2,7 @@
 
 The default [project-wide actions asset](./about-project-wide-actions.md) comes with a built-in action map named **UI**, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./actions-editor.md). 
 
-To open the Actions Editor:
+To open the UI action map:
 
 1. Go to **Project Settings > Input System Package**
 1. In the **Action Maps** column, select **UI**.
