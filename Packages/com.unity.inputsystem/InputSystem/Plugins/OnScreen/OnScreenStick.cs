@@ -6,6 +6,7 @@ using UnityEngine.Serialization;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.Controls;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,13 +24,15 @@ namespace UnityEngine.InputSystem.OnScreen
     /// <remarks>
     /// The <see cref="OnScreenStick"/> works by simulating events from the device specified in the <see cref="OnScreenControl.controlPath"/>
     /// property. Some parts of the Input System, such as the <see cref="PlayerInput"/> component, can be set up to
-    /// auto-switch to a new device when input from them is detected. When a device is switched, any currently running
-    /// inputs from the previously active device are cancelled. In the case of <see cref="OnScreenStick"/>, this can mean that the
-    /// <see cref="IPointerUpHandler.OnPointerUp"/> method will be called and the stick will jump back to center, even though
-    /// the pointer input has not physically been released.
+    /// auto-switch <see cref="PlayerInput.neverAutoSwitchControlSchemes"/> to a new device when input from them is detected.
+    /// When a device is switched, any currently running inputs from the previously active device are cancelled.
+    /// In the case of <see cref="OnScreenStick"/>, this can mean that the <see cref="IPointerUpHandler.OnPointerUp"/> method will be called
+    /// and the stick will jump back to center, even though the pointer input has not physically been released.
     ///
     /// To avoid this situation, set the <see cref="useIsolatedInputActions"/> property to true. This will create a set of local
     /// Input Actions to drive the stick that are not cancelled when device switching occurs.
+    /// You might also need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent
+    /// control schemes of the simulated device.
     /// </remarks>
     [AddComponentMenu("Input/On-Screen Stick")]
     [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
@@ -89,7 +92,10 @@ namespace UnityEngine.InputSystem.OnScreen
                 if (m_PointerDownAction == null || m_PointerDownAction.bindings.Count == 0)
                 {
                     if (m_PointerDownAction == null)
-                        m_PointerDownAction = new InputAction();
+                        m_PointerDownAction = new InputAction(type: InputActionType.PassThrough);
+                    // ensure PassThrough mode
+                    else if (m_PointerDownAction.m_Type != InputActionType.PassThrough)
+                        m_PointerDownAction.m_Type = InputActionType.PassThrough;
 
                     #if UNITY_EDITOR
                     InputExitPlayModeAnalytic.suppress = true;
@@ -119,8 +125,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     #endif
                 }
 
-                m_PointerDownAction.started += OnPointerDown;
-                m_PointerDownAction.canceled += OnPointerUp;
+                m_PointerDownAction.performed += OnPointerChanged;
                 m_PointerDownAction.Enable();
                 m_PointerMoveAction.Enable();
             }
@@ -152,8 +157,7 @@ namespace UnityEngine.InputSystem.OnScreen
         {
             if (m_UseIsolatedInputActions)
             {
-                m_PointerDownAction.started -= OnPointerDown;
-                m_PointerDownAction.canceled -= OnPointerUp;
+                m_PointerDownAction.performed -= OnPointerChanged;
             }
         }
 
@@ -225,11 +229,20 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void OnPointerDown(InputAction.CallbackContext ctx)
         {
+            if (m_IsIsolationActive) { return; }
             Debug.Assert(EventSystem.current != null);
 
             var screenPosition = Vector2.zero;
-            if (ctx.control?.device is Pointer pointer)
+            TouchControl touchControl = null;
+            if (ctx.control?.parent is TouchControl touch)
+            {
+                touchControl = touch;
+                screenPosition = touch.position.ReadValue();
+            }
+            else if (ctx.control?.device is Pointer pointer)
+            {
                 screenPosition = pointer.position.ReadValue();
+            }
 
             m_PointerEventData.position = screenPosition;
             EventSystem.current.RaycastAll(m_PointerEventData, m_RaycastResults);
@@ -249,23 +262,63 @@ namespace UnityEngine.InputSystem.OnScreen
                 return;
 
             BeginInteraction(screenPosition, GetCameraFromCanvas());
+            if (touchControl != null)
+            {
+                m_TouchControl = touchControl;
+                m_PointerMoveAction.ApplyBindingOverride($"{touchControl.path}/position", path: "<Touchscreen>/touch*/position");
+            }
+
             m_PointerMoveAction.performed += OnPointerMove;
+            m_IsIsolationActive = true;
+        }
+
+        private void OnPointerChanged(InputAction.CallbackContext ctx)
+        {
+            if (ctx.control.IsPressed())
+                OnPointerDown(ctx);
+            else
+                OnPointerUp(ctx);
         }
 
         private void OnPointerMove(InputAction.CallbackContext ctx)
         {
             // only pointer devices are allowed
             Debug.Assert(ctx.control?.device is Pointer);
+            Vector2 screenPosition;
 
-            var screenPosition = ((Pointer)ctx.control.device).position.ReadValue();
+            // If it's a finger take the value from the finger that initiated the change
+            if (m_TouchControl != null)
+            {
+                // if the finger is up ignore the move
+                if (m_TouchControl.isInProgress == false)
+                {
+                    return;
+                }
+                screenPosition = m_TouchControl.position.ReadValue();
+            }
+            else
+            {
+                screenPosition = ((Pointer)ctx.control.device).position.ReadValue();
+            }
 
             MoveStick(screenPosition, GetCameraFromCanvas());
         }
 
         private void OnPointerUp(InputAction.CallbackContext ctx)
         {
+            if (!m_IsIsolationActive) return;
+
+            // if it's a finger ensure that is the one that get released
+            if (m_TouchControl != null)
+            {
+                if (m_TouchControl.isInProgress) return;
+                m_PointerMoveAction.ApplyBindingOverride(null, path: "<Touchscreen>/touch*/position");
+                m_TouchControl = null;
+            }
+
             EndInteraction();
             m_PointerMoveAction.performed -= OnPointerMove;
+            m_IsIsolationActive = false;
         }
 
         private Camera GetCameraFromCanvas()
@@ -428,6 +481,10 @@ namespace UnityEngine.InputSystem.OnScreen
         private List<RaycastResult> m_RaycastResults;
         [NonSerialized]
         private PointerEventData m_PointerEventData;
+        [NonSerialized]
+        private TouchControl m_TouchControl;
+        [NonSerialized]
+        private bool m_IsIsolationActive;
 
         protected override string controlPathInternal
         {

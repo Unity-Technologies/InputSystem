@@ -49,10 +49,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 350
+    x: 437.5
     y: 0
-    width: 150
-    height: 150
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/scroll
   m_ControlIndex: 0
@@ -105,10 +105,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 85
-    y: 175
-    width: 50
-    height: 50
+    x: 106.25
+    y: 218.75
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/middleButton
   m_ControlIndex: 0
@@ -161,10 +161,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 25
-    y: 175
-    width: 50
-    height: 50
+    x: 31.25
+    y: 218.75
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/leftButton
   m_ControlIndex: 0
@@ -217,10 +217,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 375
-    width: 700
-    height: 70
+    x: 25
+    y: 468.75
+    width: 875
+    height: 87.5
   m_Visualization: 4
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
@@ -273,10 +273,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 460
-    width: 700
-    height: 70
+    x: 25
+    y: 575
+    width: 875
+    height: 87.5
   m_Visualization: 6
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
@@ -331,8 +331,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 150
-    height: 150
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/position
   m_ControlIndex: 0
@@ -452,10 +452,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 175
+    x: 218.75
     y: 0
-    width: 150
-    height: 150
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/delta
   m_ControlIndex: 0
@@ -508,10 +508,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 145
-    y: 175
-    width: 50
-    height: 50
+    x: 181.25
+    y: 218.75
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/rightButton
   m_ControlIndex: 0
@@ -564,10 +564,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 550
-    width: 700
-    height: 70
+    x: 25
+    y: 687.5
+    width: 875
+    height: 87.5
   m_Visualization: 7
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
@@ -620,10 +620,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 265
-    y: 175
-    width: 50
-    height: 50
+    x: 331.25
+    y: 218.75
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/backButton
   m_ControlIndex: 0
@@ -676,10 +676,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 205
-    y: 175
-    width: 50
-    height: 50
+    x: 256.25
+    y: 218.75
+    width: 62.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Mouse>/forwardButton
   m_ControlIndex: 0

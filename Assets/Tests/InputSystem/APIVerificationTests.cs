@@ -183,6 +183,7 @@ class APIVerificationTests
 #if UNITY_EDITOR_OSX
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOSWireless).FullName ||
 #endif
 #if UNITY_EDITOR_WIN
             fullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
@@ -553,6 +554,10 @@ class APIVerificationTests
         public int right = 0;
         public int up = 0;
     ")]
+    // KeyboardState state size has increased to support more keys like F13-F24
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
+    // Allow Key.IMESelected to be marked as Obsolete
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

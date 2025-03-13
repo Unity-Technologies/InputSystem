@@ -41,21 +41,31 @@ namespace UnityEngine.InputSystem
     /// runtime. However, it is possible to manually add devices using methods such as <see
     /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
     ///
-    /// <example>
-    /// <code>
-    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
-    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
-    /// </code>
-    /// </example>
-    ///
     /// There are subclasses representing the most common types of devices, like <see cref="Mouse"/>,
     /// <see cref="Keyboard"/>, <see cref="Gamepad"/>, and <see cref="Touchscreen"/>.
     ///
     /// To create your own types of devices, you can derive from InputDevice and register your device
     /// as a new "layout".
     ///
+    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). However, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
+    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
+    ///
+    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
+    /// sample which you can install from the Unity package manager.
+    ///
+    /// You can also find more information in the <a href="../manual/Devices.html">manual</a>.
+    /// </remarks>
     /// <example>
     /// <code>
+    /// using System.Runtime.InteropServices;
+    /// using UnityEditor;
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.Controls;
+    /// using UnityEngine.InputSystem.Layouts;
+    /// using UnityEngine.InputSystem.LowLevel;
+    /// using UnityEngine.InputSystem.Utilities;
+    ///
     /// // InputControlLayoutAttribute attribute is only necessary if you want
     /// // to override default behavior that occurs when registering your device
     /// // as a layout.
@@ -69,6 +79,9 @@ namespace UnityEngine.InputSystem
     /// {
     ///     public ButtonControl button { get; private set; }
     ///     public AxisControl axis { get; private set; }
+    ///
+    ///     // This is an example of how to add a "synthetic" gamepad that isn't actually backed by hardware.
+    ///     Gamepad gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     ///
     ///     // Register the device.
     ///     static MyDevice()
@@ -113,7 +126,7 @@ namespace UnityEngine.InputSystem
     ///     // particular device is connected and fed into the input system.
     ///     // The format is a simple FourCC code that "tags" state memory blocks for the
     ///     // device to give a base level of safety checks on memory operations.
-    ///     public FourCC format => return new FourCC('H', 'I', 'D');
+    ///     public FourCC format => new FourCC('H', 'I', 'D');
     ///
     ///     // InputControlAttributes on fields tell the input system to create controls
     ///     // for the public fields found in the struct.
@@ -121,26 +134,16 @@ namespace UnityEngine.InputSystem
     ///     // Assume a 16bit field of buttons. Create one button that is tied to
     ///     // bit #3 (zero-based). Note that buttons do not need to be stored as bits.
     ///     // They can also be stored as floats or shorts, for example.
-    ///     [InputControl(name = "button", layout = "Button", bit = 3)]
+    ///     [InputControl(name = "button", layout = "Button", bit = 3)] [FieldOffset(0)]
     ///     public ushort buttons;
     ///
     ///     // Create a floating-point axis. The name, if not supplied, is taken from
     ///     // the field.
-    ///     [InputControl(layout = "Axis")]
+    ///     [InputControl(layout = "Axis")] [FieldOffset(0)]
     ///     public short axis;
     /// }
     /// </code>
     /// </example>
-    ///
-    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
-    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
-    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
-    ///
-    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
-    /// sample which you can install from the Unity package manager.
-    ///
-    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
-    /// </remarks>
     /// <seealso cref="InputControl"/>
     /// <seealso cref="Mouse"/>
     /// <seealso cref="Keyboard"/>
@@ -508,10 +511,26 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been added.
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Added"/>
+        /// <see cref="OnRemoved"/>
         /// </remarks>
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Added"/>
-        /// <seealso cref="OnRemoved"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public static MyDevice current { get; private set; }
+        ///     protected override void OnAdded()
+        ///     {
+        ///         // use this context to assign the current device for instance
+        ///         base.OnAdded();
+        ///         current = this;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void OnAdded()
         {
         }
@@ -521,10 +540,27 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been removed.
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Removed"/>
+        /// <see cref="OnAdded"/>
         /// </remarks>
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Removed"/>
-        /// <seealso cref="OnRemoved"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public static MyDevice current { get; private set; }
+        ///     protected override void OnRemoved()
+        ///     {
+        ///         // use this context to unassign the current device for instance
+        ///         base.OnRemoved();
+        ///         if (current == this)
+        ///             current = null;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void OnRemoved()
         {
         }
@@ -542,7 +578,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputManager.OnUpdate"/>
         /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
-        /// <seealso cref="OnConfigurationChanged"/>///
+        /// <seealso cref="OnConfigurationChanged"/>
         protected virtual void OnConfigurationChanged()
         {
         }
@@ -560,8 +596,8 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
-        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl">ioctl</a>
         /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)

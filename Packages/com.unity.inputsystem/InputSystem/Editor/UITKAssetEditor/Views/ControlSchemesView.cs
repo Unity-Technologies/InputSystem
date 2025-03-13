@@ -63,7 +63,6 @@ namespace UnityEngine.InputSystem.Editor
             m_ModalWindow.Add(popupWindow);
             root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
-            m_ModalWindow.RegisterCallback<ClickEvent>(evt => CloseView());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
             m_ListView = controlSchemeVisualElement.Q<MultiColumnListView>(kControlSchemesListView);
