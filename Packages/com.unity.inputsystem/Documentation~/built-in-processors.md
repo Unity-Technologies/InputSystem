@@ -2,122 +2,19 @@
 
 The Input System package comes with a set of built-in Processors, which you can use with [bindings](ActionBindings.md), [actions](actions.md) and [controls](controls.md).
 
-## Clamp
 
-Clamps input values to the [`min`..`max`] range.
+|**Processor name**|**Description**|**Operand type**|**Parameters**|
+|---|---|---|---|
+|[`Clamp`](../api/UnityEngine.InputSystem.Processors.ClampProcessor.html)|Clamps input values to the [`min`..`max`] range.|`float`|<ul><li>`float min`</li><li>`float max`</li></ul>|
+|[`Invert`](../api/UnityEngine.InputSystem.Processors.InvertProcessor.html)|Inverts the values from a Control (that is, multiplies the values by &minus;1).|`float`|None|
+|[`InvertVector2`](../api/UnityEngine.InputSystem.Processors.InvertVector2Processor.html)|Inverts the values from a Control (that is, multiplies the values by &minus;1). Inverts the x-axis of the vector if `invertX` is true, and the y-axis if `invertY` is true.|`Vector2`|<ul><li>`bool invertX`</li><li>`bool invertY`</li></ul>|
+|[`Invert Vector 3`](../api/UnityEngine.InputSystem.Processors.InvertVector3Processor.html)|Inverts the values from a Control (that is, multiplies the values by &minus;1). Inverts the x-axis of the vector if `invertX` is true, the y-axis if `invertY` is true, and the z-axis if `invertZ` is true.|`Vector3`|<ul><li>`bool invertX`</li><li>`bool invertY`</li><li>`bool invertZ`</li></ul>|
+|[`Normalize`](../api/UnityEngine.InputSystem.Processors.NormalizeProcessor.html)|Normalizes input values in the range [`min`..`max`] to unsigned normalized form [0..1] if `min` is >= `zero`, and to signed normalized form [-1..1] if `min` < `zero`.|`float`|<ul><li>`float min`</li><li>`float max`</li><li>`float zero`</li></ul>|
+|[`NormalizeVector2`](../api/UnityEngine.InputSystem.Processors.NormalizeVector2Processor.html)|Normalizes input vectors to be of unit length (1). This is the same as calling `Vector2.normalized`.|`Vector2`|None|
+|[`NormalizeVector3`](../api/UnityEngine.InputSystem.Processors.NormalizeVector3Processor.html)|Normalizes input vectors to be of unit length (1). This is the same as calling `Vector3.normalized`.|`Vector3`|None|
+|[`Scale`](../api/UnityEngine.InputSystem.Processors.ScaleProcessor.html)|Multiplies all input values by `factor`.|`float`|`float factor`|
+|[`ScaleVector2`](../api/UnityEngine.InputSystem.Processors.ScaleVector2Processor.html)|Multiplies all input values by `x` along the x-axis and by `y` along the y-axis.|`Vector2`|<ul><li>`float x`</li><li>`float y`</li></ul>|
+|[`ScaleVector3`](../api/UnityEngine.InputSystem.Processors.ScaleVector3Processor.html)|Multiplies all input values by `x` along the x-axis, by `y` along the y-axis, and by `z` along the z-axis.|`Vector3`|<ul><li>`float x`</li><li>`float y`</li><li>`float z`</li></ul>|
+|[`AxisDeadzone`](../api/UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor.html)|Scales the values of a Control so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or &minus;1.<br/><br/>Many Controls don't have a precise resting point (that is, they don't always report exactly 0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.|`float`|<ul><li>`float min`</li><li>`float max`</li></ul>|
+|[`StickDeadzone`](../api/UnityEngine.InputSystem.Processors.StickDeadzoneProcessor.html)|Scales the values of a Vector2 Control, such as a stick, so that any input vector with a magnitude smaller than `min` results in (0,0), and any input vector with a magnitude greater than `max` is normalized to length 1.<br/><br/>Many Controls don't have a precise resting point (that is, they don't always report exactly 0,0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.|`Vector2`|<ul><li>`float min`</li><li>`float max`</li></ul>
 
-|__Name__|[`Clamp`](../api/UnityEngine.InputSystem.Processors.ClampProcessor.html)|
-|---|---|
-|__Operand Type__|`float`|
-|__Parameters__|`float min`<br>`float max`|
-
-
-## Invert
-
-Inverts the values from a Control (that is, multiplies the values by -1).
-
-|__Name__|[`Invert`](../api/UnityEngine.InputSystem.Processors.InvertProcessor.html)|
-|---|---|
-|__Operand Type__|`float`|
-
-
-## Invert Vector 2
-
-Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
-
-
-|__Name__|[`InvertVector2`](../api/UnityEngine.InputSystem.Processors.InvertVector2Processor.html)|
-|---|---|
-|__Operand Type__|`Vector2`|
-|__Parameters__|`bool invertX`<br>`bool invertY`|
-
-Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
-
-## Invert Vector 3
-
-Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, the y axis if `invertY` is true, and the z axis if `invertZ` is true.
-
-|__Name__|[`Invert Vector 3`](../api/UnityEngine.InputSystem.Processors.InvertVector3Processor.html)|
-|---|---|
-|__Operand Type__|`Vector3`|
-|__Parameters__|`bool invertX`<br>`bool invertY`<br>`bool invertZ`|
-
-
-## Normalize
-
-Normalizes input values in the range [`min`..`max`] to unsigned normalized form [0..1] if `min` is >= `zero`, and to signed normalized form [-1..1] if `min` < `zero`.
-
-
-|__Name__|[`Normalize`](../api/UnityEngine.InputSystem.Processors.NormalizeProcessor.html)|
-|---|---|
-|__Operand Type__|`float`|
-|__Parameters__|`float min`<br>`float max`<br>`float zero`|
-
-## Normalize Vector 2
-
-Normalizes input vectors to be of unit length (1). This is the same as calling `Vector2.normalized`.
-
-
-|__Name__|[`NormalizeVector2`](../api/UnityEngine.InputSystem.Processors.NormalizeVector2Processor.html)|
-|---|---|
-|__Operand Type__|`Vector2`|
-
-## Normalize Vector 3
-
-Normalizes input vectors to be of unit length (1). This is the same as calling `Vector3.normalized`.
-
-|__Name__|[`NormalizeVector3`](../api/UnityEngine.InputSystem.Processors.NormalizeVector3Processor.html)|
-|---|---|
-|__Operand Type__|`Vector3`|
-
-## Scale
-
-Multiplies all input values by `factor`.
-
-|__Name__|[`Scale`](../api/UnityEngine.InputSystem.Processors.ScaleProcessor.html)|
-|---|---|
-|__Operand Type__|`float`|
-|__Parameters__|`float factor`|
-
-
-## Scale Vector 2
-
-Multiplies all input values by `x` along the X axis and by `y` along the Y axis.
-
-|__Name__|[`ScaleVector2`](../api/UnityEngine.InputSystem.Processors.ScaleVector2Processor.html)|
-|---|---|
-|__Operand Type__|`Vector2`|
-|__Parameters__|`float x`<br>`float y`|
-
-
-## Scale Vector 3
-
-Multiplies all input values by `x` along the X axis, by `y` along the Y axis, and by `z` along the Z axis.
-
-
-|__Name__|[`ScaleVector3`](../api/UnityEngine.InputSystem.Processors.ScaleVector3Processor.html)|
-|---|---|
-|__Operand Type__|`Vector3`|
-|__Parameters__|`float x`<br>`float y`<br>`float x`|
-
-## Axis deadzone
-
-Scales the values of a Control so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or -1.
-
-|__Name__|[`AxisDeadzone`](../api/UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor.html)|
-|---|---|
-|__Operand Type__|`float`|
-|__Parameters__|`float min`<br>`float max`|
-
-Many Controls don't have a precise resting point (that is, they don't always report exactly 0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.
-
-## Stick deadzone
-
-Scales the values of a Vector2 Control, such as a stick, so that any input vector with a magnitude smaller than `min` results in (0,0), and any input vector with a magnitude greater than `max` is normalized to length 1.
-
-|__Name__|[`StickDeadzone`](../api/UnityEngine.InputSystem.Processors.StickDeadzoneProcessor.html)|
-|---|---|
-|__Operand Type__|`Vector2`|
-|__Parameters__|`float min`<br>`float max`|
-
-Many Controls don't have a precise resting point (that is, they don't always report exactly 0,0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.
