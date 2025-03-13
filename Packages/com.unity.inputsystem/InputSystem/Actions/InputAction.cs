@@ -1248,10 +1248,11 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasPressedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisDynamicUpdate"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasPerformedThisFrame"/>
@@ -1262,7 +1263,46 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// in the MonoBehaviour Update cycle (rendering frame).
+        /// </summary>
+        /// <returns>True if the action was pressed in the MonoBehaviour Update cycle (rendering frame).</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasPressedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was pressed in the current dynamic Update cycle (in between the previous and the current frame).
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPressedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPressedThisDynamicUpdate,
+        /// you may want to use WasPressedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressedThisDynamicUpdate() &amp;&amp; fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleasedThisDynamicUpdate())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasPressedThisDynamicUpdate()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->framePressed == ExpectedFrame();
             }
 
             return false;
@@ -1297,10 +1337,11 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasReleasedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasReleasedThisDynamicUpdate"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasCompletedThisFrame"/>
@@ -1311,7 +1352,47 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
+        /// at any point in the MonoBehaviour Update cycle (rendering frame).
+        /// </summary>
+        /// <returns>True if the action was released in the MonoBehaviour Update cycle (rendering frame).</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasReleasedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was released in the current dynamic Update cycle (in between the previous and the current frame).
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasReleasedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasReleasedThisDynamicUpdate,
+        /// you may want to use WasReleasedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressedThisDynamicUpdate() &amp;&amp; fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleasedThisDynamicUpdate())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="CallbackContext.ReadValueAsButton"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasReleasedThisDynamicUpdate()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->frameReleased == ExpectedFrame();
             }
 
             return false;
@@ -1356,9 +1437,10 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasPerformedThisDynamicUpdate"/> when trying to access in dynamic Update instead.
         /// </remarks>
+        /// <seealso cref="WasPerformedThisDynamicUpdate"/>
         /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1370,7 +1452,45 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in the MonoBehaviour Update cycle (rendering frame).
+        /// </summary>
+        /// <returns>True if the action performed in the MonoBehaviour Update cycle (rendering frame).</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasPerformedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was performed in the current dynamic Update cycle (in between the previous and the current frame).
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasPerformedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPerformedThisDynamicUpdate,
+        /// you may want to use WasPerformedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var warp = playerInput.actions["Warp"];
+        /// if (warp.WasPerformedThisDynamicUpdate())
+        ///     InitiateWarp();
+        /// </code>
+        /// </example>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasPerformedThisDynamicUpdate()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->framePerformed == ExpectedFrame();
             }
 
             return false;
@@ -1426,8 +1546,8 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         /// </para>
         /// <para>
-        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// the dynamic Update, use <see cref="WasCompletedThisDynamicUpdate"/> to access this during dynamic Update instead.
         /// </para>
         /// </remarks>
         /// <example>
@@ -1439,6 +1559,7 @@ namespace UnityEngine.InputSystem
         ///     StopTeleport();
         /// </code>
         /// </example>
+        /// <seealso cref="WasCompletedThisDynamicUpdate"/>
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1450,7 +1571,47 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default && actionStatePtr->frame == ExpectedFrame();
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
+        /// value at least once in the MonoBehaviour Update cycle (rendering frame).
+        /// </summary>
+        /// <returns>True if the action completed in this MonoBehaviour Update cycle (rendering frame).</returns>
+        /// <remarks>
+        /// Unlike <see cref="WasCompletedThisFrame"/>, this method will return true only if the InputSystem was updated and the action was completed in the current dynamic Update cycle (in between the previous and the current frame).
+        /// This can be used in dynamic update if the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>.
+        /// If the update mode is set to <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/>, this method will behave exactly like <see cref="WasCompletedThisFrame"/>.
+        ///
+        /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasCompletedThisDynamicUpdate,
+        /// you may want to use WasCompletedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var teleport = playerInput.actions["Teleport"];
+        /// if (teleport.WasPerformedThisDynamicUpdate())
+        ///     InitiateTeleport();
+        /// else if (teleport.WasCompletedThisDynamicUpdate())
+        ///     StopTeleport();
+        /// </code>
+        /// </example>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public unsafe bool WasCompletedThisDynamicUpdate()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->frameCompleted == ExpectedFrame();
             }
 
             return false;

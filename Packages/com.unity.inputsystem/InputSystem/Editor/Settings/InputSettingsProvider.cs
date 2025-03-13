@@ -116,6 +116,9 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+                    CustomUpdateModeHelpBox();
+
                 var runInBackground = Application.runInBackground;
                 using (new EditorGUI.DisabledScope(!runInBackground))
                     EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
@@ -184,6 +187,22 @@ namespace UnityEngine.InputSystem.Editor
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private void CustomUpdateModeHelpBox()
+        {
+            var message =
+                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
+            Uri link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
+            GUILayout.BeginVertical();
+            GUILayout.Label(message, EditorStyles.label);
+            if (GUILayout.Button("Read more", EditorStyles.linkLabel))
+                System.Diagnostics.Process.Start(link.AbsoluteUri);
+            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
 
         private static void ShowPlatformSettings()

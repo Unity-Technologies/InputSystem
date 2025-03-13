@@ -152,12 +152,17 @@ namespace UnityEngine.InputSystem.Editor
             return actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions)).GetArrayElementAtIndex(actionIndex);
         }
 
-        public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
+        public static SerializedInputAction? GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
         {
-            return new SerializedInputAction(state.serializedObject
+            SerializedProperty property = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.GetArrayElementAtIndex(mapIndex)
                 ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-                ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name));
+                ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name);
+
+            // If the action is not found, return null.
+            if (property == null)
+                return null;
+            return new SerializedInputAction(property);
         }
 
         public static SerializedInputBinding GetCompositeOrBindingInMap(SerializedProperty actionMap, int bindingIndex)

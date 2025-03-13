@@ -132,6 +132,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Product", m_Device.description.product);
             if (!string.IsNullOrEmpty(m_Device.description.manufacturer))
                 EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
+            if (!string.IsNullOrEmpty(m_Device.description.version))
+                EditorGUILayout.LabelField("Version", m_Device.description.version);
             if (!string.IsNullOrEmpty(m_Device.description.serial))
                 EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);

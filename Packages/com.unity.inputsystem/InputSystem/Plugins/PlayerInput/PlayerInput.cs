@@ -342,7 +342,13 @@ namespace UnityEngine.InputSystem
                         UninitializeActions();
                 }
 
+                var didChange = m_Actions != null;
+
                 m_Actions = value;
+
+                if (didChange || m_Enabled)
+                    // copy action asset for the first player so that the original asset stays untouched
+                    CopyActionAssetAndApplyBindingOverrides();
 
                 if (m_Enabled)
                 {
@@ -1373,14 +1379,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
-                    var oldActions = m_Actions;
-                    m_Actions = Instantiate(m_Actions);
-                    for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
-                    {
-                        for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                            m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
-                    }
-
+                    CopyActionAssetAndApplyBindingOverrides();
                     break;
                 }
 
@@ -1428,6 +1427,18 @@ namespace UnityEngine.InputSystem
             }
 
             m_ActionsInitialized = true;
+        }
+
+        private void CopyActionAssetAndApplyBindingOverrides()
+        {
+            // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
+            var oldActions = m_Actions;
+            m_Actions = Instantiate(m_Actions);
+            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+            {
+                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+            }
         }
 
         private void UninitializeActions()
@@ -1798,6 +1809,13 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        private void Awake()
+        {
+            // If an action asset is assigned copy it to avoid modifying the original asset.
+            if (m_Actions != null)
+                CopyActionAssetAndApplyBindingOverrides();
+        }
 
         private void OnEnable()
         {
