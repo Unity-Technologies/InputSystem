@@ -34,7 +34,7 @@ This means, in many cases, you can start scripting with the Input System without
 
 There are various ways to access your actions from code. One of the simplest ways is to use the `FindAction` method.
 
-`FindAction` allows you to search for an action by name from within the set of configured acations, and returns a reference which you can then either read the value directly (also called "polling"), or you can attach callback methods that are called the action is performed. The workflow described on this page focuses only on reading the action values. [You can read more about using callbacks here](RespondingToActions.html#action-callbacks).
+`FindAction` allows you to search for an action by name from within the set of configured acations, and returns a reference which you can then either read the value directly (known as [polling](polling-actions.md)), or you can attach callback methods that are called the action is performed. The workflow described on this page focuses only on reading the action values. Refer to [polling actions](polling-actions.md) and [setting callbacks on actions](set-callbacks-on-actions.md) for further information.
 
 > __Tip__: Finding and storing a reference to an Action is similar to finding and storing a reference to a Component, so if you have done that elsewhere in Unity, this may be a familiar process.
 
@@ -97,7 +97,7 @@ public class Example : MonoBehaviour
 
 > **Note:** You should avoid using `FindAction` in your Update() loop, because it performs a string-based lookup which could impact performance. This is why the Action refeferences in the example above are found during the Start() function, and stored in variables after finding them.
 
-> **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](about-project-wide-actions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you wish to access.
+> **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](about-project-wide-actions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type `InputActionAsset` to the asset you wish to access.
 
 ## Pros and Cons
 

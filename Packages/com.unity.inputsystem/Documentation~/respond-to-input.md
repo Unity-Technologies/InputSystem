@@ -4,12 +4,12 @@ Learn how to implement responses to the input that you have configured in your p
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
-| **[Respond To Input At Runtime](respond-to-input-at-runtime.md)** | Summary |
-| **[API Overview](api-overview.md)** | Summary |
+| **[About responding to input](about-responding-to-input.md)** | An introduction to the ways you can implement responses to input in your project. |
 | **[Enabling actions](enable-actions.md)** | Summary |
 | **[Polling actions](polling-actions.md)** | Summary |
 | **[Set callbacks on actions](set-callbacks-on-actions.md)** | Summary |
-| **[Trace actions](trace-actions.md)** | Summary |
+| **[Read devices directly](read-devices-directly.md))** | Summary |
+| **[API Overview](api-overview.md)** | Summary |
 | **[Player Input Component](player-input-component.md)** | Summary |
 | **[Player Input Manager Component](player-input-manager-component.md)** | Summary |
 
