@@ -895,7 +895,7 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPressedThisFrame() for
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPerformedThisDynamicUpdate() for
                 //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
                 //       a click will register on button *up*, but consistent with how other UI systems work where
                 //       click occurs on key press. This nuance in behavior becomes important in combination with
@@ -914,9 +914,9 @@ namespace UnityEngine.InputSystem.UI
 
                 data.device = m_SubmitCancelState.device;
 
-                if (cancelAction != null && cancelAction.WasPerformedThisFrame())
+                if (cancelAction != null && cancelAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
@@ -1931,6 +1931,15 @@ namespace UnityEngine.InputSystem.UI
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
                     eventData.trackedDevicePosition = default;
+
+                    // We only have a single pointer state and current frame press state values was based on previous eventData.
+                    // Make sure these get updated when we switch.
+                    if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                    {
+                        pointer.leftButton.OnEndFrame();
+                        pointer.rightButton.OnEndFrame();
+                        pointer.middleButton.OnEndFrame();
+                    }
                 }
 
                 if (pointerType == UIPointerType.Touch)

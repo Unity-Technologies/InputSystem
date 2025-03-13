@@ -3609,12 +3609,6 @@ namespace UnityEngine.InputSystem
             // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
             EditorApplication.delayCall += ShowRestartWarning;
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled.
-            // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
-            EnableActions();
-#endif
-
             RunInitialUpdate();
 
             k_InputInitializeInEditorMarker.End();
@@ -3657,9 +3651,9 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     EnableActions();
-                    #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:

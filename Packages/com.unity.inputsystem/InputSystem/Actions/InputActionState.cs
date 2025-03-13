@@ -559,8 +559,11 @@ namespace UnityEngine.InputSystem
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
+                newActionState.framePerformed = oldActionState.framePerformed;
+                newActionState.frameCompleted = oldActionState.frameCompleted;
+                newActionState.framePressed = oldActionState.framePressed;
+                newActionState.frameReleased = oldActionState.frameReleased;
                 newActionState.bindingIndex = oldActionState.bindingIndex;
-                newActionState.frame = oldActionState.frame;
 
                 if (oldActionState.phase != InputActionPhase.Disabled)
                 {
@@ -885,7 +888,10 @@ namespace UnityEngine.InputSystem
                 actionState->lastCompletedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
-                actionState->frame = default;
+                actionState->framePerformed = default;
+                actionState->frameCompleted = default;
+                actionState->framePressed = default;
+                actionState->frameReleased = default;
             }
 
             Debug.Assert(!actionState->isStarted, "Cannot reset an action to started phase");
@@ -1563,18 +1569,18 @@ namespace UnityEngine.InputSystem
             var actionState = &actionStates[actionIndex];
             if (!actionState->isPressed && actuation >= pressPoint)
             {
+                actionState->framePressed = Time.frameCount;
                 actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
                 actionState->isPressed = true;
-                actionState->frame = Time.frameCount;
             }
             else if (actionState->isPressed)
             {
                 var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                 if (actuation <= releasePoint)
                 {
+                    actionState->frameReleased = Time.frameCount;
                     actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
                     actionState->isPressed = false;
-                    actionState->frame = Time.frameCount;
                 }
             }
         }
@@ -2433,9 +2439,9 @@ namespace UnityEngine.InputSystem
                 newState.magnitude = 0f;
 
             newState.phase = newPhase;
-            newState.frame = Time.frameCount;
             if (newPhase == InputActionPhase.Performed)
             {
+                newState.framePerformed = Time.frameCount;
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
@@ -2453,23 +2459,34 @@ namespace UnityEngine.InputSystem
             {
                 newState.lastCanceledInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+                newState.framePerformed = actionState->framePerformed;
             }
             else
             {
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+                newState.framePerformed = actionState->framePerformed;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
             }
 
             // When we go from Performed to Disabling, we take a detour through Canceled.
             // To replicate the behavior of releasedInUpdate where it doesn't get updated when the action is disabled
             // from being performed, we skip updating lastCompletedInUpdate if Disabled is the phase after Canceled.
-            if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed && !isDisablingAction)
+            if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed &&
+                !isDisablingAction)
+            {
+                newState.frameCompleted = Time.frameCount;
                 newState.lastCompletedInUpdate = InputUpdate.s_UpdateStepCount;
+            }
             else
+            {
                 newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
+                newState.frameCompleted = actionState->frameCompleted;
+            }
 
             newState.pressedInUpdate = actionState->pressedInUpdate;
+            newState.framePressed = actionState->framePressed;
             newState.releasedInUpdate = actionState->releasedInUpdate;
+            newState.frameReleased = actionState->frameReleased;
             if (newPhase == InputActionPhase.Started)
                 newState.startTime = newState.time;
             *actionState = newState;
@@ -3640,7 +3657,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
             [FieldOffset(48)] private uint m_LastCompletedInUpdate;
-            [FieldOffset(52)] private int m_Frame;
+            [FieldOffset(52)] internal int framePerformed;
+            [FieldOffset(56)] internal int framePressed;
+            [FieldOffset(60)] internal int frameReleased;
+            [FieldOffset(64)] internal int frameCompleted;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3794,12 +3814,6 @@ namespace UnityEngine.InputSystem
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
-            }
-
-            internal int frame
-            {
-                get => m_Frame;
-                set => m_Frame = value;
             }
 
             /// <summary>
