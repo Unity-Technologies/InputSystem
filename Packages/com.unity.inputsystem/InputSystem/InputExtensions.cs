@@ -128,12 +128,24 @@ namespace UnityEngine.InputSystem
                 case Key.F10:
                 case Key.F11:
                 case Key.F12:
+                case Key.F13:
+                case Key.F14:
+                case Key.F15:
+                case Key.F16:
+                case Key.F17:
+                case Key.F18:
+                case Key.F19:
+                case Key.F20:
+                case Key.F21:
+                case Key.F22:
+                case Key.F23:
+                case Key.F24:
                 case Key.OEM1:
                 case Key.OEM2:
                 case Key.OEM3:
                 case Key.OEM4:
                 case Key.OEM5:
-                case Key.IMESelected:
+                case KeyEx.IMESelected:
                     return false;
             }
             return true;

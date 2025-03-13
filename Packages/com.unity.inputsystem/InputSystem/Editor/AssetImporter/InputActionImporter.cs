@@ -315,7 +315,7 @@ namespace UnityEngine.InputSystem.Editor
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
-            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
+            ProjectWindowUtil.CreateAssetWithContent("New Actions." + InputActionAsset.Extension,
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
 

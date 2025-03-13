@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerOSXState WithButton(Button button)
         {
-            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            Debug.Assert((int)button < 16, $"A maximum of 16 buttons is supported for this layout.");
             buttons |= (ushort)(1U << (int)button);
             return this;
         }
@@ -105,6 +105,98 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
     [StructLayout(LayoutKind.Explicit)]
     internal struct XInputControllerWirelessOSXState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat => new FourCC('H', 'I', 'D');
+
+        public enum Button
+        {
+            Start = 11,
+            Select = 16,
+            LeftThumbstickPress = 13,
+            RightThumbstickPress = 14,
+            LeftShoulder = 6,
+            RightShoulder = 7,
+            A = 0,
+            B = 1,
+            X = 3,
+            Y = 4,
+        }
+        [FieldOffset(0)]
+        private byte padding;
+
+        [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
+        [InputControl(name = "leftStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "leftStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(1)] public ushort leftStickX;
+        [FieldOffset(3)] public ushort leftStickY;
+
+        [InputControl(name = "rightStick", layout = "Stick", format = "VC2S")]
+        [InputControl(name = "rightStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(5)] public ushort rightStickX;
+        [FieldOffset(7)] public ushort rightStickY;
+
+        [InputControl(name = "leftTrigger", format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=0.01560998")]
+        [FieldOffset(9)] public ushort leftTrigger;
+        [InputControl(name = "rightTrigger", format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=0.01560998")]
+        [FieldOffset(11)] public ushort rightTrigger;
+
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=8,maxValue=2,nullValue=0,wrapAtValue=9", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=2,maxValue=4", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=4,maxValue=6", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=6, maxValue=8", bit = 0, sizeInBits = 4)]
+        [FieldOffset(13)]
+        public byte dpad;
+
+        [InputControl(name = "start", bit = (uint)Button.Start, displayName = "Start")]
+        [InputControl(name = "select", bit = (uint)Button.Select, displayName = "Select")]
+        [InputControl(name = "leftStickPress", bit = (uint)Button.LeftThumbstickPress)]
+        [InputControl(name = "rightStickPress", bit = (uint)Button.RightThumbstickPress)]
+        [InputControl(name = "leftShoulder", bit = (uint)Button.LeftShoulder)]
+        [InputControl(name = "rightShoulder", bit = (uint)Button.RightShoulder)]
+        [InputControl(name = "buttonSouth", bit = (uint)Button.A, displayName = "A")]
+        [InputControl(name = "buttonEast", bit = (uint)Button.B, displayName = "B")]
+        [InputControl(name = "buttonWest", bit = (uint)Button.X, displayName = "X")]
+        [InputControl(name = "buttonNorth", bit = (uint)Button.Y, displayName = "Y")]
+
+        [FieldOffset(14)]
+        public uint buttons;
+
+        public FourCC format => kFormat;
+
+        public XInputControllerWirelessOSXState WithButton(Button button)
+        {
+            Debug.Assert((int)button < 32, $"A maximum of 32 buttons is supported for this layout.");
+            buttons |= 1U << (int)button;
+            return this;
+        }
+
+        public XInputControllerWirelessOSXState WithDpad(byte value)
+        {
+            dpad = value;
+            return this;
+        }
+
+        public static XInputControllerWirelessOSXState defaultState => new XInputControllerWirelessOSXState
+        {
+            rightStickX = 32767,
+            rightStickY = 32767,
+            leftStickX = 32767,
+            leftStickY = 32767
+        };
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct XInputControllerWirelessOSXStateV2 : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('H', 'I', 'D');
 
@@ -173,20 +265,20 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public FourCC format => kFormat;
 
-        public XInputControllerWirelessOSXState WithButton(Button button)
+        public XInputControllerWirelessOSXStateV2 WithButton(Button button)
         {
-            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert((int)button < 32, $"A maximum of 32 buttons is supported for this layout.");
             buttons |= 1U << (int)button;
             return this;
         }
 
-        public XInputControllerWirelessOSXState WithDpad(byte value)
+        public XInputControllerWirelessOSXStateV2 WithDpad(byte value)
         {
             dpad = value;
             return this;
         }
 
-        public static XInputControllerWirelessOSXState defaultState => new XInputControllerWirelessOSXState
+        public static XInputControllerWirelessOSXStateV2 defaultState => new XInputControllerWirelessOSXStateV2
         {
             rightStickX = 32767,
             rightStickY = 32767,
@@ -221,6 +313,23 @@ namespace UnityEngine.InputSystem.XInput
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XboxOneGampadMacOSWireless : XInputController
+    {
+    }
+
+    /// <summary>
+    /// A wireless Xbox One or Xbox Series Gamepad connected to a macOS computer.
+    /// </summary>
+    /// <remarks>
+    /// An Xbox One/Series wireless gamepad connected to a mac using Bluetooth.
+    /// The reason this is different from <see cref="XboxOneGampadMacOSWireless"/> is that some Xbox Controllers have
+    /// different View and Share button bit mapping. So we need to use a different layout for those controllers. It seems
+    /// that some Xbox One and Xbox Series controller share the same mappings so this combines them all.
+    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
+    /// </remarks>
+    [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXStateV2), hideInUI = true)]
+    public class XboxGamepadMacOSWireless : XInputController
     {
     }
 }
