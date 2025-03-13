@@ -9,7 +9,7 @@ There are currently two Control types implemented out of the box: [buttons](#on-
 
 >__Note__: On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control (for example, by adding a sprite or UI component to the GameObject). On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
 
-Each on-screen Control uses a [Control path](Controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
+Each on-screen Control uses a [Control path](controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
@@ -66,7 +66,7 @@ Use Isolated Input Actions to fix this. This mode uses a local set of Input Acti
 
 ## Writing custom on-screen Controls
 
-You can add support for new types of [Input Controls](Controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html).
+You can add support for new types of [Input Controls](controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html).
 
 ```CSharp
     [AddComponentMenu("Input/On-Screen Button")]

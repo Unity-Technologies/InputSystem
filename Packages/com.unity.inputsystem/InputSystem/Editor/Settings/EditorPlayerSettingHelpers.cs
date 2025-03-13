@@ -3,6 +3,11 @@ using System;
 using System.Linq;
 using UnityEditor;
 
+#if UNITY_6000_0_OR_NEWER
+using System.Reflection;
+using UnityEditor.Build.Profile;
+#endif
+
 namespace UnityEngine.InputSystem.Editor
 {
     internal static class EditorPlayerSettingHelpers
@@ -154,7 +159,33 @@ namespace UnityEngine.InputSystem.Editor
 
         private static SerializedProperty GetPropertyOrNull(string name)
         {
+#if UNITY_6000_0_OR_NEWER
+            // HOTFIX: the code below works around an issue causing an infinite reimport loop
+            // this will be replaced by a call to an API in the editor instead of using reflection once it is available
+            var buildProfileType = typeof(BuildProfile);
+            var globalPlayerSettingsField = buildProfileType.GetField("s_GlobalPlayerSettings", BindingFlags.Static | BindingFlags.NonPublic);
+            if (globalPlayerSettingsField == null)
+            {
+                Debug.LogError($"Could not find global player settings field in build profile when trying to get property {name}. Please try to update the Input System package.");
+                return null;
+            }
+            var playerSettings = (PlayerSettings)globalPlayerSettingsField.GetValue(null);
+            var activeBuildProfile = BuildProfile.GetActiveBuildProfile();
+            if (activeBuildProfile != null)
+            {
+                var playerSettingsOverrideField = buildProfileType.GetField("m_PlayerSettings", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (playerSettingsOverrideField == null)
+                {
+                    Debug.LogError($"Could not find player settings override field in build profile when trying to get property {name}. Please try to update the Input System package.");
+                    return null;
+                }
+                var playerSettingsOverride = (PlayerSettings)playerSettingsOverrideField.GetValue(activeBuildProfile);
+                if (playerSettingsOverride != null)
+                    playerSettings = playerSettingsOverride;
+            }
+#else
             var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault();
+#endif
             if (playerSettings == null)
                 return null;
             var playerSettingsObject = new SerializedObject(playerSettings);
