@@ -1,24 +1,32 @@
 ---
 uid: input-system-tracked-input-devices
 ---
-# The Player Input Manager component
+# Tracked Input Devices
 
->NOTE: The Input System package comes with a sample called `Simple Multiplayer` which you can install from the package manager UI in the Unity editor. The sample demonstrates how to use [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) to set up a simple local multiplayer scenario.
+Some input devices can provide information about their spatial position and orientation. It can then be used to pose other objects in your scene, or to interact with your scene. 
 
-The [`Player Input`](PlayerInput.md) system facilitates setting up local multiplayer games, where multiple players share a single screen and multiple controllers. You can set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of `PlayerInput` instances as players join and leave the game.
+## Tracked Pose Driver
 
-![PlayerInputManager](Images/PlayerInputManager.png)
+The Tracked Pose Driver component is used to synchronize a GameObject's transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the GameObject’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
 
-|Property|Description|
-|--------|-----------|
-|[`Notification Behavior`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_notificationBehavior)|How the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInput.html) component notifies game code about changes to the connected players. [This works the same way as for the `PlayerInput` component](PlayerInput.md#notification-behaviors).|
-|[`Join Behavior`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_joinBehavior)|Determines the mechanism by which players can join when joining is enabled. See documentation on [join behaviors](#join-behaviors).|
-|[`Player Prefab`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_playerPrefab)|A prefab that represents a player in the game. The [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component creates an instance of this prefab whenever a new player joins. This prefab must have one [`PlayerInput`](PlayerInput.md) component in its hierarchy.|
-|[`Joining Enabled By Default`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_joiningEnabled)|While this is enabled, new players can join via the mechanism determined by [`Join Behavior`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_joinBehavior).|
-|[`Limit Number of Players`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_maxPlayerCount)|Enable this if you want to limit the number of players who can join the game.|
-|[`Max Player Count`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_maxPlayerCount)(Only shown when `Limit number of Players` is enabled.)|The maximum number of players allowed to join the game.|
-|[`Enable Split-Screen`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_splitScreen)|If enabled, each player is automatically assigned a portion of the available screen area. See documentation on [split-screen](#split-screen) multiplayer.|
+|Property Name|Description|
+|-------------|-----------|
+|trackingType|Specifies which transform properties (position, rotation, or both) should be updated based on the tracked data.|
+|updateType|Determines when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
+|ignoreTrackingState|If enabled, ignores the tracking state and always assumes the input pose is valid, even when flagged otherwise.|
+|positionInput|An input action used to retrieve the position data (Vector3) of the tracked device.|
+|rotationInput|An input action used to retrieve the rotation data (Quaternion) of the tracked device.|
+|trackingStateInput|An input action used to determine whether the tracking state (position or rotation) is valid (Integer).|
 
-### Join behaviors
+## Tracked Device Raycaster
 
-Test
+Tracked Device Raycaster enables raycasting from tracked input devices, such as XR controllers, to interact with UI elements rendered in 3D space. Designed to work alongside the Canvas component, this raycaster replaces the standard GraphicRaycaster for XR and AR use cases, allowing pointer events to be processed based on ray intersections with graphics in world space. The component supports occlusion checks, custom ray distance limits, and filtering of reversed graphics to provide reliable UI interaction in immersive environments. It is useful for building XR-enabled user interfaces where traditional 2D input methods, such as a mouse, are not applicable.
+
+|Property Name|Description|
+|-------------|-----------|
+|blockingMask|Defines the layer mask used to check for occlusion when performing raycasting.|
+|checkFor3DOcclusion|Enables occlusion checks for 3D objects, preventing rays from passing through physical geometry.|
+|checkFor2DOcclusion|Enables occlusion checks for 2D objects, such as sprites in the scene.|
+|ignoreReversedGraphics|If enabled, ignores graphics whose normal faces away from the ray’s direction.|
+|maxDistance|Sets the maximum ray distance for interaction detection in world space coordinates.|
+|eventCamera|The camera used for raycasting and converting world space positions to screen space.|
