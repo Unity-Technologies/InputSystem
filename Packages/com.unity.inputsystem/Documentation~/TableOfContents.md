@@ -21,6 +21,7 @@
   * [Player Input Component](PlayerInput.md)
   * [Player Input Manager Component](PlayerInputManager.md)
   * [Input settings](Settings.md)
+  * [Tracked Input Devices](TrackedInputDevices.md)
   * [Advanced Topics]()
     * [Events](Events.md)
     * [Layouts](Layouts.md)
