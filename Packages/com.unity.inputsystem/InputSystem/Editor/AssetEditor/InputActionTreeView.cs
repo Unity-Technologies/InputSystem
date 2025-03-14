@@ -795,6 +795,10 @@ namespace UnityEngine.InputSystem.Editor
             var itemType = CopyTagToType(tag);
             if (location.item is ActionTreeItemBase dropTarget)
             {
+                // Specific case - Composite parts cannot be dropped into Bindings
+                if (location.item is not CompositeBindingTreeItem && tag == k_PartOfCompositeBindingTag)
+                    return;
+
                 if (!dropTarget.GetDropLocation(itemType, location.childIndex, ref array, ref arrayIndex))
                     return;
             }
