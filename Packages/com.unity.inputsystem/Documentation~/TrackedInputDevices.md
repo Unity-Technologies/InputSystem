@@ -7,7 +7,7 @@ Some input devices can provide information about their spatial position and orie
 
 ## Tracked Pose Driver
 
-The Tracked Pose Driver component is used to synchronize a GameObject's transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the GameObject’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
+The Tracked Pose Driver component is used to synchronize a __GameObject__'s transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the __GameObject__’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
 
 |Property Name|Description|
 |-------------|-----------|
@@ -20,7 +20,7 @@ The Tracked Pose Driver component is used to synchronize a GameObject's transfor
 
 ## Tracked Device Raycaster
 
-Tracked Device Raycaster enables raycasting from tracked input devices, such as XR controllers, to interact with UI elements rendered in 3D space. Designed to work alongside the Canvas component, this raycaster replaces the standard GraphicRaycaster for XR and AR use cases, allowing pointer events to be processed based on ray intersections with graphics in world space. The component supports occlusion checks, custom ray distance limits, and filtering of reversed graphics to provide reliable UI interaction in immersive environments. It is useful for building XR-enabled user interfaces where traditional 2D input methods, such as a mouse, are not applicable.
+Tracked Device Raycaster enables raycasting from tracked input devices, such as XR controllers, to interact with UI elements rendered in 3D space. Designed to work alongside the __Canvas__ component, this raycaster replaces the standard __GraphicRaycaster__ for XR and AR use cases, allowing pointer events to be processed based on ray intersections with graphics in world space. The component supports occlusion checks, custom ray distance limits, and filtering of reversed graphics to provide reliable UI interaction in immersive environments. It is useful for building XR-enabled user interfaces where traditional 2D input methods, such as a mouse, are not applicable.
 
 |Property Name|Description|
 |-------------|-----------|
