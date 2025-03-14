@@ -24,9 +24,8 @@ Tracked Device Raycaster enables raycasting from tracked input devices, such as 
 
 |Property Name|Description|
 |-------------|-----------|
-|blockingMask|Defines the layer mask used to check for occlusion when performing raycasting.|
-|checkFor3DOcclusion|Enables occlusion checks for 3D objects, preventing rays from passing through physical geometry.|
-|checkFor2DOcclusion|Enables occlusion checks for 2D objects, such as sprites in the scene.|
-|ignoreReversedGraphics|If enabled, ignores graphics whose normal faces away from the ray’s direction.|
-|maxDistance|Sets the maximum ray distance for interaction detection in world space coordinates.|
-|eventCamera|The camera used for raycasting and converting world space positions to screen space.|
+|[`Ignore Reversed Graphics`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_ignoreReversedGraphics)|If enabled, ignores graphics whose normal faces away from the ray’s direction.|
+|[`Check For 2D Occlusion`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_checkFor2DOcclusion)|Enables occlusion checks for 2D objects, such as sprites in the scene.|
+|[`Check For 3D Occulusion`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_checkFor3DOcclusion)|Enables occlusion checks for 3D objects, preventing rays from passing through physical geometry.|
+|[`Max Distance`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_maxDistance)|Sets the maximum ray distance for interaction detection in world space coordinates.|
+|[`Blocking Mask`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_blockingMask)|Defines the layer mask used to check for occlusion when performing raycasting.|
