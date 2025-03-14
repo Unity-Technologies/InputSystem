@@ -3,7 +3,7 @@ uid: input-system-tracked-input-devices
 ---
 # Tracked Input Devices
 
-Some input devices can provide information about their spatial position and orientation. It can then be used to pose other objects in your scene, or to interact with your scene. 
+Some input devices can provide information about their spatial position and orientation. It can then be used to pose other objects in your scene, or to interact with your scene.
 
 ## Tracked Pose Driver
 
