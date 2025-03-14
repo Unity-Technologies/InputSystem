@@ -11,12 +11,12 @@ The Tracked Pose Driver component is used to synchronize a GameObject's transfor
 
 |Property Name|Description|
 |-------------|-----------|
-|trackingType|Specifies which transform properties (position, rotation, or both) should be updated based on the tracked data.|
-|updateType|Determines when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
-|ignoreTrackingState|If enabled, ignores the tracking state and always assumes the input pose is valid, even when flagged otherwise.|
-|positionInput|An input action used to retrieve the position data (Vector3) of the tracked device.|
-|rotationInput|An input action used to retrieve the rotation data (Quaternion) of the tracked device.|
-|trackingStateInput|An input action used to determine whether the tracking state (position or rotation) is valid (Integer).|
+|[`Tracking Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingType)|Specifies which transform properties (position, rotation, or both) should be updated based on the tracked data.|
+|[`Update Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_updateType)|Determines when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
+|[`Ignore Tracking State`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_ignoreTrackingState)|If enabled, ignores the tracking state and always assumes the input pose is valid, even when flagged otherwise.|
+|[`Position Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_positionInput)|An input action used to retrieve the position data (Vector3) of the tracked device.|
+|[`Rotation Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_rotationInput)|An input action used to retrieve the rotation data (Quaternion) of the tracked device.|
+|[`Tracking State Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingStateInput)|An input action used to determine whether the tracking state (position or rotation) is valid (Integer).|
 
 ## Tracked Device Raycaster
 
