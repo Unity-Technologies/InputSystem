@@ -38,6 +38,10 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
 
+### Added
+- Added achievable average frequency diagnostic to Input Debugger device window (along with sensor frequency and global polling frequency information).
+- Added processing delay input system latency (average, minimum, maximum) diagnostics to Input Bugger device window.
+
 ## [1.13.0] - 2025-02-05
 
 ### Fixed
