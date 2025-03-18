@@ -1,1 +1,90 @@
 VisualElement {}
+
+.piano-roll {
+    background-color: black;
+    flex-direction: column;
+}
+
+.piano-roll__top-container {
+    flex-direction: row;
+    background-color: rgba(0, 50, 50, 255);
+}
+
+.piano-roll__bottom-container {
+    flex-direction: row;
+}
+
+.piano-roll__container {
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 1;
+    background-color: green;
+    margin: 0;
+    padding: 0;
+    max-width: 168px; /* not great to set these, how can avoid flexibility, 7 * white key width */
+    min-width: 168px;
+}
+
+.piano-roll__label {
+    color: white;
+}
+
+.piano-roll__value-label {
+    color: lightblue;
+    margin-right: 45px;
+}
+
+.piano-roll__key {
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-color: rgba(77, 77, 77, 128);
+    border-width: 1px;
+    border-top-width: 0;
+    margin: 0px;
+}
+
+.piano-roll__white-key {
+    background-color: white;
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 164px;
+    max-height: 164px;
+}
+
+.piano-roll__black-key {
+    background-color: black;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 100px;
+    max-height: 100px;
+}
+
+.piano-roll__key-hover {
+    background-color: lightsteelblue;
+}
+
+.piano-roll__key-on {
+    background-color: palevioletred;
+}
+
+/* TODO Check with UI Toolkit team why these margins fall out like this it doesn't make sense to me a.t.m. */
+
+.piano-roll__c-sharp {
+    margin-left: -152px; /* rough */
+}
+
+.piano-roll__d-sharp {
+    margin-left: 12px; /* rough */
+}
+
+.piano-roll__f-sharp {
+    margin-left: 31px; /* rough */
+}
+
+.piano-roll__g-sharp {
+    margin-left: 12px; /* rough */
+}
+
+.piano-roll__a-sharp {
+    margin-left: 12px; /* rough */
+}
