@@ -62,9 +62,9 @@ namespace Tests.InputSystem.Editor
             m_Sut = new InputLatencyCalculator(0.0);
             GivenSamples(0.5, 0.3, 0.4, 0.5);
             m_Sut.Update(1.0);
-            Assert.That(m_Sut.averageLatencySeconds, Is.EqualTo(0.1f));
-            Assert.That(m_Sut.minLatencySeconds, Is.EqualTo(0.0f));
-            Assert.That(m_Sut.maxLatencySeconds, Is.EqualTo(0.2f));
+            Assert.That(m_Sut.averageLatencySeconds, Is.EqualTo(0.1f).Within(0.00001));
+            Assert.That(m_Sut.minLatencySeconds, Is.EqualTo(0.0f).Within(0.00001));
+            Assert.That(m_Sut.maxLatencySeconds, Is.EqualTo(0.2f).Within(0.00001));
         }
 
         [Test]
@@ -73,9 +73,9 @@ namespace Tests.InputSystem.Editor
             m_Sut = new InputLatencyCalculator(0.0);
             GivenSamples(0.5, 0.3, 0.4, 0.5);
             m_Sut.Update(2.0);
-            Assert.That(m_Sut.averageLatencySeconds, Is.EqualTo(0.1f));
-            Assert.That(m_Sut.minLatencySeconds, Is.EqualTo(0.0f));
-            Assert.That(m_Sut.maxLatencySeconds, Is.EqualTo(0.2f));
+            Assert.That(m_Sut.averageLatencySeconds, Is.EqualTo(0.1f).Within(0.00001));
+            Assert.That(m_Sut.minLatencySeconds, Is.EqualTo(0.0f).Within(0.00001));
+            Assert.That(m_Sut.maxLatencySeconds, Is.EqualTo(0.2f).Within(0.00001));
         }
 
         [Test]
