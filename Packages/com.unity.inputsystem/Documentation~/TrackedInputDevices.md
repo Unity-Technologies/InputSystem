@@ -9,7 +9,7 @@ Some input devices can provide information about their spatial position and orie
 
 Use the Tracked Pose Driver component to synchronize a __GameObject__'s transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the __GameObject__’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
 
-|Property Name|Description|
+| **Property**  | **Description** |
 |-------------|-----------|
 |[`Tracking Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingType)|Specifies which transform properties (position, rotation, or both) should be updated based on the tracked data.|
 |[`Update Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_updateType)|Determines when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
