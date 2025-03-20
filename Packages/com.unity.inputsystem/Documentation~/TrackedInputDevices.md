@@ -26,7 +26,7 @@ Tracked Device Raycaster works with the the __Canvas__ component, and replaces t
 
 The component also supports occlusion checks, custom ray distance limits, and filtering of reversed graphics to enable UI interactions in immersive environments. You can use it to build XR-enabled user interfaces where traditional 2D input methods, such as a mouse, do not apply.
 
-|Property Name|Description|
+| **Property**  | **Description** |
 |-------------|-----------|
 |[`Ignore Reversed Graphics`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_ignoreReversedGraphics)| Enable to ignore graphics whose normal faces away from the direction of the ray.|
 |[`Check For 2D Occlusion`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_checkFor2DOcclusion)|Enable occlusion checks for 2D objects, such as sprites in the scene.|
