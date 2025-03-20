@@ -43,6 +43,7 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_2023_3_OR_NEWER
             BuildTarget.VisionOS,
             #endif
+            (BuildTarget)49,
             BuildTarget.NoTarget
         };
 

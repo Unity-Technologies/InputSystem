@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.14.0] - 2025-03-20
+
+### Fixed
+- Fixed an issue where all action maps were enabled initially for project wide actions, which overrode the PlayerInput action map configuration. [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920)
+- Fixed an issue where ButtonStates are not fully updated when switching SingleUnifiedPointer. [ISXB-1356](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1356)
+- Fixed errors when pasting composite parts into non-composites. [ISXB-757](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-757)
+
+### Changed
+- Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
+
+### Added
+- Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+
 ## [1.13.1] - 2025-02-18
 
 ### Fixed
@@ -16,9 +29,19 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
 - Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
 - Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
+- Fixed a bug that would cause `TrackedPoseDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
 
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
+- Added disabling of action maps in rebinding UI sample.
+
+### Added
+- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
+
+### Added
+- Added achievable average frequency diagnostic to Input Debugger device window (along with sensor frequency and global polling frequency information).
+- Added processing delay input system latency (average, minimum, maximum) diagnostics to Input Bugger device window.
 
 ## [1.13.0] - 2025-02-05
 
