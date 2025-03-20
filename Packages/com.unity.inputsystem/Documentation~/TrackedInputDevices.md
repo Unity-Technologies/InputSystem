@@ -7,7 +7,7 @@ Some input devices can provide information about their spatial position and orie
 
 ## Tracked Pose Driver
 
-The Tracked Pose Driver component is used to synchronize a __GameObject__'s transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the __GameObject__’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
+Use the Tracked Pose Driver component to synchronize a __GameObject__'s transform with input data from a tracked device such as an XR headset, motion controller, or other devices that provide positional and rotational tracking. It allows creating immersive XR experiences by dynamically updating the __GameObject__’s position and rotation based on the real-world movement of the tracked device. The component works with Unity's Input System to gather position, rotation, and tracking state data, and it provides several customization options, such as updating specific transform properties, controlling update timing, and managing how invalid tracking data is handled.
 
 |Property Name|Description|
 |-------------|-----------|
