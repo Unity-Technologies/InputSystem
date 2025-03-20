@@ -11,7 +11,7 @@ Use the Tracked Pose Driver component to synchronize a __GameObject__'s transfor
 
 | **Property**  | **Description** |
 |-------------|-----------|
-|[`Tracking Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingType)|Specifies which transform properties (position, rotation, or both) should be updated based on the tracked data.|
+|[`Tracking Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingType)|Specify which transform properties (position, rotation, or both) to update based on the tracked data.|
 |[`Update Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_updateType)|Determines when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
 |[`Ignore Tracking State`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_ignoreTrackingState)|If enabled, ignores the tracking state and always assumes the input pose is valid, even when flagged otherwise.|
 |[`Position Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_positionInput)|An input action used to retrieve the position data (Vector3) of the tracked device.|
