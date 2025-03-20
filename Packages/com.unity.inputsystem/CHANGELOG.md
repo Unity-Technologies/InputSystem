@@ -28,7 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
-- Added missing manuals for the TrackedPoseDriver and TrackedDeviceRaycaster components. [ISXB-1410](https://jira.unity3d.com/browse/ISXB-1410)
+- Added missing documentation for the Tracked Pose Driver and Tracked Device Raycaster components. [ISXB-1410](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1410)
 
 ## [1.13.1] - 2025-02-18
 
