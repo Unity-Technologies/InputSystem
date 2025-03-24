@@ -1,15 +1,14 @@
 {% metadata_file .yamato/config.metadata %}
 ---
 
-{% assign editor == "trunk" %}         
 win_trunk_codecov-by-test:
-  name : Build & Run {{ editor }} - win, code coverage by test method, slow
+  name : Build & Run trunk - win, code coverage by test method, slow
   agent:
     type: Unity::VM
     image: package-ci/win10:v4
     flavor: b1.large
   variables:
-    EDITOR_VERSION: {{ editor }}
+    EDITOR_VERSION: trunk
   commands:        
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
