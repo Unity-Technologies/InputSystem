@@ -45,4 +45,3 @@
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
-{% endfor %} # editors
