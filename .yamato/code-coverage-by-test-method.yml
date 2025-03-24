@@ -1,14 +1,16 @@
 {% metadata_file .yamato/config.metadata %}
 ---
 
+{% assign editor == "trunk" %}         
+{% assign platform == platforms_win[0] %} # get the windows editor platform vars
 win_trunk_codecov-by-test:
-  name : Build & Run trunk - win, code coverage by test method
+  name : Build & Run {{ editor }} - {{ platform.name }}, code coverage by test method, slow
   agent:
-    type: Unity::VM
-    image: package-ci/win10:v4
-    flavor: b1.large
+    type: platform.type
+    image: platform.image
+    flavor: platform.flavor
   variables:
-    EDITOR_VERSION: trunk
+    EDITOR_VERSION: {{ editor }}
   commands:        
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
