@@ -6,9 +6,9 @@
 win_trunk_codecov-by-test:
   name : Build & Run {{ editor }} - {{ platform.name }}, code coverage by test method, slow
   agent:
-    type: {{ platform.type }}
-    image: {{ platform.image }}
-    flavor: {{ platform.flavor }}
+    type: Unity::VM
+    image: package-ci/win10:v4
+    flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor }}
   commands:        
