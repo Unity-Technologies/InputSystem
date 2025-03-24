@@ -4,13 +4,13 @@
 {% assign editor == "trunk" %}         
 {% assign platform == platforms_win[0] %} # get the windows editor platform vars
 win_{{ editor }}_codecov-by-test:
-  name : Build & Run {{ editor }} - {{ platform.name }}, code coverage by test method
+  name : Build & Run {{ editor }} - {{ platforms_win[0].name }}, code coverage by test method
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
   variables:
-    EDITOR_VERSION: {{ editor.version }}
+    EDITOR_VERSION: {{ editor }}
   commands:        
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
