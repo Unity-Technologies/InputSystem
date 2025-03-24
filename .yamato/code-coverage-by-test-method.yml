@@ -2,9 +2,8 @@
 ---
 
 {% assign editor == "trunk" %}         
-{% assign platform == platforms_win[0] %} # get the windows editor platform vars
 win_trunk_codecov-by-test:
-  name : Build & Run {{ editor }} - {{ platform.name }}, code coverage by test method, slow
+  name : Build & Run {{ editor }} - win, code coverage by test method, slow
   agent:
     type: Unity::VM
     image: package-ci/win10:v4
