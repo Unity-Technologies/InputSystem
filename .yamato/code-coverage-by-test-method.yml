@@ -32,8 +32,8 @@ win_trunk_codecov-by-test:
     # Merge all the code coverage results into one report.
     - '{{ yamato_source_dir_win }}/.Editor/Unity.exe -projectPath {{ yamato_source_dir_win }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_win }}/Packages/com.unity.inputsystem/;generateTestReferences" -quit' 
     # Delete the Package and Project reports, only keep the final merged one to keep Aritfacts.zip smaller
-    - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
-    - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project"
+    #- rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
+    #- rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project"
   after:
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
