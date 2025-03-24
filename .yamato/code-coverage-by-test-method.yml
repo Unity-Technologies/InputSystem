@@ -6,9 +6,9 @@
 win_trunk_codecov-by-test:
   name : Build & Run {{ editor }} - {{ platform.name }}, code coverage by test method, slow
   agent:
-    type: platform.type
-    image: platform.image
-    flavor: platform.flavor
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor }}
   variables:
     EDITOR_VERSION: {{ editor }}
   commands:        
