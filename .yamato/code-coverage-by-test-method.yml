@@ -22,8 +22,7 @@ win_trunk_codecov-by-test:
     - move /Y .\Assets\Samples.meta .\Packages\com.unity.inputsystem
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION% --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages;generateTestReferences" 
-      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package" {% endif %}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION% --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages;generateTestReferences" --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
     # ADBv2 on 2019.4 causes the test runner to not start on initial import when the
     # samples are in the package. Move the samples back into the project.
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
