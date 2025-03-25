@@ -28,7 +28,7 @@ win_trunk_codecov-by-test:
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --suite=editor --category=!Performance --api-profile=NET_4_6 --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project
+    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --suite=editor --category=!Performance --api-profile=NET_4_6 --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;generateTestReferences" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project
     # Merge all the code coverage results into one report.
     - '{{ yamato_source_dir_win }}/.Editor/Unity.exe -projectPath {{ yamato_source_dir_win }} -batchmode -debugCodeOptimization -enableCodeCoverage -coverageResultsPath {{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/ -coverageOptions "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;sourcePaths:{{ yamato_source_dir_win }}/Packages/com.unity.inputsystem/;generateTestReferences" -quit' 
     # Delete the Package and Project reports, only keep the final merged one to keep Aritfacts.zip smaller
