@@ -41,3 +41,9 @@ win_trunk_codecov-by-test:
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
+  timeout_options:
+    stages:
+      distribution: 2
+      preparation: 1
+      execution: 24
+      reporting: 1
