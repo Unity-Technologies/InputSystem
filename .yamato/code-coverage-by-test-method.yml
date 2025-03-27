@@ -2,11 +2,11 @@
 ---
 
 win_trunk_codecov-by-test:
-  name : Build & Run trunk - win, code coverage by test method, slow
+  name : Build & Run trunk - win, code coverage by test method, extremely slow
   agent:
     type: Unity::VM
     image: package-ci/win10:v4
-    flavor: b1.large
+    flavor: b1.xlarge
   variables:
     EDITOR_VERSION: trunk
   commands:        
@@ -45,5 +45,5 @@ win_trunk_codecov-by-test:
     stages:
       distribution: 2
       preparation: 1
-      execution: 24
+      execution: 96
       reporting: 1
