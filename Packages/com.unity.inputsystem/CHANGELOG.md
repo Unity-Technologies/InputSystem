@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed an issue causing a number of errors to be displayed when using `InputTestFixture` in playmode tests with domain reloading disabled on playmode entry. [ISXB-1446](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1446)
 - Fixed issue where user was not prompted to save changes when loading a second input actions asset into an already opened editor. [ISXB-1343](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1343)
+- Fixed an issue when providing JoinPlayer with a specific split screen index. [ISXB-897](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-897)
 
 ## [1.14.0] - 2025-03-20
 
