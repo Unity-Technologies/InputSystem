@@ -1831,7 +1831,7 @@ namespace UnityEngine.InputSystem
 
             // Split-screen index defaults to player index.
             if (s_InitSplitScreenIndex >= 0)
-                m_SplitScreenIndex = splitScreenIndex;
+                m_SplitScreenIndex = s_InitSplitScreenIndex;
             else
                 m_SplitScreenIndex = playerIndex;
 
