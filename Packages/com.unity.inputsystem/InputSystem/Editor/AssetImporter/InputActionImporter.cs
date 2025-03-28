@@ -236,8 +236,8 @@ namespace UnityEngine.InputSystem.Editor
                 var directory = Path.GetDirectoryName(assetPath);
                 wrapperFilePath = Path.Combine(directory, wrapperFilePath);
             }
-            else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
-                     !wrapperFilePath.ToLower().StartsWith("assets\\"))
+            else if (!wrapperFilePath.StartsWith("assets/", StringComparison.InvariantCultureIgnoreCase) &&
+                     !wrapperFilePath.StartsWith("assets\\", StringComparison.InvariantCultureIgnoreCase))
             {
                 // User-specified file in Assets/ folder.
                 wrapperFilePath = Path.Combine("Assets", wrapperFilePath);

@@ -66,7 +66,7 @@ public class AddScenesToBuild : EditorWindow
         // Check if the path or any part of it contains any of the excluded folder names
         foreach (string folder in excludedFolders)
         {
-            if (path.ToLower().Contains(folder.ToLower()))
+            if (path.Contains(folder, StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }

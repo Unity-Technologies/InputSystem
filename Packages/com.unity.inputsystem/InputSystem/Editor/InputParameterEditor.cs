@@ -210,7 +210,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_GetDefaultValue = getDefaultValue;
                 m_ToggleLabel = EditorGUIUtility.TrTextContent("Default",
                     defaultComesFromInputSettings
-                    ? $"If enabled, the default {label.ToLower()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
+                    ? $"If enabled, the default {label.ToLowerInvariant()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
                     : "If enabled, the default value is used.");
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
                 if (defaultComesFromInputSettings)

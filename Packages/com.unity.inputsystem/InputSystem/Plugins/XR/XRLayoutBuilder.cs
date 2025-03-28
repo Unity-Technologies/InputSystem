@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem.XR
                 if (inheritedLayout != null)
                     featureName = ConvertPotentialAliasToName(inheritedLayout, featureName);
 
-                featureName = featureName.ToLower();
+                featureName = featureName.ToLowerInvariant();
 
                 if (IsSubControl(featureName))
                 {

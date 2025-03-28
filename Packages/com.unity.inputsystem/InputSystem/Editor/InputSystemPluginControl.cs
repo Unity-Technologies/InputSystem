@@ -73,10 +73,10 @@ namespace UnityEngine.InputSystem.Editor
         private static bool IsPluginInstalled()
         {
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
-            var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString().ToLower();
+            var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString();
             foreach (var package in registeredPackages)
             {
-                if (package.name.Equals(plugInName))
+                if (package.name.Equals(plugInName, StringComparison.InvariantCultureIgnoreCase))
                     return true;
             }
             return false;
