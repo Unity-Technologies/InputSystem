@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an analytics event being invoked twice when the Save button in the Actions view was pressed. [ISXB-1378](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1378)
 - Fixed an issue causing a number of errors to be displayed when using `InputTestFixture` in playmode tests with domain reloading disabled on playmode entry. [ISXB-1446](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1446)
 - Fixed issue where user was not prompted to save changes when loading a second input actions asset into an already opened editor. [ISXB-1343](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1343)
+- Fixed an issue on macOS which didn't detect up-left DPAD presses for Xbox controllers. [ISXB-810](https://issuetracker.unity3d.com/issues/macos-d-pad-upper-left-corner-is-not-logged-with-the-xbox-controller)
 
 ## [1.14.0] - 2025-03-20
 
