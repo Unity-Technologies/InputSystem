@@ -208,8 +208,6 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(gamepad.startButton.isPressed);
     }
 
-// Disable tests in standalone builds from 2022.1+ see UUM-19622
-// #if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxWirelessControllerOnOSX()
@@ -315,9 +313,6 @@ internal class XInputTests : CoreTestsFixture
     }
 
 #endif // TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
-
-// #endif
-
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]
