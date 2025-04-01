@@ -596,7 +596,6 @@ namespace UnityEngine.InputSystem.Editor
                 // TODO It makes more sense to call back to editor since editor owns target object?
                 //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
-                state.m_Analytics?.RegisterExplicitSave();
                 return state;
             };
         }
