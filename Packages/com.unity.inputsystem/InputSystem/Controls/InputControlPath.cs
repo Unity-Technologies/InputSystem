@@ -559,7 +559,7 @@ namespace UnityEngine.InputSystem
                         return true; // Wildcard at end of string so rest is matched.
 
                     ++posInStr;
-                    nextChar = char.ToLower(str[posInStr], CultureInfo.InvariantCulture);
+                    nextChar = char.ToLowerInvariant(str[posInStr]);
 
                     while (posInMatchTo < matchToLength && matchToLowerCase[posInMatchTo] != nextChar)
                         ++posInMatchTo;
@@ -567,7 +567,7 @@ namespace UnityEngine.InputSystem
                     if (posInMatchTo == matchToLength)
                         return false; // Matched all the way to end of matchTo but there's more in str after the wildcard.
                 }
-                else if (char.ToLower(nextChar, CultureInfo.InvariantCulture) != matchToLowerCase[posInMatchTo])
+                else if (char.ToLowerInvariant(nextChar) != matchToLowerCase[posInMatchTo])
                 {
                     return false;
                 }
@@ -1156,7 +1156,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 var charInComponent = component[indexInComponent];
-                if (charInComponent == nextCharInPath || char.ToLower(charInComponent, CultureInfo.InvariantCulture) == char.ToLower(nextCharInPath, CultureInfo.InvariantCulture))
+                if (charInComponent == nextCharInPath || char.ToLowerInvariant(charInComponent) == char.ToLowerInvariant(nextCharInPath))
                 {
                     ++indexInComponent;
                     ++indexInPath;
