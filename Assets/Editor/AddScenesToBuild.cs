@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using System;
 
 [InitializeOnLoad]
 public class AddScenesToBuild : EditorWindow
