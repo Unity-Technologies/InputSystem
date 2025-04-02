@@ -30,12 +30,10 @@
 }
 
 #add-new-action-map-button {
-    background-color: transparent;
     border-width: 0;
 }
 
 #add-new-action-button {
-    background-color: transparent;
     border-width: 0;
 }
 
