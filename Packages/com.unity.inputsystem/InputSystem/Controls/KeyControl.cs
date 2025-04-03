@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Controls
                 // For example on Swedish Windows layout right shift display name is "HÖGER SKIFT".
                 // Just passing it to ToTitleCase won't change anything. But passing "höger skift" will return "Höger Skift".
                 var keyNameLowerCase =  rawKeyName.ToLowerInvariant();
-                
+
                 if (string.IsNullOrEmpty(keyNameLowerCase))
                 {
                     displayName = rawKeyName;
