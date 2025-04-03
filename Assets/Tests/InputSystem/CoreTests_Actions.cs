@@ -4780,6 +4780,7 @@ partial class CoreTests
 
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
+        var yawPitch = map.AddAction("Yaw/Pitch");
 
         Assert.That(map.FindAction("action1"), Is.SameAs(action1));
         Assert.That(map.FindAction("action2"), Is.SameAs(action2));
@@ -4788,6 +4789,10 @@ partial class CoreTests
         // Lookup is case-insensitive.
         Assert.That(map.FindAction("Action1"), Is.SameAs(action1));
         Assert.That(map.FindAction("Action2"), Is.SameAs(action2));
+
+        // Lookup allows '/' within action name (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306)
+        // yawPitchAction = _actions.FindAction("Yaw/Pitch");
+        Assert.That(map.FindAction("Yaw/Pitch"), Is.SameAs(yawPitch));
     }
 
     [Test]
@@ -7917,6 +7922,7 @@ partial class CoreTests
         var action1 = map1.AddAction("action1");
         var action2 = map1.AddAction("action2");
         var action3 = map2.AddAction("action3");
+        var action4 = map2.AddAction("Yaw/Pitch");
 
         Assert.That(asset.FindAction("action1"), Is.SameAs(action1));
         Assert.That(asset.FindAction("action2"), Is.SameAs(action2));
@@ -7930,12 +7936,36 @@ partial class CoreTests
         Assert.That(asset.FindAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
         Assert.That(asset.FindAction($"{{{action3.id.ToString()}}}"), Is.SameAs(action3));
 
+        // Lookup allows '/' within action name (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306)
+        // yawPitchAction = _actions.FindAction("Yaw/Pitch");
+        Assert.That(asset.FindAction("Yaw/Pitch"), Is.SameAs(action4));
+
         // Shouldn't allocate.
         var map1action1 = "map1/action1";
         Assert.That(() =>
         {
             asset.FindAction(map1action1);
         }, Is.Not.AllocatingGCMemory());
+    }
+
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionInAssetByNameIfHavingActionAndMapActionWithSameName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("Yaw");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var action1 = map1.AddAction("Yaw/Pitch");
+        var action2 = map2.AddAction("Pitch");
+
+        // map/action should be selected first
+        Assert.That(asset.FindAction("Yaw/Pitch"), Is.SameAs(action2));
     }
 
     // Since we allow looking up by action name without any map qualification, ambiguities result when several
