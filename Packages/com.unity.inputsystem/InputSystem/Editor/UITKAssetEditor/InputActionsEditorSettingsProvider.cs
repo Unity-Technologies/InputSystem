@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Editor
             DelayFocusLost(element == null);
         }
 
-        private void OnStateChanged(InputActionsEditorState newState)
+        private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
         {
 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action, auto-saved on edit-focus lost
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
             // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_State);
+                m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
                 m_StateContainer.StateChanged += OnStateChanged;
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));

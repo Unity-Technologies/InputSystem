@@ -29,8 +29,9 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetEditor.RegisterType<InputActionsEditorWindow>();
         }
 
-        static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
-
+        static readonly Vector2 k_MinWindowSize = new Vector2(740, 450);
+        // For UI testing purpose
+        internal InputActionAsset currentAssetInEditor => m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
@@ -99,6 +100,28 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var window = GetWindow<InputActionsEditorWindow>();
+            if (window.m_IsDirty)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(window.m_AssetGUID);
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    // Prompt user with a dialog
+                    var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
+                    switch (result)
+                    {
+                        case Dialog.Result.Save:
+                            window.Save(isAutoSave: false);
+                            break;
+                        case Dialog.Result.Cancel:
+                            return window;
+                        case Dialog.Result.Discard:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(result));
+                    }
+                }
+            }
+
             window.m_IsDirty = false;
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
@@ -225,7 +248,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_State.m_Analytics == null)
                 m_State.m_Analytics = m_Analytics;
 
-            m_StateContainer = new StateContainer(m_State);
+            m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();
@@ -236,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
 
-        private void OnStateChanged(InputActionsEditorState newState)
+        private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
         {
             DirtyInputActionsEditorWindow(newState);
             m_State = newState;

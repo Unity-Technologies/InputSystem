@@ -795,6 +795,10 @@ namespace UnityEngine.InputSystem.Editor
             var itemType = CopyTagToType(tag);
             if (location.item is ActionTreeItemBase dropTarget)
             {
+                // Specific case - Composite parts cannot be dropped into Bindings
+                if (tag == k_PartOfCompositeBindingTag && location.item is not(CompositeBindingTreeItem or PartOfCompositeBindingTreeItem))
+                    return;
+
                 if (!dropTarget.GetDropLocation(itemType, location.childIndex, ref array, ref arrayIndex))
                     return;
             }
@@ -1514,7 +1518,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_ExpandAllLabel = EditorGUIUtility.TrTextContent("Expand All");
         private static readonly GUIContent s_CollapseAllLabel = EditorGUIUtility.TrTextContent("Collapse All");
 
-        public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/Resources/";
+        public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/PackageResources/";
         public static string ResourcesPath
         {
             get

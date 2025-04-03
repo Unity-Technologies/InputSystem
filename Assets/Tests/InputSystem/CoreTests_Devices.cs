@@ -2648,7 +2648,7 @@ partial class CoreTests
     [TestCase("Joystick", typeof(Joystick))]
     [TestCase("Accelerometer", typeof(Accelerometer))]
     [TestCase("Gyroscope", typeof(Gyroscope))]
-    public void Devices_CanCreateDevice(string layout, Type type)
+    public void Devices_CanCreateDevice(string layout, System.Type type)
     {
         var device = InputSystem.AddDevice(layout);
 
@@ -2674,10 +2674,59 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(IMESelected: true));
         InputSystem.Update();
 
         Assert.That(keyboard.anyKey.isPressed, Is.False);
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    [Obsolete("Test obsolete IMESelected Key")]
+    public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ImeSelectedKeyOnKeyboard_IsBackwardCompatible()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var oldKeyboardStateWithIMESelected = new KeyboardState(Key.None);
+        // Hard coded state from previous version that have IMESelected setted
+        unsafe
+        {
+            oldKeyboardStateWithIMESelected.keys[0] = 0;
+            oldKeyboardStateWithIMESelected.keys[1] = 0;
+            oldKeyboardStateWithIMESelected.keys[2] = 0;
+            oldKeyboardStateWithIMESelected.keys[3] = 0;
+            oldKeyboardStateWithIMESelected.keys[4] = 0;
+            oldKeyboardStateWithIMESelected.keys[5] = 0;
+            oldKeyboardStateWithIMESelected.keys[6] = 0;
+            oldKeyboardStateWithIMESelected.keys[7] = 0;
+
+            oldKeyboardStateWithIMESelected.keys[8] = 0;
+            oldKeyboardStateWithIMESelected.keys[9] = 0;
+            oldKeyboardStateWithIMESelected.keys[10] = 0;
+            oldKeyboardStateWithIMESelected.keys[11] = 0;
+            oldKeyboardStateWithIMESelected.keys[12] = 0;
+            oldKeyboardStateWithIMESelected.keys[13] = 128;
+            oldKeyboardStateWithIMESelected.keys[14] = 0;
+            oldKeyboardStateWithIMESelected.keys[15] = 0;
+        }
+
+        InputSystem.QueueStateEvent(keyboard, oldKeyboardStateWithIMESelected);
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
 
     [Test]
@@ -4130,25 +4179,72 @@ partial class CoreTests
         // Doesn't happen when a native backend reports a device.
         var descriptionJson = description.ToJson();
 
-        Assert.That(() =>
-        {
-            Profiler.BeginSample(kProfilerRegion);
+        var recorder = Recorder.Get("GC.Alloc");
+        // The recorder was created enabled, which means it captured the creation of the Recorder object itself, etc.
+        // Disabling it flushes its data, so that we can retrieve the sample block count and have it correctly account
+        // for these initial allocations.
+        recorder.enabled = false;
+#if !UNITY_WEBGL
+        recorder.FilterToCurrentThread();
+#endif
+        recorder.enabled = true;
 
-            // "Plug" it back in.
-            deviceId = runtime.ReportNewInputDevice(descriptionJson);
-            InputSystem.Update();
+        Profiler.BeginSample(kProfilerRegion);
 
-            // "Unplug" device.
-            var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
-            InputSystem.QueueEvent(ref removeEvent2);
-            InputSystem.Update();
+        // "Plug" it back in.
+        deviceId = runtime.ReportNewInputDevice(descriptionJson);
+        InputSystem.Update();
 
-            // "Plug" it back in.
-            runtime.ReportNewInputDevice(descriptionJson);
-            InputSystem.Update();
+        // "Unplug" device.
+        var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent2);
+        InputSystem.Update();
 
-            Profiler.EndSample();
-        }, Is.Not.AllocatingGCMemory());
+        // "Plug" it back in.
+        runtime.ReportNewInputDevice(descriptionJson);
+        InputSystem.Update();
+
+        Profiler.EndSample();
+
+        recorder.enabled = false;
+#if !UNITY_WEBGL
+        recorder.CollectFromAllThreads();
+#endif
+
+        // No allocations are expected.
+        Assert.AreEqual(0, recorder.sampleBlockCount);
+    }
+
+    // Regression test to cover having null descriptor fields for a device. Some non-desktop gamepad device types do this.
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingAndReaddingDeviceWithNullDescriptorFields_DoesNotThrow()
+    {
+        // InputDeviceDescription.ToJson writes empty string fields and not null values, whereas reporting a device via an incomplete description string will fully omit the fields.
+        string description = @"{
+            ""type"": ""Gamepad"",
+            ""product"": ""TestProduct""
+        }";
+
+        var deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // "Unplug" device.
+        var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent1);
+        InputSystem.Update();
+
+        // "Plug" it back in.
+        deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // Repeat that sequence.
+        var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent2);
+        InputSystem.Update();
+
+        runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
     }
 
     [Test]

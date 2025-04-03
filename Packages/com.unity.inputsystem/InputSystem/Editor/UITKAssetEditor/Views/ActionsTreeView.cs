@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             m_PropertiesScrollview = root.Q<ScrollView>("properties-scrollview");
             m_ActionsTreeView = root.Q<TreeView>("actions-tree-view");
             //assign unique viewDataKey to store treeView states like expanded/collapsed items - make it unique to avoid conflicts with other TreeViews
-            m_ActionsTreeView.viewDataKey = "InputActionTreeView " + stateContainer.GetState().serializedObject.targetObject.GetInstanceID();
+            m_ActionsTreeView.viewDataKey = $"InputActionTreeView_{stateContainer.assetGUID}";
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
             m_ActionsTreeView.selectionType = UIElements.SelectionType.Single;
             m_ActionsTreeView.makeItem = () => new InputActionsTreeViewItem();
@@ -58,6 +58,11 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
+                    // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                    // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                    // it must be re-registered here.
+                    treeViewItem.RegisterInputField();
+
                     Action action = ContextMenu.GetContextMenuForActionAddItem(this, item.controlLayout, i);
                     addBindingButton.clicked += action;
                     addBindingButton.userData = action; // Store to use in unbindItem
@@ -76,6 +81,11 @@ namespace UnityEngine.InputSystem.Editor
                         treeViewItem.UnregisterInputField();
                     else
                     {
+                        // Items in the TreeView which were previously Bindings had input explicitly unregistered.
+                        // Since the input field is normally registered on creation, when using RefreshItem rather than Rebuild
+                        // it must be re-registered here.
+                        treeViewItem.RegisterInputField();
+
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
                             ChangeActionOrCompositName(item, newName);
@@ -94,6 +104,7 @@ namespace UnityEngine.InputSystem.Editor
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
 
                 e.SetEnabled(!item.isCut);
+                treeViewItem.isCut = item.isCut;
             };
 
             m_ActionsTreeView.itemsChosen += objects =>
@@ -124,8 +135,6 @@ namespace UnityEngine.InputSystem.Editor
 
             ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
             ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, root.Q<VisualElement>("rclick-area-to-add-new-action"));
-            // Only bring up this context menu for the Tree when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionsEmptySpace(this, m_ActionsTreeView, m_ActionsTreeView, onlyShowIfTreeIsEmpty: true);
 
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
@@ -134,11 +143,6 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
                     Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
-                }
-                else
-                {
-                    Dispatch(Commands.SelectAction(null));
-                    Dispatch(Commands.SelectBinding(-1));
                 }
             };
 
@@ -211,7 +215,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
+            // UI toolkit doesn't behave the same on 6000.0 way when refreshing items
+            // On previous versions, we need to call Rebuild() to refresh the items since refreshItems() is less predicatable
+#if UNITY_6000_0_OR_NEWER
+            m_ActionsTreeView.RefreshItems();
+#else
             m_ActionsTreeView.Rebuild();
+#endif
             if (viewState.newElementID != -1)
             {
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
@@ -666,9 +676,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private static int GetIdForGuid(Guid guid, Dictionary<Guid, int> idDictionary)
         {
+            // This method is used to ensure that the same Guid always gets the same id
+            // We use getHashCode instead of a counter, as we cannot guarantee that the same Guid will always be added in the same order
+            // There is a tiny chance of a collision, but it is it does happen it will only affect the expanded state of the tree view
             if (!idDictionary.TryGetValue(guid, out var id))
             {
-                id = idDictionary.Values.Count > 0 ? idDictionary.Values.Max() + 1 : 0;
+                id = guid.GetHashCode();
                 idDictionary.Add(guid, id);
             }
             return id;
@@ -698,7 +711,7 @@ namespace UnityEngine.InputSystem.Editor
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
                 var isMatchingDevice = true;
-                if (deviceIndex >= 0)
+                if (deviceIndex >= 0 && deviceIndex < currentControlScheme.Value.deviceRequirements.Count)
                 {
                     var devicePathToMatch = InputControlPath.TryGetDeviceLayout(currentControlScheme.Value.deviceRequirements.ElementAt(deviceIndex).controlPath);
                     var devicePath = InputControlPath.TryGetDeviceLayout(serializedInputBinding.path);

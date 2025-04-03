@@ -86,6 +86,31 @@
             "name": "Unity",
             "expression": "6000.0.9",
             "define": "UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.11",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.1.0b9",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.2.0a4",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.15",
+            "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
+        },
+        {
+            "name": "com.unity.modules.unityanalytics",
+            "expression": "1",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"
         }
     ],
     "noEngineReferences": false

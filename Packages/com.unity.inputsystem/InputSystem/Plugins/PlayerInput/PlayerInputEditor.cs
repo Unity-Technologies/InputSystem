@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem.Editor
                 var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
                 if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
                 {
-                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions than this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
                     if (GUILayout.Button(m_FixInputModuleText))
                         InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
                 }

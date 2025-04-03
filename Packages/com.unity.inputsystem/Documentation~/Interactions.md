@@ -47,19 +47,19 @@ The following example demonstrates this kind of setup with a fire Action that th
 var fireAction = new InputAction("fire");
 fireAction.AddBinding("<Gamepad>/buttonSouth")
     // Tap fires, slow tap charges. Both act on release.
-    .WithInteractions("tap;slowTap");
+    .WithInteractions("tap,slowTap");
 
 fireAction.started +=
     context =>
     {
-        if (context.Interaction is SlowTapInteraction)
+        if (context.interaction is SlowTapInteraction)
             ShowChargingUI();
     };
 
 fireAction.performed +=
     context =>
     {
-        if (context.Interaction is SlowTapInteraction)
+        if (context.interaction is SlowTapInteraction)
             ChargedFire();
         else
             Fire();
@@ -67,6 +67,7 @@ fireAction.performed +=
 
 fireAction.canceled +=
     _ => HideChargingUI();
+fireAction.Enable();
 ```
 
 ### Multiple Controls on an Action

@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -83,6 +83,11 @@ namespace UnityEngine.InputSystem
 
     public static partial class InputSystem
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
+#endif
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
+
         #region Layouts
 
         /// <summary>
@@ -3403,6 +3408,7 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
+
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3532,7 +3538,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.InitializeInEditor");
+            k_InputInitializeInEditorMarker.Begin();
 
             Reset(runtime: runtime);
 
@@ -3593,14 +3599,23 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
             Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
                 "InputSettings has lost its native object");
-            #endif
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
+            // The warning is delayed to delay call (called a short while after the Asset are loaded, on Inspector update) to make sure it doesn't pop up while the editor is still loading or assets are not fully loaded -
+            // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
+            EditorApplication.delayCall += ShowRestartWarning;
+
+            RunInitialUpdate();
+
+            k_InputInitializeInEditorMarker.End();
+        }
+
+        private static void ShowRestartWarning()
+        {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !s_Manager.m_Runtime.isInBatchMode)
@@ -3616,16 +3631,7 @@ namespace UnityEngine.InputSystem
                 }
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled.
-            // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
-            EnableActions();
-#endif
-
-            RunInitialUpdate();
-
-            Profiler.EndSample();
+            EditorApplication.delayCall -= ShowRestartWarning;
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3645,9 +3651,9 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     EnableActions();
-                    #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3851,7 +3857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            k_InputResetMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3911,7 +3917,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
             #endif
 
-            Profiler.EndSample();
+            k_InputResetMarker.End();
         }
 
         /// <summary>

@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 state.m_Analytics?.RegisterControlSchemeEdit();
                 return state.With(selectedControlScheme: new InputControlScheme(
-                    MakeUniqueControlSchemeName(state, kNewControlSchemeName)));
+                    MakeUniqueControlSchemeName(state, kNewControlSchemeName)), selectedDeviceRequirementIndex: -1);
             };
         }
 
@@ -77,8 +77,8 @@ namespace UnityEngine.InputSystem.Editor
                     RenameBindingsControlSchemeHelper(controlScheme, actionMaps, controlSchemeName, newControlSchemeName);
                 }
 
-                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = string.IsNullOrEmpty(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
-                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_BindingGroup)).stringValue = string.IsNullOrEmpty(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
+                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = string.IsNullOrWhiteSpace(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
+                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_BindingGroup)).stringValue = string.IsNullOrWhiteSpace(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
 
                 var serializedDeviceRequirements = controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_DeviceRequirements));
                 serializedDeviceRequirements.ClearArray();

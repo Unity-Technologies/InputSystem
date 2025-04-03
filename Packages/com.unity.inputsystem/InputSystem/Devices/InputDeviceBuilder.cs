@@ -66,6 +66,22 @@ namespace UnityEngine.InputSystem.Layouts
         {
             var device = m_Device;
 
+            // Set up the list of just ButtonControls to quickly update press state.
+            var i = 0;
+            foreach (var control in device.allControls)
+            {
+                if (control.isButton)
+                    ++i;
+            }
+
+            device.m_ButtonControlsCheckingPressState = new List<ButtonControl>(i);
+            #if UNITY_2020_1_OR_NEWER
+            device.m_UpdatedButtons = new HashSet<int>(i);
+            #else
+            // 2019 is too old to support setting HashSet capacity
+            device.m_UpdatedButtons = new HashSet<int>();
+            #endif
+
             // Kill off our state.
             Reset();
 
@@ -142,6 +158,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // we are rebuilding the control hierarchy.
                 m_Device.m_AliasesForEachControl = null;
                 m_Device.m_ChildrenForEachControl = null;
+                m_Device.m_UpdatedButtons = null;
                 m_Device.m_UsagesForEachControl = null;
                 m_Device.m_UsageToControl = null;
 

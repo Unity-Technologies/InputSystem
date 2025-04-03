@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
 ////TODO: runtime remapping of control usages on a per-device basis
@@ -40,21 +41,31 @@ namespace UnityEngine.InputSystem
     /// runtime. However, it is possible to manually add devices using methods such as <see
     /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
     ///
-    /// <example>
-    /// <code>
-    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
-    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
-    /// </code>
-    /// </example>
-    ///
     /// There are subclasses representing the most common types of devices, like <see cref="Mouse"/>,
     /// <see cref="Keyboard"/>, <see cref="Gamepad"/>, and <see cref="Touchscreen"/>.
     ///
     /// To create your own types of devices, you can derive from InputDevice and register your device
     /// as a new "layout".
     ///
+    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). However, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
+    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
+    ///
+    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
+    /// sample which you can install from the Unity package manager.
+    ///
+    /// You can also find more information in the <a href="../manual/Devices.html">manual</a>.
+    /// </remarks>
     /// <example>
     /// <code>
+    /// using System.Runtime.InteropServices;
+    /// using UnityEditor;
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.Controls;
+    /// using UnityEngine.InputSystem.Layouts;
+    /// using UnityEngine.InputSystem.LowLevel;
+    /// using UnityEngine.InputSystem.Utilities;
+    ///
     /// // InputControlLayoutAttribute attribute is only necessary if you want
     /// // to override default behavior that occurs when registering your device
     /// // as a layout.
@@ -68,6 +79,9 @@ namespace UnityEngine.InputSystem
     /// {
     ///     public ButtonControl button { get; private set; }
     ///     public AxisControl axis { get; private set; }
+    ///
+    ///     // This is an example of how to add a "synthetic" gamepad that isn't actually backed by hardware.
+    ///     Gamepad gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     ///
     ///     // Register the device.
     ///     static MyDevice()
@@ -112,7 +126,7 @@ namespace UnityEngine.InputSystem
     ///     // particular device is connected and fed into the input system.
     ///     // The format is a simple FourCC code that "tags" state memory blocks for the
     ///     // device to give a base level of safety checks on memory operations.
-    ///     public FourCC format => return new FourCC('H', 'I', 'D');
+    ///     public FourCC format => new FourCC('H', 'I', 'D');
     ///
     ///     // InputControlAttributes on fields tell the input system to create controls
     ///     // for the public fields found in the struct.
@@ -120,26 +134,16 @@ namespace UnityEngine.InputSystem
     ///     // Assume a 16bit field of buttons. Create one button that is tied to
     ///     // bit #3 (zero-based). Note that buttons do not need to be stored as bits.
     ///     // They can also be stored as floats or shorts, for example.
-    ///     [InputControl(name = "button", layout = "Button", bit = 3)]
+    ///     [InputControl(name = "button", layout = "Button", bit = 3)] [FieldOffset(0)]
     ///     public ushort buttons;
     ///
     ///     // Create a floating-point axis. The name, if not supplied, is taken from
     ///     // the field.
-    ///     [InputControl(layout = "Axis")]
+    ///     [InputControl(layout = "Axis")] [FieldOffset(0)]
     ///     public short axis;
     /// }
     /// </code>
     /// </example>
-    ///
-    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
-    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
-    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
-    ///
-    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
-    /// sample which you can install from the Unity package manager.
-    ///
-    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
-    /// </remarks>
     /// <seealso cref="InputControl"/>
     /// <seealso cref="Mouse"/>
     /// <seealso cref="Keyboard"/>
@@ -254,6 +258,18 @@ namespace UnityEngine.InputSystem
                     return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
                 #endif
 
+                return canDeviceRunInBackground;
+            }
+        }
+        /// <summary>
+        /// In editor, it may differ from canRunInBackground depending on the gameViewFocus setting.
+        /// This property is used by Device Debug View
+        /// </summary>
+        /// <value>Whether the device should generate input while in the background.</value>
+        internal bool canDeviceRunInBackground
+        {
+            get
+            {
                 if ((m_DeviceFlags & DeviceFlags.CanRunInBackgroundHasBeenQueried) != 0)
                     return (m_DeviceFlags & DeviceFlags.CanRunInBackground) != 0;
 
@@ -495,10 +511,26 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been added.
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Added"/>
+        /// <see cref="OnRemoved"/>
         /// </remarks>
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Added"/>
-        /// <seealso cref="OnRemoved"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public static MyDevice current { get; private set; }
+        ///     protected override void OnAdded()
+        ///     {
+        ///         // use this context to assign the current device for instance
+        ///         base.OnAdded();
+        ///         current = this;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void OnAdded()
         {
         }
@@ -508,10 +540,27 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is called <em>after</em> the device has already been removed.
+        /// <see cref="InputSystem.devices"/>
+        /// <see cref="InputDeviceChange.Removed"/>
+        /// <see cref="OnAdded"/>
         /// </remarks>
-        /// <seealso cref="InputSystem.devices"/>
-        /// <seealso cref="InputDeviceChange.Removed"/>
-        /// <seealso cref="OnRemoved"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public static MyDevice current { get; private set; }
+        ///     protected override void OnRemoved()
+        ///     {
+        ///         // use this context to unassign the current device for instance
+        ///         base.OnRemoved();
+        ///         if (current == this)
+        ///             current = null;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         protected virtual void OnRemoved()
         {
         }
@@ -529,7 +578,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputManager.OnUpdate"/>
         /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
-        /// <seealso cref="OnConfigurationChanged"/>///
+        /// <seealso cref="OnConfigurationChanged"/>
         protected virtual void OnConfigurationChanged()
         {
         }
@@ -547,8 +596,8 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
-        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl">ioctl</a>
         /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
@@ -681,7 +730,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Timestamp of last event we received.
         /// </summary>
-        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="LowLevel.InputEvent.time"/>
         internal double m_LastUpdateTimeInternal;
 
         // Update count corresponding to the current front buffers that are active on the device.
@@ -706,6 +755,16 @@ namespace UnityEngine.InputSystem
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        // Used with value caching to track updated button press states.
+        internal HashSet<int> m_UpdatedButtons;
+
+        // Used for updating button press states when we don't take the value caching path.
+        internal List<ButtonControl> m_ButtonControlsCheckingPressState;
+
+        // Once we hit about 45 ButtonControls being queried for wasPressedThisFrame/wasReleasedThisFrame, mark as such
+        // so that we can take the ReadValueCaching path for more efficient updating.
+        internal bool m_UseCachePathForButtonPresses = false;
 
         // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
         // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
@@ -975,25 +1034,27 @@ namespace UnityEngine.InputSystem
             if (m_ControlTreeNodes.Length == 0)
                 return;
 
+            // Reset counter for how many controls have updated
+            m_UpdatedButtons.Clear();
+
             // if we're dealing with a delta state event or just an individual control update through InputState.ChangeState
             // the size of the new data will not be the same size as the device state block, so use the 'partial' change state
             // method to update just those controls that overlap with the changed state.
             if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
-                        stateOffsetInDevice * 8, deviceStateBuffer, m_ControlTreeNodes[0], 0);
+                    WritePartialChangedControlStatesInternal(stateSizeInBytes * 8,
+                        stateOffsetInDevice * 8, m_ControlTreeNodes[0], 0);
             }
             else
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
-                        deviceStateBuffer, m_ControlTreeNodes[0], 0);
+                    WriteChangedControlStatesInternal(statePtr, deviceStateBuffer, m_ControlTreeNodes[0], 0);
             }
         }
 
-        private unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
-            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        private void WritePartialChangedControlStatesInternal(uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, ControlBitRangeNode parentNode, uint startOffset)
         {
             var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
             // TODO recheck
@@ -1004,12 +1065,14 @@ namespace UnityEngine.InputSystem
                 for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
                 {
                     var controlIndex = m_ControlTreeIndices[i];
-                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                    var control = m_ChildrenForEachControl[controlIndex];
+                    control.MarkAsStale();
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
+                        m_UpdatedButtons.Add(controlIndex);
                 }
 
                 if (leftNode.leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
-                        deviceStatePtr, leftNode, startOffset);
+                    WritePartialChangedControlStatesInternal(stateSizeInBits, stateOffsetInDeviceInBits, leftNode, startOffset);
             }
 
             var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
@@ -1021,12 +1084,14 @@ namespace UnityEngine.InputSystem
                 for (int i = rightNode.controlStartIndex; i < controlEndIndex; i++)
                 {
                     var controlIndex = m_ControlTreeIndices[i];
-                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                    var control = m_ChildrenForEachControl[controlIndex];
+                    control.MarkAsStale();
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
+                        m_UpdatedButtons.Add(controlIndex);
                 }
 
                 if (rightNode.leftChildIndex != -1)
-                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
-                        deviceStatePtr, rightNode, leftNode.endBitOffset);
+                    WritePartialChangedControlStatesInternal(stateSizeInBits, stateOffsetInDeviceInBits, rightNode, leftNode.endBitOffset);
             }
         }
 
@@ -1065,7 +1130,7 @@ namespace UnityEngine.InputSystem
             return string.Join("\n", output);
         }
 
-        private unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+        private unsafe void WriteChangedControlStatesInternal(void* statePtr,
             byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
         {
             var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
@@ -1089,12 +1154,16 @@ namespace UnityEngine.InputSystem
                     // points at a block of memory of the same size as the device state.
                     if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
                         (byte*)statePtr - m_StateBlock.byteOffset, null))
+                    {
                         control.MarkAsStale();
+                        if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
+                            m_UpdatedButtons.Add(controlIndex);
+                    }
                 }
 
                 // process the left child node if it exists
                 if (leftNode.leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                    WriteChangedControlStatesInternal(statePtr, deviceStatePtr,
                         leftNode, startOffset);
             }
 
@@ -1119,11 +1188,15 @@ namespace UnityEngine.InputSystem
 
                 if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
                     (byte*)statePtr - m_StateBlock.byteOffset, null))
+                {
                     control.MarkAsStale();
+                    if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
+                        m_UpdatedButtons.Add(controlIndex);
+                }
             }
 
             if (rightNode.leftChildIndex != -1)
-                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                WriteChangedControlStatesInternal(statePtr, deviceStatePtr,
                     rightNode, leftNode.endBitOffset);
         }
 

@@ -1,5 +1,61 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4692361954689130598
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7286017728639314418}
+  - component: {fileID: 6586345530156004295}
+  m_Layer: 0
+  m_Name: TouchPad
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7286017728639314418
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4692361954689130598}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5430831075476541851}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6586345530156004295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4692361954689130598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50c7363fac4d24ae8a679e3e8f1fa838, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Label: TouchPad
+  m_HistorySamples: 100
+  m_TimeWindow: 3
+  m_Rect:
+    serializedVersion: 2
+    x: 814.2
+    y: 156.25
+    width: 187.5
+    height: 62.5
+  m_Visualization: 1
+  m_ControlPath: <DualShockGamepad>/touchpadButton
+  m_ControlIndex: 0
 --- !u!1 &5430831073950378571
 GameObject:
   m_ObjectHideFlags: 0
@@ -24,12 +80,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831073950378571}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831073950378564
 MonoBehaviour:
@@ -48,10 +105,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 550
-    y: 50
-    width: 25
-    height: 25
+    x: 687.5
+    y: 62.5
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonNorth
   m_ControlIndex: 0
@@ -79,12 +136,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074071876625}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074071876626
 MonoBehaviour:
@@ -103,10 +161,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 575
-    y: 150
-    width: 50
-    height: 25
+    x: 718.75
+    y: 187.5
+    width: 62.5
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/select
   m_ControlIndex: 0
@@ -134,12 +192,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074153646138}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074153646139
 MonoBehaviour:
@@ -158,10 +217,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 50
-    y: 50
-    width: 200
-    height: 50
+    x: 62.5
+    y: 62.5
+    width: 250
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftTrigger
   m_ControlIndex: 0
@@ -189,12 +248,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074316365813}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074316365814
 MonoBehaviour:
@@ -213,10 +273,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 100
-    y: 125
-    width: 150
-    height: 50
+    x: 125
+    y: 156.25
+    width: 187.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftShoulder
   m_ControlIndex: 0
@@ -244,12 +304,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074333637589}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 19
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074333637590
 MonoBehaviour:
@@ -268,10 +329,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 375
-    width: 700
-    height: 70
+    x: 25
+    y: 468.75
+    width: 875
+    height: 87.5
   m_Visualization: 4
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
@@ -299,12 +360,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074406035309}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074406035310
 MonoBehaviour:
@@ -323,10 +385,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 525
-    y: 225
-    width: 25
-    height: 25
+    x: 656.25
+    y: 281.25
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/up
   m_ControlIndex: 0
@@ -354,12 +416,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074569589721}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074569589722
 MonoBehaviour:
@@ -378,10 +441,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 50
-    y: 200
-    width: 25
-    height: 50
+    x: 62.5
+    y: 250
+    width: 31.25
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftStickPress
   m_ControlIndex: 0
@@ -409,12 +472,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074657706042}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074657706043
 MonoBehaviour:
@@ -433,10 +497,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 275
-    y: 125
-    width: 150
-    height: 50
+    x: 343.75
+    y: 156.25
+    width: 187.5
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightShoulder
   m_ControlIndex: 0
@@ -464,12 +528,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074722065633}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 18
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074722065634
 MonoBehaviour:
@@ -488,10 +553,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 600
-    y: 200
-    width: 150
-    height: 150
+    x: 750
+    y: 250
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad
   m_ControlIndex: 0
@@ -519,12 +584,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074890777055}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074890777048
 MonoBehaviour:
@@ -543,10 +609,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 525
-    y: 75
-    width: 25
-    height: 25
+    x: 656.25
+    y: 93.75
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonWest
   m_ControlIndex: 0
@@ -574,12 +640,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074908778958}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074908778959
 MonoBehaviour:
@@ -598,10 +665,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 575
-    y: 75
-    width: 25
-    height: 25
+    x: 718.75
+    y: 93.75
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonEast
   m_ControlIndex: 0
@@ -629,12 +696,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831074960731593}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831074960731594
 MonoBehaviour:
@@ -653,10 +721,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 525
-    y: 275
-    width: 25
-    height: 25
+    x: 656.25
+    y: 343.75
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/down
   m_ControlIndex: 0
@@ -684,12 +752,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075105443482}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075105443483
 MonoBehaviour:
@@ -708,10 +777,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 500
-    y: 250
-    width: 25
-    height: 25
+    x: 625
+    y: 312.5
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/left
   m_ControlIndex: 0
@@ -739,12 +808,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075159756557}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075159756558
 MonoBehaviour:
@@ -763,10 +833,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 500
-    y: 150
-    width: 50
-    height: 25
+    x: 625
+    y: 187.5
+    width: 62.5
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/start
   m_ControlIndex: 0
@@ -794,12 +864,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075192722347}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075192722340
 MonoBehaviour:
@@ -818,10 +889,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 275
-    y: 200
-    width: 150
-    height: 150
+    x: 343.75
+    y: 250
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightStick
   m_ControlIndex: 0
@@ -849,12 +920,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075336578712}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075336578713
 MonoBehaviour:
@@ -873,10 +945,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 550
-    y: 250
-    width: 25
-    height: 25
+    x: 687.5
+    y: 312.5
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/right
   m_ControlIndex: 0
@@ -904,14 +976,17 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075476541849}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 955.3655, y: 464.9797, z: -160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5430831075516136792}
   - {fileID: 5430831075192722341}
   - {fileID: 5430831074316365815}
   - {fileID: 5430831074657706036}
+  - {fileID: 7286017728639314418}
   - {fileID: 5430831074153646132}
   - {fileID: 5430831075958221746}
   - {fileID: 5430831074569589723}
@@ -930,8 +1005,8 @@ Transform:
   - {fileID: 5430831074333637591}
   - {fileID: 5430831075888579013}
   - {fileID: 5430831075640135792}
+  - {fileID: 5381062603896267825}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075476541850
 MonoBehaviour:
@@ -981,12 +1056,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075516136798}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075516136799
 MonoBehaviour:
@@ -1005,10 +1081,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 100
-    y: 200
-    width: 150
-    height: 150
+    x: 125
+    y: 250
+    width: 187.5
+    height: 187.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftStick
   m_ControlIndex: 0
@@ -1036,12 +1112,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075640135799}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075640135793
 MonoBehaviour:
@@ -1060,10 +1137,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 550
-    width: 700
-    height: 70
+    x: 25
+    y: 687.5
+    width: 875
+    height: 87.5
   m_Visualization: 7
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
@@ -1091,12 +1168,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075882524473}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075882524474
 MonoBehaviour:
@@ -1115,10 +1193,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 450
-    y: 200
-    width: 25
-    height: 50
+    x: 562.5
+    y: 250
+    width: 31.25
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightStickPress
   m_ControlIndex: 0
@@ -1146,12 +1224,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075888579012}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 20
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075888579014
 MonoBehaviour:
@@ -1170,10 +1249,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 20
-    y: 460
-    width: 700
-    height: 70
+    x: 25
+    y: 575
+    width: 875
+    height: 87.5
   m_Visualization: 6
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
@@ -1201,12 +1280,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075958221744}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075958221745
 MonoBehaviour:
@@ -1225,10 +1305,10 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 275
-    y: 50
-    width: 200
-    height: 50
+    x: 343.75
+    y: 62.5
+    width: 250
+    height: 62.5
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightTrigger
   m_ControlIndex: 0
@@ -1256,12 +1336,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5430831075990510035}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5430831075476541851}
-  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5430831075990510060
 MonoBehaviour:
@@ -1280,10 +1361,66 @@ MonoBehaviour:
   m_TimeWindow: 3
   m_Rect:
     serializedVersion: 2
-    x: 550
-    y: 100
-    width: 25
-    height: 25
+    x: 687.5
+    y: 125
+    width: 31.25
+    height: 31.25
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonSouth
+  m_ControlIndex: 0
+--- !u!1 &7085638670613089846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5381062603896267825}
+  - component: {fileID: 5802899217532024206}
+  m_Layer: 0
+  m_Name: DeviceCurrent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5381062603896267825
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7085638670613089846}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -955.3655, y: -464.9797, z: 160.45508}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5430831075476541851}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5802899217532024206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7085638670613089846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50c7363fac4d24ae8a679e3e8f1fa838, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Label: Gamepad.current
+  m_HistorySamples: 100
+  m_TimeWindow: 3
+  m_Rect:
+    serializedVersion: 2
+    x: 814.2
+    y: 62.5
+    width: 250
+    height: 62.5
+  m_Visualization: 8
+  m_ControlPath: <Gamepad>/buttonEast
   m_ControlIndex: 0
