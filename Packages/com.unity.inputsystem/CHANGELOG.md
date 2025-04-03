@@ -36,6 +36,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the UI generation of custom interactions of action properties when it rely on OnGUI callback. [ISXB-886](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-886).
 - Fixed deletion of last composite part raising an exception. [ISXB-804](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-804)
 - Fixed an issue related to Visualizers sample where exceptions would be thrown by InputActionVisualizer and InputControlVisualizer when entering play-mode if added as components to a new `GameObject`.
+- Fixed an issue where an action with a name containing a slash "/" could not be found via `InputActionAsset.FindAction(string,bool)`. [ISXB-1306](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306).
 
 ### Added
 - Added additional device information when logging the error due to exceeding the maximum number of events processed
