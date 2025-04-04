@@ -492,7 +492,7 @@ namespace UnityEngine.InputSystem
         /// this case, the first action that is enabled is returned.
         ///
         /// If an action name contains a slash "/", e.g. "yaw/pitch" and there is also a map called "yaw" which
-        /// contains an action "pitch", the action "pitch" within the map "jump" will be returned instead of the
+        /// contains an action "pitch", the action "pitch" within the map "yaw" will be returned instead of the
         /// action named "yaw/pitch".
         ///
         /// <example>

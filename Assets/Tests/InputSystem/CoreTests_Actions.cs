@@ -8137,9 +8137,9 @@ partial class CoreTests
         }, Is.Not.AllocatingGCMemory());
     }
 
-    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306
     [Test]
     [Category("Actions")]
+    [Description("See https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306")]
     public void Actions_CanLookUpActionInAssetByNameIfHavingActionAndMapActionWithSameName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
