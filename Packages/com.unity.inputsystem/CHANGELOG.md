@@ -11,14 +11,28 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Fixed
+- Fixed an analytics event being invoked twice when the Save button in the Actions view was pressed. [ISXB-1378](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1378)
+- Fixed an issue causing a number of errors to be displayed when using `InputTestFixture` in playmode tests with domain reloading disabled on playmode entry. [ISXB-1446](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1446)
+- Fixed issue where user was not prompted to save changes when loading a second input actions asset into an already opened editor. [ISXB-1343](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1343)
+- Fixed the on hover behaviour of the two plus buttons in the Input Actions Editor window [ISXB-1327](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1327)
+- Fixed an issue on macOS which didn't detect up-left DPAD presses for Xbox controllers. [ISXB-810](https://issuetracker.unity3d.com/issues/macos-d-pad-upper-left-corner-is-not-logged-with-the-xbox-controller)
+- Fixed Input Actions code generation overwriting user files when the names happened to match. [ISXB-1257](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1257)
+- Fixed an issue when providing JoinPlayer with a specific split screen index. [ISXB-897](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-897)
+
+## [1.14.0] - 2025-03-20
+
+### Fixed
 - Fixed an issue where all action maps were enabled initially for project wide actions, which overrode the PlayerInput action map configuration. [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920)
 - Fixed an issue where ButtonStates are not fully updated when switching SingleUnifiedPointer. [ISXB-1356](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1356)
+- Fixed errors when pasting composite parts into non-composites. [ISXB-757](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-757)
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
 
 ### Changed
 - Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+- Added missing documentation for the Tracked Pose Driver and Tracked Device Raycaster components. [ISXB-1410](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1410)
 
 ## [1.13.1] - 2025-02-18
 
@@ -33,6 +47,13 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 - Added disabling of action maps in rebinding UI sample.
+
+### Added
+- An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
+
+### Added
+- Added achievable average frequency diagnostic to Input Debugger device window (along with sensor frequency and global polling frequency information).
+- Added processing delay input system latency (average, minimum, maximum) diagnostics to Input Bugger device window.
 
 ## [1.13.0] - 2025-02-05
 

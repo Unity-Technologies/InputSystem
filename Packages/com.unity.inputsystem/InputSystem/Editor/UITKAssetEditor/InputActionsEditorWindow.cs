@@ -100,6 +100,28 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var window = GetWindow<InputActionsEditorWindow>();
+            if (window.m_IsDirty)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(window.m_AssetGUID);
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    // Prompt user with a dialog
+                    var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
+                    switch (result)
+                    {
+                        case Dialog.Result.Save:
+                            window.Save(isAutoSave: false);
+                            break;
+                        case Dialog.Result.Cancel:
+                            return window;
+                        case Dialog.Result.Discard:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(result));
+                    }
+                }
+            }
+
             window.m_IsDirty = false;
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
