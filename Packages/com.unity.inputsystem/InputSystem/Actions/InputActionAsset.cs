@@ -471,7 +471,7 @@ namespace UnityEngine.InputSystem
         /// in the asset.
         /// </summary>
         /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
-        /// a simple name e.g. "fire". In the former case, the name is split at the '/' slash and the first part is used to find
+        /// a simple name (e.g. "fire"). In the former case, the name is split at the '/' slash and the first part is used to find
         /// a map with that name and the second part is used to find an action with that name inside the map. In the
         /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
         /// is returned. Note that name comparisons are case-insensitive.
