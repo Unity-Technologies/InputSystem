@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 
@@ -207,8 +208,6 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(gamepad.startButton.isPressed);
     }
 
-// Disable tests in standalone builds from 2022.1+ see UUM-19622
-#if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxWirelessControllerOnOSX()
@@ -242,6 +241,8 @@ internal class XInputTests : CoreTestsFixture
 
         InputSystem.Update();
 
+        Assert.That(gamepad.leftStick.x.IsActuated());
+
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
@@ -268,10 +269,17 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Y), gamepad.yButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Y), gamepad.buttonNorth);
 
-        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(5), gamepad.dpad.down);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(1), gamepad.dpad.up);
-        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(7), gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(2),  gamepad.dpad.up, gamepad.dpad.right);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(3), gamepad.dpad.right);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(4), gamepad.dpad.down, gamepad.dpad.right);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(5), gamepad.dpad.down);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(6), gamepad.dpad.down, gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(7), gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(8), gamepad.dpad.up, gamepad.dpad.left);
+        // No Dpad button pressed when the value is 0
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(0));
+
 
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.LeftThumbstickPress), gamepad.leftStickButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.RightThumbstickPress), gamepad.rightStickButton);
@@ -305,9 +313,6 @@ internal class XInputTests : CoreTestsFixture
     }
 
 #endif // TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
-
-#endif
-
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]

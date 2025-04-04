@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.UI
     /// </remarks>
     [AddComponentMenu("Event/Tracked Device Raycaster")]
     [RequireComponent(typeof(Canvas))]
+    [HelpURL(InputSystem.kDocUrl + "/manual/TrackedInputDevices.html#tracked-device-raycaster")]
     public class TrackedDeviceRaycaster : BaseRaycaster
     {
         private struct RaycastHitData

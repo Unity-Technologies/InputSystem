@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.XR
     /// </remarks>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (Input System)")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/TrackedInputDevices.html#tracked-pose-driver")]
     public class TrackedPoseDriver : MonoBehaviour, ISerializationCallbackReceiver
     {
         /// <summary>
