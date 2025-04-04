@@ -571,8 +571,9 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                // It's just a simple action name. Return either first enabled action or, if
-                // none are enabled, first action with the given name.
+                // Check if there is an action with the given name regardless of containing map.
+                // If multiple actions exist with the same identifier, the first enabled one is returned.
+                // If no enabled action exist, the first is returned.
                 InputAction firstActionFound = null;
                 for (var i = 0; i < m_ActionMaps.Length; ++i)
                 {
