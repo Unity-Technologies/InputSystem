@@ -14,8 +14,6 @@ using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
-// 4
-
 ////TODO: add test for domain reload logic
 
 // IMPORTANT: When running in editor, make sure to turn off debugging (disable "Editor Attaching" in
