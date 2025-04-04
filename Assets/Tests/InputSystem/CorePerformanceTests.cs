@@ -1201,7 +1201,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     [Category("Performance")]
     public IEnumerator Performance_MeasureInputSystemFrameTimeWithProfilerMarkers_DoingNothing()
     {
-        yield return Measure.Frames()                        
+        yield return Measure.Frames()
             .MeasurementCount(500)
             .ProfilerMarkers(allInputSystemProfilerMarkers)
             .WarmupCount(5)
