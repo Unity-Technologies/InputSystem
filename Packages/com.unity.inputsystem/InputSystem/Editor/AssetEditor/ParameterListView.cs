@@ -278,10 +278,11 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                 if (parameter.isEnum)
                 {
-                    var intValue = parameter.value.value.ToInt32();
-                    var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), intValue);
+                    var currentEnumValue = parameter.value.value.ToInt32();   
+                    var selectedIndex = parameter.enumValues.IndexOf(currentEnumValue);
+                    var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), selectedIndex);
                     field.tooltip = label.tooltip;
-                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, field.index, closedIndex));
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, parameter.enumValues[field.index], closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
