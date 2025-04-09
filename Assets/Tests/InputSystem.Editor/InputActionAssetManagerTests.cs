@@ -146,7 +146,7 @@ class InputActionAssetManagerEditorTests
     {
         var culture = Thread.CurrentThread.CurrentCulture;
         Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfoByIetfLanguageTag("tr-TR");
-        
+
         var name = CSharpCodeHelpers.MakeTypeName("info");
 
         Thread.CurrentThread.CurrentCulture = culture;
