@@ -417,17 +417,21 @@ namespace UnityEngine.InputSystem.Editor
                 case PlayerNotifications.InvokeUnityEvents:
                 {
                     var playerInput = (PlayerInput)target;
-                    if (playerInput.m_DeviceLostEvent == null)
-                        playerInput.m_DeviceLostEvent = new PlayerInput.DeviceLostEvent();
-                    if (playerInput.m_DeviceRegainedEvent == null)
-                        playerInput.m_DeviceRegainedEvent = new PlayerInput.DeviceRegainedEvent();
-                    if (playerInput.m_ControlsChangedEvent == null)
-                        playerInput.m_ControlsChangedEvent = new PlayerInput.ControlsChangedEvent();
-                    serializedObject.Update();
 
-                    // Force action refresh.
-                    m_ActionAssetInitialized = false;
-                    Refresh();
+                    bool areEventsDirty = (playerInput.m_DeviceLostEvent == null) || (playerInput.m_DeviceRegainedEvent == null) || (playerInput.m_ControlsChangedEvent == null);
+
+                    playerInput.m_DeviceLostEvent ??= new PlayerInput.DeviceLostEvent();
+                    playerInput.m_DeviceRegainedEvent ??= new PlayerInput.DeviceRegainedEvent();
+                    playerInput.m_ControlsChangedEvent ??= new PlayerInput.ControlsChangedEvent();
+
+                    if (areEventsDirty)
+                    {
+                        serializedObject.Update();
+
+                        // Force action refresh.
+                        m_ActionAssetInitialized = false;
+                        Refresh();
+                    }
                     break;
                 }
             }
