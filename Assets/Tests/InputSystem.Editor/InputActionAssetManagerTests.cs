@@ -142,6 +142,7 @@ class InputActionAssetManagerEditorTests
 
     [Test]
     [Category("Editor")]
+    [Description("A regression test for ISXB-1406")]
     public void Editor_InputActionAssetManager_ActionsCodeGeneration_TypeNamesAreNotAffectedByCultureChange()
     {
         var culture = Thread.CurrentThread.CurrentCulture;
