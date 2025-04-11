@@ -2873,7 +2873,9 @@ internal partial class UITests : CoreTestsFixture
     [Category("UI")]
 
     [TestCase("Gamepad", ExpectedResult = 1)]
+#if UNITY_WEBGL || UNITY_EDITOR
     [TestCase("WebGLGamepad", ExpectedResult = 1)]
+#endif
     public IEnumerator UI_CanDriveUIFromGamepad(string deviceLayout)
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(deviceLayout);
