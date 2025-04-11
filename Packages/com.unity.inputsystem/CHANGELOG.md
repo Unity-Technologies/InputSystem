@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue when providing JoinPlayer with a specific split screen index. [ISXB-897](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-897)
 - Fixed Inspector Window being refreshed all the time when a PlayerInput component is present with Invoke Unity Events nofication mode chosen [ISXB-1448](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1448)
 - Fixed an issue where an action with a name containing a slash "/" could not be found via `InputActionAsset.FindAction(string,bool)`. [ISXB-1306](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306).
+- Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
 
 ## [1.14.0] - 2025-03-20
 
