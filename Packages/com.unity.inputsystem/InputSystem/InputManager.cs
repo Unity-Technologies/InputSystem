@@ -3055,6 +3055,8 @@ namespace UnityEngine.InputSystem
             return (updateType & mask) != 0;
         }
 
+        static readonly ProfilerMarker k_InputUpdateDeltaStateEventProfilerMarker = new ProfilerMarker("InputUpdate.ProcessDeltaStateEvent");
+
         /// <summary>
         /// Process input events.
         /// </summary>
@@ -3474,7 +3476,7 @@ namespace UnityEngine.InputSystem
                     {
                         case StateEvent.Type:
                         case DeltaStateEvent.Type:
-
+                            k_InputUpdateDeltaStateEventProfilerMarker.Begin();
                             var eventPtr = new InputEventPtr(currentEventReadPtr);
 
                             // Ignore the event if the last state update we received for the device was
@@ -3500,6 +3502,7 @@ namespace UnityEngine.InputSystem
                                 // N.B. Android seems to have similar issues with touch input (OnStateEvent, Touchscreen.cs)
                                 if (!(device is Keyboard))
 #endif
+                                k_InputUpdateDeltaStateEventProfilerMarker.End();
                                 break;
                             }
 
@@ -3523,6 +3526,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                                     m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
 #endif
+                                    k_InputUpdateDeltaStateEventProfilerMarker.End();
                                     break;
                                 }
 
@@ -3544,10 +3548,10 @@ namespace UnityEngine.InputSystem
                             )
                                 device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
-                            // Make device current. Again, only do this when receiving events.
+                            // Make device current. Again, only do this when receiving events. - takes 0.01 ms on Android
                             if (haveChangedStateOtherThanNoise)
                                 device.MakeCurrent();
-
+                            k_InputUpdateDeltaStateEventProfilerMarker.End();
                             break;
 
                         case TextEvent.Type:
@@ -3809,9 +3813,10 @@ namespace UnityEngine.InputSystem
             ref var stateBlockOfDevice = ref device.m_StateBlock;
 
             ////TODO: limit stateSize and StateOffset by the device's state memory
-
+            // 0.01 ms on Android
             var deviceBuffer = (byte*)InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
 
+            //0.01 ms on Android
             // If state monitors need to be re-sorted, do it now.
             // NOTE: This must happen with the monitors in non-signalled state!
             SortStateChangeMonitorsIfNecessary(deviceIndex);
@@ -3822,6 +3827,7 @@ namespace UnityEngine.InputSystem
             // for the monitors to work reliably. By comparing the *event* data to the current
             // state, we can have multiple state events in the same frame yet still get reliable
             // change notifications.
+            // 0.02 ms on Android
             var haveSignalledMonitors =
                 ProcessStateChangeMonitors(deviceIndex, statePtr,
                     deviceBuffer + stateBlockOfDevice.byteOffset,
@@ -3833,15 +3839,18 @@ namespace UnityEngine.InputSystem
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
             // determine if the event carries signal or not.
+            // 0.01 ms on Android
             var noiseMask = device.noisy
                 ? (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset
                 : null;
             // Compare the current state of the device to the newly received state but overlay
             // the comparison by the noise mask.
+            // 0.02 ms on Android
             var makeDeviceCurrent = !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
                 0, stateSize * 8, mask: noiseMask);
 
             // Buffer flip.
+            // 0.01 ms on Android
             var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);
 
             // Now write the state.
@@ -3912,9 +3921,12 @@ namespace UnityEngine.InputSystem
             return makeDeviceCurrent;
         }
 
+        static readonly ProfilerMarker k_InputWriteStateChangeProfilerMarker = new ProfilerMarker("InputUpdate.WriteStateChange");
+
         private unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
             ref InputStateBlock deviceStateBlock, uint stateOffsetInDevice, void* statePtr, uint stateSizeInBytes, bool flippedBuffers)
         {
+            k_InputWriteStateChangeProfilerMarker.Begin();
             var frontBuffer = buffers.GetFrontBuffer(deviceIndex);
             Debug.Assert(frontBuffer != null);
 
@@ -3954,6 +3966,7 @@ namespace UnityEngine.InputSystem
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);
+            k_InputWriteStateChangeProfilerMarker.End();
         }
 
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just

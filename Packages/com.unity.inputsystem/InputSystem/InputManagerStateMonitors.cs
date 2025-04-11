@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -347,6 +348,8 @@ namespace UnityEngine.InputSystem
             return signalled;
         }
 
+        static readonly ProfilerMarker k_InputUpdateNotifyControlStateChangedProfilerMarker = new ProfilerMarker("InputUpdate.NotifyControlStateChanged");
+
         internal unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
         {
             if (m_StateChangeMonitors == null)
@@ -391,8 +394,10 @@ namespace UnityEngine.InputSystem
                 var listener = listeners[i];
                 try
                 {
+                    k_InputUpdateNotifyControlStateChangedProfilerMarker.Begin();
                     listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
                         listener.monitorIndex);
+                    k_InputUpdateNotifyControlStateChangedProfilerMarker.End();
                 }
                 catch (Exception exception)
                 {

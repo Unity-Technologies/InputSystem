@@ -1428,6 +1428,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 
+            // 23 ms on android
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
                 // Callbacks can do pretty much anything and thus trigger arbitrary state/configuration
@@ -1447,6 +1448,7 @@ namespace UnityEngine.InputSystem
                     var bindingStatePtr = &bindingStates[bindingIndex];
                     var actionIndex = bindingStatePtr->actionIndex;
 
+                    //takes 0.01 ms on Android
                     var trigger = new TriggerState
                     {
                         mapIndex = mapIndex,
@@ -1468,7 +1470,10 @@ namespace UnityEngine.InputSystem
 
                     // Store magnitude. We do this once and then only read it from here.
                     var control = controls[controlIndex];
+
+                    //0.04 ms on Android
                     trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.magnitude;
+
                     controlMagnitudes[controlIndex] = trigger.magnitude;
 
                     // Update press times.
@@ -2535,6 +2540,7 @@ namespace UnityEngine.InputSystem
                 m_ActionIndex = actionIndex,
             };
 
+            //10 ms on Android XR hands
             k_InputActionCallbackMarker.Begin();
 
             // Global callback goes first.
@@ -2809,11 +2815,14 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private static readonly ProfilerMarker k_InputActionStateReadValueMarker = new ProfilerMarker("InputActionState.ReadValue");
+
         internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex, bool ignoreComposites = false)
             where TValue : struct
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
 
+            k_InputActionStateReadValueMarker.Begin();
             var value = default(TValue);
 
             // In the case of a composite, this will be null.
@@ -2872,6 +2881,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            k_InputActionStateReadValueMarker.End();
             // Run value through processors, if any.
             return ApplyProcessors(bindingIndex, value, controlOfType);
         }

@@ -2666,6 +2666,8 @@ namespace UnityEngine.InputSystem
             public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
         }
 
+        public static ProfilerMarker m_QueueProfilerMaker = new ProfilerMarker("QueueDeltaStateEvent");
+
         /// <summary>
         /// Queue a <see cref="DeltaStateEvent"/> to update part of the input state of the given device.
         /// </summary>
@@ -2679,6 +2681,7 @@ namespace UnityEngine.InputSystem
         public static unsafe void QueueDeltaStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
             where TDelta : struct
         {
+            m_QueueProfilerMaker.Begin();
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
@@ -2724,6 +2727,7 @@ namespace UnityEngine.InputSystem
             UnsafeUtility.MemCpy(ptr, UnsafeUtility.AddressOf(ref delta), deltaSize);
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
+            m_QueueProfilerMaker.End();
         }
 
         /// <summary>

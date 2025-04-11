@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
@@ -1519,6 +1520,8 @@ namespace UnityEngine.InputSystem
             return ProcessValue(ReadUnprocessedValueFromState(statePtr));
         }
 
+        private static readonly ProfilerMarker k_InputControlReadValueCachingMarker = new ProfilerMarker("InputControl.ReadValueFromStateWithCaching");
+
         /// <summary>
         /// Read value from provided <paramref name="statePtr"/> and apply processors. Try cache result if possible.
         /// </summary>
@@ -1530,7 +1533,10 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="value"/>
         public unsafe TValue ReadValueFromStateWithCaching(void* statePtr)
         {
-            return statePtr == currentStatePtr ? value : ReadValueFromState(statePtr);
+            k_InputControlReadValueCachingMarker.Begin();
+            var val = statePtr == currentStatePtr ? value : ReadValueFromState(statePtr);
+            k_InputControlReadValueCachingMarker.End();
+            return val;
         }
 
         /// <summary>

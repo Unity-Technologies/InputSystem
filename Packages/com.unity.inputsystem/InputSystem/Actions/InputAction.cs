@@ -2410,6 +2410,7 @@ namespace UnityEngine.InputSystem
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
+                k_InputActionReadMarker.Begin();
                 var value = default(TValue);
                 if (m_State != null)
                 {
@@ -2417,9 +2418,12 @@ namespace UnityEngine.InputSystem
                         m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
                         m_State.ApplyProcessors(bindingIndex, value);
                 }
-
+                k_InputActionReadMarker.End();
                 return value;
             }
+
+            private static readonly ProfilerMarker k_InputActionReadMarker = new ProfilerMarker("InputAction.ReadValue");
+
 
             /// <summary>
             /// Read the current value of the action as a <c>float</c> and return true if it is equal to
