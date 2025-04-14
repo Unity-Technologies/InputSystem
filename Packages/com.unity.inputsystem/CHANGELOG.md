@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the on hover behaviour of the two plus buttons in the Input Actions Editor window [ISXB-1327](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1327)
 - Fixed an issue on macOS which didn't detect up-left DPAD presses for Xbox controllers. [ISXB-810](https://issuetracker.unity3d.com/issues/macos-d-pad-upper-left-corner-is-not-logged-with-the-xbox-controller)
 - Fixed Input Actions code generation overwriting user files when the names happened to match. [ISXB-1257](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1257)
+- Fixed Input Actions code generation using locale-dependent rules when lowercasing and uppercasing strings. [ISXB-1406]
 - Fixed an issue when providing JoinPlayer with a specific split screen index. [ISXB-897](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-897)
 - Fixed an issue where an action with a name containing a slash "/" could not be found via `InputActionAsset.FindAction(string,bool)`. [ISXB-1306](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306).
 
