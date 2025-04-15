@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 ////TODO: add test for domain reload logic
@@ -234,6 +235,28 @@ internal class CorePerformanceTests : CoreTestsFixture
         Measure.Method(() => action.ReadValue<float>())
             .DynamicMeasurementCount()
             .WarmupCount(5)
+            .Run();
+    }
+
+    [UnityTest, Performance]
+    [Category("Performance")]
+    public IEnumerator Performance_MultipleControls()
+    {
+        SceneManager.LoadScene("Performance_Controls");
+
+        yield return null;
+
+        var sampleGroups = new[]
+        {
+            new SampleGroup("InputUpdate", SampleUnit.Microsecond),
+        };
+
+        yield return Measure
+            .Frames()
+            .WarmupCount(30)
+            .DontRecordFrametime()
+            .MeasurementCount(300)
+            .ProfilerMarkers(sampleGroups)
             .Run();
     }
 
