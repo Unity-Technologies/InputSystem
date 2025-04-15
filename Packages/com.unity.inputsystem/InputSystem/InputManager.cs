@@ -3813,7 +3813,7 @@ namespace UnityEngine.InputSystem
             ref var stateBlockOfDevice = ref device.m_StateBlock;
 
             ////TODO: limit stateSize and StateOffset by the device's state memory
-            // 0.01 ms on Android
+            // 0.01 ms on Android with 16 hand events, 2 head events, 2 mouse events
             var deviceBuffer = (byte*)InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
 
             //0.01 ms on Android
