@@ -289,6 +289,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         UpdateBindingDisplay();
                         CleanUp();
                     })
+                .OnMatchWaitForAnother(0.2f)
                 .OnComplete(
                     operation =>
                     {
