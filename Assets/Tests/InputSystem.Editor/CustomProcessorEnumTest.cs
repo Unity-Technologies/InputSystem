@@ -88,6 +88,7 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
         var oldValue = dropdown.value;
         var newValue = dropdown.choices[newIndex];
 
+        dropdown.Focus();
         dropdown.value = newValue;
 
         var changeEvent = ChangeEvent<Enum>.GetPooled(SomeEnum.OptionA, SomeEnum.OptionC);
@@ -103,7 +104,7 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         var updatedJson = m_Window.currentAssetInEditor.ToJson();
         
-        Assert.That(updatedJson.Contains("customProcessor(SomeEnum=20)"), Is.True, "Serialized JSON does not contain the updated custom processor string for OptionB.");
+        Assert.That(updatedJson.Contains("Custom(SomeEnum=20)"), Is.True, "Serialized JSON does not contain the updated custom processor string for OptionB.");
 
         yield return null;
     }
