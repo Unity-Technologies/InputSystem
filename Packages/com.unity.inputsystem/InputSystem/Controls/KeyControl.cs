@@ -77,17 +77,18 @@ namespace UnityEngine.InputSystem.Controls
                     return;
                 }
 
-                var textInfo = CultureInfo.InvariantCulture.TextInfo;
                 // We need to lower case first because ToTitleCase preserves upper casing.
                 // For example on Swedish Windows layout right shift display name is "HÖGER SKIFT".
                 // Just passing it to ToTitleCase won't change anything. But passing "höger skift" will return "Höger Skift".
-                var keyNameLowerCase = textInfo.ToLower(rawKeyName);
+                var keyNameLowerCase =  rawKeyName.ToLowerInvariant();
+
                 if (string.IsNullOrEmpty(keyNameLowerCase))
                 {
                     displayName = rawKeyName;
                     return;
                 }
 
+                var textInfo = CultureInfo.InvariantCulture.TextInfo;
                 displayName = textInfo.ToTitleCase(keyNameLowerCase);
             }
         }
