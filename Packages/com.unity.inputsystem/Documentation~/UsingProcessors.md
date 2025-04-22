@@ -8,10 +8,16 @@ An Input Processor takes a value and returns a processed result for it. The rece
 >__Note__: To convert received input values into different types, see [composite Bindings](ActionBindings.md#composite-bindings).
 
 * [Using Processors](#using-processors)
+* [When to use which Processor](#when-to-use-which-processor)
+    * [Invert](#invert)
+    * [Normalize](#normalize)
+    * [Scale](#scale)
+    * [Deadzone](#deadzone)
+    * [Clamp](#clamp)
    
 ## Using Processors
 
-You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md).
+You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md). See [How to apply Processors](HowToApplyProcessors.md) to learn more.
 
 Each Processor is [registered](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) using a unique name. To replace an existing Processor, register your own Processor under an existing name.
 
@@ -30,3 +36,35 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 
     "invert,normalize(min=0,max=10)"
 ```
+
+## When to use which Processor
+
+Below you will find various example scenarios for different Processor types, note that there are more cases where the Processors apply and the described scenarios are just illustrating some of them. In some cases it might be useful to combine processors to achieve a certain goal. 
+If you don't find a similar scenario for your use-case, please check out the [Processor Types](ProcessorTypes.md), this page also contains more information on how to write your own custom Processors.
+
+### Invert             
+
+In order to use an axis control to mimic a ship's rudder, inverting the input will lead to the desired result. Pulling the stick left will steer the ship to the right, while pulling the stick to the right will lead to the ship moving left.
+This can be achieved using an [Invert Processor](ProcessorTypes.md#invert) on the Action or the Binding.
+
+### Normalize
+
+To let the player always move with the same speed, where the input just triggers the action and controls the direction, the [Normalize Processors](ProcessorTypes.md#normalize) is a good choice. This is accomplished by retrieving the vector of an input without considering the length of the vector, but rather evaluating the direction of the input. 
+
+### Scale
+
+Scaling the input values for the yaw, pitch and roll of a plane, controlled with a stick can help to balance the level of control. In order to simplify the control, the roll of the plane can be mitigated compared to the pitch. In this case a [Scale Processor](ProcessorTypes.md#scale) is the right choice.
+
+To allow a custom setup for the speed of the mouse in X and Y direction (eg via a game menu), a Scale Processor can be applied directly to the control itself. This way it will not affect other controls that are associated with the Bindings or Actions. 
+
+### Deadzone
+
+To filter noise from controls that are hardly in a default state, keep sending input values, or rarely report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
+The minimum value can filter out minimal movements or noise of the control, while the maximum value can mitigate the difference between the controls maximum value and the reported maximum values. 
+
+The Deadzone Processor can be used to provide accessiblity to physically difficult input gestures, like very small movements on an input device. This can be used to be configurable through a game menu for instance.
+
+### Clamp
+
+In a case where the player is not supposed to completely stop and needs to keep a base speed, but also can not to go a speed higher than value X, a [Clamp Processor](ProcessorTypes.md#clamp) is the Processor you may want to use.
+The minimum value of the Processor will define the minimum input value that will be received, while the value can not go higher than the maximum value set. 
