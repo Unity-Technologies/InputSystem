@@ -1216,6 +1216,89 @@ partial class CoreTests
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
     }
 
+    class SuppressedActionEventData
+    {
+        public bool markNextEventHandled;
+        public int startedCount;
+        public int performedCount;
+        public int canceledCount;
+    }
+
+    [Test]
+    [Category("Events")]
+    public void EventHandledPolicy_ShouldReflectUserSetting()
+    {
+        // Assert default setting
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+
+        // Assert policy can be changed
+        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressNotifications;
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressNotifications));
+
+        // Assert policy can be changed back
+        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressProcessing;
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+
+        // Assert setting property to an invalid value throws exception and do not have side-effects
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            InputSystem.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+    }
+
+    [TestCase(InputEventHandledPolicy.SuppressProcessing,
+        new int[] { 0, 0, 1, 1}, new int[] {0, 0, 0, 1})]
+    [TestCase(InputEventHandledPolicy.SuppressNotifications,
+        new int[] { 0, 0, 0, 0}, new int[] {0, 0, 0, 0})]
+    [Category("Events")]
+    [Description("ISXB-1524 Events suppressed has side-effects on actions when based on polling")]
+    public void Events_ShouldRespectHandledPolicyUponUpdate(InputEventHandledPolicy policy,
+        int[] expectedProcessed, int[] expectedCancelled) // EDIT
+    {
+        // Use a boxed boolean to allow lambda to capture reference.
+        var data = new SuppressedActionEventData();
+
+        InputSystem.onEvent +=
+            (inputEvent, _) =>
+        {
+            // If we mark the event handled, the system should skip it and not
+            // let it go to the device.
+            inputEvent.handled = data.markNextEventHandled;
+        };
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonNorth");
+        action.Enable();
+        action.started += _ => ++ data.startedCount;
+        action.performed += _ => ++ data.performedCount;
+        action.canceled += _ => ++ data.canceledCount;
+
+        // Ensure state is updated/initialized
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.01f, 0.0f) });
+        InputSystem.Update();
+        Assert.That(data.performedCount, Is.EqualTo(expectedProcessed[0]));
+        Assert.That(data.canceledCount, Is.EqualTo(expectedCancelled[0]));
+
+        // Press button north with event suppression active
+        data.markNextEventHandled = true;
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.00f, 0.01f) }.WithButton(GamepadButton.North));
+        InputSystem.Update();
+        Assert.That(data.performedCount, Is.EqualTo(expectedProcessed[1]));
+        Assert.That(data.canceledCount, Is.EqualTo(expectedCancelled[1]));
+
+        // Simulate a periodic reading, this will trigger performed count
+        data.markNextEventHandled = false;
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.01f, 0.00f) }.WithButton(GamepadButton.North));
+        InputSystem.Update();
+        Assert.That(data.performedCount, Is.EqualTo(expectedProcessed[2])); // Firing without actual change
+        Assert.That(data.canceledCount, Is.EqualTo(expectedCancelled[2]));
+
+        // Release button north
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.00f, 0.01f) });
+        InputSystem.Update();
+        Assert.That(data.performedCount, Is.EqualTo(expectedProcessed[3]));
+        Assert.That(data.canceledCount, Is.EqualTo(expectedCancelled[3]));
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 2)]
     struct StateWith2Bytes : IInputStateTypeInfo
     {

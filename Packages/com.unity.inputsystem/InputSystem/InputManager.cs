@@ -210,6 +210,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public InputEventHandledPolicy inputEventHandledPolicy
+        {
+            get => m_InputEventHandledPolicy;
+            set
+            {
+                switch (value)
+                {
+                    case InputEventHandledPolicy.SuppressNotifications:
+                    case InputEventHandledPolicy.SuppressProcessing:
+                        m_InputEventHandledPolicy = value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("value");
+                }
+            }
+        }
+
         public event DeviceChangeListener onDeviceChange
         {
             add => m_DeviceChangeListeners.AddCallback(value);
@@ -1891,6 +1908,9 @@ namespace UnityEngine.InputSystem
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
 
+            // Default input event handled policy.
+            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressProcessing;
+
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
             //       for the detection of base layouts to work.
@@ -2142,6 +2162,7 @@ namespace UnityEngine.InputSystem
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
         private float m_PollingFrequency;
+        private InputEventHandledPolicy m_InputEventHandledPolicy;
 
         internal InputControlLayout.Collection m_Layouts;
         private TypeTable m_Processors;
@@ -3901,8 +3922,11 @@ namespace UnityEngine.InputSystem
             }
 
             // Notify listeners.
+            //if (eventPtr == null || !eventPtr.handled) // EDIT
+            //{
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
                 device, eventPtr, k_InputOnDeviceSettingsChangeMarker, "InputSystem.onDeviceStateChange");
+            //}
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
@@ -4048,6 +4072,7 @@ namespace UnityEngine.InputSystem
         {
             public int layoutRegistrationVersion;
             public float pollingFrequency;
+            public InputEventHandledPolicy inputEventHandledPolicy;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
@@ -4093,6 +4118,7 @@ namespace UnityEngine.InputSystem
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
                 pollingFrequency = m_PollingFrequency,
+                inputEventHandledPolicy =  m_InputEventHandledPolicy,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices?.Take(m_AvailableDeviceCount).ToArray(),
                 buffers = m_StateBuffers,
@@ -4119,6 +4145,7 @@ namespace UnityEngine.InputSystem
             scrollDeltaBehavior = state.scrollDeltaBehavior;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
+            m_InputEventHandledPolicy = state.inputEventHandledPolicy;
 
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
