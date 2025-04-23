@@ -1229,25 +1229,25 @@ partial class CoreTests
     public void EventHandledPolicy_ShouldReflectUserSetting()
     {
         // Assert default setting
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
 
         // Assert policy can be changed
-        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressNotifications;
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressNotifications));
+        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressActionUpdates;
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressActionUpdates));
 
         // Assert policy can be changed back
-        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressProcessing;
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
 
         // Assert setting property to an invalid value throws exception and do not have side-effects
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             InputSystem.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressProcessing));
+        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
     }
 
-    [TestCase(InputEventHandledPolicy.SuppressProcessing,
+    [TestCase(InputEventHandledPolicy.SuppressStateUpdates,
         new int[] { 0, 0, 1, 1}, new int[] {0, 0, 0, 1})]
-    [TestCase(InputEventHandledPolicy.SuppressNotifications,
+    [TestCase(InputEventHandledPolicy.SuppressActionUpdates,
         new int[] { 0, 0, 0, 0}, new int[] {0, 0, 0, 0})]
     [Category("Events")]
     [Description("ISXB-1524 Events suppressed has side-effects on actions when based on polling")]

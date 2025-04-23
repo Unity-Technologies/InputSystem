@@ -217,8 +217,8 @@ namespace UnityEngine.InputSystem
             {
                 switch (value)
                 {
-                    case InputEventHandledPolicy.SuppressNotifications:
-                    case InputEventHandledPolicy.SuppressProcessing:
+                    case InputEventHandledPolicy.SuppressActionUpdates:
+                    case InputEventHandledPolicy.SuppressStateUpdates:
                         m_InputEventHandledPolicy = value;
                         break;
                     default:
@@ -1909,7 +1909,7 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
 
             // Default input event handled policy.
-            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressProcessing;
+            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
 
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
@@ -3477,7 +3477,7 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
-                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressProcessing &&
+                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
                             currentEventReadPtr->handled)
                         {
                             m_InputEventStream.Advance(false);

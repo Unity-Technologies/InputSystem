@@ -1540,7 +1540,7 @@ namespace UnityEngine.InputSystem
                     {
                         // Skip further notification if event is handled and our policy suppress notifications.
                         if (eventPtr != null && eventPtr.handled && InputSystem.inputEventHandledPolicy ==
-                            InputEventHandledPolicy.SuppressNotifications)
+                            InputEventHandledPolicy.SuppressActionUpdates)
                         {
                             return;
                         }

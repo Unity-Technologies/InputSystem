@@ -1,19 +1,19 @@
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Policy defining how the Input System will process <see cref="InputEvent"/> instances marked as
-    /// <see cref="InputEvent.handled"/>.
+    /// Policy defining how the Input System will react to <see cref="InputEvent"/> instances marked as
+    /// <see cref="InputEvent.handled"/> (Or marked handled via <see cref="InputEventPtr.handled"/>).
     /// </summary>
     public enum InputEventHandledPolicy
     {
         /// <summary>
-        /// Input events will be discarded and not propagated for neither state updates nor notifications.
+        /// Input events will be discarded directly and not propagate for state changes.
         /// </summary>
-        SuppressProcessing,
+        SuppressStateUpdates,
 
         /// <summary>
-        /// Input events will be processed for state updates but will not trigger interaction nor phase notifications.
+        /// Input events will be processed for state updates but will not trigger interaction nor phase updates.
         /// </summary>
-        SuppressNotifications
+        SuppressActionUpdates
     }
 }
