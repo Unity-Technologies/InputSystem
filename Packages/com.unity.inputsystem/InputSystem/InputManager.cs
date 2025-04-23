@@ -210,7 +210,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public InputEventHandledPolicy inputEventHandledPolicy
+        internal InputEventHandledPolicy inputEventHandledPolicy
         {
             get => m_InputEventHandledPolicy;
             set
