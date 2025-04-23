@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 public class ActionDebug : MonoBehaviour
 {
@@ -8,11 +9,23 @@ public class ActionDebug : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        trigger.action.performed += ActionOnperformed;
+        trigger.action.performed += ActionOnPerformed;
+        trigger.action.canceled += ActionOnCanceled;
+        trigger.action.started += ActionOnStarted;
         trigger.action.Enable();
     }
 
-    private void ActionOnperformed(InputAction.CallbackContext obj)
+    private void ActionOnStarted(InputAction.CallbackContext obj)
+    {
+        Debug.Log("Action Started");
+    }
+
+    private void ActionOnCanceled(InputAction.CallbackContext obj)
+    {
+        Debug.Log("Action Canceled");
+    }
+
+    private void ActionOnPerformed(InputAction.CallbackContext obj)
     {
         Debug.Log("Action Performed");
     }
@@ -20,5 +33,7 @@ public class ActionDebug : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (trigger.action.WasPerformedThisFrame())
+            Debug.Log("Action Performed (Polled Event)");
     }
 }

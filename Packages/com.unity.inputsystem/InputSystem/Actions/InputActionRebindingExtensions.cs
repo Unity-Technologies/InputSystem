@@ -2084,6 +2084,23 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
+            /// Ensures state changes are allowed to propagate during rebinding but suppresses action updates.
+            /// The default behavior is that state changes are also suppressed during rebinding.
+            /// </summary>
+            /// <remarks>
+            /// This is achieved by temporarily setting <see cref="InputSystem.inputEventHandledPolicy"/> to
+            /// <see cref="InputEventHandledPolicy.SuppressActionUpdates" />. This is automatically reverted when
+            /// the rebinding operation completes. If the policy is already set to
+            /// <see cref="InputEventHandledPolicy.SuppressActionUpdates" />, this method has no effect.
+            /// </remarks>
+            /// <returns>Reference to this rebinding operation.</returns>
+            public RebindingOperation WithSuppressedActionPropagation()
+            {
+                m_TargetInputEventHandledPolicy = InputEventHandledPolicy.SuppressActionUpdates;
+                return this;
+            }
+
+            /// <summary>
             /// Start the rebinding. This should be invoked after the rebind operation has been fully configured.
             /// </summary>
             /// <returns>The same RebindingOperation instance.</returns>
@@ -2106,6 +2123,9 @@ namespace UnityEngine.InputSystem
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
                 m_StartTime = InputState.currentTime;
+
+                m_SavedInputEventHandledPolicy = InputSystem.inputEventHandledPolicy;
+                InputSystem.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2606,6 +2626,8 @@ namespace UnityEngine.InputSystem
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
+
+                InputSystem.inputEventHandledPolicy = m_SavedInputEventHandledPolicy;
             }
 
             private void ThrowIfRebindInProgress()
@@ -2654,6 +2676,8 @@ namespace UnityEngine.InputSystem
             private double m_StartTime;
             private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
+            private InputEventHandledPolicy m_SavedInputEventHandledPolicy;
+            private InputEventHandledPolicy m_TargetInputEventHandledPolicy;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
