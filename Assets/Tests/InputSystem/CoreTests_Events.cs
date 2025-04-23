@@ -1254,6 +1254,9 @@ partial class CoreTests
     public void Events_ShouldRespectHandledPolicyUponUpdate(InputEventHandledPolicy policy,
         int[] expectedProcessed, int[] expectedCancelled) // EDIT
     {
+        // Update setting to match desired scenario
+        InputSystem.inputEventHandledPolicy = policy;
+        
         // Use a boxed boolean to allow lambda to capture reference.
         var data = new SuppressedActionEventData();
 

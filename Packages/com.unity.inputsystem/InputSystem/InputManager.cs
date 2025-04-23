@@ -3477,7 +3477,8 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
-                        if (currentEventReadPtr->handled)
+                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressProcessing && 
+                            currentEventReadPtr->handled)
                         {
                             m_InputEventStream.Advance(false);
                             continue;

@@ -75,6 +75,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"State format {stateFormat} from event does not match state format {device.stateBlock.format} of device {device}",
                     nameof(eventPtr));
 
+            // CALLBACK HERE
             InputSystem.s_Manager.UpdateState(device, eventPtr,
                 updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType);
         }

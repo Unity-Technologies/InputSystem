@@ -1346,6 +1346,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
+            // CALLBACK HERE
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
 
@@ -1537,6 +1538,14 @@ namespace UnityEngine.InputSystem
                     }
                     else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
+                        // Skip further notification if event is handled and our policy suppress notifications.
+                        if (eventPtr != null && eventPtr.handled && InputSystem.inputEventHandledPolicy ==
+                            InputEventHandledPolicy.SuppressNotifications)
+                        {
+                            return;
+                        }
+                        
+                        // CALLBACK HERE
                         ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
                 }
@@ -1939,6 +1948,7 @@ namespace UnityEngine.InputSystem
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (actuation >= threshold)
                         {
+                            // CALLBACK HERE
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                                 phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                         }
@@ -2397,6 +2407,7 @@ namespace UnityEngine.InputSystem
                 }
                 else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
                 {
+                    // CALLBACK HERE
                     ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
                         isDisablingAction: newPhase == InputActionPhase.Canceled && phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
@@ -2491,6 +2502,9 @@ namespace UnityEngine.InputSystem
                 newState.startTime = newState.time;
             *actionState = newState;
 
+            //if (InputSystem.inputEventHandledPolicy == InputEventHandledPolicy.SuppressNotifications)
+            //    return;
+            
             // Let listeners know.
             var map = maps[trigger.mapIndex];
             Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,
@@ -2509,6 +2523,7 @@ namespace UnityEngine.InputSystem
                 case InputActionPhase.Performed:
                 {
                     Debug.Assert(trigger.controlIndex != -1, "Must have control to perform an action");
+                    // CALLBACK HERE
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     break;
                 }
@@ -2562,6 +2577,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Run callbacks (if any) directly on action.
+            // CALLBACK INVOKED HERE
             DelegateHelpers.InvokeCallbacksSafe(ref listeners, context, callbackName, action);
 
             // Run callbacks (if any) on action map.
