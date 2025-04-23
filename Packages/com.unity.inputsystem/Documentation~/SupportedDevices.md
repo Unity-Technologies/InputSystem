@@ -13,17 +13,16 @@ Support for the following Devices doesn't require specialized support of particu
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
 |[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
-|[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|No|
+|[Pen](Pen.md)|Yes|No |No|Yes|Yes|Yes|No|No|No|No|No|
 |[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|Yes|
 |[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|Yes(5)|
 |[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|
 
 >__Notes__:
->1. Tablet support for macOS is coming in Unity 2020.1.
->2. Joysticks are supported as generic HIDs (See [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) below).
->3. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
->4. Indirect touches are received from Siri Remote.
->5. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
+>1. Joysticks are supported as generic HIDs, refer to [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) to learn more.
+>2. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
+>3. Indirect touches are received from Siri Remote.
+>4. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
 
 ## Gamepads
 
@@ -39,11 +38,10 @@ Support for the following Devices doesn't require specialized support of particu
 >__Notes__:
 >1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
 >2. WebGL support varies between browsers, Devices, and operating systems.
->3. XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
+>3. XInput controllers on macOS currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
 >4. This includes any XInput-compatible Device.
->5. Unity doesn't support motor rumble and lightbar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adaptor.
-On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
->6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
+>5. Unity doesn't support motor rumble and lightbar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adapter. On UWP, only USB connection is supported, motor rumble and lightbar are not working correctly.
+>6. Unity supports Made for iOS (MFi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >8. Unity supports PS4 controllers on Android devices running [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
 >9. Unity supports PS5 controllers on Android devices running [Android 12 or higher](https://playstation.com/en-gb/support/hardware/pair-dualsense-controller-bluetooth/).
