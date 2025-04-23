@@ -1398,7 +1398,6 @@ namespace UnityEngine.InputSystem
         /// propagation to happen, including updating interaction state, but will instead suppress any associated
         /// notifications.
         /// </remarks>
-        /// <returns>The current policy to be applied when processing input events marked as "handled".</returns>
         /// <exception cref="ArgumentOutOfRangeException">If attempting to set this property to an unsupported
         /// value.</exception>
         public static InputEventHandledPolicy inputEventHandledPolicy
