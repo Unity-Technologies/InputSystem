@@ -1544,7 +1544,7 @@ namespace UnityEngine.InputSystem
                         {
                             return;
                         }
-                        
+
                         // CALLBACK HERE
                         ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
@@ -2504,7 +2504,7 @@ namespace UnityEngine.InputSystem
 
             //if (InputSystem.inputEventHandledPolicy == InputEventHandledPolicy.SuppressNotifications)
             //    return;
-            
+
             // Let listeners know.
             var map = maps[trigger.mapIndex];
             Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,

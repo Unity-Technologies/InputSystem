@@ -1256,7 +1256,7 @@ partial class CoreTests
     {
         // Update setting to match desired scenario
         InputSystem.inputEventHandledPolicy = policy;
-        
+
         // Use a boxed boolean to allow lambda to capture reference.
         var data = new SuppressedActionEventData();
 

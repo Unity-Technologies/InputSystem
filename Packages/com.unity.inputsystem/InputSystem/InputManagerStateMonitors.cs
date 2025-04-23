@@ -382,7 +382,7 @@ namespace UnityEngine.InputSystem
 
             // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
             // signalled state.
-            eventPtr->handled = false;
+            var savedHandled = eventPtr->handled;
             for (var i = 0; i < signals.length; ++i)
             {
                 if (!signals.TestBit(i))
@@ -404,8 +404,9 @@ namespace UnityEngine.InputSystem
 
                 // If the monitor signalled that it has processed the state change, reset all signalled
                 // state monitors in the same group. This is what causes "SHIFT+B" to prevent "B" from
-                // also triggering.
-                if (eventPtr->handled)
+                // also triggering. Note that we skip this if it was already marked handled before notifying
+                // monitors.
+                if (!savedHandled && eventPtr->handled)
                 {
                     var groupIndex = listeners[i].groupIndex;
                     for (var n = i + 1; n < signals.length; ++n)
