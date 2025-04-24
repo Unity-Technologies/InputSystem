@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 throw new ArgumentException(
                     $"State format {stateFormat} from event does not match state format {device.stateBlock.format} of device {device}",
                     nameof(eventPtr));
-            
+
             InputSystem.s_Manager.UpdateState(device, eventPtr,
                 updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType);
         }
