@@ -587,8 +587,7 @@ namespace UnityEngine.InputSystem.DualShock
                 if (!actuated)
                     InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
-
-            // CALLBACK HERE
+            
             InputState.Change(this, eventPtr);
         }
 
