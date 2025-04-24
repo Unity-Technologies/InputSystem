@@ -391,7 +391,6 @@ namespace UnityEngine.InputSystem
                 var listener = listeners[i];
                 try
                 {
-                    // CALLBACK HERE
                     listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
                         listener.monitorIndex);
                 }
