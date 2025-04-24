@@ -421,11 +421,12 @@ namespace UnityEngine.InputSystem
                         if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
                             signals.ClearBit(n);
                     }
-
-                    // Need to reset it back to false as we may have more signalled state monitors that
-                    // aren't in the same group (i.e. have independent inputs).
-                    eventPtr->handled = false;
                 }
+                
+                // Need to reset it back to false as we may have more signalled state monitors that
+                // aren't in the same group (i.e. have independent inputs).
+                if (eventPtr->handled)
+                    eventPtr->handled = false;
 
                 signals.ClearBit(i);
             }

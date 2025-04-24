@@ -1517,6 +1517,10 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    // Check if we should suppress interaction processing
+                    var suppressInteractionProcessing = (eventPtr != null) && eventPtr.handled &&
+                        InputSystem.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates;
+
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
                     // one of higher magnitude) or may even lead us to switch to processing a different binding
@@ -1538,14 +1542,7 @@ namespace UnityEngine.InputSystem
                     }
                     else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
-                        // Skip further notification if event is handled and our policy suppress notifications.
-                        if (eventPtr != null && eventPtr.handled && InputSystem.inputEventHandledPolicy ==
-                            InputEventHandledPolicy.SuppressActionUpdates)
-                        {
-                            return;
-                        }
-
-                        // CALLBACK HERE
+                        //if (!suppressInteractionProcessing)
                         ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
                 }

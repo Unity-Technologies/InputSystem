@@ -3923,11 +3923,8 @@ namespace UnityEngine.InputSystem
             }
 
             // Notify listeners.
-            //if (eventPtr == null || !eventPtr.handled) // EDIT
-            //{
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
                 device, eventPtr, k_InputOnDeviceSettingsChangeMarker, "InputSystem.onDeviceStateChange");
-            //}
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
