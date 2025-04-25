@@ -108,6 +108,11 @@
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
         {
+            "name": "Unity",
+            "expression": "6000.2.0a5",
+            "define": "UNITY_INPUT_SYSTEM_TRACKEDDEVICE_EVENTSOURCE"
+        },
+        {
             "name": "com.unity.modules.unityanalytics",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"

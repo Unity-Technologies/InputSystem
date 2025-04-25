@@ -365,6 +365,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (device is Gamepad)
                 return EventSource.Gamepad;
 
+#if UNITY_INPUT_SYSTEM_TRACKEDDEVICE_EVENTSOURCE
+            if (device is TrackedDevice)
+                return EventSource.TrackedDevice;
+#endif
+
             return EventSource.Unspecified;
         }
 
