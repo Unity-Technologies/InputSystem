@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
+- Fixed unknown event source error in XR when receiving events from a TrackedDevice.
 
 ## [1.14.0] - 2025-03-20
 
