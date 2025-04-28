@@ -49,7 +49,35 @@ The [Invert Processor](ProcessorTypes.md#invert) will invert the input values of
 #### Ship navigation scenario
 
 In order to use an axis control to mimic a ship's rudder, inverting the input will lead to the desired result. Pulling the stick left will steer the ship to the right, while pulling the stick to the right will lead to the ship moving left.
-This can be achieved using an Invert Processor on the Action or the Binding.
+
+![image alt text](./Images/Processors_ShipNeutral.png)
+![image alt text](./Images/Processors_ShipLeft.png)
+![image alt text](./Images/Processors_ShipRight.png)
+
+This can be achieved using an Invert Processor on the Action or the Binding. In this scenario the Processor is applied to the binding. Note that Inverting is enabled for X, but not for Y. Inverting the Y axis would lead to the ship moving backwards when the joystick is pulled up. In the following picture you can see the setup in the Action asset editor. 
+
+![image alt text](./Images/Processors_InvertEditor.png)
+
+Finally, the following code can be used in a script which sits on a GameObject which has a PlayerInput component with the reference to the respective Action Asset.
+
+```c#
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class Boat : MonoBehaviour
+{
+    void OnMove(InputValue value)
+    {
+        // The X value will be used to rotate the boat
+        var stick = value.Get<Vector2>();
+        var direction = stick.x;
+        transform.Rotate(Vector3.up, direction);
+        // To move the boat forwards, this code block uses the Y value of the stick
+        var speed = stick.y;
+        transform.Translate(new Vector3(0,0,speed),Space.Self);
+    }
+}
+```
 
 ### Normalize
 
@@ -60,6 +88,17 @@ This can be achieved using an Invert Processor on the Action or the Binding.
 #### A steady running player
 
 To let the player always move with the same speed, where the input just triggers the action and controls the direction, the Normalize Processor is a good choice. This is accomplished by retrieving the vector of an input without considering the length of the vector, but rather evaluating the direction of the input. 
+
+![image alt text](./Images/Processors_NormalizeSlow.png)
+![image alt text](./Images/Processors_NormalizeFast.png)
+
+In the pictures shown above we can see that the player moves forward in the same speed, not taking into acount how far the joystick was pushed up.
+
+To apply the Processor, it can be added to the binding, like shown in the picture below.
+
+![This should be a picture of the Asset editor](./Images/Processors_NormalizeAsset.png)
+
+Note: this scenaio uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), the included PlayerScript is utilized to move the player. 
 
 ### Scale
 
