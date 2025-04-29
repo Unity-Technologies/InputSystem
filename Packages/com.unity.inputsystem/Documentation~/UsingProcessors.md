@@ -14,7 +14,7 @@ An Input Processor takes a value and returns a processed result for it. The rece
     * [Scale](#scale)
     * [Deadzone](#deadzone)
     * [Clamp](#clamp)
-   
+
 ## Using Processors
 
 You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md). See [How to apply Processors](HowToApplyProcessors.md) to learn more.
@@ -42,7 +42,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
 If you don’t find a scenario similar to your use case, please refer to the [Processor Types](ProcessorTypes.md) section. You can also find more information on how to write your own custom Processors there.
 
-### Invert             
+### Invert
 
 The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by -1. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
@@ -98,7 +98,7 @@ To apply the Processor, it can be added to the Binding, as shown in the image be
 
 ![This should be a picture of the Asset editor](./Images/Processors-NormalizeAsset.png)
 
-Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to move the player. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to move the player.
 
 ### Scale
 
@@ -117,7 +117,7 @@ There are two Bindings attached to the Action. The input value ranges of the two
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Scale-Look-Pointer.png)
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Scale-Look-Stick.png)
 
-Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera.
 
 #### Customizing mouse input
 
@@ -136,7 +136,7 @@ The Deadzone Processor can be used to improve accessibility for physically chall
 
 The default minimum value is overridden to allow a higher threshold for minimum input values. For the maximum value, the default is used to standardize the values across all gamepads (since not all gamepads may ever send the maximum value).
 
-Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera.
 
 ### Clamp
 
