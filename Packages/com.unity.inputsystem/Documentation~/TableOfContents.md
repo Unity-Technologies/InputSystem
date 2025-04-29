@@ -18,7 +18,7 @@
   * [Devices](Devices.md)
   * [Controls](Controls.md)
   * [Processors]()
-    * [Using Processors](UsingProcessors.md)
+    * [Processors and their use](UsingProcessors.md)
     * [How to apply Processors](HowToApplyProcessors.md)
     * [Processor Types](ProcessorTypes.md)
   * [Player Input Component](PlayerInput.md)
