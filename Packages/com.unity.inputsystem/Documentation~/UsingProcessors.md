@@ -39,26 +39,26 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 
 ## When to use which Processor
 
-Below you will find a short explanation and various example scenarios for the different Processor types. Note that there are more cases where the Processors apply and the described scenarios are just illustrating some of them. In some cases it might be useful to combine processors to achieve a certain goal. 
-If you don't find a similar scenario for your use-case, please check out the [Processor Types](ProcessorTypes.md), this page also contains more information on how to write your own custom Processors.
+The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
+If you don’t find a scenario similar to your use case, please refer to the [Processor Types](ProcessorTypes.md) section. You can also find more information on how to write your own custom Processors there.
 
 ### Invert             
 
-The [Invert Processor](ProcessorTypes.md#invert) will invert the input values of any form (e.g. float, Vector2 or Vector3). This happens by multiplying the values with -1, the effect that results is for instance that a player navigation would be reverted. The left arrow would be interpreted like a richt arrow and vice versa. 
+The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by -1. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
 #### Ship navigation scenario
 
-In order to use an axis control to mimic a ship's rudder, inverting the input will lead to the desired result. Pulling the stick left will steer the ship to the right, while pulling the stick to the right will lead to the ship moving left.
+To use an axis control to mimic a ship's rudder, inverting the input will produce the desired effect. Pulling the stick to the left will steer the ship to the right, while pulling it to the right will steer the ship to the left.
 
 ![image alt text](./Images/Processors-Ship-Neutral.png)
 ![image alt text](./Images/Processors-Ship-Left.png)
 ![image alt text](./Images/Processors-Ship-Right.png)
 
-This can be achieved using an Invert Processor on the Action or the Binding. In this scenario the Processor is applied to the binding. Note that Inverting is enabled for X, but not for Y. Inverting the Y axis would lead to the ship moving backwards when the joystick is pulled up. In the following picture you can see the setup in the Action asset editor. 
+This can be achieved by using an Invert Processor on the Action or the Binding. In this scenario, the Processor is applied to the Binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
 
 ![image alt text](./Images/Processors-Invert-Editor.png)
 
-Finally, the following code can be used in a script which sits on a GameObject which has a PlayerInput component with the reference to the respective Action Asset.
+Finally, the following code can be used in a script attached to a GameObject that has a PlayerInput component referencing the corresponding Action Asset.
 
 ```c#
 using UnityEngine;
@@ -81,72 +81,72 @@ public class Boat : MonoBehaviour
 
 ### Normalize
 
- The [Normalize Processors](ProcessorTypes.md#normalize) will normalize the magnitude of the input vector to always be of length 1. This extracts the direction of the input from the data and clears it from additional infromation that are not needed. 
- In the case of float input values the values will be normalized between a to define min, zero and max value.
- The normalized input value is very useful for use cases where the particular values of an input are rather distorting a uniform action to take.
+The [Normalize Processors](ProcessorTypes.md#normalize) normalizes the magnitude of the input vector so that it always has a length of 1. This extracts the direction of the input while removing additional information that may not be needed.
+In the case of float input values, the values are normalized between a defined minimum, zero, and maximum.
+Normalized input is particularly useful in scenarios where the specific magnitude of an input might distort the consistency of an intended action.
 
 #### A steady running player
 
-To let the player always move with the same speed, where the input just triggers the action and controls the direction, the Normalize Processor is a good choice. This is accomplished by retrieving the vector of an input without considering the length of the vector, but rather evaluating the direction of the input. 
+To ensure the player always moves at a constant speed where the input simply triggers the action and controls the direction, the Normalize Processor is a suitable choice. This is achieved by retrieving the input vector while ignoring its magnitude and focusing solely on its direction.
 
 ![image alt text](./Images/Processors-Normalize-Slow.png)
 ![image alt text](./Images/Processors-Normalize-Fast.png)
 
-In the pictures shown above we can see that the player moves forward in the same speed, not taking into acount how far the joystick was pushed up.
+In the images shown above, the player moves forward at a constant speed, regardless of how far the joystick is pushed upward.
 
-To apply the Processor, it can be added to the binding, like shown in the picture below.
+To apply the Processor, it can be added to the Binding, as shown in the image below.
 
 ![This should be a picture of the Asset editor](./Images/Processors-NormalizeAsset.png)
 
-Note: this scenaio uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), the included PlayerScript is utilized to move the player. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to move the player. 
 
 ### Scale
 
-The [Scale Processor](ProcessorTypes.md#scale) multiplies the input value with a given factor X. This applies to float values, as well as Vectors, where each axis will be multiplied by the factor given for the axis. 
-This way it is possible to assign a weight to input values, which can ease the use of a certain kind of control for instance, or triggering a particular action.
+The [Scale Processor](ProcessorTypes.md#scale) multiplies the input value by a given factor X. This applies to float values as well as vectors, where each axis is multiplied by the corresponding factor specified for that axis.
+This allows you to assign weight to input values, which can, for example, make a particular type of control easier to use.
 
 #### Horizontally aligned Camera
 
-To make a look around move smoother and add some ease of use it may be nice to mitigate the rotation up and down and scale the input values for the rotation of the horizontal axis higher. For in-game landscapes which are mainly horizontally aligned, this is a useful feature to avoid the camera rotating to fast in an unintended way. 
-To apply this affect to all bindings the Processor is applied to the action itself (Look). The following picture shows the setup with the Starter Assets example:
+To make the look-around movement smoother and improve ease of use, it may be helpful to reduce the vertical rotation and scale the input values for horizontal rotation. For in-game landscapes that are primarily horizontally aligned, this is a useful feature to prevent the camera from rotating vertically too quickly or in unintended ways.
+To apply this effect to all bindings, the Processor is applied to the Action itself (Look in this scenario). The following image shows the setup using the Starter Assets example:
 
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Scale-Look.png)
 
-There are two Bindings attached to the Action. The ranges of the input values of the two bindings are very different. To mitigate the difference it helps to use another Scale Processor on each of the Bindings. See how the Scale Processor uniforms the input data values for a joystick and a Pointer (e.g. a Mouse) in the pictures below.
+There are two Bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the Bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (e.g., a mouse) in the images below.
 
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Scale-Look-Pointer.png)
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Scale-Look-Stick.png)
 
-Note: this scenaio uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), the included PlayerScript is utilized to rotate the camera. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera. 
 
 #### Customizing mouse input
 
-Antother example when Scale Processors can be very useful is to customize input via a game settings window. To allow a custom setup for the speed of the mouse in X and Y direction, a Scale Processor can be applied to a Binding which is limited to a Pointer device. 
+Another example of when Scale Processors can be very useful is customizing input via a game settings window. To allow a custom setup for the speed of the mouse in the X and Y directions, a Scale Processor can be applied to a Binding that is limited to a Pointer device.
 
 ### Deadzone
 
-To filter noise from controls that are hardly in a default state, keep sending input values, or rarely report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
-The given minimum value can filter out minimal movements or noise of the control, while the maximum value can mitigate the difference between the controls maximum value and the reported maximum values. 
+To filter noise from controls that are rarely in a default state, constantly send input values, or seldom report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
+The specified minimum value can filter out small movements or noise from the control, while the maximum value can mitigate the difference between the control's maximum value and the reported maximum values.
 
 #### The Deadzone Processor for Accesibility
 
-The Deadzone Processor can be used to provide accessiblity to physically difficult input gestures, like very small movements on an input device. This can be used to be configurable through a game menu for instance. To cutoff input events from tiny movements on a joystick (e.g. for trembling hands), this is how the right stick Binding of a gamepad can be modified to ignore input events for small input values: 
+The Deadzone Processor can be used to improve accessibility for physically challenging input gestures, such as very small movements on an input device. This can be made configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (e.g., for trembling hands), here’s how the right stick binding of a gamepad can be modified to ignore input events for small input values:
 
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Deadzone-Editor.png)
 
-The default for the minimum value is overwritten to allow a higher threshold for input values. For the maximum value the default is used to uniform the values for all gamepads (not all gamepads may ever send the maximum value).
+The default minimum value is overridden to allow a higher threshold for minimum input values. For the maximum value, the default is used to standardize the values across all gamepads (since not all gamepads may ever send the maximum value).
 
-Note: this scenaio uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), the included PlayerScript is utilized to rotate the camera. 
+Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to rotate the camera. 
 
 ### Clamp
 
-The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value into a specified range. The minimum value of the Processor will define the minimum input value that will be received, while the value can not be higher than the given maximum value. In combination with the Scale Processor it is easy to uniform value ranges of different devices and place them in a well defined value spectrum. 
+The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value to a specified range. The minimum value of the Processor defines the lowest input value that will be accepted, while the value cannot exceed the given maximum value. In combination with the Scale Processor, it is easy to standardize the input value ranges of different devices and place them within a well-defined value spectrum.
 
 #### Racing car
 
-In a case where the player is not supposed to fall below a certain base speed, but also can not to go a speed higher than a certain value, a Clamp Processor is the Processor you may want to use.
-In the following picture you can see how a Clamp Processor can be used to receive input values inbetween the given range of a defined minimum and maximum value.
+In a case where the player is not supposed to fall below a certain base speed, but also cannot exceed a certain maximum speed, the Clamp Processor is the one you may want to use.
+In the following image, you can see how a Clamp Processor can be used to restrict input values within a defined minimum and maximum range.
 
 ![Here should be a picture of the Input Action Editor](./Images/Processors-Clamp-Editor.png)
 
-Note that the Bindings can contain input values of very different ranges, in that case a Scale Processor on the Bindings can help to preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings). 
+Note that the Bindings can contain input values with very different ranges. In that case, a Scale Processor on the Bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings).
