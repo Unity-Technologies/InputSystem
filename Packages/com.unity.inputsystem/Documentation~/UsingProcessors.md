@@ -144,4 +144,9 @@ The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value into a spe
 
 #### Racing car
 
-In a case where the player is not supposed to completely stop and needs to keep a base speed, but also can not to go a speed higher than value X, a Clamp Processor is the Processor you may want to use.
+In a case where the player is not supposed to fall below a certain base speed, but also can not to go a speed higher than a certain value, a Clamp Processor is the Processor you may want to use.
+In the following picture you can see how a Clamp Processor can be used to receive input values inbetween the given range of a defined minimum and maximum value.
+
+![Here should be a picture of the Input Action Editor](./Images/Processors-Clamp-Editor.png)
+
+Note that the Bindings can contain input values of very different ranges, in that case a Scale Processor on the Bindings can help to preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings). 
