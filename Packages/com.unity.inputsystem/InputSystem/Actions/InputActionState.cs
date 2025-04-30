@@ -873,7 +873,6 @@ namespace UnityEngine.InputSystem
             actionState->phase = toPhase;
             actionState->controlIndex = kInvalidIndex;
             var idx = memory.actionBindingIndicesAndCounts[actionIndex];
-            var bindingCount = memory.actionBindingIndicesAndCounts[actionIndex] + 1;
             actionState->bindingIndex = memory.actionBindingIndices != null ? memory.actionBindingIndices[idx] : 0;
             actionState->interactionIndex = kInvalidIndex;
             actionState->startTime = 0;
