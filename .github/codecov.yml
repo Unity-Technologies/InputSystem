@@ -1,0 +1,21 @@
+codecov:
+  max_report_age: false
+  require_ci_to_pass: false
+  notify:
+    wait_for_ci: false
+
+coverage:
+  precision: 2
+  round: down
+  range: "50...70"
+  status:
+    project: false
+    patch: false
+    default_rules:
+      flag_coverage_not_uploaded_behavior: exclude
+
+comment: false
+
+flag_management:
+  default_rules:
+    carryforward: true
