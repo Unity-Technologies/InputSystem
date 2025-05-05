@@ -4143,16 +4143,13 @@ namespace UnityEngine.InputSystem
 
             public ActionMapIndices* mapIndices;
 
-            // This is Anthony's version of block allocation from a blob
-            private byte* AllocFromBlob(ref byte* top, int size)
+            private static byte* AllocFromBlob(ref byte* top, int size)
             {
                 if (size == 0)
                     return null;
                 
                 var allocation = top;
-
                 top += size;
-
                 return allocation;
             }
 
