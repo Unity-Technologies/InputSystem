@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
+- Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
 
 ## [1.14.0] - 2025-03-20
 
