@@ -65,7 +65,20 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         public const int InvalidEventId = 0;
 
+        #if UNITY_INPUT_SYSTEM_INPUT_MODULE_DEFINES_EVENT_PACKING_ALIGNMENT
+        /// <summary>
+        /// Defines the packing alignment of native input events in event buffers.
+        /// </summary>
+        /// <remarks>
+        /// This is dictated by the native module implementation which populates the event buffers.
+        /// </remarks>
+        internal const int kAlignment = NativeInputEvent.alignment;
+        #else
+        /// <summary>
+        /// Defines the packing alignment of native input events in event buffers.
+        /// </summary>
         internal const int kAlignment = 4;
+        #endif
 
         [FieldOffset(0)]
         private NativeInputEvent m_Event;

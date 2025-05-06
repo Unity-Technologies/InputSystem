@@ -111,6 +111,11 @@
             "name": "com.unity.modules.unityanalytics",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.2.0a11",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_DEFINES_EVENT_PACKING_ALIGNMENT"
         }
     ],
     "noEngineReferences": false
