@@ -593,7 +593,8 @@ namespace UnityEngine.InputSystem
                 if (newBindingState.isComposite)
                 {
                     var compositeIndex = newBindingState.compositeOrCompositeBindingIndex;
-                    memory.compositeMagnitudes[compositeIndex] = oldState.compositeMagnitudes[compositeIndex];
+                    if (oldState.compositeMagnitudes != null)
+                        memory.compositeMagnitudes[compositeIndex] = oldState.compositeMagnitudes[compositeIndex];
                 }
 
                 var actionIndex = newBindingState.actionIndex;
