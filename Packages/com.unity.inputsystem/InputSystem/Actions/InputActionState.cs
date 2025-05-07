@@ -4148,7 +4148,7 @@ namespace UnityEngine.InputSystem
             {
                 if (size == 0)
                     return null;
-                
+
                 var allocation = top;
                 top += size;
                 return allocation;
