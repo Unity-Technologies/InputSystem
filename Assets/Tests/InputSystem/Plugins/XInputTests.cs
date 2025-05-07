@@ -149,7 +149,7 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.view);
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
-    
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxControllerUsingOSDriverOSX()
@@ -225,7 +225,7 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Select), gamepad.view);
         AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Select), gamepad.selectButton);
     }
-    
+
     [TestCase(0x045E, 0x02E0, 16, 11)] // Xbox One Wireless Controller
     [TestCase(0x045E, 0x0B20, 10, 11)] // Xbox Series X|S Wireless Controller
     // This test is used to establish the correct button map layout based on the PID and VIDs. The usual difference

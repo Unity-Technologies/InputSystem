@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.XInput
             InputSystem.RegisterLayout<XboxGamepadMacOS>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wired Controller"));
-            
+
 
             // Matches macOS native support for Xbox Controllers
             // macOS reports all Xbox controllers as "Controller" with manufacter Microsoft
