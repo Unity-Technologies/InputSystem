@@ -28,6 +28,13 @@ namespace UnityEngine.InputSystem.XInput
             InputSystem.RegisterLayout<XboxGamepadMacOS>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wired Controller"));
+            
+
+            // Matches macOS native support for Xbox Controllers
+            // macOS reports all Xbox controllers as "Controller" with manufacter Microsoft
+            InputSystem.RegisterLayout<XboxGamepadMacOSNative>(
+                matches: new InputDeviceMatcher().WithInterface("HID")
+                    .WithProduct("Controller").WithManufacturer("Microsoft"));
 
             // Matching older Xbox One controllers that have different View and Share buttons than the newer Xbox Series
             // controllers.

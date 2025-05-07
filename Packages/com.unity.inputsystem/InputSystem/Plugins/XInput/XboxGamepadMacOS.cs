@@ -103,6 +103,84 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         }
     }
 
+    // macOS's native bit mapping for Xbox Controllers connected via USB
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct XInputControllerNativeOSXState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat => new FourCC('H', 'I', 'D');
+
+        public enum Button
+        {
+            Start = 2,
+            Select = 3,
+            A = 4,
+            B = 5,
+            X = 6,
+            Y = 7,
+            DPadUp = 8,
+            DPadDown = 9,
+            DPadLeft = 10,
+            DPadRight = 11,
+            LeftShoulder = 12,
+            RightShoulder = 13,
+            LeftThumbstickPress = 14,
+            RightThumbstickPress = 15,
+        }
+
+        [InputControl(name = "buttonSouth", bit = (uint)Button.A, displayName = "A")]
+        [InputControl(name = "buttonEast", bit = (uint)Button.B, displayName = "B")]
+        [InputControl(name = "buttonWest", bit = (uint)Button.X, displayName = "X")]
+        [InputControl(name = "buttonNorth", bit = (uint)Button.Y, displayName = "Y")]
+        [InputControl(name = "start", bit = (uint)Button.Start, displayName = "Start")]
+        [InputControl(name = "select", bit = (uint)Button.Select, displayName = "Select")]
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4, bit = 0)]
+        [InputControl(name = "dpad/up", bit = (uint)Button.DPadUp)]
+        [InputControl(name = "dpad/down", bit = (uint)Button.DPadDown)]
+        [InputControl(name = "dpad/left", bit = (uint)Button.DPadLeft)]
+        [InputControl(name = "dpad/right", bit = (uint)Button.DPadRight)]
+        [InputControl(name = "leftStickPress", bit = (uint)Button.LeftThumbstickPress)]
+        [InputControl(name = "rightStickPress", bit = (uint)Button.RightThumbstickPress)]
+        [InputControl(name = "leftShoulder", bit = (uint)Button.LeftShoulder)]
+        [InputControl(name = "rightShoulder", bit = (uint)Button.RightShoulder)]
+        [FieldOffset(4)]
+        public ushort buttons;
+
+        [InputControl(name = "leftTrigger", format = "BYTE")]
+        [FieldOffset(6)] public byte leftTrigger;
+        [InputControl(name = "rightTrigger", format = "BYTE")]
+        [FieldOffset(8)] public byte rightTrigger;
+
+
+        [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
+        [InputControl(name = "leftStick/x", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=0,clampMax=1,invert=false")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=-1,clampMax=0,invert=true")]
+        [FieldOffset(10)] public short leftStickX;
+        [FieldOffset(12)] public short leftStickY;
+
+        [InputControl(name = "rightStick", layout = "Stick", format = "VC2S")]
+        [InputControl(name = "rightStick/x", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=0,clampMax=1,invert=false")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=-1,clampMax=0,invert=true")]
+        [FieldOffset(14)] public short rightStickX;
+        [FieldOffset(16)] public short rightStickY;
+
+        public FourCC format => kFormat;
+
+        public XInputControllerNativeOSXState WithButton(Button button)
+        {
+            Debug.Assert((int)button < 16, $"A maximum of 16 buttons is supported for this layout.");
+            buttons |= (ushort)(1U << (int)button);
+            return this;
+        }
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     internal struct XInputControllerWirelessOSXState : IInputStateTypeInfo
     {
@@ -301,6 +379,20 @@ namespace UnityEngine.InputSystem.XInput
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XboxGamepadMacOS : XInputController
+    {
+    }
+
+    /// <summary>
+    /// A wired Xbox Gamepad connected to a macOS computer
+    /// </summary>
+    /// <remarks>
+    /// An Xbox 360 or Xbox One wired gamepad connected ot a Mac.
+    /// This layout is used on modern macOS systems. It is different from <see cref="XboxGamepadMacOS"/>, due to that working with older
+    /// systems that are using the 360Controller driver.
+    /// macOS's bit mapping is different to 360Controller's, and as such this is a new device so we don't break existing projects.
+    /// </remarks>
+    [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerNativeOSXState), hideInUI = true)]
+    public class XboxGamepadMacOSNative : XInputController
     {
     }
 
