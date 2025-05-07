@@ -374,8 +374,8 @@ namespace UnityEngine.InputSystem.XInput
     /// </summary>
     /// <remarks>
     /// An Xbox 360 or Xbox one wired gamepad connected to a mac.
-    /// These controllers don't work on a mac out of the box, but require a driver like https://github.com/360Controller/
-    /// to work.
+    /// This layout is used for macOS versions when https://github.com/360Controller/ was required
+    /// On modern macOS versions, you will instead get a device with class XboxGamepadMacOSNative
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XboxGamepadMacOS : XInputController
@@ -389,7 +389,8 @@ namespace UnityEngine.InputSystem.XInput
     /// An Xbox 360 or Xbox One wired gamepad connected ot a Mac.
     /// This layout is used on modern macOS systems. It is different from <see cref="XboxGamepadMacOS"/>, due to that working with older
     /// systems that are using the 360Controller driver.
-    /// macOS's bit mapping is different to 360Controller's, and as such this is a new device so we don't break existing projects.
+    /// macOS's native controller support provides a bit mapping which is different to 360Controller's mapping
+    /// As such this is a new device, in order to not break existing projects.
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerNativeOSXState), hideInUI = true)]
     public class XboxGamepadMacOSNative : XInputController
@@ -403,7 +404,7 @@ namespace UnityEngine.InputSystem.XInput
     /// An Xbox One wireless gamepad connected to a mac using Bluetooth.
     /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
     /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
-    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
+    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XboxOneGampadMacOSWireless : XInputController
@@ -420,7 +421,7 @@ namespace UnityEngine.InputSystem.XInput
     /// that some Xbox One and Xbox Series controller share the same mappings so this combines them all.
     /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
     /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
-    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
+    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXStateV2), hideInUI = true)]
     public class XboxGamepadMacOSWireless : XInputController
