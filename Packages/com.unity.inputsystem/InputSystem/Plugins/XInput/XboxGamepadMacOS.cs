@@ -127,6 +127,12 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
             RightThumbstickPress = 15,
         }
 
+        // IL2CPP on 2021 doesn't respect the FieldOffsets - as such, we need some padding fields
+#if UNITY_2021 && ENABLE_IL2CPP
+        [FieldOffset(0)]
+        private uint padding;
+#endif
+
         [InputControl(name = "buttonSouth", bit = (uint)Button.A, displayName = "A")]
         [InputControl(name = "buttonEast", bit = (uint)Button.B, displayName = "B")]
         [InputControl(name = "buttonWest", bit = (uint)Button.X, displayName = "X")]
@@ -147,8 +153,19 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
         [FieldOffset(6)] public byte leftTrigger;
+
+#if UNITY_2021 && ENABLE_IL2CPP
+        [FieldOffset(7)]
+        private byte triggerPadding;
+#endif
+
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(8)] public byte rightTrigger;
+
+#if UNITY_2021 && ENABLE_IL2CPP
+        [FieldOffset(9)]
+        private byte triggerPadding2;
+#endif
 
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
