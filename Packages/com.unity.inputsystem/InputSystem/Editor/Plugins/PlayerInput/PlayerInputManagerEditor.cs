@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Users;
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEditor.InputSystem.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.

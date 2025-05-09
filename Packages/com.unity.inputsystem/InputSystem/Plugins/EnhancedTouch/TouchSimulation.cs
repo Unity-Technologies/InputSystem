@@ -3,10 +3,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine.InputSystem.Editor;
-#endif
 
 ////TODO: add pressure support
 
@@ -32,9 +28,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     [AddComponentMenu("Input/Debug/Touch Simulation")]
     [ExecuteInEditMode]
     [HelpURL(InputSystem.kDocUrl + "/manual/Touch.html#touch-simulation")]
-    #if UNITY_EDITOR
-    [InitializeOnLoad]
-    #endif
     public class TouchSimulation : MonoBehaviour, IInputStateChangeMonitor
     {
         public Touchscreen simulatedTouchscreen { get; private set; }
@@ -340,45 +333,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
-
-        #if UNITY_EDITOR
-        static TouchSimulation()
-        {
-            // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
-            // created. We don't want to trigger InputSystem initialization from there so delay-execute
-            // the code here.
-            EditorApplication.delayCall +=
-                () =>
-            {
-                InputSystem.onSettingsChange += OnSettingsChanged;
-                InputSystem.onBeforeUpdate += ReEnableAfterDomainReload;
-            };
-        }
-
-        private static void ReEnableAfterDomainReload()
-        {
-            OnSettingsChanged();
-            InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
-        }
-
-        private static void OnSettingsChanged()
-        {
-            if (InputEditorUserSettings.simulateTouch)
-                Enable();
-            else
-                Disable();
-        }
-
-        [CustomEditor(typeof(TouchSimulation))]
-        private class TouchSimulationEditor : UnityEditor.Editor
-        {
-            public void OnDisable()
-            {
-                new InputComponentEditorAnalytic(InputSystemComponent.TouchSimulation).Send();
-            }
-        }
-
-        #endif // UNITY_EDITOR
 
         ////TODO: Remove IInputStateChangeMonitor from this class when we can break the API
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
