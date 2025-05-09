@@ -2,7 +2,7 @@
 using System;
 using UnityEditor;
 
-namespace UnityEngine.InputSystem
+namespace UnityEditor.InputSystem
 {
     internal class InputSettingsiOSProvider
     {
