@@ -8,11 +8,112 @@
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.oculus",
+            "expression": "1.0.3",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
+        },
+        {
+            "name": "com.unity.xr.googlevr",
+            "expression": "1.0.0",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR"
+        },
+        {
+            "name": "com.unity.xr.openvr",
+            "expression": "1.0.0",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR"
+        },
+        {
+            "name": "com.unity.xr.windowsmr",
+            "expression": "2.0.3",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
+        },
+        {
+            "name": "com.unity.modules.vr",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_VR"
+        },
+        {
+            "name": "com.unity.modules.xr",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
+        },
+        {
+            "name": "com.unity.modules.physics",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_PHYSICS"
+        },
+        {
+            "name": "com.unity.modules.physics2d",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_PHYSICS2D"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_UI"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2021.3.11,2022.1)",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1.19,2022.2)",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.2",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.3",
+            "define": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS"
+        },
+        {
+            "name": "Unity",
+            "expression": "1",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.9",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.11",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.1.0b9",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.2.0a4",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.0.15",
+            "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
+        },
+        {
+            "name": "com.unity.modules.unityanalytics",
+            "expression": "1",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"
+        }
+    ],
     "noEngineReferences": false
 }

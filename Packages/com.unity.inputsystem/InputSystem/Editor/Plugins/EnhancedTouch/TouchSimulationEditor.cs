@@ -1,14 +1,16 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.InputSystem;
 #endif
 
-namespace UnityEngine.InputSystem.EnhancedTouch {
+namespace UnityEditor.InputSystem.EnhancedTouch {
 
     [InitializeOnLoad]
-    private class TouchSimulationEdtiorInitialization 
+    class TouchSimulationEdtiorInitialization 
     {
-        static TouchSimulation()
+        static TouchSimulationEdtiorInitialization()
         {
             // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
             // created. We don't want to trigger InputSystem initialization from there so delay-execute
@@ -16,15 +18,15 @@ namespace UnityEngine.InputSystem.EnhancedTouch {
             EditorApplication.delayCall +=
                 () =>
             {
-                InputSystem.onSettingsChange += OnSettingsChanged;
-                InputSystem.onBeforeUpdate += ReEnableAfterDomainReload;
+                UnityEngine.InputSystem.InputSystem.onSettingsChange += OnSettingsChanged;
+                UnityEngine.InputSystem.InputSystem.onBeforeUpdate += ReEnableAfterDomainReload;
             };
         }
 
         private static void ReEnableAfterDomainReload()
         {
             OnSettingsChanged();
-            InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
+            UnityEngine.InputSystem.InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
         }
 
         private static void OnSettingsChanged()
@@ -39,7 +41,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch {
 
 
     [CustomEditor(typeof(TouchSimulation))]
-    private class TouchSimulationEditor : UnityEditor.Editor
+    class TouchSimulationEditor : UnityEditor.Editor
     {
         public void OnDisable()
         {

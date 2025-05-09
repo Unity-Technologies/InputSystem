@@ -16,9 +16,6 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using Unity.Profiling;
 
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
 
 #if UNITY_EDITOR
 using CustomBindingPathValidator = System.Func<string, System.Action>;
@@ -993,6 +990,10 @@ namespace UnityEngine.InputSystem
             return layoutName;
         }
 
+        #if UNITY_EDITOR
+        internal static Func<bool> m_InputEditorUserSettingsAddDevicesNotSupportedByProject;
+        #endif
+
         /// <summary>
         /// Return true if the given device layout is supported by the game according to <see cref="InputSettings.supportedDevices"/>.
         /// </summary>
@@ -1005,7 +1006,7 @@ namespace UnityEngine.InputSystem
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
             #if UNITY_EDITOR
-            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
+            if (m_InputEditorUserSettingsAddDevicesNotSupportedByProject.Invoke())
                 return true;
             #endif
 
@@ -1842,6 +1843,9 @@ namespace UnityEngine.InputSystem
 
             // Project-wide Actions are never temporary so we do not destroy them.
         }
+#if UNITY_EDITOR
+    internal static Func<InputActionAsset> m_ProjectWideActionsBuildProviderActionsToIncludeInPlayerBuild;
+#endif        
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Initialize project-wide actions:
@@ -1850,7 +1854,7 @@ namespace UnityEngine.InputSystem
         private void InitializeActions()
         {
 #if UNITY_EDITOR
-            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+            m_Actions = m_ProjectWideActionsBuildProviderActionsToIncludeInPlayerBuild.Invoke();
 #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();

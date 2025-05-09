@@ -1,8 +1,12 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using UnityEngine.InputSystem.Interactions;
 #endif
 
 namespace UnityEditor.InputSystem.Interactions {
@@ -21,13 +25,13 @@ namespace UnityEditor.InputSystem.Interactions {
                 + "'Default Button Press Point' in the global input settings.",
                 "Default Button Press Point",
                 () => target.pressPoint, v => target.pressPoint = v,
-                () => InputSystem.settings.defaultButtonPressPoint);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultButtonPressPoint);
         }
 
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);

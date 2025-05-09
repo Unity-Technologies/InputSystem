@@ -1,11 +1,15 @@
 #if UNITY_EDITOR
+using System;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Controls;
 #endif
 
 namespace UnityEditor.InputSystem.Interactions
 {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     /// <summary>
     /// UI that is displayed when editing <see cref="HoldInteraction"/> in the editor.
     /// </summary>
@@ -20,13 +24,13 @@ namespace UnityEditor.InputSystem.Interactions
             m_DurationSetting.Initialize("Hold Time",
                 "Time (in seconds) that a control has to be held in order for it to register as a hold.",
                 "Default Hold Time",
-                () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultHoldTime);
+                () => target.duration, x => target.duration = x, () => UnityEngine.InputSystem.InputSystem.settings.defaultHoldTime);
         }
 
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();

@@ -2,7 +2,10 @@
 using System;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Editor;
 
 namespace UnityEditor.InputSystem.Editor
 {

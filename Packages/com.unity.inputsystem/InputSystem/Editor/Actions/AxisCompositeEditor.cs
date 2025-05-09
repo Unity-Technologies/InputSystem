@@ -1,8 +1,10 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem.Composites;
 #endif
 
 namespace UnityEditor.InputSystem.Composites {
@@ -17,7 +19,7 @@ namespace UnityEditor.InputSystem.Composites {
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.whichSideWins = (AxisComposite.WhichSideWins)EditorGUILayout.EnumPopup(m_WhichAxisWinsLabel, target.whichSideWins);
         }

@@ -18,6 +18,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] public double exitEditModeTime;
         [SerializeField] public double enterPlayModeTime;
 
+        static InputEditorUserSettings.SerializedState m_InputEditorUserSettingsS_Settings;
+
         public void OnBeforeSerialize()
         {
             // Save current system state.

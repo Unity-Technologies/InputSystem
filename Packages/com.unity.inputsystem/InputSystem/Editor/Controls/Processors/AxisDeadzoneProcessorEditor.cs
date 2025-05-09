@@ -1,7 +1,10 @@
 
 #if UNITY_EDITOR
+using System;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem.Processors;
 #endif
 
 namespace UnityEditor.InputSystem.Processors {
@@ -15,18 +18,18 @@ namespace UnityEditor.InputSystem.Processors {
                 "Value below which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Min",
                 () => target.min, v => target.min = v,
-                () => InputSystem.settings.defaultDeadzoneMin);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMin);
             m_MaxSetting.Initialize("Max",
                 "Value above which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Max",
                 () => target.max, v => target.max = v,
-                () => InputSystem.settings.defaultDeadzoneMax);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMax);
         }
 
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             m_MinSetting.OnGUI();
             m_MaxSetting.OnGUI();

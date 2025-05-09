@@ -1,8 +1,12 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using UnityEngine.InputSystem.Interactions;
 #endif
 
 namespace UnityEditor.InputSystem.Interactions {
@@ -19,23 +23,23 @@ namespace UnityEditor.InputSystem.Interactions {
                 "Time (in seconds) within with a control has to be released again for it to register as a tap. If the control is held "
                 + "for longer than this time, the tap is canceled.",
                 "Default Tap Time",
-                () => target.tapTime, x => target.tapTime = x, () => InputSystem.settings.defaultTapTime);
+                () => target.tapTime, x => target.tapTime = x, () => UnityEngine.InputSystem.InputSystem.settings.defaultTapTime);
             m_TapDelaySetting.Initialize("Max Tap Spacing",
                 "The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.",
                 "Default Tap Spacing",
-                () => target.tapDelay, x => target.tapDelay = x, () => InputSystem.settings.multiTapDelayTime);
+                () => target.tapDelay, x => target.tapDelay = x, () => UnityEngine.InputSystem.InputSystem.settings.multiTapDelayTime);
             m_PressPointSetting.Initialize("Press Point",
                 "The amount of actuation a control requires before being considered pressed. If not set, default to "
                 + "'Default Button Press Point' in the global input settings.",
                 "Default Button Press Point",
                 () => target.pressPoint, v => target.pressPoint = v,
-                () => InputSystem.settings.defaultButtonPressPoint);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultButtonPressPoint);
         }
 
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
