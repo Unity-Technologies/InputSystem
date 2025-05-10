@@ -140,9 +140,12 @@ namespace UnityEngine.InputSystem
 
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
-#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+#if UNITY_EDITOR
             internal static Func<bool> m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled;
             internal static Func<bool> m_EditorPlayerSettingHelpersGetOldSystemBackendsEnabled;
+#endif
+
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
             public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
