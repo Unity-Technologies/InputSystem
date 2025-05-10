@@ -45,5 +45,17 @@ static class EditorInitialization {
 #endif
 
          UnityEngine.InputSystem.InputSystem.InitializeInEditor(); 
+
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
+        
+        UnityEngine.InputSystem.UI.InputSystemUIInputModule.m_Reset = (inputModule) => {
+            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
+                UnityEditor.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                typeof(InputActionAsset));
+            // Setting default asset and actions when creating via inspector
+            UnityEngine.InputSystem.UI.Editor.InputSystemUIInputModuleEditor.ReassignActions(inputModule, asset);
+        };
     }
+#endif
+
 }
