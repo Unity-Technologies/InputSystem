@@ -19,7 +19,7 @@ upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactor
 platforms_win:
   - name: win
     type: Unity::VM
-    image: package-ci/win10:v4
+    image: pets-ops/draft:M97c169bdfd16-4006556-1
     flavor: b1.large
   - name: win_standalone
     type: Unity::VM

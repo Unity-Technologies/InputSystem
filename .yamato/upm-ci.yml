@@ -27,7 +27,7 @@
     # Run upm-ci verification tests as well as tests contained in the package.
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u %EDITOR_VERSION%
       {% if platform.name == "win" and category.name == "functional" %} --enable-code-coverage --code-coverage-options "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem;pathReplacePatterns:@*,,Library/PackageCache,Packages" 
-      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package --coverage-upload-options=\"hostUrl:https://codecov.test.unity3d.com;git-service:github;token:%CODECOV_TOKEN_TEST%;reportsDir:upm-ci~/test-results/CodeCoverage/Package;name:{{platform.name}}_{{editor.version}};flags:{{platform.name}}_{{editor.version}}\"" {% endif %}
+      --extra-utr-arg="--coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package --coverage-upload-options=\"hostUrl:https://codecov.test.unity3d.com;token:%CODECOV_TOKEN_TEST%;reportsDir:upm-ci~/test-results/CodeCoverage/Package;name:{{platform.name}}_{{editor.version}};flags:{{platform.name}}_{{editor.version}}\"" {% endif %}
   after:
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
