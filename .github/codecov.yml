@@ -2,7 +2,7 @@ codecov:
   max_report_age: false
   require_ci_to_pass: false
   notify:
-    wait_for_ci: false
+    wait_for_ci: true
 
 coverage:
   precision: 2
@@ -13,8 +13,22 @@ coverage:
     patch: false
     default_rules:
       flag_coverage_not_uploaded_behavior: exclude
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        base: auto 
+        if_ci_failed: success
+        informational: false
+        only_pulls: true
 
-comment: false
+comment:
+  layout: "diff,flags,files"
+  behavior: default
+  require_changes: false
+  require_base: true
+  require_head: true
+  after_n_builds: 1
 
 flag_management:
   default_rules:
