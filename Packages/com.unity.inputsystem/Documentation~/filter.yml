@@ -37,3 +37,15 @@ apiRules:
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.InputSystem\.runInBackground$
       type: Member
+  - exclude:
+      uidRegex: ^Unity\.XR\.Oculus\.Input\..*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^Unity\.XR\.GoogleVr\..*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^Unity\.XR\.OpenVR\..*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^Unity\.XR\.WindowsMR\.Input\..*$
+      type: Namespace

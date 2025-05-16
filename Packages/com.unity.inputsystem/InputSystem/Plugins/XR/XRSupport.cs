@@ -1,5 +1,3 @@
-// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
@@ -104,7 +102,12 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
         public InputDeviceCharacteristics characteristics;
+#else
+        [SerializeField]
+        private uint characteristics;
+#endif
         /// <summary>
         /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
         /// </summary>
@@ -388,7 +391,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
-#if !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
@@ -506,4 +509,3 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif
