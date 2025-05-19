@@ -51,6 +51,11 @@
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
+{% if platform.name == "win" and category.name == "functional" %}
+  triggers:
+      expression: push.branch match "develop"
+      cancel_old_ci: true
+{% endif %}
 {% endfor %} # test_category
 {% endfor %} # platforms_win
 
@@ -104,6 +109,11 @@
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
+{% if category.name == "functional" and platform.name == "mac" or platform.name == "linux"%}
+  triggers:
+      expression: push.branch match "develop"
+      cancel_old_ci: true
+{% endif %}
 {% endfor %} # test_category
 {% endfor %} # platforms_nix
 {% endfor %} # editors
