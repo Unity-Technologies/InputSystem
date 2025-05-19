@@ -38,7 +38,7 @@
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
     - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if platform.name == "win" and category.name == "functional" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
     {% if platform.name == "win" and category.name == "functional" %}
-    # Delete the Package and Project reports & raw coverage data, to keep Aritfacts.zip smaller
+    # Delete the Package and Project reports & raw coverage data, to keep Artifacts.zip smaller
     - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
     - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project"   
     {% endif %}
@@ -91,7 +91,7 @@
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
     - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" or platform.name == "linux"%} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
     {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux"%}
-    # Delete the Package and Project reports & raw coverage data, to keep Aritfacts.zip smaller
+    # Delete the Package and Project reports & raw coverage data, to keep Artifacts.zip smaller
     - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package
     - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project 
     {% endif %} 
