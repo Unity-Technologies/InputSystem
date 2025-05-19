@@ -51,7 +51,7 @@
         - "upm-ci~/test-results/**/*"
 {% if platform.name == "win" and category.name == "functional" %}
   triggers:
-      expression: push.branch match "develop"
+      expression: push.branch eq "develop"
       cancel_old_ci: true
 {% endif %}
 {% endfor %} # test_category
@@ -104,7 +104,7 @@
         - "upm-ci~/test-results/**/*"
 {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux"%}
   triggers:
-      expression: push.branch match "develop"
+      expression: push.branch eq "develop"
       cancel_old_ci: true
 {% endif %}
 {% endfor %} # test_category
