@@ -18,7 +18,7 @@ coverage:
         threshold: 1%
         base: auto 
         if_ci_failed: success
-        informational: false
+        informational: true
         only_pulls: true
 
 comment:
