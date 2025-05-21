@@ -32,16 +32,39 @@ namespace UnityEngine.InputSystem.XR
         ///
         /// </remarks>
 
+        /// <summary>
+        /// Accessor for left eye position.
+        /// </summary>
         [InputControl(noisy = true)]
         public Vector3Control leftEyePosition { get; protected set; }
+
+        /// <summary>
+        /// Accessor for left eye rotation.
+        /// </summary>
         [InputControl(noisy = true)]
         public QuaternionControl leftEyeRotation { get; protected set; }
         [InputControl(noisy = true)]
+
+        /// <summary>
+        /// Accessor for right eye position.
+        /// </summary>
         public Vector3Control rightEyePosition { get; protected set; }
         [InputControl(noisy = true)]
+
+        /// <summary>
+        /// Accessor for right eye rotation.
+        /// </summary>
         public QuaternionControl rightEyeRotation { get; protected set; }
+
+        /// <summary>
+        /// Accessor for center eye position.
+        /// </summary>
         [InputControl(noisy = true)]
         public Vector3Control centerEyePosition { get; protected set; }
+
+        /// <summary>
+        /// Accessor for center eye rotation.
+        /// </summary>
         [InputControl(noisy = true)]
         public QuaternionControl centerEyeRotation { get; protected set; }
 
@@ -118,6 +141,11 @@ namespace UnityEngine.InputSystem.XR
     /// </summary>
     public class XRControllerWithRumble : XRController
     {
+        /// <summary>
+        /// Sends an impulse command with the given amplitude and duration.
+        /// </summary>
+        /// <param name="amplitude"> Amplitude of the impulse.</param>
+        /// <param name="duration"> Duration of the impulse.</param>
         public void SendImpulse(float amplitude, float duration)
         {
             var command = SendHapticImpulseCommand.Create(0, amplitude, duration);
