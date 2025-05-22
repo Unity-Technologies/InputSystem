@@ -28,6 +28,8 @@ To create an Action Asset with default actions pre-configured, click  **"Create 
 
 The Action Asset appears in your Project view, and is named "InputSystem_Actions". This is where your new configuration of actions is saved, including any changes you make to it.
 
+![](images/InputSystemActionsAsset.png)
+
 ## Edit project-wide actions
 
 Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
@@ -41,6 +43,8 @@ These default actions mean that in many cases, you can start scripting with the 
 If you’d like to delete all the default actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete the each Action Map, which deletes all the Actions contained in the maps in one go.
 
 You can also delete all action maps, or reset all the actions back to the default values from the **more** (⋮) menu at the top right of the Input Actions section of the settings window, below the Project Settings window search field.
+
+![](images/InputActionsSettingsMoreMenu.png)
 
 > **Note:** this **more** (⋮) menu is not available when the Actions Editor is open in a separate window, it is only present in the Project Settings window.
 
