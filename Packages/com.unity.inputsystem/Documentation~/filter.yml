@@ -50,6 +50,9 @@ apiRules:
       uidRegex: ^Unity\.XR\.WindowsMR\.Input\..*$
       type: Namespace
   - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics\..*$
+      type: Namespace
+  - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRHMD$
       type: Type
   - exclude:
@@ -66,4 +69,10 @@ apiRules:
       type: Type
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRControllerWithRumble\..*$
+      type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRSupport$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRSupport\..*$
       type: Member
