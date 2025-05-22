@@ -121,6 +121,7 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor.version }}
+    UTR_VERSION: 1.35.1
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
@@ -170,6 +171,7 @@ build_tvos_{{ editor.version }}_{{ category.name }}:
     flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor.version }}
+    UTR_VERSION: 1.35.1    
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
