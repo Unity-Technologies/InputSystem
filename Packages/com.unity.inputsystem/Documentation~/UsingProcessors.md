@@ -142,7 +142,7 @@ Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packa
 
 The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value to a specified range. The minimum value of the Processor defines the lowest input value that will be accepted, while the value cannot exceed the given maximum value. In combination with the Scale Processor, it is easy to standardize the input value ranges of different devices and place them within a well-defined value spectrum.
 
-#### Racing car
+#### Example: Racing game speend control
 
 In a case where the player is not supposed to fall below a certain base speed, but also cannot exceed a certain maximum speed, the Clamp Processor is the one you may want to use.
 In the following image, you can see how a Clamp Processor can be used to restrict input values within a defined minimum and maximum range.
