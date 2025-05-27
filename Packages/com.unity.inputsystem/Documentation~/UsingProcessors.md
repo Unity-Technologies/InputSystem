@@ -88,7 +88,7 @@ In the images shown above, the player moves forward at a constant speed, regardl
 
 To apply the Processor, add it to the Binding, as shown in the image below.
 
-![This should be a picture of the Asset editor](./Images/Processors-NormalizeAsset.png)
+![This picture shows the setup of a Normalize Vector 2 Processor in the Input Action Asset Editor](./Images/Processors-NormalizeAsset.png)
 
 Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-updates-in-new-charactercontroller-pa-196526?srsltid=AfmBOoqLWdW2pU5Wt2reGYdWVodc1e0ko3cBKtfMQuPSgVqmL7yVA3dB), and the included PlayerScript is utilized to move the player.
 
