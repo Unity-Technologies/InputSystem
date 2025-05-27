@@ -105,7 +105,7 @@ Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packa
 The [Scale Processor](ProcessorTypes.md#scale) multiplies the input value by a given factor X. This applies to float values as well as vectors, where each axis is multiplied by the corresponding factor specified for that axis.
 This allows you to assign weight to input values, which can, for example, make a particular type of control easier to use.
 
-#### Horizontally aligned Camera
+#### Example: Horizontally aligned Camera
 
 To make the look-around movement smoother and improve ease of use, it may be helpful to reduce the vertical rotation and scale the input values for horizontal rotation. For in-game landscapes that are primarily horizontally aligned, this is a useful feature to prevent the camera from rotating vertically too quickly or in unintended ways.
 To apply this effect to all bindings, the Processor is applied to the Action itself (Look in this scenario). The following image shows the setup using the Starter Assets example:
