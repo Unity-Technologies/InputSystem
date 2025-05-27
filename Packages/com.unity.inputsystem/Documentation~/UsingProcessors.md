@@ -128,7 +128,7 @@ You can use a Scale processor to adjust mouse sensitivity through a game setting
 To filter noise from controls that are rarely in a default state, constantly send input values, or seldom report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
 The specified minimum value can filter out small movements or noise from the control, while the maximum value can mitigate the difference between the control's maximum value and the reported maximum values.
 
-#### The Deadzone Processor for Accesibility
+#### Example: Accessibility enhancement
 
 The Deadzone Processor can be used to improve accessibility for physically challenging input gestures, such as very small movements on an input device. This can be made configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (e.g., for trembling hands), here’s how the right stick binding of a gamepad can be modified to ignore input events for small input values:
 
