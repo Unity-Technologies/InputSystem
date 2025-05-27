@@ -139,6 +139,6 @@ The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value to a speci
 In a case where the player is not supposed to fall below a certain base speed, but also cannot exceed a certain maximum speed, the Clamp Processor is the one you may want to use.
 In the following image, you can see how a Clamp Processor can be used to restrict input values within a defined minimum and maximum range.
 
-![Here should be a picture of the Input Action Editor](./Images/Processors-Clamp-Editor.png)
+![This picture shows the setup of a Clamp Processor in the Input Action Asset Editor](./Images/Processors-Clamp-Editor.png)
 
 Note that the Bindings can contain input values with very different ranges. In that case, a Scale Processor on the Bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings).
