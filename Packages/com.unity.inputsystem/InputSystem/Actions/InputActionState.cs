@@ -593,7 +593,8 @@ namespace UnityEngine.InputSystem
                 if (newBindingState.isComposite)
                 {
                     var compositeIndex = newBindingState.compositeOrCompositeBindingIndex;
-                    memory.compositeMagnitudes[compositeIndex] = oldState.compositeMagnitudes[compositeIndex];
+                    if (oldState.compositeMagnitudes != null)
+                        memory.compositeMagnitudes[compositeIndex] = oldState.compositeMagnitudes[compositeIndex];
                 }
 
                 var actionIndex = newBindingState.actionIndex;
@@ -872,7 +873,8 @@ namespace UnityEngine.InputSystem
             // Wipe state.
             actionState->phase = toPhase;
             actionState->controlIndex = kInvalidIndex;
-            actionState->bindingIndex = memory.actionBindingIndices[memory.actionBindingIndicesAndCounts[actionIndex]];
+            var idx = memory.actionBindingIndicesAndCounts[actionIndex];
+            actionState->bindingIndex = memory.actionBindingIndices != null ? memory.actionBindingIndices[idx] : 0;
             actionState->interactionIndex = kInvalidIndex;
             actionState->startTime = 0;
             actionState->time = 0;
@@ -2879,6 +2881,9 @@ namespace UnityEngine.InputSystem
         internal TValue ApplyProcessors<TValue>(int bindingIndex, TValue value, InputControl<TValue> controlOfType = null)
             where TValue : struct
         {
+            if (totalBindingCount == 0)
+                return value;
+
             var processorCount = bindingStates[bindingIndex].processorCount;
             if (processorCount > 0)
             {
@@ -4139,6 +4144,16 @@ namespace UnityEngine.InputSystem
 
             public ActionMapIndices* mapIndices;
 
+            private static byte* AllocFromBlob(ref byte* top, int size)
+            {
+                if (size == 0)
+                    return null;
+
+                var allocation = top;
+                top += size;
+                return allocation;
+            }
+
             public void Allocate(int mapCount, int actionCount, int bindingCount, int controlCount, int interactionCount, int compositeCount)
             {
                 Debug.Assert(basePtr == null, "Memory already allocated! Free first!");
@@ -4164,17 +4179,17 @@ namespace UnityEngine.InputSystem
                 // NOTE: This depends on the individual structs being sufficiently aligned in order to not
                 //       cause any misalignment here. TriggerState, InteractionState, and BindingState all
                 //       contain doubles so put them first in memory to make sure they get proper alignment.
-                actionStates = (TriggerState*)ptr; ptr += actionCount * sizeof(TriggerState);
-                interactionStates = (InteractionState*)ptr; ptr += interactionCount * sizeof(InteractionState);
-                bindingStates = (BindingState*)ptr; ptr += bindingCount * sizeof(BindingState);
-                mapIndices = (ActionMapIndices*)ptr; ptr += mapCount * sizeof(ActionMapIndices);
-                controlMagnitudes = (float*)ptr; ptr += controlCount * sizeof(float);
-                compositeMagnitudes = (float*)ptr; ptr += compositeCount * sizeof(float);
-                controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
-                controlGroupingAndComplexity = (ushort*)ptr; ptr += controlCount * sizeof(ushort) * 2;
-                actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
-                actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
-                enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
+                actionStates = (TriggerState*)AllocFromBlob(ref ptr, actionCount * sizeof(TriggerState));
+                interactionStates = (InteractionState*)AllocFromBlob(ref ptr, interactionCount * sizeof(InteractionState));
+                bindingStates = (BindingState*)AllocFromBlob(ref ptr, bindingCount * sizeof(BindingState));
+                mapIndices = (ActionMapIndices*)AllocFromBlob(ref ptr, mapCount * sizeof(ActionMapIndices));
+                controlMagnitudes = (float*)AllocFromBlob(ref ptr, controlCount * sizeof(float));
+                compositeMagnitudes = (float*)AllocFromBlob(ref ptr, compositeCount * sizeof(float));
+                controlIndexToBindingIndex = (int*)AllocFromBlob(ref ptr, controlCount * sizeof(int));
+                controlGroupingAndComplexity = (ushort*)AllocFromBlob(ref ptr, controlCount * sizeof(ushort) * 2);
+                actionBindingIndicesAndCounts = (ushort*)AllocFromBlob(ref ptr, actionCount * sizeof(ushort) * 2);
+                actionBindingIndices = (ushort*)AllocFromBlob(ref ptr, bindingCount * sizeof(ushort));
+                enabledControls = (int*)AllocFromBlob(ref ptr, (controlCount + 31) / 32 * sizeof(int));
             }
 
             public void Dispose()
