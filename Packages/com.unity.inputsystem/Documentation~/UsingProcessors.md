@@ -85,7 +85,7 @@ The [Normalize Processors](ProcessorTypes.md#normalize) normalizes the magnitude
 In the case of float input values, the values are normalized between a defined minimum, zero, and maximum.
 Normalized input is particularly useful in scenarios where the specific magnitude of an input might distort the consistency of an intended action.
 
-#### A steady running player
+#### Example: A steady running player
 
 To ensure the player always moves at a constant speed where the input simply triggers the action and controls the direction, the Normalize Processor is a suitable choice. This is achieved by retrieving the input vector while ignoring its magnitude and focusing solely on its direction.
 
