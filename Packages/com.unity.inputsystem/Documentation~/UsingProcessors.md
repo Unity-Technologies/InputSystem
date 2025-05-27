@@ -37,7 +37,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
     "invert,normalize(min=0,max=10)"
 ```
 
-## When to use which Processor
+## Choose the right Processor
 
 The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
 If you don’t find a scenario similar to your use case, please refer to the [Processor Types](ProcessorTypes.md) section. You can also find more information on how to write your own custom Processors there.
