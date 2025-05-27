@@ -48,7 +48,7 @@ The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any typ
 
 #### Example: Ship navigation
 
-To use an axis control to mimic a ship's rudder, inverting the input will produce the desired effect. Pulling the stick to the left will steer the ship to the right, while pulling it to the right will steer the ship to the left.
+To use an axis control to mimic a ship's rudder, inverting the input produces the desired effect. Pulling left steers the ship right, and vice versa.
 
 ![image alt text](./Images/Processors-Ship-Neutral.png)
 ![image alt text](./Images/Processors-Ship-Left.png)
