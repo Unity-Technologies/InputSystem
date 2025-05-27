@@ -13,7 +13,12 @@ The following are the three different ways of applying Processors to input event
 
 When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](ProcessorTypes.md#invert-vector-2) Processor to your Binding.
 
-If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an  [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. Select the Add (+) icon on the __Processors__ foldout to open a list of all available Processors that match your control type, then choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. If the Processor has any parameters, you can edit them in the __Processors__ foldout.
+If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor:
+
+1. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. 
+2. Select the **Add (+)** icon on the __Processors__ foldout to open a list of all available Processors that match your control type.
+3. Choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. 
+4. (Optional) If the Processor has any parameters, you can edit them in the __Processors__ foldout.
 
 ![Binding Processors](Images/BindingProcessors.png)
 
