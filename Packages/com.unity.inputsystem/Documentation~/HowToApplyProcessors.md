@@ -1,7 +1,7 @@
 ---
 uid: input-system-processors
 ---
-# How to apply Processors
+# Apply Processors
 
 The particularities between the three different ways of applying Processors to input events. For more information on the general usage of Processors refer to [Using Processors](UsingProcessors.md).
 
