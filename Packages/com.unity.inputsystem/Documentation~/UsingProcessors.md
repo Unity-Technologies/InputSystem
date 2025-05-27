@@ -7,14 +7,6 @@ An Input Processor takes a value and returns a processed result for it. The rece
 
 >__Note__: To convert received input values into different types, refer to [composite Bindings](ActionBindings.md#composite-bindings).
 
-* [Using Processors](#using-processors)
-* [When to use which Processor](#when-to-use-which-processor)
-    * [Invert](#invert)
-    * [Normalize](#normalize)
-    * [Scale](#scale)
-    * [Deadzone](#deadzone)
-    * [Clamp](#clamp)
-
 ## Using Processors
 
 You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md). See [How to apply Processors](HowToApplyProcessors.md) to learn more.
