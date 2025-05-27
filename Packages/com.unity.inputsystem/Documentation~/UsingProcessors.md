@@ -46,7 +46,7 @@ If you don’t find a scenario similar to your use case, please refer to the [Pr
 
 The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by -1. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
-#### Ship navigation scenario
+#### Example: Ship navigation
 
 To use an axis control to mimic a ship's rudder, inverting the input will produce the desired effect. Pulling the stick to the left will steer the ship to the right, while pulling it to the right will steer the ship to the left.
 
