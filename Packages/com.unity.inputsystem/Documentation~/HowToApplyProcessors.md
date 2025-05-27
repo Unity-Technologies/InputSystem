@@ -3,7 +3,7 @@ uid: input-system-processors
 ---
 # Apply Processors
 
-The particularities between the three different ways of applying Processors to input events. For more information on the general usage of Processors refer to [Using Processors](UsingProcessors.md).
+The following are the three different ways of applying Processors to input events. For more information on the general usage of Processors, refer to [Using Processors](UsingProcessors.md).
 
 * [Processors on Bindings](#processors-on-bindings)
 * [Processors on Actions](#processors-on-actions)
