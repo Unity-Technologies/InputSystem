@@ -3,7 +3,7 @@ uid: input-system-processors
 ---
 # Processor types
 
-Below you will find predefined processors, furthermore it's possible to create custom Processors. For more information on when to use which type of processor please refer to [Using Processors](UsingProcessors.md).
+Below are predefined processors. You can also create custom Processors. For guidance on when to use each type, refer to [Using Processors](UsingProcessors.md).
 
 * [Predefined Processors](#predefined-processors)
     * [Clamp](#clamp)
