@@ -121,7 +121,7 @@ Note: This scenario uses the [Starter Assets](https://assetstore.unity.com/packa
 
 #### Customizing mouse input
 
-Another example of when Scale Processors can be very useful is customizing input via a game settings window. To allow a custom setup for the speed of the mouse in the X and Y directions, a Scale Processor can be applied to a Binding that is limited to a Pointer device.
+You can use a Scale processor to adjust mouse sensitivity through a game settings menu. To support custom X and Y speed settings, apply the processor to a Binding limited to a Pointer device.
 
 ### Deadzone
 
