@@ -5,7 +5,7 @@ uid: input-system-processors
 
 An Input Processor takes a value and returns a processed result for it. The received value and result value must be of the same type. For example, you can use a [clamp](#clamp) Processor to clamp values from a control to a certain range.
 
->__Note__: To convert received input values into different types, see [composite Bindings](ActionBindings.md#composite-bindings).
+>__Note__: To convert received input values into different types, refer to [composite Bindings](ActionBindings.md#composite-bindings).
 
 * [Using Processors](#using-processors)
 * [When to use which Processor](#when-to-use-which-processor)
