@@ -94,7 +94,7 @@ To ensure the player always moves at a constant speed where the input simply tri
 
 In the images shown above, the player moves forward at a constant speed, regardless of how far the joystick is pushed upward.
 
-To apply the Processor, it can be added to the Binding, as shown in the image below.
+To apply the Processor, add it to the Binding, as shown in the image below.
 
 ![This should be a picture of the Asset editor](./Images/Processors-NormalizeAsset.png)
 
