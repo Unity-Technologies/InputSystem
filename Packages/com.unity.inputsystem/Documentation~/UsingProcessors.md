@@ -58,7 +58,7 @@ This can be achieved by using an Invert Processor on the Action or the Binding. 
 
 ![image alt text](./Images/Processors-Invert-Editor.png)
 
-Finally, the following code can be used in a script attached to a GameObject that has a PlayerInput component referencing the corresponding Action Asset.
+Finally, attach the following script to a GameObject with a PlayerInput component that references the corresponding Action Asset:
 
 ```c#
 using UnityEngine;
