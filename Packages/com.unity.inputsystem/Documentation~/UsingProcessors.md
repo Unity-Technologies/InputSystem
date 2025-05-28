@@ -141,4 +141,4 @@ In the following image, you can see how a Clamp Processor can be used to restric
 
 ![This picture shows the setup of a Clamp Processor in the Input Action Asset Editor](./Images/Processors-Clamp-Editor.png)
 
-Note that the Bindings can contain input values with very different ranges. In that case, a Scale Processor on the Bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings).
+>__Note__: The Bindings can contain input values with very different ranges. In that case, a Scale Processor on the Bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings).
