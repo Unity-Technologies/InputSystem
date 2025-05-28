@@ -15,9 +15,9 @@ When you create Bindings for your [actions](Actions.md), you can choose to add P
 
 If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor:
 
-1. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. 
+1. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding.
 2. Select the **Add (+)** icon on the __Processors__ foldout to open a list of all available Processors that match your control type.
-3. Choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. 
+3. Choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout.
 4. (Optional) If the Processor has any parameters, you can edit them in the __Processors__ foldout.
 
 ![Binding Processors](Images/BindingProcessors.png)
