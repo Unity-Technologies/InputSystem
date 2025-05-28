@@ -33,7 +33,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 ## Choose the right Processor
 
 The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
-Refer to the [Processor Types] (ProcessorTypes.md) for a comprehensive list and information on how to write your own custom Processors.
+Refer to the [Processor Types](ProcessorTypes.md) for a comprehensive list and information on how to write your own custom Processors.
 
 ### Invert
 
@@ -47,7 +47,7 @@ To use an axis control to mimic a ship's rudder, inverting the input produces th
 ![This picture shows a ship rotated to the left while the On-Screen control stick was moved to the right](./Images/Processors-Ship-Left.png)
 ![This picture shows a ship rotated to the right while the On-Screen control stick was moved to the left](./Images/Processors-Ship-Right.png)
 
-This can be achieved by using an Invert Processor on the Action or the Binding. In this scenario, the Processor is applied to the Binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
+You can achieve this by using an Invert Processor on the Action or the Binding. In this scenario, the Processor is applied to the Binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
 
 ![This picture shows the setup of a Invert Vector 2 Processor in the Input Action Asset Editor](./Images/Processors-Invert-Editor.png)
 
@@ -101,7 +101,7 @@ This allows you to assign weight to input values, which can, for example, make a
 #### Example: Horizontally aligned Camera
 
 To make the look-around movement smoother and improve ease of use, it may be helpful to reduce the vertical rotation and scale the input values for horizontal rotation. For in-game landscapes that are primarily horizontally aligned, this is a useful feature to prevent the camera from rotating vertically too quickly or in unintended ways.
-To apply this effect to all bindings, the Processor is applied to the Action itself (Look in this scenario). The following image shows the setup using the Starter Assets example:
+To apply this effect to all bindings, you can add the Processor to the Action itself (Look in this scenario). The following image shows the setup using the Starter Assets example:
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look.png)
 
@@ -123,7 +123,7 @@ The specified minimum value can filter out small movements or noise from the con
 
 #### Example: Accessibility enhancement
 
-The Deadzone Processor can be used to improve accessibility for physically challenging input gestures, such as very small movements on an input device. This can be made configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (e.g., for trembling hands), here’s how the right stick binding of a gamepad can be modified to ignore input events for small input values:
+You may want to use the Deadzone Processor to improve accessibility for physically challenging input gestures, such as very small movements on an input device. The sensitivity can be configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (e.g., for trembling hands), here’s how you can modify the right stick binding of a gamepad to ignore input events for small input values:
 
 ![An example of a Stick Deadzone Processor setup in the Input Action Asset Editor](./Images/Processors-Deadzone-Editor.png)
 
