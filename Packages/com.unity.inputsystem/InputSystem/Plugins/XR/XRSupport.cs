@@ -1,4 +1,4 @@
-#if PACKAGE_DOCS_GENERATION
+#if !PACKAGE_DOCS_GENERATION
 
 using System;
 using System.Collections.Generic;
