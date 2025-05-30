@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public int deviceId;
         /// <summary>
-        /// A list of all input features.  <seealso cref="XRFeatureDescriptor"/>
+        /// A list of all input features.  <see cref="XRFeatureDescriptor"/>
         /// </summary>
         public List<XRFeatureDescriptor> inputFeatures;
 
