@@ -3652,7 +3652,12 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    EnableActions();
+                    // Don't enable actions if some are already enabled.
+                    // This is useful when you just want specific action maps to be enabled, but not all
+                    // action maps.
+                    if (!InputSystem.actions.enabled)
+                        EnableActions();
+
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     break;
 
