@@ -50,7 +50,7 @@ apiRules:
       uidRegex: ^Unity\.XR\.WindowsMR\.Input\..*$
       type: Namespace
   - exclude:
-      uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics\..*$
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics(?:\..+)*$
       type: Namespace
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRHMD$
