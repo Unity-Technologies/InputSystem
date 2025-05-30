@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// Converts this structure to a JSON string.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A JSON string.</returns>
         public string ToJson()
         {
             return JsonUtility.ToJson(this);
