@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 #if UNITY_2020_2_OR_NEWER
 using UnityEditor.AssetImporters;
@@ -29,6 +30,8 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 13;
+        // Bump this whenever you make a breaking change to the on-disk JSON format
+        private const int kJsonFormatVersion = 1;
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -66,6 +69,19 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Attempt to parse JSON
                 asset.LoadFromJson(content);
+
+                // If this JSON was authored before we switched to enum-by-value, migrate it now
+                if (asset.m_Version < kJsonFormatVersion)
+                {
+                    MigrateAllEnumParams(asset);
+                    asset.m_Version = kJsonFormatVersion;
+
+                    if (!EditorHelpers.WriteAsset(context.assetPath, asset.ToJson()))
+                        context.LogImportError($"Could not write migrated JSON to '{context.assetPath}'");
+
+                    EditorUtility.SetDirty(asset);
+                    return null;
+                }
 
                 // Make sure action map names are unique within JSON file
                 var names = new HashSet<string>();
@@ -115,6 +131,76 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             return asset;
+        }
+
+        static void MigrateAllEnumParams(InputActionAsset asset)
+        {
+            foreach (var map in asset.actionMaps)
+            {
+                foreach (var action in map.actions)
+                {
+                    var raw = action.processors;
+                    if (string.IsNullOrEmpty(raw))
+                        continue;
+
+                    var rebuilt = new List<string>();
+                    foreach (var entry in raw.Split(';'))
+                    {
+                        var e = entry.Trim();
+                        if (e.Length == 0)
+                        {
+                            rebuilt.Add(e);
+                            continue;
+                        }
+
+                        var paren = e.IndexOf('(');
+                        string procName = paren >= 0 ? e.Substring(0, paren) : e;
+                        string args    = paren >= 0
+                            ? e.Substring(paren + 1, e.Length - paren - 2)
+                            : null;
+
+                        var procType = InputSystem.TryGetProcessor(procName);
+                        if (procType != null && args != null)
+                        {
+                            var patched = PatchEnumArgs(procType, args);
+                            rebuilt.Add($"{procName}({patched})");
+                        }
+                        else
+                        {
+                            rebuilt.Add(e);
+                        }
+                    }
+
+                    action.m_Processors = string.Join(";", rebuilt);
+                }
+            }
+        }
+
+        static string PatchEnumArgs(Type procType, string args)
+        {
+            var dict = args.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]);
+            var anyChanged = false;
+            var enumFields = procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum);
+
+            foreach (var field in enumFields)
+            {
+                if (dict.TryGetValue(field.Name, out var raw) && int.TryParse(raw, out var ordinal))
+                {
+                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
+
+                    if (ordinal >= 0 && ordinal < values.Length)
+                    {
+                        var real = Convert.ToInt32(values[ordinal]);
+                        dict[field.Name] = real.ToString();
+                        anyChanged = true;
+                    }
+                }
+            }
+
+            if (!anyChanged)
+                return args;
+
+            return string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
         }
 
         public override void OnImportAsset(AssetImportContext ctx)

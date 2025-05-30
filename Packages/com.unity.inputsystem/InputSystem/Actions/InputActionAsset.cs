@@ -298,6 +298,7 @@ namespace UnityEngine.InputSystem
         {
             return JsonUtility.ToJson(new WriteFileJson
             {
+                version = m_Version,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
@@ -946,10 +947,12 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionRebindingExtensions.ParameterOverride[] m_ParameterOverrides;
 
         [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
+        [SerializeField] internal int m_Version;
 
         [Serializable]
         internal struct WriteFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -965,12 +968,14 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
 
             public void ToAsset(InputActionAsset asset)
             {
+                asset.m_Version = version;
                 asset.name = name;
                 asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
                 asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
