@@ -38,16 +38,16 @@ apiRules:
       uidRegex: ^UnityEngine\.InputSystem\.InputSystem\.runInBackground$
       type: Member
   - exclude:
-      uidRegex: ^Unity\.XR\.Oculus\.Input\..*$
+      uidRegex: ^Unity\.XR\.Oculus\.Input(?:\..+)*$
       type: Namespace
   - exclude:
-      uidRegex: ^Unity\.XR\.GoogleVr\..*$
+      uidRegex: ^Unity\.XR\.GoogleVr(?:\..+)*$
       type: Namespace
   - exclude:
-      uidRegex: ^Unity\.XR\.OpenVR\..*$
+      uidRegex: ^Unity\.XR\.OpenVR(?:\..+)*$
       type: Namespace
   - exclude:
-      uidRegex: ^Unity\.XR\.WindowsMR\.Input\..*$
+      uidRegex: ^Unity\.XR\.WindowsMR\.Input(?:\..+)**$
       type: Namespace
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics(?:\..+)*$
