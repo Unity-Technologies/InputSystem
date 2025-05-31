@@ -30,8 +30,6 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 13;
-        // Bump this whenever you make a breaking change to the on-disk JSON format
-        private const int kJsonFormatVersion = 1;
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -71,10 +69,10 @@ namespace UnityEngine.InputSystem.Editor
                 asset.LoadFromJson(content);
 
                 // If this JSON was authored before we switched to enum-by-value, migrate it now
-                if (asset.m_Version < kJsonFormatVersion)
+                if (asset.m_Version < kVersion)
                 {
                     MigrateAllEnumParams(asset);
-                    asset.m_Version = kJsonFormatVersion;
+                    asset.m_Version = kVersion;
 
                     if (!EditorHelpers.WriteAsset(context.assetPath, asset.ToJson()))
                         context.LogImportError($"Could not write migrated JSON to '{context.assetPath}'");
@@ -133,7 +131,7 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        static void MigrateAllEnumParams(InputActionAsset asset)
+        internal static void MigrateAllEnumParams(InputActionAsset asset)
         {
             foreach (var map in asset.actionMaps)
             {
@@ -176,7 +174,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        static string PatchEnumArgs(Type procType, string args)
+        internal static string PatchEnumArgs(Type procType, string args)
         {
             var dict = args.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]);
             var anyChanged = false;
