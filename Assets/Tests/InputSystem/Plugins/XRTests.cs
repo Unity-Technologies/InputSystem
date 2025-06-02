@@ -633,7 +633,7 @@ internal class XRTests : CoreTestsFixture
 
     [UnityTest]
     [Category("Components")]
-    public IEnumerator LateAddedXRControllerCanLinkTrackedPoseDriver()
+    public IEnumerator CanUseTrackedPoseDriverWithoutTrackingAction()
     {
         var go = new GameObject();
         var tpd = go.AddComponent<TrackedPoseDriver>();
@@ -644,10 +644,8 @@ internal class XRTests : CoreTestsFixture
 
         var positionAction = new InputAction(binding: "<XRController>/devicePosition");
         var rotationAction = new InputAction(binding: "<XRController>/deviceRotation");
-        var trackingStateAction = new InputAction(binding: "<XRController>/trackingState");
         tpd.positionInput = new InputActionProperty(positionAction);
         tpd.rotationInput = new InputActionProperty(rotationAction);
-        tpd.trackingStateInput = new InputActionProperty(trackingStateAction);
 
         yield return null;
 
@@ -668,7 +666,6 @@ internal class XRTests : CoreTestsFixture
         {
             device.devicePosition.WriteValueIntoEvent(position, stateEvent);
             device.deviceRotation.WriteValueIntoEvent(rotation, stateEvent);
-            device.trackingState.WriteValueIntoEvent((int)(InputTrackingState.Position | InputTrackingState.Rotation), stateEvent);
 
             transform.position = Vector3.zero;
             transform.rotation = Quaternion.identity;
