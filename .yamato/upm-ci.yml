@@ -13,7 +13,6 @@
   variables:
     EDITOR_VERSION: {{ editor.version }}
   commands:        
-    - {{ utr_install_win }}
     - {{ upm_ci_install }}
     # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
     # Automatically makes the documentation tests in APIVerification go live.
@@ -36,7 +35,7 @@
     - move /Y .\Packages\com.unity.inputsystem\Samples .\Assets
     - move /Y .\Packages\com.unity.inputsystem\Samples.meta .\Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if platform.name == "win" and category.name == "functional" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
+    - UnifiedTestRunner --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "win" %} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if platform.name == "win" and category.name == "functional" %}--enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
     {% if platform.name == "win" and category.name == "functional" %}
     # Delete the Package and Project reports & raw coverage data, to keep Artifacts.zip smaller
     - rmdir /s/q "{{ yamato_source_dir_win }}/upm-ci~/test-results/CodeCoverage/Package"
@@ -68,7 +67,6 @@
   variables:
     EDITOR_VERSION: {{ editor.version }}  
   commands:
-    - {{ utr_install_nix }}
     - {{ upm_ci_install }}
     # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
     # Automatically makes the documentation tests in APIVerification go live.
@@ -89,7 +87,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - ./utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" or platform.name == "linux"%} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
+    - UnifiedTestRunner --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode {% if platform.name == "mac" or platform.name == "linux"%} --suite=editor {% endif %} {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --api-profile=NET_4_6 {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %} {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux" %} --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem" --coverage-results-path={{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Project --coverage-upload-options="reportsDir:upm-ci~/test-results/CodeCoverage/Project;name:{{platform.name}}_{{editor.version}}_project;flags:{{platform.name}}_{{editor.version}}_project" {% endif %}
     {% if category.name == "functional" and platform.name == "mac" or platform.name == "linux"%}
     # Delete the Package and Project reports & raw coverage data, to keep Artifacts.zip smaller
     - rm -rf {{ yamato_source_dir_nix }}/upm-ci~/test-results/CodeCoverage/Package
@@ -122,10 +120,9 @@ build_ios_{{ editor.version }}_{{ category.name }}:
   variables:
     EDITOR_VERSION: {{ editor.version }}
   commands:
-    - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c iOS -u $EDITOR_VERSION --fast --wait
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
@@ -152,8 +149,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
   dependencies:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}_{{ category.name }}
   commands:
-    - {{ utr_install_nix }}
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
@@ -171,10 +167,9 @@ build_tvos_{{ editor.version }}_{{ category.name }}:
   variables:
     EDITOR_VERSION: {{ editor.version }}
   commands:
-    - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c AppleTV -u $EDITOR_VERSION --fast --wait
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
@@ -200,8 +195,7 @@ run_tvos_{{ editor.version }}_{{ category.name }}:
   dependencies:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}_{{ category.name }}
   commands:
-    - {{ utr_install_nix }}
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+    - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_nix }}
     - {{ instabilities_run_mac }}
@@ -222,10 +216,9 @@ build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   variables:
     EDITOR_VERSION: {{ editor.version }}
   commands:
-    - {{ utr_install_win }}
     - {{ unity_downloader_install }}
     - unity-downloader-cli -c Editor -c Android -u %EDITOR_VERSION% --fast --wait
-    - ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository {% if category.name == "performance" %} --performance-project-id=InputSystem {% endif %}
+    - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository {% if category.name == "performance" %} --performance-project-id=InputSystem {% endif %}
   after:
     - {{ instabilities_install_win }}
     - {{ instabilities_run_win }}  
@@ -251,7 +244,6 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
   dependencies:
     - .yamato/upm-ci.yml#build_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}
   commands:
-    - {{ utr_install_win }}
     - |
        # Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
        set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
@@ -259,7 +251,7 @@ run_android_{{ editor.version }}_{{ backend.name }}_{{ category.name }}:
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
        # List the connected devices
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-       ./utr --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=android --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
+       UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=android --player-load-path=build/players --artifacts_path=build/test-results {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results

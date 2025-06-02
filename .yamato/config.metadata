@@ -6,6 +6,8 @@ editors:
     run_tvos: false
   - version: 6000.1
     run_tvos: false
+  - version: 6000.2
+    run_tvos: false
   - version: trunk
     run_tvos: false    
 
