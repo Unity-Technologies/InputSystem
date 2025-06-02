@@ -18,8 +18,9 @@ Unless you have specific project requirements that require more than one Action 
 To create and assign the current project-wide actions, go to **Edit** > **Project Settings** > **Input System Package**.
 
 If you don't yet have an Action Asset assigned as project-wide in your project, the Input System Package settings window displays an empty field for you to assign your action asset, and a button allowing you to create and assign one.
-![image alt text](./Images/InputSettingsNoProjectWideAsset.png)</br>
-*The Input System Package Project Settings with no project-wide actions assigned*
+
+![Screenshot of the Project Settings window, with Input System Package selected. Its settings are displayed on the right of the window. The Project-wide Actions field is empty, and an information box explaining you can assign an Action Asset as project-wide by selecting it in this field or creating it in this window is shown. A button to automatically create and assign the default project-wide Action Asset is displayed under the information box.](./Images/InputSettingsNoProjectWideAsset.png)</br>
+*The Input System Package Project Settings with no project-wide actions assigned displays a button to create and assign a default project-wide Action Asset.*
 
 > **Note:** If you already have an Action Asset assigned, this button is not displayed, and instead the Actions Editor is displayed, allowing you to edit the project-wide actions.
 
@@ -27,15 +28,11 @@ To create an Action Asset with default actions pre-configured, click  **"Create 
 
 The Action Asset appears in your Project view, and is named "InputSystem_Actions". This is where your new configuration of actions is saved, including any changes you make to it.
 
-![](images/InputSystemActionsAsset.png)<br/>
-*The new Actions Asset in your Project window*
+![](images/InputSystemActionsAsset.png)
 
 ## Edit project-wide actions
 
 Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
-
-![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
-*The Input System Package Project Settings after creating and assigning the default actions*
 
 ## The default actions
 
@@ -47,7 +44,7 @@ If you’d like to delete all the default actions so that you can start from an 
 
 You can also delete all action maps, or reset all the actions back to the default values from the **more** (⋮) menu at the top right of the Input Actions section of the settings window, below the Project Settings window search field.
 
-![The Input Actions **more** menu as displayed in the Project Settings window](images/InputActionsSettingsMoreMenu.png)
+![](images/InputActionsSettingsMoreMenu.png)
 
 > **Note:** this **more** (⋮) menu is not available when the Actions Editor is open in a separate window, it is only present in the Project Settings window.
 
