@@ -3038,6 +3038,19 @@ namespace UnityEngine.InputSystem
             actions.Enable();
         }
 
+        /// <summary>
+        /// Determines whether project-wide actions are automatically enabled after entering Play Mode.
+        /// </summary>
+        /// <remarks>
+        /// This property is set to <c>true</c> by default.
+        /// </remarks>
+        internal static bool m_EnableActionsAfterEnterPlayMode = true;
+
+        internal static void AllowEnableActionsAfterEnterPlayMode(bool enabled)
+        {
+            m_EnableActionsAfterEnterPlayMode = enabled;
+        }
+
         private static void DisableActions(bool triggerSetupChanged = false)
         {
             // Make sure project wide input actions are disabled
@@ -3408,7 +3421,6 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
-
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3655,7 +3667,7 @@ namespace UnityEngine.InputSystem
                     // Don't enable actions if some are already enabled.
                     // This is useful when you just want specific action maps to be enabled, but not all
                     // action maps.
-                    if (!InputSystem.actions.enabled)
+                    if (m_EnableActionsAfterEnterPlayMode)
                         EnableActions();
 
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS

@@ -954,6 +954,15 @@ namespace UnityEngine.InputSystem
 
             m_InputActive = true;
 
+            // Disable project-wide actions if they are being used by this PlayerInput.
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (m_Actions != null && m_Actions == InputSystem.actions)
+            {
+                InputSystem.AllowEnableActionsAfterEnterPlayMode(false);
+                InputSystem.actions.Disable();
+            }
+            #endif
+
             // If we have no current action map but there's a default
             // action map, make it current.
             if (m_CurrentActionMap == null && m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
