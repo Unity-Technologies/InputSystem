@@ -117,6 +117,7 @@ build_ios_{{ editor.version }}_{{ category.name }}:
     flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor.version }}
+    UTR_VERSION: 1.35.1
   commands:
     - unity-downloader-cli -c Editor -c iOS -u $EDITOR_VERSION --fast --wait
     - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
@@ -163,6 +164,7 @@ build_tvos_{{ editor.version }}_{{ category.name }}:
     flavor: b1.large
   variables:
     EDITOR_VERSION: {{ editor.version }}
+    UTR_VERSION: 1.35.1    
   commands:
     - unity-downloader-cli -c Editor -c AppleTV -u $EDITOR_VERSION --fast --wait
     - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
