@@ -4122,7 +4122,8 @@ namespace UnityEngine.InputSystem
 
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
-            m_Settings = state.settings;
+
+            settings = state.settings;
 
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that we just reassign actions and never destroy them since always mapped to persisted asset
