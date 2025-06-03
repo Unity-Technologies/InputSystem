@@ -76,3 +76,27 @@ apiRules:
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRSupport\..*$
       type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.FeatureType$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.UsageHint$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRFeatureDescriptor$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRDeviceDescriptor$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Bone$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Eyes$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.BoneControl$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.EyesControl$
+      type: Type
