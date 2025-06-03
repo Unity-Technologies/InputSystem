@@ -3664,9 +3664,9 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    // Don't enable actions if some are already enabled.
-                    // This is useful when you just want specific action maps to be enabled, but not all
-                    // action maps.
+                    // Check if project-wide actions should be enabled after entering PlayMode.
+                    // In some cases, like using project-wide actions in PlayerInput, we don't want actions to be
+                    // enabled when entering PlayMode so that PlayerInput is able to enable the default action map.
                     if (m_EnableActionsAfterEnterPlayMode)
                         EnableActions();
 
