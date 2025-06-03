@@ -47,7 +47,7 @@ apiRules:
       uidRegex: ^Unity\.XR\.OpenVR(?:\..+)*$
       type: Namespace
   - exclude:
-      uidRegex: ^Unity\.XR\.WindowsMR\.Input..*$
+      uidRegex: ^Unity\.XR\.WindowsMR\.Input\..*$
       type: Namespace
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics(?:\..+)*$
