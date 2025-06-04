@@ -271,6 +271,7 @@ all_tests:
     {% for platform in platforms_win %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_functional
     {% endfor %}
+    {% unless editor == "2021.3" %}
     {% for platform in platforms_nix %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_functional
     {% endfor %}
@@ -283,6 +284,7 @@ all_tests:
     {% else %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}_functional
     {% endif %}
+    {% endunless %}
     {% endfor %}
     - .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
