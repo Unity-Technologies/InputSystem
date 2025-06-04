@@ -1044,13 +1044,10 @@ namespace UnityEngine.InputSystem
 
                         if (!anyChanged)
                         {
-                            Debug.Log("No Change");
-
                             rebuilt.Add(nap.ToString());
                         }
                         else
                         {
-                            Debug.Log("Changed");
                             var paramString = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
                             var newNamedValues = NamedValue.ParseMultiple(paramString);
 
