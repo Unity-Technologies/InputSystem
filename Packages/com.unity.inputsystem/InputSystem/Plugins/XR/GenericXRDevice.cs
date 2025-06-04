@@ -1,3 +1,4 @@
+#if PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;
@@ -153,3 +154,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
+#endif
