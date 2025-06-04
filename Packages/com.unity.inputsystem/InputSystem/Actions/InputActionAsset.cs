@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -380,6 +383,12 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
+
+            m_Version = parsedJson.version;
+            if (m_Version <= 13)
+            {
+                MigrateAllEnumParams(this);
+            }
             parsedJson.ToAsset(this);
         }
 
@@ -984,6 +993,78 @@ namespace UnityEngine.InputSystem
                 if (asset.m_ActionMaps != null)
                     foreach (var map in asset.m_ActionMaps)
                         map.m_Asset = asset;
+            }
+        }
+        internal static void MigrateAllEnumParams(InputActionAsset asset)
+        {
+            foreach (var map in asset.actionMaps)
+            {
+                foreach (var action in map.actions)
+                {
+                    var raw = action.processors;
+
+                    List<NameAndParameters> parsedList = null;
+                    NameAndParameters.ParseMultiple(raw, ref parsedList);
+
+                    if (parsedList == null || parsedList.Count == 0)
+                        continue;
+
+                    var rebuilt = new List<string>(parsedList.Count);
+
+                    foreach (var nap in parsedList)
+                    {
+                        if (nap.parameters.Count == 0 || InputSystem.TryGetProcessor(nap.name) == null)
+                        {
+                            rebuilt.Add(nap.ToString());
+                            continue;
+                        }
+
+                        var procType = InputSystem.TryGetProcessor(nap.name);
+
+                        var dict = nap.parameters.ToDictionary(pv => pv.name, pv => pv.value.ToString());
+
+                        bool anyChanged = false;
+
+                        var enumFields = procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum);
+
+                        foreach (var field in enumFields)
+                        {
+                            if (dict.TryGetValue(field.Name, out var rawString) && int.TryParse(rawString, out var ordinal))
+                            {
+                                var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
+
+                                if (ordinal >= 0 && ordinal < values.Length)
+                                {
+                                    var realValue = Convert.ToInt32(values[ordinal]);
+                                    dict[field.Name] = realValue.ToString();
+                                    anyChanged = true;
+                                }
+                            }
+                        }
+
+                        if (!anyChanged)
+                        {
+                            Debug.Log("No Change");
+
+                            rebuilt.Add(nap.ToString());
+                        }
+                        else
+                        {
+                            Debug.Log("Changed");
+                            var paramString = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
+                            var newNamedValues = NamedValue.ParseMultiple(paramString);
+
+                            var newNap = new NameAndParameters
+                            {
+                                name = nap.name,
+                                parameters = new ReadOnlyArray<NamedValue>(newNamedValues)
+                            };
+
+                            rebuilt.Add(newNap.ToString());
+                        }
+                    }
+                    action.m_Processors = string.Join(";", rebuilt);
+                }
             }
         }
     }
