@@ -271,7 +271,7 @@ all_tests:
     {% for platform in platforms_win %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_functional
     {% endfor %}
-    {% unless editor == "2021.3" %}
+    {% unless editor.version == "2021.3" %}
     {% for platform in platforms_nix %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}_functional
     {% endfor %}
