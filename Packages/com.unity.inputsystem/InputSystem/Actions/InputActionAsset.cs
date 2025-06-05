@@ -301,7 +301,7 @@ namespace UnityEngine.InputSystem
         {
             return JsonUtility.ToJson(new WriteFileJson
             {
-                version = m_Version,
+                version = (m_Version >= 13) ? (int?)m_Version : null,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
@@ -961,7 +961,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
-            public int version;
+            public int? version;
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
