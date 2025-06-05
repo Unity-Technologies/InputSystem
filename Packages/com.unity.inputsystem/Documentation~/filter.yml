@@ -56,15 +56,6 @@ apiRules:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRHMD$
       type: Type
   - exclude:
-      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRHMD\..*$
-      type: Member
-  - exclude:
-      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRController$
-      type: Type
-  - exclude:
-      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRController\..*$
-      type: Member
-  - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRControllerWithRumble$
       type: Type
   - exclude:
