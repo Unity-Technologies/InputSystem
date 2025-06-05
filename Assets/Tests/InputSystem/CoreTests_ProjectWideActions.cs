@@ -143,11 +143,10 @@ internal class ProjectWideActionsTests : CoreTestsFixture
 
     [Category(TestCategory)]
     [Test]
-    // Test that will make sure that a PlayerInput component using project wide actions will:
-    // - Have the only default action map set enabled, and all others disabled.
-    // - Have all action maps of project-wide actions disabled, if there's no default action map selected.
-    [TestCase("Player", true)]
-    [TestCase(null, false)]
+    [TestCase("Player", true, Description = "PlayerInput using project-wide actions has the default action map set " +
+            "enabled, and all others disabled.")]
+    [TestCase(null, false, Description = "PlayerInput using project wide actions has all action maps of project-wide " +
+            "actions disabled, if there is no default action map assigned.")]
     public void ProjectWideActions_AreDisabledWithPlayerInput(string actionMapName, bool expectedResult)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
