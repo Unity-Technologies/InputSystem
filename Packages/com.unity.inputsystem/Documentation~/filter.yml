@@ -53,9 +53,6 @@ apiRules:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics(?:\..+)*$
       type: Namespace
   - exclude:
-      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRHMD$
-      type: Type
-  - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.XRControllerWithRumble$
       type: Type
   - exclude:

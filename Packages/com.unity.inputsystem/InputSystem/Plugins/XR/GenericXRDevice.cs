@@ -5,6 +5,9 @@ using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// The base type for all XR head mounted displays.
+    /// </summary>
     [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD", canRunInBackground = true)]
     public class XRHMD : TrackedDevice
     {
