@@ -3038,19 +3038,6 @@ namespace UnityEngine.InputSystem
             actions.Enable();
         }
 
-        /// <summary>
-        /// Determines whether project-wide actions are automatically enabled after entering Play Mode.
-        /// </summary>
-        /// <remarks>
-        /// This property is set to <c>true</c> by default.
-        /// </remarks>
-        internal static bool m_EnableActionsAfterEnterPlayMode = true;
-
-        internal static void AllowEnableActionsAfterEnterPlayMode(bool enabled)
-        {
-            m_EnableActionsAfterEnterPlayMode = enabled;
-        }
-
         private static void DisableActions(bool triggerSetupChanged = false)
         {
             // Make sure project wide input actions are disabled
@@ -3663,14 +3650,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    // Check if project-wide actions should be enabled after entering PlayMode.
-                    // In some cases, like using project-wide actions in PlayerInput, we don't want actions to be
-                    // enabled when entering PlayMode so that PlayerInput is able to enable the default action map.
-                    if (m_EnableActionsAfterEnterPlayMode)
-                        EnableActions();
 
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3928,8 +3908,8 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            // Note this is too early for editor ! actions is not setup yet.
+            // // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
+            // // Note this is too early for editor ! actions is not setup yet.
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
             #endif

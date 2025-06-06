@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 using UnityEngine;
+using System.Collections;
 
 #if UNITY_EDITOR
 using System.IO;
@@ -143,11 +144,11 @@ internal class ProjectWideActionsTests : CoreTestsFixture
 
     [Category(TestCategory)]
     [Test]
-    [TestCase("Player", true, Description = "PlayerInput using project-wide actions has the default action map set " +
+    [TestCase("Player", true, Description = "PlayerInput using project-wide actions can have default action map set " +
             "enabled, and all others disabled.")]
     [TestCase(null, false, Description = "PlayerInput using project wide actions has all action maps of project-wide " +
             "actions disabled, if there is no default action map assigned.")]
-    public void ProjectWideActions_AreDisabledWithPlayerInput(string actionMapName, bool expectedResult)
+    public void ProjectWideActions_CanEnableCurrentActionMapOfPlayerInput(string actionMapName, bool expectedResult)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var go = new GameObject("PlayerInput");
@@ -159,29 +160,40 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         // will be called.
         playerInput.defaultActionMap = actionMapName;
 
-        #if UNITY_EDITOR
+        // PWA actions assigned to playerInput start enabled
+        Assert.That(playerInput.actions.enabled, Is.True);
+        Assert.That(ReferenceEquals(playerInput.actions, InputSystem.actions));
+
+#if UNITY_EDITOR
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        #endif
+#endif
 
         // This makes sure to call PlayerInput.OnEnable()
         go.SetActive(true);
 
-        Assert.That(ReferenceEquals(playerInput.actions, InputSystem.actions));
+        // This mimics usings to disabling actions on Start/Awake.
+        InputSystem.actions.Disable();
+
+        if (!string.IsNullOrEmpty(actionMapName))
+            playerInput.SwitchCurrentActionMap("Player");
+
         Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
 
-        #if UNITY_EDITOR
-        // This mimics the behavior of entering play-mode, which will check if InputSystem.EnableActions() should
-        // be called.
+        // We do this on the editor to make sure project-wide actions maintain the enabled state
+        // after entering PlayMode.
+#if UNITY_EDITOR
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-        #endif
+        Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
+#endif
 
-        if (actionMapName != null)
+        if (!string.IsNullOrEmpty(actionMapName))
             Assert.That(playerInput.currentActionMap.enabled, Is.EqualTo(expectedResult));
 
+        // Check state of all action maps in the asset
         Assert.That(InputSystem.actions.FindActionMap("Player").enabled, Is.EqualTo(expectedResult));
         Assert.That(InputSystem.actions.FindActionMap("UI").enabled, Is.False);
 
-        //NOTE: Asset actions will be considered enabled even if a single action map is enabled
+        //NOTE: Asset actions are considered enabled even if a single action map is enabled
         Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
     }
 }
