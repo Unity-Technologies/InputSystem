@@ -499,6 +499,8 @@ namespace UnityEngine.InputSystem.XR
 
         void OnDeviceChanged(InputDevice inputDevice, InputDeviceChange inputDeviceChange)
         {
+            if (m_IsFirstUpdate)
+                return;
             ReadTrackingStateWithoutTrackingAction();
         }
 
