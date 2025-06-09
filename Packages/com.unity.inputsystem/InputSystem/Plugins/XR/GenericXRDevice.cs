@@ -20,16 +20,12 @@ namespace UnityEngine.InputSystem.XR
         /// To give your head tracking an extra update before rendering:
         /// First, enable before render updates on your Device.
         ///
-        /// <sample>
-        /// <code>
         ///     // JSON
         ///     {
         ///         "name" : "MyHMD",
         ///         "extend" : "HMD",
         ///         "beforeRender" : "Update"
         ///     }
-        /// </code>
-        /// </sample>
         ///
         /// Then, make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
         ///
@@ -96,22 +92,12 @@ namespace UnityEngine.InputSystem.XR
         /// <remarks>
         /// If there is no left hand connected, this will be null.
         /// This also matches any currently tracked device that contains the 'LeftHand' device usage.
-        /// <example>
-        /// <code>
-        /// // To set up an Action to specifically target
-        /// // the left-hand XR controller:
-        ///
+        /// To set up an Action to specifically target
+        /// the left-hand XR controller:
         /// var action = new InputAction(binding: "/&lt;XRController&gt;{leftHand}/position");
-        /// </code>
-        /// </example>
-        ///
-        /// <example>
-        /// <code>
-        /// // To make the left-hand XR controller behave like the right-hand one
+        /// To make the left-hand XR controller behave like the right-hand one
         /// var controller = XRController.leftHand;
         /// InputSystem.SetUsage(controller, CommonUsages.RightHand);
-        /// </code>
-        /// </example>
         /// </remarks>
         public static XRController leftHand => InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
 
