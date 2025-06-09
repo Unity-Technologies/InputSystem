@@ -38,17 +38,17 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         [InputControl(noisy = true)]
         public QuaternionControl leftEyeRotation { get; protected set; }
-        [InputControl(noisy = true)]
 
         /// <summary>
         /// Accessor for right eye position.
         /// </summary>
-        public Vector3Control rightEyePosition { get; protected set; }
         [InputControl(noisy = true)]
+        public Vector3Control rightEyePosition { get; protected set; }
 
         /// <summary>
         /// Accessor for right eye rotation.
         /// </summary>
+        [InputControl(noisy = true)]
         public QuaternionControl rightEyeRotation { get; protected set; }
 
         /// <summary>
@@ -63,6 +63,9 @@ namespace UnityEngine.InputSystem.XR
         [InputControl(noisy = true)]
         public QuaternionControl centerEyeRotation { get; protected set; }
 
+        /// <summary>
+        /// Override for FinishSetup().
+        /// </summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();
