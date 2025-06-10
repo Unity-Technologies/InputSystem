@@ -66,14 +66,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Attempt to parse JSON
                 asset.LoadFromJson(content);
-
-                // If this JSON was authored before we switched to enum-by-value, migrate it now
-                if (asset.m_Version <= 13)
-                {
-                    InputActionAsset.MigrateAllEnumParams(asset);
-                    asset.m_Version = kVersion;
-                }
-
                 // Make sure action map names are unique within JSON file
                 var names = new HashSet<string>();
                 foreach (var map in asset.actionMaps)
