@@ -399,11 +399,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
-            //if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Version1)
-            //{
             MigrateJson(ref parsedJson);
-            //}
-
             parsedJson.ToAsset(this);
         }
 
@@ -1016,8 +1012,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal void MigrateJson(ref ReadFileJson parsedJson)
         {
-            var existing = parsedJson.version ?? JsonVersion.Version1;
-            if (existing >= JsonVersion.Current)
+            var existing = parsedJson.version ?? JsonVersion.Version0;
+            if (existing >= JsonVersion.Version1)
                 return;
 
             if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Version1)
