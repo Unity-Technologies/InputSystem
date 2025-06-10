@@ -671,6 +671,78 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformTapInteractionWithAnalogControls()
+    {
+        ResetTime();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", type: InputActionType.Button,
+            interactions: "tap(duration=0.2)");
+
+        // This is the default value, which makes the release point to be 0.75 * 0.5 = 0.375.
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        action.Enable();
+
+        currentTime = 0f;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            currentTime = 0.1f;
+            Set(gamepad.leftTrigger, 0.3f);
+            currentTime = 0.2f;
+            Set(gamepad.leftTrigger, 0.54f);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action, value: 0.54f, time: 0.2f));
+            trace.Clear();
+
+            // Assert that a timeout will ocurr and a canceled event will be triggered.
+            currentTime = 0.5f;
+            Set(gamepad.leftTrigger, 0.9f);
+            Assert.That(trace,
+                Canceled<TapInteraction>(action));
+            trace.Clear();
+
+            // Maintain a value above the press point for a while to assess that a start event is not triggered.
+            // This was the case where the tap interaction was previously re-starting.
+            currentTime = 1.2f;
+            Set(gamepad.leftTrigger, 0.52f);
+
+            Assert.That(trace, Is.Empty);
+
+            // Go below the release point so check that no cancel event is triggered, since it didn't start.
+            // This was the case where the tap interaction was previously re-starting and then would cancel after
+            // timeout.
+            currentTime = 1.5f;
+            Set(gamepad.leftTrigger, 0.2f);
+
+            Assert.That(trace, Is.Empty);
+
+            // Go above the press point again and check that a start event is triggered.
+            currentTime = 2.0f;
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action));
+            trace.Clear();
+
+            currentTime = 2.10f;
+            Set(gamepad.leftTrigger, 0.4f);
+
+            // Check that the tap is performed.
+            currentTime = 2.15f;
+            Set(gamepad.leftTrigger, 0.2f);
+            Assert.That(trace,
+                Performed<TapInteraction>(action));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
