@@ -1022,18 +1022,15 @@ namespace UnityEngine.InputSystem
             for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
             {
                 var mapJson = parsedJson.maps[mi];
-
                 for (var ai = 0; ai < mapJson.actions.Length; ++ai)
                 {
                     var actionJson = mapJson.actions[ai];
                     var raw = actionJson.processors;
-
                     if (string.IsNullOrEmpty(raw))
                         continue;
 
                     var list = NameAndParameters.ParseMultiple(raw).ToList();
                     var rebuilt = new List<string>(list.Count);
-
                     foreach (var nap in list)
                     {
                         var procType = InputSystem.TryGetProcessor(nap.name);
@@ -1045,7 +1042,6 @@ namespace UnityEngine.InputSystem
 
                         var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
                         var anyChanged = false;
-
                         foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
                         {
                             if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
