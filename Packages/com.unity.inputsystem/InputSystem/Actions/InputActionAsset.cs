@@ -398,10 +398,10 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
-            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Current)
-            {
-                MigrateJson(ref parsedJson);
-            }
+            //if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Version1)
+            //{
+            MigrateJson(ref parsedJson);
+            //}
 
             parsedJson.ToAsset(this);
         }
@@ -1015,64 +1015,67 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal void MigrateJson(ref ReadFileJson parsedJson)
         {
-            var existing = parsedJson.version ?? JsonVersion.Version0;
+            var existing = parsedJson.version ?? JsonVersion.Version1;
             if (existing >= JsonVersion.Current)
                 return;
 
-            for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Version1)
             {
-                var mapJson = parsedJson.maps[mi];
-                for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
                 {
-                    var actionJson = mapJson.actions[ai];
-                    var raw = actionJson.processors;
-                    if (string.IsNullOrEmpty(raw))
-                        continue;
-
-                    var list = NameAndParameters.ParseMultiple(raw).ToList();
-                    var rebuilt = new List<string>(list.Count);
-                    foreach (var nap in list)
+                    var mapJson = parsedJson.maps[mi];
+                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
                     {
-                        var procType = InputSystem.TryGetProcessor(nap.name);
-                        if (nap.parameters.Count == 0 || procType == null)
-                        {
-                            rebuilt.Add(nap.ToString());
+                        var actionJson = mapJson.actions[ai];
+                        var raw = actionJson.processors;
+                        if (string.IsNullOrEmpty(raw))
                             continue;
-                        }
 
-                        var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
-                        var anyChanged = false;
-                        foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                        var list = NameAndParameters.ParseMultiple(raw).ToList();
+                        var rebuilt = new List<string>(list.Count);
+                        foreach (var nap in list)
                         {
-                            if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                            var procType = InputSystem.TryGetProcessor(nap.name);
+                            if (nap.parameters.Count == 0 || procType == null)
                             {
-                                var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
-                                if (ord >= 0 && ord < values.Length)
+                                rebuilt.Add(nap.ToString());
+                                continue;
+                            }
+
+                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
+                            var anyChanged = false;
+                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                            {
+                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
                                 {
-                                    dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
-                                    anyChanged = true;
+                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
+                                    if (ord >= 0 && ord < values.Length)
+                                    {
+                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
+                                        anyChanged = true;
+                                    }
                                 }
+                            }
+
+                            if (!anyChanged)
+                            {
+                                rebuilt.Add(nap.ToString());
+                            }
+                            else
+                            {
+                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
+                                rebuilt.Add($"{nap.name}({paramText})");
                             }
                         }
 
-                        if (!anyChanged)
-                        {
-                            rebuilt.Add(nap.ToString());
-                        }
-                        else
-                        {
-                            var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
-                            rebuilt.Add($"{nap.name}({paramText})");
-                        }
+                        actionJson.processors = string.Join(";", rebuilt);
+                        mapJson.actions[ai] = actionJson;
                     }
-
-                    actionJson.processors = string.Join(";", rebuilt);
-                    mapJson.actions[ai] = actionJson;
+                    parsedJson.maps[mi] = mapJson;
                 }
-                parsedJson.maps[mi] = mapJson;
             }
             // Bump the version so we never re-migrate
-            parsedJson.version = JsonVersion.Current;
+            parsedJson.version = JsonVersion.Version1;
         }
     }
 }
