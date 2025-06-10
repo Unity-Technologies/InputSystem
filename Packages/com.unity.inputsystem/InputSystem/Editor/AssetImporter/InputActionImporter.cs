@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        internal const int kVersion = 14;
+        private const int kVersion = 14;
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
