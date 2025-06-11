@@ -2893,9 +2893,9 @@ partial class CoreTests
     private static void DisableProjectWideActions()
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // If the system has project-wide input actions they will also trigger enable/disable via
-        // play mode change triggers above. Hence we adjust extra variable to compensate of
-        // state allocated by project-wide actions.
+        // If the system has project-wide input actions they will start enabled once InputSystem.Reset() is called and
+        // be disabled entering EditMode. Hence, we adjust extra variable to compensate ofstate allocated by
+        // project-wide actions.
         if (InputSystem.actions)
         {
             Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
@@ -2918,6 +2918,14 @@ partial class CoreTests
 
         // Enter play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // This simulates enabling project-wide actions, which is done before just before entering play mode,
+        // called from InputSystem.InitializeInEditor().
+        if (InputSystem.actions)
+            InputSystem.actions.Enable();
+#endif
+
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         DisableProjectWideActions();
@@ -2934,7 +2942,8 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+        // Won't get removed, just cleared.
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null);
     }
 
     [Test]
