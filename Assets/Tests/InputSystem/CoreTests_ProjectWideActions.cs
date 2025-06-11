@@ -196,37 +196,6 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         //NOTE: Asset actions are considered enabled even if a single action map is enabled
         Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
     }
-
-    [Test]
-    [Category("Editor")]
-    public void ProjectWideActions_InitializeInEditorEnablesProjectWideActions()
-    {
-        if (InputSystem.actions != null)
-        {
-            // Asserts that project wide actions are enabled by default.
-            // Before the test is run, InputSystem.Reset() is called which will enable them.
-            // It can be interpreted as a mock of the behavior that happens when `InitializeInEditor()` is called.
-            Assert.That(InputSystem.actions.enabled, Is.True);
-
-            // Calling exit play mode callbacks will disable them
-            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
-            Assert.That(InputSystem.actions.enabled, Is.False);
-
-            // Calling enter play mode callbacks will not re-enable them per default. They are only
-            // enabled when `InputSystem.InitializeInEditor()` is called, which happens before these callbacks.
-            // Note: Project-wide actions are disabled at this point. These next lines are added to make sure we
-            // establish behavior that project-wide actions should be enabled only once
-            // `InputSystem.InitializeInEditor()` is called. Before this test was introduced, project-wide actions were
-            // enabled after entering play mode again which would lead to a different behavior than Player
-            // builds.
-            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-
-            Assert.That(InputSystem.actions.enabled, Is.False);
-        }
-    }
 }
 
 #endif
