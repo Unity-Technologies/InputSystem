@@ -12,7 +12,4 @@ check_formatting:
     - perl unity-meta/Tools/Format/format.pl Assets Packages --dry-run
   triggers:
     cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
+    expression: pull_request.(target eq "develop" AND NOT changes.all match "**/*.md")
