@@ -287,10 +287,17 @@ all_tests:
     - .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
     cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
+    expression: pull_request.(target eq "develop" AND NOT changes.all match "**/*.md")
+
+tests_for_doc_changes:
+  name: Tests for Documentation Changes
+  dependencies:
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2021_3_-_windows
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_windows
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_2_-_windows
+  triggers:
+    cancel_old_ci: true
+    expression: pull_request.(target eq "develop" AND changes.all match "**/*.md")
             
 performance_tests_only:
   name: All Performance Tests
