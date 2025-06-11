@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.XR
     public class XRHMD : TrackedDevice
     {
         /// <summary>
-        /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
+        /// Test The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
         /// </summary>
         ///
         /// <remarks>
