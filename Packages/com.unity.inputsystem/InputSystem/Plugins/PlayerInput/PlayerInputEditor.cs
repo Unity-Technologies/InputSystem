@@ -87,10 +87,9 @@ namespace UnityEngine.InputSystem.Editor
                 // Check for if we're using project-wide actions to raise warning
                 if (actions == InputSystem.actions)
                 {
-                    EditorGUILayout.HelpBox("Project-Wide Actions should not used with Player Input because it's a " +
-                        "singleton reference and all actions maps are enabled by default.\r\n" +
-                        "If you choose to do so in Single Player, please disable all action maps on Start() and " +
-                        "manually enable the ones needed.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("Project-wide actions asset is not recommended to be used with Player " +
+                        "Input because it is a singleton reference and all actions maps are enabled by default.\r\n",
+                        MessageType.Warning);
                 }
             }
 
