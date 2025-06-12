@@ -80,6 +80,20 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
+
+            if (m_ActionsProperty.objectReferenceValue != null)
+            {
+                InputActionAsset actions = m_ActionsProperty.objectReferenceValue as InputActionAsset;
+                // Check for if we're using project-wide actions to raise warning
+                if (actions == InputSystem.actions)
+                {
+                    EditorGUILayout.HelpBox("Project-Wide Actions should not used with Player Input because it's a " +
+                        "singleton reference and all actions maps are enabled by default.\r\n" +
+                        "If you choose to do so in Single Player, please disable all action maps on Start() and " +
+                        "manually enable the ones needed.", MessageType.Warning);
+                }
+            }
+
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
             {
                 OnActionAssetChange();
@@ -119,7 +133,6 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 // Restore the initial color
                 GUI.backgroundColor = currentBg;
-
 
                 rect = EditorGUILayout.GetControlRect();
                 label = EditorGUI.BeginProperty(rect, m_AutoSwitchText, m_NeverAutoSwitchControlSchemesProperty);
