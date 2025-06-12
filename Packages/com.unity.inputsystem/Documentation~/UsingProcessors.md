@@ -12,7 +12,7 @@ An Input Processor takes a value and returns a processed result for it. The rece
 
 You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md). Refer to [How to apply Processors](HowToApplyProcessors.md) to learn more.
 
-Each Processor is [registered](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) using a unique name. To replace an existing Processor, register your own Processor under an existing name.
+Each Processor is [registered](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) using a unique name. To replace an existing one, register your own under an existing name.
 
 Processors can have parameters which can be booleans, integers, or floating-point numbers. When created in data such as [bindings](./ActionBindings.md), processors are described as strings that look like function calls:
 
