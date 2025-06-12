@@ -19,16 +19,12 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 ```CSharp
     // This references the processor registered as "scale" and sets its "factor"
     // parameter (a floating-point value) to a value of 2.5.
-
     "scale(factor=2.5)"
 
     // Multiple processors can be chained together. They are processed
     // from left to right.
-    //
     // Example: First invert the value, then normalize [0..10] values to [0..1].
-
     "invert,normalize(min=0,max=10)"
-```
 
 ## Choose the right Processor
 
