@@ -81,10 +81,11 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Check for if we're using project-wide actions to raise a warning message.
             if (m_ActionsProperty.objectReferenceValue != null)
             {
                 InputActionAsset actions = m_ActionsProperty.objectReferenceValue as InputActionAsset;
-                // Check for if we're using project-wide actions to raise warning
                 if (actions == InputSystem.actions)
                 {
                     EditorGUILayout.HelpBox("Project-wide actions asset is not recommended to be used with Player " +
@@ -92,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
                         MessageType.Warning);
                 }
             }
-
+#endif
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
             {
                 OnActionAssetChange();
