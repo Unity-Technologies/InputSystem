@@ -49,7 +49,7 @@ You can achieve this by using an Invert Processor on the Action or the Binding. 
 
 Finally, attach the following script to a GameObject with a PlayerInput component that references the corresponding Action Asset:
 
-```c#
+```csharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
