@@ -67,7 +67,7 @@ Gamepad.current["Triangle"]
 
 Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
 
-To add a deadzone to gamepad stick, put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](ProcessorTypes.md#stick-deadzone) on the sticks, like this:
 
 ```JSON
      {
