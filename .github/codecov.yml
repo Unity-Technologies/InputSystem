@@ -16,7 +16,7 @@ coverage:
       default:
         target: auto
         threshold: 1%
-        base: auto 
+        base: auto
         if_ci_failed: success
         informational: true
         only_pulls: true
@@ -25,6 +25,8 @@ comment:
   layout: "diff,flags,files"
   behavior: default
   require_changes: false
+  paths:
+    - "!**/*Editor.cs"
   require_base: true
   require_head: true
   after_n_builds: 1
