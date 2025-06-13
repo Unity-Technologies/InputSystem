@@ -31,6 +31,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
+- Fixed the defaultActionMap dropdown in the PlayerInput component defaulting to <None> instead of the first ActionMap.
 
 ## [1.14.0] - 2025-03-20
 
