@@ -49,33 +49,12 @@ namespace UnityEngine.InputSystem.OnScreen
             set => m_ControlPath = value;
         }
 
-#if UNITY_EDITOR
-        [UnityEditor.CustomEditor(typeof(OnScreenButton))]
-        internal class OnScreenButtonEditor : UnityEditor.Editor
-        {
-            private UnityEditor.SerializedProperty m_ControlPathInternal;
+    #if UNITY_EDITOR
+    static internal class OnScreenButtonEditorHelper {
+        static internal string m_ControlPath = nameof(OnScreenButton.m_ControlPath);
+    }
+    #endif
 
-            public void OnEnable()
-            {
-                m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenButton.m_ControlPath));
-            }
-
-            public void OnDisable()
-            {
-                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenButton).Send();
-            }
-
-            public override void OnInspectorGUI()
-            {
-                // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
-                UGUIOnScreenControlEditorUtils.ShowWarningIfNotPartOfCanvasHierarchy((OnScreenButton)target);
-
-                UnityEditor.EditorGUILayout.PropertyField(m_ControlPathInternal);
-
-                serializedObject.ApplyModifiedProperties();
-            }
-        }
-#endif
     }
 }
 #endif

@@ -1,8 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
+using UnityEngine;
 
-namespace UnityEngine.InputSystem
+namespace UnityEditor.InputSystem
 {
     internal class InputSettingsiOSProvider
     {

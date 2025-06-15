@@ -2,9 +2,12 @@
 using System;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEditor.InputSystem.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.

@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Editor;
 
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.InputSystem.UI;
@@ -15,7 +18,7 @@ using UnityEngine.InputSystem.UI.Editor;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEditor.InputSystem.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.

@@ -1,9 +1,8 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.Layouts;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif // UNITY_EDITOR
+using UnityEditor;
+
 
 ////FIXME: apparently shutdown events are not coming through in the analytics backend
 
@@ -141,6 +140,11 @@ namespace UnityEngine.InputSystem
 
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
+#if UNITY_EDITOR
+            internal static Func<bool> m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled;
+            internal static Func<bool> m_EditorPlayerSettingHelpersGetOldSystemBackendsEnabled;
+#endif
+
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
             public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
@@ -155,8 +159,8 @@ namespace UnityEngine.InputSystem
                         devices = CollectRecognizedDevices(m_InputManager),
                         unrecognized_devices = CollectUnrecognizedDevices(m_InputManager),
 #if UNITY_EDITOR
-                        new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled,
-                        old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled,
+                        new_enabled = m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled.Invoke(),
+                        old_enabled = m_EditorPlayerSettingHelpersGetOldSystemBackendsEnabled.Invoke(),
 #endif // UNITY_EDITOR
                     };
                     error = null;

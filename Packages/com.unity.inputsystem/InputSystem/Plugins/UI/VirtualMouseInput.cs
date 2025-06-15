@@ -1,5 +1,6 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
@@ -613,17 +614,7 @@ namespace UnityEngine.InputSystem.UI
             HardwareCursorIfAvailable,
         }
 
-        #if UNITY_EDITOR
-        [UnityEditor.CustomEditor(typeof(VirtualMouseInput))]
-        private class VirtualMouseInputEditor : UnityEditor.Editor
-        {
-            public void OnDisable()
-            {
-                new InputComponentEditorAnalytic(InputSystemComponent.VirtualMouseInput).Send();
-                new VirtualMouseInputEditorAnalytic(this).Send();
-            }
-        }
-        #endif
+        
     }
 }
 #endif // PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI

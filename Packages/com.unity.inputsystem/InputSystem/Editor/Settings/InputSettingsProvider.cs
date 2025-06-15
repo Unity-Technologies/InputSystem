@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
+using UnityEditor.InputSystem;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 

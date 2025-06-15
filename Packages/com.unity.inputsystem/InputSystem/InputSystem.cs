@@ -17,8 +17,8 @@ using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.InputSystem.Editor;
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
@@ -2905,15 +2905,21 @@ namespace UnityEngine.InputSystem
 
                 // In the editor, we keep track of the settings asset through EditorBuildSettings.
                 #if UNITY_EDITOR
+                
                 if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                    EditorBuildSettings.AddConfigObject(m_EditorBuildSettingsConfigKey,
                         value, true);
                 }
                 #endif
 
                 s_Manager.settings = value;
             }
+        }
+
+        static string m_EditorBuildSettingsConfigKey = "";
+        public static void SetBuildSettingsConfigKey(string key) {
+            m_EditorBuildSettingsConfigKey = key;
         }
 
         /// <summary>
@@ -3114,7 +3120,8 @@ namespace UnityEngine.InputSystem
 
                 // Track reference to enable including it in built Players, note that it will discard any non-persisted
                 // object reference
-                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
+                m_ActionsSetEvent.Invoke(value);
+                //ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
 #endif // UNITY_EDITOR
 
                 // Update underlying value
@@ -3122,6 +3129,11 @@ namespace UnityEngine.InputSystem
 
                 // Note that we do not enable/disable any actions until play-mode
             }
+        }
+
+        internal static Action<InputActionAsset> m_ActionsSetEvent;
+        internal static void SetActionSetEvent(Action<InputActionAsset> callback){
+            m_ActionsSetEvent = callback;
         }
 
         /// <summary>
@@ -3502,7 +3514,8 @@ namespace UnityEngine.InputSystem
         static InputSystem()
         {
             #if UNITY_EDITOR
-            InitializeInEditor();
+            //This will be called by EditorInitialization on the editor assembly
+            //InitializeInEditor(); 
             #else
             InitializeInPlayer();
             #endif
@@ -3535,6 +3548,8 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
         internal static InputSystemObject s_SystemObject;
+        internal static Action m_InputDebuggerWindowReviveAfterDomainReload;
+        internal static Func<InputActionAsset> m_ProjectWideActionsBuildProviderActionsToIncludeInPlayerBuild;
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
@@ -3553,7 +3568,7 @@ namespace UnityEngine.InputSystem
 
                 s_SystemObject = existingSystemObjects[0];
                 s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
-                InputDebuggerWindow.ReviveAfterDomainReload();
+                m_InputDebuggerWindowReviveAfterDomainReload.Invoke();
 
                 // Restore remoting state.
                 s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
@@ -3577,7 +3592,7 @@ namespace UnityEngine.InputSystem
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                if (EditorBuildSettings.TryGetConfigObject(m_EditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
@@ -3588,7 +3603,8 @@ namespace UnityEngine.InputSystem
 
                 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // See if we have a saved actions object
-                var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+                var savedActions = m_ProjectWideActionsBuildProviderActionsToIncludeInPlayerBuild.Invoke();
+                //var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                     s_Manager.actions = savedActions;
                 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -3614,10 +3630,14 @@ namespace UnityEngine.InputSystem
             k_InputInitializeInEditorMarker.End();
         }
 
+        internal static Func<bool> m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled; //What should the default be?
+        internal static Action<bool> m_EditorPlayerSettingHelpersSetNewSystemBackendsEnabled;
+        internal static Action m_EditorHelpersRestartEditorAndRecompileScripts;
+
         private static void ShowRestartWarning()
         {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
+                !m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled.Invoke() &&
                 !s_Manager.m_Runtime.isInBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
@@ -3626,8 +3646,9 @@ namespace UnityEngine.InputSystem
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
                 {
-                    EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-                    EditorHelpers.RestartEditorAndRecompileScripts();
+                    
+                    m_EditorPlayerSettingHelpersSetNewSystemBackendsEnabled.Invoke(true);
+                    m_EditorHelpersRestartEditorAndRecompileScripts.Invoke();
                 }
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
@@ -3705,12 +3726,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal static Action m_InputSettingsProviderForceReload;
         private static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            InputSettingsProvider.ForceReload();
+            m_InputSettingsProviderForceReload.Invoke();
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
@@ -3920,6 +3942,8 @@ namespace UnityEngine.InputSystem
             k_InputResetMarker.End();
         }
 
+        internal static Action m_OnDestroyCallback;
+
         /// <summary>
         /// Destroy the current setup of the input system.
         /// </summary>
@@ -3935,8 +3959,7 @@ namespace UnityEngine.InputSystem
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
             #if UNITY_EDITOR
-            EditorInputControlLayoutCache.Clear();
-            InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
+            m_OnDestroyCallback.Invoke();
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
             #endif
 
