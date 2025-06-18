@@ -12,12 +12,11 @@ You can choose to configure Actions and Bindings in the Editor UI, or you can se
 
 The descriptions below describe these main workflows and link to more detailed description of them.
 
-
-|   |   |
+|Workflows   |Description   |
 |---|---|
-|[**Using Actions**](Workflow-Actions.md)<br/><br/>This is the **recommended** workflow for most situations. In this workflow, you use the [Actions Editor window](./ActionsEditor.md) to configure sets of actions and bindings, then set up references and read the values for those actions in your code [(read more)](Workflow-Actions.md).<br/><br/>|![image alt text](Images/Workflow-Actions.png)|
-|[**Using Actions and the PlayerInput Component**](Workflow-PlayerInput.html)<br/><br/>This workflow provides extra features that allow you to connect up **callbacks** directly from Actions to your own callback handler methods, removing the need to deal with Action references in your code. It also provides features that are useful in **local multiplayer** scenarios such as device assignment and split-screen functionality.  [(read more)](Workflow-PlayerInput.html).<br/><br/>|![image alt text](Images/Workflow-PlayerInput.png)|
-|[**Directly read device states**](Workflow-Direct.html)<br/><br/>This workflow is a simplified, script-only approach which bypasses the Actions and Bindings features entirely. Instead your script explicitly references specific device controls (such as "left gamepad stick") and reads the values directly. This is suitable for **fast prototyping**, or single fixed platform scenarios. It is a **less flexible** workflow because it bypasses some of the main input system features [(read more)](Workflow-Direct.html). <br/><br/>|![image alt text](Images/Workflow-Direct.png)|
+|[**Using Actions**](Workflow-Actions.md)|This is the **recommended** workflow for most situations. In this workflow, you use the [Actions Editor window](./ActionsEditor.md) to configure sets of actions and bindings, then set up references and read the values for those actions in your code.|
+|[**Using Actions and the PlayerInput Component**](Workflow-PlayerInput.md)|This workflow provides extra features that allow you to connect up **callbacks** directly from Actions to your own callback handler methods, removing the need to deal with Action references in your code. It also provides features that are useful in **local multiplayer** scenarios such as device assignment and split-screen functionality.|
+|[**Directly read device states**](Workflow-Direct.md)|This workflow is a simplified, script-only approach which bypasses the Actions and Bindings features entirely. Instead your script explicitly references specific device controls (such as "left gamepad stick") and reads the values directly. This is suitable for **fast prototyping**, or single fixed platform scenarios. It is a **less flexible** workflow because it bypasses some of the main input system features|
 
 
 
