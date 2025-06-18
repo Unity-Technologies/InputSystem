@@ -402,11 +402,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool isInBatchMode { get; set; }
-
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
-        public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
         public Func<IntPtr, bool> onUnityRemoteMessage
         {
