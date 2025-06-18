@@ -314,10 +314,10 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var hasContent = (m_ActionMaps?.Length ?? 0) > 0 || (m_ControlSchemes?.Length ?? 0) > 0;
+            var hasContent = m_ActionMaps.LengthSafe() > 0 || m_ControlSchemes.LengthSafe() > 0;
             return JsonUtility.ToJson(new WriteFileJson
             {
-                version = hasContent ? JsonVersion.Current : null,
+                version = hasContent ? JsonVersion.Current : JsonVersion.Version0,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
@@ -971,7 +971,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
-            public int? version;
+            public int version;
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -987,7 +987,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
-            public int? version;
+            public int version;
             public string name;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -1012,11 +1012,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal void MigrateJson(ref ReadFileJson parsedJson)
         {
-            var existing = parsedJson.version ?? JsonVersion.Version0;
-            if (existing >= JsonVersion.Version1)
+            if (parsedJson.version >= JsonVersion.Version1)
                 return;
-
-            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version ?? 0) < JsonVersion.Version1)
+            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
             {
                 for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
                 {
