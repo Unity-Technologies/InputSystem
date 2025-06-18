@@ -55,7 +55,7 @@ internal class PlayerInputTests : CoreTestsFixture
 
         Assert.That(player, Is.Not.Null);
         Assert.That(player.playerIndex, Is.EqualTo(0));
-        Assert.That(player.actions.actionMaps.Count, Is.EqualTo(prefabPlayerInput.actions.actionMaps.Count));
+        Assert.That(player.actions, Is.SameAs(prefabPlayerInput.actions));
         Assert.That(player.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(player.currentControlScheme, Is.EqualTo("Gamepad"));
     }
@@ -397,21 +397,6 @@ internal class PlayerInputTests : CoreTestsFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CopiesActionAssetForFirstPlayer()
-    {
-        var go = new GameObject();
-        var playerInput = go.AddComponent<PlayerInput>();
-
-        var actions = InputActionAsset.FromJson(kActions);
-        playerInput.actions = actions;
-
-        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
-        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
-        Assert.That(playerInput.actions.GetInstanceID(), !Is.EqualTo(actions.GetInstanceID()));
-    }
-
-    [Test]
-    [Category("PlayerInput")]
     public void PlayerInput_AssigningNewActionsToPlayer_DisablesExistingActions()
     {
         var go = new GameObject();
@@ -424,12 +409,12 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.actions = actions1;
 
         Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
-        Assert.That(actions1.actionMaps[0].enabled, Is.False);
+        Assert.That(actions2.actionMaps[0].enabled, Is.False);
 
         playerInput.actions = actions2;
 
-        Assert.That(actions2.actionMaps[0].enabled, Is.False);
         Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
+        Assert.That(actions1.actionMaps[0].enabled, Is.False);
     }
 
     [Test]
@@ -495,6 +480,22 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
         Assert.That(playerInput1.actions, Is.SameAs(ui1.actionsAsset));
         Assert.That(playerInput2.actions, Is.SameAs(ui2.actionsAsset));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_ActionFromCodeGeneratedActionIsTheSameBeingReferenced()
+    {
+        var go = new GameObject();
+
+        var playerInput = go.AddComponent<PlayerInput>();
+        var ui = go.AddComponent<InputSystemUIInputModule>();
+        var defaultActions = new DefaultInputActions();
+
+        playerInput.uiInputModule = ui;
+        playerInput.actions = defaultActions.asset;
+
+        Assert.That(defaultActions.UI.Submit == playerInput.actions.FindAction("Submit"), Is.True);
     }
 
     [Test]

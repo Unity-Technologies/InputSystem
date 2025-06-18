@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Added
+- Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
 - Added a new run-time setting `InputSystem.inputEventHandledPolicy` which allows changing how the system processes input events marked as "handled". The new alternative setting (not default) allows for allowing handled events to propagate into state changes but still suppresses action interactions from being processed.
 
 ### Fixed
@@ -25,8 +26,12 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Inspector Window being refreshed all the time when a PlayerInput component is present with Invoke Unity Events nofication mode chosen [ISXB-1448](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1448)
 - Fixed an issue where an action with a name containing a slash "/" could not be found via `InputActionAsset.FindAction(string,bool)`. [ISXB-1306](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306).
 - Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
+- Fixed reenabling the VirtualMouseInput component may sometimes lead to NullReferenceException. [ISXB-1096](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1096)
+- Fixed the default button press point not being respected in Editor (as well as some other Touchscreen properties). [ISXB-1152](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1152)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
+- Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
+- Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
 - Fixed an issue in `RebindingUISample` that fired actions bound to the same control as the target control in a rebinding process. ISXB-1524.
 
 ## [1.14.0] - 2025-03-20
