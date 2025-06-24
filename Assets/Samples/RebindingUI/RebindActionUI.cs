@@ -257,7 +257,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_RebindOperation?.Cancel(); // Will null out m_RebindOperation.
 
             var actionWasEnabledPriorToRebind = action.enabled; // Allow restoring enabled state
-            
+
             void CleanUp()
             {
                 m_RebindOperation?.Dispose();
@@ -266,7 +266,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 // Restore action enabled state based on state prior to rebind
                 if (actionWasEnabledPriorToRebind)
                     action.actionMap.Enable();
-                
+
                 m_UIInputActionMap?.Enable();
             }
 

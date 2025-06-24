@@ -11,7 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Changed
-- Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators illustrating when actions get triggered.  
+- Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators illustrating when actions get triggered.
 
 ### Added
 - Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]

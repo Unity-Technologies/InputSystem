@@ -1229,20 +1229,20 @@ partial class CoreTests
     public void EventHandledPolicy_ShouldReflectUserSetting()
     {
         // Assert default setting
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
 
         // Assert policy can be changed
-        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressActionUpdates;
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressActionUpdates));
+        InputSystem.s_Manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressActionUpdates;
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressActionUpdates));
 
         // Assert policy can be changed back
-        InputSystem.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+        InputSystem.s_Manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
 
         // Assert setting property to an invalid value throws exception and do not have side-effects
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            InputSystem.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
-        Assert.That(InputSystem.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+            InputSystem.s_Manager.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
     }
 
     [TestCase(InputEventHandledPolicy.SuppressStateUpdates,
@@ -1255,7 +1255,7 @@ partial class CoreTests
         int[] expectedProcessed, int[] expectedCancelled) // EDIT
     {
         // Update setting to match desired scenario
-        InputSystem.inputEventHandledPolicy = policy;
+        InputSystem.s_Manager.inputEventHandledPolicy = policy;
 
         // Use a boxed boolean to allow lambda to capture reference.
         var data = new SuppressedActionEventData();

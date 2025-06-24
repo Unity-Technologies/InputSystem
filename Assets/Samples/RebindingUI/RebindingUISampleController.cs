@@ -16,9 +16,9 @@ public class RebindingUISampleController : MonoBehaviour
     public InputActionReference interact;
     public InputActionReference use;
     public InputActionReference menu;
-    
+
     public float movementSpeed = 10.0f;
-    
+
     private Material m_Material;
     private Vector3 m_TargetPosition;
     private Vector3 m_TargetEulerAngles;
@@ -40,7 +40,7 @@ public class RebindingUISampleController : MonoBehaviour
     {
         if (target != null)
             m_TargetPosition = target.transform.position;
-        
+
         move?.action?.Enable();
         look?.action?.Enable();
         interact?.action?.Enable();
@@ -60,7 +60,7 @@ public class RebindingUISampleController : MonoBehaviour
         // When we "Move" we add to the target position
         if (move != null && move.action != null)
             m_TargetPosition += (Vector3)(move.action.ReadValue<Vector2>() * Time.deltaTime * movementSpeed);
-        
+
         // When we "Look" we rotate the target object relative to its current orientation.
         if (look != null && look.action != null && target != null)
         {
@@ -69,15 +69,15 @@ public class RebindingUISampleController : MonoBehaviour
             // to convert absolute movement to movement per time unit.
             var timeInvariant = (look.action.activeControl is DeltaControl);
             var scale = timeInvariant ? 1.0f : Time.deltaTime * 300.0f;
-            
+
             target.transform.Rotate(Vector3.up, look.action.ReadValue<Vector2>().x * -1.0f * scale, Space.World);
             target.transform.Rotate(Vector3.right, look.action.ReadValue<Vector2>().y * 1.0f * scale, Space.World);
         }
-        
+
         // When we "Interact", we move to the next target color
         if (interact.action.WasPressedThisFrame())
             m_TargetColor = Colors[(++m_ColorIndex % Colors.Length)];
-        
+
         // When we "Use", we toggle scale of secondary object
         if (use.action.WasPerformedThisFrame())
             m_TargetScale = (Mathf.Approximately(m_TargetScale, 0.0f) ? 1.0f : 0.0f);
