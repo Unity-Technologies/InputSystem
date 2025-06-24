@@ -256,12 +256,17 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             m_RebindOperation?.Cancel(); // Will null out m_RebindOperation.
 
+            var actionWasEnabledPriorToRebind = action.enabled; // Allow restoring enabled state
+            
             void CleanUp()
             {
                 m_RebindOperation?.Dispose();
                 m_RebindOperation = null;
 
-                action.actionMap.Enable();
+                // Restore action enabled state based on state prior to rebind
+                if (actionWasEnabledPriorToRebind)
+                    action.actionMap.Enable();
+                
                 m_UIInputActionMap?.Enable();
             }
 
@@ -274,8 +279,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // character to jump.
             //
             // In this example, we explicitly disable both the UI input action map and
-            // the action map containing the target action.
-            action.actionMap.Disable();
+            // the action map containing the target action if it was initially enabled.
+            if (actionWasEnabledPriorToRebind)
+                action.actionMap.Disable();
             m_UIInputActionMap?.Disable();
 
             // Configure the rebind.
