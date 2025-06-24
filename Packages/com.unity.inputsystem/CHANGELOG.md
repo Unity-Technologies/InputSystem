@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
+
 ### Fixed
 - Fixed an analytics event being invoked twice when the Save button in the Actions view was pressed. [ISXB-1378](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1378)
 - Fixed an issue causing a number of errors to be displayed when using `InputTestFixture` in playmode tests with domain reloading disabled on playmode entry. [ISXB-1446](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1446)
@@ -27,6 +31,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
+- Fixed TrackedPoseDriver stops updating position and rotation when device is added after its initialization. [ISXB-1555](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1555)
+- Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
 
 ## [1.14.0] - 2025-03-20
 
