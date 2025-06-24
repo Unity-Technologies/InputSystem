@@ -1521,7 +1521,7 @@ namespace UnityEngine.InputSystem
 
                     // Check if we should suppress interaction processing
                     var suppressInteractionProcessing = (eventPtr != null) && eventPtr.handled &&
-                        InputSystem.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates;
+                        InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates;
 
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having

@@ -1383,30 +1383,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// The policy to be applied when processing input events that has been marked as "handled" by setting
-        /// <see cref="InputEvent.handled"/> or <see cref="InputEventPtr.handled"/> to true.
-        /// </summary>
-        /// <remarks>
-        /// The default setting of this property is <see cref="InputEventHandledPolicy.SuppressStateUpdates"/> which
-        /// implies that events are completely suppressed which means that associated state will not be updated.
-        /// Hence, any state dependent classes such as <see cref="InputAction"/> or associated interactions will
-        /// not be updated either. A side-effect of this setting is that succeeding events that are not suppressed
-        /// may trigger new unexpected events since they may trigger state changes due to monitoring instances not
-        /// seeing previous changes.
-        ///
-        /// The setting <see cref="InputEventHandledPolicy.SuppressActionUpdates"/> will instead allow state change
-        /// propagation to happen, including updating interaction state, but will instead suppress any associated
-        /// notifications.
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">If attempting to set this property to an unsupported
-        /// value.</exception>
-        public static InputEventHandledPolicy inputEventHandledPolicy
-        {
-            get => s_Manager.inputEventHandledPolicy;
-            set => s_Manager.inputEventHandledPolicy = value;
-        }
-
-        /// <summary>
         /// Add a new device by instantiating the given device layout.
         /// </summary>
         /// <param name="layout">Name of the layout to instantiate. Must be a device layout. Note that

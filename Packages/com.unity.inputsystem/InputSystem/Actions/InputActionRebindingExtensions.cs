@@ -2124,8 +2124,8 @@ namespace UnityEngine.InputSystem
 
                 m_StartTime = InputState.currentTime;
 
-                m_SavedInputEventHandledPolicy = InputSystem.inputEventHandledPolicy;
-                InputSystem.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
+                m_SavedInputEventHandledPolicy = InputSystem.s_Manager.inputEventHandledPolicy;
+                InputSystem.s_Manager.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2627,7 +2627,7 @@ namespace UnityEngine.InputSystem
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
 
-                InputSystem.inputEventHandledPolicy = m_SavedInputEventHandledPolicy;
+                InputSystem.s_Manager.inputEventHandledPolicy = m_SavedInputEventHandledPolicy;
             }
 
             private void ThrowIfRebindInProgress()

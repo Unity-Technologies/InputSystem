@@ -4,7 +4,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Policy defining how the Input System will react to <see cref="InputEvent"/> instances marked as
     /// <see cref="InputEvent.handled"/> (Or marked handled via <see cref="InputEventPtr.handled"/>).
     /// </summary>
-    public enum InputEventHandledPolicy
+    internal enum InputEventHandledPolicy
     {
         /// <summary>
         /// Input events will be discarded directly and not propagate for state changes.
