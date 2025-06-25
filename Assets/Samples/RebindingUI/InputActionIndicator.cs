@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         [Tooltip("The color to show when the associated action has not been performed for the specified duration.")]
         public Color inactiveColor = Color.black;
-        
+
         [Tooltip("The color to show when the associated action is disabled")]
         public Color disabledColor = Color.red;
 
@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_Image.color = duration <= 0.0f
                     ? inactiveColor
                     : Color.Lerp(inactiveColor, activeColor,
-                        (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
+                    (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
             }
             else
             {
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     m_Image.color = disabledColor;
             }
         }
-        
+
         // We want the label for the action name to update in edit mode, too, so
         // we kick that off from here.
 #if UNITY_EDITOR
@@ -79,11 +79,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             UpdateActionLabel();
         }
+
 #endif
-        
+
         private void UpdateActionLabel()
         {
-            if (m_Text == null) 
+            if (m_Text == null)
                 return;
             if (action != null && action.action != null)
                 m_Text.text = action.name;
