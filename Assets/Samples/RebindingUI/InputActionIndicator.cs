@@ -1,6 +1,4 @@
 using System;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
@@ -20,16 +18,21 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         [Tooltip("The color to show when the associated action has not been performed for the specified duration.")]
         public Color inactiveColor = Color.black;
+        
+        [Tooltip("The color to show when the associated action is disabled")]
+        public Color disabledColor = Color.red;
 
         [Tooltip("The duration for which the indicator should be lit before becoming completely inactive.")]
         public float duration = 1.0f;
 
         private double m_RealTimeLastPerformed;
         private Image m_Image;
+        private Text m_Text;
 
         void Awake()
         {
             m_Image = GetComponent<Image>();
+            m_Text = GetComponent<Text>();
             Update();
         }
 
@@ -52,11 +55,40 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void Update()
         {
-            var elapsedSincePerformed = Time.realtimeSinceStartupAsDouble - m_RealTimeLastPerformed;
-            m_Image.color = duration <= 0.0f
-                ? inactiveColor
-                : Color.Lerp(inactiveColor, activeColor,
-                (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
+            if (action.action.enabled)
+            {
+                // Pulse active color if enabled
+                var elapsedSincePerformed = Time.realtimeSinceStartupAsDouble - m_RealTimeLastPerformed;
+                m_Image.color = duration <= 0.0f
+                    ? inactiveColor
+                    : Color.Lerp(inactiveColor, activeColor,
+                        (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
+            }
+            else
+            {
+                // Show disabled indicator if disabled
+                if (m_Image.color != disabledColor)
+                    m_Image.color = disabledColor;
+            }
+        }
+        
+        // We want the label for the action name to update in edit mode, too, so
+        // we kick that off from here.
+#if UNITY_EDITOR
+        protected void OnValidate()
+        {
+            UpdateActionLabel();
+        }
+#endif
+        
+        private void UpdateActionLabel()
+        {
+            if (m_Text == null) 
+                return;
+            if (action != null && action.action != null)
+                m_Text.text = action.name;
+            else
+                m_Text.text = string.Empty;
         }
     }
 }

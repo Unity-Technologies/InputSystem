@@ -2141,9 +2141,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Basic rebinding menu with the left side rebinding the <b>Keyboard & Mouse</b>
-    control scheme and the right side rebinding the <b>Gamepad</b> scheme. Note that
-    actions triggering are indicated at the bottom of the screen.
+  m_Text: "Basic rebinding menu that allows rebinding of the <b>Keyboard & Mouse</b>
+    and <b>Gamepad</b> control schemes. \nNote that actions triggering are indicated
+    at the bottom of the screen also when the menu is visible."
 --- !u!222 &607293546
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3102,8 +3102,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -87}
-  m_SizeDelta: {x: 400, y: 2}
+  m_AnchoredPosition: {x: 51.43, y: -87}
+  m_SizeDelta: {x: 460, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &862809804
 MonoBehaviour:
@@ -3222,6 +3222,141 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 899779638}
   m_CullTransparentMesh: 0
+--- !u!1001 &920225868
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1592902109}
+    m_Modifications:
+    - target: {fileID: 1255350527062619510, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_Name
+      value: MenuIndicator
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 250
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4072204658071074964, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: m_Text
+      value: Menu
+      objectReference: {fileID: 0}
+    - target: {fileID: 8586258032687207620, guid: 0648a5c163cef41038b804a34b4b80e7,
+        type: 3}
+      propertyPath: action
+      value: 
+      objectReference: {fileID: -2195523558945053078, guid: 7dead05c54ca85b4681351aafd8bd03a,
+        type: 3}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0648a5c163cef41038b804a34b4b80e7, type: 3}
+--- !u!224 &920225869 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
+    type: 3}
+  m_PrefabInstance: {fileID: 920225868}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &982377775
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3912,7 +4047,7 @@ PrefabInstance:
     - target: {fileID: 1255350527062619510, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: m_Name
-      value: RebindUIActionIndicator
+      value: UseIndicator
       objectReference: {fileID: 0}
     - target: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
@@ -4325,8 +4460,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -87}
-  m_SizeDelta: {x: 400, y: 2}
+  m_AnchoredPosition: {x: 0.6000061, y: -87}
+  m_SizeDelta: {x: 289.6, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1207403195
 MonoBehaviour:
@@ -4400,8 +4535,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -69.1}
-  m_SizeDelta: {x: 573.5, y: 31.700012}
+  m_AnchoredPosition: {x: 63.5, y: -69.1}
+  m_SizeDelta: {x: 534.5, y: 31.700012}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1208536040
 MonoBehaviour:
@@ -4436,7 +4571,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Actions
+  m_Text: Gameplay & Common Actions
 --- !u!222 &1208536041
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4597,9 +4732,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: It is up to you whether to do something like WASD as a single composite
-    like above (in which case the individual parts will get polled one after the
-    other) or as four separate part bindings.
+  m_Text: It is up to you whether to do somthing like e.g. WASD as a single composite
+    like to the right (in which case the individual parts will get assigned one after
+    the other) or as four separate partial bindings.
 --- !u!222 &1237134520
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4728,6 +4863,7 @@ RectTransform:
   - {fileID: 1653112498}
   - {fileID: 113688689}
   - {fileID: 1125279441}
+  - {fileID: 920225869}
   - {fileID: 862809803}
   m_Father: {fileID: 861395295}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
