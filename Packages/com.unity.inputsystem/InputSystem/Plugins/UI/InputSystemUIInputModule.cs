@@ -1677,6 +1677,12 @@ namespace UnityEngine.InputSystem.UI
             DisableAllActions();
             UnhookActions();
 
+            // In the case we've been initialialised with default actions, we want to unalloc them
+            if (defaultActions != null && defaultActions.asset == actionsAsset)
+            {
+                UnassignActions();
+            }
+
             base.OnDisable();
         }
 
