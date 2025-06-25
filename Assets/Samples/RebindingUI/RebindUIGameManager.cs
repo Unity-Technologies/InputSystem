@@ -43,37 +43,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private GameState m_CurrentState = GameState.Initializing;
         private GameState m_NextState = GameState.Playing;
 
-        private void SetState(GameState newState)
-        {
-            // Abort if there is no change to state
-            if (newState == m_CurrentState)
-                return;
-
-            // Update current state
-            m_CurrentState = newState;
-
-            switch (newState)
-            {
-                // Entering game mode: enable in-game actions, show menu
-                case GameState.Playing:
-                    gameplayActions.Enable();
-                    menu.SetActive(false);
-                    break;
-
-                // Entering menu: disable in-game actions, hide menu, make sure we have selection.
-                // Also make sure or toggle menu action is enabled in case its part of gameplay actions.
-                case GameState.RebindingMenu:
-                    gameplayActions.Disable();
-                    toggleMenuAction.action.Enable();
-                    menu.SetActive(true);
-                    if (EventSystem.current.currentSelectedGameObject == null)
-                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
-                    break;
-            }
-
-            Debug.Log(m_CurrentState);
-        }
-
         private void OnToggleMenu(InputAction.CallbackContext obj)
         {
             ToggleMenu();
@@ -91,8 +60,32 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void Update()
         {
-            if (m_CurrentState != m_NextState)
-                SetState(m_NextState);
+            // Abort if there is no change to state
+            if (m_CurrentState == m_NextState)
+                return;
+
+            // Update current state
+            m_CurrentState = m_NextState;
+
+            // Handle state transition
+            switch (m_NextState)
+            {
+                // Entering game mode: enable in-game actions, show menu
+                case GameState.Playing:
+                    gameplayActions.Enable();
+                    menu.SetActive(false);
+                    break;
+
+                // Entering menu: disable in-game actions, hide menu, make sure we have selection.
+                // Also make sure or toggle menu action is enabled in case its part of gameplay actions.
+                case GameState.RebindingMenu:
+                    gameplayActions.Disable();
+                    toggleMenuAction.action.Enable();
+                    menu.SetActive(true);
+                    if (EventSystem.current.currentSelectedGameObject == null)
+                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
+                    break;
+            }
         }
     }
 }
