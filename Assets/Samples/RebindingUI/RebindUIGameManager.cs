@@ -10,13 +10,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     {
         [Tooltip("The in-game menu object to be activated and deactivated when menu is toggled (Required).")]
         public GameObject menu;
-        
+
         [Tooltip("The gameplay actions to be disabled when exiting game mode and enabled when entering game mode (Required).")]
         public InputActionAsset gameplayActions;
-        
+
         [Tooltip("The input action to be used to toggle menu (Required).")]
         public InputActionReference toggleMenuAction;
-        
+
         /// <summary>
         /// Toggles between game state and rebinding menu state.
         /// </summary>
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     break;
             }
         }
-        
+
         private enum GameState
         {
             Initializing,
@@ -42,13 +42,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private GameState m_CurrentState = GameState.Initializing;
         private GameState m_NextState = GameState.Playing;
-        
+
         private void SetState(GameState newState)
         {
             // Abort if there is no change to state
             if (newState == m_CurrentState)
                 return;
-            
+
             // Update current state
             m_CurrentState = newState;
 
@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
                     break;
             }
-            
+
             Debug.Log(m_CurrentState);
         }
 

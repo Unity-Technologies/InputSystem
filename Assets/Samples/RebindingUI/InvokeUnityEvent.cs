@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     {
         [Tooltip("The input action that triggers the Unity event when performed.")]
         public InputActionReference action;
-        
+
         [Tooltip("The Unity event to be invoked when action is performed.")]
         public UnityEvent onPerformed;
 
