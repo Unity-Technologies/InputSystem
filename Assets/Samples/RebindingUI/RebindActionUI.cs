@@ -155,11 +155,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         /// <summary>
         /// Return the action and binding index for the binding that is targeted by the component
-        /// according to
+        /// according to the binding ID property.
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="bindingIndex"></param>
-        /// <returns></returns>
+        /// <param name="action">The action returned by reference.</param>
+        /// <param name="bindingIndex">The binding index returned by reference.</param>
+        /// <returns>true if able to resolve, otherwise false.</returns>
         public bool ResolveActionAndBinding(out InputAction action, out int bindingIndex)
         {
             bindingIndex = -1;
@@ -172,8 +172,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 return false;
 
             // Look up binding index.
-            var bindingId = new Guid(m_BindingId);
-            bindingIndex = action.bindings.IndexOf(x => x.id == bindingId);
+            var id = new Guid(m_BindingId);
+            bindingIndex = action.bindings.IndexOf(x => x.id == id);
             if (bindingIndex == -1)
             {
                 Debug.LogError($"Cannot find binding with ID '{bindingId}' on '{action}'", this);
@@ -256,7 +256,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             m_RebindOperation?.Cancel(); // Will null out m_RebindOperation.
 
-            var actionWasEnabledPriorToRebind = action.enabled; // Allow restoring enabled state
+            // Extract enabled state to allow restoring enabled state after rebind completes
+            var actionWasEnabledPriorToRebind = action.enabled;
 
             void CleanUp()
             {
@@ -266,8 +267,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 // Restore action enabled state based on state prior to rebind
                 if (actionWasEnabledPriorToRebind)
                     action.actionMap.Enable();
-
-                m_UIInputActionMap?.Enable();
             }
 
             // An "InvalidOperationException: Cannot rebind action x while it is enabled" will
@@ -282,7 +281,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // the action map containing the target action if it was initially enabled.
             if (actionWasEnabledPriorToRebind)
                 action.actionMap.Disable();
-            m_UIInputActionMap?.Disable();
 
             // Configure the rebind.
             m_RebindOperation = action.PerformInteractiveRebinding(bindingIndex)
@@ -348,8 +346,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             s_RebindActionUIs.Add(this);
             if (s_RebindActionUIs.Count == 1)
                 InputSystem.onActionChange += OnActionChange;
-            if (m_DefaultInputActions != null && m_UIInputActionMap == null)
-                m_UIInputActionMap = m_DefaultInputActions.FindActionMap("UI");
         }
 
         protected void OnDisable()
@@ -418,12 +414,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("Optional text label that will be updated with prompt for user input.")]
         [SerializeField]
         private Text m_RebindText;
-
-        [Tooltip("Optional reference to default input actions containing the UI action map. The UI action map is "
-            + "disabled when rebinding is in progress.")]
-        [SerializeField]
-        private InputActionAsset m_DefaultInputActions;
-        private InputActionMap m_UIInputActionMap;
 
         [Tooltip("Event that is triggered when the way the binding is display should be updated. This allows displaying "
             + "bindings in custom ways, e.g. using images instead of text.")]
