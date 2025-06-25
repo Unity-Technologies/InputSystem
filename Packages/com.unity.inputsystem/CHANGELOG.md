@@ -51,6 +51,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
+- Changed conditional guards inside Plugins/XR so that we don't unnecessarily wrap entire classes. This stops downstream packages from having to also wrap Input System objects with similar conditionals.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
