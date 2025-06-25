@@ -1531,8 +1531,6 @@ namespace UnityEngine.InputSystem
                     var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
                     bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
-                    // TODO Potentially we need to move suppression down to indicators/callbacks, this may be too blunt
-
                     // Process button presses/releases.
                     if (!isConflictingInput && !suppressActionProcessing)
                         ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
