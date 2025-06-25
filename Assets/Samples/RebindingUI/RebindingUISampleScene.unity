@@ -892,7 +892,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Move
+  m_Text: Navigate
 --- !u!222 &323438533
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2255,7 +2255,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5c8f13dfafeb5445b872565802d1e44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  action: {fileID: -4334443723673744087, guid: 100b460020a15704692cc0ec34331d8a, type: 3}
+  action: {fileID: -64187129634329061, guid: 100b460020a15704692cc0ec34331d8a, type: 3}
   activeColor: {r: 0, g: 1, b: 0, a: 1}
   inactiveColor: {r: 0, g: 0, b: 0, a: 1}
   duration: 1

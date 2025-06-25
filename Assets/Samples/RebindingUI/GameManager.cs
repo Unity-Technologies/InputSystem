@@ -52,6 +52,8 @@ public class GameManager : MonoBehaviour
 
     private void OnExitMenu(InputAction.CallbackContext obj)
     {
+        // TODO We cannot do this without first cancelling rebinding
+
         if (!menu.activeInHierarchy)
             return;
 

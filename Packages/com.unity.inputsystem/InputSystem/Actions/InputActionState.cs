@@ -1520,7 +1520,7 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Check if we should suppress interaction processing
-                    var suppressInteractionProcessing = (eventPtr != null) && eventPtr.handled &&
+                    var suppressActionProcessing = (eventPtr != null) && eventPtr.handled &&
                         InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates;
 
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
@@ -1531,8 +1531,10 @@ namespace UnityEngine.InputSystem
                     var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
                     bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
+                    // TODO Potentially we need to move suppression down to indicators/callbacks, this may be too blunt
+
                     // Process button presses/releases.
-                    if (!isConflictingInput)
+                    if (!isConflictingInput && !suppressActionProcessing)
                         ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
 
                     // If we have interactions, let them do all the processing. The presence of an interaction
@@ -1540,12 +1542,13 @@ namespace UnityEngine.InputSystem
                     var interactionCount = bindingStatePtr->interactionCount;
                     if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
                     {
-                        ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
+                        if (!suppressActionProcessing)
+                            ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
                     }
                     else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
-                        //if (!suppressInteractionProcessing)
-                        ProcessDefaultInteraction(ref trigger, actionIndex);
+                        if (!suppressActionProcessing) // <-- This solves it for default interaction
+                            ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
                 }
                 finally
@@ -1573,6 +1576,7 @@ namespace UnityEngine.InputSystem
             if (controlActuation <= pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold)
                 bindingStatePtr->pressTime = 0d;
 
+            // TODO Point of interest (polled events)
             var actuation = trigger.magnitude;
             var actionState = &actionStates[actionIndex];
             if (!actionState->isPressed && actuation >= pressPoint)
@@ -1947,7 +1951,7 @@ namespace UnityEngine.InputSystem
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (actuation >= threshold)
                         {
-                            // CALLBACK HERE
+                            // CALLBACK HERE!
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                                 phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                         }
@@ -2365,8 +2369,8 @@ namespace UnityEngine.InputSystem
 
             // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
-            if (actionState->isDisabled)
-                return true;
+            if (actionState->isDisabled /*|| InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates*/)
+                return true; // <--- Could be relevant
 
             // We mark the action as in-processing while we execute its phase transitions and perform
             // callbacks. The callbacks may alter system state such that the action may get disabled
@@ -2406,7 +2410,7 @@ namespace UnityEngine.InputSystem
                 }
                 else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
                 {
-                    // CALLBACK HERE
+                    // CALLBACK HERE!
                     ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
                         isDisablingAction: newPhase == InputActionPhase.Canceled && phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
