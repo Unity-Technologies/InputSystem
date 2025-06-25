@@ -294,6 +294,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         CleanUp();
                     })
                 .WithSuppressedActionPropagation()
+                .WithTimeout(10.0f)
                 .OnComplete(
                     operation =>
                     {
