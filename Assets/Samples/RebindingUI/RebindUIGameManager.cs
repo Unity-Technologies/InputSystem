@@ -5,13 +5,34 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     /// <summary>
     /// Simple game manager that manages enabling/disabling in-game and UI actions.
     /// </summary>
+    /// <remarks>State transitions happens per frame and hence handles throttling.</remarks>
     public class RebindUIGameManager : MonoBehaviour
     {
+        [Tooltip("The in-game menu object to be activated and deactivated when menu is toggled (Required).")]
         public GameObject menu;
+        
+        [Tooltip("The gameplay actions to be disabled when exiting game mode and enabled when entering game mode (Required).")]
         public InputActionAsset gameplayActions;
-        public InputActionReference menuAction;
-        public InputActionReference exitMenuAction;
-
+        
+        [Tooltip("The input action to be used to toggle menu (Required).")]
+        public InputActionReference toggleMenuAction;
+        
+        /// <summary>
+        /// Toggles between game state and rebinding menu state.
+        /// </summary>
+        public void ToggleMenu()
+        {
+            switch (m_CurrentState)
+            {
+                case GameState.Playing:
+                    m_NextState = GameState.RebindingMenu;
+                    break;
+                case GameState.RebindingMenu:
+                    m_NextState = GameState.Playing;
+                    break;
+            }
+        }
+        
         private enum GameState
         {
             Initializing,
@@ -20,23 +41,16 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         private GameState m_CurrentState = GameState.Initializing;
-
-        void Start()
-        {
-            SetState(GameState.Playing);
-
-            // Let menu initially be disabled
-            menu.SetActive(false);
-
-            // Let gameplay actions be initially enabled
-            gameplayActions.Enable();
-        }
-
+        private GameState m_NextState = GameState.Playing;
+        
         private void SetState(GameState newState)
         {
             // Abort if there is no change to state
             if (newState == m_CurrentState)
                 return;
+            
+            // Update current state
+            m_CurrentState = newState;
 
             switch (newState)
             {
@@ -46,43 +60,39 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     menu.SetActive(false);
                     break;
 
-                // Entering menu: disable in-game actions, hide menu, make sure we have selection
+                // Entering menu: disable in-game actions, hide menu, make sure we have selection.
+                // Also make sure or toggle menu action is enabled in case its part of gameplay actions.
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
+                    toggleMenuAction.action.Enable();
                     menu.SetActive(true);
                     if (EventSystem.current.currentSelectedGameObject == null)
                         EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
                     break;
-
-                case GameState.Initializing:
-                default:
-                    break;
             }
-
-            // Update current state
-            m_CurrentState = newState;
+            
+            Debug.Log(m_CurrentState);
         }
 
-        private void OnMenu(InputAction.CallbackContext obj)
+        private void OnToggleMenu(InputAction.CallbackContext obj)
         {
-            SetState(GameState.RebindingMenu);
-        }
-
-        private void OnExitMenu(InputAction.CallbackContext obj)
-        {
-            SetState(GameState.Playing);
+            ToggleMenu();
         }
 
         private void OnEnable()
         {
-            menuAction.action.performed += OnMenu;
-            exitMenuAction.action.performed += OnExitMenu;
+            toggleMenuAction.action.performed += OnToggleMenu;
         }
 
         private void OnDisable()
         {
-            menuAction.action.performed -= OnMenu;
-            exitMenuAction.action.performed -= OnExitMenu;
+            toggleMenuAction.action.performed -= OnToggleMenu;
+        }
+
+        private void Update()
+        {
+            if (m_CurrentState != m_NextState)
+                SetState(m_NextState);
         }
     }
 }

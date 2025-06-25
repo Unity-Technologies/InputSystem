@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4442569273011091735}
   - component: {fileID: 8586258032687207620}
   m_Layer: 5
-  m_Name: RebindUIActionIndicator
+  m_Name: InputActionIndicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

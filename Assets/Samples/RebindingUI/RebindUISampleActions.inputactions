@@ -40,15 +40,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "Menu",
-                    "type": "Button",
-                    "id": "e9611426-b2b5-4d32-8f80-0044aa66c3ee",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -183,10 +174,27 @@
                     "action": "Use",
                     "isComposite": false,
                     "isPartOfComposite": false
-                },
+                }
+            ]
+        },
+        {
+            "name": "Common",
+            "id": "2bbff6e4-ede9-4e3a-8f82-d588abe8c348",
+            "actions": [
+                {
+                    "name": "Menu",
+                    "type": "Button",
+                    "id": "50dde025-01a5-4349-9e15-df9f730275b1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
                 {
                     "name": "",
-                    "id": "a30d4e10-5144-403d-bb4a-31cd1981cac8",
+                    "id": "51a4896f-3b5f-4c33-b1e4-048f093e6ec1",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
@@ -197,7 +205,7 @@
                 },
                 {
                     "name": "",
-                    "id": "1a4b7cba-58ea-424f-8773-ccf95ac70960",
+                    "id": "0b7a5efe-7a20-45db-8406-ccca75733d10",
                     "path": "<Gamepad>/start",
                     "interactions": "",
                     "processors": "",

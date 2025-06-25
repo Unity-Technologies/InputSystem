@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     /// </summary>
     /// <remarks>Error handling have been excluded for simplicity.</remarks>
     [RequireComponent(typeof(Image))]
-    public class RebindUIActionIndicator : MonoBehaviour
+    public class InputActionIndicator : MonoBehaviour
     {
         [Tooltip("Reference to the associated action to be visualized.")]
         public InputActionReference action;
@@ -27,9 +27,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private double m_RealTimeLastPerformed;
         private Image m_Image;
 
-        void Start()
+        void Awake()
         {
             m_Image = GetComponent<Image>();
+            Update();
         }
 
         private void OnEnable()
