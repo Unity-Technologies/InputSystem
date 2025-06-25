@@ -1,63 +1,88 @@
-using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 
-/// <summary>
-/// Simple game manager that manages enabling/disabling in-game and UI actions.
-/// </summary>
-public class RebindUIGameManager : MonoBehaviour
+namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    public GameObject menu;
-    public InputActionAsset gameplayActions;
-    public InputActionReference menuAction;
-    public InputActionReference exitMenuAction;
-    public GameObject initiallySelectedGameObject;
-
-    void Start()
+    /// <summary>
+    /// Simple game manager that manages enabling/disabling in-game and UI actions.
+    /// </summary>
+    public class RebindUIGameManager : MonoBehaviour
     {
-        // Let menu initially be disabled
-        menu.SetActive(false);
+        public GameObject menu;
+        public InputActionAsset gameplayActions;
+        public InputActionReference menuAction;
+        public InputActionReference exitMenuAction;
 
-        // Let gameplay actions be initially enabled
-        gameplayActions.Enable();
-    }
+        private enum GameState
+        {
+            Initializing,
+            Playing,
+            RebindingMenu
+        }
 
-    private void OnEnable()
-    {
-        menuAction.action.performed += OnMenu;
-        exitMenuAction.action.performed += OnExitMenu;
-    }
+        private GameState m_CurrentState = GameState.Initializing;
 
-    private void OnDisable()
-    {
-        menuAction.action.performed -= OnMenu;
-        exitMenuAction.action.performed -= OnExitMenu;
-    }
+        void Start()
+        {
+            SetState(GameState.Playing);
 
-    private void OnMenu(InputAction.CallbackContext obj)
-    {
-        // Disable gameplay actions while in menu
-        gameplayActions.Disable();
+            // Let menu initially be disabled
+            menu.SetActive(false);
 
-        // Enable menu if currently not active
-        menu.SetActive(true);
+            // Let gameplay actions be initially enabled
+            gameplayActions.Enable();
+        }
 
-        // Make sure EventSystem has a selection to allow gamepad navigation
-        if (EventSystem.current.currentSelectedGameObject == null)
-            EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
-    }
+        private void SetState(GameState newState)
+        {
+            // Abort if there is no change to state
+            if (newState == m_CurrentState)
+                return;
 
-    private void OnExitMenu(InputAction.CallbackContext obj)
-    {
-        // TODO We cannot do this without first cancelling rebinding
+            switch (newState)
+            {
+                // Entering game mode: enable in-game actions, show menu
+                case GameState.Playing:
+                    gameplayActions.Enable();
+                    menu.SetActive(false);
+                    break;
 
-        if (!menu.activeInHierarchy)
-            return;
+                // Entering menu: disable in-game actions, hide menu, make sure we have selection
+                case GameState.RebindingMenu:
+                    gameplayActions.Disable();
+                    menu.SetActive(true);
+                    if (EventSystem.current.currentSelectedGameObject == null)
+                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
+                    break;
 
-        // Hide menu
-        menu.SetActive(false);
+                case GameState.Initializing:
+                default:
+                    break;
+            }
 
-        // Reenable gameplay actions
-        gameplayActions.Enable();
+            // Update current state
+            m_CurrentState = newState;
+        }
+
+        private void OnMenu(InputAction.CallbackContext obj)
+        {
+            SetState(GameState.RebindingMenu);
+        }
+
+        private void OnExitMenu(InputAction.CallbackContext obj)
+        {
+            SetState(GameState.Playing);
+        }
+
+        private void OnEnable()
+        {
+            menuAction.action.performed += OnMenu;
+            exitMenuAction.action.performed += OnExitMenu;
+        }
+
+        private void OnDisable()
+        {
+            menuAction.action.performed -= OnMenu;
+            exitMenuAction.action.performed -= OnExitMenu;
+        }
     }
 }
