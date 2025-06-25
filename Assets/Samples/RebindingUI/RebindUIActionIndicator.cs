@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// </summary>
 /// <remarks>Error handling have been excluded for simplicity.</remarks>
 [RequireComponent(typeof(Image))]
-public class ActionUIIndicator : MonoBehaviour
+public class RebindUIActionIndicator : MonoBehaviour
 {
     [Tooltip("Reference to the associated action to be visualized.")]
     public InputActionReference action;

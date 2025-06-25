@@ -5,11 +5,8 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Simple game manager that manages enabling/disabling in-game and UI actions.
 /// </summary>
-public class GameManager : MonoBehaviour
+public class RebindUIGameManager : MonoBehaviour
 {
-    // TODO Its still an issue if we assign UI cancel button in rebinding,
-    //      same goes for keyboard ESC
-
     public GameObject menu;
     public InputActionAsset gameplayActions;
     public InputActionReference menuAction;
