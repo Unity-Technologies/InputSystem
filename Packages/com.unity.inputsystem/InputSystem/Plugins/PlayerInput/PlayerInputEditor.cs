@@ -80,9 +80,27 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
-            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Check for if we're using project-wide actions to raise a warning message.
+            if (m_ActionsProperty.objectReferenceValue != null)
             {
-                OnActionAssetChange();
+                InputActionAsset actions = m_ActionsProperty.objectReferenceValue as InputActionAsset;
+                if (actions == InputSystem.actions)
+                {
+                    EditorGUILayout.HelpBox("Project-wide actions asset is not recommended to be used with Player " +
+                        "Input because it is a singleton reference and all actions maps are enabled by default.\r\n" +
+                        "You should manually disable all action maps on Start() and " +
+                        "manually enable the default action map.",
+                        MessageType.Warning);
+                }
+            }
+#endif
+            var assetChanged = CheckIfActionAssetChanged();
+            // initialize the editor component if the asset has changed or if it has not been initialized yet
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)
+            {
+                InitializeEditorComponent(assetChanged);
                 actionsWereChanged = true;
             }
 
@@ -262,7 +280,8 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ActionsProperty.objectReferenceValue != null)
             {
                 var assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
-                bool result = assetInstanceID != m_ActionAssetInstanceID;
+                // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
+                bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
                 m_ActionAssetInstanceID = (int)assetInstanceID;
                 return result;
             }
@@ -439,19 +458,21 @@ namespace UnityEngine.InputSystem.Editor
             m_NotificationBehaviorInitialized = true;
         }
 
-        private void OnActionAssetChange()
+        private void InitializeEditorComponent(bool assetChanged)
         {
             serializedObject.ApplyModifiedProperties();
             m_ActionAssetInitialized = true;
 
             var playerInput = (PlayerInput)target;
             var asset = (InputActionAsset)m_ActionsProperty.objectReferenceValue;
+
+            if (assetChanged)
+                m_SelectedDefaultActionMap = -1;
             if (asset == null)
             {
                 m_ControlSchemeOptions = null;
                 m_ActionMapOptions = null;
                 m_ActionNames = null;
-                m_SelectedDefaultActionMap = -1;
                 m_SelectedDefaultControlScheme = -1;
                 m_InvalidDefaultControlSchemeName = null;
                 return;
