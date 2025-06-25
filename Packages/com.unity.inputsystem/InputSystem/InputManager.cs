@@ -4161,7 +4161,7 @@ namespace UnityEngine.InputSystem
             scrollDeltaBehavior = state.scrollDeltaBehavior;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
-            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates; // TODO Make sure we always restore: state.inputEventHandledPolicy;
+            m_InputEventHandledPolicy = state.inputEventHandledPolicy;
 
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
