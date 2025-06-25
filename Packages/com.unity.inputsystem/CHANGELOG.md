@@ -31,6 +31,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
+- Fixed the defaultActionMap dropdown in the PlayerInput component defaulting to <None> instead of the first ActionMap.
 - Fixed TrackedPoseDriver stops updating position and rotation when device is added after its initialization. [ISXB-1555](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1555)
 - Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
 
@@ -44,6 +45,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
+- Changed conditional guards inside Plugins/XR so that we don't unnecessarily wrap entire classes. This stops downstream packages from having to also wrap Input System objects with similar conditionals.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
