@@ -1537,7 +1537,7 @@ namespace UnityEngine.InputSystem.UI
                 defaultActions.Dispose();
                 defaultActions = null;
             }
-        }        
+        }
 
         /// <summary>
         /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
