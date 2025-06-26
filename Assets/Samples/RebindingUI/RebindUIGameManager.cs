@@ -74,6 +74,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.Playing:
                     gameplayActions.Enable();
                     menu.SetActive(false);
+                    Time.timeScale = 1.0f;
                     break;
 
                 // Entering menu: disable in-game actions, hide menu, make sure we have selection.
@@ -81,6 +82,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
                     toggleMenuAction.action.Enable();
+                    Time.timeScale = 0.0f;
                     menu.SetActive(true);
                     if (EventSystem.current.currentSelectedGameObject == null)
                         EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
