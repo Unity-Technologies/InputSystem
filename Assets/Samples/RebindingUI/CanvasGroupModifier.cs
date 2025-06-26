@@ -1,3 +1,5 @@
+using UnityEngine.EventSystems;
+
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
     /// <summary>
@@ -12,11 +14,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         public bool interactable = false;
 
         private bool m_SavedInteractable;
+        private GameObject m_SelectedObject;
 
         void OnEnable()
         {
             if (canvasGroup != null)
             {
+                // Store selection to make sure it is not changed when switching "windows".
+                m_SelectedObject = EventSystem.current.currentSelectedGameObject;
+
                 // Save current setting and override
                 m_SavedInteractable = canvasGroup.interactable;
                 canvasGroup.interactable = interactable;
@@ -27,8 +33,14 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             if (canvasGroup != null)
             {
-                // Restore previous setting
+                // Restore previous setting.
                 canvasGroup.interactable = m_SavedInteractable;
+
+                // Restore previous selection.
+                if (m_SelectedObject != null)
+                    EventSystem.current.SetSelectedGameObject(m_SelectedObject);
+                else if (EventSystem.current.currentSelectedGameObject == null)
+                    EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
             }
         }
     }
