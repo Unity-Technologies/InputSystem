@@ -22,6 +22,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_RebindOverlayProperty = serializedObject.FindProperty("m_RebindOverlay");
             m_RebindTextProperty = serializedObject.FindProperty("m_RebindText");
             m_RebindInfoProperty = serializedObject.FindProperty("m_RebindInfo");
+            m_RebindCancelButtonProperty = serializedObject.FindProperty("m_RebindCancelButton");
             m_UpdateBindingUIEventProperty = serializedObject.FindProperty("m_UpdateBindingUIEvent");
             m_RebindStartEventProperty = serializedObject.FindProperty("m_RebindStartEvent");
             m_RebindStopEventProperty = serializedObject.FindProperty("m_RebindStopEvent");
@@ -64,6 +65,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 EditorGUILayout.PropertyField(m_RebindOverlayProperty);
                 EditorGUILayout.PropertyField(m_RebindTextProperty);
                 EditorGUILayout.PropertyField(m_RebindInfoProperty);
+                EditorGUILayout.PropertyField(m_RebindCancelButtonProperty);
             }
 
             // Events section.
@@ -158,6 +160,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private SerializedProperty m_RebindOverlayProperty;
         private SerializedProperty m_RebindTextProperty;
         private SerializedProperty m_RebindInfoProperty;
+        private SerializedProperty m_RebindCancelButtonProperty;
         private SerializedProperty m_RebindStartEventProperty;
         private SerializedProperty m_RebindStopEventProperty;
         private SerializedProperty m_UpdateBindingUIEventProperty;

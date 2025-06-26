@@ -102,6 +102,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
+        /// Optional button to manually cancel rebinding while waiting.
+        /// </summary>
+        public Button rebindCancelButton
+        {
+            get => m_RebindCancelButton;
+            set => m_RebindCancelButton = value;
+        }
+
+        /// <summary>
         /// Optional UI that is activated when an interactive rebind is started and deactivated when the rebind
         /// is finished. This is normally used to display an overlay over the current UI while the system is
         /// waiting for a control to be actuated.
@@ -272,6 +281,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             void CleanUp()
             {
+                // Restore monitoring cancel button clicks
+                if (m_RebindCancelButton != null)
+                    m_RebindCancelButton.onClick.RemoveListener(CancelRebind);
+
                 m_RebindOperation?.Dispose();
                 m_RebindOperation = null;
 
@@ -346,6 +359,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_RebindText.text = text;
             }
 
+            // Optionally allow canceling rebind via a button if it applicable for the use-case
+            if (m_RebindCancelButton != null)
+            {
+                m_RebindCancelButton.onClick.AddListener(CancelRebind);
+            }
+
             // Update rebind overlay information, if we have one.
             if (m_RebindInfo != null)
             {
@@ -379,6 +398,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 : string.Empty;
             m_RebindInfo.text = text;
             m_LastRemainingTimeoutSeconds = remainingTimeoutWholeSeconds;
+        }
+
+        private void CancelRebind()
+        {
+            m_RebindOperation?.Cancel();
         }
 
         protected void Update()
@@ -466,6 +490,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("Optional text label that will be updated with relevant information during rebinding.")]
         [SerializeField]
         private Text m_RebindInfo;
+
+        [Tooltip("Optional cancellation UI button for rebinding overlay.")]
+        [SerializeField]
+        private Button m_RebindCancelButton;
 
         [Tooltip("Event that is triggered when the way the binding is display should be updated. This allows displaying "
             + "bindings in custom ways, e.g. using images instead of text.")]
