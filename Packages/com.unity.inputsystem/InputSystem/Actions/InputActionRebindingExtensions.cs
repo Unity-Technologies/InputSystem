@@ -1557,10 +1557,13 @@ namespace UnityEngine.InputSystem
             /// For this reason, a rebind can be configured to automatically swallow any input event except the ones having
             /// input on controls matching <see cref="WithControlsExcluding"/>.
             ///
-            /// Not at all input necessarily should be suppressed. For example, it can be desirable to have UI that
+            /// Note that all input shouldn't necessarily should be suppressed. For example, it can be desirable to have UI that
             /// allows the user to cancel an ongoing rebind by clicking with the mouse. This means that mouse position and
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.
+            ///
+            /// See <seealso cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// actions during rebind.
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
             {
@@ -1569,6 +1572,33 @@ namespace UnityEngine.InputSystem
                     m_Flags |= Flags.SuppressMatchingEvents;
                 else
                     m_Flags &= ~Flags.SuppressMatchingEvents;
+                return this;
+            }
+
+            /// <summary>
+            /// Prevent all input events that have no input matching the rebind operation's configuration from reaching
+            /// its target <
+            /// </summary>
+            /// <param name="value">If true (default) suppression is enabled, if false suppression is disabled.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// This is similar to <see cref="WithMatchingEventsBeingSuppressed"/> but determines how to treat
+            /// non-matching input events.
+            ///
+            /// Use this setting to suppress any input coming from controls that do not match the rebind target type.
+            /// For example, if the rebinding process is timed and do not show UI while rebinding, it might be desirable
+            /// to suppress e.g. UI input binding actions from triggering while waiting for input to bind.
+            ///
+            /// See <seealso cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// actions during rebind.
+            /// </remarks>
+            public RebindingOperation WithNonMatchingEventsBeingSuppressed(bool value = true)
+            {
+                ThrowIfRebindInProgress();
+                if (value)
+                    m_Flags |= Flags.SuppressNonMatchingEvents;
+                else
+                    m_Flags &= ~Flags.SuppressNonMatchingEvents;
                 return this;
             }
 
@@ -2085,17 +2115,32 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Ensures state changes are allowed to propagate during rebinding but suppresses action updates
-            /// to prevent u nexpected actions triggering as soon as rebinding ends (event suppression stops).
+            /// to prevent unexpected actions triggering as soon as rebinding ends (event suppression stops).
             /// </summary>
+            /// <param name="value">If true disables action propagation, if false enables action propagation.</param>
             /// <remarks>
-            /// If events are suppressed during rebinding without suppressing action propagation, it may lead to
-            /// unexpected actions triggering as soon as event suppression stops due to missed state transitions.
+            /// If events are suppressed during rebinding using <see cref="WithMatchingEventsBeingSuppressed"/>
+            /// and/or <see cref="WithNonMatchingEventsBeingSuppressed"/> without suppressing action propagation,
+            /// events will not update their associated device state. This may lead to unexpected actions triggering
+            /// as soon as rebinding completes (event suppression stops), due to missed state transitions.
             /// Action propagation resumes to normal as soon as rebinding operation completes or cancels.
+            ///
+            /// When this configuration is active, any events suppressed via
+            /// <see cref="WithMatchingEventsBeingSuppressed"/> and/or
+            /// <see cref="WithNonMatchingEventsBeingSuppressed"/> will still be allowed to update their associated
+            /// device state but will not propagate into action interaction updates which could cause undesirable
+            /// triggering of actions caused by the difference between device state prior to rebinding and after
+            /// rebinding.
+            ///
+            /// Note that if event suppression is not active, this setting will have no effect.
             /// </remarks>
             /// <returns>Reference to this rebinding operation.</returns>
-            public RebindingOperation WithSuppressedActionPropagation()
+            public RebindingOperation WithActionsBeingSuppressed(bool value = true)
             {
-                m_TargetInputEventHandledPolicy = InputEventHandledPolicy.SuppressActionUpdates;
+                ThrowIfRebindInProgress();
+                m_TargetInputEventHandledPolicy = value 
+                    ? InputEventHandledPolicy.SuppressActionUpdates
+                    : InputEventHandledPolicy.SuppressStateUpdates;
                 return this;
             }
 
@@ -2441,6 +2486,8 @@ namespace UnityEngine.InputSystem
                 // will skip further processing of the event.
                 if (suppressEvent && (m_Flags & Flags.SuppressMatchingEvents) != 0)
                     eventPtr.handled = true;
+                else if ((m_Flags & Flags.SuppressNonMatchingEvents) != 0)
+                    eventPtr.handled = true;
 
                 if (haveChangedCandidates && !canceled)
                 {
@@ -2707,6 +2754,7 @@ namespace UnityEngine.InputSystem
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,
                 SuppressMatchingEvents = 1 << 9,
+                SuppressNonMatchingEvents = 1 << 10,
             }
         }
 

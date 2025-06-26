@@ -91,6 +91,17 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
+        /// Optional text component that shows relevant information when waiting for a control to be actuated.
+        /// </summary>
+        /// <seealso cref="rebindPrompt"/>
+        /// <seealso cref="rebindOverlay"/>
+        public Text rebindInfo
+        {
+            get => m_RebindInfo;
+            set => m_RebindInfo = value;
+        }
+
+        /// <summary>
         /// Optional UI that is activated when an interactive rebind is started and deactivated when the rebind
         /// is finished. This is normally used to display an overlay over the current UI while the system is
         /// waiting for a control to be actuated.
@@ -293,7 +304,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         UpdateBindingDisplay();
                         CleanUp();
                     })
-                .WithSuppressedActionPropagation()
+                // We want matching events to be suppressed during rebinding (this is also default).
+                .WithMatchingEventsBeingSuppressed()
+                // Since this sample has no interactable UI during rebinding we also want to suppress non-matching events.
+                .WithNonMatchingEventsBeingSuppressed()
+                // We want device state to update but not actions firing during rebinding.
+                .WithActionsBeingSuppressed()
+                // Since this sample has no UI to cancle rebinding we timeout after not receiving input for a period of time.
                 .WithTimeout(10.0f)
                 .OnComplete(
                     operation =>
@@ -329,6 +346,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_RebindText.text = text;
             }
 
+            // Update rebind overlay information, if we have one.
+            if (m_RebindInfo != null)
+            {
+                m_RebindStartTime = Time.realtimeSinceStartup;
+                UpdateRebindInfo(m_RebindStartTime);
+            }
+
             // If we have no rebind overlay and no callback but we have a binding text label,
             // temporarily set the binding text label to "<Waiting>".
             if (m_RebindOverlay == null && m_RebindText == null && m_RebindStartEvent == null && m_BindingText != null)
@@ -338,6 +362,29 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_RebindStartEvent?.Invoke(this, m_RebindOperation);
 
             m_RebindOperation.Start();
+        }
+
+        private void UpdateRebindInfo(double now)
+        {
+            if (m_RebindOperation == null)
+                return;
+
+            var elapsed = now - m_RebindStartTime;
+            var remainingTimeoutWholeSeconds = (int)Math.Floor(m_RebindOperation.timeout - elapsed);
+            if (remainingTimeoutWholeSeconds == m_LastRemainingTimeoutSeconds)
+                return;
+
+            var text = (m_RebindOperation.timeout > 0.0f)
+                ? $"(This will timeout in <b>{remainingTimeoutWholeSeconds}</b> seconds if no matching input is received)"
+                : string.Empty;
+            m_RebindInfo.text = text;
+            m_LastRemainingTimeoutSeconds = remainingTimeoutWholeSeconds;
+        }
+
+        protected void Update()
+        {
+            if (m_RebindInfo != null)
+                UpdateRebindInfo(Time.realtimeSinceStartupAsDouble);
         }
 
         protected void OnEnable()
@@ -416,6 +463,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [SerializeField]
         private Text m_RebindText;
 
+        [Tooltip("Optional text label that will be updated with relevant information during rebinding.")]
+        [SerializeField]
+        private Text m_RebindInfo;
+
         [Tooltip("Event that is triggered when the way the binding is display should be updated. This allows displaying "
             + "bindings in custom ways, e.g. using images instead of text.")]
         [SerializeField]
@@ -434,6 +485,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private InputActionRebindingExtensions.RebindingOperation m_RebindOperation;
 
         private static List<RebindActionUI> s_RebindActionUIs;
+
+        private double m_RebindStartTime = -1;
+        private int m_LastRemainingTimeoutSeconds;
 
         // We want the label for the action name to update in edit mode, too, so
         // we kick that off from here.
