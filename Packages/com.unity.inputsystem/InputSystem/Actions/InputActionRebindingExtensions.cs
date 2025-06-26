@@ -2084,14 +2084,13 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Ensures state changes are allowed to propagate during rebinding but suppresses action updates.
-            /// The default behavior is that state changes are also suppressed during rebinding.
+            /// Ensures state changes are allowed to propagate during rebinding but suppresses action updates
+            /// to prevent u nexpected actions triggering as soon as rebinding ends (event suppression stops).
             /// </summary>
             /// <remarks>
-            /// This is achieved by temporarily setting <see cref="InputSystem.inputEventHandledPolicy"/> to
-            /// <see cref="InputEventHandledPolicy.SuppressActionUpdates" />. This is automatically reverted when
-            /// the rebinding operation completes. If the policy is already set to
-            /// <see cref="InputEventHandledPolicy.SuppressActionUpdates" />, this method has no effect.
+            /// If events are suppressed during rebinding without suppressing action propagation, it may lead to
+            /// unexpected actions triggering as soon as event suppression stops due to missed state transitions.
+            /// Action propagation resumes to normal as soon as rebinding operation completes or cancels.
             /// </remarks>
             /// <returns>Reference to this rebinding operation.</returns>
             public RebindingOperation WithSuppressedActionPropagation()
