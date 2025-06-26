@@ -3611,7 +3611,7 @@ namespace UnityEngine.InputSystem
         {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.m_Runtime.isInBatchMode)
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +

@@ -187,13 +187,10 @@ namespace UnityEngine.InputSystem.LowLevel
         void SendAnalytic(InputAnalytics.IInputAnalytic analytic);
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
 
-        bool isInBatchMode { get; }
-
         #if UNITY_EDITOR
         Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
-        bool isPaused { get; }
         bool isEditorActive { get; }
 
         // Functionality related to the Unity Remote.
