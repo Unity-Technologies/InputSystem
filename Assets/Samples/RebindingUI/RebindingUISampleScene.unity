@@ -1622,6 +1622,7 @@ GameObject:
   - component: {fileID: 508436408}
   - component: {fileID: 508436407}
   - component: {fileID: 508436409}
+  - component: {fileID: 508436410}
   m_Layer: 5
   m_Name: RebindMenu
   m_TagString: Untagged
@@ -1717,6 +1718,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!225 &508436410
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 508436405}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!224 &510051365 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1777307397533242038, guid: 0648a5c163cef41038b804a34b4b80e7,
@@ -3994,6 +4007,7 @@ GameObject:
   - component: {fileID: 1106689462}
   - component: {fileID: 1106689464}
   - component: {fileID: 1106689463}
+  - component: {fileID: 1106689465}
   m_Layer: 5
   m_Name: RebindOverlay
   m_TagString: Untagged
@@ -4060,6 +4074,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1106689461}
   m_CullTransparentMesh: 0
+--- !u!114 &1106689465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1106689461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f694bb5379aca43c790706ceb4191b31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvasGroup: {fileID: 508436410}
+  interactable: 0
 --- !u!1 &1121800141
 GameObject:
   m_ObjectHideFlags: 0

@@ -305,9 +305,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                         CleanUp();
                     })
                 // We want matching events to be suppressed during rebinding (this is also default).
-                .WithMatchingEventsBeingSuppressed()
+                //.WithMatchingEventsBeingSuppressed()
                 // Since this sample has no interactable UI during rebinding we also want to suppress non-matching events.
-                .WithNonMatchingEventsBeingSuppressed()
+                //.WithNonMatchingEventsBeingSuppressed()
                 // We want device state to update but not actions firing during rebinding.
                 .WithActionsBeingSuppressed()
                 // Since this sample has no UI to cancle rebinding we timeout after not receiving input for a period of time.

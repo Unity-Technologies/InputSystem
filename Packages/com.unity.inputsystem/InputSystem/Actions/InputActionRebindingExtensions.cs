@@ -2138,7 +2138,7 @@ namespace UnityEngine.InputSystem
             public RebindingOperation WithActionsBeingSuppressed(bool value = true)
             {
                 ThrowIfRebindInProgress();
-                m_TargetInputEventHandledPolicy = value 
+                m_TargetInputEventHandledPolicy = value
                     ? InputEventHandledPolicy.SuppressActionUpdates
                     : InputEventHandledPolicy.SuppressStateUpdates;
                 return this;

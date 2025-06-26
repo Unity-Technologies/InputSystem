@@ -102,7 +102,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.36173913, g: 0.4408696, b: 0.65, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.8679245, g: 0.4550042, b: 0.045033824, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 0.21960784, g: 0.21960784, b: 0.25882354, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -389,7 +389,7 @@ MonoBehaviour:
   m_BindingText: {fileID: 690190895482579582}
   m_RebindOverlay: {fileID: 0}
   m_RebindText: {fileID: 0}
-  m_DefaultInputActions: {fileID: 0}
+  m_RebindInfo: {fileID: 0}
   m_UpdateBindingUIEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -580,7 +580,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.36078432, g: 0.4392157, b: 0.6509804, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.8666667, g: 0.45490196, b: 0.043137256, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 0.22, g: 0.22, b: 0.25882354, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
