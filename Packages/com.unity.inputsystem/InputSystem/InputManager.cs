@@ -362,7 +362,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
-            (m_Runtime.isInPlayMode && !m_Runtime.isPaused) || m_RunPlayerUpdatesInEditMode;
+            (m_Runtime.isInPlayMode && !UnityEditor.EditorApplication.isPaused) || m_RunPlayerUpdatesInEditMode;
 #else
             true;
 #endif
