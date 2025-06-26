@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
 - Fixed reenabling the VirtualMouseInput component may sometimes lead to NullReferenceException. [ISXB-1096](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1096)
 - Fixed the default button press point not being respected in Editor (as well as some other Touchscreen properties). [ISXB-1152](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1152)
+- Fixed the TreeView compilation warnings when used with Unity 6.2 beta (ISX-2320)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
