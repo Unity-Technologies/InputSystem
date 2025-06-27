@@ -1562,7 +1562,7 @@ namespace UnityEngine.InputSystem
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.
             ///
-            /// See <seealso cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// See <see cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
             /// actions during rebind.
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
