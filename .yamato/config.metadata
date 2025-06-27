@@ -1,15 +1,15 @@
 editors:
   - version: 2021.3
   - version: 2022.3
-    run_tvos: false
+    run_tvos: true
   - version: 6000.0
-    run_tvos: false
+    run_tvos: true
   - version: 6000.1
-    run_tvos: false
+    run_tvos: true
   - version: 6000.2
-    run_tvos: false
+    run_tvos: true
   - version: trunk
-    run_tvos: false    
+    run_tvos: true    
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
 utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
