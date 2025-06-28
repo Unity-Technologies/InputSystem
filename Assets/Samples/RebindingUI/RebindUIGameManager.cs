@@ -1,4 +1,6 @@
+using System;
 using UnityEngine.EventSystems;
+using UnityEngine.Pool;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
@@ -16,6 +18,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         [Tooltip("The input action to be used to toggle menu (Required).")]
         public InputActionReference toggleMenuAction;
+
+        [Tooltip("The gameplay manager responsible for managing gameplay.")]
+        public GameplayManager gameplayManager;
+
+        private GameState m_CurrentState = GameState.Initializing;
+        private GameState m_NextState = GameState.Playing;
 
         /// <summary>
         /// Toggles between game state and rebinding menu state.
@@ -39,9 +47,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             Playing,
             RebindingMenu
         }
-
-        private GameState m_CurrentState = GameState.Initializing;
-        private GameState m_NextState = GameState.Playing;
 
         private void OnToggleMenu(InputAction.CallbackContext obj)
         {
@@ -73,19 +78,20 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 // Entering game mode: enable in-game actions, show menu
                 case GameState.Playing:
                     gameplayActions.Enable();
+                    gameplayManager.enabled = true;
                     menu.SetActive(false);
-                    Time.timeScale = 1.0f;
                     break;
 
                 // Entering menu: disable in-game actions, hide menu, make sure we have selection.
                 // Also make sure or toggle menu action is enabled in case its part of gameplay actions.
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
+                    gameplayManager.enabled = false;
                     toggleMenuAction.action.Enable();
-                    Time.timeScale = 0.0f;
+
                     menu.SetActive(true);
                     if (EventSystem.current.currentSelectedGameObject == null)
-                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
+                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject); // TODO Move to other canvas interaction place
                     break;
             }
         }

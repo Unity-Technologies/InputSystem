@@ -1960,6 +1960,7 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="timeout"/>
             public RebindingOperation WithTimeout(float timeInSeconds)
             {
+                ThrowIfRebindInProgress();
                 m_Timeout = timeInSeconds;
                 return this;
             }

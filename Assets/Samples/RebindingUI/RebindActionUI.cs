@@ -323,8 +323,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 //.WithNonMatchingEventsBeingSuppressed()
                 // We want device state to update but not actions firing during rebinding.
                 .WithActionsBeingSuppressed()
-                // Since this sample has no UI to cancle rebinding we timeout after not receiving input for a period of time.
-                .WithTimeout(10.0f)
+                // We use a timeout to illustrate that its possible to skip cancel buttons and let rebind timeout.
+                .WithTimeout(m_RebindTimeout)
                 .OnComplete(
                     operation =>
                     {
@@ -394,7 +394,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 return;
 
             var text = (m_RebindOperation.timeout > 0.0f)
-                ? $"(This will timeout in <b>{remainingTimeoutWholeSeconds}</b> seconds if no matching input is received)"
+                ? $"Cancels in <b>{remainingTimeoutWholeSeconds}</b> seconds if no matching input is provided."
                 : string.Empty;
             m_RebindInfo.text = text;
             m_LastRemainingTimeoutSeconds = remainingTimeoutWholeSeconds;
@@ -494,6 +494,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("Optional cancellation UI button for rebinding overlay.")]
         [SerializeField]
         private Button m_RebindCancelButton;
+
+        [Tooltip("Optional rebinding timeout in seconds. If zero, no timeout will be used.")]
+        [SerializeField]
+        private float m_RebindTimeout;
 
         [Tooltip("Event that is triggered when the way the binding is display should be updated. This allows displaying "
             + "bindings in custom ways, e.g. using images instead of text.")]
