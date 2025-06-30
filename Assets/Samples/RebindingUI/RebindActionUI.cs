@@ -418,6 +418,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             s_RebindActionUIs.Add(this);
             if (s_RebindActionUIs.Count == 1)
                 InputSystem.onActionChange += OnActionChange;
+            UpdateBindingDisplay();
         }
 
         protected void OnDisable()
@@ -431,6 +432,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 s_RebindActionUIs = null;
                 InputSystem.onActionChange -= OnActionChange;
             }
+            UpdateBindingDisplay();
         }
 
         // When the action system re-resolves bindings, we want to update our UI in response. While this will
