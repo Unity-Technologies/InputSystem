@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [SerializeField]
         private UpdateBindingUIEvent m_UpdateBindingUIEvent;
 
-        private static List<ActionLabel> s_RebindActionUIs;
+        private static List<ActionLabel> s_InputActionUIs;
 
         /// <summary>
         /// Reference to the action that is to be rebound.
@@ -110,19 +110,20 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         protected void OnEnable()
         {
-            if (s_RebindActionUIs == null)
-                s_RebindActionUIs = new List<ActionLabel>();
-            s_RebindActionUIs.Add(this);
-            if (s_RebindActionUIs.Count == 1)
+            if (s_InputActionUIs == null)
+                s_InputActionUIs = new List<ActionLabel>();
+            s_InputActionUIs.Add(this);
+            if (s_InputActionUIs.Count == 1)
                 InputSystem.onActionChange += OnActionChange;
+            UpdateBindingDisplay();
         }
 
         protected void OnDisable()
         {
-            s_RebindActionUIs.Remove(this);
-            if (s_RebindActionUIs.Count == 0)
+            s_InputActionUIs.Remove(this);
+            if (s_InputActionUIs.Count == 0)
             {
-                s_RebindActionUIs = null;
+                s_InputActionUIs = null;
                 InputSystem.onActionChange -= OnActionChange;
             }
         }
@@ -138,9 +139,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             var actionMap = action?.actionMap ?? obj as InputActionMap;
             var actionAsset = actionMap?.asset ?? obj as InputActionAsset;
 
-            for (var i = 0; i < s_RebindActionUIs.Count; ++i)
+            for (var i = 0; i < s_InputActionUIs.Count; ++i)
             {
-                var component = s_RebindActionUIs[i];
+                var component = s_InputActionUIs[i];
                 var referencedAction = component.actionReference?.action;
                 if (referencedAction == null)
                     continue;

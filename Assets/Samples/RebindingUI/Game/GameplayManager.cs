@@ -142,9 +142,10 @@ public class GameplayManager : MonoBehaviour
             m_Messages = messages;
             break;
         }
+        Debug.Assert(m_Messages != null);
     }
 
-    void Start()
+    private void Start()
     {
         // Instantiate and initialize the player
         m_Player = Instantiate(player, transform, worldPositionStays: true);
@@ -159,7 +160,7 @@ public class GameplayManager : MonoBehaviour
         m_Messages.HideMessage();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         messageService.gameObject.SetActive(true);
 
@@ -170,14 +171,15 @@ public class GameplayManager : MonoBehaviour
             m_Messages.ShowMessage("PAUSED");
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        messageService?.gameObject.SetActive(false); // TODO May sometimes be destroyed, fix
+        //messageService.gameObject.SetActive(false); // TODO May sometimes be destroyed, fix, reference survices scene load
         PauseGame();
     }
 
     private void OnApplicationFocusChanged(bool focus)
     {
+        // If application looses focus, pause the game, else resume the game
         if (focus)
             ResumeGame();
         else
@@ -187,7 +189,7 @@ public class GameplayManager : MonoBehaviour
     void ResetGame()
     {
         messageService.gameObject.SetActive(false);
-        messageService = null;
+        m_Messages = null;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -197,7 +199,7 @@ public class GameplayManager : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        m_Messages.HideMessage();
+        m_Messages?.HideMessage(); // <-- issue also here
     }
 
     void PauseGame()
@@ -205,6 +207,8 @@ public class GameplayManager : MonoBehaviour
         Time.timeScale = 0.0f;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        m_Messages?.ShowMessage("PAUSED");
     }
 
     void SpawnEnemy()
@@ -271,10 +275,14 @@ public class GameplayManager : MonoBehaviour
             return;
 
         // Animate motor speeds uniformly according to shake for a simple immersive effect
-        var frequency = 0.0f;
-        if (m_ShakeDuration > 0.0f)
-            frequency = 1.0f - m_ShakeDuration;
-        gamepad.SetMotorSpeeds(lowFrequency: frequency, highFrequency: frequency);
+        // var frequency = 0.0f;
+        // if (m_ShakeDuration > 0.0f)
+        //     frequency = 1.0f - m_ShakeDuration;
+        // if (frequency > 0.0f)
+        //     gamepad.SetMotorSpeeds(lowFrequency: 0.2f, highFrequency: 0.0f);
+        // else
+        //     gamepad.SetMotorSpeeds(lowFrequency: 0.0f, highFrequency: 0.0f);
+        gamepad.SetMotorSpeeds(lowFrequency: m_ShakeDuration > 0.0f ? 0.2f : 0.0f, highFrequency: 0.0f);
     }
 
     void NextRound()
