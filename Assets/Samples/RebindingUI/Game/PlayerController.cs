@@ -8,9 +8,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     /// Component that integrates Input System actions with the player object.
     /// </summary>
     [RequireComponent(typeof(Player))]
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(-1)] // We need this to run before Player to avoid potential additional latency
     public class PlayerController : MonoBehaviour
     {
+        [Header("Input Action Bindings")]
         [Tooltip("The move action, must generate Vector2")]
         public InputActionReference move;
         [Tooltip("The move action, must generate Vector2")]
@@ -20,23 +21,26 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The move action, must generate Button value")]
         public InputActionReference change;
 
-        [Tooltip("Show player color on deivce when applicable")]
-        public bool applyColorToDevice = true;
-        [Tooltip("The power multiplier of the rumble effect")]
-        public float rumblePower = 0.5f;
+        [Header("Color Output")]
+        [Tooltip("The device color output frequency (Hz)")]
+        public float colorOutputFrequency = 10.0f;
+
+        [Header("Force Feedback Output")]
+        [Tooltip("The device rumble output frequency (Hz)")]
+        public float rumbleOutputFrequency = 10.0f;
 
         // Cached actions to avoid excessive memory allocation on binding callback functions
-        // private Action<InputAction.CallbackContext> m_OnMove;
-        // private Action<InputAction.CallbackContext> m_OnLook;
         private Action<InputAction.CallbackContext> m_OnFire;
         private Action<InputAction.CallbackContext> m_OnChange;
 
-        // Cached actions relating to in-game events
-        private Action<Color, Color> m_OnColorChange;
-        private Action m_OnShakeChanged;
-
         // Required player reference
         private Player m_Player;
+
+        // Device I/O throttling
+        private double m_NextLightUpdateTime;
+        private Color m_DeviceColor = Color.black;
+        private double m_NextRumbleUpdateTime;
+        private float m_DeviceRumble;
 
         private void Awake()
         {
@@ -47,44 +51,28 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // Create (and cache) actions
             m_OnFire = OnFire;
             m_OnChange = OnChange;
-            m_OnColorChange = OnColorChanged;
-            m_OnShakeChanged = OnShakeChanged;
+
+            // Initialize throttling times to allow direct update
+            var now = Time.realtimeSinceStartupAsDouble;
+            m_NextLightUpdateTime = now;
+            m_NextRumbleUpdateTime = now;
         }
 
         private void OnEnable()
         {
-            // Note that for value based controls we must monitor both performed and canceled.
-            // Otherwise we would not reset look and move to zero when controls are no longer actuated.
-
-            // move.action.performed += m_OnMove;
-            // move.action.canceled += m_OnMove;
-            //
-            // look.action.performed += m_OnLook;
-            // look.action.canceled += m_OnLook;
-
+            // Monitor button interaction via callbacks to not miss them
             fire.action.performed += m_OnFire;
-
             change.action.performed += m_OnChange;
 
-            //m_Player.ColorChangedEvent += m_OnColorChange;
-            SetDeviceColor(m_Player.GetTargetColor());
-            SetDeviceRumble(0.0f);
-            //m_Player.manager.ShakeChanged -= m_OnShakeChanged;
+            ApplyRumble(0.0f);
+            ApplyLight(Color.black);
         }
 
         private void OnDisable()
         {
-            //m_Player.manager.ShakeChanged -= m_OnShakeChanged;
-            SetDeviceRumble(0.0f);
-
-            //m_Player.ColorChangedEvent -= m_OnColorChange;
-            SetDeviceColor(Color.black);
-
-            // move.action.performed -= m_OnMove;
-            // move.action.canceled -= m_OnMove;
-            //
-            // look.action.performed -= m_OnLook;
-            // look.action.canceled -= m_OnLook;
+            // Note: When disabling the component we skip throttling to make sure the value reaches the device
+            ApplyRumble(0.0f);
+            ApplyLight(Color.black);
 
             fire.action.performed -= m_OnFire;
             change.action.performed -= m_OnChange;
@@ -98,48 +86,16 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnChange(InputAction.CallbackContext context)
         {
-            // Request player to change weapon
-            m_Player.ChangeWeapon();
-        }
-
-        private void OnColorChanged(Color animatedColor, Color targetColor)
-        {
-            SetDeviceColor(animatedColor);
-        }
-
-        private void OnShakeChanged()
-        {
-            SetDeviceRumble(m_Player.manager.GetShake());
-        }
-
-        private Color m_TargetDeviceColor = Color.black;
-        private Color m_DeviceColor = Color.black;
-
-        private float m_DeviceColorOutputFrequency = 5.0f;
-        private float m_TimeUntilNextDeviceColor;
-
-        private float m_TargetDeviceRumble;
-        private float m_DeviceRumble;
-
-        private float m_DeviceRumbleOutputFrequency = 5.0f;
-        private float m_TimeUntilNextDeviceRumble = 0.0f;
-
-        private void SetDeviceColor(Color color)
-        {
-            m_TargetDeviceColor = color;
-        }
-
-        private void SetDeviceRumble(float amount)
-        {
-            m_TargetDeviceRumble = amount;
+            // Request player to change mode.
+            m_Player.Change();
         }
 
         private void Update()
         {
-            // Sample desired move direction and magnitude based on move input.
+            // Sample desired move direction and magnitude based on move input per update.
             m_Player.move = move.action.ReadValue<Vector2>();
 
-            // Sample desired rotation angle based on look input:
+            // Sample desired rotation angle based on look input per update:
             // - If the underlying control is a relative control we should not scale with time, but rely
             //   on accumulated provided via action, e.g. accumulated (sum of) deltas since last update.
             // - If the underlying control is absolute, we scale magnitude with elapsed time to sample
@@ -152,47 +108,49 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_Player.Rotate(angle);
             }
 
-            // Animate device color, note that we throttle this to avoid output congestion on device side.
-            m_TargetDeviceColor = m_Player.GetColor();
-            if (!Throttle(ref m_TimeUntilNextDeviceColor, m_TargetDeviceColor != m_DeviceColor,
-                Time.deltaTime, 1.0f / m_DeviceColorOutputFrequency))
-            {
-                m_DeviceColor = m_TargetDeviceColor;
+            // Use real-time when throttling devices to not be affected by time scale
+            var now = Time.realtimeSinceStartupAsDouble;
 
-                // There is currently no interface for light effects so we check type
-                var gamepad = Gamepad.current;
-                var dualShockGamepad = gamepad as DualShockGamepad;
-                if (dualShockGamepad != null)
-                    dualShockGamepad.SetLightBarColor(m_DeviceColor);
+            // Animate device color, note that we throttle this to avoid output congestion on device side.
+            var color = m_Player.GetColor();
+            if (now >= m_NextLightUpdateTime && m_DeviceColor != color)
+            {
+                m_NextLightUpdateTime = NextMultipleOf(now, 1.0f / colorOutputFrequency);
+                ApplyLight(color);
             }
 
             // Animate device rumble, note that we throttle this to avoid output congestion on device side.
-            m_TargetDeviceRumble = m_Player.manager.GetShake();
-            if (!Throttle(ref m_TimeUntilNextDeviceRumble,
-                !Mathf.Approximately(m_TargetDeviceRumble, m_DeviceRumble),
-                Time.deltaTime, 1.0f / m_DeviceRumbleOutputFrequency))
+            // The else branch makes sure rumble effect is paused if user pauses with motors running.
+            var rumble = m_Player.manager.GetShake();
+            if (now >= m_NextRumbleUpdateTime && !Mathf.Approximately(m_DeviceRumble, rumble))
             {
-                m_DeviceRumble = m_TargetDeviceRumble;
-
-                // Rumble is currently only supported by gamepads
-                var gamepad = Gamepad.current;
-                if (gamepad != null)
-                {
-                    gamepad.SetMotorSpeeds(m_DeviceRumble, 0.0f);
-                }
+                m_NextRumbleUpdateTime = NextMultipleOf(now, 1.0f / rumbleOutputFrequency);
+                ApplyRumble(rumble);
             }
         }
 
-        private static bool Throttle(ref float remainingTime, bool condition, float deltaTime, float timeUntilNextEvent)
+        private void ApplyLight(Color color)
         {
-            remainingTime -= deltaTime;
-            if (remainingTime > 0.0f)
-                return true; // Enough time has not elapsed
-            if (condition)
-                remainingTime += timeUntilNextEvent;
-            if (remainingTime < 0.0f)
-                remainingTime = 0.0f;
-            return !condition;
+            m_DeviceColor = color;
+
+            // There is currently no interface for light effects so we check type
+            var gamepad = Gamepad.current;
+            var dualShockGamepad = gamepad as DualShockGamepad;
+            dualShockGamepad?.SetLightBarColor(color);
+        }
+
+        private void ApplyRumble(float value)
+        {
+            m_DeviceRumble = value;
+
+            // Rumble is currently only supported by gamepads
+            var gamepad = Gamepad.current;
+            gamepad?.SetMotorSpeeds(value, 0.0f);
+        }
+
+        private static double NextMultipleOf(double value, double factor)
+        {
+            return Math.Round((value / factor), MidpointRounding.AwayFromZero) * factor;
         }
     }
 }

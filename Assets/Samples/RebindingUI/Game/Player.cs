@@ -39,17 +39,52 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("List of color animation targets")]
         public Renderer[] animatedRenderers;
 
+        /// <summary>
+        /// Specifies whether the player is firing or not.
+        /// </summary>
+        public bool firing { get; set; }
+
+        /// <summary>
+        /// The move vector of the player that specifies movement direction and magnitude.
+        /// </summary>
+        public Vector2 move {  get; set; }
+
+        /// <summary>
+        /// Get the current color of the player.
+        /// </summary>
+        /// <returns>Current color.</returns>
+        public Color GetColor() => GetColor(m_OmniFire); //m_Material != null ? m_Material.GetColor(Color1) : Color.black;
+
+        /// <summary>
+        /// Request mode change.
+        /// </summary>
+        public void Change()
+        {
+            m_ChangeRequested = true;
+        }
+
+        /// <summary>
+        /// Rotate the player by the given angle.
+        /// </summary>
+        /// <param name="angle">Angle in degrees (additive).</param>
+        public void Rotate(float angle)
+        {
+            m_RotationAngle += angle;
+        }
+
         private static readonly int Color1 = Shader.PropertyToID("_Color");
 
         private Material m_Material;
         private Vector3 m_TargetEulerAngles;
         private Color m_TargetColor;
+        private Color m_Color;
         private float m_TargetScale;
 
         private int m_ColorIndex;
         private float m_TimeUntilNextFire;
         private float m_TimeUntilNextChange;
         private bool m_OmniFire;
+        private bool m_ChangeRequested;
 
         private float m_TargetBeltAngle;
         private float m_BeltAngle;
@@ -68,6 +103,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             fireObject.transform.localScale = m_OmniFire ? Vector3.zero : Vector3.one;
             omniFireObject.transform.localScale = m_OmniFire ? Vector3.one : Vector3.zero;
+
+            m_TargetColor = GetColor(m_OmniFire);
         }
 
         private void Start()
@@ -90,8 +127,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // indirectly changing the source material.
             m_Material = animatedRenderers[0].sharedMaterial;
             #endif
-            m_TargetColor = GetColor(m_OmniFire);
-            ColorChangedEvent?.Invoke(GetColor(), m_TargetColor);
 
             // Create an object pool for bullets/projectiles
             m_ObjectPool = new ObjectPool<Bullet>(
@@ -106,16 +141,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_TimeUntilNextFire = 0.0f;
             m_TimeUntilNextChange = 0.0f;
         }
-
-        /// <summary>
-        /// Specifies whether the player is firing or not.
-        /// </summary>
-        public bool firing { get; set; }
-
-        /// <summary>
-        /// The move vector of the player that specifies movement direction and magnitude.
-        /// </summary>
-        public Vector2 move {  get; set; }
 
         private void UpdateFire(float deltaTime)
         {
@@ -162,18 +187,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_BeltAngle += 45.0f;
         }
 
-        private bool m_ChangeRequested;
-
-        public void ChangeWeapon()
-        {
-            m_ChangeRequested = true;
-        }
-
-        public void Rotate(float angle)
-        {
-            m_RotationAngle += angle;
-        }
-
         private void UpdateChangeWeapon(float deltaTime)
         {
             if (Throttle(ref m_TimeUntilNextChange, m_ChangeRequested, deltaTime, changeRate))
@@ -184,7 +197,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_OmniFire = !m_OmniFire;
             m_TargetScale = m_OmniFire ? 1.0f : 0.0f;
             m_BeltAngle += 360.0f;
-            m_TargetColor = m_OmniFire ? Color.yellow : Color.red;
+            m_TargetColor = GetColor(m_OmniFire);
         }
 
         private void UpdateRotate()
@@ -252,18 +265,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 localPosition.z);
         }
 
-        public event Action<Color, Color> ColorChangedEvent;
-
-        public Color GetColor() => m_Material != null ? m_Material.GetColor(Color1) : Color.black;
-        public Color GetTargetColor() => m_TargetColor;
-
         private void AnimateColors(float deltaTime)
         {
             var color = Color.Lerp(m_Material.color, m_TargetColor, deltaTime * 2.0f);
             if (color != GetColor())
             {
-                ColorChangedEvent?.Invoke(color, m_TargetColor);
-
                 // Update material
                 m_Material.SetColor(Color1, color);
             }

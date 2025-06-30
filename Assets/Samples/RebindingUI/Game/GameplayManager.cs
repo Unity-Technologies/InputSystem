@@ -97,7 +97,7 @@ public class GameplayManager : MonoBehaviour
             x = min;
     }
 
-    public static bool TryTeleportOrthographicExtents(Camera camera, Vector3 position,
+    private static bool TryTeleportOrthographicExtents(Camera camera, Vector3 position,
         out Vector3 result, float margin = 0.8f)
     {
         // Wrap around constraint x, y and teleport player if outside orthographic camera bounds
@@ -119,7 +119,7 @@ public class GameplayManager : MonoBehaviour
         return false;
     }
 
-    public bool TryTeleportOrthographicExtents(Vector3 position, out Vector3 result, float margin = 0.8f)
+    internal bool TryTeleportOrthographicExtents(Vector3 position, out Vector3 result, float margin = 0.8f)
     {
         return TryTeleportOrthographicExtents(gameCamera, position, out result, margin);
     }
