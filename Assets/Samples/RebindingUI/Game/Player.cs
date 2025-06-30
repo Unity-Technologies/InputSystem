@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.Pool;
 
 // Note: Error handling has been excluded from this script since not the main focus of example.
@@ -12,47 +7,54 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 {
     public class Player : MonoBehaviour
     {
-        [Header("Input Bindings")]
-        public InputActionReference move;
-        public InputActionReference look;
-        public InputActionReference interact;
-        public InputActionReference use;
-
-        [Header("Gameplay")]
+        // Since since its expected to be assigned at run-time
+        [HideInInspector]
         [Tooltip("The gameplay manager")]
         public GameplayManager manager;
 
-        public GameObject target;
-        public GameObject fire;
-        public GameObject omniFire;
+        [Tooltip("The fire object")]
+        public GameObject fireObject;
 
+        [Tooltip("The omni-fire object")]
+        public GameObject omniFireObject;
+
+        [Tooltip("The bullet/particle object")]
         public GameObject particle;
+
+        [Tooltip("The cannon belt")]
         public GameObject belt;
+
+        [Tooltip("The cannon barrel")]
         public GameObject barrel;
 
-        public float movementSpeed = 10.0f;
+        [Tooltip("The regular fire rate")]
         public float fireRate = 0.25f;
+
+        [Tooltip("The omni-fire rate")]
         public float omniFireRate = 1.0f;
 
+        [Tooltip("The change rate")]
+        public float changeRate = 1.0f;
+
+        [Tooltip("List of color animation targets")]
         public Renderer[] animatedRenderers;
 
+        private static readonly int Color1 = Shader.PropertyToID("_Color");
+
         private Material m_Material;
-        private Vector3 m_TargetPosition;
         private Vector3 m_TargetEulerAngles;
         private Color m_TargetColor;
         private float m_TargetScale;
 
-        private static readonly Color[] Colors = { Color.red, Color.yellow };
-        private static readonly int Color1 = Shader.PropertyToID("_Color");
-
         private int m_ColorIndex;
-        private double m_TimeUntilNextFire = 0.0f;
-        private double m_TimeUntilNextOmniFire = 0.0f;
-        private bool m_OmniFire = false;
+        private float m_TimeUntilNextFire;
+        private float m_TimeUntilNextChange;
+        private bool m_OmniFire;
 
         private float m_TargetBeltAngle;
         private float m_BeltAngle;
         private float m_BarrelPosition;
+        private float m_RotationAngle;
 
         private ObjectPool<Bullet> m_ObjectPool;
 
@@ -63,6 +65,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Rigidbody = GetComponent<Rigidbody>();
 
             m_BarrelPosition = barrel.transform.localPosition.y;
+
+            fireObject.transform.localScale = m_OmniFire ? Vector3.zero : Vector3.one;
+            omniFireObject.transform.localScale = m_OmniFire ? Vector3.one : Vector3.zero;
         }
 
         private void Start()
@@ -85,9 +90,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // indirectly changing the source material.
             m_Material = animatedRenderers[0].sharedMaterial;
             #endif
-
-            // Initialize color and target color
             m_TargetColor = GetColor(m_OmniFire);
+            ColorChangedEvent?.Invoke(GetColor(), m_TargetColor);
 
             // Create an object pool for bullets/projectiles
             m_ObjectPool = new ObjectPool<Bullet>(
@@ -97,75 +101,141 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 actionOnDestroy: (bullet) => Destroy(bullet.gameObject));
         }
 
-        private static Color GetColor(bool omniFire)
-        {
-            return omniFire ? Color.yellow : Color.red;
-        }
-
         private void OnEnable()
         {
-            if (target != null)
-                m_TargetPosition = target.transform.position;
-
-            move?.action?.Enable();
-            look?.action?.Enable();
-            interact?.action?.Enable();
-            use?.action?.Enable();
-
             m_TimeUntilNextFire = 0.0f;
-            m_TimeUntilNextOmniFire = 0.0f;
-
-            // fire.transform.localScale = omniFire ? Vector3.zero : Vector3.one;
-            // omniFire.transform.localScale = omniFire ? Vector3.one : Vector3.zero;
+            m_TimeUntilNextChange = 0.0f;
         }
 
-        private void OnDisable()
-        {
-            move?.action?.Disable();
-            look?.action?.Disable();
-            interact?.action?.Disable();
-            use?.action?.Disable();
-        }
+        /// <summary>
+        /// Specifies whether the player is firing or not.
+        /// </summary>
+        public bool firing { get; set; }
 
-        private void Fire(float deltaTime)
+        /// <summary>
+        /// The move vector of the player that specifies movement direction and magnitude.
+        /// </summary>
+        public Vector2 move {  get; set; }
+
+        private void UpdateFire(float deltaTime)
         {
-            // When we "Interact", we move to the next target color
-            m_TimeUntilNextFire -= deltaTime;
-            if (interact.action.IsPressed() && m_TimeUntilNextFire <= 0.0f)
+            if (Throttle(ref m_TimeUntilNextFire, firing, deltaTime, m_OmniFire ? omniFireRate : fireRate))
+                return;
+
+            // Fire in all directions with 45 degree offset for each bullet
+            if (m_OmniFire)
             {
-                if (m_OmniFire)
-                {
-                    OmniFire();
-                    m_TimeUntilNextFire += omniFireRate;
-                }
-                else
-                {
-                    Fire(transform.up);
-                    m_TimeUntilNextFire += fireRate;
-                }
+                for (var i = 0; i < 8; ++i)
+                    FireBullet(Quaternion.AngleAxis(i * 45.0f, Vector3.forward) * transform.up);
+                return;
             }
-            if (m_TimeUntilNextFire < 0.0f)
-                m_TimeUntilNextFire = 0.0f;
+
+            // Else: Fire in forward direction
+            FireBullet(transform.up);
         }
 
-        private void ChangeWeapon(float deltaTime)
+        private static bool Throttle(ref float remainingTime, bool condition, float deltaTime, float timeUntilNextEvent)
         {
-            m_TimeUntilNextOmniFire -= deltaTime;
-            if (use.action.WasPressedThisFrame())
-            {
-                m_OmniFire = !m_OmniFire;
-                m_TargetScale = m_OmniFire ? 1.0f : 0.0f;
-                m_BeltAngle += 360.0f;
-                m_TargetColor = m_OmniFire ? Color.yellow : Color.red;
-            }
+            remainingTime -= deltaTime;
+            if (remainingTime > 0.0f)
+                return true; // Enough time has not elapsed
+            if (condition)
+                remainingTime += timeUntilNextEvent;
+            if (remainingTime < 0.0f)
+                remainingTime = 0.0f;
+            return !condition;
+        }
+
+        private void FireBullet(Vector3 direction)
+        {
+            // Fire a single bullet in the direction of the player, approximately originating from the muzzle.
+            var bullet = m_ObjectPool.Get();
+            bullet.direction = direction;
+            bullet.transform.position = transform.position + direction.normalized * (1.6f * transform.lossyScale.y);
+            bullet.pool = m_ObjectPool;
+
+            // Animate barrel to simulate recoil
+            var pos = barrel.transform.localPosition;
+            barrel.transform.localPosition = new Vector3(pos.x, m_BarrelPosition - 0.2f, pos.z);
+
+            // Rotate the belt for each fired round, simulated a reload
+            m_BeltAngle += 45.0f;
+        }
+
+        private bool m_ChangeRequested;
+
+        public void ChangeWeapon()
+        {
+            m_ChangeRequested = true;
+        }
+
+        public void Rotate(float angle)
+        {
+            m_RotationAngle += angle;
+        }
+
+        private void UpdateChangeWeapon(float deltaTime)
+        {
+            if (Throttle(ref m_TimeUntilNextChange, m_ChangeRequested, deltaTime, changeRate))
+                return;
+            m_ChangeRequested = false;
+
+            // Change weapon, animate change, belt rotation, color
+            m_OmniFire = !m_OmniFire;
+            m_TargetScale = m_OmniFire ? 1.0f : 0.0f;
+            m_BeltAngle += 360.0f;
+            m_TargetColor = m_OmniFire ? Color.yellow : Color.red;
+        }
+
+        private void UpdateRotate()
+        {
+            // We do not want to use physics for this rotation to give a more direct feel.
+            transform.Rotate(Vector3.forward, m_RotationAngle, Space.World);
+
+            // Reset rotation angle and let it accumulate until next update.
+            m_RotationAngle = 0;
+        }
+
+        private void OnCollisionEnter(Collision other)
+        {
+            // If we collide with an enemy its game over.
+            if (other.gameObject.GetComponent<Enemy>())
+                manager.GameOver();
+        }
+
+        private void Update()
+        {
+            // Update game logic
+            var deltaTime = Time.deltaTime;
+            UpdateFire(deltaTime);
+            UpdateChangeWeapon(deltaTime);
+            UpdateRotate();
+            if (manager.TryTeleportOrthographicExtents(transform.position, out var result))
+                transform.position = result;
+
+            // Animate
+            AnimateChangeWeapon(deltaTime);
+            AnimateFireWeapon(deltaTime);
+            AnimateColors(deltaTime);
+        }
+
+        private void FixedUpdate()
+        {
+            // Use physics to animate player movement to get a feeling of inertia.
+            //var moveValue = move.action.ReadValue<Vector2>();
+            var y = move.y;
+            if (y < 0.0f)
+                y *= 0.33f;
+            if (m_Rigidbody.linearVelocity.magnitude < 10.0f)
+                m_Rigidbody.AddRelativeForce(Vector3.up * (10.0f * y) + Vector3.right * (5.0f * move.x), ForceMode.Acceleration);
         }
 
         private void AnimateChangeWeapon(float deltaTime)
         {
             // Animate scale of fire vs omni-fire to be the inverse of each other
-            var omniFireScale = Mathf.Lerp(omniFire.transform.localScale.x, m_TargetScale, deltaTime * 10.0f);
-            fire.transform.localScale = new Vector3(1.0f - omniFireScale, 1.0f - omniFireScale, 1.0f - omniFireScale);
-            omniFire.transform.localScale = new Vector3(omniFireScale, omniFireScale, omniFireScale);
+            var omniFireScale = Mathf.Lerp(omniFireObject.transform.localScale.x, m_TargetScale, deltaTime * 10.0f);
+            fireObject.transform.localScale = new Vector3(1.0f - omniFireScale, 1.0f - omniFireScale, 1.0f - omniFireScale);
+            omniFireObject.transform.localScale = new Vector3(omniFireScale, omniFireScale, omniFireScale);
         }
 
         private void AnimateFireWeapon(float deltaTime)
@@ -182,79 +252,26 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 localPosition.z);
         }
 
-        private void Rotate(float deltaTime)
+        public event Action<Color, Color> ColorChangedEvent;
+
+        public Color GetColor() => m_Material != null ? m_Material.GetColor(Color1) : Color.black;
+        public Color GetTargetColor() => m_TargetColor;
+
+        private void AnimateColors(float deltaTime)
         {
-            // If the underlying control is a relative control we should not scale with time.
-            // If the underlying control is absolute, we scale magnitude with elapsed time.
-            // We do not want to use physics for this rotation and hence use an object without rigidbody.
-            var timeInvariant = (look.action.activeControl is DeltaControl);
-            var scale = timeInvariant ? 1.0f : deltaTime * 300.0f;
-            var angle = look.action.ReadValue<Vector2>().x * -1.0f * scale;
-            target.transform.Rotate(Vector3.forward, angle, Space.World);
-        }
-
-        private void Update()
-        {
-            var deltaTime = Time.deltaTime;
-
-            Fire(deltaTime);
-            ChangeWeapon(deltaTime);
-            Rotate(deltaTime);
-
-            AnimateChangeWeapon(deltaTime);
-            AnimateFireWeapon(deltaTime);
-
-            if (manager.TryTeleportOrthographicExtents(transform.position, out var result))
-                transform.position = result;
-
-            // Animate material
-            if (m_Material != null)
-                m_Material.SetColor(Color1, Color.Lerp(m_Material.color, m_TargetColor, Time.deltaTime * 2.0f));
-        }
-
-        private void OnCollisionEnter(Collision other)
-        {
-            // If we are hit by a bullet apply force
-            if (other.gameObject.GetComponent<Enemy>())
+            var color = Color.Lerp(m_Material.color, m_TargetColor, deltaTime * 2.0f);
+            if (color != GetColor())
             {
-                //manager.Explosion(animationTarget.transform, other.GetContact(0).point);
-                //pool.Release(this);
-                manager.GameOver(); //Destroy(gameObject); // TODO End game
+                ColorChangedEvent?.Invoke(color, m_TargetColor);
+
+                // Update material
+                m_Material.SetColor(Color1, color);
             }
         }
 
-        private void FixedUpdate()
+        private static Color GetColor(bool omniFire)
         {
-            // Use physics to animate player movement to get a feeling of inertia.
-            var moveValue = move.action.ReadValue<Vector2>();
-            var y = moveValue.y;
-            if (y < 0.0f)
-                y *= 0.33f;
-            if (m_Rigidbody.linearVelocity.magnitude < 10.0f)
-                m_Rigidbody.AddRelativeForce(Vector3.up * (10.0f * y) + Vector3.right * (5.0f * moveValue.x), ForceMode.Acceleration);
-        }
-
-        private void OmniFire()
-        {
-            // Fire in all directions with 45 degree offset for each bullet
-            for (var i = 0; i < 8; ++i)
-                Fire(Quaternion.AngleAxis(i * 45.0f, Vector3.forward) * transform.up);
-        }
-
-        private void Fire(Vector3 direction)
-        {
-            // Fire a single bullet in the direction of the player, approximately originating from the muzzle.
-            var bullet = m_ObjectPool.Get();
-            bullet.direction = direction;
-            bullet.transform.position = transform.position + direction.normalized * (1.6f * transform.lossyScale.y);
-            bullet.pool = m_ObjectPool;
-
-            // Animate barrel to simulate recoil
-            var pos = barrel.transform.localPosition;
-            barrel.transform.localPosition = new Vector3(pos.x, m_BarrelPosition - 0.2f, pos.z);
-
-            // Rotate the belt for each fired round, simulated a reload
-            m_BeltAngle += 45.0f;
+            return omniFire ? Color.yellow : Color.red;
         }
     }
 }

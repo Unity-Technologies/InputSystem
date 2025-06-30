@@ -34,8 +34,10 @@ public class GameplayManager : MonoBehaviour
     private ObjectPool<Enemy> m_EnemyPool;
     private ObjectPool<Explosion> m_EnemyExplosionPool;
 
-    private float m_CameraShakeForce;
+    private float m_ShakeForce;
+    private float m_ShakeMaxForce;
     private float m_ShakeDuration;
+    private double m_ShakeTime;
     private Vector3 m_CameraPosition;
 
     private IShowMessages m_Messages;
@@ -49,7 +51,21 @@ public class GameplayManager : MonoBehaviour
         --m_RemainingEnemiesRound;
     }
 
-    public void Explosion(Transform target, Vector3 position)
+    /// <summary>
+    /// Returns a normalized shake value between [0, 1].
+    /// </summary>
+    /// <returns>Normalized shake value.</returns>
+    public float GetShake() => Mathf.Approximately(Time.timeScale, 0.0f) ? 0.0f : m_ShakeForce;
+
+    private void Shake(float duration, float amplitude)
+    {
+        m_ShakeMaxForce = amplitude;
+        m_ShakeForce = amplitude;
+        m_ShakeDuration = duration;
+        m_ShakeTime = Time.timeAsDouble;
+    }
+
+    public void Explosion(Transform target, Vector3 position, float amplitude = 0.1f)
     {
         var obj = Instantiate(enemyExplosion);//m_EnemyExplosionPool.Get();
         obj.transform.position = target.position;
@@ -57,17 +73,15 @@ public class GameplayManager : MonoBehaviour
 
         var exp = obj.GetComponent<Explosion>();
         exp.explosionPosition = position;
-        //obj.pool = m_EnemyExplosionPool;
 
-        m_CameraShakeForce = 0.2f;
-        m_ShakeDuration = 0.5f;
+        Shake(duration: 0.4f, amplitude: amplitude);
     }
 
     public void GameOver()
     {
-        m_Player.SetActive(false);
+        m_Player.SetActive(false); // <--- TODO This collides with haptic effect sitting on player
 
-        m_CameraShakeForce = 0.5f;
+        m_ShakeForce = 0.5f;
         m_ShakeDuration = 0.5f;
 
         //m_ResetDuration = 2.0f;
@@ -245,33 +259,30 @@ public class GameplayManager : MonoBehaviour
             case 3:
                 enemyComponent.transform.position = new Vector3(horizontalExtent + margin, axis * orthoSize, 0.0f);
                 break;
-            default:
-                break;
         }
     }
 
     void AnimateCameraShake()
     {
-        // Animate shake duration towards zero
-        if (m_ShakeDuration > 0.0f)
-            m_ShakeDuration = Mathf.Max(m_ShakeDuration - Time.deltaTime, 0);
+        var time = Time.timeAsDouble;
+        var elapsed = (time - m_ShakeTime);
+        var t = m_ShakeDuration <= 0.0f ? 1.0f : elapsed / m_ShakeDuration;
+        m_ShakeForce = Mathf.Lerp(m_ShakeMaxForce, 0.0f, (float)t);
 
-        // Compute camera shake position offset vector
         var cameraShakeOffset = new Vector3(
-            m_CameraShakeForce * Mathf.Sin(Time.realtimeSinceStartup * 71.0f),
-            m_CameraShakeForce * Mathf.Sin(Time.realtimeSinceStartup * 53.0f + Mathf.PI / 3.0f),
-            gameCamera.transform.position.z);
+            m_ShakeForce * Mathf.Sin((float)time * 71.0f),
+            m_ShakeForce * Mathf.Sin((float)time * 53.0f + Mathf.PI / 3.0f),
+            0f);
 
-        // Apply camera shake effect using inverse lerp
-        gameCamera.transform.position = Vector3.Lerp(m_CameraPosition, cameraShakeOffset, m_ShakeDuration);
+        gameCamera.transform.position = m_CameraPosition + cameraShakeOffset;
     }
 
     void AnimateHapticShake()
     {
         // Abort if there is no gamepad available or if the player is not currently using a gamepad
-        var gamepad = Gamepad.current;
-        if (gamepad == null)
-            return;
+        // var gamepad = Gamepad.current;
+        // if (gamepad == null)
+        //     return;
 
         // Animate motor speeds uniformly according to shake for a simple immersive effect
         // var frequency = 0.0f;
@@ -281,7 +292,7 @@ public class GameplayManager : MonoBehaviour
         //     gamepad.SetMotorSpeeds(lowFrequency: 0.2f, highFrequency: 0.0f);
         // else
         //     gamepad.SetMotorSpeeds(lowFrequency: 0.0f, highFrequency: 0.0f);
-        gamepad.SetMotorSpeeds(lowFrequency: m_ShakeDuration > 0.0f ? 0.2f : 0.0f, highFrequency: 0.0f);
+        //gamepad.SetMotorSpeeds(lowFrequency: m_ShakeDuration > 0.0f ? 0.2f : 0.0f, highFrequency: 0.0f);
     }
 
     void NextRound()
