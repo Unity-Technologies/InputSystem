@@ -215,7 +215,6 @@ GameObject:
   - component: {fileID: 2015862577459089465}
   - component: {fileID: 8405734665077712472}
   - component: {fileID: 2398786828729306593}
-  - component: {fileID: 6129053087595370668}
   m_Layer: 0
   m_Name: CenterCylinder
   m_TagString: Untagged
@@ -291,18 +290,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6129053087595370668
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1301957592146641064}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86fbb1f8c6c82436889d2baa414abc48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1320950608154455731
 GameObject:
   m_ObjectHideFlags: 0
@@ -1163,7 +1150,6 @@ GameObject:
   - component: {fileID: 5810074321081530279}
   - component: {fileID: 3152648591916554523}
   - component: {fileID: 184967481120521931}
-  - component: {fileID: 1386081064041694807}
   m_Layer: 0
   m_Name: UpRight
   m_TagString: Untagged
@@ -1240,18 +1226,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1386081064041694807
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4082837162269288093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86fbb1f8c6c82436889d2baa414abc48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &4226381366087723844
 GameObject:
   m_ObjectHideFlags: 0
@@ -1507,25 +1481,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a97c93226e2448b2ac01ab952c481e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 4472603860614154820}
-  fire: {fileID: 7963456999888181814}
-  omniFire: {fileID: 2271140282590099294}
   move: {fileID: 4053732215274948253, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
   look: {fileID: 4485540969121359642, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
   interact: {fileID: -1946564365313720924, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
   use: {fileID: -1391618853198549538, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
-  menu: {fileID: 0}
+  manager: {fileID: 0}
+  target: {fileID: 4472603860614154820}
+  fire: {fileID: 7963456999888181814}
+  omniFire: {fileID: 2271140282590099294}
   particle: {fileID: 3118742897133167386, guid: 89894e35b3fcc45adb0e4695950de3c1,
     type: 3}
   belt: {fileID: 5048465152275260245}
   barrel: {fileID: 2398180248322597067}
-  muzzle: {fileID: 4810836640982174496}
   movementSpeed: 10
   fireRate: 0.25
   omniFireRate: 1
-  camera: {fileID: 0}
-  manager: {fileID: 0}
   animatedRenderers:
   - {fileID: 2985948515062494047}
   - {fileID: 2023798816759740027}
@@ -1875,6 +1846,7 @@ GameObject:
   - component: {fileID: 6756516187673869606}
   - component: {fileID: 7715129085798435848}
   - component: {fileID: 2985948515062494047}
+  - component: {fileID: 2224650791216060481}
   m_Layer: 0
   m_Name: CenterSphere
   m_TagString: Untagged
@@ -1950,6 +1922,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2224650791216060481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5111329771906072901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8898ba8f5618c4b33b3dcdc6d3b16b35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 1
 --- !u!1 &5159267414064418574
 GameObject:
   m_ObjectHideFlags: 0
@@ -2391,7 +2376,6 @@ GameObject:
   - component: {fileID: 1305692353499076427}
   - component: {fileID: 228973403723061134}
   - component: {fileID: 1374774140652165930}
-  - component: {fileID: 696537401031103010}
   m_Layer: 0
   m_Name: TailPiece
   m_TagString: Untagged
@@ -2467,18 +2451,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &696537401031103010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6348364974912880747}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86fbb1f8c6c82436889d2baa414abc48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6545345377021590462
 GameObject:
   m_ObjectHideFlags: 0
@@ -2748,7 +2720,6 @@ GameObject:
   - component: {fileID: 1870567002842261431}
   - component: {fileID: 8790252404268253282}
   - component: {fileID: 2276613892963345245}
-  - component: {fileID: 4924121907027669592}
   m_Layer: 0
   m_Name: Up
   m_TagString: Untagged
@@ -2825,18 +2796,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4924121907027669592
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7325969282624696464}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86fbb1f8c6c82436889d2baa414abc48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7863371700311119425
 GameObject:
   m_ObjectHideFlags: 0

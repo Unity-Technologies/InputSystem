@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         public InputActionReference use;
 
         [Header("Gameplay")]
-        public new Camera camera;
+        [Tooltip("The gameplay manager")]
         public GameplayManager manager;
 
         public GameObject target;

@@ -151,7 +151,6 @@ public class GameplayManager : MonoBehaviour
         m_Player = Instantiate(player, transform, worldPositionStays: true);
         var playerComponent = m_Player.GetComponent<Player>();
         playerComponent.manager = this;
-        playerComponent.camera = gameCamera;
 
         // Delay first spawn so player has a chance to get ready
         m_TimeToNextSpawn = 3.0f;
