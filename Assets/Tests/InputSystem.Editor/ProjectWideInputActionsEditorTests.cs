@@ -236,7 +236,7 @@ internal class ProjectWideInputActionsEditorTests
         }
     }
 
-    [Test(Description = "Verifies that the default asset do not generate any verification errors (Regardless of existing requirements)")]
+    [Test(Description = "Verifies that the default asset does not generate any verification errors (Regardless of existing requirements)")]
     [Category(kTestCategory)]
     public void ProjectWideActions_ShouldSupportAssetVerification_AndHaveNoVerificationErrorsForDefaultAsset()
     {

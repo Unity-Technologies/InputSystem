@@ -6,6 +6,12 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using Unity.Profiling;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////FIXME: this performs horribly; the constant rebuilding on every single event makes the debug view super slow when device is noisy
 
 ////TODO: add information about which update type + update count an event came through in
@@ -271,7 +277,7 @@ namespace UnityEngine.InputSystem.Editor
                     else if (eventPtr.IsA<TextEvent>())
                     {
                         var textEventPtr = TextEvent.From(eventPtr);
-                        GUI.Label(cellRect, $"Character='{(char) textEventPtr->character}'");
+                        GUI.Label(cellRect, $"Character='{(char)textEventPtr->character}'");
                     }
                     break;
             }
