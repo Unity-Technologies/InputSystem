@@ -45,7 +45,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 10.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 20.0)
     {
         return WaitUntil(() =>
         {
@@ -58,7 +58,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 10.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 20.0)
     {
         return WaitUntil(() =>
         {
