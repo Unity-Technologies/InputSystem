@@ -429,6 +429,8 @@ MonoBehaviour:
   enemyExplosion: {fileID: 5308828742654324719, guid: 39a7c0f8dfc714dd6be0743596240a32,
     type: 3}
   player: {fileID: 4472603860614154820, guid: 0f92337866e254da99f12fd4390ecc7c, type: 3}
+  playerExplosion: {fileID: 0}
+  explosion: {fileID: 0}
   messageService: {fileID: 535440010}
 --- !u!1001 &67962919
 PrefabInstance:

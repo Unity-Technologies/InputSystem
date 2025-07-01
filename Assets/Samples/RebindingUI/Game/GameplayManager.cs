@@ -22,11 +22,14 @@ public class GameplayManager : MonoBehaviour
     [Tooltip("The enemy prefab for the mini game")]
     public GameObject enemy;
 
-    [Tooltip("The enemy explosion prefab for the mini game")]
+    [Tooltip("The explosion prefab for the mini game")]
     public GameObject enemyExplosion;
 
     [Tooltip("The player prefab for the mini game")]
     public GameObject player;
+
+    [Tooltip("The explosion prefab for the mini game")]
+    public GameObject playerExplosion;
 
     public GameObject explosion;
 
@@ -68,26 +71,35 @@ public class GameplayManager : MonoBehaviour
         m_ShakeTime = Time.timeAsDouble;
     }
 
-    public void Explosion(Transform target, Vector3 position, float amplitude = 0.1f)
+    public void Explosion(Transform target, Vector3 position, float amplitude, Color color, Material material = null)
     {
         var obj = Instantiate(enemyExplosion);
         obj.transform.position = target.position;
         obj.transform.rotation = target.rotation;
 
+        // If we are provided a material, use that for all debris
+        if (material != null)
+        {
+            var renderers = obj.GetComponentsInChildren<MeshRenderer>();
+            foreach (var childRenderer in renderers)
+                childRenderer.sharedMaterial = material;
+        }
+
+        // Set explosion position
         var exp = obj.GetComponent<Explosion>();
         exp.explosionPosition = position;
+
+        // Modify the particle color
+        var particles = exp.GetComponent<ParticleSystem>();
+        ParticleSystem.MainModule main = particles.main;
+        main.startColor = color;
 
         Shake(duration: 0.4f, amplitude: amplitude);
     }
 
-    public void GameOver(Vector3 position)
+    public void GameOver()
     {
         m_Player.SetActive(false); // <--- TODO This collides with haptic effect sitting on player
-
-        Explosion(m_Player.transform, position, 0.3f);
-
-        m_ShakeForce = 0.5f;
-        m_ShakeDuration = 0.5f;
 
         //m_ResetDuration = 2.0f;
 

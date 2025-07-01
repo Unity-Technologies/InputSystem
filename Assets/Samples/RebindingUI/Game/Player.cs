@@ -211,9 +211,17 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnCollisionEnter(Collision other)
         {
-            // If we collide with an enemy its game over.
+            // If we collide with an enemy
             if (other.gameObject.GetComponent<Enemy>())
-                manager.GameOver(other.GetContact(0).point);
+            {
+                // Create an explosion matching our current color
+                Color.RGBToHSV(GetColor(), out float h, out float s, out float v);
+                var explosionColor = Color.HSVToRGB(h, s * 0.5f, v);
+                manager.Explosion(transform, other.GetContact(0).point, 0.5f, explosionColor, m_Material);
+
+                // End the game
+                manager.GameOver();
+            }
         }
 
         private void Update()
