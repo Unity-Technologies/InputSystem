@@ -22,6 +22,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The gameplay manager responsible for managing gameplay.")]
         public GameplayManager gameplayManager;
 
+        [Tooltip("The gameplay UI")]
+        public GameObject gameUI;
+
         private GameState m_CurrentState = GameState.Initializing;
         private GameState m_NextState = GameState.Playing;
 
@@ -79,6 +82,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.Playing:
                     gameplayActions.Enable();
                     gameplayManager.enabled = true;
+                    gameUI.SetActive(true);
                     menu.SetActive(false);
                     break;
 
@@ -87,6 +91,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
                     gameplayManager.enabled = false;
+                    gameUI.SetActive(false);
                     toggleMenuAction.action.Enable();
 
                     menu.SetActive(true);

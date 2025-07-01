@@ -2,46 +2,75 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public interface IShowMessages
+namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    public void ShowMessage(string message);
-    public void ShowMessage(string message, TimeSpan duration, Action timeoutCallback = null);
-    public void HideMessage();
-}
-
-public class Message : MonoBehaviour, IShowMessages
-{
-    public Text text;
-    private double m_Timeout;
-    private Action m_TimeoutCallback;
-
-    public void HideMessage()
+    public class Message : MonoBehaviour
     {
-        gameObject.SetActive(false);
-    }
+        public GameplayManager gameplayManager;
+        public GameObject root;
+        public Text text;
+        private Action m_TimeoutCallback;
 
-    public void ShowMessage(string message)
-    {
-        if (text)
+        private void OnEnable()
+        {
+            gameplayManager.GameplayStateChanged += OnGameplayStateChanged;
+            gameplayManager.PauseChanged += OnPauseChanged;
+            OnGameplayStateChanged(gameplayManager.state);
+        }
+
+        private void OnPauseChanged(bool paused)
+        {
+            OnGameplayStateChanged(gameplayManager.state);
+        }
+
+        private void OnDisable()
+        {
+            gameplayManager.GameplayStateChanged += OnGameplayStateChanged;
+            gameplayManager.PauseChanged -= OnPauseChanged;
+        }
+
+        private void Hide()
+        {
+            root.SetActive(false);
+        }
+
+        private void Show(string message)
+        {
             text.text = message;
-    }
+            root.SetActive(true);
+        }
 
-    public void ShowMessage(string message, TimeSpan duration, Action timeoutCallback = null)
-    {
-        ShowMessage(message);
-        m_TimeoutCallback = timeoutCallback;
-        m_Timeout = Time.timeAsDouble + duration.TotalSeconds;
-        gameObject.SetActive(true);
-    }
+        private void Show(string message, float duration)
+        {
+            Show(message);
+        }
 
-    void Update()
-    {
-        if (!(Time.timeAsDouble >= m_Timeout))
-            return;
+        private void OnGameplayStateChanged(GameplayManager.GameplayState state)
+        {
+            if (gameplayManager.paused)
+            {
+                Show("PAUSED");
+                return;
+            }
 
-        HideMessage();
-
-        m_TimeoutCallback?.Invoke();
-        m_TimeoutCallback = null;
+            switch (state)
+            {
+                case GameplayManager.GameplayState.None:
+                    break;
+                case GameplayManager.GameplayState.StartLevel:
+                    Debug.Log("Starting level");
+                    Show($"ROUND {gameplayManager.level}");
+                    break;
+                case GameplayManager.GameplayState.CompleteLevel:
+                    break;
+                case GameplayManager.GameplayState.Playing:
+                    Debug.Log("Playing level");
+                    Hide();
+                    break;
+                case GameplayManager.GameplayState.GameOver:
+                    Show("GAME OVER");
+                    break;
+            }
+        }
     }
 }
