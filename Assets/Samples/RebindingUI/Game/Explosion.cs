@@ -1,14 +1,12 @@
-using System;
 using UnityEngine;
-using UnityEngine.Pool;
 
 public class Explosion : MonoBehaviour
 {
-    public IObjectPool<Explosion> pool;
     public Vector3 explosionPosition;
     private ParticleSystem m_ParticleSystem;
     private Rigidbody[] m_Rigidbodies;
     private bool m_Exploded;
+    private bool m_Destroyed;
 
     void Awake()
     {
@@ -29,8 +27,11 @@ public class Explosion : MonoBehaviour
 
     void Update()
     {
-        if (!m_ParticleSystem.isPlaying)
-            Destroy(gameObject);//pool.Release(this);
+        if (!m_ParticleSystem.isPlaying && !m_Destroyed)
+        {
+            m_Destroyed = true;
+            Destroy(gameObject);
+        }
     }
 
     private void FixedUpdate()

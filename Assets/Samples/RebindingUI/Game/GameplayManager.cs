@@ -6,6 +6,8 @@ using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
+// This sample can be optimized with pooled explosions.
+
 public class GameplayManager : MonoBehaviour
 {
     [Tooltip("The game camera")]
@@ -26,13 +28,14 @@ public class GameplayManager : MonoBehaviour
     [Tooltip("The player prefab for the mini game")]
     public GameObject player;
 
+    public GameObject explosion;
+
     [Tooltip("The message service.")]
     public GameObject messageService;
 
     private double m_TimeToNextSpawn;
     private GameObject m_Player;
     private ObjectPool<Enemy> m_EnemyPool;
-    private ObjectPool<Explosion> m_EnemyExplosionPool;
 
     private float m_ShakeForce;
     private float m_ShakeMaxForce;
@@ -67,7 +70,7 @@ public class GameplayManager : MonoBehaviour
 
     public void Explosion(Transform target, Vector3 position, float amplitude = 0.1f)
     {
-        var obj = Instantiate(enemyExplosion);//m_EnemyExplosionPool.Get();
+        var obj = Instantiate(enemyExplosion);
         obj.transform.position = target.position;
         obj.transform.rotation = target.rotation;
 
@@ -77,9 +80,11 @@ public class GameplayManager : MonoBehaviour
         Shake(duration: 0.4f, amplitude: amplitude);
     }
 
-    public void GameOver()
+    public void GameOver(Vector3 position)
     {
         m_Player.SetActive(false); // <--- TODO This collides with haptic effect sitting on player
+
+        Explosion(m_Player.transform, position, 0.3f);
 
         m_ShakeForce = 0.5f;
         m_ShakeDuration = 0.5f;
@@ -135,12 +140,6 @@ public class GameplayManager : MonoBehaviour
                 enemyComponent.manager = this;
                 return enemyComponent;
             },
-            actionOnGet: (obj) => obj.gameObject.SetActive(true),
-            actionOnRelease: (obj) => obj.gameObject.SetActive(false),
-            actionOnDestroy: (obj) => Destroy(obj.gameObject));
-
-        m_EnemyExplosionPool = new ObjectPool<Explosion>(
-            createFunc: () => Instantiate(enemyExplosion).GetComponent<Explosion>(),
             actionOnGet: (obj) => obj.gameObject.SetActive(true),
             actionOnRelease: (obj) => obj.gameObject.SetActive(false),
             actionOnDestroy: (obj) => Destroy(obj.gameObject));

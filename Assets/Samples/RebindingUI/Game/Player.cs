@@ -213,7 +213,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             // If we collide with an enemy its game over.
             if (other.gameObject.GetComponent<Enemy>())
-                manager.GameOver();
+                manager.GameOver(other.GetContact(0).point);
         }
 
         private void Update()
