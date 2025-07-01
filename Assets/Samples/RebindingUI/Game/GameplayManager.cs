@@ -52,16 +52,18 @@ public class GameplayManager : MonoBehaviour
     private int m_RemainingEnemiesRound;
     private int m_EnemySpawnCount;
 
+    private FeedbackController m_FeedbackController;
+
     public void KillEnemy()
     {
         --m_RemainingEnemiesRound;
     }
 
-    /// <summary>
-    /// Returns a normalized shake value between [0, 1].
-    /// </summary>
-    /// <returns>Normalized shake value.</returns>
-    public float GetShake() => Mathf.Approximately(Time.timeScale, 0.0f) ? 0.0f : m_ShakeForce;
+    public void GameOver()
+    {
+        m_Player.SetActive(false); // <--- TODO This collides with haptic effect sitting on player
+        m_Messages.ShowMessage("GAME OVER", TimeSpan.FromSeconds(2), ResetGame);
+    }
 
     private void Shake(float duration, float amplitude)
     {
@@ -95,15 +97,6 @@ public class GameplayManager : MonoBehaviour
         main.startColor = color;
 
         Shake(duration: 0.4f, amplitude: amplitude);
-    }
-
-    public void GameOver()
-    {
-        m_Player.SetActive(false); // <--- TODO This collides with haptic effect sitting on player
-
-        //m_ResetDuration = 2.0f;
-
-        m_Messages.ShowMessage("GAME OVER", TimeSpan.FromSeconds(2), ResetGame);
     }
 
     private static void WrapAround(ref float x, float min, float max)
@@ -143,6 +136,8 @@ public class GameplayManager : MonoBehaviour
 
     private void Awake()
     {
+        m_FeedbackController = GetComponent<FeedbackController>();
+
         m_EnemyPool = new ObjectPool<Enemy>(
             createFunc: () =>
             {
@@ -176,6 +171,10 @@ public class GameplayManager : MonoBehaviour
         m_Player = Instantiate(player, transform, worldPositionStays: true);
         var playerComponent = m_Player.GetComponent<Player>();
         playerComponent.manager = this;
+
+        // Setup feedback controller
+        var playerController = m_Player.GetComponent<PlayerController>();
+        playerController.feedbackController = m_FeedbackController;
 
         // Delay first spawn so player has a chance to get ready
         m_TimeToNextSpawn = 3.0f;
@@ -286,6 +285,10 @@ public class GameplayManager : MonoBehaviour
             0f);
 
         gameCamera.transform.position = m_CameraPosition + cameraShakeOffset;
+
+        // Apply shake to feedback controller if available
+        if (m_FeedbackController != null)
+            m_FeedbackController.rumble = m_ShakeForce;
     }
 
     void AnimateHapticShake()

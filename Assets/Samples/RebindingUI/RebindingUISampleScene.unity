@@ -357,6 +357,7 @@ GameObject:
   - component: {fileID: 51853245}
   - component: {fileID: 51853246}
   - component: {fileID: 51853247}
+  - component: {fileID: 51853248}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -432,6 +433,20 @@ MonoBehaviour:
   playerExplosion: {fileID: 0}
   explosion: {fileID: 0}
   messageService: {fileID: 535440010}
+--- !u!114 &51853248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 51853243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ac9b43eedbd9426f94712efe5efc1ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  colorOutputFrequency: 10
+  rumbleOutputFrequency: 10
 --- !u!1001 &67962919
 PrefabInstance:
   m_ObjectHideFlags: 0
