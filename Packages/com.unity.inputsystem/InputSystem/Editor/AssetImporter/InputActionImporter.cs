@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 13;
+        private const int kVersion = 14;
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -66,7 +66,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Attempt to parse JSON
                 asset.LoadFromJson(content);
-
                 // Make sure action map names are unique within JSON file
                 var names = new HashSet<string>();
                 foreach (var map in asset.actionMaps)

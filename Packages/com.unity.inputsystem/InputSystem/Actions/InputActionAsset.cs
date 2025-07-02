@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -275,6 +278,21 @@ namespace UnityEngine.InputSystem
                 return action;
             }
         }
+        /// <summary>
+        /// File‐format version constants for InputActionAsset JSON.
+        /// </summary>
+        static class JsonVersion
+        {
+            /// <summary>The original JSON version format for InputActionAsset.</summary>
+            public const int Version0 = 0;
+
+            /// <summary>Updated JSON version format for InputActionAsset.</summary>
+            /// <remarks>Changes representation of parameter values from being serialized by value to being serialized by value.</remarks>
+            public const int Version1 = 1;
+
+            /// <summary>The current version.</summary>
+            public const int Current  = Version1;
+        }
 
         /// <summary>
         /// Return a JSON representation of the asset.
@@ -296,8 +314,10 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
+            var hasContent = m_ActionMaps.LengthSafe() > 0 || m_ControlSchemes.LengthSafe() > 0;
             return JsonUtility.ToJson(new WriteFileJson
             {
+                version = hasContent ? JsonVersion.Current : JsonVersion.Version0,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
@@ -379,6 +399,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
+            MigrateJson(ref parsedJson);
             parsedJson.ToAsset(this);
         }
 
@@ -950,6 +971,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -965,6 +987,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -980,6 +1003,74 @@ namespace UnityEngine.InputSystem
                     foreach (var map in asset.m_ActionMaps)
                         map.m_Asset = asset;
             }
+        }
+
+        /// <summary>
+        /// If parsedJson.version is older than Current, rewrite every
+        /// action.processors entry to replace “enumName(Ordinal=…)” with
+        /// “enumName(Value=…)” and bump parsedJson.version.
+        /// </summary>
+        internal void MigrateJson(ref ReadFileJson parsedJson)
+        {
+            if (parsedJson.version >= JsonVersion.Version1)
+                return;
+            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
+            {
+                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+                {
+                    var mapJson = parsedJson.maps[mi];
+                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+                    {
+                        var actionJson = mapJson.actions[ai];
+                        var raw = actionJson.processors;
+                        if (string.IsNullOrEmpty(raw))
+                            continue;
+
+                        var list = NameAndParameters.ParseMultiple(raw).ToList();
+                        var rebuilt = new List<string>(list.Count);
+                        foreach (var nap in list)
+                        {
+                            var procType = InputSystem.TryGetProcessor(nap.name);
+                            if (nap.parameters.Count == 0 || procType == null)
+                            {
+                                rebuilt.Add(nap.ToString());
+                                continue;
+                            }
+
+                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
+                            var anyChanged = false;
+                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                            {
+                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                                {
+                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
+                                    if (ord >= 0 && ord < values.Length)
+                                    {
+                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
+                                        anyChanged = true;
+                                    }
+                                }
+                            }
+
+                            if (!anyChanged)
+                            {
+                                rebuilt.Add(nap.ToString());
+                            }
+                            else
+                            {
+                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
+                                rebuilt.Add($"{nap.name}({paramText})");
+                            }
+                        }
+
+                        actionJson.processors = string.Join(";", rebuilt);
+                        mapJson.actions[ai] = actionJson;
+                    }
+                    parsedJson.maps[mi] = mapJson;
+                }
+            }
+            // Bump the version so we never re-migrate
+            parsedJson.version = JsonVersion.Version1;
         }
     }
 }
