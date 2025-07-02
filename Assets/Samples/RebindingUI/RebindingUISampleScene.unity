@@ -375,16 +375,11 @@ PrefabInstance:
       propertyPath: m_Text
       value: Point
       objectReference: {fileID: 0}
-    - target: {fileID: 4072204658071074964, guid: 0648a5c163cef41038b804a34b4b80e7,
-        type: 3}
-      propertyPath: m_FontData.m_FontSize
-      value: 14
-      objectReference: {fileID: 0}
     - target: {fileID: 8586258032687207620, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: action
       value: 
-      objectReference: {fileID: 2479356488543213997, guid: 100b460020a15704692cc0ec34331d8a,
+      objectReference: {fileID: -2812785568107061803, guid: 7dead05c54ca85b4681351aafd8bd03a,
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -407,9 +402,9 @@ GameObject:
   m_Component:
   - component: {fileID: 51853244}
   - component: {fileID: 51853245}
-  - component: {fileID: 51853246}
   - component: {fileID: 51853247}
   - component: {fileID: 51853248}
+  - component: {fileID: 51853246}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -445,10 +440,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   menu: {fileID: 508436405}
-  gameplayActions: {fileID: -944628639613478452, guid: 7dead05c54ca85b4681351aafd8bd03a,
-    type: 3}
-  toggleMenuAction: {fileID: -2195523558945053078, guid: 7dead05c54ca85b4681351aafd8bd03a,
-    type: 3}
+  actions: {fileID: -944628639613478452, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
   gameplayManager: {fileID: 51853247}
   gameUI: {fileID: 5139312}
 --- !u!114 &51853246
@@ -1749,7 +1741,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83ad383eb7f4143f388de7a2a7e17738, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Action: {fileID: 273729934076485498, guid: 100b460020a15704692cc0ec34331d8a, type: 3}
+  m_Action: {fileID: 2606659438429624211, guid: 7dead05c54ca85b4681351aafd8bd03a,
+    type: 3}
   m_OnPerformed:
     m_PersistentCalls:
       m_Calls:
@@ -2559,15 +2552,13 @@ PrefabInstance:
     - target: {fileID: 4072204658071074964, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: m_Text
-      value: 'Scroll
-
-'
+      value: Cancel
       objectReference: {fileID: 0}
     - target: {fileID: 8586258032687207620, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: action
       value: 
-      objectReference: {fileID: 273729934076485498, guid: 100b460020a15704692cc0ec34331d8a,
+      objectReference: {fileID: -5236070842925329707, guid: 7dead05c54ca85b4681351aafd8bd03a,
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2614,27 +2605,27 @@ MonoBehaviour:
   m_MoveRepeatDelay: 0.5
   m_MoveRepeatRate: 0.1
   m_XRTrackingOrigin: {fileID: 0}
-  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_ActionsAsset: {fileID: -944628639613478452, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_PointAction: {fileID: 1054132383583890850, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_PointAction: {fileID: -2812785568107061803, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_MoveAction: {fileID: 3710738434707379630, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_MoveAction: {fileID: 139695247442476359, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_SubmitAction: {fileID: 2064916234097673511, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_SubmitAction: {fileID: -1759990180155748471, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_CancelAction: {fileID: -1967631576421560919, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_CancelAction: {fileID: 2606659438429624211, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_LeftClickAction: {fileID: 8056856818456041789, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_LeftClickAction: {fileID: -537212454756102682, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_MiddleClickAction: {fileID: 3279352641294131588, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_MiddleClickAction: {fileID: -5402457027643495422, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_RightClickAction: {fileID: 3837173908680883260, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_RightClickAction: {fileID: 4746025245667075610, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_ScrollWheelAction: {fileID: 4502412055082496612, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_ScrollWheelAction: {fileID: -5236070842925329707, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_TrackedDevicePositionAction: {fileID: 4754684134866288074, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_TrackedDevicePositionAction: {fileID: 6199160919944235066, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
-  m_TrackedDeviceOrientationAction: {fileID: 1025543830046995696, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  m_TrackedDeviceOrientationAction: {fileID: 6252141164119506759, guid: 7dead05c54ca85b4681351aafd8bd03a,
     type: 3}
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
@@ -5715,7 +5706,7 @@ PrefabInstance:
         type: 3}
       propertyPath: action
       value: 
-      objectReference: {fileID: -4334443723673744087, guid: 100b460020a15704692cc0ec34331d8a,
+      objectReference: {fileID: -1759990180155748471, guid: 7dead05c54ca85b4681351aafd8bd03a,
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6022,7 +6013,7 @@ PrefabInstance:
         type: 3}
       propertyPath: action
       value: 
-      objectReference: {fileID: 273729934076485498, guid: 100b460020a15704692cc0ec34331d8a,
+      objectReference: {fileID: 2606659438429624211, guid: 7dead05c54ca85b4681351aafd8bd03a,
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6873,20 +6864,13 @@ PrefabInstance:
     - target: {fileID: 4072204658071074964, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: m_Text
-      value: 'Navigate
-
-'
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072204658071074964, guid: 0648a5c163cef41038b804a34b4b80e7,
-        type: 3}
-      propertyPath: m_FontData.m_FontSize
-      value: 14
+      value: Navigate
       objectReference: {fileID: 0}
     - target: {fileID: 8586258032687207620, guid: 0648a5c163cef41038b804a34b4b80e7,
         type: 3}
       propertyPath: action
       value: 
-      objectReference: {fileID: -64187129634329061, guid: 100b460020a15704692cc0ec34331d8a,
+      objectReference: {fileID: 139695247442476359, guid: 7dead05c54ca85b4681351aafd8bd03a,
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

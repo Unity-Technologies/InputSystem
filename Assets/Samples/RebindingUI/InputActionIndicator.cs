@@ -25,27 +25,22 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The duration for which the indicator should be lit before becoming completely inactive.")]
         public float duration = 1.0f;
 
-        private double m_RealTimeLastPerformed;
-        private Image m_Image;
-        private Text m_Text;
+        public Image performedIndicator;
+        public Image pressedIndicator;
+        public Text label;
 
-        void Awake()
-        {
-            m_Image = GetComponent<Image>();
-            m_Text = GetComponent<Text>();
-            Update();
-        }
+        private double m_RealTimeLastPerformed;
 
         private void OnEnable()
         {
-            action.action.performed += OnPerformed;
-            action.action.Enable();
+            if (action != null && action.action != null)
+                action.action.performed += OnPerformed;
         }
 
         private void OnDisable()
         {
-            action.action.Disable();
-            action.action.performed -= OnPerformed;
+            if (action != null && action.action != null)
+                action.action.performed -= OnPerformed;
         }
 
         private void OnPerformed(InputAction.CallbackContext obj)
@@ -57,23 +52,30 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             if (action.action.enabled)
             {
-                // Pulse active color if enabled
+                // Pulse active color if enabled and performed
                 var elapsedSincePerformed = Time.realtimeSinceStartupAsDouble - m_RealTimeLastPerformed;
-                m_Image.color = duration <= 0.0f
-                    ? inactiveColor
-                    : Color.Lerp(inactiveColor, activeColor,
-                    (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
+                if (performedIndicator)
+                {
+                    performedIndicator.color = duration <= 0.0f
+                        ? inactiveColor
+                        : Color.Lerp(inactiveColor, activeColor,
+                        (float)Math.Max(0.0, 1.0 - elapsedSincePerformed / duration));
+                }
+
+                if (pressedIndicator)
+                    pressedIndicator.color = action.action.IsPressed() ? activeColor : inactiveColor;
             }
             else
             {
                 // Show disabled indicator if disabled
-                if (m_Image.color != disabledColor)
-                    m_Image.color = disabledColor;
+                if (performedIndicator && performedIndicator.color != disabledColor)
+                    performedIndicator.color = disabledColor;
+                if (pressedIndicator && pressedIndicator.color != disabledColor)
+                    pressedIndicator.color = disabledColor;
             }
         }
 
-        // We want the label for the action name to update in edit mode, too, so
-        // we kick that off from here.
+        // Also update action label in edit-mode
 #if UNITY_EDITOR
         protected void OnValidate()
         {
@@ -84,12 +86,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void UpdateActionLabel()
         {
-            if (m_Text == null)
+            if (label == null)
                 return;
             if (action != null && action.action != null)
-                m_Text.text = action.name;
+                label.text = action.action.name;
             else
-                m_Text.text = string.Empty;
+                label.text = string.Empty;
         }
     }
 }

@@ -13,11 +13,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The in-game menu object to be activated and deactivated when menu is toggled (Required).")]
         public GameObject menu;
 
-        [Tooltip("The gameplay actions to be disabled when exiting game mode and enabled when entering game mode (Required).")]
-        public InputActionAsset gameplayActions;
+        [Tooltip("The actions asset that holds Gameplay, Common and UI action maps to be used. (Required).")]
+        public InputActionAsset actions;
 
-        [Tooltip("The input action to be used to toggle menu (Required).")]
-        public InputActionReference toggleMenuAction;
+        //[Tooltip("The input action to be used to toggle menu (Required).")]
+        //public InputActionReference toggleMenuAction;
 
         [Tooltip("The gameplay manager responsible for managing gameplay.")]
         public GameplayManager gameplayManager;
@@ -27,6 +27,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private GameState m_CurrentState = GameState.Initializing;
         private GameState m_NextState = GameState.Playing;
+
+        private InputActionMap gameplayActions;
+        private InputAction toggleMenuAction;
+
+        private void Awake()
+        {
+            gameplayActions = actions.FindActionMap("Gameplay");
+            toggleMenuAction = actions.FindAction("Common/Menu");
+        }
 
         /// <summary>
         /// Toggles between game state and rebinding menu state.
@@ -62,12 +71,14 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnEnable()
         {
-            toggleMenuAction.action.performed += OnToggleMenu;
+            toggleMenuAction.performed += OnToggleMenu;
+            toggleMenuAction.Enable();
         }
 
         private void OnDisable()
         {
-            toggleMenuAction.action.performed -= OnToggleMenu;
+            toggleMenuAction.performed -= OnToggleMenu;
+            toggleMenuAction.Disable();
         }
 
         private void Update()
@@ -86,6 +97,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.Playing:
                     gameplayActions.Enable();
                     gameplayManager.enabled = true;
+
                     gameUI.SetActive(true);
                     menu.SetActive(false);
                     break;
@@ -95,9 +107,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
                     gameplayManager.enabled = false;
+
                     gameUI.SetActive(false);
-                    toggleMenuAction.action.Enable();
                     menu.SetActive(true);
+
+                    // Workaround: Make sure we always have a select game object since Unity UI might otherwise show
+                    // without a selection which might prevent gamepad navigation.
+                    var eventSystem = EventSystem.current;
+                    if (eventSystem.currentSelectedGameObject == null)
+                        eventSystem.SetSelectedGameObject(eventSystem.firstSelectedGameObject);
                     break;
             }
         }
