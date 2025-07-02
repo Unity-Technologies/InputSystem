@@ -41,6 +41,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.RebindingMenu:
                     // Only allow transition back to the game if game menu is interactable.
                     // This is to avoid e.g. pressing menu toggle action while in rebind mode.
+                    // Essentially this is equivalent "if NOT currently rebinding".
                     if (menu.GetComponent<CanvasGroup>().interactable)
                         m_NextState = GameState.Playing;
                     break;
@@ -96,10 +97,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     gameplayManager.enabled = false;
                     gameUI.SetActive(false);
                     toggleMenuAction.action.Enable();
-
                     menu.SetActive(true);
-                    if (EventSystem.current.currentSelectedGameObject == null)
-                        EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject); // TODO Move to other canvas interaction place
                     break;
             }
         }
