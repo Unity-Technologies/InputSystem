@@ -1528,6 +1528,17 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
         }
 
+        // We should dispose the static default actions thing because otherwise it will survive domain reloads
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetDefaultActions()
+        {
+            if (defaultActions != null)
+            {
+                defaultActions.Dispose();
+                defaultActions = null;
+            }
+        }
+
         /// <summary>
         /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
         /// Useful for creating <see cref="InputSystemUIInputModule"/> at runtime.
@@ -1665,7 +1676,12 @@ namespace UnityEngine.InputSystem.UI
             InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
             DisableAllActions();
             UnhookActions();
-            UnassignActions();
+
+            // In the case we've been initialized with default actions, we want to release them
+            if (defaultActions != null && defaultActions.asset == actionsAsset)
+            {
+                UnassignActions();
+            }
 
             base.OnDisable();
         }
