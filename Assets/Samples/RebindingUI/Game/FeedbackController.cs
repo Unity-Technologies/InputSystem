@@ -105,6 +105,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_InvalidateLight = m_InvalidateRumble = true;
 
             // Animate device color, note that we throttle this to avoid output congestion on device side.
+            // See https://jira.unity3d.com/browse/ISXB-1587 for why this workaround was added.
+            // If this ticket is resolved, frequency settings and this workaround may be removed.
             if (now >= m_NextLightUpdateTime && (m_InvalidateLight || m_DeviceColor != color))
             {
                 m_InvalidateLight = false;
@@ -114,6 +116,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             // Animate device rumble, note that we throttle this to avoid output congestion on device side.
             // The else branch makes sure rumble effect is paused if user pauses with motors running.
+            // See https://jira.unity3d.com/browse/ISXB-1586 for why this workaround was added.
+            // If this ticket is resolved, frequency settings and this workaround may be removed.
             if (now >= m_NextRumbleUpdateTime && (m_InvalidateRumble || !Mathf.Approximately(m_DeviceRumble, rumble)))
             {
                 m_InvalidateRumble = false;
