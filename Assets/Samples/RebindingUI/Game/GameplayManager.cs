@@ -149,6 +149,19 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 x = min;
         }
 
+        internal bool IsInsideGameplayArea(Vector3 position, float margin = 0.8f)
+        {
+            if (!gameCamera || !gameCamera.orthographic)
+                return true;
+
+            var orthoSize = gameCamera.orthographicSize;
+            var horizontalExtent = orthoSize * gameCamera.aspect;
+            return (position.x >= -horizontalExtent - margin) &&
+                (position.x <= horizontalExtent + margin) &&
+                (position.y >= -orthoSize - margin) &&
+                (position.y <= orthoSize + margin);
+        }
+
         private static bool TryTeleportOrthographicExtents(Camera camera, Vector3 position,
             out Vector3 result, float margin = 0.8f)
         {

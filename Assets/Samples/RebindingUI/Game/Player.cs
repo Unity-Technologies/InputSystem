@@ -130,7 +130,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             // Create an object pool for bullets/projectiles
             m_ObjectPool = new ObjectPool<Bullet>(
-                createFunc: () => Instantiate(particle).GetComponent<Bullet>(),
+                createFunc: () =>
+                {
+                    var bullet = Instantiate(particle).GetComponent<Bullet>();
+                    bullet.Initialize(manager, m_ObjectPool);
+                    return bullet;
+                },
                 actionOnGet: (bullet) =>  bullet.gameObject.SetActive(true),
                 actionOnRelease: (bullet) =>  bullet.gameObject.SetActive(false),
                 actionOnDestroy: (bullet) => Destroy(bullet.gameObject));
@@ -177,7 +182,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             var bullet = m_ObjectPool.Get();
             bullet.direction = direction;
             bullet.transform.position = transform.position + direction.normalized * (1.6f * transform.lossyScale.y);
-            bullet.pool = m_ObjectPool;
 
             // Animate barrel to simulate recoil
             var pos = barrel.transform.localPosition;

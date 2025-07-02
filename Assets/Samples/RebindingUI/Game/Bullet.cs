@@ -1,40 +1,56 @@
-using System;
-using UnityEngine;
 using UnityEngine.Pool;
 
-public class Bullet : MonoBehaviour
+namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    public float speed = 1.0f;
-    public Vector3 direction = Vector3.forward;
-    public IObjectPool<Bullet> pool;
-
-    private bool m_Destroyed;
-
-    private void Update()
+    /// <summary>
+    /// Represents a projectile with collision detection.
+    /// </summary>
+    public class Bullet : MonoBehaviour
     {
-        // Animate bullet
-        transform.position += direction * (speed * Time.deltaTime);
+        [Tooltip("The bullet velocity")]
+        public float speed = 1.0f;
 
-        // Destroy bullet if it has exited the game area
-        if (Vector3.Distance(transform.position, Vector3.zero) > 10.0f)
-            OnParticleDestroyed();
-    }
+        [Tooltip("The bullet movement direction vector")]
+        public Vector3 direction = Vector3.forward;
 
-    void OnEnable()
-    {
-        m_Destroyed = false;
-    }
+        private IObjectPool<Bullet> m_Pool;
+        private GameplayManager m_Manager;
+        private bool m_Destroyed;
 
-    private void OnCollisionEnter(Collision other)
-    {
-        OnParticleDestroyed();
-    }
+        public void Initialize(GameplayManager manager, IObjectPool<Bullet> pool)
+        {
+            m_Manager = manager;
+            m_Pool = pool;
+        }
 
-    private void OnParticleDestroyed()
-    {
-        if (m_Destroyed)
-            return;
-        pool.Release(this);
-        m_Destroyed = true;
+        private void Update()
+        {
+            // Animate bullet
+            transform.position += direction * (speed * Time.deltaTime);
+
+            // Destroy bullet if it has exited the game area
+            if (!m_Manager.IsInsideGameplayArea(transform.position))
+                DestroyBullet();
+        }
+
+        void OnEnable()
+        {
+            m_Destroyed = false;
+        }
+
+        private void OnCollisionEnter(Collision other)
+        {
+            DestroyBullet();
+        }
+
+        private void DestroyBullet()
+        {
+            if (m_Destroyed)
+                return;
+
+            // Return this object to the pool
+            m_Pool.Release(this);
+            m_Destroyed = true;
+        }
     }
 }
