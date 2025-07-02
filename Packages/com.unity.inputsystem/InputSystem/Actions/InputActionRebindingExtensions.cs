@@ -2367,6 +2367,11 @@ namespace UnityEngine.InputSystem
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
                         control.HasValueChangeInState(statePtr))
                     {
+                        // ISXB-1595: Mark event as handled, otherwise the direct cancellation may affect actions bound
+                        // to the same control. Since the cancellation is part of the rebind process it should be
+                        // treated as matched input.
+                        eventPtr.handled = true;
+
                         OnCancel();
                         break;
                     }
