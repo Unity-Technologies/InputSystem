@@ -67,7 +67,7 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
     public override IEnumerator UnitySetup()
     {
         m_Window = InputActionsEditorWindow.OpenEditor(m_Asset);
-        yield return base.UnitySetup();
+        yield return null;
     }
 
     [UnityTest]
