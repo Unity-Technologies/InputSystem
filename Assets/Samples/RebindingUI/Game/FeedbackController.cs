@@ -9,13 +9,16 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     /// </summary>
     public class FeedbackController : MonoBehaviour
     {
+        private const float kDefaultOutputFrequency = 10.0f;
+        private const float kDefaultOutputThrottleDelay = 1.0f / kDefaultOutputFrequency;
+
         [Header("Color Output")]
         [Tooltip("The device color output frequency (Hz)")]
-        public float colorOutputFrequency = 10.0f;
+        public float colorOutputFrequency = kDefaultOutputFrequency;
 
         [Header("Force Feedback Output")]
         [Tooltip("The device rumble output frequency (Hz)")]
-        public float rumbleOutputFrequency = 10.0f;
+        public float rumbleOutputFrequency = kDefaultOutputFrequency;
 
         /// <summary>
         /// Gets or sets the target light color.
@@ -25,7 +28,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <summary>
         /// Gets or sets the strength of the rumble effect [0, 1].
         /// </summary>
-        public float rumble { get; set; }
+        public float rumble
+        {
+            get => m_Rumble;
+            set => m_Rumble = Mathf.Clamp01(value);
+        }
 
         /// <summary>
         /// Records the device used to trigger an action.
@@ -74,6 +81,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private Color m_DeviceColor = NoLight;
         private double m_NextRumbleUpdateTime;
         private float m_DeviceRumble;
+        private float m_Rumble;
 
         private void Awake()
         {
@@ -110,7 +118,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             if (now >= m_NextLightUpdateTime && (m_InvalidateLight || m_DeviceColor != color))
             {
                 m_InvalidateLight = false;
-                m_NextLightUpdateTime = NextMultipleOf(now, 1.0f / colorOutputFrequency);
+                m_NextLightUpdateTime = ComputeNextUpdateTime(now, colorOutputFrequency);
                 ApplyLight(color);
             }
 
@@ -121,7 +129,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             if (now >= m_NextRumbleUpdateTime && (m_InvalidateRumble || !Mathf.Approximately(m_DeviceRumble, rumble)))
             {
                 m_InvalidateRumble = false;
-                m_NextRumbleUpdateTime = NextMultipleOf(now, 1.0f / rumbleOutputFrequency);
+                m_NextRumbleUpdateTime = ComputeNextUpdateTime(now, rumbleOutputFrequency);
                 ApplyRumble(rumble);
             }
         }
@@ -186,7 +194,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private static bool DetectAbandonedDevices(double realTimeSinceStartup)
         {
-            var removed = false;
+            bool removed;
             var foundAtLeastOnePassiveDevice = false;
             do
             {
@@ -210,9 +218,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             return foundAtLeastOnePassiveDevice;
         }
 
-        private static double NextMultipleOf(double value, double factor)
+        private static double ComputeNextUpdateTime(double now, float frequency)
         {
-            return Math.Round((value / factor), MidpointRounding.AwayFromZero) * factor;
+            var factor = frequency > 0.0 ? 1.0f / frequency : kDefaultOutputThrottleDelay;
+            return Math.Ceiling(now / factor) * factor;
         }
     }
 }
