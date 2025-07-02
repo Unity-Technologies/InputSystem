@@ -31,6 +31,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the TreeView compilation warnings when used with Unity 6.2 beta (ISX-2320)
 - Fixed actions being reset when disabling the InputSystemUIInputModule component [ISXB-1493](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
 - Fixed a memory leak when disabling and enabling the InputSystemUIInputModule component at runtime [ISXB-1573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1573)
+- Fixed all InputControls being changed at once when you change just one by reverting `2a37caac288ac09bc9122234339dc5df8d3a0ca6`, which was an attempt at fixing [ISXB-1221] that introduced this regression [ISXB-1531] (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
