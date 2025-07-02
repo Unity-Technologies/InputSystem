@@ -1576,33 +1576,6 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Prevent all input events that have no input matching the rebind operation's configuration from reaching
-            /// its target <
-            /// </summary>
-            /// <param name="value">If true (default) suppression is enabled, if false suppression is disabled.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// This is similar to <see cref="WithMatchingEventsBeingSuppressed"/> but determines how to treat
-            /// non-matching input events.
-            ///
-            /// Use this setting to suppress any input coming from controls that do not match the rebind target type.
-            /// For example, if the rebinding process is timed and do not show UI while rebinding, it might be desirable
-            /// to suppress e.g. UI input binding actions from triggering while waiting for input to bind.
-            ///
-            /// See <seealso cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
-            /// actions during rebind.
-            /// </remarks>
-            public RebindingOperation WithNonMatchingEventsBeingSuppressed(bool value = true)
-            {
-                ThrowIfRebindInProgress();
-                if (value)
-                    m_Flags |= Flags.SuppressNonMatchingEvents;
-                else
-                    m_Flags &= ~Flags.SuppressNonMatchingEvents;
-                return this;
-            }
-
-            /// <summary>
             /// Set the control path that is matched against actuated controls.
             /// </summary>
             /// <param name="binding">A control path (see <see cref="InputControlPath"/>) such as <c>"&lt;Keyboard&gt;/escape"</c>.</param>
@@ -2492,8 +2465,6 @@ namespace UnityEngine.InputSystem
                 // will skip further processing of the event.
                 if (suppressEvent && (m_Flags & Flags.SuppressMatchingEvents) != 0)
                     eventPtr.handled = true;
-                else if ((m_Flags & Flags.SuppressNonMatchingEvents) != 0)
-                    eventPtr.handled = true;
 
                 if (haveChangedCandidates && !canceled)
                 {
@@ -2759,8 +2730,7 @@ namespace UnityEngine.InputSystem
                 DontIgnoreNoisyControls = 1 << 6,
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,
-                SuppressMatchingEvents = 1 << 9,
-                SuppressNonMatchingEvents = 1 << 10,
+                SuppressMatchingEvents = 1 << 9
             }
         }
 
