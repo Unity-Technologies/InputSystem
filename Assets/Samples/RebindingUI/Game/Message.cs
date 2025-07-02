@@ -58,13 +58,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameplayManager.GameplayState.None:
                     break;
                 case GameplayManager.GameplayState.StartLevel:
-                    Debug.Log("Starting level");
                     Show($"ROUND {gameplayManager.level}");
                     break;
                 case GameplayManager.GameplayState.CompleteLevel:
                     break;
                 case GameplayManager.GameplayState.Playing:
-                    Debug.Log("Playing level");
                     Hide();
                     break;
                 case GameplayManager.GameplayState.GameOver:
