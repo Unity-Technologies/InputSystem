@@ -37,10 +37,14 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 canvasGroup.interactable = m_SavedInteractable;
 
                 // Restore previous selection.
-                if (m_SelectedObject != null)
-                    EventSystem.current.SetSelectedGameObject(m_SelectedObject);
-                else if (EventSystem.current.currentSelectedGameObject == null)
-                    EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
+                var eventSystem = EventSystem.current;
+                if (eventSystem != null)
+                {
+                    if (m_SelectedObject != null)
+                        eventSystem.SetSelectedGameObject(m_SelectedObject);
+                    else if (EventSystem.current.currentSelectedGameObject == null)
+                        eventSystem.SetSelectedGameObject(eventSystem.firstSelectedGameObject);
+                }
             }
         }
     }
