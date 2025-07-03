@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 // Since this sample has no interactable UI during rebinding we also want to suppress non-matching events.
                 //.WithNonMatchingEventsBeingSuppressed()
                 // We want device state to update but not actions firing during rebinding.
-                .WithActionsBeingSuppressed()
+                .WithActionEventNotificationsBeingSuppressed()
                 // We use a timeout to illustrate that its possible to skip cancel buttons and let rebind timeout.
                 .WithTimeout(m_RebindTimeout)
                 .OnComplete(

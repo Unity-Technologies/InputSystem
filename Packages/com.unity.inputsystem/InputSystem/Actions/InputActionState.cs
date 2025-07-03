@@ -121,6 +121,7 @@ namespace UnityEngine.InputSystem
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
         private bool m_InProcessControlStateChange;
+        private bool m_Suppressed;
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
@@ -366,6 +367,11 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
+
+        /// <summary>
+        /// Check whether the state is currently reflecting a suppressed state.
+        /// </summary>
+        public bool isSuppressed => m_Suppressed;
 
         /// <summary>
         /// Check whether the state has any actions that are currently enabled.
@@ -1519,9 +1525,9 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
-                    // Check if we should suppress interaction processing
-                    var suppressActionProcessing = (eventPtr != null) && eventPtr.handled &&
-                        InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates;
+                    // Check if we should suppress interaction processing notifications
+                    m_Suppressed = (eventPtr != null) && eventPtr.handled &&
+                        InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionEventNotifications;
 
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
@@ -1532,7 +1538,7 @@ namespace UnityEngine.InputSystem
                     bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
                     // Process button presses/releases.
-                    if (!isConflictingInput && !suppressActionProcessing)
+                    if (!isConflictingInput)
                         ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
 
                     // If we have interactions, let them do all the processing. The presence of an interaction
@@ -1540,13 +1546,11 @@ namespace UnityEngine.InputSystem
                     var interactionCount = bindingStatePtr->interactionCount;
                     if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
                     {
-                        if (!suppressActionProcessing)
-                            ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
+                        ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
                     }
                     else if (!haveInteractionsOnComposite && !isConflictingInput)
                     {
-                        if (!suppressActionProcessing) // <-- This solves it for default interaction
-                            ProcessDefaultInteraction(ref trigger, actionIndex);
+                        ProcessDefaultInteraction(ref trigger, actionIndex);
                     }
                 }
                 finally
@@ -1574,7 +1578,6 @@ namespace UnityEngine.InputSystem
             if (controlActuation <= pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold)
                 bindingStatePtr->pressTime = 0d;
 
-            // TODO Point of interest (polled events)
             var actuation = trigger.magnitude;
             var actionState = &actionStates[actionIndex];
             if (!actionState->isPressed && actuation >= pressPoint)
@@ -1949,7 +1952,7 @@ namespace UnityEngine.InputSystem
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (actuation >= threshold)
                         {
-                            // CALLBACK HERE!
+                            // TODO CALLBACK HERE!
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                                 phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                         }
@@ -2367,8 +2370,8 @@ namespace UnityEngine.InputSystem
 
             // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
-            if (actionState->isDisabled /*|| InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionUpdates*/)
-                return true; // <--- Could be relevant
+            if (actionState->isDisabled)
+                return true;
 
             // We mark the action as in-processing while we execute its phase transitions and perform
             // callbacks. The callbacks may alter system state such that the action may get disabled
@@ -2408,7 +2411,6 @@ namespace UnityEngine.InputSystem
                 }
                 else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
                 {
-                    // CALLBACK HERE!
                     ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
                         isDisablingAction: newPhase == InputActionPhase.Canceled && phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
@@ -2434,7 +2436,8 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger, bool isDisablingAction = false)
+        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase,
+            ref TriggerState trigger, bool isDisablingAction = false)
         {
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
@@ -2503,15 +2506,17 @@ namespace UnityEngine.InputSystem
                 newState.startTime = newState.time;
             *actionState = newState;
 
-            //if (InputSystem.inputEventHandledPolicy == InputEventHandledPolicy.SuppressNotifications)
-            //    return;
-
             // Let listeners know.
             var map = maps[trigger.mapIndex];
             Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,
                 "actionIndex is below actionStartIndex for map that the action belongs to");
             var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
             trigger.phase = newPhase;
+
+            // Early out if suppressed
+            if (m_Suppressed)
+                return;
+
             switch (newPhase)
             {
                 case InputActionPhase.Started:
@@ -2524,7 +2529,6 @@ namespace UnityEngine.InputSystem
                 case InputActionPhase.Performed:
                 {
                     Debug.Assert(trigger.controlIndex != -1, "Must have control to perform an action");
-                    // CALLBACK HERE
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     break;
                 }
@@ -2538,7 +2542,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase,
+            ref CallbackArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -2552,6 +2557,13 @@ namespace UnityEngine.InputSystem
             };
 
             k_InputActionCallbackMarker.Begin();
+
+            // Early return in case of suppressed action notifications.
+            if (m_Suppressed)
+            {
+                k_InputActionCallbackMarker.End();
+                return;
+            }
 
             // Global callback goes first.
             var action = context.action;
@@ -2578,7 +2590,6 @@ namespace UnityEngine.InputSystem
             }
 
             // Run callbacks (if any) directly on action.
-            // CALLBACK INVOKED HERE
             DelegateHelpers.InvokeCallbacksSafe(ref listeners, context, callbackName, action);
 
             // Run callbacks (if any) on action map.

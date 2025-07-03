@@ -12,8 +12,9 @@ namespace UnityEngine.InputSystem.LowLevel
         SuppressStateUpdates,
 
         /// <summary>
-        /// Input events will be processed for state updates but will not trigger interaction nor phase updates.
+        /// Input events will be processed for state updates and input action interaction updates but interaction
+        /// event notifications will be suppressed.
         /// </summary>
-        SuppressActionUpdates
+        SuppressActionEventNotifications
     }
 }

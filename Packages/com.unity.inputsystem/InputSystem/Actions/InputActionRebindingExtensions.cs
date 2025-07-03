@@ -1562,7 +1562,7 @@ namespace UnityEngine.InputSystem
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.
             ///
-            /// See <see cref="WithActionsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// See <see cref="WithActionEventNotificationsBeingSuppressed"/> for how this configuration relates to suppressing
             /// actions during rebind.
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
@@ -2088,32 +2088,37 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Ensures state changes are allowed to propagate during rebinding but suppresses action updates
-            /// to prevent unexpected actions triggering as soon as rebinding ends (event suppression stops).
+            /// Ensures state changes are allowed to propagate during rebinding but suppresses action event
+            /// notifications to prevent unexpected actions triggering as soon as rebinding ends
+            /// (event suppression stops).
             /// </summary>
-            /// <param name="value">If true disables action propagation, if false enables action propagation.</param>
+            /// <param name="value">If true, disables action event notifications for changes driven by handled events
+            /// during rebinding, if false this feature is disabled.</param>
             /// <remarks>
             /// If events are suppressed during rebinding using <see cref="WithMatchingEventsBeingSuppressed"/>
-            /// and/or <see cref="WithNonMatchingEventsBeingSuppressed"/> without suppressing action propagation,
-            /// events will not update their associated device state. This may lead to unexpected actions triggering
-            /// as soon as rebinding completes (event suppression stops), due to missed state transitions.
-            /// Action propagation resumes to normal as soon as rebinding operation completes or cancels.
+            /// without suppressing action event notifications, events will not update their associated device state
+            /// and be suppressed earlier in the processing chain. This may lead to unexpected actions triggering
+            /// as soon as rebinding completes (event suppression stops), due to missed recording of state transitions.
+            /// Action event notification resumes to normal as soon as rebinding operation completes or cancels.
             ///
             /// When this configuration is active, any events suppressed via
-            /// <see cref="WithMatchingEventsBeingSuppressed"/> and/or
-            /// <see cref="WithNonMatchingEventsBeingSuppressed"/> will still be allowed to update their associated
-            /// device state but will not propagate into action interaction updates which could cause undesirable
-            /// triggering of actions caused by the difference between device state prior to rebinding and after
-            /// rebinding.
+            /// <see cref="WithMatchingEventsBeingSuppressed"/> will still be allowed to update their associated
+            /// device state but will not propagate into action interaction event notifications which could cause
+            /// undesirable triggering of actions caused by the difference between device state prior to rebinding
+            /// and after rebinding.
             ///
             /// Note that if event suppression is not active, this setting will have no effect.
+            ///
+            /// In addition to interaction event notifications, the following APIs will also return false when the
+            /// action reflects a state subject for suppression: <see cref="InputAction.WasPerformedThisFrame"/>,
+            /// <see cref="InputAction.WasPressedThisFrame"/>, <see cref="InputAction.WasReleasedThisFrame"/>.
             /// </remarks>
             /// <returns>Reference to this rebinding operation.</returns>
-            public RebindingOperation WithActionsBeingSuppressed(bool value = true)
+            public RebindingOperation WithActionEventNotificationsBeingSuppressed(bool value = true)
             {
                 ThrowIfRebindInProgress();
                 m_TargetInputEventHandledPolicy = value
-                    ? InputEventHandledPolicy.SuppressActionUpdates
+                    ? InputEventHandledPolicy.SuppressActionEventNotifications
                     : InputEventHandledPolicy.SuppressStateUpdates;
                 return this;
             }

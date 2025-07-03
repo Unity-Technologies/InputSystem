@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem
         /// may trigger new unexpected events since they may trigger state changes due to monitoring instances not
         /// seeing previous changes.
         ///
-        /// The setting <see cref="InputEventHandledPolicy.SuppressActionUpdates"/> will instead allow state change
+        /// The setting <see cref="InputEventHandledPolicy.SuppressActionEventNotifications"/> will instead allow state change
         /// propagation to happen, including updating interaction state, but will instead suppress any associated
         /// notifications.
         /// </remarks>
@@ -235,7 +235,7 @@ namespace UnityEngine.InputSystem
             {
                 switch (value)
                 {
-                    case InputEventHandledPolicy.SuppressActionUpdates:
+                    case InputEventHandledPolicy.SuppressActionEventNotifications:
                     case InputEventHandledPolicy.SuppressStateUpdates:
                         m_InputEventHandledPolicy = value;
                         break;
