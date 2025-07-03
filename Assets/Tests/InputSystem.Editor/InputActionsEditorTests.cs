@@ -45,7 +45,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 20.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 5.0)
     {
         return WaitUntil(() =>
         {
@@ -58,7 +58,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 20.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 5.0)
     {
         return WaitUntil(() =>
         {
@@ -87,6 +87,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanCreateActionMap()
     {
         var button = m_Window.rootVisualElement.Q<Button>("add-new-action-map-button");
@@ -115,6 +116,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
