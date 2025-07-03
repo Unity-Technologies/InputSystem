@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private bool m_SavedInteractable;
         private GameObject m_SelectedObject;
 
-        void OnEnable()
+        private void OnEnable()
         {
             if (canvasGroup != null)
             {
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             if (canvasGroup != null)
             {

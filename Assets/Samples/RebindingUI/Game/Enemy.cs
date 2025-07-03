@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             // Animate rotation
             if (animationTarget)

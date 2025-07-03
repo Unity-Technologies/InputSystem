@@ -13,13 +13,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     [DefaultExecutionOrder(-1)] // We need this to run before Player to avoid potential additional latency
     public class PlayerController : MonoBehaviour
     {
-        [Header("Input Action Bindings")]
         [Tooltip("The move action, must generate Vector2")]
         public InputActionReference move;
+
         [Tooltip("The move action, must generate Vector2")]
         public InputActionReference look;
+
         [Tooltip("The move action, must generate Button value")]
         public InputActionReference fire;
+
         [Tooltip("The move action, must generate Button value")]
         public InputActionReference change;
 
@@ -33,7 +35,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         // Required player reference
         private Player m_Player;
 
-        private const float kMouseSensitivity = 0.5f;
+        private const float kMouseSensitivity = 0.4f;
         private const float kGamepadSensitivity = 1.0f;
 
         private void Awake()
@@ -98,7 +100,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 if (lookValue.sqrMagnitude > 0.05f)
                     feedbackController?.RecordRecentDeviceFromAction(look);
 
-                var timeInvariant = (look.action.activeControl is DeltaControl);
+                var timeInvariant = look.action.activeControl is DeltaControl;
                 var scale = timeInvariant ?
                     1.0f * kMouseSensitivity :
                     Time.deltaTime * 300.0f * kGamepadSensitivity;

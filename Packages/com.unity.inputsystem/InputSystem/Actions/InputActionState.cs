@@ -1354,7 +1354,6 @@ namespace UnityEngine.InputSystem
             #endif
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
-            // CALLBACK HERE
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
 
@@ -1952,7 +1951,6 @@ namespace UnityEngine.InputSystem
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (actuation >= threshold)
                         {
-                            // TODO CALLBACK HERE!
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                                 phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                         }
@@ -2513,7 +2511,7 @@ namespace UnityEngine.InputSystem
             var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
             trigger.phase = newPhase;
 
-            // Early out if suppressed
+            // Early out from CallActionListeners if suppressed
             if (m_Suppressed)
                 return;
 
@@ -2557,13 +2555,6 @@ namespace UnityEngine.InputSystem
             };
 
             k_InputActionCallbackMarker.Begin();
-
-            // Early return in case of suppressed action notifications.
-            if (m_Suppressed)
-            {
-                k_InputActionCallbackMarker.End();
-                return;
-            }
 
             // Global callback goes first.
             var action = context.action;

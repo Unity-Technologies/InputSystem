@@ -4,29 +4,42 @@ using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
+    /// <summary>
+    /// A UI to show messages reflecting changes to gameplay state.
+    /// </summary>
     public class Message : MonoBehaviour
     {
+        [Tooltip("The associated gameplay manager.")]
         public GameplayManager gameplayManager;
+
+        [Tooltip("The associated UI root to hide/show.")]
         public GameObject root;
+
+        [Tooltip("The associated UI text to be altered to show messages.")]
         public Text text;
+
         private Action m_TimeoutCallback;
 
         private void OnEnable()
         {
+            // Monitor changes to gameplay state and game pause state.
             gameplayManager.GameplayStateChanged += OnGameplayStateChanged;
             gameplayManager.PauseChanged += OnPauseChanged;
-            OnGameplayStateChanged(gameplayManager.state);
-        }
 
-        private void OnPauseChanged(bool paused)
-        {
+            // Initialize
             OnGameplayStateChanged(gameplayManager.state);
         }
 
         private void OnDisable()
         {
+            // Unsubscribe from monitoring gameplay and pause state.
             gameplayManager.GameplayStateChanged += OnGameplayStateChanged;
             gameplayManager.PauseChanged -= OnPauseChanged;
+        }
+
+        private void OnPauseChanged(bool paused)
+        {
+            OnGameplayStateChanged(gameplayManager.state);
         }
 
         private void Hide()

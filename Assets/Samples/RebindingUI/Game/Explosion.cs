@@ -8,7 +8,7 @@ public class Explosion : MonoBehaviour
     private bool m_Exploded;
     private bool m_Destroyed;
 
-    void Awake()
+    private void Awake()
     {
         m_ParticleSystem = GetComponent<ParticleSystem>();
         m_Rigidbodies = gameObject.GetComponentsInChildren<Rigidbody>();
@@ -25,7 +25,7 @@ public class Explosion : MonoBehaviour
         m_ParticleSystem.Stop();
     }
 
-    void Update()
+    private void Update()
     {
         if (!m_ParticleSystem.isPlaying && !m_Destroyed)
         {

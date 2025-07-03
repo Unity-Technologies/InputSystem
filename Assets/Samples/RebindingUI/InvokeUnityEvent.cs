@@ -38,6 +38,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
+        /// <summary>
+        /// Access or set the Unity event to be triggered when the action is performed.
+        /// </summary>
         public UnityEvent onPerformed
         {
             get => m_OnPerformed;
