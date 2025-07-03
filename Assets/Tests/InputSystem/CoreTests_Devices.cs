@@ -4394,6 +4394,15 @@ partial class CoreTests
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
     }
 
+    #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+    [Test]
+    [Category("Devices")]
+    public void Devices_PollingFrequencyIsAtLeast60HzByDefault()
+    {
+        Assert.That(InputSystem.pollingFrequency, Is.GreaterThanOrEqualTo(60));
+    }
+
+    #else
     [Test]
     [Category("Devices")]
     public void Devices_PollingFrequencyIs60HzByDefault()
@@ -4402,6 +4411,8 @@ partial class CoreTests
         // Make sure InputManager passed the frequency on to the runtime.
         Assert.That(runtime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
     }
+
+    #endif
 
     [Test]
     [Category("Devices")]
