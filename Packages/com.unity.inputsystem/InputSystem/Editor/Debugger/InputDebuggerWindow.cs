@@ -12,6 +12,12 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////FIXME: Generate proper IDs for the individual tree view items; the current sequential numbering scheme just causes lots of
 ////       weird expansion/collapsing to happen.
 
@@ -275,7 +281,8 @@ namespace UnityEngine.InputSystem.Editor
                     var profilerName = ProfilerDriver.GetConnectionIdentifier(profiler);
                     var isConnected = ProfilerDriver.connectedProfiler == profiler;
                     if (enabled)
-                        menu.AddItem(new GUIContent(profilerName), isConnected, () => {
+                        menu.AddItem(new GUIContent(profilerName), isConnected, () =>
+                        {
                             ProfilerDriver.connectedProfiler = profiler;
                             EnableRemoteDevices();
                         });
@@ -291,7 +298,8 @@ namespace UnityEngine.InputSystem.Editor
 
                     var url = "device://" + device.id;
                     var isConnected = ProfilerDriver.connectedProfiler == 0xFEEE && ProfilerDriver.directConnectionUrl == url;
-                    menu.AddItem(new GUIContent(device.name), isConnected, () => {
+                    menu.AddItem(new GUIContent(device.name), isConnected, () =>
+                    {
                         ProfilerDriver.DirectURLConnect(url);
                         EnableRemoteDevices();
                     });
@@ -961,7 +969,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var control = state.controls[controlStartIndex + n];
                         var interactions =
-                            StringHelpers.Join(new[] {binding.effectiveInteractions, action.interactions}, ",");
+                            StringHelpers.Join(new[] { binding.effectiveInteractions, action.interactions }, ",");
 
                         var text = control.path;
                         if (!string.IsNullOrEmpty(interactions))

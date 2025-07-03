@@ -5215,8 +5215,8 @@ partial class CoreTests
     static string MinimalJson(string name = null)
     {
         if (name != null)
-            return "{\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
-        return "{\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+            return "{\n    \"version\": 0,\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+        return "{\n    \"version\": 0,\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
     }
 
     [Test]
