@@ -3015,16 +3015,10 @@ namespace UnityEngine.InputSystem
         #region Actions
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
-        // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
-        // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
-        // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
-        //
-        // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
-        // state ensures that the they are active in all of these MonoBehavior methods:
-        //
-        //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
-        //
+
+        // This is called from InitializeInEditor() and InitializeInPlayer() to make sure
+        // project-wide actions are all active in they are active in all of these MonoBehavior methods:
+        // Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
         private static void EnableActions()
         {
 #if UNITY_EDITOR
@@ -3408,7 +3402,6 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
-
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3618,7 +3611,7 @@ namespace UnityEngine.InputSystem
         {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.m_Runtime.isInBatchMode)
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -3651,9 +3644,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    EnableActions();
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3878,7 +3869,7 @@ namespace UnityEngine.InputSystem
                 s_Manager.UninstallGlobals();
             }
 
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,
             // this should get replaced with an actual InputSettings asset.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
@@ -3911,8 +3902,7 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            // Note this is too early for editor ! actions is not setup yet.
+            // This is the point where we initialise project-wide actions for the Editor Play-mode, Editor Tests and Player Tests.
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
             #endif

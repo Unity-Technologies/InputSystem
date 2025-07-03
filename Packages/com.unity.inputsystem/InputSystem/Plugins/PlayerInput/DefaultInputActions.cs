@@ -42,6 +42,7 @@ namespace UnityEngine.InputSystem
         public @DefaultInputActions()
         {
             asset = InputActionAsset.FromJson(@"{
+    ""version"": 1,
     ""name"": ""DefaultInputActions"",
     ""maps"": [
         {
