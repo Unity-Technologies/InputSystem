@@ -45,7 +45,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 10.0)
     {
         return WaitUntil(() =>
         {
@@ -58,7 +58,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 10.0)
     {
         return WaitUntil(() =>
         {
@@ -87,7 +87,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanCreateActionMap()
     {
         var button = m_Window.rootVisualElement.Q<Button>("add-new-action-map-button");
@@ -116,7 +115,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -128,9 +126,10 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").selectedIndex = 1;
 
         // changing the selection triggers a state change, wait for the scheduler to process the frame
+        var timeoutSecs = 10.0;
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty();
-        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"));
+        yield return WaitForNotDirty(timeoutSecs);
+        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"), timeoutSecs);
 
         // refetch the action map item since the ui may have refreshed.
         actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
@@ -203,8 +202,9 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         m_Window.rootVisualElement.Q<TreeView>("actions-tree-view").selectedIndex = 1;
 
         // Selection change triggers a state change, wait for the scheduler to process the frame
+        var timeoutSecs = 10.0;
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty();
+        yield return WaitForNotDirty(timeoutSecs);
         yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
 
         // Re-fetch the actions since the UI may have refreshed.
@@ -212,7 +212,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // Click twice to start the rename
         SimulateClickOn(actionItem[1]);
-        yield return WaitForNotDirty();
+        yield return WaitForNotDirty(timeoutSecs);
 
         // If the item is already focused, don't click again
         if (!actionItem[1].IsFocused)
