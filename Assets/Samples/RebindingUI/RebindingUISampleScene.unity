@@ -5175,7 +5175,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: It is up to you whether to do somthing like e.g. WASD as a single composite
+  m_Text: It is up to you whether to do something like e.g. WASD as a single composite
     like to the right (in which case the individual parts will get assigned one after
     the other) or as four separate partial bindings.
 --- !u!222 &1237134520
