@@ -197,16 +197,28 @@ namespace UnityEngine.InputSystem
 
         public float pollingFrequency
         {
-            get => m_PollingFrequency;
+            get
+            {
+                #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+                return m_Runtime.pollingFrequency;
+                #else
+                return m_PollingFrequency;
+                #endif
+            }
+
             set
             {
                 ////REVIEW: allow setting to zero to turn off polling altogether?
                 if (value <= 0)
                     throw new ArgumentException("Polling frequency must be greater than zero", "value");
 
+                #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+                m_Runtime.pollingFrequency = value;
+                #else
                 m_PollingFrequency = value;
                 if (m_Runtime != null)
                     m_Runtime.pollingFrequency = value;
+                #endif
             }
         }
 
@@ -1888,8 +1900,10 @@ namespace UnityEngine.InputSystem
 
             m_ScrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 
+            #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
+            #endif
 
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
@@ -2141,7 +2155,9 @@ namespace UnityEngine.InputSystem
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
+        #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
         private float m_PollingFrequency;
+        #endif
 
         internal InputControlLayout.Collection m_Layouts;
         private TypeTable m_Processors;
@@ -4092,7 +4108,9 @@ namespace UnityEngine.InputSystem
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
+                #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 pollingFrequency = m_PollingFrequency,
+                #endif
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices?.Take(m_AvailableDeviceCount).ToArray(),
                 buffers = m_StateBuffers,
@@ -4118,7 +4136,9 @@ namespace UnityEngine.InputSystem
             updateMask = state.updateMask;
             scrollDeltaBehavior = state.scrollDeltaBehavior;
             m_Metrics = state.metrics;
+            #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
             m_PollingFrequency = state.pollingFrequency;
+            #endif
 
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);
