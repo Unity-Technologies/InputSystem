@@ -16,8 +16,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The actions asset that holds Gameplay, Common and UI action maps to be used. (Required).")]
         public InputActionAsset actions;
 
-        //[Tooltip("The input action to be used to toggle menu (Required).")]
-        //public InputActionReference toggleMenuAction;
+        [Tooltip("Whether UI actions should be disabled during gameplay.")]
+        public bool enableUIActionsDuringGameplay = true;
 
         [Tooltip("The gameplay manager responsible for managing gameplay.")]
         public GameplayManager gameplayManager;
@@ -29,11 +29,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private GameState m_NextState = GameState.Playing;
 
         private InputActionMap gameplayActions;
+        private InputActionMap uiActions;
         private InputAction toggleMenuAction;
 
         private void Awake()
         {
             gameplayActions = actions.FindActionMap("Gameplay");
+            uiActions = actions.FindActionMap("UI");
             toggleMenuAction = actions.FindAction("Common/Menu");
         }
 
@@ -97,6 +99,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.Playing:
                     gameplayActions.Enable();
                     gameplayManager.enabled = true;
+                    if (enableUIActionsDuringGameplay)
+                        uiActions.Enable();
+                    else
+                        uiActions.Disable();
 
                     gameUI.SetActive(true);
                     menu.SetActive(false);
@@ -107,6 +113,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 case GameState.RebindingMenu:
                     gameplayActions.Disable();
                     gameplayManager.enabled = false;
+                    if (!enableUIActionsDuringGameplay)
+                        uiActions.Enable();
 
                     gameUI.SetActive(false);
                     menu.SetActive(true);

@@ -441,6 +441,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   menu: {fileID: 508436405}
   actions: {fileID: -944628639613478452, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
+  enableUIActionsDuringGameplay: 0
   gameplayManager: {fileID: 51853247}
   gameUI: {fileID: 5139312}
 --- !u!114 &51853246
