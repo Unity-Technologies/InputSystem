@@ -23,14 +23,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [Tooltip("The move action, must generate Button value")]
         public InputActionReference change;
 
-        [Header("Color Output")]
-        [Tooltip("The device color output frequency (Hz)")]
-        public float colorOutputFrequency = 10.0f;
-
-        [Header("Force Feedback Output")]
-        [Tooltip("The device rumble output frequency (Hz)")]
-        public float rumbleOutputFrequency = 10.0f;
-
         [Tooltip("Feedback controller handling device feedback")]
         public FeedbackController feedbackController;
 
@@ -40,6 +32,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         // Required player reference
         private Player m_Player;
+
+        private const float kMouseSensitivity = 0.5f;
+        private const float kGamepadSensitivity = 1.0f;
 
         private void Awake()
         {
@@ -104,7 +99,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     feedbackController?.RecordRecentDeviceFromAction(look);
 
                 var timeInvariant = (look.action.activeControl is DeltaControl);
-                var scale = timeInvariant ? 1.0f : Time.deltaTime * 300.0f;
+                var scale = timeInvariant ?
+                    1.0f * kMouseSensitivity :
+                    Time.deltaTime * 300.0f * kGamepadSensitivity;
                 var angle = lookValue.x * -1.0f * scale;
                 m_Player.Rotate(angle);
             }
