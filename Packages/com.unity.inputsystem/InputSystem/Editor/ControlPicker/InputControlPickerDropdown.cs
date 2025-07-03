@@ -58,6 +58,11 @@ namespace UnityEngine.InputSystem.Editor
             Reload();
         }
 
+        public void SetPickedCallback(Action<string> action)
+        {
+            m_OnPickCallback = action;
+        }
+
         protected override void OnDestroy()
         {
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
