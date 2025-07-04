@@ -251,7 +251,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             var y = move.y;
             if (y < 0.0f)
                 y *= 0.33f;
-            if (m_Rigidbody.linearVelocity.magnitude < 10.0f)
+            #if UNITY_6000_0_OR_NEWER
+            var velocityMagnitude = m_Rigidbody.linearVelocity.magnitude;
+            #else
+            var velocityMagnitude = m_Rigidbody.velocity.magnitude;
+            #endif
+            if (velocityMagnitude < 10.0f)
                 m_Rigidbody.AddRelativeForce(Vector3.up * (10.0f * y) + Vector3.right * (5.0f * move.x), ForceMode.Acceleration);
         }
 
