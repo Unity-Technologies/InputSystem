@@ -16,6 +16,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 {
     #region setup and teardown
     InputActionAsset m_Asset;
+    const float kTimeoutSecs = 10.0f;
 
     public override void OneTimeSetUp()
     {
@@ -126,10 +127,9 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         m_Window.rootVisualElement.Q<ListView>("action-maps-list-view").selectedIndex = 1;
 
         // changing the selection triggers a state change, wait for the scheduler to process the frame
-        var timeoutSecs = 10.0;
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty(timeoutSecs);
-        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"), timeoutSecs);
+        yield return WaitForNotDirty(kTimeoutSecs);
+        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"), kTimeoutSecs);
 
         // refetch the action map item since the ui may have refreshed.
         actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
@@ -202,18 +202,15 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         m_Window.rootVisualElement.Q<TreeView>("actions-tree-view").selectedIndex = 1;
 
         // Selection change triggers a state change, wait for the scheduler to process the frame
-        var timeoutSecs = 10.0;
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty(timeoutSecs);
-        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"), timeoutSecs);
+        yield return WaitForNotDirty(kTimeoutSecs);
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"), kTimeoutSecs);
 
         // Re-fetch the actions since the UI may have refreshed.
         actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
 
-        // Click twice to start the rename
         SimulateClickOn(actionItem[1]);
-        yield return WaitForNotDirty(timeoutSecs);
-
+        yield return WaitForNotDirty(kTimeoutSecs);
         // If the item is already focused, don't click again
         if (!actionItem[1].IsFocused)
         {
