@@ -16,7 +16,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 {
     #region setup and teardown
     InputActionAsset m_Asset;
-    const double kTimeoutSecs = 10.0;
 
     public override void OneTimeSetUp()
     {
@@ -46,7 +45,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 10.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -59,7 +58,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 10.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -128,8 +127,8 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // changing the selection triggers a state change, wait for the scheduler to process the frame
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty(kTimeoutSecs);
-        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"), kTimeoutSecs);
+        yield return WaitForNotDirty();
+        yield return WaitForFocus(m_Window.rootVisualElement.Q("action-maps-list-view"));
 
         // refetch the action map item since the ui may have refreshed.
         actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
@@ -203,14 +202,14 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // Selection change triggers a state change, wait for the scheduler to process the frame
         yield return WaitForSchedulerLoop();
-        yield return WaitForNotDirty(kTimeoutSecs);
-        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"), kTimeoutSecs);
+        yield return WaitForNotDirty();
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
 
         // Re-fetch the actions since the UI may have refreshed.
         actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
 
         SimulateClickOn(actionItem[1]);
-        yield return WaitForNotDirty(kTimeoutSecs);
+        yield return WaitForNotDirty();
         // If the item is already focused, don't click again
         if (!actionItem[1].IsFocused)
         {
