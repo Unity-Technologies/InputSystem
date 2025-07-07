@@ -16,7 +16,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 {
     #region setup and teardown
     InputActionAsset m_Asset;
-    const float kTimeoutSecs = 10.0f;
+    const double kTimeoutSecs = 10.0;
 
     public override void OneTimeSetUp()
     {
