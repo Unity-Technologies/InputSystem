@@ -205,7 +205,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         var timeoutSecs = 10.0;
         yield return WaitForSchedulerLoop();
         yield return WaitForNotDirty(timeoutSecs);
-        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"));
+        yield return WaitForFocus(m_Window.rootVisualElement.Q<TreeView>("actions-tree-view"), timeoutSecs);
 
         // Re-fetch the actions since the UI may have refreshed.
         actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
