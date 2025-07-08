@@ -15,7 +15,7 @@ using UnityEngine.UIElements;
 public class UIToolkitBaseTestWindow<T> where T : EditorWindow
 {
     protected T m_Window;
-    protected const double kDefaultTimeoutSecs = 10.0f;
+    protected const double kDefaultTimeoutSecs = 10.0;
 
     #region setup and teardown
     [OneTimeSetUp]
