@@ -85,7 +85,6 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
     public @SimpleControls()
     {
         asset = InputActionAsset.FromJson(@"{
-    ""version"": 1,
     ""name"": ""SimpleControls"",
     ""maps"": [
         {
