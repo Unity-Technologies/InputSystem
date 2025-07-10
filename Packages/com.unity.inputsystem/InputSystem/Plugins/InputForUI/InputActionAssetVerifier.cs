@@ -32,9 +32,23 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void Verify(InputActionAsset asset,
             ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
         {
-            // Note that we never cache this to guarantee we have the current configuration.
-            var config = InputSystemProvider.Configuration.GetDefaultConfiguration();
-            Verify(asset, ref config, reporter);
+            // Note:
+            // PWA has initial state check true for "Point" action, DefaultActions do not, does it matter?
+            //
+            // Additionally note that "Submit" and "Cancel" are indirectly expected to be of Button action type.
+            // This is not available in UI configuration, but InputActionRebindingExtensions suggests this.
+            //
+            // Additional "LeftClick" has initial state check set in PWA, but not "MiddleClick" and "RightClick".
+            // Is this intentional? Are requirements different?
+            var context = new Context(asset, reporter, DefaultReportPolicy);
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.PointAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.MoveAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.SubmitAction, actionType: InputActionType.Button, expectedControlType: "Button");
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.CancelAction, actionType: InputActionType.Button, expectedControlType: "Button");
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.LeftClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.MiddleClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.RightClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
+            context.Verify(actionNameOrId: InputSystemProvider.Actions.ScrollWheelAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
         }
 
         #endregion
@@ -110,28 +124,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             private HashSet<string> missingPaths; // Avoids generating multiple warnings around missing map
             private ReportPolicy policy;
-        }
-
-        private static void Verify(InputActionAsset asset, ref InputSystemProvider.Configuration config,
-            ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
-        {
-            // Note:
-            // PWA has initial state check true for "Point" action, DefaultActions do not, does it matter?
-            //
-            // Additionally note that "Submit" and "Cancel" are indirectly expected to be of Button action type.
-            // This is not available in UI configuration, but InputActionRebindingExtensions suggests this.
-            //
-            // Additional "LeftClick" has initial state check set in PWA, but not "MiddleClick" and "RightClick".
-            // Is this intentional? Are requirements different?
-            var context = new Context(asset, reporter, DefaultReportPolicy);
-            context.Verify(actionNameOrId: config.PointAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
-            context.Verify(actionNameOrId: config.MoveAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
-            context.Verify(actionNameOrId: config.SubmitAction, actionType: InputActionType.Button, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.CancelAction, actionType: InputActionType.Button, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.LeftClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.MiddleClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.RightClickAction, actionType: InputActionType.PassThrough, expectedControlType: "Button");
-            context.Verify(actionNameOrId: config.ScrollWheelAction, actionType: InputActionType.PassThrough, expectedControlType: nameof(Vector2));
         }
     }
 }

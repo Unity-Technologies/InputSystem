@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_2022_1_OR_NEWER
             BuildTarget.QNX,
             #endif
-            #if UNITY_2023_3_OR_NEWER
+            #if UNITY_2022_3_OR_NEWER
             BuildTarget.VisionOS,
             #endif
             (BuildTarget)49,
@@ -73,10 +73,10 @@ namespace UnityEngine.InputSystem.Editor
         private static bool IsPluginInstalled()
         {
             var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
-            var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString().ToLower();
+            var plugInName = PlugInName + EditorUserBuildSettings.activeBuildTarget.ToString();
             foreach (var package in registeredPackages)
             {
-                if (package.name.Equals(plugInName))
+                if (package.name.Equals(plugInName, StringComparison.InvariantCultureIgnoreCase))
                     return true;
             }
             return false;

@@ -293,13 +293,9 @@ namespace UnityEngine.InputSystem.LowLevel
             get => NativeInputSystem.GetScrollWheelDeltaPerTick();
         }
 #endif
-
-        public bool isInBatchMode => Application.isBatchMode;
-
         #if UNITY_EDITOR
 
         public bool isInPlayMode => EditorApplication.isPlaying;
-        public bool isPaused => EditorApplication.isPaused;
         public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
         public Func<IntPtr, bool> onUnityRemoteMessage

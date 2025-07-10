@@ -9,6 +9,10 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////TODO: allow selecting events and saving out only the selected ones
 
 ////TODO: add the ability for the debugger to just generate input on the device according to the controls it finds; good for testing

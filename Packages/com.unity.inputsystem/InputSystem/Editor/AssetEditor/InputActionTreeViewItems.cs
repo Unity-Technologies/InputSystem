@@ -6,6 +6,10 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#endif
+
 ////TODO: sync expanded state of SerializedProperties to expanded state of tree (will help preserving expansion in inspector)
 
 ////REVIEW: would be great to align all "[device]" parts of binding strings neatly in a column

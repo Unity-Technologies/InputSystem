@@ -33,7 +33,7 @@ The Input System's default configuration comes with two Action Maps: "Player" an
 
 The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
 
- Each each default action has bindings to several different types of Control. For example:
+ Each default action has bindings to several different types of Control. For example:
 
 - The "Move" action is bound to the "WSAD" keyboard keys and arrow keys, a gamepad stick, the primary 2D axis on an XR controller
 - The "Jump" action is bound to the space key, the "south" button on a gamepad, and the secondary button on an XR controller.
@@ -49,7 +49,7 @@ This workflow uses the following steps:
 
 1. Add the Input System "`using`" statement at the top of your script.
 2. Create variables to hold the Action references.
-3. In your Start method, find the and store the Action references.
+3. In your Start method, find and store the Action references.
 4. In your Update method, read the values from the Action references, and add your own code to respond accordingly.
 
 These steps are shown in the example script below:

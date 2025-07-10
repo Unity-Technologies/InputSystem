@@ -157,6 +157,23 @@ internal partial class UITests
             Assert.IsTrue(callbackCheck.pointerData.fullyExited == true);
         }
 
+        [UnityTest]
+        [Description("Regression test for https://jira.unity3d.com/browse/ISXB-1493")]
+        public IEnumerator DisablingDoesNotResetUserActions()
+        {
+            var actions = new DefaultInputActions();
+            m_InputModule.actionsAsset = actions.asset;
+            m_InputModule.cancel = InputActionReference.Create(actions.UI.Cancel);
+
+            m_InputModule.enabled = false;
+
+            yield return null;
+
+            Assert.IsNotNull(m_InputModule.cancel, "Disabling component shouldn't lose its data.");
+
+            actions.Dispose();
+        }
+
         public class PointerExitCallbackCheck : MonoBehaviour, IPointerExitHandler
         {
             public PointerEventData pointerData { get; private set; }

@@ -17,10 +17,7 @@ code_analyser:
     - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2021.3
   triggers:
     cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
+    expression: pull_request.(target eq "develop" AND NOT changes.all match "**/*.md")
   artifacts:
     UTR_Output.zip:
       paths:

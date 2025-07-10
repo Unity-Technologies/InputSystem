@@ -342,13 +342,7 @@ namespace UnityEngine.InputSystem
                         UninitializeActions();
                 }
 
-                var didChange = m_Actions != null;
-
                 m_Actions = value;
-
-                if (didChange || m_Enabled)
-                    // copy action asset for the first player so that the original asset stays untouched
-                    CopyActionAssetAndApplyBindingOverrides();
 
                 if (m_Enabled)
                 {
@@ -1810,13 +1804,6 @@ namespace UnityEngine.InputSystem
 
         #endif
 
-        private void Awake()
-        {
-            // If an action asset is assigned copy it to avoid modifying the original asset.
-            if (m_Actions != null)
-                CopyActionAssetAndApplyBindingOverrides();
-        }
-
         private void OnEnable()
         {
             m_Enabled = true;
@@ -1831,7 +1818,7 @@ namespace UnityEngine.InputSystem
 
             // Split-screen index defaults to player index.
             if (s_InitSplitScreenIndex >= 0)
-                m_SplitScreenIndex = splitScreenIndex;
+                m_SplitScreenIndex = s_InitSplitScreenIndex;
             else
                 m_SplitScreenIndex = playerIndex;
 

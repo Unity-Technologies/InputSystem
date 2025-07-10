@@ -2871,26 +2871,29 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
-    public IEnumerator UI_CanDriveUIFromGamepad()
+
+    [TestCase("Gamepad", ExpectedResult = 1)]
+#if UNITY_WEBGL || UNITY_EDITOR
+    [TestCase("WebGLGamepad", ExpectedResult = 1)]
+#endif
+    public IEnumerator UI_CanDriveUIFromGamepad(string deviceLayout)
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepad = (Gamepad)InputSystem.AddDevice(deviceLayout);
 
         var scene = CreateTestUI();
 
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var map = asset.AddActionMap("map");
-        var moveAction = map.AddAction("move", type: InputActionType.PassThrough, binding: "<Gamepad>/*stick");
-        var submitAction = map.AddAction("submit", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
-        var cancelAction = map.AddAction("cancel", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonEast");
+        var actions = new DefaultInputActions();
 
-        scene.uiModule.move = InputActionReference.Create(moveAction);
-        scene.uiModule.submit = InputActionReference.Create(submitAction);
-        scene.uiModule.cancel = InputActionReference.Create(cancelAction);
+        scene.uiModule.move = InputActionReference.Create(actions.UI.Navigate);
+        scene.uiModule.submit = InputActionReference.Create(actions.UI.Submit);
+        scene.uiModule.cancel = InputActionReference.Create(actions.UI.Cancel);
 
         scene.uiModule.moveRepeatDelay = 0.1f;
         scene.uiModule.moveRepeatRate = 0.1f;
 
-        map.Enable();
+        actions.Enable();
+        Assert.That(actions.UI.enabled, Is.True);
+        Assert.That(actions.Player.enabled, Is.True);
 
         yield return null;
 
@@ -2913,7 +2916,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Right),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(1.0f, 0.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
@@ -2932,7 +2935,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Left),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(-1.0f, 0.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2946,7 +2949,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Up),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, 1.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2960,7 +2963,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2975,7 +2978,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -2989,7 +2992,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -3031,6 +3034,10 @@ internal partial class UITests : CoreTestsFixture
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
+
+        actions.Disable();
+        Assert.That(actions.UI.enabled, Is.False);
+        Assert.That(actions.Player.enabled, Is.False);
     }
 
     [Test]
