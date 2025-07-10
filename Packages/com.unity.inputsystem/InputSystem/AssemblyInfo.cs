@@ -17,6 +17,6 @@ namespace UnityEngine.InputSystem
         // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
         //       "-preview" suffixes here.
         internal const string kAssemblyVersion = "1.15.0";
-        internal const string kDocUrl = "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14";
+        internal const string kDocUrl = "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.15";
     }
 }
