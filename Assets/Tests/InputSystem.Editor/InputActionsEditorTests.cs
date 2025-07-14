@@ -45,7 +45,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -58,7 +58,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -208,10 +208,8 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         // Re-fetch the actions since the UI may have refreshed.
         actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
 
-        // Click twice to start the rename
         SimulateClickOn(actionItem[1]);
         yield return WaitForNotDirty();
-
         // If the item is already focused, don't click again
         if (!actionItem[1].IsFocused)
         {

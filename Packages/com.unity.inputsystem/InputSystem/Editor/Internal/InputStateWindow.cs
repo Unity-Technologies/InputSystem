@@ -6,6 +6,10 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////TODO: add ability to single-step through events
 
 ////TODO: annotate raw memory view with control offset and ranges (probably easiest to put the control tree and raw memory view side by side)

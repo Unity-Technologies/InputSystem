@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+## [1.14.1] - 2025-07-10
+
 ### Added
 
 - Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
@@ -28,12 +32,17 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
 - Fixed reenabling the VirtualMouseInput component may sometimes lead to NullReferenceException. [ISXB-1096](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1096)
 - Fixed the default button press point not being respected in Editor (as well as some other Touchscreen properties). [ISXB-1152](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1152)
+- Fixed the TreeView compilation warnings when used with Unity 6.2 beta (ISX-2320)
+- Fixed actions being reset when disabling the InputSystemUIInputModule component [ISXB-1493](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
+- Fixed a memory leak when disabling and enabling the InputSystemUIInputModule component at runtime [ISXB-1573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1573)
+- Fixed all InputControls being changed at once when you change just one by reverting `2a37caac288ac09bc9122234339dc5df8d3a0ca6`, which was an attempt at fixing [ISXB-1221] that introduced this regression [ISXB-1531] (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
 - Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
 - Fixed a console error being shown when targeting visionOS builds in 2022.3.
 - Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
 - Fixed the defaultActionMap dropdown in the PlayerInput component defaulting to <None> instead of the first ActionMap.
 - Fixed TrackedPoseDriver stops updating position and rotation when device is added after its initialization. [ISXB-1555](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1555)
 - Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
+- Fixed an issue that caused input processors with enum properties to incorrectly serialise by index instead of by value [ISXB-1474](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1474)
 
 ## [1.14.0] - 2025-03-20
 

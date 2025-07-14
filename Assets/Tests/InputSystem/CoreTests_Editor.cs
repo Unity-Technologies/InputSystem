@@ -3398,7 +3398,7 @@ partial class CoreTests
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
         var cp = new CompilerParameters { CompilerOptions = options };
-        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add(typeof(UnityEngine.Vector2).Assembly.Location);
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
 #if UNITY_2022_1_OR_NEWER
         // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable
