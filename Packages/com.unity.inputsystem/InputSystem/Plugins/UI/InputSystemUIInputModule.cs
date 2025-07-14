@@ -2070,6 +2070,11 @@ namespace UnityEngine.InputSystem.UI
 
         private bool RemovePointerAtIndex(int index)
         {
+            // Pointers can have be reset before (e.g. when calling OnDisable) which would make m_PointerStates
+            // empty (ISXB-687).
+            if (m_PointerStates.length == 0)
+                return false;
+
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // // We don't want to release touch pointers on the same frame they are released (unpressed). They get cleaned up one frame later in Process()
@@ -2458,8 +2463,8 @@ namespace UnityEngine.InputSystem.UI
                     //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
                     if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
-                        RemovePointerAtIndex(i);
-                        --i;
+                        if (RemovePointerAtIndex(i))
+                            --i;
                         continue;
                     }
 

@@ -1531,6 +1531,65 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    [Description("Tests that disabling the UI module during a Button click event works correctly with touch pointers." +
+        "ISXB-687")]
+    public IEnumerator UI_DisablingEventSystemOnClickEventWorksWithTouchPointersWorks()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough);
+        var clickAction = uiActions.AddAction("click", type: InputActionType.PassThrough);
+
+        pointAction.AddBinding("<Touchscreen>/touch*/position");
+        clickAction.AddBinding("<Touchscreen>/touch*/press");
+
+        pointAction.Enable();
+        clickAction.Enable();
+
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+
+        // Add a listener to the button to disable the UI module when clicked.
+        // This calls InputSystemUIInputModule.OnDisable() which will reset the pointer data during
+        // InputSystemUIInputModule.Process() and ProcessPointer(). It will allow us to test that removing
+        // a pointer once the UI module is disabled (all pointers are removed) works correctly.
+        button.onClick.AddListener(() =>
+        {
+            clicked = true;
+            scene.uiModule.enabled = false; // Disable the UI module to test pointer reset.
+        });
+
+        yield return null;
+
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+
+        // This will allocate a pointer for the touch and set the first touch position and press
+        BeginTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.False, "Button was clicked when it should not have been yet.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(1),
+            "A pointer states was not allocated for the touch pointer.");
+
+        // Release the touch to make sure we have a Click event that calls the button listener.
+        EndTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.True, "Button was not clicked when it should have been.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(0),
+            "Pointer states were not cleared when the UI module was disabled after a click event.");
+    }
+
+    [UnityTest]
+    [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTouches()
     {
         var touchScreen = InputSystem.AddDevice<Touchscreen>();
