@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+## [1.14.1] - 2025-07-10
+
 ### Added
 
 - Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
