@@ -87,6 +87,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
         public @InGameHintsActions()
         {
             asset = InputActionAsset.FromJson(@"{
+    ""version"": 1,
     ""name"": ""InGameHintsActions"",
     ""maps"": [
         {

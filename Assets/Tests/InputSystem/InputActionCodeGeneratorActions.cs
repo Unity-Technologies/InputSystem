@@ -85,6 +85,7 @@ public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, 
     public @InputActionCodeGeneratorActions()
     {
         asset = InputActionAsset.FromJson(@"{
+    ""version"": 1,
     ""name"": ""InputActionCodeGeneratorActions"",
     ""maps"": [
         {
