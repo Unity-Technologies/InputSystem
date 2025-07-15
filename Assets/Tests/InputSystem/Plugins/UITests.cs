@@ -1533,7 +1533,7 @@ internal partial class UITests : CoreTestsFixture
     [Category("UI")]
     [Description("Tests that disabling the UI module during a Button click event works correctly with touch pointers." +
         "ISXB-687")]
-    public IEnumerator UI_DisablingEventSystemOnClickEventWorksWithTouchPointersWorks()
+    public IEnumerator UI_DisablingEventSystemOnClickEventWorksWithTouchPointers()
     {
         var touch = InputSystem.AddDevice<Touchscreen>();
         var scene = CreateTestUI();

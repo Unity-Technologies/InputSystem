@@ -2070,7 +2070,7 @@ namespace UnityEngine.InputSystem.UI
 
         private bool RemovePointerAtIndex(int index)
         {
-            // Pointers can have be reset before (e.g. when calling OnDisable) which would make m_PointerStates
+            // Pointers might have been reset before (e.g. when calling OnDisable) which would make m_PointerStates
             // empty (ISXB-687).
             if (m_PointerStates.length == 0)
                 return false;
