@@ -10,7 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
-
+### Added
+- Added OnMouse events for the InputSystem, including samples and tests.
 
 ## [1.14.1] - 2025-07-10
 
