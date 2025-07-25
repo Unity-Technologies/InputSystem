@@ -291,6 +291,92 @@ partial class CoreTests
         Assert.That(gameObject.transform.position, Is.EqualTo(new Vector3(0, 0, 1)), "No MouseDown event received.");
     }
 
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseUp()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMouseEventsTest>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Began);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Ended);
+        yield return null;
+        Assert.That(gameObject.transform.position, Is.EqualTo(new Vector3(0, 0, 2)), "No MouseUp event received.");
+    }
+
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseUpAsButton()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMousEventTestTwo>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Began);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Ended);
+        yield return null;
+        Assert.That(gameObject.transform.position, Is.EqualTo(new Vector3(0, 0, 1)), "No MouseUpAsButton event received.");
+    }
+
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseDrag()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMouseEventsTest>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Ended);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Began);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Moved);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x + 1f, vec.y), TouchPhase.Moved);
+        yield return null;
+        Assert.That(gameObject.transform.position, Is.EqualTo(new Vector3(0, 0, 3)), "No MouseDrag event received.");
+    }
+
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseEnterAndMouseExit()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMouseEventsTest>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(0, 0), TouchPhase.Ended);
+        yield return null;
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.None);
+        yield return null;
+        Assert.That(gameObject.GetComponent<Renderer>().material.color, Is.EqualTo(Color.green), "No MouseEnter event received.");
+
+        SetTouch(touch, new Vector2(0, 0), TouchPhase.None);
+        yield return null;
+        Assert.That(gameObject.GetComponent<Renderer>().material.color, Is.EqualTo(Color.red), "No MouseExit event received.");
+    }
+
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseOver()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMousEventTestTwo>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.None);
+        yield return null;
+        Assert.That(gameObject.GetComponent<Renderer>().material.color, Is.EqualTo(Color.blue), "No MouseOver event received.");
+    }
+
     private long m_eventSize = UnsafeUtility.SizeOf<StateEvent>() + (uint)UnsafeUtility.SizeOf<TouchState>() - StateEvent.kStateDataSizeToSubtract;
 
     // we need to use the NativeInputRuntime to queue the events in order to get the input events in native
