@@ -1,3 +1,4 @@
+#if UNITY_6000_3_OR_NEWER
 using System;
 using System.Collections;
 using NUnit.Framework;
@@ -21,6 +22,16 @@ partial class CoreTests
         base.TearDown();
     }
 
+    internal GameObject SetUpScene()
+    {
+        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        gameObject.transform.position = Vector3.zero;
+        var camera = new GameObject("MainCamera").AddComponent<Camera>();
+        camera.transform.position = new Vector3(0, 0, -2f);
+        camera.tag = "MainCamera";
+        return gameObject;
+    }
+
     #region Mouse
     [UnityTest]
     [Category("MouseEvents")]
@@ -28,12 +39,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(vec.x, vec.y), 1f);
 
@@ -48,12 +55,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(vec.x, vec.y), 1f);
         yield return null;
@@ -68,12 +71,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMousEventTestTwo>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(vec.x, vec.y), 1f);
         yield return null;
@@ -88,12 +87,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(vec.x, vec.y), 0f);
         yield return null;
@@ -112,12 +107,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(0, 0), 0f);
         yield return null;
@@ -136,12 +127,8 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMousEventTestTwo>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetMouse(mouse, new Vector2(vec.x, vec.y), 0f);
         yield return null;
@@ -171,12 +158,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(vec.x, vec.y), 1f);
 
@@ -191,12 +174,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(vec.x, vec.y), 1f);
         yield return null;
@@ -211,12 +190,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMousEventTestTwo>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(vec.x, vec.y), 1f);
         yield return null;
@@ -231,12 +206,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        gameObject.AddComponent<OnMousEventTestTwo>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMouseEventsTest>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(vec.x, vec.y), 0f);
         yield return null;
@@ -255,12 +226,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMouseEventsTest>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(0, 0), 0f);
         yield return null;
@@ -279,12 +246,8 @@ partial class CoreTests
     {
         var pen = InputSystem.AddDevice<Pen>();
 
-        var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var gameObject = SetUpScene();
         gameObject.AddComponent<OnMousEventTestTwo>();
-        gameObject.transform.position = Vector3.zero;
-        var camera = new GameObject("MainCamera").AddComponent<Camera>();
-        camera.transform.position = new Vector3(0, 0, -2f);
-        camera.tag = "MainCamera";
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         SetPen(pen, new Vector2(vec.x, vec.y), 0f);
         yield return null;
@@ -352,3 +315,4 @@ internal class OnMousEventTestTwo : MonoBehaviour
         gameObject.transform.position = new Vector3(0, 0, 3);
     }
 }
+#endif
