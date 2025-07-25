@@ -2,12 +2,14 @@
 using System;
 using System.Collections;
 using NUnit.Framework;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using UnityEngineInternal.Input;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 
 partial class CoreTests
@@ -17,8 +19,10 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var pen = InputSystem.AddDevice<Pen>();
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
         SetMouse(mouse, Vector2.zero, 0f);
         SetPen(pen, Vector2.zero, 0f);
+        SetTouch(touchscreen, Vector2.zero, TouchPhase.Ended);
         base.TearDown();
     }
 
@@ -265,6 +269,55 @@ partial class CoreTests
             pen.tip.WriteValueIntoEvent(pressed, eventPtr);
             NativeInputRuntime.instance.QueueEvent(eventPtr);
         }
+    }
+
+    #endregion
+
+    #region Touch
+
+    [UnityTest]
+    [Category("MouseEvents")]
+    public IEnumerator TouchEvents_CanReceiveOnMouseDown()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var gameObject = SetUpScene();
+        gameObject.AddComponent<OnMouseEventsTest>();
+        var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+        SetTouch(touch, new Vector2(vec.x, vec.y), TouchPhase.Began);
+
+        yield return null;
+
+        Assert.That(gameObject.transform.position, Is.EqualTo(new Vector3(0, 0, 1)), "No MouseDown event received.");
+    }
+
+    private long m_eventSize = UnsafeUtility.SizeOf<StateEvent>() + (uint)UnsafeUtility.SizeOf<TouchState>() - StateEvent.kStateDataSizeToSubtract;
+
+    // we need to use the NativeInputRuntime to queue the events in order to get the input events in native
+    // code, where the touch events are processed.
+    unsafe void SetTouch(Touchscreen touch, Vector2 pos, TouchPhase phase)
+    {
+        var state = new TouchState
+        {
+            touchId = 1,
+            phase = phase,
+            position = pos,
+            delta = default,
+            pressure = 1f,
+            displayIndex = 0,
+        };
+
+        var stateEvent =
+            new StateEvent
+        {
+            baseEvent = new InputEvent(StateEvent.Type, (int)m_eventSize, touch.deviceId, InputState.currentTime),
+            stateFormat = state.format
+        };
+
+        var ptr = stateEvent.stateData;
+        UnsafeUtility.MemCpy(ptr, UnsafeUtility.AddressOf(ref state), m_eventSize);
+
+        NativeInputRuntime.instance.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref stateEvent));
     }
 
     #endregion
