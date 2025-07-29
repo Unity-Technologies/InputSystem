@@ -161,21 +161,21 @@ namespace UnityEngine.InputSystem.Switch
         /// The gamepad class will return the state of buttonSouth, whereas this class returns the state of buttonEast
         /// </summary>
         public new ButtonControl aButton => buttonEast;
-    
+
         /// <summary>
         /// A Button for a Nintendo Switch Pro Controller.
         /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
         /// The gamepad class will return the state of buttonEast, whereas this class returns the state of buttonSouth
         /// </summary>
         public new ButtonControl bButton => buttonSouth;
-    
+
         /// <summary>
         /// A Button for a Nintendo Switch Pro Controller.
         /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
         /// The gamepad class will return the state of buttonNorth, whereas this class returns the state of buttonWest
         /// </summary>
         public new ButtonControl yButton => buttonWest;
-    
+
         /// <summary>
         /// A Button for a Nintendo Switch Pro Controller.
         /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
