@@ -56,9 +56,13 @@ internal class SwitchTests : CoreTestsFixture
         Assert.That(currentRight, Is.EqualTo(expectedRight).Using(new Vector2EqualityComparer(0.01f)));
 
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.A), controller.buttonEast);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.A), controller.aButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.B), controller.buttonSouth);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.B), controller.bButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.X), controller.buttonNorth);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.X), controller.xButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Y), controller.buttonWest);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Y), controller.yButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.StickL), controller.leftStickButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.StickR), controller.rightStickButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.L), controller.leftShoulder);
