@@ -56,11 +56,58 @@ internal class iOSTests : CoreTestsFixture
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.A), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.A), gamepad.aButton);
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.X), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.X), gamepad.xButton);
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.Y), gamepad.buttonNorth);
+        AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.Y), gamepad.yButton);
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.B), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.B), gamepad.bButton);
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.LeftShoulder), gamepad.leftShoulder);
         AssertButtonPress(gamepad, new iOSGameControllerState().WithButton(iOSButton.RightShoulder), gamepad.rightShoulder);
+    }
+
+    [Test]
+    [Category("Devices")]
+    // this is a new test, as we need to assert the Nintendo layout (e.g. buttonSouth == B button)
+    public void Devices_SupportsProControlleriOS()
+    {
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = "iOS",
+                deviceClass = "iOSGameController",
+                product = "Pro Controller"
+            });
+        Assert.That(device, Is.TypeOf(typeof(SwitchProControlleriOS)));
+        Assert.That(device, Is.InstanceOf(typeof(Gamepad)));
+
+        var gamepad = (SwitchProControlleriOS)device;
+
+        InputSystem.QueueStateEvent(gamepad,
+            new iOSGameControllerStateSwappedFaceButtons()
+                .WithButton(iOSButton.LeftTrigger, true, 0.123f)
+                .WithButton(iOSButton.RightTrigger, true, 0.456f)
+                .WithAxis(iOSAxis.LeftStickX, 0.789f)
+                .WithAxis(iOSAxis.LeftStickY, 0.987f)
+                .WithAxis(iOSAxis.RightStickX, 0.654f)
+                .WithAxis(iOSAxis.RightStickY, 0.321f));
+        InputSystem.Update();
+
+        var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.789f, 0.987f))));
+        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.654f, 0.321f))));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        // testing for Pro Controller layout...
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.A), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.X), gamepad.buttonNorth);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.Y), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.B), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.LeftShoulder), gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.RightShoulder), gamepad.rightShoulder);
     }
 
     [Test]
