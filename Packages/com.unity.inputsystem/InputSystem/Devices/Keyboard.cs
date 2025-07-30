@@ -970,6 +970,21 @@ namespace UnityEngine.InputSystem
         F24,
 
         /// <summary>
+        /// The <see cref="Keyboard.mediaPlayPause"/>.
+        /// </summary>
+        MediaPlayPause,
+
+        /// <summary>
+        /// The <see cref="Keyboard.mediaRewind"/>.
+        /// </summary>
+        MediaRewind,
+
+        /// <summary>
+        /// The <see cref="Keyboard.mediaForward"/>.
+        /// </summary>
+        MediaForward,
+
+        /// <summary>
         /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
         /// Will be removed in the future.
         /// FIXME: This should never have been a Key but rather just an extra button or state on keyboard
@@ -2269,6 +2284,12 @@ namespace UnityEngine.InputSystem
         /// Keyboards may have additional Functions keys that are not part of the standardized 104-key keyboard layout
         /// </remarks>
         public KeyControl f24Key => this[Key.F24];
+
+        public KeyControl mediaPlayPause => this[Key.MediaPlayPause];
+
+        public KeyControl mediaRewind => this[Key.MediaRewind];
+
+        public KeyControl mediaForward => this[Key.MediaForward];
 
         /// <summary>
         /// An artificial combination of <see cref="leftShiftKey"/> and <see cref="rightShiftKey"/> into one control.
