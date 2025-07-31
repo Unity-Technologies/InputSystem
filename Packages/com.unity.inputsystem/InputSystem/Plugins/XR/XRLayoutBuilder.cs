@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.XR
             {
                 return null;
             }
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+
             if (string.IsNullOrEmpty(matchedLayout))
             {
                 const InputDeviceCharacteristics controllerCharacteristics = InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
             }
-#endif
+
             string layoutName;
             if (string.IsNullOrEmpty(description.manufacturer))
             {

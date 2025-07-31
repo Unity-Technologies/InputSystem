@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -43,6 +42,27 @@ namespace UnityEngine.InputSystem.XR
         Hand,
         Bone,
         Eyes
+    }
+
+    // Sync to InputDeviceCharacteristics in IUnityXRInput.h
+    /// <summary>
+    /// The type of data a <see cref="XRDeviceDescriptor"/> exposes.
+    /// </summary>
+    [Flags]
+    public enum InputDeviceCharacteristics : uint
+    {
+        None = 0,
+        HeadMounted = 1 << 0,
+        Camera = 1 << 1,
+        HeldInHand = 1 << 2,
+        HandTracking = 1 << 3,
+        EyeTracking = 1 << 4,
+        TrackedDevice = 1 << 5,
+        Controller = 1 << 6,
+        TrackingReference = 1 << 7,
+        Left = 1 << 8,
+        Right = 1 << 9,
+        Simulated6DOF = 1 << 10
     }
 
     /// <summary>
@@ -102,12 +122,8 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
         public InputDeviceCharacteristics characteristics;
-#else
-        [SerializeField]
-        private uint characteristics;
-#endif
+
         /// <summary>
         /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
         /// </summary>

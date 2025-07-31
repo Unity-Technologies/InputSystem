@@ -112,7 +112,6 @@ namespace UnityEngine.InputSystem.XR
         protected override void FinishSetup()
         {
             base.FinishSetup();
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
             var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
@@ -123,7 +122,6 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
             }
-#endif
         }
     }
 
