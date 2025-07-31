@@ -103,9 +103,13 @@ internal class iOSTests : CoreTestsFixture
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         // testing for Pro Controller layout...
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.A), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.A), gamepad.aButton);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.X), gamepad.buttonNorth);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.X), gamepad.xButton);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.Y), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.Y), gamepad.yButton);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.B), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.B), gamepad.bButton);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.LeftShoulder), gamepad.leftShoulder);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.RightShoulder), gamepad.rightShoulder);
     }
