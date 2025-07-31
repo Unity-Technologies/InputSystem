@@ -175,6 +175,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "f22", displayName = "F22", layout = "Key", bit = (int)Key.F22)]
         [InputControl(name = "f23", displayName = "F23", layout = "Key", bit = (int)Key.F23)]
         [InputControl(name = "f24", displayName = "F24", layout = "Key", bit = (int)Key.F24)]
+        [InputControl(name = "mediaPlayPause", displayName = "MediaPlayPause", layout = "Key", bit = (int)Key.MediaPlayPause)]
+        [InputControl(name = "mediaRewind", displayName = "MediaRewind", layout = "Key", bit = (int)Key.MediaRewind)]
+        [InputControl(name = "mediaForward", displayName = "MediaForward", layout = "Key", bit = (int)Key.MediaForward)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)] // Use the last bit to hold IME selected state.
         public fixed byte keys[kSizeInBytes];
 
@@ -2570,6 +2573,9 @@ namespace UnityEngine.InputSystem
                 "f22",
                 "f23",
                 "f24",
+                nameof(mediaPlayPause),
+                nameof(mediaRewind),
+                nameof(mediaForward),
             };
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
