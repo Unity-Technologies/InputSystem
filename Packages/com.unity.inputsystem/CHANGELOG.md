@@ -13,6 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
 
+### Fixed
+- Fixed `buttonSouth` returning the state of the east button (and so on for all the buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+
 ## [1.14.2] - 2025-08-05
 
 ### Fixed
