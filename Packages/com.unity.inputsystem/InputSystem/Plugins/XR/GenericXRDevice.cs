@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.XR
         protected override void FinishSetup()
         {
             base.FinishSetup();
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE)
             var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
