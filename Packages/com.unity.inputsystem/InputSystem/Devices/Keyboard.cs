@@ -2285,10 +2285,28 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public KeyControl f24Key => this[Key.F24];
 
+        /// <summary>
+        /// The Media Play/Pause key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaPlayPause"/>.
+        /// Supported on Windows and Android.
+        /// </remarks>
         public KeyControl mediaPlayPause => this[Key.MediaPlayPause];
 
+        /// <summary>
+        /// The Media Rewind key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaRewind"/>.
+        /// Supported on Android.
+        /// </remarks>
         public KeyControl mediaRewind => this[Key.MediaRewind];
 
+        /// <summary>
+        /// The Media Forward key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaForward"/>.
+        /// Supported on Android.
+        /// </remarks>
         public KeyControl mediaForward => this[Key.MediaForward];
 
         /// <summary>
