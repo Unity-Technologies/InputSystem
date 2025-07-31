@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+- Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
+
 ### Fixed
 - Fixed an issue where using Pen devices on Android tablets would result in double clicks for UI interactions. [ISXB-1456](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1456)
 
