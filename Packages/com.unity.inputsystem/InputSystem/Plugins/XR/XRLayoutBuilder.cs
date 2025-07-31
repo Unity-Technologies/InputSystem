@@ -1,3 +1,5 @@
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -88,7 +90,7 @@ namespace UnityEngine.InputSystem.XR
             {
                 return null;
             }
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+
             if (string.IsNullOrEmpty(matchedLayout))
             {
                 const InputDeviceCharacteristics controllerCharacteristics = InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
@@ -97,7 +99,7 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
             }
-#endif
+
             string layoutName;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
@@ -339,3 +341,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
+#endif
