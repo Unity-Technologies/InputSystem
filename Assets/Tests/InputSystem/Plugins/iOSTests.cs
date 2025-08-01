@@ -70,7 +70,7 @@ internal class iOSTests : CoreTestsFixture
     [Test]
     [Category("Devices")]
     // this is a new test, as we need to assert the Nintendo layout (e.g. buttonSouth == B button)
-    public void Devices_SupportsProControlleriOS()
+    public void Devices_SupportsSwitchProControlleriOS()
     {
         var device = InputSystem.AddDevice(
             new InputDeviceDescription
