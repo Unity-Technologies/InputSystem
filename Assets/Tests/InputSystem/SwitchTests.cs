@@ -172,6 +172,7 @@ internal class SwitchTests : CoreTestsFixture
             });
 
         Assert.That(device, Is.TypeOf<SwitchProControllerHID>());
+        Assert.That(device, Is.InstanceOf(typeof(SwitchProController)));
     }
 
 #endif

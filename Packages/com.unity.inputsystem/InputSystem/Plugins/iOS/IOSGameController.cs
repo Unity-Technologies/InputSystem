@@ -198,38 +198,11 @@ namespace UnityEngine.InputSystem.iOS
 
     /// <summary>
     /// A Switch Pro Controller connected to an iOS device.
-    /// If you use InputSystem.GetDevice, you must query for this class rather than Gamepad in order for aButton, bButton, yButton and xButton to be correct
+    /// If you use InputSystem.GetDevice, you must query for SwitchProControlleriOS rather than Gamepad in order for aButton, bButton, yButton and xButton to be correct
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerStateSwappedFaceButtons), displayName = "iOS Switch Pro Controller Gamepad")]
-    public class SwitchProControlleriOS : Gamepad
+    public class SwitchProControlleriOS : SwitchProController
     {
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControlleriOS, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonSouth, whereas this class returns the state of buttonEast
-        /// </summary>
-        public new ButtonControl aButton => buttonEast;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControlleriOS, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonEast, whereas this class returns the state of buttonSouth
-        /// </summary>
-        public new ButtonControl bButton => buttonSouth;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControlleriOS, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonNorth, whereas this class returns the state of buttonWest
-        /// </summary>
-        public new ButtonControl yButton => buttonWest;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControlleriOS, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonWest, whereas this class returns the state of buttonNorth
-        /// </summary>
-        public new ButtonControl xButton => buttonNorth;
     }
 }
 #endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
