@@ -588,7 +588,7 @@ namespace UnityEngine.InputSystem
             // State offset to control index map.
             builder.WithStateOffsetToControlIndexMap(new uint[]
             {
-                525314u, 650240u, 1049603u, 1573892u, 2098181u, 2622470u, 3146759u, 3671048u, 4195337u, 4719626u
+                525314u, 653312u, 1049603u, 1573892u, 2098181u, 2622470u, 3146759u, 3671048u, 4195337u, 4719626u
                 , 5243915u, 5768204u, 6292493u, 6816782u, 7341071u, 7865364u, 8389653u, 8913942u, 9438231u, 9962520u
                 , 10486809u, 11011098u, 11535387u, 12059676u, 12583965u, 13108254u, 13632543u, 14156832u, 14681121u, 15205410u
                 , 15729699u, 16253988u, 16778277u, 17302566u, 17826855u, 18351144u, 18875433u, 19399722u, 19924011u, 20448300u
@@ -696,7 +696,7 @@ namespace UnityEngine.InputSystem
                     format = new FourCC(1112101920),
                     byteOffset = 0,
                     bitOffset = 1,
-                    sizeInBits = 123
+                    sizeInBits = 126
                 })
                 .WithMinAndMax(0, 1)
                 .Finish();
