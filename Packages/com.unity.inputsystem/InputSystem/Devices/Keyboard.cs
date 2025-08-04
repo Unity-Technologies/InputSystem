@@ -1066,7 +1066,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Total number of key controls.</value>
         public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API
-        internal const int ExtendedKeyCount = (int)Key.F24;
+        internal const int ExtendedKeyCount = (int)Key.MediaForward;
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
