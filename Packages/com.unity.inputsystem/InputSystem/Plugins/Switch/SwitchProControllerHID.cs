@@ -147,41 +147,13 @@ namespace UnityEngine.InputSystem.Switch
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
-    public class SwitchProControllerHID : Gamepad, IInputStateCallbackReceiver, IEventPreProcessor
+    public class SwitchProControllerHID : SwitchProController, IInputStateCallbackReceiver, IEventPreProcessor
     {
         [InputControl(name = "capture", displayName = "Capture")]
         public ButtonControl captureButton { get; protected set; }
 
         [InputControl(name = "home", displayName = "Home")]
         public ButtonControl homeButton { get; protected set; }
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonSouth, whereas this class returns the state of buttonEast
-        /// </summary>
-        public new ButtonControl aButton => buttonEast;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonEast, whereas this class returns the state of buttonSouth
-        /// </summary>
-        public new ButtonControl bButton => buttonSouth;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonNorth, whereas this class returns the state of buttonWest
-        /// </summary>
-        public new ButtonControl yButton => buttonWest;
-
-        /// <summary>
-        /// A Button for a Nintendo Switch Pro Controller.
-        /// If querying via script, ensure you cast the device to SwitchProControllerHID, rather than using the Gamepad class.
-        /// The gamepad class will return the state of buttonWest, whereas this class returns the state of buttonNorth
-        /// </summary>
-        public new ButtonControl xButton => buttonNorth;
 
         protected override void OnAdded()
         {

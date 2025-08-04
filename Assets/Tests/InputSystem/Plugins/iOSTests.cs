@@ -80,6 +80,7 @@ internal class iOSTests : CoreTestsFixture
                 product = "Pro Controller"
             });
         Assert.That(device, Is.TypeOf(typeof(SwitchProControlleriOS)));
+        Assert.That(device, Is.InstanceOf(typeof(SwitchProController)));
         Assert.That(device, Is.InstanceOf(typeof(Gamepad)));
 
         var gamepad = (SwitchProControlleriOS)device;
