@@ -9,7 +9,7 @@ editors:
   - version: 6000.2
     run_tvos: false
   - version: trunk
-    run_tvos: false    
+    run_tvos: false
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
 utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
@@ -57,18 +57,18 @@ platforms_nix:
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
   - name: linux
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4.50.0
+    image: package-ci/ubuntu-20.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
   - name: linux_standalone
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4.50.0
+    image: package-ci/ubuntu-20.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     runtime: StandaloneLinux64
   - name: linux_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4.50.0
+    image: package-ci/ubuntu-20.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     runtime: StandaloneLinux64
@@ -78,7 +78,7 @@ scripting_backends:
   - name: mono
   - name: il2cpp
   
-ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4.50.0
+ios_and_tvos_macos_bokken_image: package-ci/macos-13:v4
 
 test_category: 
   - name: performance
