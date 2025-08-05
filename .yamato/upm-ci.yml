@@ -139,7 +139,11 @@ run_ios_{{ editor.version }}_{{ category.name }}:
   agent:
       type: Unity::mobile::iPhone
       image: {{ ios_and_tvos_macos_bokken_image }}
+{% if editor.version == "trunk" %}
+      model: SE-Gen3
+{% else %}
       model: SE
+{% endif %}
       flavor: b1.medium
   variables:
     EDITOR_VERSION: {{ editor.version }}
