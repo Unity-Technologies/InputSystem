@@ -22,7 +22,9 @@
       "dependantsToIgnoreInPreviewApv": {
         "6000.3": [
           "com.unity.polyspatial",
-          "com.unity.polyspatial.extensions"
+          "com.unity.polyspatial.extensions",
+          "com.unity.polyspatial.visionos",
+          "com.unity.xr.visionos"
         ]
       }
     }

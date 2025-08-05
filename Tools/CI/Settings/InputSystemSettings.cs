@@ -73,8 +73,10 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 new Editor("6000.3",  ""),
                 new HashSet<string>()
                 {
+                    "com.unity.polyspatial",
+                    "com.unity.polyspatial.visionos",
                     "com.unity.polyspatial.extensions",
-                    "com.unity.polyspatial"
+                    "com.unity.xr.visionos"
                 }
             }
         };
