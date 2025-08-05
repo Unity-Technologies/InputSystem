@@ -120,6 +120,9 @@ build_ios_{{ editor.version }}_{{ category.name }}:
   variables:
     EDITOR_VERSION: {{ editor.version }}
     UTR_VERSION: 1.35.1
+{% if editor.version == "trunk" %}
+    UNITY_HANDLEUIINTERRUPTIONS: 1
+{% endif %}
   commands:
     - unity-downloader-cli -c Editor -c iOS -u $EDITOR_VERSION --fast --wait
     - UnifiedTestRunner --suite=playmode {% if category.name == "performance" %} --category=Performance {% else %} --category=!Performance {% endif %} --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only {% if category.name == "performance" %} --report-performance-data --performance-project-id=InputSystem {% endif %}
