@@ -19,7 +19,15 @@
       "coverageCommands": [
         "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:ASSEMBLY_NAME;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:YAMATO_SOURCE_DIR/Packages;"
       ],
-      "dependantsToIgnoreInPreviewApv": {}
+      "dependantsToIgnoreInPreviewApv": {
+        "6000.3": [
+          "com.unity.polyspatial",
+          "com.unity.polyspatial.extensions",
+          "com.unity.polyspatial.visionos",
+          "com.unity.polyspatial.xr",
+          "com.unity.xr.visionos"
+        ]
+      }
     }
   },
   "releasing_packages": [
