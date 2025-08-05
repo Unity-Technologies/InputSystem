@@ -4,6 +4,7 @@ using RecipeEngine.Api.Settings;
 using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Modules.Wrench.Settings;
 using RecipeEngine.Platforms;
+using RecipeEngine.Unity.Abstractions.Editors;
 
 namespace InputSystem.Cookbook.Settings;
 
@@ -64,6 +65,18 @@ public class InputSystemSettings : AnnotatedSettingsBase
         
         // change default images as per Dictionary above.
         Wrench.Packages["com.unity.inputsystem"].EditorPlatforms = ImageOverrides;
+        
+        // ignore packages listed below in PreviewAPV
+        Wrench.Packages["com.unity.inputsystem"].DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
+        {
+            {
+                new Editor("6000.3",  ""),
+                new HashSet<string>()
+                {
+                    "com.unity.polyspatial.extensions"
+                }
+            }
+        };
         
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
     }
