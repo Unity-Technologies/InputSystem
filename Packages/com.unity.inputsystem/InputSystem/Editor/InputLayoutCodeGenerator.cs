@@ -387,7 +387,10 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("    .Finish();");
 
             if (control is KeyControl key)
-                writer.WriteLine($"{controlVariableName}.keyCode = UnityEngine.InputSystem.Key.{key.keyCode};");
+            {
+                var tt = $"{controlVariableName}.keyCode = UnityEngine.InputSystem.Key.{key.keyCode};";
+                writer.WriteLine(tt);
+            }
             else if (control is DpadControl.DpadAxisControl dpadAxis)
                 writer.WriteLine($"{controlVariableName}.component = {dpadAxis.component};");
 
