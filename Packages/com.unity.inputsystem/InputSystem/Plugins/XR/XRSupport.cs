@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE)
         public InputDeviceCharacteristics characteristics;
 #else
         [SerializeField]
