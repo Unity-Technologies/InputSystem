@@ -76,7 +76,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
                     "com.unity.polyspatial",
                     "com.unity.polyspatial.visionos",
                     "com.unity.polyspatial.extensions",
-                    "com.unity.xr.visionos"
+                    "com.unity.polyspatial.xr",
+                    "com.unity.xr.visionos" 
                 }
             }
         };
