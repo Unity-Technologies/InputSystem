@@ -21,6 +21,7 @@
       ],
       "dependantsToIgnoreInPreviewApv": {
         "6000.3": [
+          "com.unity.polyspatial",
           "com.unity.polyspatial.extensions"
         ]
       }
