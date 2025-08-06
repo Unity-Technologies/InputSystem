@@ -120,7 +120,7 @@ build_ios_{{ editor.version }}_{{ category.name }}:
   variables:
     EDITOR_VERSION: {{ editor.version }}
     UTR_VERSION: 1.35.1
-{% if editor.version == "trunk" %}
+{% if editor.run_ios_15 %}
     UNITY_HANDLEUIINTERRUPTIONS: 1
 {% endif %}
   commands:
@@ -142,7 +142,7 @@ run_ios_{{ editor.version }}_{{ category.name }}:
   agent:
       type: Unity::mobile::iPhone
       image: {{ ios_and_tvos_macos_bokken_image }}
-{% if editor.version == "trunk" %}
+{% if editor.run_ios_15 %}
       model: SE-Gen3
 {% else %}
       model: SE
