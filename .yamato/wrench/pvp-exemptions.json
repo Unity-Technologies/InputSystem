@@ -82,11 +82,6 @@
             "InputSystem/Editor/UITKAssetEditor/Resources/NameAndParameterListViewItemTemplate.uxml"
           ]
         },
-        "PVP-40-1": {
-          "errors": [
-            "CHANGELOG.md: line 11: header must match regex: ^\\[(?<version>.*)\\]( - (?<date>\\d{4}-\\d{2}-\\d{2}))?$"
-          ]
-        },
         "PVP-91-3": {
           "errors": [
             "Samples~/RebindingUI/Icons/PS4_Circle.png.meta: /ps4_circle.png.meta",
