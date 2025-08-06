@@ -206,12 +206,9 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_PathLabel;
         private string m_ExpectedControlLayout;
         private string[] m_ControlPathsToMatch;
-        private InputControlScheme[] m_ControlSchemes;
-        private bool m_NeedToClearProgressBar;
 
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
-        private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
     }
 }
  #endif // UNITY_EDITOR
