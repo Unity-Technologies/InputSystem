@@ -3,6 +3,7 @@ using RecipeEngine.Api.Artifacts;
 using RecipeEngine.Api.Extensions;
 using RecipeEngine.Api.Jobs;
 using RecipeEngine.Api.Platforms;
+using RecipeEngine.Modules.InfrastructureInstabilityDetection;
 using RecipeEngine.Modules.UnifiedTestRunner;
 using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Platforms;
@@ -43,8 +44,8 @@ public class FullPackageTests: InputBaseRecipe
                     .WithRerun(1, true)
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithArtifacts("artifacts"))))
-            .WithArtifact(new Artifact("artifacts", "artifacts/**/*"));
-            //.WithDependencies(Settings.Wrench.WrenchJobs[InputSystemSettings.InputSystemPackageName][JobTypes.Pack])
+            .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
+            .WithInfrastructureInstabilityDetection();
         return job;
     }
 }

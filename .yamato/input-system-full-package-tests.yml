@@ -11,6 +11,8 @@ inputsystem-fullpackagetests_-_2021_3_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -27,6 +29,8 @@ inputsystem-fullpackagetests_-_2021_3_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -44,6 +48,8 @@ inputsystem-fullpackagetests_-_2021_3_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
@@ -60,6 +66,8 @@ inputsystem-fullpackagetests_-_2022_3_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -76,6 +84,8 @@ inputsystem-fullpackagetests_-_2022_3_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -93,6 +103,8 @@ inputsystem-fullpackagetests_-_2022_3_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
@@ -109,6 +121,8 @@ inputsystem-fullpackagetests_-_6000_0_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -125,6 +139,8 @@ inputsystem-fullpackagetests_-_6000_0_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -142,6 +158,8 @@ inputsystem-fullpackagetests_-_6000_0_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
@@ -158,6 +176,8 @@ inputsystem-fullpackagetests_-_6000_1_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.1/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -174,6 +194,8 @@ inputsystem-fullpackagetests_-_6000_1_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.1/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -191,6 +213,8 @@ inputsystem-fullpackagetests_-_6000_1_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.1/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
@@ -207,6 +231,8 @@ inputsystem-fullpackagetests_-_6000_2_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -223,6 +249,8 @@ inputsystem-fullpackagetests_-_6000_2_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -240,6 +268,8 @@ inputsystem-fullpackagetests_-_6000_2_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
@@ -256,6 +286,8 @@ inputsystem-fullpackagetests_-_6000_3_-_macos:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -272,6 +304,8 @@ inputsystem-fullpackagetests_-_6000_3_-_ubuntu:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
     artifacts:
       paths:
@@ -289,6 +323,8 @@ inputsystem-fullpackagetests_-_6000_3_-_windows:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --clean-library --api-profile=NET_4_6 --artifacts-path=artifacts
+  after:
+  - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     artifacts:
       paths:
