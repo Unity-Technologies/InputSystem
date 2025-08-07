@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <summary>
         /// This property is only set from this class in order to communicate that we're showing the dropdown at the moment
         /// It's employed to skip auto-saving, because that complicates updating the internal SerializedProperties.
-        /// Unfortunately, we can't use IMGUIDropdownVisible from the setings provider because of the early-out logic in there. 
+        /// Unfortunately, we can't use IMGUIDropdownVisible from the setings provider because of the early-out logic in there.
         /// </summary>
         public static bool IsShowingDropdown { get; private set; }
     }
