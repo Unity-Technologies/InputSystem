@@ -11,13 +11,19 @@ namespace InputSystem.Cookbook.Settings;
 public class InputSystemSettings : AnnotatedSettingsBase
 {
     // Path from the root of the repository where packages are located.
-    readonly string[] PackagesRootPaths = {"Packages"};
+    readonly string[] PackagesRootPaths = ["Packages"];
+
+    private static InputSystemSettings? _instance;
+    
+    public static readonly string BranchName = "develop";
+    public static readonly string InputSystemPackageName = "com.unity.inputsystem";
+    public WrenchPackage InputSystemPackage => Wrench.Packages[InputSystemPackageName];
 
     // update this to list all packages in this repo that you want to release.
     Dictionary<string, PackageOptions> PackageOptions = new()
     {
         {
-            "com.unity.inputsystem",
+            InputSystemPackageName,
             new PackageOptions()
             {
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
@@ -36,7 +42,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
     };
     
     // You can either use a platform.json file or specify custom yamato VM images for each package in code.
-    private readonly Dictionary<SystemType, Platform> ImageOverrides = new()
+    /*private readonly Dictionary<SystemType, Platform> ImageOverrides = new()
     {
         {
             SystemType.Windows,
@@ -52,7 +58,19 @@ public class InputSystemSettings : AnnotatedSettingsBase
             new Platform(new Agent("package-ci/ubuntu-20.04:v4", FlavorType.BuildLarge, ResourceType.Vm),
                 SystemType.Ubuntu)
         }
-    };
+    };*/
+
+    public static InputSystemSettings Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new InputSystemSettings();
+            }
+            return _instance;
+        }
+    }
 
     public InputSystemSettings()
     {
@@ -62,10 +80,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             wrenchCsProjectPath: "/Tools/CI/InputSystem.Cookbook.csproj",
             useLocalPvpExemptions: true
         );
-        
-        // change default images as per Dictionary above.
-        Wrench.Packages["com.unity.inputsystem"].EditorPlatforms = ImageOverrides;
-        
+
         // ignore packages listed below in PreviewAPV
         Wrench.Packages["com.unity.inputsystem"].DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
         {
