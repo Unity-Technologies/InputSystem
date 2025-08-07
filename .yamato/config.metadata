@@ -9,6 +9,7 @@ editors:
   - version: 6000.2
     run_tvos: false
   - version: trunk
+    run_ios_15: true
     run_tvos: false
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
