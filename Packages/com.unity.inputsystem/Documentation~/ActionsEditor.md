@@ -7,7 +7,7 @@ The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md)
 
 It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-It also alows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
+It also allows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
 ### Action Assets and Project-Wide Actions
 
@@ -45,8 +45,6 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-*
-
 
 ## Action type and Control type
 
@@ -56,7 +54,7 @@ If you select an Action, you can edit its properties in the right-hand pane of t
 
 #### Action Type
 
-The Action Type setting allows to to select between **Button**, **Value** or **PassThrough**.
+Use the Action Type setting to select **Button**, **Value** or **PassThrough**.
 
 These options relate to whether this action should represent a discrete on/off button-style interaction or a value that can change over time while the control is being used.
 

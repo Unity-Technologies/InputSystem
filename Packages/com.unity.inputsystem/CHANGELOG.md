@@ -10,7 +10,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+- Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
 
+## [1.14.2] - 2025-08-05
+
+### Fixed
+- Fixed an issue where using Pen devices on Android tablets would result in double clicks for UI interactions. [ISXB-1456](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1456)
+- Fixed an issue preventing an embedded platform from being released. It adds back some `#defines` to `XRSupport` and `InputDeviceCharacteristics`.
 
 ## [1.14.1] - 2025-07-10
 
@@ -44,6 +51,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
 - Fixed an issue that caused input processors with enum properties to incorrectly serialise by index instead of by value [ISXB-1474](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1474)
 
+### Changed
+
+- Changed conditional guards inside Plugins/XR so that we don't unnecessarily wrap entire classes. This stops downstream packages from having to also wrap Input System objects with similar conditionals.
+
 ## [1.14.0] - 2025-03-20
 
 ### Fixed
@@ -54,7 +65,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
-- Changed conditional guards inside Plugins/XR so that we don't unnecessarily wrap entire classes. This stops downstream packages from having to also wrap Input System objects with similar conditionals.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
