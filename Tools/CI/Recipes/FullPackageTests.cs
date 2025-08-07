@@ -41,6 +41,7 @@ public class FullPackageTests: InputBaseRecipe
                     .WithExtraArgs("--suite=Editor --suite=Playmode")
                     .WithCategory("!Performance")
                     .WithRerun(1, true)
+                    .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"));
             //.WithDependencies(Settings.Wrench.WrenchJobs[InputSystemSettings.InputSystemPackageName][JobTypes.Pack])
