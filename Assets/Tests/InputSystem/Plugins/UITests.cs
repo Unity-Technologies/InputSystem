@@ -2793,17 +2793,17 @@ internal partial class UITests : CoreTestsFixture
         // Move right
         Set(gamepad.leftStick, new Vector2(1, 0));
         yield return null;
-        
-        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject),"Right navigation did not work when localMultiPlayerRoot was set");
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was set");
 
         // Move left
         Set(gamepad.leftStick, Vector2.zero);
         yield return null;
         Set(gamepad.leftStick, new Vector2(-1, 0));
         yield return null;
-        
-        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject),"Left navigation did not work when localMultiPlayerRoot was set");
-        
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was set");
+
         // Reset stick position
         Set(gamepad.leftStick, Vector2.zero);
         yield return null;
@@ -2818,8 +2818,8 @@ internal partial class UITests : CoreTestsFixture
         // Move right
         Set(gamepad.leftStick, new Vector2(1, 0));
         yield return null;
-        
-        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject),"Right navigation did not work when localMultiPlayerRoot was null");
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was null");
 
         // Move left
         Set(gamepad.leftStick, Vector2.zero);
@@ -2827,13 +2827,13 @@ internal partial class UITests : CoreTestsFixture
         Set(gamepad.leftStick, new Vector2(-1, 0));
         yield return null;
 
-        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject),"Left navigation did not work when localMultiPlayerRoot was null");
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was null");
 
         // Submit
         PressAndRelease(gamepad.buttonSouth);
         yield return null;
 
-        Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.Submit),"Submit event was not received when localMultiPlayerRoot was null");
+        Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.Submit), "Submit event was not received when localMultiPlayerRoot was null");
 
         // Checking that localMultiPlayerRoot is null
         Assert.AreEqual(null, scene.uiModule.localMultiPlayerRoot);
