@@ -8,7 +8,6 @@ inputsystem-fullpackagetests_-_2021_3_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -25,7 +24,6 @@ inputsystem-fullpackagetests_-_2021_3_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -59,7 +57,6 @@ inputsystem-fullpackagetests_-_2022_3_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -76,7 +73,6 @@ inputsystem-fullpackagetests_-_2022_3_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -110,7 +106,6 @@ inputsystem-fullpackagetests_-_6000_0_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -127,7 +122,6 @@ inputsystem-fullpackagetests_-_6000_0_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -161,7 +155,6 @@ inputsystem-fullpackagetests_-_6000_1_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.1/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -178,7 +171,6 @@ inputsystem-fullpackagetests_-_6000_1_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.1/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -212,7 +204,6 @@ inputsystem-fullpackagetests_-_6000_2_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -229,7 +220,6 @@ inputsystem-fullpackagetests_-_6000_2_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -263,7 +253,6 @@ inputsystem-fullpackagetests_-_6000_3_-_macos:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
@@ -280,7 +269,6 @@ inputsystem-fullpackagetests_-_6000_3_-_ubuntu:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
