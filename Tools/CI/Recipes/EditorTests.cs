@@ -11,7 +11,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class FullPackageTests: InputBaseRecipe
+public class EditorTests: InputBaseRecipe
 {
     public override string ProjectPath => ".";
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityBranch)
@@ -28,7 +28,6 @@ public class FullPackageTests: InputBaseRecipe
         job.WithCommands(c => c
                 .Add(InputSystemSettings.DoctoolsInstallCmd)
                 .Add(Utilities.GetEditorDownloadCommand(unityBranch, platform))
-                //.Add($"upm-pvp create-test-project {ProjectPath} --packages \"upm-ci~/packages/*.tgz\" --unity .Editor")
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithTestProject($"{ProjectPath}")
                     .WithEditor(".Editor")
