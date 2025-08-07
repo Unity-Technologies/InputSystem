@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
+- Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 
 ## [1.14.2] - 2025-08-05
 
