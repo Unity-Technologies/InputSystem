@@ -145,6 +145,9 @@ namespace UnityEngine.InputSystem
                 case Key.OEM3:
                 case Key.OEM4:
                 case Key.OEM5:
+                case Key.MediaPlayPause:
+                case Key.MediaForward:
+                case Key.MediaRewind:
                 case KeyEx.IMESelected:
                     return false;
             }

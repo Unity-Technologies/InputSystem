@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+- Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
 
 ## [1.14.2] - 2025-08-05
 
