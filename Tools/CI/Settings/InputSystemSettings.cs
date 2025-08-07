@@ -17,6 +17,11 @@ public class InputSystemSettings : AnnotatedSettingsBase
     
     public static readonly string BranchName = "develop";
     public static readonly string InputSystemPackageName = "com.unity.inputsystem";
+
+    // Command to install .NET Framework 4.7.1 Developer Pack which is used by doctools on Windows.
+    public static readonly string NetfxInstallCmd = "%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes";
+    public static readonly string DoctoolsInstallCmd = "git clone --branch \"2.3.0-preview\" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools";
+
     public WrenchPackage InputSystemPackage => Wrench.Packages[InputSystemPackageName];
 
     // update this to list all packages in this repo that you want to release.

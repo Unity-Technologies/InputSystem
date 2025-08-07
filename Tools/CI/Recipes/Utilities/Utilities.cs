@@ -12,12 +12,12 @@ internal static class Utilities
         return InputSystemSettings.Instance.InputSystemPackage.EditorPlatforms.ContainsKey(platform.System);
     }
     
-    public static string GetEditorDownloadCommand(string editor, Platform platform)
+    public static string GetEditorDownloadCommand(string unityBranch, Platform platform)
     {
         if (IsEditorPlatform(platform))
-            return $"unity-downloader-cli -u {editor} -c Editor --fast --wait";
+            return $"unity-downloader-cli -u {unityBranch} -c Editor --fast --wait";
         else
-            return $"unity-downloader-cli -u {editor} -c Editor  -c {Utilities.GetPlatformName(platform)} --fast --wait";
+            return $"unity-downloader-cli -u {unityBranch} -c Editor  -c {Utilities.GetPlatformName(platform)} --fast --wait";
     }
 
     public static string GetPlatformName(Platform platform)
