@@ -2070,15 +2070,12 @@ namespace UnityEngine.InputSystem.UI
 
         private bool RemovePointerAtIndex(int index)
         {
-            Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
-
-            // We don't want to release touch pointers on the same frame they are released (unpressed). They get cleaned up one frame later in Process()
-            ref var state = ref GetPointerStateForIndex(index);
-            if (state.pointerType == UIPointerType.Touch && (state.leftButton.isPressed || state.leftButton.wasReleasedThisFrame))
-            {
-                // The pointer was not removed
+            // Pointers might have been reset before (e.g. when calling OnDisable) which would make m_PointerStates
+            // empty (ISXB-687).
+            if (m_PointerStates.length == 0)
                 return false;
-            }
+
+            Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
             var eventData = m_PointerStates[index].eventData;
@@ -2350,13 +2347,7 @@ namespace UnityEngine.InputSystem.UI
                     // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
-                        ref var state = ref GetPointerStateForIndex(i);
-                        // Touch pointers need to get forced to no longer be pressed otherwise they will not get released in subsequent frames.
-                        if (m_PointerStates[i].pointerType == UIPointerType.Touch)
-                        {
-                            state.leftButton.isPressed = false;
-                        }
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen && m_PointerStates[i].pointerType != UIPointerType.Touch || (m_PointerStates[i].pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame))
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
                         {
                             if (SendPointerExitEventsAndRemovePointer(i))
                                 --i;
@@ -2452,8 +2443,8 @@ namespace UnityEngine.InputSystem.UI
                     //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
                     if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
-                        RemovePointerAtIndex(i);
-                        --i;
+                        if (RemovePointerAtIndex(i))
+                            --i;
                         continue;
                     }
 
