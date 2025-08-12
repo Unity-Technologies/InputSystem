@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.XR
             {
                 return null;
             }
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE)
             if (string.IsNullOrEmpty(matchedLayout))
             {
                 const InputDeviceCharacteristics controllerCharacteristics = InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
