@@ -1460,33 +1460,132 @@ internal partial class UITests : CoreTestsFixture
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
-        // Test if creating Pointer events from different devices at the same time results in only one event
-        BeginTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
-        Press(mouse1.leftButton);
+        // End previous touches that started so that we can do a cleanup from the last test.
+        EndTouch(1, secondPosition, screen: touch1);
         yield return null;
-        EndTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        EndTouch(1, firstPosition, screen: touch2);
+        yield return null;
+        // Set a mouse position without any clicks to "emulate" a real movement before a button press.
+        Set(mouse1.position, secondPosition + new Vector2(-10, 0));
+        yield return null;
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Test a press and release from both a Mouse and Touchscreen at the same time
+        // This is to simulate some platforms that always send Mouse/Pen and Touches (e.g. Android).
+        // Also, this mostly assets the expected behavior for the options SingleMouseOrPenButMultiTouchAndTrack.
+        var touchId = 2;
+        BeginTouch(touchId, secondPosition, screen: touch1, queueEventOnly: true);
+        Set(mouse1.position, secondPosition, queueEventOnly: true);
+        Press(mouse1.leftButton);
+
+        yield return null;
+
+        EndTouch(touchId, secondPosition, screen: touch1, queueEventOnly: true);
         Release(mouse1.leftButton);
         yield return null;
 
+        Func<UICallbackReceiver.Event, bool> eventDeviceCondition = null;
+        var expectedCount = 0;
         switch (pointerBehavior)
         {
-            case UIPointerBehavior.SingleUnifiedPointer:
-                //// Getting "Drop" event even if using only one type of input device for Press/Release.
-                //// E.g. the following test would also produce only a Drop event:
-                ////     Press(mouse1.leftButton);
-                ////     yield return null;
-                ////     Release(mouse1.leftButton);
-                ////     yield return null;
-                break;
             case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
-            case UIPointerBehavior.AllPointersAsIs:
-                // Single pointer click on the left object
-                Assert.That(scene.leftChildReceiver.events,
-                    Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerClick).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+                // Expects only mouse events for PointerClick, PointerDown, and PointerUp
+                eventDeviceCondition = (e) => e.pointerData.device == mouse1;
+                expectedCount = 1;
+                // Make sure that the touch does not generate a UI events.
+                Assert.That(scene.rightChildReceiver.events, Has.None.Matches((UICallbackReceiver.Event e) =>
+                    e.pointerData != null && e.pointerData.device == touch1));
                 break;
+
+            case UIPointerBehavior.SingleUnifiedPointer:
+                // Expects only single UI events with touch source since they are the first events in the queue
+                eventDeviceCondition = (e) => e.pointerData.device == touch1;
+                expectedCount = 1;
+                break;
+
+            case UIPointerBehavior.AllPointersAsIs:
+                // Expects both pointer devices to generate PointerClick, PointerDown, and PointerUp events
+                eventDeviceCondition = (e) => e.pointerData.device == mouse1 || e.pointerData.device == touch1;
+                expectedCount = 2;
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(pointerBehavior), pointerBehavior, null);
         }
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerClick).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerDown).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [Description("Tests that disabling the UI module during a Button click event works correctly with touch pointers." +
+        "ISXB-687")]
+    public IEnumerator UI_DisablingEventSystemOnClickEventWorksWithTouchPointers()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough);
+        var clickAction = uiActions.AddAction("click", type: InputActionType.PassThrough);
+
+        pointAction.AddBinding("<Touchscreen>/touch*/position");
+        clickAction.AddBinding("<Touchscreen>/touch*/press");
+
+        pointAction.Enable();
+        clickAction.Enable();
+
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+
+        // Add a listener to the button to disable the UI module when clicked.
+        // This calls InputSystemUIInputModule.OnDisable() which will reset the pointer data during
+        // InputSystemUIInputModule.Process() and ProcessPointer(). It will allow us to test that removing
+        // a pointer once the UI module is disabled (all pointers are removed) works correctly.
+        button.onClick.AddListener(() =>
+        {
+            clicked = true;
+            scene.uiModule.enabled = false; // Disable the UI module to test pointer reset.
+        });
+
+        yield return null;
+
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+
+        // This will allocate a pointer for the touch and set the first touch position and press
+        BeginTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.False, "Button was clicked when it should not have been yet.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(1),
+            "A pointer states was not allocated for the touch pointer.");
+
+        // Release the touch to make sure we have a Click event that calls the button listener.
+        EndTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.True, "Button was not clicked when it should have been.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(0),
+            "Pointer states were not cleared when the UI module was disabled after a click event.");
     }
 
     [UnityTest]
