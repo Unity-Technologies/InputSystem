@@ -62,10 +62,11 @@ public class InputSystemSettings : AnnotatedSettingsBase
             wrenchCsProjectPath: "/Tools/CI/InputSystem.Cookbook.csproj",
             useLocalPvpExemptions: true
         );
-        
-        // change default images as per Dictionary above.
-        Wrench.Packages["com.unity.inputsystem"].EditorPlatforms = ImageOverrides;
-        
+
+        var defaultUbuntuPlatform = WrenchPackage.DefaultEditorPlatforms[SystemType.Ubuntu];
+        // Use Ubuntu image package-ci/ubuntu-22.04.
+        Wrench.Packages["com.unity.inputsystem"].EditorPlatforms[SystemType.Ubuntu] = new Platform(new Agent("package-ci/ubuntu-22.04:default", defaultUbuntuPlatform.Agent.Flavor, defaultUbuntuPlatform.Agent.Resource), defaultUbuntuPlatform.System);
+
         // ignore packages listed below in PreviewAPV
         Wrench.Packages["com.unity.inputsystem"].DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
         {
