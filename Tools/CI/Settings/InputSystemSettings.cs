@@ -87,7 +87,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
         );
 
         // ignore packages listed below in PreviewAPV
-        Wrench.Packages["com.unity.inputsystem"].DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
+        InputSystemPackage.DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
         {
             {
                 new Editor("6000.3",  ""),
@@ -101,7 +101,10 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 }
             }
         };
-        
+
+        InputSystemPackage.CoverageCommands.Enabled = true;
+        var assemblies = InputSystemPackage.CoverageAssemblies;
+        var assebmliesNames = InputSystemPackage.CoverageAssemblyNames();
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
     }
     

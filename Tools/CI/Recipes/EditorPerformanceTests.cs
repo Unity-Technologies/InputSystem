@@ -11,7 +11,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class EditorTests: InputBaseRecipe
+public class EditorPerformanceTests: InputBaseRecipe
 {
     public override string ProjectPath => ".";
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
@@ -35,14 +35,10 @@ public class EditorTests: InputBaseRecipe
                     .WithTestProject($"{ProjectPath}")
                     .WithEditor(".Editor")
                     .WithExtraArgs("--suite=Editor --suite=Playmode")
-                    .WithCategory("!Performance")
+                    .WithCategory("Performance")
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithRerun(1, true)
-                    .WithExtraArgs("--enable-code-coverage", 
-                        "--coverage-options=\"generateAdditionalMetrics;generateHtmlReport;" + 
-                        $"assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:{yamatoSourceDir}/Packages;\"",
-                        $"--coverage-results-path={yamatoSourceDir}/upm-ci~/CodeCoverage",
-                        $"--coverage-upload-options=\"reportsDir:upm-ci~/CodeCoverage;name:inputsystem_{platform.System.ToString()}_{unityVersion}_project;flags:inputsystem_{platform.System.ToString()}_{unityVersion}_project\"")
+                    .WithExtraArgs("--report-performance-data --performance-project-id=InputSystem")
                     .WithArtifacts("artifacts"))
                 ))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))

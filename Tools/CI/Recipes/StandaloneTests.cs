@@ -14,8 +14,10 @@ namespace InputSystem.Cookbook.Recipes;
 public class StandaloneTests: InputBaseRecipe
 {
     public override string ProjectPath => ".";
-    protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityBranch)
+    protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
+        var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
+
         IJobBuilder job = JobBuilder.Create(jobName)
             .WithDescription(jobName)
             .WithPlatform(platform);
@@ -34,8 +36,8 @@ public class StandaloneTests: InputBaseRecipe
                     .WithSuite(UtrTestSuiteType.Playmode)
                     .WithPlatform(platform.System)
                     .WithCategory("!Performance")
-                    .WithRerun(1, true)
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
+                    .WithRerun(1, true)
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
             .WithInfrastructureInstabilityDetection();

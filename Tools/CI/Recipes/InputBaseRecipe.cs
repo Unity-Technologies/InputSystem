@@ -60,8 +60,7 @@ public abstract class InputBaseRecipe: RecipeBase
     public virtual IJobBuilder ProduceJob(Package package, Platform platform, string unityVersion)
     {
         var jobName = GetJobName(unityVersion, platform.System);
-        var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
-        return ProduceJob(jobName, package, platform, unityBranch);
+        return ProduceJob(jobName, package, platform, unityVersion);
     }
 
     /// <summary>
@@ -70,9 +69,9 @@ public abstract class InputBaseRecipe: RecipeBase
     /// <param name="jobName">The name of the job.</param>
     /// <param name="package">The package.</param>
     /// <param name="platform">The platform that the job should target.</param>
-    /// <param name="unityBranch">The unity branch that the job should download unity editor from.</param>
+    /// <param name="unityVersion">The unity version that the job should target.</param>
     /// <returns>The job builder</returns>
-    protected abstract IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityBranch);
+    protected abstract IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion);
 
     /// <summary>
     /// Implement this to provide the platforms for which this job should be generated.
