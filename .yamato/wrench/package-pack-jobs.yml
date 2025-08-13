@@ -5,7 +5,7 @@
 package_pack_-_inputsystem:
   name: Package Pack - inputsystem
   agent:
-    image: package-ci/ubuntu-20.04:v4
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
