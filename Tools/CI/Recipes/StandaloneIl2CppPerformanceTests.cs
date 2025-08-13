@@ -29,7 +29,7 @@ public class StandaloneIl2CppPerformanceTests: InputBaseRecipe
 
         job.WithCommands(c => c
                 .Add(InputSystemSettings.DoctoolsInstallCmd)
-                .Add(Utilities.GetEditorDownloadCommand(unityBranch, platform))
+                .Add(Utilities.GetEditorDownloadCommand(unityBranch, platform, "Il2Cpp"))
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithTestProject($"{ProjectPath}")
                     .WithEditor(".Editor")

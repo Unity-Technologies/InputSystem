@@ -9,7 +9,7 @@ inputsystem-standaloneil2cpptests_-_2021_3_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2021.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -27,7 +27,7 @@ inputsystem-standaloneil2cpptests_-_2021_3_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2021.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -46,7 +46,7 @@ inputsystem-standaloneil2cpptests_-_2021_3_-_windows:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2021.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2021.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
@@ -64,7 +64,7 @@ inputsystem-standaloneil2cpptests_-_2022_3_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2022.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -82,7 +82,7 @@ inputsystem-standaloneil2cpptests_-_2022_3_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2022.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -101,7 +101,7 @@ inputsystem-standaloneil2cpptests_-_2022_3_-_windows:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 2022.3/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
@@ -119,7 +119,7 @@ inputsystem-standaloneil2cpptests_-_6000_0_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.0/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -137,7 +137,7 @@ inputsystem-standaloneil2cpptests_-_6000_0_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.0/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -156,7 +156,7 @@ inputsystem-standaloneil2cpptests_-_6000_0_-_windows:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.0/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
@@ -174,7 +174,7 @@ inputsystem-standaloneil2cpptests_-_6000_2_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.2/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -192,7 +192,7 @@ inputsystem-standaloneil2cpptests_-_6000_2_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.2/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -211,7 +211,7 @@ inputsystem-standaloneil2cpptests_-_6000_2_-_windows:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.2/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
@@ -229,7 +229,7 @@ inputsystem-standaloneil2cpptests_-_6000_3_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -247,7 +247,7 @@ inputsystem-standaloneil2cpptests_-_6000_3_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: bash Tools/CI/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -266,7 +266,7 @@ inputsystem-standaloneil2cpptests_-_6000_3_-_windows:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts
   after:
   - command: Tools\CI\generated-scripts\infrastructure-instability-detection-win.cmd
