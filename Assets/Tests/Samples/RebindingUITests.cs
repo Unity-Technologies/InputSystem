@@ -14,6 +14,12 @@ public class RebindingUITests : CoreTestsFixture
 {
     private int m_Counter;
 
+    public override void Setup()
+    {
+        base.Setup();
+        m_Counter = 0;
+    }
+
     [Test]
     [Category("Samples")]
     public void Samples_CanCreateRebindingUI()
