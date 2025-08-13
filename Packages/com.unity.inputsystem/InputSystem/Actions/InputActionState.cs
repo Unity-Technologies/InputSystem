@@ -371,7 +371,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Check whether the state is currently reflecting a suppressed state.
         /// </summary>
-        public bool isSuppressed => m_Suppressed;
+        public bool IsSuppressed => m_Suppressed;
 
         /// <summary>
         /// Check whether the state has any actions that are currently enabled.

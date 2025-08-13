@@ -1,3 +1,6 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
     public class RebindSaveLoad : MonoBehaviour

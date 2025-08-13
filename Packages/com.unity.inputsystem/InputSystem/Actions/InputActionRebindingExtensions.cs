@@ -1557,7 +1557,7 @@ namespace UnityEngine.InputSystem
             /// For this reason, a rebind can be configured to automatically swallow any input event except the ones having
             /// input on controls matching <see cref="WithControlsExcluding"/>.
             ///
-            /// Note that all input shouldn't necessarily should be suppressed. For example, it can be desirable to have UI that
+            /// Note that not all input should necessarily be suppressed. For example, it can be desirable to have UI that
             /// allows the user to cancel an ongoing rebind by clicking with the mouse. This means that mouse position and
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.

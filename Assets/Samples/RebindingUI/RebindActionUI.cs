@@ -196,7 +196,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             bindingIndex = action.bindings.IndexOf(x => x.id == id);
             if (bindingIndex == -1)
             {
-                Debug.LogError($"Cannot find binding with ID '{bindingId}' on '{action}'", this);
+                Debug.LogError($"Cannot find binding with ID '{m_BindingId}' on '{action}'", this);
                 return false;
             }
 
