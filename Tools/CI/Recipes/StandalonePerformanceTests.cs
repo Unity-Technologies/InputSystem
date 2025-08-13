@@ -5,6 +5,7 @@ using RecipeEngine.Api.Jobs;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Modules.InfrastructureInstabilityDetection;
 using RecipeEngine.Modules.UnifiedTestRunner;
+using RecipeEngine.Modules.Wrench.Helpers;
 using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
@@ -41,7 +42,7 @@ public class StandalonePerformanceTests: InputBaseRecipe
                     .WithExtraArgs("--report-performance-data --performance-project-id=InputSystem")
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
-            .WithInfrastructureInstabilityDetection();
+            .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
 
         return job;
     }
