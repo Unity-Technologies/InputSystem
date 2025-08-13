@@ -58,18 +58,18 @@ platforms_nix:
     installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP --wait --fast -u
   - name: linux
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4
+    image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
   - name: linux_standalone
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4
+    image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     runtime: StandaloneLinux64
   - name: linux_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/ubuntu-20.04:v4
+    image: package-ci/ubuntu-22.04:v4
     flavor: b1.large
     instabilities_run: sh ./run_standalone_instability_detection-latest.sh ubuntu 0.5.1 || exit 0
     runtime: StandaloneLinux64
