@@ -240,7 +240,8 @@ namespace UnityEngine.InputSystem
                         m_InputEventHandledPolicy = value;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("value");
+                        throw new ArgumentOutOfRangeException(
+                            $"Unsupported input event handling policy: {value}");
                 }
             }
         }
