@@ -17,7 +17,7 @@ public class EditorTests: InputBaseRecipe
     public override string ProjectPath => ".";
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
-        var yamatoSourceDir = Environment.GetEnvironmentVariable("YAMATO_SOURCE_DIR");
+        var yamatoSourceDir = platform.System == SystemType.Windows ? "%YAMATO_SOURCE_DIR%" : "$YAMATO_SOURCE_DIR";
         var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
         
         IJobBuilder job = JobBuilder.Create(jobName)
