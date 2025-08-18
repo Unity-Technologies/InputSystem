@@ -219,7 +219,7 @@ namespace UnityEngine.InputSystem.Editor
         /// It's employed to skip auto-saving, because that complicates updating the internal SerializedProperties.
         /// Unfortunately, we can't use IMGUIDropdownVisible from the setings provider because of the early-out logic in there.
         /// </summary>
-        public static bool IsShowingDropdown { get; private set; }
+        internal static bool IsShowingDropdown { get; private set; }
     }
 }
  #endif // UNITY_EDITOR
