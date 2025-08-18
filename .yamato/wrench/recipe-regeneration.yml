@@ -5,7 +5,7 @@
 test_-_wrench_jobs_up_to_date:
   name: Test - Wrench Jobs up to date
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:

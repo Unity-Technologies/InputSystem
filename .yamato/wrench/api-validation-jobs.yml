@@ -9,7 +9,7 @@ all_api_validation_jobs:
 api_validation_-_inputsystem_-_2021_3_-_windows:
   name: API Validation - inputsystem - 2021.3 - windows
   agent:
-    image: package-ci/win10:v4
+    image: package-ci/win10:default
     type: Unity::VM
     flavor: b1.large
   commands:
