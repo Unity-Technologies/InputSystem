@@ -114,7 +114,7 @@
         },
         {
             "name": "Unity",
-            "expression": "6000.3.0a5",
+            "expression": "6000.3.0a6",
             "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
         }
     ],
