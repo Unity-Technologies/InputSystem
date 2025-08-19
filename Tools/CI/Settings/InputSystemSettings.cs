@@ -138,8 +138,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
             
             MobileTestPlatforms.Add(platform, new Platform(
                 new Agent(v["run"]["image"].ToString(), 
-                    Utilities.GetEnumValue<FlavorType>(v["build"]["flavor"].ToString()), 
-                    Utilities.GetEnumValue<ResourceType>(v["build"]["type"].ToString())),
+                    Utilities.GetEnumValue<FlavorType>(v["run"]["flavor"].ToString()), 
+                    Utilities.GetEnumValue<ResourceType>(v["run"]["type"].ToString())),
                 platform));
         }
     }

@@ -5,6 +5,7 @@ using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
 using RecipeEngine.Api.Artifacts;
+using RecipeEngine.Api.Platforms;
 using RecipeEngine.Modules.InfrastructureInstabilityDetection;
 using RecipeEngine.Modules.Wrench.Helpers;
 
@@ -50,11 +51,27 @@ public class MobileFunctionalTests: InputBaseRecipe
     {
         var buildJob = new MobileFunctionalBuildJobs().AsDependencies().Where(d =>
             d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion));
-        
+
         IJobBuilder job = JobBuilder.Create(jobName)
             .WithDescription(jobName)
-            .WithPlatform(platform)
-            .WithCommands(c => c
+            .WithPlatform(platform);
+        
+        if (platform.System == SystemType.Android)
+        {
+            job.WithCommands(c => c
+                    //Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
+                    .Add("set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%")
+                    //Establish an ADB connection with the device
+                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
+                    //List the connected devices
+                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe devices"))
+                .WithAfterCommands(c=> c
+                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
+                    .Add("if not exist build\\test-results mkdir build\\test-results")
+                    .Add("powershell %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe logcat -d > build/test-results/device_log.txt"));
+        }
+
+        job.WithCommands(c => c
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithSuite(UtrTestSuiteType.Playmode)
                     .WithPlatform(platform.System)

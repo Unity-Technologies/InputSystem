@@ -5,13 +5,19 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_android:
   name: InputSystem-MobileFunctionalTests - 2021.3 - Android
   agent:
     image: package-ci/win10:default
-    type: Unity::VM
+    type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
+  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --suite=playmode --platform=android --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: if not exist build\test-results mkdir build\test-results
+  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -25,7 +31,7 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_ios:
   name: InputSystem-MobileFunctionalTests - 2021.3 - IOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::iPhone
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -43,7 +49,7 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_tvos:
   name: InputSystem-MobileFunctionalTests - 2021.3 - TvOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -61,13 +67,19 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_android:
   name: InputSystem-MobileFunctionalTests - 2022.3 - Android
   agent:
     image: package-ci/win10:default
-    type: Unity::VM
+    type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
+  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --suite=playmode --platform=android --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: if not exist build\test-results mkdir build\test-results
+  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -81,7 +93,7 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_ios:
   name: InputSystem-MobileFunctionalTests - 2022.3 - IOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::iPhone
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -99,7 +111,7 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_tvos:
   name: InputSystem-MobileFunctionalTests - 2022.3 - TvOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -117,13 +129,19 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_android:
   name: InputSystem-MobileFunctionalTests - 6000.0 - Android
   agent:
     image: package-ci/win10:default
-    type: Unity::VM
+    type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
+  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --suite=playmode --platform=android --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: if not exist build\test-results mkdir build\test-results
+  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -137,7 +155,7 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_ios:
   name: InputSystem-MobileFunctionalTests - 6000.0 - IOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::iPhone
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -155,7 +173,7 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_tvos:
   name: InputSystem-MobileFunctionalTests - 6000.0 - TvOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -173,13 +191,19 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_android:
   name: InputSystem-MobileFunctionalTests - 6000.2 - Android
   agent:
     image: package-ci/win10:default
-    type: Unity::VM
+    type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
+  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --suite=playmode --platform=android --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: if not exist build\test-results mkdir build\test-results
+  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -193,7 +217,7 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_ios:
   name: InputSystem-MobileFunctionalTests - 6000.2 - IOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::iPhone
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -211,7 +235,7 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_tvos:
   name: InputSystem-MobileFunctionalTests - 6000.2 - TvOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -229,13 +253,19 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_android:
   name: InputSystem-MobileFunctionalTests - 6000.3 - Android
   agent:
     image: package-ci/win10:default
-    type: Unity::VM
+    type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
+  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --suite=playmode --platform=android --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
+  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+  - command: if not exist build\test-results mkdir build\test-results
+  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -249,7 +279,7 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_ios:
   name: InputSystem-MobileFunctionalTests - 6000.3 - IOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::iPhone
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
@@ -267,7 +297,7 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_tvos:
   name: InputSystem-MobileFunctionalTests - 6000.3 - TvOS
   agent:
     image: package-ci/macos-13:default
-    type: Unity::VM::osx
+    type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
