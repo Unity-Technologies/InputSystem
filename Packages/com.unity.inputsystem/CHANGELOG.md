@@ -9,6 +9,7 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
+- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
