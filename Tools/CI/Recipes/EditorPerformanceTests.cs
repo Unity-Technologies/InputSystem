@@ -39,6 +39,8 @@ public class EditorPerformanceTests: InputBaseRecipe
                     .WithCategory("Performance")
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithRerun(1, true)
+                    .WithPerformanceDataReporting(true)
+                    .WithPerformanceProject("InputSystem")
                     .WithExtraArgs("--report-performance-data --performance-project-id=InputSystem")
                     .WithArtifacts("artifacts"))
                 ))

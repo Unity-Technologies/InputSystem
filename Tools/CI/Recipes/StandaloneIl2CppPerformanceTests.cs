@@ -40,7 +40,8 @@ public class StandaloneIl2CppPerformanceTests: InputBaseRecipe
                     .WithCategory("Performance")
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithRerun(1, true)
-                    .WithExtraArgs("--report-performance-data --performance-project-id=InputSystem")
+                    .WithPerformanceDataReporting(true)
+                    .WithPerformanceProject("InputSystem")
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();

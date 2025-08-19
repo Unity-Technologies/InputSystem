@@ -1,4 +1,6 @@
-﻿using RecipeEngine.Api.Commands;
+﻿using InputSystem.Cookbook.Recipes;
+using Newtonsoft.Json.Linq;
+using RecipeEngine.Api.Commands;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Api.Settings;
 using RecipeEngine.Modules.Wrench.Models;
@@ -24,6 +26,12 @@ public class InputSystemSettings : AnnotatedSettingsBase
 
     public WrenchPackage InputSystemPackage => Wrench.Packages[InputSystemPackageName];
 
+    // Mobile platforms which run build jobs
+    public readonly Dictionary<SystemType, Platform> MobileBuildPlatforms = new();
+    
+    // Mobile platforms which run tests jobs
+    public readonly Dictionary<SystemType, Platform> MobileTestPlatforms = new();
+
     // update this to list all packages in this repo that you want to release.
     Dictionary<string, PackageOptions> PackageOptions = new()
     {
@@ -45,25 +53,6 @@ public class InputSystemSettings : AnnotatedSettingsBase
             }
         }
     };
-    
-    // You can either use a platform.json file or specify custom yamato VM images for each package in code.
-    /*private readonly Dictionary<SystemType, Platform> ImageOverrides = new()
-    {
-        {
-            SystemType.Windows,
-            new Platform(new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm), SystemType.Windows)
-        },
-        {
-            SystemType.MacOS,
-            new Platform(new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx),
-                SystemType.MacOS)
-        },
-        {
-            SystemType.Ubuntu,
-            new Platform(new Agent("package-ci/ubuntu-20.04:v4", FlavorType.BuildLarge, ResourceType.Vm),
-                SystemType.Ubuntu)
-        }
-    };*/
 
     public static InputSystemSettings Instance
     {
@@ -76,6 +65,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
             return _instance;
         }
     }
+    
+    readonly string mobileConfigFilePath = ".yamato/mobile_config.json";
 
     public InputSystemSettings()
     {
@@ -106,7 +97,50 @@ public class InputSystemSettings : AnnotatedSettingsBase
         var assemblies = InputSystemPackage.CoverageAssemblies;
         var assebmliesNames = InputSystemPackage.CoverageAssemblyNames();
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
+
+        ReadMobileConfig();
     }
     
     public WrenchSettings Wrench { get; private set; }
+
+    void ReadMobileConfig()
+    {
+        if (!File.Exists(mobileConfigFilePath))
+            throw new FileNotFoundException("Mobile config file could not be found.");
+
+        var configs = File.ReadAllText(mobileConfigFilePath);
+        var jsonObject = JObject.Parse(configs);
+
+        foreach (var (k, v) in jsonObject)
+        {
+            SystemType platform;
+            switch (k)
+            {
+                case "android":
+                    platform = SystemType.Android;
+                    break;
+                case "ios":
+                    platform = SystemType.IOS;
+                    break;
+                case "tvos":
+                    platform = SystemType.TvOS;
+                    break;
+                default:
+                    platform = SystemType.Unknown;
+                    break;
+            }
+            
+            MobileBuildPlatforms.Add(platform, new Platform(
+                new Agent(v["build"]["image"].ToString(), 
+                    Utilities.GetEnumValue<FlavorType>(v["build"]["flavor"].ToString()), 
+                    Utilities.GetEnumValue<ResourceType>(v["build"]["type"].ToString())),
+                platform));
+            
+            MobileTestPlatforms.Add(platform, new Platform(
+                new Agent(v["run"]["image"].ToString(), 
+                    Utilities.GetEnumValue<FlavorType>(v["build"]["flavor"].ToString()), 
+                    Utilities.GetEnumValue<ResourceType>(v["build"]["type"].ToString())),
+                platform));
+        }
+    }
 }

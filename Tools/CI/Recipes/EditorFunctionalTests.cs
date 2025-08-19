@@ -12,13 +12,14 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class StandaloneTests: InputBaseRecipe
+public class EditorFunctionalTests: InputBaseRecipe
 {
     public override string ProjectPath => ".";
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
+        var yamatoSourceDir = platform.System == SystemType.Windows ? "%YAMATO_SOURCE_DIR%" : "$YAMATO_SOURCE_DIR";
         var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
-
+        
         IJobBuilder job = JobBuilder.Create(jobName)
             .WithDescription(jobName)
             .WithPlatform(platform);
@@ -34,12 +35,17 @@ public class StandaloneTests: InputBaseRecipe
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithTestProject($"{ProjectPath}")
                     .WithEditor(".Editor")
-                    .WithSuite(UtrTestSuiteType.Playmode)
-                    .WithPlatform(platform.System)
+                    .WithExtraArgs("--suite=Editor --suite=Playmode")
                     .WithCategory("!Performance")
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithRerun(1, true)
-                    .WithArtifacts("artifacts"))))
+                    .WithExtraArgs("--enable-code-coverage", 
+                        "--coverage-options=\"generateAdditionalMetrics;generateHtmlReport;" + 
+                        $"assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:{yamatoSourceDir}/Packages;\"",
+                        $"--coverage-results-path={yamatoSourceDir}/upm-ci~/CodeCoverage",
+                        $"--coverage-upload-options=\"reportsDir:upm-ci~/CodeCoverage;name:inputsystem_{platform.System.ToString()}_{unityVersion}_project;flags:inputsystem_{platform.System.ToString()}_{unityVersion}_project\"")
+                    .WithArtifacts("artifacts"))
+                ))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
 

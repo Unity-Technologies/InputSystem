@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.Serialization;
 using InputSystem.Cookbook.Settings;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Platforms;
@@ -45,4 +47,18 @@ internal static class Utilities
 #pragma warning restore CS8603 // Possible null reference return.
     }
 
+    public static TEnum GetEnumValue<TEnum>(string value) where TEnum : Enum
+    {
+        var type = typeof(TEnum);
+        foreach (var field in type.GetFields())
+        {
+            var attribute = field.GetCustomAttribute<EnumMemberAttribute>();
+            if (attribute != null && attribute.Value == value)
+            {
+                return (TEnum)field.GetValue(null);
+            }
+        }
+
+        throw new ArgumentException($"No EnumMemberAttribute with value '{value}' found in enum '{type.Name}'.");
+    }
 }
