@@ -24,7 +24,7 @@ internal static class Utilities
             return $"unity-downloader-cli -u {unityBranch} -c Editor --fast --wait";
         }
 
-        return $"unity-downloader-cli -u {unityBranch} -c Editor  -c {Utilities.GetPlatformName(platform)} --fast --wait";
+        return $"unity-downloader-cli -u {unityBranch} -c Editor -c {Utilities.GetPlatformName(platform)} --fast --wait";
     }
 
     public static string GetPlatformName(Platform platform)

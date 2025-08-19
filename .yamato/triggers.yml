@@ -22,16 +22,21 @@ all_functional_tests:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_ios
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_tvos
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_ios
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2021_3_-_macos
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2021_3_-_ubuntu
