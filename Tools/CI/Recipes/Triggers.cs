@@ -41,6 +41,7 @@ public class Triggers: RecipeBase
                 .WithDependencies(allStandaloneIl2CppFunctionalTests)
                 .WithDependencies(allMobileFunctionalTests)
                 .WithDependencies(allTvOSFunctionalBuildJobs)
+                .WithDependencies(new Dependency("wrench/promotion-jobs", "publish_dry_run_inputsystem"))
                 .WithPullRequestTrigger(pr => pr.ExcludeDraft().And().WithTargetBranch(InputSystemSettings.BranchName).And().WithoutChanges("**/*.md"), true, CancelLeftoverJobs.Always),
             
             JobBuilder.Create("All Performance Tests")

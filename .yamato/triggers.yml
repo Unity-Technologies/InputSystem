@@ -68,6 +68,7 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_windows
+  - path: .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
     expression: |-
       NOT pull_request.draft AND
