@@ -222,6 +222,42 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// The policy to be applied when processing input events that has been marked as "handled" by setting
+        /// <see cref="InputEvent.handled"/> or <see cref="InputEventPtr.handled"/> to true.
+        /// </summary>
+        /// <remarks>
+        /// The default setting of this property is <see cref="InputEventHandledPolicy.SuppressStateUpdates"/> which
+        /// implies that events are completely suppressed which means that associated state will not be updated.
+        /// Hence, any state dependent classes such as <see cref="InputAction"/> or associated interactions will
+        /// not be updated either. A side-effect of this setting is that succeeding events that are not suppressed
+        /// may trigger new unexpected events since they may trigger state changes due to monitoring instances not
+        /// seeing previous changes.
+        ///
+        /// The setting <see cref="InputEventHandledPolicy.SuppressActionEventNotifications"/> will instead allow state change
+        /// propagation to happen, including updating interaction state, but will instead suppress any associated
+        /// notifications.
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">If attempting to set this property to an unsupported
+        /// value.</exception>
+        internal InputEventHandledPolicy inputEventHandledPolicy
+        {
+            get => m_InputEventHandledPolicy;
+            set
+            {
+                switch (value)
+                {
+                    case InputEventHandledPolicy.SuppressActionEventNotifications:
+                    case InputEventHandledPolicy.SuppressStateUpdates:
+                        m_InputEventHandledPolicy = value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(
+                            $"Unsupported input event handling policy: {value}");
+                }
+            }
+        }
+
         public event DeviceChangeListener onDeviceChange
         {
             add => m_DeviceChangeListeners.AddCallback(value);
@@ -1905,6 +1941,9 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
             #endif
 
+            // Default input event handled policy.
+            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
             //       for the detection of base layouts to work.
@@ -2158,6 +2197,7 @@ namespace UnityEngine.InputSystem
         #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
         private float m_PollingFrequency;
         #endif
+        private InputEventHandledPolicy m_InputEventHandledPolicy;
 
         internal InputControlLayout.Collection m_Layouts;
         private TypeTable m_Processors;
@@ -3472,7 +3512,8 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
-                        if (currentEventReadPtr->handled)
+                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
+                            currentEventReadPtr->handled)
                         {
                             m_InputEventStream.Advance(false);
                             continue;
@@ -4064,6 +4105,7 @@ namespace UnityEngine.InputSystem
         {
             public int layoutRegistrationVersion;
             public float pollingFrequency;
+            public InputEventHandledPolicy inputEventHandledPolicy;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
@@ -4111,6 +4153,7 @@ namespace UnityEngine.InputSystem
                 #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 pollingFrequency = m_PollingFrequency,
                 #endif
+                inputEventHandledPolicy =  m_InputEventHandledPolicy,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices?.Take(m_AvailableDeviceCount).ToArray(),
                 buffers = m_StateBuffers,
@@ -4139,6 +4182,7 @@ namespace UnityEngine.InputSystem
             #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
             m_PollingFrequency = state.pollingFrequency;
             #endif
+            m_InputEventHandledPolicy = state.inputEventHandledPolicy;
 
             if (m_Settings != null)
                 Object.DestroyImmediate(m_Settings);

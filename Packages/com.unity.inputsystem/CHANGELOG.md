@@ -11,8 +11,19 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 
+### Changed
+- Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
+
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
+- Added a new fluent API `WithSuppressedActionPropagation()` to `UnityEngine.InputSystem.InputActionRebindingExtensions` that allows suppressing actions from firing during interactive rebinding while allowing state updates to avoid actions triggering after state event suppression (default). ISXB-1546.
+- Added a new Monobehavior `InputActionLabel` to rebinding sample to allow dynamic text showing relevant binding for an `InputAction`.
+
+### Fixed
+- Fixed an issue in `RebindingUISample` that fired actions bound to the same control as the target control in a rebinding process. ISXB-1524.
+- Fixed an issue in `RebindingUISample` preventing UI navigation without Keyboard and Mouse present.
+- Fixed an issue in `RebindActionUI` which resulted in active binding not being shown after a scene reload. ISXB-1588.
+- Fixed an issue in `GamepadIconExample` which resulted in icons for left and right triggers not being displayed after a rebind to the exact same controls. ISXB-1593.
 
 ## [1.14.2] - 2025-08-05
 
@@ -23,7 +34,6 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.14.1] - 2025-07-10
 
 ### Added
-
 - Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
 
 ### Fixed
@@ -50,7 +60,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the defaultActionMap dropdown in the PlayerInput component defaulting to <None> instead of the first ActionMap.
 - Fixed TrackedPoseDriver stops updating position and rotation when device is added after its initialization. [ISXB-1555](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1555)
 - Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
-- Fixed an issue that caused input processors with enum properties to incorrectly serialise by index instead of by value [ISXB-1474](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1474)
+- Fixed an issue that caused input processors with enum properties to incorrectly serialise by index instead of by value [ISXB-1474](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1474).
 
 ### Changed
 
