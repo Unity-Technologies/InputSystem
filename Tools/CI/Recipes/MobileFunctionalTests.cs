@@ -12,50 +12,11 @@ using RecipeEngine.Modules.Wrench.Helpers;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class MobileFunctionalBuildJobs: InputBaseRecipe
+public class MobileFunctionalBuildJobs: InputMobileBaseRecipe
 {
     public override string ProjectPath => ".";
-
-    public override IEnumerable<IJobBuilder> GetJobs()
-    {
-        List<IJobBuilder> builders = new();
-
-        var package = Settings.InputSystemPackage;
-        var platforms = GetJobPlatforms(package);
-        foreach (var platform in platforms)
-        {
-            var supportedVersions = package.SupportedEditorVersions;
-            foreach (var version in supportedVersions)
-            {
-                if (platform.System == SystemType.Android)
-                {
-                    builders.AddRange(ProduceJobsForAndroid(package, platform, version));
-                }
-                else
-                {
-                    builders.Add(ProduceJob(package, platform, version));
-                }
-            }
-        }
-
-        return builders;
-    }
-    
-    // Produces jobs for Android platform with different scripting backends.
-    IEnumerable<IJobBuilder> ProduceJobsForAndroid(Package package, Platform platform, string unityVersion)
-    {
-        List<IJobBuilder> builders = new();
-        string jobName = "";
-        foreach (var backend in (List<string>)["mono", "il2cpp"])
-        {
-            jobName = GetJobName(unityVersion, platform.System) + $" - {backend}";
-            builders.Add(ProduceJob(jobName, package, platform, unityVersion));
-        }
-
-        return builders;
-    }
-    
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileBuildPlatforms.Values;
+    
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
         var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
@@ -101,54 +62,15 @@ public class MobileFunctionalBuildJobs: InputBaseRecipe
     }
 }
 
-public class MobileFunctionalTests: InputBaseRecipe
+public class MobileFunctionalTests: InputMobileBaseRecipe
 {
     public override string ProjectPath => ".";
-    
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileTestPlatforms.Values;
-    
-    public override IEnumerable<IJobBuilder> GetJobs()
-    {
-        List<IJobBuilder> builders = new();
-
-        var package = Settings.InputSystemPackage;
-        var platforms = GetJobPlatforms(package);
-        foreach (var platform in platforms)
-        {
-            var supportedVersions = package.SupportedEditorVersions;
-            foreach (var version in supportedVersions)
-            {
-                if (platform.System == SystemType.Android)
-                {
-                    builders.AddRange(ProduceJobsForAndroid(package, platform, version));
-                }
-                else
-                {
-                    builders.Add(ProduceJob(package, platform, version));
-                }
-            }
-        }
-
-        return builders;
-    }
-    
-    // Produces jobs for Android platform with different scripting backends.
-    IEnumerable<IJobBuilder> ProduceJobsForAndroid(Package package, Platform platform, string unityVersion)
-    {
-        List<IJobBuilder> builders = new();
-        string jobName = "";
-        foreach (var backend in (List<string>)["mono", "il2cpp"])
-        {
-            jobName = GetJobName(unityVersion, platform.System) + $" - {backend}";
-            builders.Add(ProduceJob(jobName, package, platform, unityVersion));
-        }
-
-        return builders;
-    }
     
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
-        IEnumerable<Dependency> buildJob;
+        IEnumerable<Dependency> buildJob = new MobileFunctionalBuildJobs().AsDependencies().Where(d =>
+            d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion));
 
         if (platform.System == SystemType.Android)
         {
@@ -165,30 +87,11 @@ public class MobileFunctionalTests: InputBaseRecipe
                     d.JobId.Contains("mono"));
             }
         }
-        else
-        {
-            buildJob = new MobileFunctionalBuildJobs().AsDependencies().Where(d =>
-                d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion));
-        }
 
-        IJobBuilder job = JobBuilder.Create(jobName)
-            .WithDescription(jobName)
-            .WithPlatform(platform);
+        IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
         
         if (platform.System == SystemType.Android)
-        {
-            job.WithCommands(c => c
-                    //Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
-                    .Add("set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%")
-                    //Establish an ADB connection with the device
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
-                    //List the connected devices
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe devices"))
-                .WithAfterCommands(c=> c
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
-                    .Add("if not exist build\\test-results mkdir build\\test-results")
-                    .Add("powershell %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe logcat -d > build/test-results/device_log.txt"));
-        }
+            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
         
         job.WithCommands(c => c
                 .Add(UtrCommand.Run(platform.System, b => b

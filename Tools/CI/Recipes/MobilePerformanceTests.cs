@@ -1,4 +1,5 @@
 using RecipeEngine.Api.Artifacts;
+using RecipeEngine.Api.Dependencies;
 using RecipeEngine.Api.Extensions;
 using RecipeEngine.Api.Jobs;
 using RecipeEngine.Api.Platforms;
@@ -11,67 +12,91 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class MobilePerformanceBuildJobs: InputBaseRecipe
+public class MobilePerformanceBuildJobs: InputMobileBaseRecipe
 {
     public override string ProjectPath => ".";
-
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileBuildPlatforms.Values;
+
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
         var unityBranch = Settings.Wrench.EditorVersionToBranches[unityVersion];
         IJobBuilder job = JobBuilder.Create(jobName)
             .WithDescription(jobName)
             .WithPlatform(platform)
-            .WithCommands(c => c
-                .Add(Utilities.GetEditorDownloadCommand(unityBranch, platform))
-                .Add(UtrCommand.Run(platform.System, b => b
-                    .WithTestProject($"{ProjectPath}")
-                    .WithEditor(".Editor")
-                    .WithSuite(UtrTestSuiteType.Playmode)
-                    .WithPlatform(platform.System)
-                    .WithCategory("Performance")
-                    .WithExtraArgs("--clean-library")
-                    .WithRerun(1, true)
-                    .WithBuildOnly()
-                    .WithPerformanceDataReporting(true)
-                    .WithPerformanceProject("InputSystem")
-                    .WithPlayerSavePath("build/players")
-                    .WithArtifacts("build/logs"))))
-            .WithArtifact(new Artifact("players", "build/players/**/*"), 
+            .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
+
+        // Build job on Android with il2cpp scripting backend.
+        if (platform.System == SystemType.Android && jobName.Contains("il2cpp"))
+        {
+            job.WithCommands(UtrCommand.Run(platform.System, b => b
+                .WithTestProject($"{ProjectPath}")
+                .WithEditor(".Editor")
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithPlatform(platform.System)
+                .WithCategory("Performance")
+                .WithScriptingBackend(ScriptingBackendType.Il2Cpp)
+                .WithExtraArgs("--clean-library")
+                .WithRerun(1, true)
+                .WithBuildOnly()
+                .WithPerformanceDataReporting(true)
+                .WithPerformanceProject("InputSystem")
+                .WithPlayerSavePath("build/players")
+                .WithArtifacts("build/logs")));
+        }
+        else
+        {
+            job.WithCommands(UtrCommand.Run(platform.System, b => b
+                .WithTestProject($"{ProjectPath}")
+                .WithEditor(".Editor")
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithPlatform(platform.System)
+                .WithCategory("Performance")
+                .WithExtraArgs("--clean-library")
+                .WithRerun(1, true)
+                .WithBuildOnly()
+                .WithPerformanceDataReporting(true)
+                .WithPerformanceProject("InputSystem")
+                .WithPlayerSavePath("build/players")
+                .WithArtifacts("build/logs")));
+        }
+
+        job.WithArtifact(new Artifact("players", "build/players/**/*"),
                 new Artifact("logs", "build/logs/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
         return job;
     }
 }
 
-public class MobilePerformanceTests: InputBaseRecipe
+public class MobilePerformanceTests: InputMobileBaseRecipe
 {
     public override string ProjectPath => ".";
-
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileTestPlatforms.Values;
+    
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)
     {
-        var buildJob = new MobilePerformanceBuildJobs().AsDependencies().Where(d =>
+        IEnumerable<Dependency> buildJob = new MobilePerformanceBuildJobs().AsDependencies().Where(d =>
             d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion));
-
-        IJobBuilder job = JobBuilder.Create(jobName)
-            .WithDescription(jobName)
-            .WithPlatform(platform);
-
+        
         if (platform.System == SystemType.Android)
         {
-            job.WithCommands(c => c
-                    //Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
-                    .Add("set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%")
-                    //Establish an ADB connection with the device
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
-                    //List the connected devices
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe devices"))
-                .WithAfterCommands(c=> c
-                    .Add("start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%")
-                    .Add("if not exist build\\test-results mkdir build\\test-results")
-                    .Add("powershell %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe logcat -d > build/test-results/device_log.txt"));
+            if (jobName.Contains("il2cpp"))
+            {
+                buildJob = new MobilePerformanceBuildJobs().AsDependencies().Where(d =>
+                    d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion) &&
+                    d.JobId.Contains("il2cpp"));
+            }
+            else
+            {
+                buildJob = new MobilePerformanceBuildJobs().AsDependencies().Where(d =>
+                    d.JobId.Contains(platform.System.ToString()) && d.JobId.Contains(unityVersion) &&
+                    d.JobId.Contains("mono"));
+            }
         }
+
+        IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
+
+        if (platform.System == SystemType.Android)
+            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
 
         job.WithCommands(c => c
                 .Add(UtrCommand.Run(platform.System, b => b

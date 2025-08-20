@@ -8,7 +8,6 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_il2cpp:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -34,7 +33,6 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_mono:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -96,7 +94,6 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -122,7 +119,6 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -184,7 +180,6 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_il2cpp:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -210,7 +205,6 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -272,7 +266,6 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_il2cpp:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -298,7 +291,6 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -360,7 +352,6 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_il2cpp:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
@@ -386,7 +377,6 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono:
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
-  - command: set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-

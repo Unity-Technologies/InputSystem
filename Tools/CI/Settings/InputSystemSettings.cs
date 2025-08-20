@@ -31,6 +31,21 @@ public class InputSystemSettings : AnnotatedSettingsBase
     
     // Mobile platforms which run tests jobs
     public readonly Dictionary<SystemType, Platform> MobileTestPlatforms = new();
+    
+    public readonly string[] AndroidExtraCommands = new[]
+    {
+        //Establish an ADB connection with the device
+        "start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%",
+        //List the connected devices
+        "start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe devices"
+    };
+
+    public readonly string[] AndroidExtraAfterCommands = new[]
+    {
+        "start %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe connect %BOKKEN_DEVICE_IP%",
+        "if not exist build\\test-results mkdir build\\test-results",
+        "powershell %ANDROID_SDK_ROOT%\\platform-tools\\adb.exe logcat -d > build/test-results/device_log.txt"
+    };
 
     // update this to list all packages in this repo that you want to release.
     Dictionary<string, PackageOptions> PackageOptions = new()
