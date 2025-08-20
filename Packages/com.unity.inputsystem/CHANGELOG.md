@@ -94,6 +94,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 - Added disabling of action maps in rebinding UI sample.
+- `InputSystem.pollingFrequency` is now initialized based on recommended polling frequency by the underlying platform on Unity versions newer than 6000.3.0a1. It can still be customized (set) during run-time as usual. Increasing polling frequency beyond the default 60Hz leads to less probability of input loss and reduces input latency.
 
 ### Added
 - An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.

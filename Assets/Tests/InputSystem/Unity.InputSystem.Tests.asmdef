@@ -65,6 +65,11 @@
             "name": "Unity",
             "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.3.0a6",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
         }
     ],
     "noEngineReferences": false
