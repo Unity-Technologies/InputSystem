@@ -1,11 +1,17 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 ////TODO: allow selecting events and saving out only the selected ones
 
@@ -90,6 +96,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.onSettingsChange -= NeedControlValueRefresh;
                 Application.focusChanged -= OnApplicationFocusChange;
                 EditorApplication.playModeStateChanged += OnPlayModeChange;
+                EditorApplication.update -= OnEditorUpdate;
             }
 
             m_EventTrace?.Dispose();
@@ -132,6 +139,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Product", m_Device.description.product);
             if (!string.IsNullOrEmpty(m_Device.description.manufacturer))
                 EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
+            if (!string.IsNullOrEmpty(m_Device.description.version))
+                EditorGUILayout.LabelField("Version", m_Device.description.version);
             if (!string.IsNullOrEmpty(m_Device.description.serial))
                 EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
@@ -141,6 +150,19 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
+            const string sampleFrequencyTooltip = "Displays the current event or sample frequency of this device in Hertz (Hz) averaged over measurement period of 1 second. " +
+                "The target frequency is device and backend dependent and may not be supported by all devices nor backends. " +
+                "The Polling Frequency indicates system polling target frequency.";
+            if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
+                EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
+            const string processingDelayTooltip =
+                "Displays the average, minimum and maximum observed input processing delay. This shows the time from " +
+                "when an input event is first created within Unity until its processed by the Input System. " +
+                "Note that this excludes additional input latency introduced by OS, driver or device communication. " +
+                "It also doesn't include output latency introduced by script processing, rendering, swap-chains, display refresh latency etc.";
+            if (!string.IsNullOrEmpty(m_DeviceLatencyString))
+                EditorGUILayout.LabelField(new GUIContent("Processing Delay", processingDelayTooltip),
+                    new GUIContent(m_DeviceLatencyString), EditorStyles.label);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -288,6 +310,17 @@ namespace UnityEngine.InputSystem.Editor
 
             UpdateDeviceFlags();
 
+            // Query the sampling frequency of the device.
+            // We do this synchronously here for simplicity.
+            var queryFrequency = QuerySamplingFrequencyCommand.Create();
+            var result = device.ExecuteCommand(ref queryFrequency);
+            var targetFrequency = float.NaN;
+            if (result >= 0)
+                targetFrequency = queryFrequency.frequency;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            m_SampleFrequencyCalculator = new SampleFrequencyCalculator(targetFrequency, realtimeSinceStartup);
+            m_InputLatencyCalculator = new InputLatencyCalculator(realtimeSinceStartup);
+
             // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
@@ -324,6 +357,84 @@ namespace UnityEngine.InputSystem.Editor
             InputState.onChange += OnDeviceStateChange;
             Application.focusChanged += OnApplicationFocusChange;
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+            EditorApplication.update += OnEditorUpdate;
+        }
+
+        private void OnEditorUpdate()
+        {
+            StringBuilder sb = null;
+            bool needControlValueRefresh = false;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            if (m_SampleFrequencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceFrequencyString = CreateDeviceFrequencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (m_InputLatencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceLatencyString = CreateDeviceLatencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (needControlValueRefresh)
+                NeedControlValueRefresh();
+        }
+
+        private string CreateDeviceFrequencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display achievable frequency for device
+            const string frequencyFormat = "0.000 Hz";
+            sb.Append(m_SampleFrequencyCalculator.frequency.ToString(frequencyFormat, CultureInfo.InvariantCulture));
+
+            // Display target frequency reported for device
+            sb.Append(" (Target @ ");
+            sb.Append(float.IsNaN(m_SampleFrequencyCalculator.targetFrequency)
+                ? "n/a"
+                : m_SampleFrequencyCalculator.targetFrequency.ToString(frequencyFormat));
+
+            // Display system-wide polling frequency
+            sb.Append(", Polling-Frequency @ ");
+            sb.Append(InputSystem.pollingFrequency.ToString(frequencyFormat));
+            sb.Append(')');
+
+            return sb.ToString();
+        }
+
+        private static void FormatLatency(StringBuilder sb, float value)
+        {
+            const string latencyFormat = "0.000 ms";
+            if (float.IsNaN(value))
+            {
+                sb.Append("n/a");
+                return;
+            }
+
+            var millis = 1000.0f * value;
+            sb.Append(millis <= 1000.0f
+                ? (millis).ToString(latencyFormat, CultureInfo.InvariantCulture)
+                : ">1000.0 ms");
+        }
+
+        private string CreateDeviceLatencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display latency in seconds for device
+            sb.Append("Average: ");
+            FormatLatency(sb, m_InputLatencyCalculator.averageLatencySeconds);
+            sb.Append(", Min: ");
+            FormatLatency(sb, m_InputLatencyCalculator.minLatencySeconds);
+            sb.Append(", Max: ");
+            FormatLatency(sb, m_InputLatencyCalculator.maxLatencySeconds);
+
+            return sb.ToString();
         }
 
         private void UpdateDeviceFlags()
@@ -394,6 +505,8 @@ namespace UnityEngine.InputSystem.Editor
         private string m_DeviceIdString;
         private string m_DeviceUsagesString;
         private string m_DeviceFlagsString;
+        private string m_DeviceFrequencyString;
+        private string m_DeviceLatencyString;
         private InputDevice.DeviceFlags m_DeviceFlags;
         private InputControlTreeView m_ControlTree;
         private InputEventTreeView m_EventTree;
@@ -402,6 +515,8 @@ namespace UnityEngine.InputSystem.Editor
         private InputEventTrace.ReplayController m_ReplayController;
         private InputEventTrace m_EventTrace;
         private InputUpdateType m_InputUpdateTypeShownInControlTree;
+        private InputLatencyCalculator m_InputLatencyCalculator;
+        private SampleFrequencyCalculator m_SampleFrequencyCalculator;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -462,7 +577,12 @@ namespace UnityEngine.InputSystem.Editor
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
             if (device == m_Device)
+            {
+                m_InputLatencyCalculator.ProcessSample(eventPtr);
+                m_SampleFrequencyCalculator.ProcessSample(eventPtr);
+
                 NeedControlValueRefresh();
+            }
         }
 
         private static class Styles

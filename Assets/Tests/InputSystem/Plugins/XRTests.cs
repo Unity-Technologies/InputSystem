@@ -1,6 +1,7 @@
 // ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
 #if ENABLE_VR || UNITY_GAMECORE
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
@@ -11,6 +12,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.XR;
+using UnityEngine.TestTools;
 using UnityEngine.XR;
 
 using Usages = UnityEngine.InputSystem.CommonUsages;
@@ -629,6 +631,54 @@ internal class XRTests : CoreTestsFixture
         Assert.That(trackingStateInput.action.enabled, Is.False);
     }
 
+    [UnityTest]
+    [Category("Components")]
+    public IEnumerator CanUseTrackedPoseDriverWithoutTrackingAction()
+    {
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+
+        var positionAction = new InputAction(binding: "<XRController>/devicePosition");
+        var rotationAction = new InputAction(binding: "<XRController>/deviceRotation");
+        tpd.positionInput = new InputActionProperty(positionAction);
+        tpd.rotationInput = new InputActionProperty(rotationAction);
+
+        yield return null;
+
+        Assert.That(positionAction.controls.Count, Is.EqualTo(0));
+        Assert.That(rotationAction.controls.Count, Is.EqualTo(0));
+
+        var device = InputSystem.AddDevice<XRController>();
+        InputSystem.AddDeviceUsage(device, "RightHand");
+
+        yield return null;
+
+        Assert.That(positionAction.controls.Count, Is.EqualTo(1));
+        Assert.That(rotationAction.controls.Count, Is.EqualTo(1));
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            device.devicePosition.WriteValueIntoEvent(position, stateEvent);
+            device.deviceRotation.WriteValueIntoEvent(rotation, stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+        }
+
+        yield return null;
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
     [Test]
     [Category("Components")]
     public void Components_TrackedPoseDriver_RequiresResolvedTrackingStateBindings()
@@ -729,6 +779,40 @@ internal class XRTests : CoreTestsFixture
     }
 
     [Test]
+    [Category("Components")]
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound(bool ignoreTrackingState)
+    {
+        // Tests/reproduces the scenario described in https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699
+        // i.e. that rotation and/or position is not updated if device is not connected.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        // Setup GameObject to have a position and rotation that is different from identity transform
+        var go = new GameObject();
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+
+        // Configure TrackedPoseDriver
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = ignoreTrackingState;
+
+        var transform = tpd.transform;
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+        // Ensure that position and/or rotation is not affected by update.
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
+    [Test]
     [Category("Layouts")]
     public void Layouts_PoseControlsCanBeCreatedBySubcontrols()
     {
@@ -739,7 +823,7 @@ internal class XRTests : CoreTestsFixture
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
 
-        // A Pose control parent was created based off subcontrols
+        // A Pose control parent was created based off sub-controls
         var pose = generatedLayout["PoseControl"];
         Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
     }

@@ -395,7 +395,7 @@ internal class OnScreenTests : CoreTestsFixture
     // https://fogbugz.unity3d.com/f/cases/1271942
     [UnityTest]
     [Category("Devices")]
-    public IEnumerator Devices_CanHaveOnScreenJoystickControls()
+    public IEnumerator Devices_CanHaveOnScreenJoystickControls([Values(false, true)] bool useInIsolation)
     {
         foreach (var c in Camera.allCameras)
             Object.Destroy(c.gameObject);
@@ -422,18 +422,33 @@ internal class OnScreenTests : CoreTestsFixture
         canvasGO.AddComponent<GraphicRaycaster>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-        var stickGO = new GameObject("Stick");
-        stickGO.SetActive(false);
-        var stickTransform = stickGO.AddComponent<RectTransform>();
-        var stick = stickGO.AddComponent<OnScreenStick>();
-        stickGO.AddComponent<Image>();
-        stickTransform.SetParent(canvasTransform);
-        stickTransform.anchorMin = new Vector2(0, 0);
-        stickTransform.anchorMax = new Vector2(0, 0);
-        stickTransform.anchoredPosition = new Vector2(100, 100);
-        stickTransform.sizeDelta = new Vector2(100, 100);
-        stick.controlPath = "<Gamepad>/leftStick";
-        stickGO.SetActive(true);
+        var stickLeftGO = new GameObject("StickLeft");
+        stickLeftGO.SetActive(false);
+        var stickLeftTransform = stickLeftGO.AddComponent<RectTransform>();
+        var stickLeft = stickLeftGO.AddComponent<OnScreenStick>();
+        stickLeft.useIsolatedInputActions = useInIsolation;
+        stickLeftGO.AddComponent<Image>();
+        stickLeftTransform.SetParent(canvasTransform);
+        stickLeftTransform.anchorMin = new Vector2(0, 0);
+        stickLeftTransform.anchorMax = new Vector2(0, 0);
+        stickLeftTransform.anchoredPosition = new Vector2(100, 100);
+        stickLeftTransform.sizeDelta = new Vector2(100, 100);
+        stickLeft.controlPath = "<Gamepad>/leftStick";
+        stickLeftGO.SetActive(true);
+
+        var stickRightGO = new GameObject("StickRight");
+        stickRightGO.SetActive(false);
+        var stickRightTransform = stickRightGO.AddComponent<RectTransform>();
+        var stickRight = stickRightGO.AddComponent<OnScreenStick>();
+        stickRight.useIsolatedInputActions = useInIsolation;
+        stickRightGO.AddComponent<Image>();
+        stickRightTransform.SetParent(canvasTransform);
+        stickRightTransform.anchorMin = new Vector2(0, 0);
+        stickRightTransform.anchorMax = new Vector2(0, 0);
+        stickRightTransform.anchoredPosition = new Vector2(500, 100);
+        stickRightTransform.sizeDelta = new Vector2(100, 100);
+        stickRight.controlPath = "<Gamepad>/rightStick";
+        stickRightGO.SetActive(true);
 
         var buttonGO = new GameObject("Button");
         buttonGO.SetActive(false);
@@ -464,7 +479,7 @@ internal class OnScreenTests : CoreTestsFixture
 
         Assert.That(player.devices, Is.EquivalentTo(new[] { Gamepad.all[0] }));
 
-        // Touch the stick and drag it upwards.
+        // Touch the Left stick and drag it upwards.
         BeginTouch(1, new Vector2(150, 150));
         yield return null;
         eventSystem.Update();
@@ -491,6 +506,38 @@ internal class OnScreenTests : CoreTestsFixture
         InputSystem.Update(); // Button is feeding events when responding to UI events.
 
         Assert.That(Gamepad.all[0].buttonSouth.isPressed, Is.False);
+
+        // Touch the right stick and drag it downwards
+        BeginTouch(2, new Vector2(550, 150));
+        yield return null;
+        eventSystem.Update();
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
+        MoveTouch(2, new Vector2(550, 50));
+        yield return null;
+        eventSystem.Update();
+        InputSystem.Update(); // Stick is feeding events when responding to UI events.
+
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(new Vector2(0, 1)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].rightStick.ReadValue(), Is.EqualTo(new Vector2(0, -1)).Using(Vector2EqualityComparer.Instance));
+
+        // Release finger one and move second and ensure that it still works
+        EndTouch(1, new Vector2(550, 200));
+        MoveTouch(2, new Vector2(600, 150));
+        yield return null;
+        eventSystem.Update();
+        InputSystem.Update(); // Stick is feeding events when responding to UI events.
+
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(new Vector2(0, 0)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].rightStick.ReadValue(), Is.EqualTo(new Vector2(1, 0)).Using(Vector2EqualityComparer.Instance));
+
+        // Release finger two
+        EndTouch(2, new Vector2(600, 150));
+        yield return null;
+        eventSystem.Update();
+        InputSystem.Update(); // Stick is feeding events when responding to UI events.
+
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(new Vector2(0, 0)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].rightStick.ReadValue(), Is.EqualTo(new Vector2(0, 0)).Using(Vector2EqualityComparer.Instance));
     }
 
     [UnityTest]
@@ -518,6 +565,9 @@ internal class OnScreenTests : CoreTestsFixture
         {
             uiTestScene.uiInputModule.actionsAsset.actionMaps[0].LazyResolveBindings(true);
         };
+
+        // Ensure that the OnScreenStick component has been started
+        yield return null;
 
         yield return uiTestScene.PressAndDrag(image, new Vector2(50, 50));
 

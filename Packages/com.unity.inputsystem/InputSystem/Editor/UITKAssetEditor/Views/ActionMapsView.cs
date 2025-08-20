@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.userData = i;
                 element.SetEnabled(!mapData.isDisabled);
+                treeViewItem.isDisabledActionMap = mapData.isDisabled;
 
                 ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };

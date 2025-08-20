@@ -137,7 +137,7 @@ public class UIvsGameInputHandler : MonoBehaviour
                     transform.rotation = default;
 
                 // When using a pointer-based control scheme, we engage camera look explicitly.
-                if (m_ControlStyle != ControlStyle.GamepadJoystick && m_LookEngageAction.WasPressedThisFrame() && IsPointerInsideScreen())
+                if (m_ControlStyle != ControlStyle.GamepadJoystick && m_LookEngageAction.WasPressedThisDynamicUpdate() && IsPointerInsideScreen())
                     EngageCameraControl();
 
                 // With gamepad/joystick, we can freely rotate the camera at any time.
@@ -166,14 +166,14 @@ public class UIvsGameInputHandler : MonoBehaviour
                 if (m_Mouse != null)
                     m_MousePositionToWarpToAfterCursorUnlock = m_MousePositionToWarpToAfterCursorUnlock.Value + m_Mouse.delta.ReadValue();
 
-                if (m_CancelAction.WasPressedThisFrame() || !m_LookEngageAction.IsPressed())
+                if (m_CancelAction.WasPressedThisDynamicUpdate() || !m_LookEngageAction.IsPressed())
                     DisengageCameraControl();
 
                 break;
 
             case State.InMenu:
 
-                if (m_CancelAction.WasPressedThisFrame())
+                if (m_CancelAction.WasPressedThisDynamicUpdate())
                     OnContinueClicked();
 
                 break;

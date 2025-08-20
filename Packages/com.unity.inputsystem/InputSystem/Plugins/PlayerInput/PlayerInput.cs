@@ -1373,14 +1373,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
-                    var oldActions = m_Actions;
-                    m_Actions = Instantiate(m_Actions);
-                    for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
-                    {
-                        for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                            m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
-                    }
-
+                    CopyActionAssetAndApplyBindingOverrides();
                     break;
                 }
 
@@ -1428,6 +1421,18 @@ namespace UnityEngine.InputSystem
             }
 
             m_ActionsInitialized = true;
+        }
+
+        private void CopyActionAssetAndApplyBindingOverrides()
+        {
+            // duplicate action asset to not operate on the original (as it might be used outside - eg project wide action asset or UIInputModule)
+            var oldActions = m_Actions;
+            m_Actions = Instantiate(m_Actions);
+            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+            {
+                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                    m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+            }
         }
 
         private void UninitializeActions()
@@ -1813,7 +1818,7 @@ namespace UnityEngine.InputSystem
 
             // Split-screen index defaults to player index.
             if (s_InitSplitScreenIndex >= 0)
-                m_SplitScreenIndex = splitScreenIndex;
+                m_SplitScreenIndex = s_InitSplitScreenIndex;
             else
                 m_SplitScreenIndex = playerIndex;
 

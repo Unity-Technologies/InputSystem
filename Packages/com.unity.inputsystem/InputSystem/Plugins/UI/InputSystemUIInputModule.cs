@@ -861,7 +861,7 @@ namespace UnityEngine.InputSystem.UI
 
                     if (allow)
                     {
-                        var eventData = m_NavigationState.eventData;
+                        var eventData = m_NavigationState.eventData as ExtendedAxisEventData;
                         if (eventData == null)
                         {
                             eventData = new ExtendedAxisEventData(eventSystem);
@@ -871,6 +871,7 @@ namespace UnityEngine.InputSystem.UI
 
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
+                        eventData.device = navigationState.device;
 
                         if (IsMoveAllowed(eventData))
                         {
@@ -894,7 +895,7 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPressedThisFrame() for
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPerformedThisDynamicUpdate() for
                 //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
                 //       a click will register on button *up*, but consistent with how other UI systems work where
                 //       click occurs on key press. This nuance in behavior becomes important in combination with
@@ -903,10 +904,19 @@ namespace UnityEngine.InputSystem.UI
                 var submitAction = m_SubmitAction?.action;
                 var cancelAction = m_CancelAction?.action;
 
-                var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasPerformedThisFrame())
+                var data = m_SubmitCancelState.eventData as ExtendedSubmitCancelEventData;
+                if (data == null)
+                {
+                    data = new ExtendedSubmitCancelEventData(eventSystem);
+                    m_SubmitCancelState.eventData = data;
+                }
+                data.Reset();
+
+                data.device = m_SubmitCancelState.device;
+
+                if (cancelAction != null && cancelAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
@@ -1393,7 +1403,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference submit
         {
             get => m_SubmitAction;
-            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, null);
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -1433,7 +1443,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference cancel
         {
             get => m_CancelAction;
-            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, null);
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -1516,6 +1526,17 @@ namespace UnityEngine.InputSystem.UI
         {
             get => m_TrackedDevicePositionAction;
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
+        }
+
+        // We should dispose the static default actions thing because otherwise it will survive domain reloads
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetDefaultActions()
+        {
+            if (defaultActions != null)
+            {
+                defaultActions.Dispose();
+                defaultActions = null;
+            }
         }
 
         /// <summary>
@@ -1653,18 +1674,25 @@ namespace UnityEngine.InputSystem.UI
             ResetPointers();
 
             InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
-
             DisableAllActions();
             UnhookActions();
+
+            // In the case we've been initialized with default actions, we want to release them
+            if (defaultActions != null && defaultActions.asset == actionsAsset)
+            {
+                UnassignActions();
+            }
 
             base.OnDisable();
         }
 
         private void ResetPointers()
         {
-            var numPointers = m_PointerStates.length;
-            for (var i = 0; i < numPointers; ++i)
-                SendPointerExitEventsAndRemovePointer(0);
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                if (SendPointerExitEventsAndRemovePointer(i))
+                    --i;
+            }
 
             m_CurrentPointerId = -1;
             m_CurrentPointerIndex = -1;
@@ -1919,6 +1947,15 @@ namespace UnityEngine.InputSystem.UI
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
                     eventData.trackedDevicePosition = default;
+
+                    // We only have a single pointer state and current frame press state values was based on previous eventData.
+                    // Make sure these get updated when we switch.
+                    if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                    {
+                        pointer.leftButton.OnEndFrame();
+                        pointer.rightButton.OnEndFrame();
+                        pointer.middleButton.OnEndFrame();
+                    }
                 }
 
                 if (pointerType == UIPointerType.Touch)
@@ -2021,25 +2058,24 @@ namespace UnityEngine.InputSystem.UI
             return m_PointerStates.AppendWithCapacity(new PointerModel(eventData));
         }
 
-        private void SendPointerExitEventsAndRemovePointer(int index)
+        // Returns true if the pointer was successfully removed (ISXB-1258)
+        private bool SendPointerExitEventsAndRemovePointer(int index)
         {
             var eventData = m_PointerStates[index].eventData;
             if (eventData.pointerEnter != null)
                 ProcessPointerMovement(eventData, null);
 
-            RemovePointerAtIndex(index);
+            return RemovePointerAtIndex(index);
         }
 
-        private void RemovePointerAtIndex(int index)
+        private bool RemovePointerAtIndex(int index)
         {
-            Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
+            // Pointers might have been reset before (e.g. when calling OnDisable) which would make m_PointerStates
+            // empty (ISXB-687).
+            if (m_PointerStates.length == 0)
+                return false;
 
-            // We don't want to release touch pointers on the same frame they are released (unpressed). They get cleaned up one frame later in Process()
-            ref var state = ref GetPointerStateForIndex(index);
-            if (state.pointerType == UIPointerType.Touch && (state.leftButton.isPressed || state.leftButton.wasReleasedThisFrame))
-            {
-                return;
-            }
+            Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
             var eventData = m_PointerStates[index].eventData;
@@ -2086,6 +2122,8 @@ namespace UnityEngine.InputSystem.UI
                 m_PointerStates.firstValue.eventData = eventData;
             else
                 m_PointerStates.additionalValues[m_PointerStates.length - 1].eventData = eventData;
+
+            return true;
         }
 
         // Remove any pointer that no longer has the ability to point.
@@ -2100,8 +2138,9 @@ namespace UnityEngine.InputSystem.UI
                      !HaveControlForDevice(device, trackedDevicePosition) &&
                      !HaveControlForDevice(device, trackedDeviceOrientation)))
                 {
-                    SendPointerExitEventsAndRemovePointer(i);
-                    --i;
+                    // Only decrement 'i' if the pointer was successfully removed
+                    if (SendPointerExitEventsAndRemovePointer(i))
+                        --i;
                 }
             }
 
@@ -2245,6 +2284,12 @@ namespace UnityEngine.InputSystem.UI
         {
             ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
+            m_NavigationState.device = context.control.device;
+        }
+
+        private void OnSubmitCancelCallback(InputAction.CallbackContext context)
+        {
+            m_SubmitCancelState.device = context.control.device;
         }
 
         private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
@@ -2302,16 +2347,10 @@ namespace UnityEngine.InputSystem.UI
                     // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
-                        ref var state = ref GetPointerStateForIndex(i);
-                        // Touch pointers need to get forced to no longer be pressed otherwise they will not get released in subsequent frames.
-                        if (m_PointerStates[i].pointerType == UIPointerType.Touch)
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
                         {
-                            state.leftButton.isPressed = false;
-                        }
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen && m_PointerStates[i].pointerType != UIPointerType.Touch || (m_PointerStates[i].pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame))
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
                         }
                     }
                 }
@@ -2322,8 +2361,8 @@ namespace UnityEngine.InputSystem.UI
                     {
                         if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
                         {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
                         }
                     }
                 }
@@ -2404,8 +2443,8 @@ namespace UnityEngine.InputSystem.UI
                     //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
                     if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
-                        RemovePointerAtIndex(i);
-                        --i;
+                        if (RemovePointerAtIndex(i))
+                            --i;
                         continue;
                     }
 
@@ -2441,6 +2480,18 @@ namespace UnityEngine.InputSystem.UI
 
 #endif
 
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
+        public override NavigationDeviceType GetNavigationEventDeviceType(BaseEventData eventData)
+        {
+            if (eventData is not INavigationEventData eed)
+                return NavigationDeviceType.Unknown;
+            if (eed.device is Keyboard)
+                return NavigationDeviceType.Keyboard;
+            return NavigationDeviceType.NonKeyboard;
+        }
+
+#endif
+
         private void HookActions()
         {
             if (m_ActionsHooked)
@@ -2458,6 +2509,8 @@ namespace UnityEngine.InputSystem.UI
                 m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
                 m_OnMoveDelegate = OnMoveCallback;
+            if (m_OnSubmitCancelDelegate == null)
+                m_OnSubmitCancelDelegate = OnSubmitCancelCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
                 m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
@@ -2479,6 +2532,8 @@ namespace UnityEngine.InputSystem.UI
             m_ActionsHooked = install;
             SetActionCallback(m_PointAction, m_OnPointDelegate, install);
             SetActionCallback(m_MoveAction, m_OnMoveDelegate, install);
+            SetActionCallback(m_SubmitAction, m_OnSubmitCancelDelegate, install);
+            SetActionCallback(m_CancelAction, m_OnSubmitCancelDelegate, install);
             SetActionCallback(m_LeftClickAction, m_OnLeftClickDelegate, install);
             SetActionCallback(m_RightClickAction, m_OnRightClickDelegate, install);
             SetActionCallback(m_MiddleClickAction, m_OnMiddleClickDelegate, install);
@@ -2594,6 +2649,7 @@ namespace UnityEngine.InputSystem.UI
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
+        private Action<InputAction.CallbackContext> m_OnSubmitCancelDelegate;
         private Action<InputAction.CallbackContext> m_OnLeftClickDelegate;
         private Action<InputAction.CallbackContext> m_OnRightClickDelegate;
         private Action<InputAction.CallbackContext> m_OnMiddleClickDelegate;
@@ -2611,6 +2667,7 @@ namespace UnityEngine.InputSystem.UI
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+        private SubmitCancelModel m_SubmitCancelState;
 
         [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
 

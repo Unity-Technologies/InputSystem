@@ -17,7 +17,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
         private bool m_HasEditFocus;
-        private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
         private static bool m_IMGUIDropdownVisible;
         StateContainer m_StateContainer;
@@ -176,7 +175,7 @@ namespace UnityEngine.InputSystem.Editor
             DelayFocusLost(element == null);
         }
 
-        private void OnStateChanged(InputActionsEditorState newState)
+        private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
         {
 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action, auto-saved on edit-focus lost
