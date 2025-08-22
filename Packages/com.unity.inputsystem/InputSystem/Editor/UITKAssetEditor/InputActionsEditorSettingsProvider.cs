@@ -17,7 +17,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
         private bool m_HasEditFocus;
-        private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
         private static bool m_IMGUIDropdownVisible;
         StateContainer m_StateContainer;
