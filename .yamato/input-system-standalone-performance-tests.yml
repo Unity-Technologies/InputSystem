@@ -22,7 +22,7 @@ inputsystem-standaloneperformancetests_-_2021_3_-_macos:
 inputsystem-standaloneperformancetests_-_2021_3_-_ubuntu:
   name: InputSystem-StandalonePerformanceTests - 2021.3 - Ubuntu
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -77,7 +77,7 @@ inputsystem-standaloneperformancetests_-_2022_3_-_macos:
 inputsystem-standaloneperformancetests_-_2022_3_-_ubuntu:
   name: InputSystem-StandalonePerformanceTests - 2022.3 - Ubuntu
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -132,7 +132,7 @@ inputsystem-standaloneperformancetests_-_6000_0_-_macos:
 inputsystem-standaloneperformancetests_-_6000_0_-_ubuntu:
   name: InputSystem-StandalonePerformanceTests - 6000.0 - Ubuntu
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -187,7 +187,7 @@ inputsystem-standaloneperformancetests_-_6000_2_-_macos:
 inputsystem-standaloneperformancetests_-_6000_2_-_ubuntu:
   name: InputSystem-StandalonePerformanceTests - 6000.2 - Ubuntu
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -242,7 +242,7 @@ inputsystem-standaloneperformancetests_-_6000_3_-_macos:
 inputsystem-standaloneperformancetests_-_6000_3_-_ubuntu:
   name: InputSystem-StandalonePerformanceTests - 6000.3 - Ubuntu
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:

@@ -5,7 +5,7 @@
 publish_dry_run_inputsystem:
   name: Publish Dry Run inputsystem
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -178,16 +178,16 @@ publish_dry_run_inputsystem:
         ignore_artifact: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.3.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.3.0
+    Wrench: 1.0.1.0
 
 # Publish  for inputsystem to https://artifactory-slo.bf.unity3d.com/artifactory/api/npm/upm-npm
 publish_inputsystem:
   name: Publish inputsystem
   agent:
-    image: package-ci/ubuntu-20.04:default
+    image: package-ci/ubuntu-22.04:default
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -360,8 +360,8 @@ publish_inputsystem:
         ignore_artifact: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.3.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.3.0
+    Wrench: 1.0.1.0
 
