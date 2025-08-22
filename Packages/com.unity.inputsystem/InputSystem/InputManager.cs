@@ -15,6 +15,7 @@ using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using Unity.Profiling;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -3646,6 +3647,9 @@ namespace UnityEngine.InputSystem
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
+            //send pointer data to backend for OnMouseEvents
+            if (Pointer.current != null && gameIsPlaying)
+                NativeInputSystem.SetMouseEventsData(Pointer.current.press.isPressed, Pointer.current.press.wasPressedThisFrame, Pointer.current.position.x.value, Pointer.current.position.y.value);
             m_CurrentUpdate = default;
         }
 
