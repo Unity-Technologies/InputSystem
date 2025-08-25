@@ -41,6 +41,19 @@ public class MobileFunctionalBuildJobs: InputMobileBaseRecipe
                 .WithPlayerSavePath("build/players")
                 .WithArtifacts("build/logs")));
         }
+        else if(platform.System == SystemType.TvOS)
+        {
+            job.WithCommands(UtrCommand.Run(platform.System, b => b
+                .WithTestProject($"{ProjectPath}")
+                .WithEditor(".Editor")
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithCategory("!Performance")
+                .WithExtraArgs("--platform=tvOS --clean-library")
+                .WithRerun(1, true)
+                .WithBuildOnly()
+                .WithPlayerSavePath("build/players")
+                .WithArtifacts("build/logs")));
+        }
         else
         {
             job.WithCommands(UtrCommand.Run(platform.System, b => b
@@ -58,6 +71,10 @@ public class MobileFunctionalBuildJobs: InputMobileBaseRecipe
 
         job.WithArtifact(new Artifact("players", "build/players/**/*"), new Artifact("logs", "build/logs/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
+
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+            job.WithEnvironmentVariable("UNITY_HANDLEUIINTERRUPTIONS", 1);
+
         return job;
     }
 }
@@ -87,6 +104,10 @@ public class MobileFunctionalTests: InputMobileBaseRecipe
                     d.JobId.Contains("mono"));
             }
         }
+
+        // For 6000.3+ versions, use iOS15 platform to run tests.
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+            platform = Settings.iOS15Platform;
 
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
         

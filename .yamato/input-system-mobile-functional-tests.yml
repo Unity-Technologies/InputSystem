@@ -57,6 +57,7 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_ios:
     image: package-ci/macos-13:default
     type: Unity::mobile::iPhone
     flavor: m1.mac
+    model: SE
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
@@ -143,6 +144,7 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_ios:
     image: package-ci/macos-13:default
     type: Unity::mobile::iPhone
     flavor: m1.mac
+    model: SE
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
@@ -229,6 +231,7 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_ios:
     image: package-ci/macos-13:default
     type: Unity::mobile::iPhone
     flavor: m1.mac
+    model: SE
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
@@ -315,6 +318,7 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_ios:
     image: package-ci/macos-13:default
     type: Unity::mobile::iPhone
     flavor: m1.mac
+    model: SE
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
@@ -401,6 +405,7 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_ios:
     image: package-ci/macos-13:default
     type: Unity::mobile::iPhone
     flavor: m1.mac
+    model: SE-Gen3
   commands:
   - command: UnifiedTestRunner --suite=playmode --platform=ios --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:

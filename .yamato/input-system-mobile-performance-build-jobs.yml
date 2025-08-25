@@ -73,7 +73,7 @@ inputsystem-mobileperformancebuildjobs_-_2021_3_-_tvos:
     flavor: m1.mac
   commands:
   - command: unity-downloader-cli -u 2021.3/staging -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=undefined --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --platform=tvOS --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -157,7 +157,7 @@ inputsystem-mobileperformancebuildjobs_-_2022_3_-_tvos:
     flavor: m1.mac
   commands:
   - command: unity-downloader-cli -u 2022.3/staging -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=undefined --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --platform=tvOS --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -241,7 +241,7 @@ inputsystem-mobileperformancebuildjobs_-_6000_0_-_tvos:
     flavor: m1.mac
   commands:
   - command: unity-downloader-cli -u 6000.0/staging -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=undefined --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --platform=tvOS --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -325,7 +325,7 @@ inputsystem-mobileperformancebuildjobs_-_6000_2_-_tvos:
     flavor: m1.mac
   commands:
   - command: unity-downloader-cli -u 6000.2/staging -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=undefined --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --platform=tvOS --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -399,6 +399,8 @@ inputsystem-mobileperformancebuildjobs_-_6000_3_-_ios:
     players:
       paths:
       - build/players/**/*
+  variables:
+    UNITY_HANDLEUIINTERRUPTIONS: 1
 
 # InputSystem-MobilePerformanceBuildJobs - 6000.3 - TvOS
 inputsystem-mobileperformancebuildjobs_-_6000_3_-_tvos:
@@ -409,7 +411,7 @@ inputsystem-mobileperformancebuildjobs_-_6000_3_-_tvos:
     flavor: m1.mac
   commands:
   - command: unity-downloader-cli -u trunk -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=undefined --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --platform=tvOS --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --artifacts-path=build/logs
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:

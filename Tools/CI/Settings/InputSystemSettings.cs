@@ -31,6 +31,9 @@ public class InputSystemSettings : AnnotatedSettingsBase
     
     // Mobile platforms which run tests jobs
     public readonly Dictionary<SystemType, Platform> MobileTestPlatforms = new();
+
+    // iOS platform with iOS 15 device (iPhone SE 3rd generation) for 6000.3+ editors
+    public readonly Platform iOS15Platform;
     
     public readonly string[] AndroidExtraCommands = new[]
     {
@@ -119,6 +122,9 @@ public class InputSystemSettings : AnnotatedSettingsBase
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
 
         ReadMobileConfig();
+        
+        var oldIOSAgent = MobileTestPlatforms[SystemType.IOS].Agent;
+        iOS15Platform = new Platform(new Agent(oldIOSAgent.Image, oldIOSAgent.Flavor, oldIOSAgent.Resource, "SE-Gen3"), SystemType.IOS);
     }
     
     public WrenchSettings Wrench { get; private set; }
@@ -159,7 +165,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
             MobileTestPlatforms.Add(platform, new Platform(
                 new Agent(v["run"]["image"].ToString(), 
                     Utilities.GetEnumValue<FlavorType>(v["run"]["flavor"].ToString()), 
-                    Utilities.GetEnumValue<ResourceType>(v["run"]["type"].ToString())),
+                    Utilities.GetEnumValue<ResourceType>(v["run"]["type"].ToString()),
+                    v["run"]["model"]?.ToString()),
                 platform));
         }
     }
