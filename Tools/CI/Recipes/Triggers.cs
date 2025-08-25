@@ -35,6 +35,10 @@ public class Triggers: RecipeBase
     {
         HashSet<IJobBuilder> builders =
         [
+            JobBuilder.Create("All Mobile Tests")
+                .WithDependencies(allMobileFunctionalTests)
+                .WithDependencies(allTvOSFunctionalBuildJobs),
+            
             JobBuilder.Create("All Functional Tests")
                 .WithDependencies(allEditorFunctionalTests)
                 .WithDependencies(allStandaloneFunctionalTests)

@@ -76,6 +76,30 @@ all_functional_tests:
       NOT pull_request.changes.all match "**/*.md"
     cancel_old_ci: true
     cancel_leftover_jobs: Always
+all_mobile_tests:
+  name: All Mobile Tests
+  dependencies:
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2021_3_-_tvos
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_tvos
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_tvos
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_ios
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_tvos
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_ios
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_ios
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_ios
 all_performance_tests:
   name: All Performance Tests
   dependencies:
