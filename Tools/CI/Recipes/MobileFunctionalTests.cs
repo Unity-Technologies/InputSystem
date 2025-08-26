@@ -113,16 +113,31 @@ public class MobileFunctionalTests: InputMobileBaseRecipe
         
         if (platform.System == SystemType.Android)
             job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-        
-        job.WithCommands(c => c
+
+        if (platform.System == SystemType.TvOS)
+        {
+            job.WithCommands(c => c
+                .Add(UtrCommand.Run(platform.System, b => b
+                    .WithSuite(UtrTestSuiteType.Playmode)
+                    .WithExtraArgs("--platform=tvOS")
+                    .WithCategory("!Performance")
+                    .WithRerun(1)
+                    .WithPlayerLoadPath("build/players")
+                    .WithArtifacts("build/test-results"))));
+        }
+        else
+        {
+            job.WithCommands(c => c
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithSuite(UtrTestSuiteType.Playmode)
                     .WithPlatform(platform.System)
                     .WithCategory("!Performance")
                     .WithRerun(1)
                     .WithPlayerLoadPath("build/players")
-                    .WithArtifacts("build/test-results"))))
-            .WithDependencies(buildJob)
+                    .WithArtifacts("build/test-results"))));
+        }
+        
+        job.WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
         

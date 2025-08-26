@@ -77,7 +77,7 @@ inputsystem-mobilefunctionaltests_-_2021_3_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
+  - command: UnifiedTestRunner --suite=playmode --platform=tvOS --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -164,7 +164,7 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
+  - command: UnifiedTestRunner --suite=playmode --platform=tvOS --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -251,7 +251,7 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
+  - command: UnifiedTestRunner --suite=playmode --platform=tvOS --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -338,7 +338,7 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
+  - command: UnifiedTestRunner --suite=playmode --platform=tvOS --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -425,7 +425,7 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --platform=undefined --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
+  - command: UnifiedTestRunner --suite=playmode --platform=tvOS --category=!Performance --reruncount=1 --clean-library --player-load-path=build/players --artifacts-path=build/test-results
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
