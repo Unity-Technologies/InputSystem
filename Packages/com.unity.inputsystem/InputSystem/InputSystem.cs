@@ -1364,7 +1364,7 @@ namespace UnityEngine.InputSystem
         /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
         ///
-        /// The default polling frequency is 60 Hz.
+        /// The default polling frequency is at least 60 Hz or what is suitable for the target device.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
         /// <see cref="InputEvent.time"/> patterns. At 60 Hz, for example, timestamps for a specific,
