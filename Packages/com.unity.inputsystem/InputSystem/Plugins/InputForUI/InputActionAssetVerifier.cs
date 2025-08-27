@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && ENABLE_INPUT_SYSTEM && UNITY_2023_2_OR_NEWER
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -70,7 +71,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                return path ?? asset.name;
+                if (path == String.Empty)
+                {
+                    return asset.name;
+                }
+                return path;
             }
 
             private void ActionMapWarning(string actionMap, string problem)
@@ -96,7 +101,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     if (index > 0)
                     {
                         var path = actionNameOrId.Substring(0, index);
-                        if (asset.FindActionMap(path) == null)
+                        if (asset.FindActionMap(path) == null && asset.actionMaps.Count > 0)
                         {
                             if (missingPaths == null)
                                 missingPaths = new HashSet<string>(1);
@@ -106,7 +111,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                         }
                     }
 
-                    if (!noMapOrMapExists && policy == ReportPolicy.SuppressChildErrors)
+                    if (noMapOrMapExists && policy == ReportPolicy.SuppressChildErrors)
                         return;
 
                     ActionWarning(actionNameOrId, kCouldNotBeFound);
