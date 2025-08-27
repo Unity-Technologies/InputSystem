@@ -3705,8 +3705,10 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             //send pointer data to backend for OnMouseEvents
+#if UNITY_6000_4_OR_NEWER
             if (Pointer.current != null && gameIsPlaying)
                 NativeInputSystem.SetMouseEventsData(Pointer.current.press.isPressed, Pointer.current.press.wasPressedThisFrame, Pointer.current.position.x.value, Pointer.current.position.y.value);
+#endif
             m_CurrentUpdate = default;
         }
 
