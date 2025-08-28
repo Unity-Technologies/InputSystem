@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                if (path == String.Empty)
+                if (path == string.Empty)
                 {
                     return asset.name;
                 }
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
                     // Check if the map (if any) exists
                     var noMapOrMapExists = true;
-                    if (asset.actionMaps.Count > 0)
+                    if (asset.actionMaps.Count == 0)
                     {
                         return;
                     }
