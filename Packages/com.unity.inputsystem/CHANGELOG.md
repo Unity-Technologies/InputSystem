@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed an issue where using Pen devices on Android tablets would result in double clicks for UI interactions. [ISXB-1456](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1456)
 - Fixed an issue preventing an embedded platform from being released. It adds back some `#defines` to `XRSupport` and `InputDeviceCharacteristics`.
+- Fixed a warning not showing the asset name correctly when the input action map parameters for runtime GUI were not setup.[ISXB-1560]
 
 ## [1.14.1] - 2025-07-10
 
