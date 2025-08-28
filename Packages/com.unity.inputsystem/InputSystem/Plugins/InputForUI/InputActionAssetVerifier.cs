@@ -97,11 +97,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
                     // Check if the map (if any) exists
                     var noMapOrMapExists = true;
+                    if (asset.actionMaps.Count > 0)
+                    {
+                        return;
+                    }
+                    
                     var index = actionNameOrId.IndexOf('/');
                     if (index > 0)
                     {
                         var path = actionNameOrId.Substring(0, index);
-                        if (asset.FindActionMap(path) == null && asset.actionMaps.Count > 0)
+                        if (asset.FindActionMap(path) == null)
                         {
                             if (missingPaths == null)
                                 missingPaths = new HashSet<string>(1);
@@ -111,7 +116,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                         }
                     }
 
-                    if (noMapOrMapExists && policy == ReportPolicy.SuppressChildErrors)
+                    if (!noMapOrMapExists && policy == ReportPolicy.SuppressChildErrors)
                         return;
 
                     ActionWarning(actionNameOrId, kCouldNotBeFound);
