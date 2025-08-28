@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void Verify(InputActionAsset asset,
             ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
         {
+            // We don't want to log warnings if no UI action map is present as we default in this case.
             if (asset.FindActionMap("UI", false) == null)
             {
                 return;
