@@ -32,6 +32,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void Verify(InputActionAsset asset,
             ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
         {
+            if (asset.FindActionMap("UI", false) == null)
+            {
+                return;
+            }
+
             // Note:
             // PWA has initial state check true for "Point" action, DefaultActions do not, does it matter?
             //
@@ -92,10 +97,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
                     // Check if the map (if any) exists
                     var noMapOrMapExists = true;
-                    if (asset.actionMaps.Count == 0)
-                    {
-                        return;
-                    }
                     
                     var index = actionNameOrId.IndexOf('/');
                     if (index > 0)
