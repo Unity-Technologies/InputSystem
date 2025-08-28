@@ -359,7 +359,7 @@ namespace UnityEngine.InputSystem
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
         public bool isPlayerFocused => m_HasFocus;
-        public float pollingFrequency { get; set; }
+        public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
