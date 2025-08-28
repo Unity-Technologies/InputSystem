@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                if (path == string.Empty)
+                if (string.IsNullOrEmpty(path)) 
                 {
                     return asset.name;
                 }
