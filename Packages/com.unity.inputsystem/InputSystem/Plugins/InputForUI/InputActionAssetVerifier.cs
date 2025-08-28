@@ -97,7 +97,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
                     // Check if the map (if any) exists
                     var noMapOrMapExists = true;
-                    
                     var index = actionNameOrId.IndexOf('/');
                     if (index > 0)
                     {
