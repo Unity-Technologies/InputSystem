@@ -914,11 +914,15 @@ namespace UnityEngine.InputSystem.UI
 
                 data.device = m_SubmitCancelState.device;
 
-                if (cancelAction != null && cancelAction.WasPerformedThisDynamicUpdate())
+                if (cancelAction != null && m_NavigationState.wasCancelButtonReleased)
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasPerformedThisDynamicUpdate())
+                if (!data.used && submitAction != null && m_NavigationState.wasSubmitButtonReleased)
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
+
+            // We clear the following flags here to mark that we've processed them already
+            m_NavigationState.wasSubmitButtonReleased = false;
+            m_NavigationState.wasCancelButtonReleased = false;
         }
 
         private bool IsMoveAllowed(AxisEventData eventData)
@@ -1403,7 +1407,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference submit
         {
             get => m_SubmitAction;
-            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitDelegate);
         }
 
         /// <summary>
@@ -1443,7 +1447,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference cancel
         {
             get => m_CancelAction;
-            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnCancelDelegate);
         }
 
         /// <summary>
@@ -2287,11 +2291,6 @@ namespace UnityEngine.InputSystem.UI
             m_NavigationState.device = context.control.device;
         }
 
-        private void OnSubmitCancelCallback(InputAction.CallbackContext context)
-        {
-            m_SubmitCancelState.device = context.control.device;
-        }
-
         private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
         {
             var index = GetPointerStateIndexFor(ref context);
@@ -2316,6 +2315,26 @@ namespace UnityEngine.InputSystem.UI
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
+        }
+
+        private void OnSubmit(InputAction.CallbackContext context)
+        {
+            m_SubmitCancelState.device = context.control.device;
+
+            if (!context.ReadValueAsButton())
+            {
+                m_NavigationState.wasSubmitButtonReleased = true;
+            }
+        }
+
+        private void OnCancel(InputAction.CallbackContext context)
+        {
+            m_SubmitCancelState.device = context.control.device;
+
+            if (!context.ReadValueAsButton())
+            {
+                m_NavigationState.wasCancelButtonReleased = true;
+            }
         }
 
         private void OnControlsChanged(object obj)
@@ -2509,12 +2528,14 @@ namespace UnityEngine.InputSystem.UI
                 m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
                 m_OnMoveDelegate = OnMoveCallback;
-            if (m_OnSubmitCancelDelegate == null)
-                m_OnSubmitCancelDelegate = OnSubmitCancelCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
                 m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
                 m_OnTrackedDevicePositionDelegate = OnTrackedDevicePositionCallback;
+            if (m_OnSubmitDelegate == null)
+                m_OnSubmitDelegate = OnSubmit;
+            if (m_OnCancelDelegate == null)
+                m_OnCancelDelegate = OnCancel;
 
             SetActionCallbacks(true);
         }
@@ -2532,14 +2553,14 @@ namespace UnityEngine.InputSystem.UI
             m_ActionsHooked = install;
             SetActionCallback(m_PointAction, m_OnPointDelegate, install);
             SetActionCallback(m_MoveAction, m_OnMoveDelegate, install);
-            SetActionCallback(m_SubmitAction, m_OnSubmitCancelDelegate, install);
-            SetActionCallback(m_CancelAction, m_OnSubmitCancelDelegate, install);
             SetActionCallback(m_LeftClickAction, m_OnLeftClickDelegate, install);
             SetActionCallback(m_RightClickAction, m_OnRightClickDelegate, install);
             SetActionCallback(m_MiddleClickAction, m_OnMiddleClickDelegate, install);
             SetActionCallback(m_ScrollWheelAction, m_OnScrollWheelDelegate, install);
             SetActionCallback(m_TrackedDeviceOrientationAction, m_OnTrackedDeviceOrientationDelegate, install);
             SetActionCallback(m_TrackedDevicePositionAction, m_OnTrackedDevicePositionDelegate, install);
+            SetActionCallback(m_SubmitAction, m_OnSubmitDelegate, install);
+            SetActionCallback(m_CancelAction, m_OnCancelDelegate, install);
         }
 
         private static void SetActionCallback(InputActionReference actionReference, Action<InputAction.CallbackContext> callback, bool install)
@@ -2649,13 +2670,14 @@ namespace UnityEngine.InputSystem.UI
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
-        private Action<InputAction.CallbackContext> m_OnSubmitCancelDelegate;
         private Action<InputAction.CallbackContext> m_OnLeftClickDelegate;
         private Action<InputAction.CallbackContext> m_OnRightClickDelegate;
         private Action<InputAction.CallbackContext> m_OnMiddleClickDelegate;
         private Action<InputAction.CallbackContext> m_OnScrollWheelDelegate;
         private Action<InputAction.CallbackContext> m_OnTrackedDevicePositionDelegate;
         private Action<InputAction.CallbackContext> m_OnTrackedDeviceOrientationDelegate;
+        private Action<InputAction.CallbackContext> m_OnSubmitDelegate;
+        private Action<InputAction.CallbackContext> m_OnCancelDelegate;
         private Action<object> m_OnControlsChangedDelegate;
 
         // Pointer-type input (also tracking-type).

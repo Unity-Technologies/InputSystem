@@ -11,10 +11,14 @@ namespace UnityEngine.InputSystem.UI
         public float lastMoveTime;
         public AxisEventData eventData;
         public InputDevice device;
+        public bool wasSubmitButtonReleased;
+        public bool wasCancelButtonReleased;
 
         public void Reset()
         {
             move = Vector2.zero;
+            wasCancelButtonReleased = false;
+            wasSubmitButtonReleased = false;
         }
     }
 
