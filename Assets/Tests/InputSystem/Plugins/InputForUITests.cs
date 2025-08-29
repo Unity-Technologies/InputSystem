@@ -554,11 +554,8 @@ public class InputForUITests : InputTestFixture
     public void ActionsWithUIMap_MissingActions_ShouldGenerateWarnings()
     {
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
-        var uiActionMap = asset.FindActionMap("UI", true);
-        for (int i = uiActionMap.m_Actions.Length - 1; i >= 0; i--)
-        {
-            ArrayHelpers.EraseAt(ref uiActionMap.m_Actions, uiActionMap.m_Actions.Length - 1);
-        }
+        asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
+        asset.AddActionMap(new InputActionMap("UI")); // An empty UI map should log warnings.
 
         InputSystem.s_Manager.actions = asset;
         Update();
