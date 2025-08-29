@@ -14,7 +14,6 @@ using UnityEngine.TestTools.Constraints;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
-using UnityEngine.InputSystem.Utilities;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
 using Is = NUnit.Framework.Is;
