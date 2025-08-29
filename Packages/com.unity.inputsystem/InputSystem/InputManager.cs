@@ -3706,8 +3706,9 @@ namespace UnityEngine.InputSystem
             InvokeAfterUpdateCallback(updateType);
             //send pointer data to backend for OnMouseEvents
 #if UNITY_6000_4_OR_NEWER
-            if (Pointer.current != null && gameIsPlaying)
-                NativeInputSystem.SetMouseEventsData(Pointer.current.press.isPressed, Pointer.current.press.wasPressedThisFrame, Pointer.current.position.x.value, Pointer.current.position.y.value);
+            var pointer = Pointer.current;
+            if (pointer != null && gameIsPlaying)
+                NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
 #endif
             m_CurrentUpdate = default;
         }
