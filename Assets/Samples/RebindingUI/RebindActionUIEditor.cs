@@ -21,7 +21,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_BindingTextProperty = serializedObject.FindProperty("m_BindingText");
             m_RebindOverlayProperty = serializedObject.FindProperty("m_RebindOverlay");
             m_RebindTextProperty = serializedObject.FindProperty("m_RebindText");
-            m_DefaultInputActionsProperty = serializedObject.FindProperty("m_DefaultInputActions");
+            m_RebindInfoProperty = serializedObject.FindProperty("m_RebindInfo");
+            m_RebindCancelButtonProperty = serializedObject.FindProperty("m_RebindCancelButton");
+            m_RebindTimeoutProperty = serializedObject.FindProperty("m_RebindTimeout");
             m_UpdateBindingUIEventProperty = serializedObject.FindProperty("m_UpdateBindingUIEvent");
             m_RebindStartEventProperty = serializedObject.FindProperty("m_RebindStartEvent");
             m_RebindStopEventProperty = serializedObject.FindProperty("m_RebindStopEvent");
@@ -63,7 +65,16 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 EditorGUILayout.PropertyField(m_BindingTextProperty);
                 EditorGUILayout.PropertyField(m_RebindOverlayProperty);
                 EditorGUILayout.PropertyField(m_RebindTextProperty);
-                EditorGUILayout.PropertyField(m_DefaultInputActionsProperty);
+                EditorGUILayout.PropertyField(m_RebindInfoProperty);
+                EditorGUILayout.PropertyField(m_RebindCancelButtonProperty);
+            }
+
+            // Rebind options section.
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(m_RebindOptionsLabel, Styles.boldLabel);
+            using (new EditorGUI.IndentLevelScope())
+            {
+                EditorGUILayout.PropertyField(m_RebindTimeoutProperty);
             }
 
             // Events section.
@@ -155,9 +166,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private SerializedProperty m_BindingIdProperty;
         private SerializedProperty m_ActionLabelProperty;
         private SerializedProperty m_BindingTextProperty;
-        private SerializedProperty m_DefaultInputActionsProperty;
         private SerializedProperty m_RebindOverlayProperty;
         private SerializedProperty m_RebindTextProperty;
+        private SerializedProperty m_RebindInfoProperty;
+        private SerializedProperty m_RebindCancelButtonProperty;
+        private SerializedProperty m_RebindTimeoutProperty;
         private SerializedProperty m_RebindStartEventProperty;
         private SerializedProperty m_RebindStopEventProperty;
         private SerializedProperty m_UpdateBindingUIEventProperty;
@@ -166,6 +179,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private GUIContent m_BindingLabel = new GUIContent("Binding");
         private GUIContent m_DisplayOptionsLabel = new GUIContent("Display Options");
         private GUIContent m_UILabel = new GUIContent("UI");
+        private GUIContent m_RebindOptionsLabel = new GUIContent("Rebind Options");
         private GUIContent m_EventsLabel = new GUIContent("Events");
         private GUIContent[] m_BindingOptions;
         private string[] m_BindingOptionValues;
