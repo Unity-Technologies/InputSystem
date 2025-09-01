@@ -547,7 +547,7 @@ public class InputForUITests : InputTestFixture
 
         LogAssert.NoUnexpectedReceived();
     }
-    
+
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if the UI map is present but actions are missing.")]
     [Category(kTestCategory)]
     public void ActionsWithUIMap_MissingActions_ShouldGenerateWarnings()
