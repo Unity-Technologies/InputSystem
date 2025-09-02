@@ -9,7 +9,6 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
-- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
@@ -20,6 +19,8 @@ however, it has to be formatted properly to pass verification tests.
 - Added a new Monobehavior `InputActionLabel` to rebinding sample to allow dynamic text showing relevant binding for an `InputAction`.
 
 ### Fixed
+- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Fixed UISelectable's OnSubmit and OnCancel not being triggered when using InputTestFixture with mock keyboard [ISXB-1561](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1561)
 - Fixed an issue in `RebindingUISample` that fired actions bound to the same control as the target control in a rebinding process. ISXB-1524.
 - Fixed an issue in `RebindingUISample` preventing UI navigation without Keyboard and Mouse present.
 - Fixed an issue in `RebindActionUI` which resulted in active binding not being shown after a scene reload. ISXB-1588.
