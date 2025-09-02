@@ -5894,4 +5894,18 @@ partial class CoreTests
                 BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
         }, Throws.Nothing);
     }
+
+    // Note: Tested inside this class for now since there are no dedicated device test classes for built-in devices,
+    //       only for plugin devices.
+    [Test, Description("https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541")]
+    [Category("Devices")]
+    public void Devices_KeyboardAllKeys_EnumeratesAllKeyControls()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        int index = 0;
+        foreach (var key in keyboard.allKeys)
+        {
+            Assert.NotNull(key, $"Key at index {index++} was null");
+        }
+    }
 }
