@@ -17,6 +17,7 @@ public class MockKeyboardWithUITests : InputTestFixture
     private GameObject m_ButtonGo;
     private InputActionAsset m_InputActionAsset;
 
+    // We only use this simple class as an adapter for a lambda closure that we need for assertion to work below.
     public class CancellationHandler : MonoBehaviour, ICancelHandler
     {
         public Action trigger;
@@ -56,6 +57,8 @@ public class MockKeyboardWithUITests : InputTestFixture
     {
         GameObject.Destroy(m_EventSystemGo);
         GameObject.Destroy(m_CanvasGo);
+
+        GameObject.Destroy(m_InputActionAsset);
 
         InputSystem.RemoveDevice(m_Keyboard);
 
