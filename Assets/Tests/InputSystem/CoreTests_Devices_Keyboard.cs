@@ -199,6 +199,24 @@ partial class CoreTests
         }
     }
 
+    [Test(Description = "Verifies documented requirement 'This is equivalent to <c>allKeys[(int)key - 1]'")]
+    [Category("Devices")]
+    public void Devices_Keyboard_SubscriptOperatorShouldBeEquivalentToShiftedAllKeysLookup()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var allKeys = keyboard.allKeys;
+        foreach (var key in sKeys)
+        {
+            // Key.None is documented as an invalid key so skip it in this test.
+            // Sub-script operator is documented to through for invalid key.
+            if (key == Key.None)
+                continue;
+
+            var keyControl = keyboard[key];
+            Assert.That(keyControl, Is.EqualTo(allKeys[(int)key - 1]));
+        }
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_Keyboard_SubscriptOperatorThrowsForInvalidOrOutOfRangeKey()
