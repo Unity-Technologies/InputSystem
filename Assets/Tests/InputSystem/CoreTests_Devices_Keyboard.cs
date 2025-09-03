@@ -160,8 +160,6 @@ partial class CoreTests
         var index = 0;
         foreach (var key in keyboard.allKeys)
         {
-            if (index == 109)
-                Debug.Log("TEMP");
             Assert.NotNull(key, $"Key at index {index++} was null");
         }
     }
