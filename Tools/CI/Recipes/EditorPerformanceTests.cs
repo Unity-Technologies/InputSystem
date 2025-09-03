@@ -41,7 +41,6 @@ public class EditorPerformanceTests: InputBaseRecipe
                     .WithRerun(1, true)
                     .WithPerformanceDataReporting(true)
                     .WithPerformanceProject("InputSystem")
-                    .WithExtraArgs("--report-performance-data --performance-project-id=InputSystem")
                     .WithArtifacts("artifacts"))
                 ))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
