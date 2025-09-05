@@ -24,58 +24,37 @@ public class MobilePerformanceBuildJobs: InputMobileBaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform)
             .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
+        
+        var utrCommand = UtrCommand.Run(platform.System, b => b
+            .WithTestProject($"{ProjectPath}")
+            .WithEditor(".Editor")
+            .WithSuite(UtrTestSuiteType.Playmode)
+            .WithCategory("Performance")
+            .WithExtraArgs("--clean-library")
+            .WithRerun(1, true)
+            .WithBuildOnly()
+            .WithPerformanceDataReporting(true)
+            .WithPerformanceProject("InputSystem")
+            .WithPlayerSavePath("build/players")
+            .WithArtifacts("build/logs"));
 
-        // Build job on Android with il2cpp scripting backend.
-        if (platform.System == SystemType.Android && jobName.Contains("il2cpp"))
+        if (platform.System == SystemType.Android)
         {
-            job.WithCommands(UtrCommand.Run(platform.System, b => b
-                .WithTestProject($"{ProjectPath}")
-                .WithEditor(".Editor")
-                .WithSuite(UtrTestSuiteType.Playmode)
-                .WithPlatform(platform.System)
-                .WithCategory("Performance")
-                .WithScriptingBackend(ScriptingBackendType.Il2Cpp)
-                .WithExtraArgs("--clean-library")
-                .WithRerun(1, true)
-                .WithBuildOnly()
-                .WithPerformanceDataReporting(true)
-                .WithPerformanceProject("InputSystem")
-                .WithPlayerSavePath("build/players")
-                .WithArtifacts("build/logs")));
+            utrCommand = utrCommand.Concat("--platform=android");
+            if(jobName.Contains("il2cpp"))
+                utrCommand = utrCommand.Concat("--scripting-backend=il2cpp");
         }
         else if (platform.System == SystemType.TvOS)
         {
-            job.WithCommands(UtrCommand.Run(platform.System, b => b
-                .WithTestProject($"{ProjectPath}")
-                .WithEditor(".Editor")
-                .WithSuite(UtrTestSuiteType.Playmode)
-                .WithCategory("Performance")
-                .WithExtraArgs("--platform=tvOS --clean-library")
-                .WithRerun(1, true)
-                .WithBuildOnly()
-                .WithPerformanceDataReporting(true)
-                .WithPerformanceProject("InputSystem")
-                .WithPlayerSavePath("build/players")
-                .WithArtifacts("build/logs")));
+            utrCommand = utrCommand.Concat("--platform=tvOS");
         }
-        else
+        else if (platform.System == SystemType.IOS)
         {
-            job.WithCommands(UtrCommand.Run(platform.System, b => b
-                .WithTestProject($"{ProjectPath}")
-                .WithEditor(".Editor")
-                .WithSuite(UtrTestSuiteType.Playmode)
-                .WithPlatform(platform.System)
-                .WithCategory("Performance")
-                .WithExtraArgs("--clean-library")
-                .WithRerun(1, true)
-                .WithBuildOnly()
-                .WithPerformanceDataReporting(true)
-                .WithPerformanceProject("InputSystem")
-                .WithPlayerSavePath("build/players")
-                .WithArtifacts("build/logs")));
+            utrCommand = utrCommand.Concat("--platform=ios");
         }
 
-        job.WithArtifact(new Artifact("players", "build/players/**/*"),
+        job.WithCommands(utrCommand)
+            .WithArtifact(new Artifact("players", "build/players/**/*"),
                 new Artifact("logs", "build/logs/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
         
@@ -121,16 +100,29 @@ public class MobilePerformanceTests: InputMobileBaseRecipe
         if (platform.System == SystemType.Android)
             job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
 
-        job.WithCommands(c => c
-                .Add(UtrCommand.Run(platform.System, b => b
-                    .WithSuite(UtrTestSuiteType.Playmode)
-                    .WithPlatform(platform.System)
-                    .WithCategory("Performance")
-                    .WithRerun(1)
-                    .WithPerformanceDataReporting(true)
-                    .WithPerformanceProject("InputSystem")
-                    .WithPlayerLoadPath("build/players")
-                    .WithArtifacts("build/test-results"))))
+        var utrCommand = UtrCommand.Run(platform.System, b => b
+            .WithSuite(UtrTestSuiteType.Playmode)
+            .WithCategory("Performance")
+            .WithRerun(1)
+            .WithPerformanceDataReporting(true)
+            .WithPerformanceProject("InputSystem")
+            .WithPlayerLoadPath("build/players")
+            .WithArtifacts("build/test-results"));
+        
+        if (platform.System == SystemType.Android)
+        {
+            utrCommand = utrCommand.Concat("--platform=android");
+        }
+        else if (platform.System == SystemType.TvOS)
+        {
+            utrCommand = utrCommand.Concat("--platform=tvOS");
+        }
+        else if (platform.System == SystemType.IOS)
+        {
+            utrCommand = utrCommand.Concat("--platform=ios");
+        }
+        
+        job.WithCommands(utrCommand)
             .WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
