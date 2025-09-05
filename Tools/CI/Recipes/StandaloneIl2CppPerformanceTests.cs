@@ -12,7 +12,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class StandaloneIl2CppPerformanceTests: InputBaseRecipe
+public class StandaloneIl2CppPerformanceTests: BaseRecipe
 {
     public override string ProjectPath => ".";
     protected override IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion)

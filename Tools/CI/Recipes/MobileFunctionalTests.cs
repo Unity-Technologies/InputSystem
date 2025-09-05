@@ -12,7 +12,7 @@ using RecipeEngine.Modules.Wrench.Helpers;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class MobileFunctionalBuildJobs: InputMobileBaseRecipe
+public class MobileFunctionalBuildJobs: MobileBaseRecipe
 {
     public override string ProjectPath => ".";
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileBuildPlatforms.Values;
@@ -64,7 +64,7 @@ public class MobileFunctionalBuildJobs: InputMobileBaseRecipe
     }
 }
 
-public class MobileFunctionalTests: InputMobileBaseRecipe
+public class MobileFunctionalTests: MobileBaseRecipe
 {
     public override string ProjectPath => ".";
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileTestPlatforms.Values;

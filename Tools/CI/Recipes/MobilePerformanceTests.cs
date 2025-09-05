@@ -12,7 +12,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public class MobilePerformanceBuildJobs: InputMobileBaseRecipe
+public class MobilePerformanceBuildJobs: MobileBaseRecipe
 {
     public override string ProjectPath => ".";
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileBuildPlatforms.Values;
@@ -65,7 +65,7 @@ public class MobilePerformanceBuildJobs: InputMobileBaseRecipe
     }
 }
 
-public class MobilePerformanceTests: InputMobileBaseRecipe
+public class MobilePerformanceTests: MobileBaseRecipe
 {
     public override string ProjectPath => ".";
     public override IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => Settings.MobileTestPlatforms.Values;

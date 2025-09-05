@@ -5,7 +5,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public abstract class InputMobileBaseRecipe: InputBaseRecipe
+public abstract class MobileBaseRecipe: BaseRecipe
 {
     public override IEnumerable<IJobBuilder> GetJobs()
     {

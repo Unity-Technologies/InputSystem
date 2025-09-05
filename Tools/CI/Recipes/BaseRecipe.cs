@@ -10,9 +10,9 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public abstract class InputBaseRecipe: RecipeBase
+public abstract class BaseRecipe: RecipeBase
 {
-    protected InputBaseRecipe()
+    protected BaseRecipe()
     {
         Name = $"InputSystem-{GetType().Name}";
     }
