@@ -156,7 +156,6 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "f8", displayName = "F8", layout = "Key", bit = (int)Key.F8)]
         [InputControl(name = "f9", displayName = "F9", layout = "Key", bit = (int)Key.F9)]
         [InputControl(name = "f10", displayName = "F10", layout = "Key", bit = (int)Key.F10)]
-
         [InputControl(name = "f11", displayName = "F11", layout = "Key", bit = (int)Key.F11)]
         [InputControl(name = "f12", displayName = "F12", layout = "Key", bit = (int)Key.F12)]
         [InputControl(name = "OEM1", layout = "Key", bit = (int)Key.OEM1)]
@@ -180,10 +179,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "mediaRewind", displayName = "MediaRewind", layout = "Key", bit = (int)Key.MediaRewind)]
         [InputControl(name = "mediaForward", displayName = "MediaForward", layout = "Key", bit = (int)Key.MediaForward)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)] // Use the last bit to hold IME selected state.
-        // Disable deprecation warning to not generate warnings in user project about internal use of deprecated key
-#pragma warning disable 0618
         [InputControl(name = "IMESelectedObsoleteKey", layout = "Key", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)]
-#pragma warning restore 0618
         public fixed byte keys[kSizeInBytes];
 
         // will be the default in new editor [InputControl(name = "IMESelected", layout = "Button", bit = 0, sizeInBits = 1, synthetic = true)]
