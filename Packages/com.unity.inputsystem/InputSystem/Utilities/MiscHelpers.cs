@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -35,6 +36,16 @@ namespace UnityEngine.InputSystem.Utilities
                 else
                     ++index;
             return -1;
+        }
+
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.4
+        public static bool HasNativeObject(Object obj)
+        {
+#if UNITY_6000_4_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
         }
     }
 }
