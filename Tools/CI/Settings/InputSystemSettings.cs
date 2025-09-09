@@ -97,7 +97,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
         
         var defaultUbuntuPlatform = WrenchPackage.DefaultEditorPlatforms[SystemType.Ubuntu];
         // Use Ubuntu image package-ci/ubuntu-22.04 which is required by 6000.0+ versions.
-        Wrench.Packages["com.unity.inputsystem"].EditorPlatforms[SystemType.Ubuntu] = new Platform(new Agent("package-ci/ubuntu-22.04:default", 
+        InputSystemPackage.EditorPlatforms[SystemType.Ubuntu] = new Platform(new Agent("package-ci/ubuntu-22.04:default",
             defaultUbuntuPlatform.Agent.Flavor, defaultUbuntuPlatform.Agent.Resource), defaultUbuntuPlatform.System);
 
         // ignore packages listed below in PreviewAPV

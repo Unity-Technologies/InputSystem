@@ -1,3 +1,4 @@
+using InputSystem.Cookbook.Recipes.Extensions;
 using RecipeEngine.Api.Artifacts;
 using RecipeEngine.Api.Dependencies;
 using RecipeEngine.Api.Extensions;
@@ -24,34 +25,23 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform)
             .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
-        
-        var utrCommand = UtrCommand.Run(platform.System, b => b
-            .WithTestProject($"{ProjectPath}")
-            .WithEditor(".Editor")
-            .WithSuite(UtrTestSuiteType.Playmode)
-            .WithCategory("Performance")
-            .WithExtraArgs("--clean-library")
-            .WithRerun(1, true)
-            .WithBuildOnly()
-            .WithPerformanceDataReporting(true)
-            .WithPerformanceProject("InputSystem")
-            .WithPlayerSavePath("build/players")
-            .WithArtifacts("build/logs"));
 
-        if (platform.System == SystemType.Android)
-        {
-            utrCommand = utrCommand.Concat("--platform=android");
-            if(jobName.Contains("il2cpp"))
-                utrCommand = utrCommand.Concat("--scripting-backend=il2cpp");
-        }
-        else if (platform.System == SystemType.TvOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=tvOS");
-        }
-        else if (platform.System == SystemType.IOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=ios");
-        }
+        var utrCommand = UtrCommand.Run(platform.System, b => b
+                .WithTestProject($"{ProjectPath}")
+                .WithEditor(".Editor")
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithCategory("Performance")
+                .WithExtraArgs("--clean-library")
+                .WithRerun(1, true)
+                .WithBuildOnly()
+                .WithPerformanceDataReporting(true)
+                .WithPerformanceProject("InputSystem")
+                .WithPlayerSavePath("build/players")
+                .WithArtifacts("build/logs"))
+            .WithPlatform(platform);
+
+        if (platform.System == SystemType.Android && jobName.Contains("il2cpp"))
+            utrCommand = utrCommand.Concat("--scripting-backend=il2cpp");
 
         job.WithCommands(utrCommand)
             .WithArtifact(new Artifact("players", "build/players/**/*"),
@@ -101,27 +91,15 @@ public class MobilePerformanceTests: MobileBaseRecipe
             job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
 
         var utrCommand = UtrCommand.Run(platform.System, b => b
-            .WithSuite(UtrTestSuiteType.Playmode)
-            .WithCategory("Performance")
-            .WithRerun(1)
-            .WithPerformanceDataReporting(true)
-            .WithPerformanceProject("InputSystem")
-            .WithPlayerLoadPath("build/players")
-            .WithArtifacts("build/test-results"));
-        
-        if (platform.System == SystemType.Android)
-        {
-            utrCommand = utrCommand.Concat("--platform=android");
-        }
-        else if (platform.System == SystemType.TvOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=tvOS");
-        }
-        else if (platform.System == SystemType.IOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=ios");
-        }
-        
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithCategory("Performance")
+                .WithRerun(1)
+                .WithPerformanceDataReporting(true)
+                .WithPerformanceProject("InputSystem")
+                .WithPlayerLoadPath("build/players")
+                .WithArtifacts("build/test-results"))
+            .WithPlatform(platform);
+
         job.WithCommands(utrCommand)
             .WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))

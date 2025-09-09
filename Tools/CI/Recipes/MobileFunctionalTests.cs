@@ -1,3 +1,4 @@
+using InputSystem.Cookbook.Recipes.Extensions;
 using RecipeEngine.Api.Extensions;
 using RecipeEngine.Api.Jobs;
 using RecipeEngine.Modules.UnifiedTestRunner;
@@ -24,32 +25,21 @@ public class MobileFunctionalBuildJobs: MobileBaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform)
             .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
-        
-        var utrCommand = UtrCommand.Run(platform.System, b => b
-            .WithTestProject($"{ProjectPath}")
-            .WithEditor(".Editor")
-            .WithSuite(UtrTestSuiteType.Playmode)
-            .WithCategory("!Performance")
-            .WithExtraArgs("--clean-library")
-            .WithRerun(1, true)
-            .WithBuildOnly()
-            .WithPlayerSavePath("build/players")
-            .WithArtifacts("build/logs"));
 
-        if (platform.System == SystemType.Android)
-        {
-            utrCommand = utrCommand.Concat("--platform=android");
-            if(jobName.Contains("il2cpp"))
-                utrCommand = utrCommand.Concat("--scripting-backend=il2cpp");
-        }
-        else if (platform.System == SystemType.TvOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=tvOS");
-        }
-        else if (platform.System == SystemType.IOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=ios");
-        }
+        var utrCommand = UtrCommand.Run(platform.System, b => b
+                .WithTestProject($"{ProjectPath}")
+                .WithEditor(".Editor")
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithCategory("!Performance")
+                .WithExtraArgs("--clean-library")
+                .WithRerun(1, true)
+                .WithBuildOnly()
+                .WithPlayerSavePath("build/players")
+                .WithArtifacts("build/logs"))
+            .WithPlatform(platform);
+
+        if (platform.System == SystemType.Android && jobName.Contains("il2cpp"))
+            utrCommand = utrCommand.Concat("--scripting-backend=il2cpp");
 
         job.WithCommands(utrCommand)
             .WithArtifact(new Artifact("players", "build/players/**/*"), new Artifact("logs", "build/logs/**/*"))
@@ -100,24 +90,12 @@ public class MobileFunctionalTests: MobileBaseRecipe
             job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
 
         var utrCommand = UtrCommand.Run(platform.System, b => b
-            .WithSuite(UtrTestSuiteType.Playmode)
-            .WithCategory("!Performance")
-            .WithRerun(1)
-            .WithPlayerLoadPath("build/players")
-            .WithArtifacts("build/test-results"));
-
-        if (platform.System == SystemType.Android)
-        {
-            utrCommand = utrCommand.Concat("--platform=android");
-        }
-        else if (platform.System == SystemType.TvOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=tvOS");
-        }
-        else if (platform.System == SystemType.IOS)
-        {
-            utrCommand = utrCommand.Concat("--platform=ios");
-        }
+                .WithSuite(UtrTestSuiteType.Playmode)
+                .WithCategory("!Performance")
+                .WithRerun(1)
+                .WithPlayerLoadPath("build/players")
+                .WithArtifacts("build/test-results"))
+            .WithPlatform(platform);
         
         job.WithCommands(utrCommand)
             .WithDependencies(buildJob)
