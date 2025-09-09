@@ -49,8 +49,6 @@ namespace UnityEngine.InputSystem.UI
 
         private void InitializePlayerRoot()
         {
-            if (m_PlayerRoot == null) return;
-
             var inputModule = GetComponent<InputSystemUIInputModule>();
             if (inputModule != null)
                 inputModule.localMultiPlayerRoot = m_PlayerRoot;
