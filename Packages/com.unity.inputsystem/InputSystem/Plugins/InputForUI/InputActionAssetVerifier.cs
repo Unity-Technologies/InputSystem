@@ -32,6 +32,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void Verify(InputActionAsset asset,
             ProjectWideActionsAsset.IReportInputActionAssetVerificationErrors reporter)
         {
+            // We don't want to log warnings if no UI action map is present as we default in this case.
+            if (asset.FindActionMap("UI", false) == null)
+            {
+                return;
+            }
+
             // Note:
             // PWA has initial state check true for "Point" action, DefaultActions do not, does it matter?
             //
@@ -70,7 +76,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             private string GetAssetReference()
             {
                 var path = AssetDatabase.GetAssetPath(asset);
-                return path ?? asset.name;
+                return string.IsNullOrEmpty(path) ? asset.name : path;
             }
 
             private void ActionMapWarning(string actionMap, string problem)
