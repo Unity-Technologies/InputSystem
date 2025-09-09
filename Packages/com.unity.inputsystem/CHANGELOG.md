@@ -24,12 +24,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in `RebindingUISample` preventing UI navigation without Keyboard and Mouse present.
 - Fixed an issue in `RebindActionUI` which resulted in active binding not being shown after a scene reload. ISXB-1588.
 - Fixed an issue in `GamepadIconExample` which resulted in icons for left and right triggers not being displayed after a rebind to the exact same controls. ISXB-1593.
+- Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 
 ## [1.14.2] - 2025-08-05
 
 ### Fixed
 - Fixed an issue where using Pen devices on Android tablets would result in double clicks for UI interactions. [ISXB-1456](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1456)
 - Fixed an issue preventing an embedded platform from being released. It adds back some `#defines` to `XRSupport` and `InputDeviceCharacteristics`.
+- Fixed a warning not showing the asset name correctly when the input action map parameters for runtime GUI were not setup. [ISXB-1560]
 
 ## [1.14.1] - 2025-07-10
 
