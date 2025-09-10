@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor;
-
 namespace UnityEngine.InputSystem.Utilities
 {
     internal static class MiscHelpers
