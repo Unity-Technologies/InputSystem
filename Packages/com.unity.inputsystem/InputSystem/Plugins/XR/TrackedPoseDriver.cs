@@ -425,7 +425,7 @@ namespace UnityEngine.InputSystem.XR
                 // See https://jira.unity3d.com/browse/XR-7591
 #pragma warning disable CS0618
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, true);
-#pragma warning restore CS0618 
+#pragma warning restore CS0618
             }
 #endif
         }

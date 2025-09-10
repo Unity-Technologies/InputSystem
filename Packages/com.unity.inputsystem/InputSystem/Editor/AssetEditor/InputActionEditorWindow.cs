@@ -52,15 +52,17 @@ namespace UnityEngine.InputSystem.Editor
 
             return OpenAsset(EditorUtility.EntityIdToObject(entityId));
         }
+
 #else
         public static bool OpenAsset(int instanceId, int line)
         {
             if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
                 return false;
-            
+
             return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
         }
-#endif      
+
+#endif
 
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
