@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_RotationAngle += angle;
         }
 
-        private static readonly int Color1 = Shader.PropertyToID("_Color");
+        private static readonly int Color1 = Shader.PropertyToID("_Albedo");
 
         private Material m_Material;
         private Vector3 m_TargetEulerAngles;
@@ -284,11 +284,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void AnimateColors(float deltaTime)
         {
-            var color = Color.Lerp(m_Material.color, m_TargetColor, deltaTime * 2.0f);
-            if (color != GetColor())
+            Color currentColor = m_Material.GetColor(Color1);
+            Color newColor = Color.Lerp(currentColor, m_TargetColor, deltaTime * 2.0f);
+            if (newColor != GetColor())
             {
                 // Update material
-                m_Material.SetColor(Color1, color);
+                m_Material.SetColor(Color1, newColor);
             }
         }
 

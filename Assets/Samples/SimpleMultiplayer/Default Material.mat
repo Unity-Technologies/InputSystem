@@ -24,7 +24,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Default Material
-  m_Shader: {fileID: -6465566751694194690, guid: f4881416d3c024e44aefe85156ea5201,
+  m_Shader: {fileID: -6465566751694194690, guid: de6e96ea6f7ce4f9e81a9b8c126977fc,
     type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -196,6 +196,7 @@ Material:
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!114 &2866137758639019065
 MonoBehaviour:
   m_ObjectHideFlags: 11
