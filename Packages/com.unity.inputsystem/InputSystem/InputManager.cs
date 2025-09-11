@@ -3289,10 +3289,7 @@ namespace UnityEngine.InputSystem
 
                         continue;
                     }
-#endif
 
-
-#if UNITY_EDITOR
                     // Decide to skip events based on timing or focus state
                     if (ShouldDiscardEventInEditor(currentEventType, currentEventTimeInternal, updateType))
                     {
