@@ -2244,6 +2244,8 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
+        private bool m_DiscardOutOfFocusEvents;
+        private double m_FocusRegainedTime;
         private InputEventStream m_InputEventStream;
 
         // We want to sync devices when the editor comes back into focus. Unfortunately, there's no
@@ -3032,6 +3034,8 @@ namespace UnityEngine.InputSystem
             }
             else
             {
+                m_DiscardOutOfFocusEvents = true;
+                m_FocusRegainedTime = m_Runtime.currentTime;
                 // On focus gain, reenable and sync devices.
                 for (var i = 0; i < m_DevicesCount; ++i)
                 {
@@ -3319,23 +3323,10 @@ namespace UnityEngine.InputSystem
                     }
 #endif
 
-                    // In the editor, we discard all input events that occur in-between exiting edit mode and having
-                    // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
-                    // UI was sort of neither in this mode nor in that mode. This would usually lead to the game receiving
-                    // an accumulation of spurious inputs right in one of its first updates.
-                    //
-                    // NOTE: There's a chance the solution here will prove inadequate on the long run. We may do things
-                    //       here such as throwing partial touches away and then letting the rest of a touch go through.
-                    //       Could be that ultimately we need to issue a full reset of all devices at the beginning of
-                    //       play mode in the editor.
+
 #if UNITY_EDITOR
-                    if ((currentEventType == StateEvent.Type ||
-                         currentEventType == DeltaStateEvent.Type) &&
-                        (updateType & InputUpdateType.Editor) == 0 &&
-                        InputSystem.s_SystemObject.exitEditModeTime > 0 &&
-                        currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
-                        (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
-                         InputSystem.s_SystemObject.enterPlayModeTime == 0))
+                    // Decide to skip events based on timing or focus state
+                    if (ShouldDiscardEventInEditor(currentEventType, currentEventTimeInternal, updateType))
                     {
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3695,6 +3686,8 @@ namespace UnityEngine.InputSystem
                 throw;
             }
 
+            m_DiscardOutOfFocusEvents = false;
+
             if (shouldProcessActionTimeouts)
                 ProcessStateChangeMonitorTimeouts();
 
@@ -3705,6 +3698,60 @@ namespace UnityEngine.InputSystem
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Determines if an event should be discarded based on timing or focus state.
+        /// </summary>
+        /// <param name="eventType">The type of the current event</param>
+        /// <param name="eventTime">The internal time of the current event</param>
+        /// <param name="updateType">The current update type</param>
+        /// <returns>True if the event should be discarded, false otherwise.</returns>
+        private bool ShouldDiscardEventInEditor(FourCC eventType, double eventTime, InputUpdateType updateType)
+        {
+            // Check if this is an event that occurred during edit mode transition
+            if (ShouldDiscardEditModeTransitionEvent(eventType, eventTime, updateType))
+                return true;
+
+            // Check if this is an out-of-focus event that should be discarded
+            if (ShouldDiscardOutOfFocusEvent(eventTime))
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// In the editor, we discard all input events that occur in-between exiting edit mode and having
+        /// entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
+        /// UI was sort of neither in this mode nor in that mode. This would usually lead to the game receiving
+        /// an accumulation of spurious inputs right in one of its first updates.
+        ///
+        /// NOTE: There's a chance the solution here will prove inadequate on the long run. We may do things
+        ///       here such as throwing partial touches away and then letting the rest of a touch go through.
+        ///       Could be that ultimately we need to issue a full reset of all devices at the beginning of
+        ///       play mode in the editor.
+        /// </summary>
+        private bool ShouldDiscardEditModeTransitionEvent(FourCC eventType, double eventTime, InputUpdateType updateType)
+        {
+            return (eventType == StateEvent.Type || eventType == DeltaStateEvent.Type) &&
+                (updateType & InputUpdateType.Editor) == 0 &&
+                InputSystem.s_SystemObject.exitEditModeTime > 0 &&
+                eventTime >= InputSystem.s_SystemObject.exitEditModeTime &&
+                (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
+                    InputSystem.s_SystemObject.enterPlayModeTime == 0);
+        }
+
+        /// <summary>
+        /// Checks if an event should be discarded because it occurred while out of focus, under specific settings.
+        /// </summary>
+        private bool ShouldDiscardOutOfFocusEvent(double eventTime)
+        {
+            if (gameHasFocus && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
+                return m_DiscardOutOfFocusEvents && eventTime < m_FocusRegainedTime;
+            return false;
+        }
+
+#endif
 
         bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
         {
