@@ -9,10 +9,10 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
-- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
+- Changed sample materials to use the shadergraph which makes them cross-compatible with URP & HDRP. The shader will work with built-in render pipeline but it does require for the shadergraph package to be installed.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
@@ -27,6 +27,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the compilation warnings when used with Unity 6.4 (ISX-2349).
 - Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 
 ## [1.14.2] - 2025-08-05
 
