@@ -381,7 +381,7 @@ namespace UnityEngine.InputSystem
         /// <paramref name="action"/> for which to get a display string.</param>
         /// <param name="deviceLayoutName">Receives the name of the <see cref="InputControlLayout"/> used for the
         /// device in the given binding, if applicable. Otherwise is set to <c>null</c>. If, for example, the binding
-        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad</c>.</param>
+        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad"</c>.</param>
         /// <param name="controlPath">Receives the path to the control on the device referenced in the given binding,
         /// if applicable. Otherwise is set to <c>null</c>. If, for example, the binding is <c>"&lt;Gamepad&gt;/leftStick/x"</c>,
         /// the resulting value is <c>"leftStick/x"</c>.</param>
