@@ -116,6 +116,7 @@ partial class CoreTests
 
     void Set(Pointer pointer, Vector2 point, bool pressed, bool released)
     {
+        // Touch needs special handling in InputTestFixture
         if (pointer is Touchscreen touchscreen)
         {
             if (pressed)
@@ -126,6 +127,7 @@ partial class CoreTests
                 MoveTouch(0, point, delta: default, false, touchscreen);
             return;
         }
+        // all other Pointer, e.g. Mouse, Pen...
         Move(pointer.position, point);
         if (pressed)
             Press(pointer.press);
