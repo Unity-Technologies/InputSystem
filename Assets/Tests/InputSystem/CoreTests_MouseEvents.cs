@@ -8,31 +8,29 @@ using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 using Is = UnityEngine.TestTools.Constraints.Is;
 
-
 partial class CoreTests
 {
-    internal GameObject SetUpScene()
+    internal GameObject SetUpScene(Type pointerType, out Pointer pointer)
     {
         var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         gameObject.transform.position = Vector3.zero;
         var camera = new GameObject("MainCamera").AddComponent<Camera>();
         camera.transform.position = new Vector3(0, 0, -2f);
         camera.tag = "MainCamera";
+        pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
+        InputSystem.AddDevice(pointer);
         return gameObject;
     }
 
-    private static HashSet<Type> _testDevices = new HashSet<Type> { typeof(Mouse), typeof(Pen), typeof(Touchscreen) };
+    private static readonly Type[] _testDevices = new Type[] { typeof(Mouse), typeof(Pen), typeof(Touchscreen) };
     // OnMouseOver/Exit and Hover events are not supported for touch
-    private static HashSet<Type> _testDevicesNoTouch = new HashSet<Type> { typeof(Mouse), typeof(Pen) };
+    private static readonly Type[] _testDevicesNoTouch = new Type[] { typeof(Mouse), typeof(Pen) };
 
     [UnityTest]
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseDown([ValueSource(nameof(_testDevices))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
 
@@ -46,10 +44,7 @@ partial class CoreTests
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseUp([ValueSource(nameof(_testDevices))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         Set(pointer, new Vector2(vec.x, vec.y), true, false);
@@ -63,10 +58,7 @@ partial class CoreTests
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseUpAsButton([ValueSource(nameof(_testDevices))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMousEventTestTwo>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         Set(pointer, new Vector2(vec.x, vec.y), true, false);
@@ -80,10 +72,7 @@ partial class CoreTests
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseDrag([ValueSource(nameof(_testDevices))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         Set(pointer, new Vector2(vec.x, vec.y), false, false);
@@ -99,10 +88,7 @@ partial class CoreTests
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseEnterAndMouseExit([ValueSource(nameof(_testDevicesNoTouch))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         Set(pointer, new Vector2(0, 0), false, false);
@@ -120,10 +106,7 @@ partial class CoreTests
     [Category("MouseEvents")]
     public IEnumerator MouseEvents_CanReceiveOnMouseOver([ValueSource(nameof(_testDevicesNoTouch))] Type pointerType)
     {
-        var pointer = (Pointer)InputSystem.s_Manager.AddDevice(pointerType);
-        InputSystem.AddDevice(pointer);
-
-        var gameObject = SetUpScene();
+        var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMousEventTestTwo>();
         var vec = Camera.main.WorldToScreenPoint(gameObject.transform.position);
         Set(pointer, new Vector2(vec.x, vec.y), false, false);
