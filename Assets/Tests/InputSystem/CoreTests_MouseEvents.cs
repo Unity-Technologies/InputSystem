@@ -10,7 +10,7 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 
 partial class CoreTests
 {
-    internal GameObject SetUpScene(Type pointerType, out Pointer pointer)
+    private GameObject SetUpScene(string pointerType, out Pointer pointer)
     {
         var gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         gameObject.transform.position = Vector3.zero;
@@ -22,13 +22,12 @@ partial class CoreTests
         return gameObject;
     }
 
-    private static readonly Type[] _testDevices = new Type[] { typeof(Mouse), typeof(Pen), typeof(Touchscreen) };
-    // OnMouseOver/Exit and Hover events are not supported for touch
-    private static readonly Type[] _testDevicesNoTouch = new Type[] { typeof(Mouse), typeof(Pen) };
-
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Touchscreen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseDown([ValueSource(nameof(_testDevices))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseDown(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
@@ -41,8 +40,11 @@ partial class CoreTests
     }
 
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Touchscreen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseUp([ValueSource(nameof(_testDevices))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseUp(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
@@ -55,8 +57,11 @@ partial class CoreTests
     }
 
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Touchscreen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseUpAsButton([ValueSource(nameof(_testDevices))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseUpAsButton(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMousEventTestTwo>();
@@ -69,8 +74,11 @@ partial class CoreTests
     }
 
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Touchscreen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseDrag([ValueSource(nameof(_testDevices))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseDrag(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
@@ -85,8 +93,10 @@ partial class CoreTests
     }
 
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseEnterAndMouseExit([ValueSource(nameof(_testDevicesNoTouch))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseEnterAndMouseExit(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMouseEventsTest>();
@@ -103,8 +113,10 @@ partial class CoreTests
     }
 
     [UnityTest]
+    [TestCase("Pen", ExpectedResult = null)]
+    [TestCase("Mouse", ExpectedResult = null)]
     [Category("MouseEvents")]
-    public IEnumerator MouseEvents_CanReceiveOnMouseOver([ValueSource(nameof(_testDevicesNoTouch))] Type pointerType)
+    public IEnumerator MouseEvents_CanReceiveOnMouseOver(string pointerType)
     {
         var gameObject = SetUpScene(pointerType, out var pointer);
         gameObject.AddComponent<OnMousEventTestTwo>();
