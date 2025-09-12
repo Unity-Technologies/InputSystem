@@ -16,7 +16,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
-- Added OnMouse events for the InputSystem from editor version 6.3, including samples and tests.
+- Added support for (MonoBehavior OnMouse events) [https://docs.unity3d.com/ScriptReference/MonoBehaviour.html] when running the Input System on Unity 6.4 or newer.
+- Added tests and a sample for MonoBehavior OnMouse events using the InputSystem package.
 - Added a new fluent API `WithSuppressedActionPropagation()` to `UnityEngine.InputSystem.InputActionRebindingExtensions` that allows suppressing actions from firing during interactive rebinding while allowing state updates to avoid actions triggering after state event suppression (default). ISXB-1546.
 - Added a new Monobehavior `InputActionLabel` to rebinding sample to allow dynamic text showing relevant binding for an `InputAction`.
 
