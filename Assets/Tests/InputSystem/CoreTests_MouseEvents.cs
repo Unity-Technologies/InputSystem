@@ -1,4 +1,4 @@
-#if UNITY_6000_4_OR_NEWER
+#if UNITY_INPUTSYSTEM_HAS_MOUSE_SCRIPT_EVENTS_SUPPORTED
 using System;
 using System.Collections;
 using System.Collections.Generic;
