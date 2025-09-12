@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in `GamepadIconExample` which resulted in icons for left and right triggers not being displayed after a rebind to the exact same controls. ISXB-1593.
 - Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed.  [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 
 ## [1.14.2] - 2025-08-05
 
