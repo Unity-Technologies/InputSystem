@@ -23,6 +23,8 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarButton m_SaveButton;
 
         private readonly Action m_SaveAction;
+        
+        private ControlSchemesView m_ControlSchemesView;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
                                       Action saveAction)
@@ -91,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
-            stateContainer.StateChanged += OnStateChanged;
+            stateContainer.StateChanged += StateChanged(stateContainer);
 
             CreateSelector(
                 s => s.selectedControlSchemeIndex,
@@ -104,6 +106,22 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             s_OnPasteCutElements.Add(this);
+        }
+
+        private Action<InputActionsEditorState, UIRebuildMode> StateChanged(StateContainer stateContainer)
+        {
+            return (inputActionsEditorState, uiRebuildMode) =>
+            {
+                var state = stateContainer.GetState();
+                var viewState = ViewStateSelector.GetViewState(state);
+                var elementAtOrDefault = viewState.controlSchemes?.ElementAtOrDefault(viewState.selectedControlSchemeIndex);
+                if (viewState.selectedControlSchemeIndex != -1 && elementAtOrDefault == default(InputControlScheme))
+                {
+                    m_ControlSchemesView?.Cancel();
+                }
+                
+                OnStateChanged(inputActionsEditorState, uiRebuildMode);
+            };
         }
 
         private void OnReset()
@@ -156,9 +174,8 @@ namespace UnityEngine.InputSystem.Editor
 
             if (viewState.controlSchemes.Any())
             {
-                m_ControlSchemesToolbar.text = viewState.selectedControlSchemeIndex == -1
-                    ? "All Control Schemes"
-                    : viewState.controlSchemes.ElementAt(viewState.selectedControlSchemeIndex).name;
+                var elementAtOrDefault = viewState.controlSchemes.ElementAtOrDefault(viewState.selectedControlSchemeIndex);
+                m_ControlSchemesToolbar.text = elementAtOrDefault == default ? "All Control Schemes" : elementAtOrDefault.name;
 
                 m_ControlSchemesToolbar.menu.AppendAction("All Control Schemes", _ => SelectControlScheme(-1),
                     viewState.selectedControlSchemeIndex == -1 ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
@@ -186,7 +203,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
             m_DevicesToolbar.SetEnabled(true);
-            var currentControlScheme = viewState.controlSchemes.ElementAt(viewState.selectedControlSchemeIndex);
+            var currentControlScheme = viewState.controlSchemes.ElementAtOrDefault(viewState.selectedControlSchemeIndex);
             if (viewState.selectedDeviceIndex == -1)
                 m_DevicesToolbar.text = "All Devices";
 
@@ -228,12 +245,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowControlSchemeEditor(VisualElement parent, bool updateExisting = false)
         {
-            var controlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
-            controlSchemesView.UpdateView(stateContainer.GetState());
-
-            controlSchemesView.OnClosing += _ => DestroyChildView(controlSchemesView);
+            m_ControlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
+            m_ControlSchemesView.UpdateView(stateContainer.GetState());
+            m_ControlSchemesView.OnClosing += _ =>
+            {
+                DestroyChildView(m_ControlSchemesView);
+                m_ControlSchemesView = null;
+            };
         }
-
+        
         private void SelectControlScheme(int controlSchemeIndex)
         {
             Dispatch(ControlSchemeCommands.SelectControlScheme(controlSchemeIndex));
