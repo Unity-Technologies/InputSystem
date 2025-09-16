@@ -37,7 +37,7 @@ There are various ways to access your actions from code. One of the simplest way
 
 Use `FindAction` to search for an action by name from within the set of configured actions, and return a reference which you can then either read the value directly (also called "polling"), or you can attach callback methods that are called when the action is performed. The workflow described on this page focuses only on reading the action values. [You can read more about using callbacks here](RespondingToActions.html#action-callbacks).
 
-> [!TIP] 
+> [!TIP]
 > Finding and storing a reference to an Action is similar to finding and storing a reference to a Component, so if you have done that elsewhere in Unity, this might be a familiar process.
 
 To use `FindAction` to get references to your Actions and read user input in your script, use the following steps:
