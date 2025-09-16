@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -93,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
-            stateContainer.StateChanged += StateChanged(stateContainer);
+            stateContainer.StateChanged += OnStateChanged;
 
             CreateSelector(
                 s => s.selectedControlSchemeIndex,
@@ -106,12 +107,15 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             s_OnPasteCutElements.Add(this);
+
+            Undo.undoRedoPerformed += CheckForInvalidControlSchemeInOneFrame;
         }
 
-        private Action<InputActionsEditorState, UIRebuildMode> StateChanged(StateContainer stateContainer)
+        private async void CheckForInvalidControlSchemeInOneFrame()
         {
-            return (inputActionsEditorState, uiRebuildMode) =>
+            try
             {
+                await Task.Delay(1);
                 var state = stateContainer.GetState();
                 var viewState = ViewStateSelector.GetViewState(state);
                 var elementAtOrDefault = viewState.controlSchemes?.ElementAtOrDefault(viewState.selectedControlSchemeIndex);
@@ -119,9 +123,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     m_ControlSchemesView?.Cancel();
                 }
-                
-                OnStateChanged(inputActionsEditorState, uiRebuildMode);
-            };
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         private void OnReset()
@@ -278,6 +284,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             base.DestroyView();
             s_OnPasteCutElements.Remove(this);
+            Undo.undoRedoPerformed -= CheckForInvalidControlSchemeInOneFrame;
         }
 
         public void OnPaste(InputActionsEditorState state)
