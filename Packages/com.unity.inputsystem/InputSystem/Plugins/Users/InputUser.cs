@@ -768,7 +768,6 @@ namespace UnityEngine.InputSystem.Users
             return s_GlobalState.allUsers[userIndex];
         }
 
-
         ////Doc is filtered out (see Documentation~/filter.yml)
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
         {
