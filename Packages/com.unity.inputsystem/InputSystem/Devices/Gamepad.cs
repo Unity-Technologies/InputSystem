@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.LowLevel
         internal const string ButtonNorthShortDisplayName = "Triangle";
         internal const string ButtonWestShortDisplayName = "Square";
         internal const string ButtonEastShortDisplayName = "Circle";
-        #elif UNITY_SWITCH
+        #elif UNITY_SWITCH || UNITY_SWITCH2
         internal const string ButtonSouthShortDisplayName = "B";
         internal const string ButtonNorthShortDisplayName = "X";
         internal const string ButtonWestShortDisplayName = "Y";
