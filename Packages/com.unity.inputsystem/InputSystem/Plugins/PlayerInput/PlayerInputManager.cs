@@ -334,6 +334,12 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Inhibit players from joining the game.
         /// </summary>
+        /// <remarks>
+        /// Note that this method might disable the action, depending on how the action 
+        /// was joined initially. Specifically, if the initial joining was triggered using
+        /// the <see cref="joinBehavior.JoinPlayersWhenJoinActionIsTriggered"/> behavior,
+        /// this method also disables the join action.
+        /// </remarks>
         /// <seealso cref="EnableJoining"/>
         /// <seealso cref="joiningEnabled"/>
         public void DisableJoining()
