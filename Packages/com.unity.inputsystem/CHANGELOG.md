@@ -10,6 +10,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Added missing UNITY_SWITCH2 define in Gamepad.cs to fix button display names
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
