@@ -337,7 +337,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Note that this method might disable the action, depending on how the action 
         /// was joined initially. Specifically, if the initial joining was triggered using
-        /// the <see cref="joinBehavior.JoinPlayersWhenJoinActionIsTriggered"/> behavior,
+        /// the <see cref="PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered"/> behavior, 
         /// this method also disables the join action.
         /// </remarks>
         /// <seealso cref="EnableJoining"/>
