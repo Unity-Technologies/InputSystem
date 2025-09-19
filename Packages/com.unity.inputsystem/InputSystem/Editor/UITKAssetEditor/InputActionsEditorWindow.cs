@@ -48,18 +48,36 @@ namespace UnityEngine.InputSystem.Editor
             m_Analytics ??= new InputActionsEditorSessionAnalytic(
                 InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow);
 
+        // Unity 6.4 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
         [OnOpenAsset]
+#if UNITY_6000_4_OR_NEWER
+        public static bool OpenAsset(EntityId entityId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))
+                return false;
+
+            return OpenAsset(EditorUtility.EntityIdToObject(entityId));
+        }
+
+#else
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
-                return false;
             if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
+                return false;
+
+            return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
+        }
+
+#endif
+
+        private static bool OpenAsset(Object obj)
+        {
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;
 
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
-            var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
 
             string actionMapToSelect = null;

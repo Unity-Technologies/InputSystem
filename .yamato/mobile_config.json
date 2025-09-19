@@ -1,0 +1,39 @@
+{
+    "ios": {
+        "build": {
+            "type": "Unity::VM::osx",
+            "image": "package-ci/macos-13:default",
+            "flavor": "m1.mac"
+        },
+        "run": {
+            "type": "Unity::mobile::iPhone",
+            "image": "package-ci/macos-13:default",
+            "flavor": "m1.mac",
+            "model": "SE"
+        }
+    },
+    "tvos": {
+        "build": {
+            "type": "Unity::VM::osx",
+            "image": "package-ci/macos-13:default",
+            "flavor": "m1.mac"
+        },
+        "run": {
+            "type": "Unity::mobile::appletv",
+            "image": "package-ci/macos-13:default",
+            "flavor": "m1.mac"
+        }
+    },
+    "android": {
+        "build": {
+            "type": "Unity::VM",
+            "image": "package-ci/win10:default",
+            "flavor": "b1.xlarge"
+        },
+        "run": {
+            "type": "Unity::mobile::shield",
+            "image": "package-ci/win10:default",
+            "flavor": "b1.xlarge"
+        }
+    }
+}

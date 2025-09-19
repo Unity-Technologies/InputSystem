@@ -2851,15 +2851,6 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanGetKeyCodeFromKeyboardKey()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
-    }
-
-    [Test]
-    [Category("Devices")]
     public void Devices_CanLookUpKeyFromKeyboardUsingKeyCode()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();

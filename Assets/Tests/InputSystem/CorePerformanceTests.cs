@@ -126,8 +126,6 @@ internal class CorePerformanceTests : CoreTestsFixture
             int keyIndex = 0;
             foreach (var key in keyboard.allKeys)
             {
-                if (++keyIndex == (int)KeyEx.IMESelected)  // Skip IMESelected as it's not a real key.
-                    continue;
                 key.ReadValue();
             }
         })

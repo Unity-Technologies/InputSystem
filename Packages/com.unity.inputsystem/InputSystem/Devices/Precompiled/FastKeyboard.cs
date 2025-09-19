@@ -24,10 +24,10 @@ namespace UnityEngine.InputSystem
         public const string metadata = ";AnyKey;Button;Axis;Key;DiscreteButton;Keyboard";
         public FastKeyboard()
         {
-            var builder = this.Setup(130, 15, 7)
+            var builder = this.Setup(131, 15, 7)
                 .WithName("Keyboard")
                 .WithDisplayName("Keyboard")
-                .WithChildren(0, 130)
+                .WithChildren(0, 131)
                 .WithLayout(new InternedString("Keyboard"))
                 .WithStateBlock(new InputStateBlock { format = new FourCC(1262836051), sizeInBits = 128 });
 
@@ -426,6 +426,9 @@ namespace UnityEngine.InputSystem
             // /Keyboard/IMESelected
             var ctrlKeyboardIMESelected = Initialize_ctrlKeyboardIMESelected(kButtonLayout, this);
 
+            // /Keyboard/IMESelectedObsoleteKey
+            var ctrlKeyboardIMESelectedObsoleteKey = Initialize_ctrlKeyboardIMESelectedObsoleteKey(kKeyLayout, this);
+
             // Usages.
             builder.WithControlUsage(0, new InternedString("Back"), ctrlKeyboardescape);
             builder.WithControlUsage(1, new InternedString("Cancel"), ctrlKeyboardescape);
@@ -564,6 +567,7 @@ namespace UnityEngine.InputSystem
             this.keys[107] = ctrlKeyboardOEM3;
             this.keys[108] = ctrlKeyboardOEM4;
             this.keys[109] = ctrlKeyboardOEM5;
+            this.keys[110] = ctrlKeyboardIMESelectedObsoleteKey;
             this.keys[111] = ctrlKeyboardf13;
             this.keys[112] = ctrlKeyboardf14;
             this.keys[113] = ctrlKeyboardf15;
@@ -601,6 +605,7 @@ namespace UnityEngine.InputSystem
                 , 50857060u, 51381349u, 51905638u, 52429927u, 52954216u, 53478505u, 54002794u, 54527083u, 55051372u, 55575661u
                 , 56099950u, 56624239u, 57148528u, 57672817u, 58721394u, 59245683u, 59769972u, 60294261u, 60818550u, 61342839u
                 , 61867128u, 62391417u, 62915706u, 63439995u, 63964284u, 64488573u, 65012862u, 65537151u, 66061440u, 66585729u
+                , 66585730u
             });
 
             builder.WithControlTree(new byte[]
@@ -665,7 +670,7 @@ namespace UnityEngine.InputSystem
                 , 127, 0, 247, 0, 0, 0, 0, 121, 0, 243, 0, 0, 0, 0, 123, 0, 245, 0, 0, 0, 0, 120, 0, 255, 255, 125, 0, 1, 121, 0
                 , 255, 255, 126, 0, 1, 122, 0, 255, 255, 127, 0, 1, 123, 0, 255, 255, 128, 0, 1, 125, 0, 249, 0, 0, 0, 0, 127, 0, 251, 0
                 , 0, 0, 0, 124, 0, 255, 255, 129, 0, 1, 125, 0, 255, 255, 130, 0, 1, 126, 0, 255, 255, 131, 0, 1, 127, 0, 253, 0, 132, 0
-                , 1, 127, 0, 255, 255, 0, 0, 0, 127, 0, 255, 0, 0, 0, 0, 128, 0, 255, 255, 133, 0, 1, 127, 0, 255, 255, 0, 0, 0
+                , 1, 127, 0, 255, 255, 0, 0, 0, 127, 0, 255, 0, 0, 0, 0, 128, 0, 255, 255, 133, 0, 2, 127, 0, 255, 255, 0, 0, 0
             }, new ushort[]
                 {
                     // Control tree node indicies
@@ -674,7 +679,7 @@ namespace UnityEngine.InputSystem
                     , 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58
                     , 58, 59, 60, 61, 61, 62, 63, 64, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85
                     , 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115
-                    , 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129
+                    , 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130
                 });
 
             builder.Finish();
@@ -3685,6 +3690,30 @@ namespace UnityEngine.InputSystem
                 .WithMinAndMax(0, 1)
                 .Finish();
             return ctrlKeyboardIMESelected;
+        }
+
+        private UnityEngine.InputSystem.Controls.KeyControl Initialize_ctrlKeyboardIMESelectedObsoleteKey(InternedString kKeyLayout, InputControl parent)
+        {
+            var ctrlKeyboardIMESelectedObsoleteKey = new UnityEngine.InputSystem.Controls.KeyControl();
+            ctrlKeyboardIMESelectedObsoleteKey.Setup()
+                .At(this, 130)
+                .WithParent(parent)
+                .WithName("IMESelectedObsoleteKey")
+                .WithDisplayName("IMESelectedObsoleteKey")
+                .WithLayout(kKeyLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 0,
+                    bitOffset = 127,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            ctrlKeyboardIMESelectedObsoleteKey.keyCode = UnityEngine.InputSystem.Key.IMESelected;
+            return ctrlKeyboardIMESelectedObsoleteKey;
         }
     }
 }
