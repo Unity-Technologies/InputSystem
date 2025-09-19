@@ -25,6 +25,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
     // from left to right.
     // Example: First invert the value, then normalize [0..10] values to [0..1].
     "invert,normalize(min=0,max=10)"
+```
 
 ## Choose the right Processor
 
