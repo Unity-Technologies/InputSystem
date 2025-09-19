@@ -1,3 +1,6 @@
+---
+uid: input-system-timing-optimize-fixed
+---
 # Optimize for fixed-timestep or physics-based scenarios
 
 If you are working with the physics system or using `FixedUpdate` to control your game in a scenario where a small amount of input latency is acceptable (for example, a few frames), the simplest approach is to set the [input system update mode](./timing-select-mode.md) to **Process Events in Fixed Update**. This means your input code in `FixedUpdate` will operate as expected.

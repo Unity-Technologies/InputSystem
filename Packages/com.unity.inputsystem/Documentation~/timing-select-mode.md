@@ -1,3 +1,6 @@
+---
+uid: input-system-timing-select
+---
 # Select an appropriate input processing mode
 
 The Input System **Update Mode** controls when the input system processes queued input events.

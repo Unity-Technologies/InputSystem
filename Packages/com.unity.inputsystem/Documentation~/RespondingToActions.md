@@ -1,4 +1,6 @@
-
+---
+uid: input-system-responding
+---
 # Responding to Actions
 
 There are two main techniques you can use to respond to Actions in your project. These are to either use **polling** or an **event-driven** approach.

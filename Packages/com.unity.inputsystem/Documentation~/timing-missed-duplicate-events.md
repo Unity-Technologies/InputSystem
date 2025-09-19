@@ -1,3 +1,6 @@
+---
+uid: input-system-timing-missed
+---
 # Avoid missed or duplicate discrete events
 
 Discrete events are simple on/off events that occur when a user presses or releases a control such as a gamepad button, key, mouse, or touch press. This is in contrast to continuously changing values like those from gamepad stick movement. You can poll for these types of discrete event by using [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) or [`WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_). However, you can get incorrect results such as missing an event or appearing to receive multiple, if you check for them at the wrong time.
