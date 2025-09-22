@@ -2524,7 +2524,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1627715299}
         m_TargetAssemblyTypeName: UnityEngine.InputSystem.Samples.RebindUI.RebindActionUI,
           Unity.InputSystem.RebindingUI
-        m_MethodName: Swap
+        m_MethodName: SwapBinding
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 720160216}
@@ -4031,7 +4031,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1014357782
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4084,9 +4084,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: In practice, you probably don't want to set up rebinding the sticks like
-    this on a gamepad scheme but rather have a "swap sticks" kind of toggle instead.
-    The stick bindings here are included mainly for demonstration purposes.
+  m_Text: "In practice, you probably don't want to set up rebinding the sticks like
+    this on a gamepad scheme but rather have a \"swap sticks\" kind of toggle instead.
+    \n\nHere we do both variants for demonstration purposes."
 --- !u!222 &1014357784
 CanvasRenderer:
   m_ObjectHideFlags: 0

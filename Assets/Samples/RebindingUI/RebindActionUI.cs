@@ -256,23 +256,22 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <remarks>It is expected that the other control is of a compatible type.</remarks>
         /// <param name="other">The other instance to swap binding with.</param>
         /// <returns>true if successfully swapped, else false.</returns>
-        public void Swap(RebindActionUI other)
+        public void SwapBinding(RebindActionUI other)
         {
             if (this == other)
                 return; // Silently ignore any request to swap binding with itself
             if (ongoingRebind != null || other.ongoingRebind != null)
-                return; // Do not allow swapping with ongoing rebinding .
-
+                throw new Exception("Cannot swap bindings when interactive rebinding is ongoing");
             if (!ResolveActionAndBinding(out var action, out var bindingIndex))
                 throw new Exception("Failed to resolve action and binding index");
             if (!other.ResolveActionAndBinding(out var otherAction, out var otherBindingIndex))
                 throw new Exception("Failed to resolve action and binding index");
 
-            // Apply binding override to target binding
-            var path = action.bindings[bindingIndex].path;
-            var otherPath = otherAction.bindings[otherBindingIndex].path;
-            action.ApplyBindingOverride(bindingIndex, otherPath);
-            otherAction.ApplyBindingOverride(otherBindingIndex, path);
+            // Apply binding override to target binding based on swapped effective binding paths.
+            var effectivePath = action.bindings[bindingIndex].effectivePath;
+            var otherEffectivePath = otherAction.bindings[otherBindingIndex].effectivePath;
+            action.ApplyBindingOverride(bindingIndex, otherEffectivePath);
+            otherAction.ApplyBindingOverride(otherBindingIndex, effectivePath);
         }
 
         /// <summary>
