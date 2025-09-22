@@ -1014,11 +1014,14 @@ namespace UnityEngine.InputSystem
         {
             if (parsedJson.version >= JsonVersion.Version1)
                 return;
-            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
+            
+            if ((parsedJson.maps?.Length ?? 0) > 0 && parsedJson.version < JsonVersion.Version1)
             {
                 for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
                 {
                     var mapJson = parsedJson.maps[mi];
+                    if (mapJson.actions == null || mapJson.actions.Length == 0)
+                        continue;
                     for (var ai = 0; ai < mapJson.actions.Length; ++ai)
                     {
                         var actionJson = mapJson.actions[ai];
@@ -1026,44 +1029,68 @@ namespace UnityEngine.InputSystem
                         if (string.IsNullOrEmpty(raw))
                             continue;
 
-                        var list = NameAndParameters.ParseMultiple(raw).ToList();
-                        var rebuilt = new List<string>(list.Count);
-                        foreach (var nap in list)
+                        var originalTokens = raw.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToList();
+
+                        List<NameAndParameters> parsed = null;
+                        NameAndParameters.ParseMultiple(raw, ref parsed);
+                        if (parsed == null || parsed.Count == 0)
+                            continue;
+
+                        var canPreservePerToken = parsed.Count == originalTokens.Count;
+                        var rebuiltTokens = canPreservePerToken ? new List<string>(originalTokens) : new List<string>(parsed.Count);
+                        var anyProcessorChanged = false;
+
+                        for (int pi = 0; pi < parsed.Count; pi++)
                         {
+                            var nap = parsed[pi];
                             var procType = InputSystem.TryGetProcessor(nap.name);
-                            if (nap.parameters.Count == 0 || procType == null)
+                            if (procType == null || nap.parameters.Count == 0)
                             {
-                                rebuilt.Add(nap.ToString());
+                                if (!canPreservePerToken)
+                                    rebuiltTokens.Add(nap.ToString());
                                 continue;
                             }
 
                             var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
-                            var anyChanged = false;
+                            var changedThisProcessor = false;
+
+                            // For each enum parameter, if value is an ordinal index, replace with the underlying numeric enum value.
                             foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
                             {
-                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                                if (dict.TryGetValue(field.Name, out var ordStr) && int.TryParse(ordStr, out var ordinal))
                                 {
                                     var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
-                                    if (ord >= 0 && ord < values.Length)
+                                    if (ordinal >= 0 && ordinal < values.Length)
                                     {
-                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
-                                        anyChanged = true;
+                                        dict[field.Name] = Convert.ToInt32(values[ordinal]).ToString();
+                                        changedThisProcessor = true;
                                     }
                                 }
                             }
 
-                            if (!anyChanged)
+                            if (!changedThisProcessor)
                             {
-                                rebuilt.Add(nap.ToString());
-                            }
+                                if (!canPreservePerToken)
+                                    rebuiltTokens.Add(nap.ToString());
+                            }   
                             else
                             {
+                                // Rebuild only this processor’s text.
                                 var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
-                                rebuilt.Add($"{nap.name}({paramText})");
+                                var migrated = $"{nap.name}({paramText})";
+
+                                if (canPreservePerToken)
+                                    rebuiltTokens[pi] = migrated;
+                                else
+                                    rebuiltTokens.Add(migrated);
+
+                                anyProcessorChanged = true;
                             }
                         }
 
-                        actionJson.processors = string.Join(";", rebuilt);
+                        // Only touch the processors string if something actually changed.
+                        if (anyProcessorChanged)
+                            actionJson.processors = string.Join(";", rebuiltTokens);
                         mapJson.actions[ai] = actionJson;
                     }
                     parsedJson.maps[mi] = mapJson;
