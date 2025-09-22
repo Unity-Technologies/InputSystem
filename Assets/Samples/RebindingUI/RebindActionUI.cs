@@ -251,6 +251,31 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
+        /// Attempts to swap associated binding of this instance with another instance.
+        /// </summary>
+        /// <remarks>It is expected that the other control is of a compatible type.</remarks>
+        /// <param name="other">The other instance to swap binding with.</param>
+        /// <returns>true if successfully swapped, else false.</returns>
+        public void Swap(RebindActionUI other)
+        {
+            if (this == other)
+                return; // Silently ignore any request to swap binding with itself
+            if (ongoingRebind != null || other.ongoingRebind != null)
+                return; // Do not allow swapping with ongoing rebinding .
+
+            if (!ResolveActionAndBinding(out var action, out var bindingIndex))
+                throw new Exception("Failed to resolve action and binding index");
+            if (!other.ResolveActionAndBinding(out var otherAction, out var otherBindingIndex))
+                throw new Exception("Failed to resolve action and binding index");
+
+            // Apply binding override to target binding
+            var path = action.bindings[bindingIndex].path;
+            var otherPath = otherAction.bindings[otherBindingIndex].path;
+            action.ApplyBindingOverride(bindingIndex, otherPath);
+            otherAction.ApplyBindingOverride(otherBindingIndex, path);
+        }
+
+        /// <summary>
         /// Initiate an interactive rebind that lets the player actuate a control to choose a new binding
         /// for the action.
         /// </summary>
