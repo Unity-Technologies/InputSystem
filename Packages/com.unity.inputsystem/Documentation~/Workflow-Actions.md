@@ -5,6 +5,7 @@ uid: input-system-workflow-project-wide-actions
 
 <img src="Images/Workflow-Actions.png" height="200px">
 
+<br/>
 While the Input System has a variety of workflows to choose from, this is the primary recommended workflow, which suits most common scenarios for game and app input.
 
 In this workflow, you configure Actions in the [**Input Actions** editor](ActionsEditor.html), then set up references to those actions and read their values in your code.
@@ -36,7 +37,8 @@ There are various ways to access your actions from code. One of the simplest way
 
 Use `FindAction` to search for an action by name from within the set of configured actions, and return a reference which you can then either read the value directly (also called "polling"), or you can attach callback methods that are called when the action is performed. The workflow described on this page focuses only on reading the action values. [You can read more about using callbacks here](RespondingToActions.html#action-callbacks).
 
-> __Tip__: Finding and storing a reference to an Action is similar to finding and storing a reference to a Component, so if you have done that elsewhere in Unity, this might be a familiar process.
+> [!TIP]
+> Finding and storing a reference to an Action is similar to finding and storing a reference to a Component, so if you have done that elsewhere in Unity, this might be a familiar process.
 
 To use `FindAction` to get references to your Actions and read user input in your script, use the following steps:
 
@@ -95,9 +97,11 @@ public class Example : MonoBehaviour
 }
 ```
 
-> **Note:** You should avoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
+> [!TIP]
+> You should avoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
 
-> **Note:** The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
+> [!NOTE]
+> The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
 
 ## Pros and Cons
 
