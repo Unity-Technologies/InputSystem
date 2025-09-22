@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.Editor
                 SerializedProperty controlSchemeSerializedProperty = null;
                 var serializedProperty = state.serializedObject
                     .FindProperty(nameof(InputActionAsset.m_ControlSchemes));
-                
+
                 if (state.selectedControlSchemeIndex < serializedProperty.arraySize)
                 {
                     controlSchemeSerializedProperty = state.selectedControlSchemeIndex == -1 ? null :

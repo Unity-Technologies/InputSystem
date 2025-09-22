@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarButton m_SaveButton;
 
         private readonly Action m_SaveAction;
-        
+
         private ControlSchemesView m_ControlSchemesView;
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ControlSchemesView = null;
             };
         }
-        
+
         private void SelectControlScheme(int controlSchemeIndex)
         {
             Dispatch(ControlSchemeCommands.SelectControlScheme(controlSchemeIndex));
