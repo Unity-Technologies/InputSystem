@@ -29,12 +29,15 @@ validate_-_inputsystem_-_2021_3_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_2021.3;flags:inputsystem_MacOS_2021.3" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -60,10 +63,10 @@ validate_-_inputsystem_-_2021_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -95,12 +98,15 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_2021.3;flags:inputsystem_Ubuntu_2021.3" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -126,10 +132,10 @@ validate_-_inputsystem_-_2021_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -161,12 +167,15 @@ validate_-_inputsystem_-_2021_3_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_2021.3;flags:inputsystem_Windows_2021.3" '
     timeout: 20
     retries: 1
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -192,10 +201,10 @@ validate_-_inputsystem_-_2021_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -227,12 +236,15 @@ validate_-_inputsystem_-_2022_3_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_2022.3;flags:inputsystem_MacOS_2022.3" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -258,10 +270,10 @@ validate_-_inputsystem_-_2022_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -293,12 +305,15 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_2022.3;flags:inputsystem_Ubuntu_2022.3" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -324,10 +339,10 @@ validate_-_inputsystem_-_2022_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -359,12 +374,15 @@ validate_-_inputsystem_-_2022_3_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_2022.3;flags:inputsystem_Windows_2022.3" '
     timeout: 20
     retries: 1
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -390,10 +408,10 @@ validate_-_inputsystem_-_2022_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -425,12 +443,15 @@ validate_-_inputsystem_-_6000_0_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.0;flags:inputsystem_MacOS_6000.0" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -456,10 +477,10 @@ validate_-_inputsystem_-_6000_0_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -467,7 +488,7 @@ validate_-_inputsystem_-_6000_0_-_macos:
 validate_-_inputsystem_-_6000_0_-_ubuntu:
   name: Validate - inputsystem - 6000.0 - ubuntu
   agent:
-    image: package-ci/ubuntu-22.04:default
+    image: package-ci/ubuntu-22.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -491,12 +512,15 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.0;flags:inputsystem_Ubuntu_6000.0" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -522,10 +546,10 @@ validate_-_inputsystem_-_6000_0_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -557,12 +581,15 @@ validate_-_inputsystem_-_6000_0_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.0;flags:inputsystem_Windows_6000.0" '
     timeout: 20
     retries: 1
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -588,10 +615,10 @@ validate_-_inputsystem_-_6000_0_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -623,12 +650,15 @@ validate_-_inputsystem_-_6000_2_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.2;flags:inputsystem_MacOS_6000.2" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -654,10 +684,10 @@ validate_-_inputsystem_-_6000_2_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -665,7 +695,7 @@ validate_-_inputsystem_-_6000_2_-_macos:
 validate_-_inputsystem_-_6000_2_-_ubuntu:
   name: Validate - inputsystem - 6000.2 - ubuntu
   agent:
-    image: package-ci/ubuntu-22.04:default
+    image: package-ci/ubuntu-22.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -689,12 +719,15 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.2;flags:inputsystem_Ubuntu_6000.2" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -720,10 +753,10 @@ validate_-_inputsystem_-_6000_2_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
@@ -755,12 +788,15 @@ validate_-_inputsystem_-_6000_2_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.2;flags:inputsystem_Windows_6000.2" '
     timeout: 20
     retries: 1
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -786,16 +822,223 @@ validate_-_inputsystem_-_6000_2_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
 # PVP Editor and Playmode tests for Validate - inputsystem - 6000.3 - macos (6000.3 - MacOS).
 validate_-_inputsystem_-_6000_3_-_macos:
   name: Validate - inputsystem - 6000.3 - macos
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: b1.xlarge
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-68_53c92d3b34ce3f4b652c9785dd1530bdc5885f6523465d6969c3be91f9ccaaf1.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u 6000.3/staging -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.3;flags:inputsystem_MacOS_6000.3" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.0.1.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.3 - ubuntu (6000.3 - Ubuntu).
+validate_-_inputsystem_-_6000_3_-_ubuntu:
+  name: Validate - inputsystem - 6000.3 - ubuntu
+  agent:
+    image: package-ci/ubuntu-22.04:v4
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-68_53c92d3b34ce3f4b652c9785dd1530bdc5885f6523465d6969c3be91f9ccaaf1.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u 6000.3/staging -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.3;flags:inputsystem_Ubuntu_6000.3" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.0.1.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.3 - windows (6000.3 - Windows).
+validate_-_inputsystem_-_6000_3_-_windows:
+  name: Validate - inputsystem - 6000.3 - windows
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-2-68_53c92d3b34ce3f4b652c9785dd1530bdc5885f6523465d6969c3be91f9ccaaf1.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u 6000.3/staging -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.3;flags:inputsystem_Windows_6000.3" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.0.1.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.4 - macos (6000.4 - MacOS).
+validate_-_inputsystem_-_6000_4_-_macos:
+  name: Validate - inputsystem - 6000.4 - macos
   agent:
     image: package-ci/macos-13:default
     type: Unity::VM::osx
@@ -821,12 +1064,15 @@ validate_-_inputsystem_-_6000_3_-_macos:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.4;flags:inputsystem_MacOS_6000.4" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -852,18 +1098,18 @@ validate_-_inputsystem_-_6000_3_-_macos:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
-# PVP Editor and Playmode tests for Validate - inputsystem - 6000.3 - ubuntu (6000.3 - Ubuntu).
-validate_-_inputsystem_-_6000_3_-_ubuntu:
-  name: Validate - inputsystem - 6000.3 - ubuntu
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.4 - ubuntu (6000.4 - Ubuntu).
+validate_-_inputsystem_-_6000_4_-_ubuntu:
+  name: Validate - inputsystem - 6000.4 - ubuntu
   agent:
-    image: package-ci/ubuntu-22.04:default
+    image: package-ci/ubuntu-22.04:v4
     type: Unity::VM
     flavor: b1.large
   commands:
@@ -887,12 +1133,15 @@ validate_-_inputsystem_-_6000_3_-_ubuntu:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.4;flags:inputsystem_Ubuntu_6000.4" '
     timeout: 20
     retries: 1
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -918,16 +1167,16 @@ validate_-_inputsystem_-_6000_3_-_ubuntu:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 
-# PVP Editor and Playmode tests for Validate - inputsystem - 6000.3 - windows (6000.3 - Windows).
-validate_-_inputsystem_-_6000_3_-_windows:
-  name: Validate - inputsystem - 6000.3 - windows
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.4 - windows (6000.4 - Windows).
+validate_-_inputsystem_-_6000_4_-_windows:
+  name: Validate - inputsystem - 6000.4 - windows
   agent:
     image: package-ci/win10:default
     type: Unity::VM
@@ -953,12 +1202,15 @@ validate_-_inputsystem_-_6000_3_-_windows:
   - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
     timeout: 10
     retries: 0
-  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" '
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.4;flags:inputsystem_Windows_6000.4" '
     timeout: 20
     retries: 1
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
     Crash Dumps:
       paths:
       - CrashDumps/**
@@ -984,10 +1236,10 @@ validate_-_inputsystem_-_6000_3_-_windows:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
   labels:
   - Packages:inputsystem
 

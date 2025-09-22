@@ -42,28 +42,43 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetEditor.RegisterType<InputActionEditorWindow>();
         }
 
+        // Unity 6.4 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
+        [OnOpenAsset]
+#if UNITY_6000_4_OR_NEWER
+        public static bool OpenAsset(EntityId entityId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))
+                return false;
+
+            return OpenAsset(EditorUtility.EntityIdToObject(entityId));
+        }
+
+#else
+        public static bool OpenAsset(int instanceId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
+                return false;
+
+            return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
+        }
+
+#endif
+
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
-        [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceId, int line)
+        private static bool OpenAsset(Object obj)
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return false;
 #endif
-            var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!InputActionImporter.IsInputActionAssetPath(path))
-                return false;
-
             string mapToSelect = null;
             string actionToSelect = null;
 
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
-            var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
             if (asset == null)
             {
