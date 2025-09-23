@@ -46,7 +46,6 @@ static class EditorInitialization {
          UnityEngine.InputSystem.InputSystem.InitializeInEditor(); 
 
 #if UNITY_INPUT_SYSTEM_ENABLE_UI
-        
         UnityEngine.InputSystem.UI.InputSystemUIInputModule.m_Reset = (inputModule) => {
             var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
                 UnityEditor.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,

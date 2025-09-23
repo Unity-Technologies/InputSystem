@@ -3,4 +3,6 @@ using UnityEngine.Scripting;
 
 [assembly: InternalsVisibleTo("UnityEngine.InputForUIVisualizer")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
+[assembly: InternalsVisibleTo("Unity.InputSystem.ForUI.Editor")]
+
 [assembly: AlwaysLinkAssembly]
