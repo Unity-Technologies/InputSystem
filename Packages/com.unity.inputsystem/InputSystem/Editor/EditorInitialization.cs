@@ -54,7 +54,7 @@ static class EditorInitialization {
             // Setting default asset and actions when creating via inspector
             UnityEngine.InputSystem.UI.Editor.InputSystemUIInputModuleEditor.ReassignActions(inputModule, asset);
         };
-    }
 #endif
-
+        
+    }
 }
