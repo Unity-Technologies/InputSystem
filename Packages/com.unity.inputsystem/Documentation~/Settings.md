@@ -40,7 +40,8 @@ This setting determines when the Input System processes input. The Input System 
 |[`Process Events In Fixed Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
 |[`Process Events Manually`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System does not process events automatically. Instead, it processes them whenever you call [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
 
->__Note__: The system performs two additional types of updates in the form of  [`InputUpdateType.BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (late update for XR tracking Devices) and [`InputUpdateType.Editor`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (for EditorWindows). Neither of these update types change how the application consumes input.
+> [!NOTE]
+> The system performs two additional types of updates in the form of  [`InputUpdateType.BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (late update for XR tracking Devices) and [`InputUpdateType.Editor`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (for EditorWindows). Neither of these update types change how the application consumes input.
 
 ## Background Behavior
 
@@ -50,7 +51,8 @@ This setting is only relevant when "Run In Background" is enabled in the [Player
 
 In the Editor, "Run In Background" is considered to always be enabled as the player loop is kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
 
->__Note__: In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
+> [!NOTE]
+> In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
 
 |Setting|Description|
 |----|-----------|
@@ -72,7 +74,8 @@ Some Devices have noise in their input, and receive input even if nothing is int
 
 To counteract this, enable noise filtering. When this setting is enabled and your application receives input, the system determines whether the input comes from a Device that has noisy Controls ([`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy)). If it does, the system also determines whether the given input contains any state changes on a Control that isn't flagged as noisy. If so, that Device becomes current. Otherwise, your application still consumes the input, which is also visible on the Device, but the Device doesn't become current.
 
->__Note__: The system doesn't currently detect most forms of noise, but does detect those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves.
+> [!NOTE]
+> The system doesn't currently detect most forms of noise, but does detect those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves.
 
 ## Compensate Orientation
 
@@ -115,7 +118,8 @@ To narrow the options that the Editor UI presents to you, and to avoid creating 
 
 If __Supported Devices__ is empty, no restrictions apply, which means that the Input System adds any Device that Unity recognizes and processes input for it. However, if __Support Devices__ contains one or more entries, the Input System only adds Devices that are of one of the listed types.
 
->__Note__: When the __Support Devices__ list changes, the system removes or re-adds Devices as needed. The system always keeps information about what Devices are available for potential, which means that no Device is permanently lost as long as it stays connected.
+> [!NOTE]
+> When the __Support Devices__ list changes, the system removes or re-adds Devices as needed. The system always keeps information about what Devices are available for potential, which means that no Device is permanently lost as long as it stays connected.
 
 To add Devices to the list, click the Add (+) icon and choose a Device from the menu that appears.
 
@@ -127,7 +131,8 @@ To force the Editor to add all locally available Devices, even if they're not in
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 
->__Note__: This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.
+> [!NOTE]
+> This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.
 
 ## Platform-specific settings
 

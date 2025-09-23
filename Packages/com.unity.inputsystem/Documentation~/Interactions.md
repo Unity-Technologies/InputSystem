@@ -139,7 +139,8 @@ var Action = new InputAction(Interactions: "tap(duration=0.8)");
 
 The Input System package comes with a set of basic Interactions you can use. If an Action has no Interactions set, the system uses its [default Interaction](#default-interaction).
 
->__Note__: The built-in Interactions operate on Control actuation and don't use Control values directly. The Input System evaluates the `pressPoint` parameters against the magnitude of the Control actuation. This means you can use these Interactions on any Control which has a magnitude, such as sticks, and not just on buttons.
+> [!NOTE]
+> The built-in Interactions operate on Control actuation and don't use Control values directly. The Input System evaluates the `pressPoint` parameters against the magnitude of the Control actuation. This means you can use these Interactions on any Control which has a magnitude, such as sticks, and not just on buttons.
 
 The following diagram shows the behavior of the built-in Interactions for a simple button press.
 

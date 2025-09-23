@@ -15,7 +15,8 @@ uid: input-system-controls
 
 An Input Control represents a source of values. These values can be of any structured or primitive type. The only requirement is that the type is [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
->__Note__: Controls are for input only. Output and configuration items on Input Devices are not represented as Controls.
+> [!NOTE]
+> Controls are for input only. Output and configuration items on Input Devices are not represented as Controls.
 
 Each Control is identified by a name ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and can optionally have a display name ([`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)) that differs from the Control name. For example, the right-hand face button closest to the touchpad on a PlayStation DualShock 4 controller has the control name "buttonWest" and the display name "Square".
 
@@ -222,7 +223,8 @@ If a Control is marked as noisy, it means that:
 2. If enabled in the Project Settings, the system performs additional event filtering, then calls [`InputDevice.MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent). If an input event for a Device contains no state change on a Control that is not marked noisy, then the Device will not be made current based on the event. This avoids, for example, a plugged in PS4 controller constantly making itself the current gamepad ([`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)) due to its sensors constantly feeding data into the system.
 3. When the application loses focus and Devices are [reset](Devices.md#device-resets) as a result, the state of noisy Controls will be preserved as is. This ensures that sensor readinds will remain at their last value rather than being reset to default values.
 
->**Note**: If any Control on a Device is noisy, the Device itself is flagged as noisy.
+> [!NOTE]
+> If any Control on a Device is noisy, the Device itself is flagged as noisy.
 
 Parallel to the [`input state`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_currentStatePtr) and the [`default state`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_defaultStatePtr) that the Input System keeps for all Devices currently present, it also maintains a [`noise mask`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noiseMaskPtr) in which only bits for state that is __not__ noise are set. This can be used to very efficiently mask out noise in input.
 
@@ -244,7 +246,9 @@ Use [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html
 ### Control Value Caching
 
 When the `'USE_READ_VALUE_CACHING'` internal feature flag is set, the Input System will switch to an optimized path for reading control values. This path efficiently marks controls as 'stale' when they have been actuated. Subsequent calls to [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) will only apply control processing when there have been changes to that control or in case of control processing. Control processing in this case can mean any hard-coded processing that might exist on the control, such as with [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) which has built-in inversion, normalisation, scaling etc, or any processors that have been applied to the controls' [processor stack](HowToApplyProcessors.md#processors-on-controls).
-> Note: Performance improvements **are currently not guaranteed** for all use cases. Even though this performance path marks controls as "stale" in an efficient way, it still has an overhead which can degrade performance in some cases.
+
+> [!NOTE]
+> Performance improvements **are currently not guaranteed** for all use cases. Even though this performance path marks controls as "stale" in an efficient way, it still has an overhead which can degrade performance in some cases.
 
 A positive performance impact has been seen when:
 - Reading from controls that do not change frequently.

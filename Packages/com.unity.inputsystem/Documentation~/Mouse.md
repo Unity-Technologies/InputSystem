@@ -11,7 +11,8 @@ To query the last used or last added mouse, use [`Mouse.current`](../api/UnityEn
     var mouse = Mouse.current;
 ```
 
->__Note__: The Input System does not currently support:
+> [!NOTE]
+> The Input System does not currently support:
 >* Input from multiple mice at the platform level.
 >* Identifying the current display a mouse is on.
 
@@ -39,4 +40,5 @@ To move the cursor to a different position, use [`Mouse.WarpCursorPosition`](../
     Mouse.current.WarpCursorPosition(new Vector2(123, 234));
 ```
 
->__Note__: If the cursor is locked, warping the mouse position is only temporary and Unity resets the cursor to the center of the window every frame.
+> [!NOTE]
+> If the cursor is locked, warping the mouse position is only temporary and Unity resets the cursor to the center of the window every frame.

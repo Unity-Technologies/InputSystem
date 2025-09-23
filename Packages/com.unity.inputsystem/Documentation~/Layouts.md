@@ -15,7 +15,8 @@ uid: input-system-layouts
 
 Layouts are the central mechanism by which the Input System learns about types of Input Devices and Input Controls. Each layout represents a specific composition of Input Controls. By matching the description of a Device to a layout, the Input System is able to create the correct type of Device and interpret the incoming input data correctly.
 
->__Note__: Layouts are an advanced, mostly internal feature of the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
+> [!NOTE]
+> Layouts are an advanced, mostly internal feature of the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
 
 A layout describes a memory format for input, and the Input Controls to build in order to read and write data to or from that memory.
 
@@ -316,7 +317,8 @@ Building a device at runtime from an [`InputControlLayout`](../api/UnityEngine.I
 
 You can speed up this process up by "baking" the final form of a layout into a "precompiled layout". A precompiled layout is generated C# code that, when run, will build the corresponding device without relying on loading and interpreting an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html). Aside from running faster, this will also create far less garbage and will not involve C# reflection (which generally causes runtime overhead by inflating the number of objects internally kept by the C# runtime).
 
->__NOTE__: Precompiled layouts must be device layouts. It is not possible to precompile the layout for an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html).
+> [!NOTE]
+> Precompiled layouts must be device layouts. It is not possible to precompile the layout for an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html).
 
 ### Creating a precompiled layout
 
@@ -332,7 +334,8 @@ Unity will ask you where to store the generated code. Pick a directory in your p
  InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
  ```
 
->__IMPORTANT__: It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
+> [!IMPORTANT]
+> It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
 
 Once registered, a precompiled layout is automatically used whenever the layout that the precompiled layout is based on is instantiated.
 

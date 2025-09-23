@@ -10,7 +10,8 @@ uid: input-system-installation
 
 This guide describes how to install and activate the Input System package for your Unity Project.
 
->__Note__: The new Input System requires Unity 2019.4+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
+> [!NOTE]
+> The new Input System requires Unity 2019.4+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
 
 ## Installing the package
 
@@ -28,7 +29,8 @@ When you install the Input System package, Unity will ask whether you want to en
 
 You can find the corresponding setting in __Edit__ > __Project Settings__ > __Player__ > __Other Settings__ > __Active Input Handling__. If you change this setting you must restart the Editor for it to take effect.
 
->**Note:** You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
+> [!NOTE]
+> You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
 
 ![Active Input Handling](Images/ActiveInputHandling.png)
 

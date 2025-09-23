@@ -84,7 +84,8 @@ You can also reset the UI action map to its default bindings by selecting **Rese
 ## The UI Input Module component
 
 When working with Unity UI (uGUI), or when using UI Toolkit in versions of Unity prior to Unity 2023.2, you must use the **UI Input Module** component which defines which actions are passed through to your UI, as well as some other UI-related input settings.
-> **Note:**
+
+> [!NOTE]
 > If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions. Also, The UI action map will be enabled, along with the default action map specified on any UI Input Module component in the scene.
 
 The UI Input module is implemented in the class [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
@@ -168,8 +169,8 @@ Navigation input is non-positional, that is, unlike with pointer-type input, the
 
 Input from [tracked devices](../api/UnityEngine.InputSystem.TrackedDevice.html) such as [XR controllers](../api/UnityEngine.InputSystem.XR.XRController.html) and [HMDs](../api/UnityEngine.InputSystem.XR.XRHMD.html) essentially behaves like [pointer-type input](#pointer-type-input). The main difference is that the world-space device position and orientation sourced from  [trackedDevicePosition](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_trackedDevicePosition) and  [trackedDeviceOrientation](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_trackedDeviceOrientation) is translated into a screen-space position via raycasting.
 
-> **Important:**
->Because multiple tracked Devices can feed into the same set of Actions, it is important to set the [action type](./RespondingToActions.md#action-types) to [PassThrough](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_PassThrough). This ensures that no filtering is applied to input on these actions and that instead every input is relayed as is.
+> [!IMPORTANT]
+> Because multiple tracked Devices can feed into the same set of Actions, it is important to set the [action type](./RespondingToActions.md#action-types) to [PassThrough](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_PassThrough). This ensures that no filtering is applied to input on these actions and that instead every input is relayed as is.
 
 For this raycasting to work, you need to add [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) to the `GameObject` that has the UI's `Canvas` component. This `GameObject` will usually have a `GraphicRaycaster` component which, however, only works for 2D screen-space raycasting. You can put [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) alongside `GraphicRaycaster` and both can be enabled at the same time without advserse effect.
 
@@ -197,8 +198,8 @@ Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui
 
 Internally, UI Toolkit installs an event listener in the form of the `PanelEventHandler` component which intercepts events that `InputSystemUIInputModule` sends and translates them into UI Toolkit-specific events that are then routed into the visual tree. If you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
 
->**Note:**
->XR ([tracked-type input](#tracked-type-input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
+> [!NOTE]
+> XR ([tracked-type input](#tracked-type-input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
 
 There are some additional things worth noting:
 
@@ -232,7 +233,8 @@ If your application uses gamepads and joysticks as an input, you can use the [na
 
 The Input System package provides a **Virtual Mouse** component for this purpose.
 
-> **Note**: This component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit.
+> [!NOTE]
+> This component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit.
 
 To see an example of the Virtual Mouse in a project, see the [Gamepad Mouse Cursor sample](Installation.md#installing-samples) included with the Input System package.
 
@@ -250,7 +252,7 @@ To set up the Virtual Mouse component with the Unity UI system:
 8. If you want the virtual mouse to control the system mouse cursor, set [Cursor Mode](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to **Hardware Cursor If Available**. In this mode, the **Cursor Graphic** is hidden when a system mouse is present and you use [Mouse.WarpCursorPosition](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_) to move the system mouse cursor instead of the software cursor. The transform linked through **Cursor Transform** is not updated in that case.
 9.  To configure the input to drive the virtual mouse, either add  bindings on the various actions (such as **Stick Action**), or enable **Use Reference** and link existing actions from an Input Actions asset.
 
-> **Important:**
+> [!IMPORTANT]
 > Make sure the UI Input Module component on the UI's **Event System** does not receive navigation input from the same devices that feed into the Virtual Mouse component. If, for example, the Virtual Mouse component is set up to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels.
 
 ![VirtualMouseInput](Images/VirtualMouseInput.png)
@@ -259,7 +261,7 @@ At runtime, the component adds a virtual [Mouse](../api/UnityEngine.InputSystem.
 
 Note that the resulting [Mouse](../api/UnityEngine.InputSystem.Mouse.html) input is visible in all code that picks up input from the mouse device. You can therefore use the component for mouse simulation elsewhere, not just with [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 
-> **Note**:
+> [!NOTE]
 > Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using the Virtual Mouse component. If both the Virtual Mouse component and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
 
 ## Distinguishing between UI and game input

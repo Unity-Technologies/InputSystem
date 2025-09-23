@@ -15,11 +15,13 @@ Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
 * high-level support implemented in the [`EnhancedTouch.Touch`](#enhancedtouchtouch-class) class.
 
->__Note__: You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
+> [!NOTE]
+> You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
->__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
+> [!NOTE]
+> To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
 
 ## `Touchscreen` Device
 
@@ -78,7 +80,8 @@ Because the API comes with a certain overhead due to having to record touches as
     EnhancedTouchSupport.Enable();
 ```
 
->__Note__: [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) does not require [`EnhancedTouchSupport`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html) to be enabled. You only need to call [`EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable) if you want to use the [`EnhancedTouch.Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) API.
+> [!NOTE]
+> [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) does not require [`EnhancedTouchSupport`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html) to be enabled. You only need to call [`EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable) if you want to use the [`EnhancedTouch.Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) API.
 
 The [`EnhancedTouch.Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) API is designed to provide access to touch information along two dimensions:
 
@@ -88,7 +91,8 @@ The [`EnhancedTouch.Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.h
 
 See [`EnhancedTouch.Touch` API documentation](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) for more details.
 
->__Note__: The [`Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) and [`Finger`](../api/UnityEngine.InputSystem.EnhancedTouch.Finger.html) APIs don't generate GC garbage. The bulk of the data is stored in unmanaged memory that is indexed by wrapper structs. All arrays are pre-allocated.
+> [!NOTE]
+> The [`Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) and [`Finger`](../api/UnityEngine.InputSystem.EnhancedTouch.Finger.html) APIs don't generate GC garbage. The bulk of the data is stored in unmanaged memory that is indexed by wrapper structs. All arrays are pre-allocated.
 
 ## Touch Simulation
 
@@ -120,6 +124,7 @@ To get all current touches from the touchscreen, use [`EnhancedTouch.Touch.activ
     }
 ```
 
->__Note__: You must first enable enhanced touch support by calling  [`InputSystem.EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+> [!NOTE]
+> You must first enable enhanced touch support by calling  [`InputSystem.EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 You can also use the lower-level [`Touchscreen.current.touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) API.

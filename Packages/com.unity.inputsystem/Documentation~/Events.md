@@ -17,7 +17,8 @@ uid: input-system-events
 
 The Input System is event-driven. All input is delivered as events, and you can generate custom input by injecting events. You can also observe all source input by listening in on the events flowing through the system.
 
->__Note__: Events are an advanced, mostly internal feature of the Input System. Knowledge of the event system is mostly useful if you want to support custom Devices, or change the behavior of existing Devices.
+> [!NOTE]
+> Events are an advanced, mostly internal feature of the Input System. Knowledge of the event system is mostly useful if you want to support custom Devices, or change the behavior of existing Devices.
 
 Input events are a low-level mechanism. Usually, you don't need to deal with events if all you want to do is receive input for your app. Events are stored in unmanaged memory buffers and not converted to C# heap objects. The Input System provides wrapper APIs, but unsafe code is required for more involved event manipulations.
 
@@ -143,7 +144,8 @@ InputSystem.onEvent +=
 
 Anyone can create and queue new input events against any existing Device. Queueing an input event is thread-safe, which means that event generation can happen in background threads.
 
->__Note__: Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
+> [!NOTE]
+> Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
 
 Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](Settings.md#update-mode), it is triggered either manually via [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update), or automatically as part of the Player loop).
 
@@ -175,7 +177,8 @@ InputSystem.QueueStateEvent(Touchscreen.current,
     new TouchState { touchId = 1, phase = TouchPhase.Ended, position = new Vector2(123, 234) });
 ```
 
->__IMPORTANT:__ [Touch IDs](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
+> [!IMPORTANT]
+> [Touch IDs](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
 
 If the exact format of the state used by a given Device is not known, the easiest way to send input to it is to simply create a [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html) from the Device itself:
 
@@ -203,7 +206,8 @@ Note that delta state events only work for Controls that are both byte-aligned a
 
 ### Capturing Events
 
->NOTE: To download a sample project which contains a reusable MonoBehaviour called `InputRecorder`, which can capture and replay input from arbitrary devices, open the Package Manager, select the Input System Package, and choose the sample project "Input Recorder" to download.
+> [!NOTE]
+> To download a sample project which contains a reusable MonoBehaviour called `InputRecorder`, which can capture and replay input from arbitrary devices, open the Package Manager, select the Input System Package, and choose the sample project "Input Recorder" to download.
 
 You can use the [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) class to record input events for later processing:
 
@@ -279,7 +283,8 @@ When using [`UpdateMode.ProcessEventsInFixedUpdate`](../api/UnityEngine.InputSys
 
 The other exception are [`BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html#UnityEngine_InputSystem_LowLevel_InputUpdateType_BeforeRender) updates. These updates are run after fixed or dynamic updates but before rendering and used used exclusively to update devices such as VR headsets that need the most up-to-date tracking data. Other input is not consumed from such updates and these updates are only enabled if such devices are actually present. `BeforeRender` updates are not considered separate frames as far as input is concerned.
 
->__Note__: Manually calling [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) is strongly advised against except within tests employing [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) or when explicitly setting the system to [manual update mode](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html#UnityEngine_InputSystem_InputSettings_UpdateMode_ProcessEventsManually).
+> [!NOTE]
+> Manually calling [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) is strongly advised against except within tests employing [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) or when explicitly setting the system to [manual update mode](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html#UnityEngine_InputSystem_InputSettings_UpdateMode_ProcessEventsManually).
 
 Methods such as [`InputAction.WasPerformedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame) and [`InputAction.WasPerformedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame) operate implicitly based on the [`InputSystem.Update`] cadence described above. Meaning, that they refer to the state as per the __last__ fixed/dynamic/manual update happened.
 

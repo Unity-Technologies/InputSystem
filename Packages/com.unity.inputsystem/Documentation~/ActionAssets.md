@@ -90,7 +90,8 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 }
 ```
 
->__Note__: To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
+> [!NOTE]
+> To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
 
 ### Using Action Assets with `PlayerInput`
 
@@ -117,4 +118,5 @@ void Start()
 }
 ```
 
-> __Note:__ This default actions asset is older than, and entirely separate from the [default project-wide actions](ProjectWideActions.md). It is a legacy asset that remains included in the package for backward compatibility.
+> [!NOTE]
+> This default actions asset is older than, and entirely separate from the [default project-wide actions](ProjectWideActions.md). It is a legacy asset that remains included in the package for backward compatibility.

@@ -20,7 +20,8 @@ uid: input-system-sensors
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
->__Note__: To test your app on iOS or Android in the editor with sensor input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote). This currently supports [`Accelerometer`](#accelerometer), [`Gyroscope`](#gyroscope), [`GravitySensor`](#gravitysensor), [`AttitudeSensor`](#attitudesensor), and [`LinearAccelerationSensor`](#linearaccelerationsensor).
+> [!NOTE]
+> To test your app on iOS or Android in the editor with sensor input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote). This currently supports [`Accelerometer`](#accelerometer), [`Gyroscope`](#gyroscope), [`GravitySensor`](#gravitysensor), [`AttitudeSensor`](#attitudesensor), and [`LinearAccelerationSensor`](#linearaccelerationsensor).
 
 To determine whether a particular sensor is present, you can use its `.current` getter.
 
@@ -53,11 +54,11 @@ Each sensor Device implements a single Control which represents the data read by
 
 |Device|Android|iOS|**WebGL**|Control|Type|
 |------|-------|---|-------|----|----|
-|[`Accelerometer`](#accelerometer)|Yes|Yes|Yes(1)|[`acceleration`](../api/UnityEngine.InputSystem.Accelerometer.html#UnityEngine_InputSystem_Accelerometer_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`Gyroscope`](#gyroscope)|Yes|Yes|Yes(1)|[`angularVelocity`](../api/UnityEngine.InputSystem.Gyroscope.html#UnityEngine_InputSystem_Gyroscope_angularVelocity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`GravitySensor`](#gravitysensor)|Yes|Yes|Yes(1)|[`gravity`](../api/UnityEngine.InputSystem.GravitySensor.html#UnityEngine_InputSystem_GravitySensor_gravity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`AttitudeSensor`](#attitudesensor)|Yes|Yes|Yes(1)|[`attitude`](../api/UnityEngine.InputSystem.AttitudeSensor.html#properties)|[`QuaternionControl`](../api/UnityEngine.InputSystem.Controls.QuaternionControl.html)|
-|[`LinearAccelerationSensor`](#linearaccelerationsensor)|Yes|Yes|Yes(1)|[`acceleration`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html#UnityEngine_InputSystem_LinearAccelerationSensor_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`Accelerometer`](#accelerometer)|Yes|Yes|Yes [<sup>&#8224;</sup>](#fn1)|[`acceleration`](../api/UnityEngine.InputSystem.Accelerometer.html#UnityEngine_InputSystem_Accelerometer_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`Gyroscope`](#gyroscope)|Yes|Yes|Yes [<sup>&#8224;</sup>](#fn1)|[`angularVelocity`](../api/UnityEngine.InputSystem.Gyroscope.html#UnityEngine_InputSystem_Gyroscope_angularVelocity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`GravitySensor`](#gravitysensor)|Yes|Yes|Yes [<sup>&#8224;</sup>](#fn1)|[`gravity`](../api/UnityEngine.InputSystem.GravitySensor.html#UnityEngine_InputSystem_GravitySensor_gravity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`AttitudeSensor`](#attitudesensor)|Yes|Yes|Yes [<sup>&#8224;</sup>](#fn1)|[`attitude`](../api/UnityEngine.InputSystem.AttitudeSensor.html#properties)|[`QuaternionControl`](../api/UnityEngine.InputSystem.Controls.QuaternionControl.html)|
+|[`LinearAccelerationSensor`](#linearaccelerationsensor)|Yes|Yes|Yes [<sup>&#8224;</sup>](#fn1)|[`acceleration`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html#UnityEngine_InputSystem_LinearAccelerationSensor_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
 |[`MagneticFieldSensor`](#magneticfieldsensor)|Yes|No|No|[`magneticField`](../api/UnityEngine.InputSystem.MagneticFieldSensor.html#UnityEngine_InputSystem_MagneticFieldSensor_magneticField)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
 |[`LightSensor`](#lightsensor)|Yes|No|No|[`lightLevel`](../api/UnityEngine.InputSystem.LightSensor.html#UnityEngine_InputSystem_LightSensor_lightLevel)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 |[`PressureSensor`](#pressuresensor)|Yes|No|No|[`atmosphericPressure`](../api/UnityEngine.InputSystem.PressureSensor.html#UnityEngine_InputSystem_PressureSensor_atmosphericPressure)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
@@ -67,8 +68,11 @@ Each sensor Device implements a single Control which represents the data read by
 |[`StepCounter`](#stepcounter)|Yes|Yes|No|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
 |[`HingeAngle`](#hingeangle)|Yes|No|No|[`angle`](../api/UnityEngine.InputSystem.HingeAngle.html#UnityEngine_InputSystem_HingeAngle_angle)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 
->__Notes__:
->1. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
+
+<a name="fn1" id="fn1"></a>
+
+> [!NOTE]
+>   **&#8224;** Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2.
 
 ## Sampling frequency
 
@@ -120,7 +124,14 @@ Use the gravity sensor to determine the direction of the gravity vector relative
 
 Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
-**Note**: On Android devices, there are two types of attitude sensors: [**RotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [**GameRotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR). Some Android devices have both types of sensor, while other devices may only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. You can [read about the differences between them here](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot). Because of this variety in what type of rotation sensors are available across devices, when you require input from a rotation sensor on Android devices, you should include code that checks for your preferred type of rotation sensor with a fallback to the alternative type of rotation sensor if it is not present. For example:
+On Android devices, there are two types of attitude sensors: 
+
+- [**RotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR)
+- [**GameRotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR)
+
+Some Android devices have both types of sensor, while other devices may only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. You can [read about the differences between them here](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot). 
+
+Because of this variety in what type of rotation sensors are available across devices, when you require input from a rotation sensor on Android devices, you should include code that checks for your preferred type of rotation sensor with a fallback to the alternative type of rotation sensor if it is not present. For example:
 
 ```CSharp
 AttitudeSensor attitudeSensor = InputSystem.GetDevice<AndroidRotationVector>();
@@ -155,7 +166,8 @@ This Input Device represents the atmospheric pressure measured by the device whi
 
 This Input Device measures how close the device which is running the content is to the user. Phones typically use the proximity sensor to determine if the user is holding the phone to their ear or not. Values represent distance measured in centimeters.
 
->NOTE: The Samsung devices' proximity sensor is only enabled during calls and not when using speakerphone or Bluetooth earphones. This means the lock screen function won't work, allowing the user to use the display during the call. It is important to note that the proximity sensor only works during non-speakerphone or non-Bluetooth calls, as it is designed to prevent accidental touches during calls. However, the proximity sensor can work slightly differently on different Samsung phones.
+> [!NOTE]
+> The Samsung devices' proximity sensor is only enabled during calls and not when using speakerphone or Bluetooth earphones. This means the lock screen function won't work, allowing the user to use the display during the call. It is important to note that the proximity sensor only works during non-speakerphone or non-Bluetooth calls, as it is designed to prevent accidental touches during calls. However, the proximity sensor can work slightly differently on different Samsung phones.
 
 ## <a name="humiditysensor"></a>[`HumiditySensor`](../api/UnityEngine.InputSystem.HumiditySensor.html)
 
@@ -169,7 +181,8 @@ This Input Device represents the ambient air temperature measured by the device 
 
 This Input Device represents the user's footstep count as measured by the device which is running the content.
 
->NOTE: To access the pedometer on iOS/tvOS devices, you need to enable the [__Motion Usage__ setting](Settings.md#iostvos) in the [Input Settings](Settings.md).
+> [!NOTE]
+> To access the pedometer on iOS/tvOS devices, you need to enable the [__Motion Usage__ setting](Settings.md#iostvos) in the [Input Settings](Settings.md).
 
 ## <a name="hingeangle"></a>[`HingeAngle`](../api/UnityEngine.InputSystem.HingeAngle.html)
 

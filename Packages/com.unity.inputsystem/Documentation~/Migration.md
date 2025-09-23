@@ -37,7 +37,8 @@ There are scripting symbols defined which allow you to use conditional compilati
 #endif
 ```
 
-> **Note:** It is possible to have both systems enabled at the same time, in which case both sets of code in the example above above will be active.
+> [!NOTE]
+> It is possible to have both systems enabled at the same time, in which case both sets of code in the example above above will be active.
 
 ## Comparison of API in the old Input Manager and the new Input System package
 
@@ -53,7 +54,8 @@ Action-based input refers to reading pre-configured named axes, buttons, or othe
 
 ![](Images/InputManagerVsInputActions.png)</br>_On the left, the old Input Manager Axes Configuration window, in Project settings. On the right, the new Input System's [Actions Editor](ActionsEditor.md)._
 
-__Note:__ In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
+> [!NOTE]
+> In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
 
 To find and store references to actions, which can be axes or buttons use [`FindAction`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_FindAction_System_String_System_Boolean_). For example:
 ```
@@ -106,6 +108,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.inputString`](https://docs.unity3d.com/ScriptReference/Input-inputString.html)|Subscribe to the [`Keyboard.onTextInput`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onTextInput) event:<br/>`Keyboard.current.onTextInput += character => /* ... */;`
 
 ### Mouse
+
 |Input Manager (Old)|Input System (New)|
 |--|--|
 [`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`
@@ -132,7 +135,8 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 
 
 
-Note: [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html) is not part of the old Input Manager API, so you can continue to use it when migrating to the new Input System package.
+> [!NOTE]
+> [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html) is not part of the old Input Manager API, so you can continue to use it when migrating to the new Input System package.
 
 ### Sensors
 |Input Manager (Old)|Input System (New)|

@@ -133,7 +133,8 @@ A stick deadzone Processor scales the values of a Vector2 Control, such as a sti
 
 You can also write custom Processors to use in your Project. Custom Processors are available in the UI and code in the same way as the built-in Processors. Add a class derived from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
 
->__IMPORTANT__: Processors must be __stateless__. This means you cannot store local state in a processor that will change depending on the input being processed. The reason for this is because processors are not part of the [input state](./Controls.md#control-state) that the Input System keeps.
+> [!Important]
+> Processors must be __stateless__. This means you cannot store local state in a processor that will change depending on the input being processed. The reason for this is because processors are not part of the [input state](./Controls.md#control-state) that the Input System keeps.
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>

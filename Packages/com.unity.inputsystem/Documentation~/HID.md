@@ -131,7 +131,8 @@ The following example assumes that the Input System doesn't already have a custo
 
 In this example, you want to expose the controller as a [`Gamepad`](Gamepad.md) and you roughly know the HID data format used by the Device.
 
->__Tip__: If you don't know the format of a given HID you want to support, you can open the Input Debugger with the Device plugged in and pop up both the debugger view for the Device and the window showing the HID descriptor. Then, you can go through the Controls one by one, see what happens in the debug view, and correlate that to the Controls in the HID descriptor. You can also double-click individual events and compare the raw data coming in from the Device. If you select two events in the event trace, you can then right-click them and choose __Compare__ to open a window that shows only the differences between the two events.
+> [!TIP]
+> If you don't know the format of a given HID you want to support, you can open the Input Debugger with the Device plugged in and pop up both the debugger view for the Device and the window showing the HID descriptor. Then, you can go through the Controls one by one, see what happens in the debug view, and correlate that to the Controls in the HID descriptor. You can also double-click individual events and compare the raw data coming in from the Device. If you select two events in the event trace, you can then right-click them and choose __Compare__ to open a window that shows only the differences between the two events.
 
 #### Step 1: The state struct
 

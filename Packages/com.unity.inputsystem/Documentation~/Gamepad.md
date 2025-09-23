@@ -20,9 +20,10 @@ A gamepad can have additional Controls, such as a gyro, which the Device can exp
 
 Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
 
->NOTE: Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#creating-a-custom-device-layout)).
-
->NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
+> [!NOTE]
+> Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#creating-a-custom-device-layout)).
+> 
+> In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
 ## Controls
 
@@ -46,7 +47,8 @@ Every gamepad has the following Controls:
 |[`leftStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed when the user presses down the left stick.|
 |[`rightStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed when the user presses down the right stick.|
 
->__Note__: Buttons are also full floating-point axes. For example, the left and right triggers can function as buttons as well as full floating-point axes.
+> [!NOTE]
+> Buttons are also full floating-point axes. For example, the left and right triggers can function as buttons as well as full floating-point axes.
 
 You can also access gamepad buttons using the indexer property on [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_Item_UnityEngine_InputSystem_LowLevel_GamepadButton_) and the [`GamepadButton`](../api/UnityEngine.InputSystem.LowLevel.GamepadButton.html) enumeration:
 
@@ -125,7 +127,8 @@ The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implements th
 Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 ```
 
->__Note__: Only the following combinations of Devices/OSes currently support rumble:
+> [!NOTE]
+> Only the following combinations of Devices/OSes currently support rumble:
 >* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
@@ -167,7 +170,7 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 
 Note that, due to limitations in the USB driver and/or the hardware, only one IOCTL (input/output control) command can be serviced at a time. [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_UnityEngine_Color_) and [`SetMotorSpeeds(Single, Single)`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_SetMotorSpeeds_System_Single_System_Single_) functionality on Dualshock 4 is implemented using IOCTL commands, and so if either method is called in quick succession, it is likely that only the first command will successfully complete. The other commands will be dropped. If there is a need to set both lightbar color and rumble motor speeds at the same time, use the [`SetMotorSpeedsAndLightBarColor(Single, Single, Color)`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html#UnityEngine_InputSystem_DualShock_DualShock4GamepadHID_SetMotorSpeedsAndLightBarColor_System_Single_System_Single_UnityEngine_Color_) method.
 
->__Note__:
+> [!NOTE]
 >* Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other DualShock-specific functionality.
 >* Unity doesn't support connecting a PlayStation controller to a desktop machine using the DualShock 4 USB Wireless Adaptor. Use USB or Bluetooth to connect it.
 
@@ -185,17 +188,19 @@ On other platforms Unity, uses derived classes to represent Xbox controllers:
 
 * [`XboxOneGampadiOS`](../api/UnityEngine.InputSystem.iOS.XboxOneGampadiOS.html): An Xbox One controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
 
->__Note__:
->* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
->* Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other Xbox-specific functionality.
+> [!NOTE]
+> * XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
+> * Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other Xbox-specific functionality.
 
 ## Switch controllers
 
 The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.
 
->__Note__: This support does not currently work for Switch Pro controllers connected via wired USB. Instead, the Switch Pro controller *must* be connected via Bluetooth. This is due to the controller using a prioprietary communication protocol on top of HID which does not allow treating the controller like any other HID.
+> [!NOTE]
+> This support does not currently work for Switch Pro controllers connected via wired USB. Instead, the Switch Pro controller *must* be connected via Bluetooth. This is due to the controller using a prioprietary communication protocol on top of HID which does not allow treating the controller like any other HID.
 
->__Note__: Switch Joy-Cons are not currently supported on desktop.
+> [!NOTE]
+> Switch Joy-Cons are not currently supported on desktop.
 
 ## Cursor Control
 

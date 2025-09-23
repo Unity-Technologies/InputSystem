@@ -1862,7 +1862,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 - **The system no longer supports processing input in __BOTH__ fixed and dynamic updates**. Instead, a choice has to be made whether to process input before each `FixedUpdate()` or before each `Update()`.
   * Rationale: the existing code that supported having both updates receive input independently still had several holes and became increasingly complex and brittle. Our solution was based on not actually processing input twice but on channeling input concurrently into both the state of both updates. Together with the fact that specific inputs have to reset (and possibly accumulate) correctly with respect to their update time slices, this became increasingly hard to do right. This, together with the fact that we've come to increasingly question the value of this feature, led us to removing the capability while preserving the ability to determine where input is processed.
-  * NOTE: Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
+    > [!NOTE]
+    > Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
   * `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate` has been removed.
   * `InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInDynamicUpdate` and is now the default.
   * `InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInFixedUpdate`.
@@ -2063,9 +2064,10 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 ## [0.2.6-preview] - 2019-03-20
 
->NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
->NOTE: The minimum version requirement for the new input system has been bumped
-       to 2019.1
+> [!NOTE]
+> The UI code for editing actions has largely been rewritten. There may be regressions.
+>
+> The minimum version requirement for the new input system has been bumped to 2019.1
 
 ### Added
 
@@ -2143,7 +2145,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
 
->NOTE: There are some breaking changes. Please see the "Changed" section below.
+> [!NOTE]
+> There are some breaking changes. Please see the "Changed" section below.
 
 ### Changed
 
@@ -2279,10 +2282,11 @@ This release contains a number of fairly significant changes. The focus has been
 
 ## [0.1.2-preview] - 2018-12-19
 
-    NOTE: The minimum version requirement for the new input system has been bumped
-          to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
-          Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
-          runtime is now required to use the new input system.
+> [!NOTE]
+> The minimum version requirement for the new input system has been bumped
+> to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
+> Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
+> runtime is now required to use the new input system.
 
 We've started working on documentation. The current work-in-progress can be found on [GitHub](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 
