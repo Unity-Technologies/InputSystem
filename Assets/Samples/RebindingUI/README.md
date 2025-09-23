@@ -4,7 +4,14 @@ To demonstrate how to use images instead of textual display strings, take a look
 
 To demonstrate how to show dynamic texts based on input action bindings, see [ActionLabel](./ActionLabel.cs).
 
- Finally, the [RebindSaveLoad](./RebindSaveLoad.cs) script demonstrates how to persist user rebinds in `PlayerPrefs` and how to restore them from there.
+Finally, the [RebindSaveLoad](./RebindSaveLoad.cs) script demonstrates how to persist user rebinds in `PlayerPrefs` and how to restore them from there.
 
- The icons used in the sample are taken from [Free Prompts Pack v4.0](https://opengameart.org/content/free-keyboard-and-controllers-prompts-pack) created by, and made available to public domain by Nicolae Berbece.
- Icons are licensed under [Creative Commons CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+In this sample, keyboard bindings for "Move" (default WASD) is rebound as a single composite. This means that indivudual parts will get assigned one after
+the other. Another way of doing this is to set it up as four individual button bindings and assign them individually as four partial bindings.
+
+In this sample it is possible to directly rebind gamepad sticks in the gamepad control scheme. In practice, you probably
+don't want to set up rebinding the sticks like this but rather have a "swap sticks" kind of toggle instead. In this
+sample we have both variants for demonstration purposes.
+
+The icons used in the sample are taken from [Free Prompts Pack v4.0](https://opengameart.org/content/free-keyboard-and-controllers-prompts-pack) created by, and made available to public domain by Nicolae Berbece.
+Icons are licensed under [Creative Commons CC0](https://creativecommons.org/publicdomain/zero/1.0/).

@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private void OnEnable()
         {
             if (action != null && action.action != null)
-                action.action.performed += OnPerformed;
+                action.action.performed += OnPerformed; // TODO Problem here after domain reload, InputAction.addperformed(), CallbackArray.AddCallback,. InputArrayExtensions.Contains
         }
 
         private void OnDisable()
