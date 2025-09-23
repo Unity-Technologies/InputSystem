@@ -457,6 +457,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   actions: {fileID: -944628639613478452, guid: 7dead05c54ca85b4681351aafd8bd03a, type: 3}
+  playerPreferenceKey: rebinds
 --- !u!114 &51853247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -982,6 +983,7 @@ GameObject:
   m_Component:
   - component: {fileID: 244172484}
   - component: {fileID: 244172485}
+  - component: {fileID: 244172486}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -1061,7 +1063,33 @@ MonoBehaviour:
   m_Value: 0.5
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 244172483}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &244172486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 244172483}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b52b7577d0f9e44e99408e2e11257fd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem.RebindingUI::RebindBindingParameter
+  m_Action: {fileID: 4485540969121359642, guid: 7dead05c54ca85b4681351aafd8bd03a,
+    type: 3}
 --- !u!1 &303988305
 GameObject:
   m_ObjectHideFlags: 0
@@ -5142,8 +5170,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 674949961}
-  - {fileID: 1424978755}
   - {fileID: 244172484}
+  - {fileID: 1424978755}
   m_Father: {fileID: 1219085456}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
@@ -5442,7 +5470,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1414988297}
+      - m_Target: {fileID: 244172483}
         m_TargetAssemblyTypeName: 
         m_MethodName: ResetToDefault
         m_Mode: 1
