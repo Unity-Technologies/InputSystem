@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.InputSystem.Interactions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;

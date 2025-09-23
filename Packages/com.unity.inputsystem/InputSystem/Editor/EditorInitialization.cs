@@ -24,10 +24,9 @@ static class EditorInitialization {
 
         UnityEngine.InputSystem.InputSystem.m_EditorPlayerSettingHelpersSetNewSystemBackendsEnabled = (val) => { EditorPlayerSettingHelpers.newSystemBackendsEnabled  = val; };
 
-#if UNITY_2023_2_OR_NEWER
-        InputAnalytics.StartupEventAnalytic.m_EditorPlayerSettingHelpersGetNewSystemBackendsEnabled = () => { return EditorPlayerSettingHelpers.newSystemBackendsEnabled; };
+        
         InputAnalytics.StartupEventAnalytic.m_EditorPlayerSettingHelpersGetOldSystemBackendsEnabled = () => { return EditorPlayerSettingHelpers.oldSystemBackendsEnabled; };
-#endif 
+
         UnityEngine.InputSystem.InputSystem.m_EditorHelpersRestartEditorAndRecompileScripts = () => { EditorHelpers.RestartEditorAndRecompileScripts(); };
 
         UnityEngine.InputSystem.InputSystem.m_InputSettingsProviderForceReload = () => { InputSettingsProvider.ForceReload(); };
