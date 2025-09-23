@@ -285,7 +285,7 @@ You can define new types of Composites, and register them with the API. Unity tr
 
 To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html).
 
-> [!Important]
+> [!IMPORTANT]
 > Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, see [interactions](./Interactions.md#writing-custom-interactions).
 
 ```CSharp
@@ -832,7 +832,8 @@ There are two situations where a given input may lead to ambiguity:
 
 #### Multiple, concurrently used Controls
 
->__Note:__ This section does not apply to [`PassThrough`](RespondingToActions.md#pass-through) Actions as they are by design meant to allow multiple concurrent inputs.
+> [!NOTE]
+> This section does not apply to [`PassThrough`](RespondingToActions.md#pass-through) Actions as they are by design meant to allow multiple concurrent inputs.
 
 For a [`Button`](RespondingToActions.md#button) or [`Value`](RespondingToActions.md#value) Action, there can only be one Control at any time that is "driving" the Action. This Control is considered the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl).
 
