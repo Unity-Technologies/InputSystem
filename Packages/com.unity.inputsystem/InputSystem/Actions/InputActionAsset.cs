@@ -1014,87 +1014,187 @@ namespace UnityEngine.InputSystem
         {
             if (parsedJson.version >= JsonVersion.Version1)
                 return;
-            
-            if ((parsedJson.maps?.Length ?? 0) > 0 && parsedJson.version < JsonVersion.Version1)
+
+            var maps = parsedJson.maps;
+            if (maps == null || maps.Length == 0)
             {
-                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+                parsedJson.version = JsonVersion.Version1;
+                return;
+            }
+
+            for (int mi = 0; mi < maps.Length; mi++)
+            {
+                var mapJson = maps[mi];
+                if (mapJson.actions == null || mapJson.actions.Length == 0)
+                    continue;
+
+                for (int ai = 0; ai < mapJson.actions.Length; ai++)
                 {
-                    var mapJson = parsedJson.maps[mi];
-                    if (mapJson.actions == null || mapJson.actions.Length == 0)
+                    var actionJson = mapJson.actions[ai];
+                    var processors = actionJson.processors;
+                    if (string.IsNullOrEmpty(processors))
                         continue;
-                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+
+                    // Find top-level ';' token ranges without altering whitespace.
+                    var tokenRanges = new List<(int start, int length)>();
                     {
-                        var actionJson = mapJson.actions[ai];
-                        var raw = actionJson.processors;
-                        if (string.IsNullOrEmpty(raw))
-                            continue;
-
-                        var originalTokens = raw.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToList();
-
-                        List<NameAndParameters> parsed = null;
-                        NameAndParameters.ParseMultiple(raw, ref parsed);
-                        if (parsed == null || parsed.Count == 0)
-                            continue;
-
-                        var canPreservePerToken = parsed.Count == originalTokens.Count;
-                        var rebuiltTokens = canPreservePerToken ? new List<string>(originalTokens) : new List<string>(parsed.Count);
-                        var anyProcessorChanged = false;
-
-                        for (int pi = 0; pi < parsed.Count; pi++)
+                        int depth = 0, tokenStart = 0;
+                        for (int i = 0; i < processors.Length; i++)
                         {
-                            var nap = parsed[pi];
-                            var procType = InputSystem.TryGetProcessor(nap.name);
-                            if (procType == null || nap.parameters.Count == 0)
+                            char c = processors[i];
+                            if (c == '(')
+                                depth++;
+                            else if (c == ')')
+                                depth = Math.Max(0, depth - 1);
+                            else if (c == ';' && depth == 0)
                             {
-                                if (!canPreservePerToken)
-                                    rebuiltTokens.Add(nap.ToString());
-                                continue;
+                                int len = i - tokenStart;
+                                if (len > 0)
+                                    tokenRanges.Add((tokenStart, len));
+                                
+                                tokenStart = i + 1; 
                             }
+                        }
+                        if (tokenStart < processors.Length)
+                        {
+                            int len = processors.Length - tokenStart;
+                            if (len > 0)
+                                tokenRanges.Add((tokenStart, len));
+                        }
+                    }
 
-                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
-                            var changedThisProcessor = false;
+                    if (tokenRanges.Count == 0)
+                        continue;
 
-                            // For each enum parameter, if value is an ordinal index, replace with the underlying numeric enum value.
-                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                    bool anyTokenChanged = false;
+                    var rebuilt = new System.Text.StringBuilder(processors.Length + 16);
+                    int cursor = 0;
+
+                    foreach (var (start, length) in tokenRanges)
+                    {
+                        if (start > cursor)
+                            rebuilt.Append(processors, cursor, start - cursor);
+
+                        var tokenText = processors.Substring(start, length);
+                        var trimmed = tokenText.Trim();
+
+                        // If we can't parse, just write the original token back unchanged.
+                        NameAndParameters nap;
+                        try
+                        {
+                            nap = NameAndParameters.Parse(trimmed);
+                        }
+                        catch
+                        {
+                            rebuilt.Append(tokenText);
+                            cursor = start + length;
+                            continue;
+                        }
+
+                        var procType = InputSystem.TryGetProcessor(nap.name);
+                        if (procType == null || nap.parameters.Count == 0)
+                        {
+                            rebuilt.Append(tokenText);
+                            cursor = start + length;
+                            continue;
+                        }
+
+                        var enumFields = procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum).ToArray();
+                        if (enumFields.Length == 0)
+                        {
+                            rebuilt.Append(tokenText);
+                            cursor = start + length;
+                            continue;
+                        }
+
+                        int leadingWs = tokenText.Length - tokenText.TrimStart().Length;
+                        int trailingWs = tokenText.Length - tokenText.TrimEnd().Length;
+                        string core = tokenText.Substring(leadingWs, tokenText.Length - leadingWs - trailingWs);
+
+                        bool changedThisToken = false;
+
+                        foreach (var field in enumFields)
+                        {
+                            if (core.IndexOf(field.Name + "=", StringComparison.Ordinal) < 0)
+                                continue;
+
+                            // Map ordinal -> underlying numeric values for the enum.
+                            var values = Enum.GetValues(field.FieldType);
+                            var numeric = new int[values.Length];
+                            for (int i = 0; i < values.Length; i++)
+                                numeric[i] = Convert.ToInt32(values.GetValue(i));
+
+                            // Replace occurrences of "<Field>=<int>".
+                            int search = 0;
+                            while (true)
                             {
-                                if (dict.TryGetValue(field.Name, out var ordStr) && int.TryParse(ordStr, out var ordinal))
+                                int hit = core.IndexOf(field.Name + "=", search, StringComparison.Ordinal);
+                                if (hit < 0) break;
+
+                                int valStart = hit + field.Name.Length + 1;
+                                int j = valStart;
+                                bool neg = false;
+                                if (j < core.Length && core[j] == '-')
                                 {
-                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
-                                    if (ordinal >= 0 && ordinal < values.Length)
+                                    neg = true; 
+                                    j++;
+                                }
+
+                                int valEnd = j;
+                                while (valEnd < core.Length && char.IsDigit(core[valEnd]))
+                                    valEnd++;
+
+                                if (valEnd == j)
+                                {
+                                    search = valStart;
+                                    continue;
+                                }
+
+                                var numStr = core.Substring(valStart, valEnd - valStart);
+                                if (int.TryParse(neg ? "-" + numStr : numStr, out var parsed))
+                                {
+                                    if (parsed >= 0 && parsed < numeric.Length)
                                     {
-                                        dict[field.Name] = Convert.ToInt32(values[ordinal]).ToString();
-                                        changedThisProcessor = true;
+                                        int underlying = numeric[parsed];
+                                        if (underlying != parsed)
+                                        {
+                                            core = core.Substring(0, valStart) + underlying.ToString() + core.Substring(valEnd);
+                                            changedThisToken = true;
+                                            search = valStart + underlying.ToString().Length;
+                                            continue;
+                                        }
                                     }
                                 }
-                            }
 
-                            if (!changedThisProcessor)
-                            {
-                                if (!canPreservePerToken)
-                                    rebuiltTokens.Add(nap.ToString());
-                            }   
-                            else
-                            {
-                                // Rebuild only this processor’s text.
-                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
-                                var migrated = $"{nap.name}({paramText})";
-
-                                if (canPreservePerToken)
-                                    rebuiltTokens[pi] = migrated;
-                                else
-                                    rebuiltTokens.Add(migrated);
-
-                                anyProcessorChanged = true;
+                                search = valEnd;
                             }
                         }
 
-                        // Only touch the processors string if something actually changed.
-                        if (anyProcessorChanged)
-                            actionJson.processors = string.Join(";", rebuiltTokens);
-                        mapJson.actions[ai] = actionJson;
+                        if (changedThisToken)
+                        {
+                            anyTokenChanged = true;
+                            rebuilt.Append(tokenText.Substring(0, leadingWs));
+                            rebuilt.Append(core);
+                            rebuilt.Append(tokenText.Substring(tokenText.Length - trailingWs, trailingWs));
+                        }
+                        else
+                        {
+                            rebuilt.Append(tokenText);
+                        }
+
+                        cursor = start + length;
                     }
-                    parsedJson.maps[mi] = mapJson;
+
+                    if (cursor < processors.Length)
+                        rebuilt.Append(processors, cursor, processors.Length - cursor);
+
+                    if (anyTokenChanged)
+                        actionJson.processors = rebuilt.ToString();
+
+                    mapJson.actions[ai] = actionJson;
                 }
+
+                maps[mi] = mapJson;
             }
             // Bump the version so we never re-migrate
             parsedJson.version = JsonVersion.Version1;
