@@ -22,11 +22,7 @@ A layout describes a memory format for input, and the Input Controls to build in
 
 The Input System ships with a large set of layouts for common Control types and common Devices. For other Device types, the system automatically generates layouts based on the Device description that the Device's interface reports.
 
-You can browse the set of currently understood layouts from the Input Debugger.
-
-![Layouts in Debugger](Images/LayoutsInDebugger.png)
-
-A layout has two primary functions:
+Open the Input Debugger to browse the set of currently available layouts. A layout has two primary functions:
 
 * Describe a certain memory layout containing input data.
 * Assign names, structure, and meaning to the Controls operating on the data.
@@ -322,13 +318,17 @@ You can speed up this process up by "baking" the final form of a layout into a "
 
 ### Creating a precompiled layout
 
-The first step in setting up a precompiled layout is to generate it. To do so, open the [Input Debugger](./Debugging.md), navigate to the layout you want to precompile within the **Layouts** branch, right-click it, and select **Generate Precompiled Layout**.
+The first step in setting up a precompiled layout is to generate it. 
 
-![Generate Precompiled Layout](./Images/GeneratePrecompiledLayout.png)
+To generate a layout:
 
-Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
+1. Open the [Input Debugger](./Debugging.md).
+2. Navigate to the layout you want to precompile within the **Layouts** branch and right-click it.
+3. Select **Generate Precompiled Layout**.
 
- Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterPrecompiledLayout__1_System_String_). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
+    Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
+
+Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterPrecompiledLayout__1_System_String_). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
 
  ```CSharp
  InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);

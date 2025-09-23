@@ -19,7 +19,7 @@ To set up a test assembly that uses the Input System's automation framework, fol
 2. Create a new assembly definition (menu: __Create > Assembly Definition__) or go to an assembly definition for a test assembly that you have already created.
 3. Add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described in [How to create a new test assembly](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)), as well as `Unity.InputSystem` and `Unity.InputSystem.TestFramework` for the Input System.
 
-![Test Assembly Setup](Images/TestAssemblySetup.png)
+![The Inspector displays the Assembly Definition References and the Assembly References linked for the DemoTests Import Settings.](Images/TestAssemblySetup.png){width="486" height="667"}
 
 ## Setting up test fixtures
 

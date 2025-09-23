@@ -35,8 +35,6 @@ You can add multiple bindings to an action, which is generally useful for suppor
 
 You can also bind multiple controls from the same device to an action. For example, both the left and right trigger of a gamepad could be mapped to the same action, so that pulling either trigger has the same result in your game.
 
-![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
-_The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
 
 
 Each Binding has the following properties:
@@ -97,9 +95,10 @@ There are currently five Composite types that come with the system out of the bo
 
 ### 1D axis
 
-![Add 1D Axis Composite](./Images/Add1DAxisComposite.png)
+![The Add Positive/Negative Binding property is selected for the "fire" action on the Actions panel.](Images/Add1DAxisComposite.png){width="486" height="133"}
 
-![1D Axis Composite](./Images/1DAxisComposite.png)
+![The 1D Axis Composite binding appears under the "fire" action on the Actions panel.](Images/1DAxisComposite.png){width="486" height="142"}
+
 
 A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html) class. The result is a `float`.
 
@@ -137,9 +136,10 @@ If Controls from both the `positive` and the `negative` side are actuated, then 
 
 ### 2D vector
 
-![Add 2D Vector Composite](./Images/Add2DVectorComposite.png)
+![The Add Up/Down/Left/Right Composite binding is selected for the Move property on the Actions panel.](Images/Add2DVectorComposite.png){width="486" height="199"}
 
-![2D Vector Composite](./Images/2DVectorComposite.png)
+![The Add Up/Down/Left/Right Composite binding is selected for the "Move" action on the Actions panel.](Images/Add2DVectorComposite.png){width="486" height="199"}
+
 
 A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html) class. The result is a `Vector2`.
 
@@ -180,9 +180,11 @@ In addition, you can set the following parameters on a 2D vector Composite:
 
 ### 3D vector
 
-![Add 3D Vector Composite](./Images/Add3DVectorComposite.png)
 
-![3D Vector Composite](./Images/3DVectorComposite.png)
+![The Add Up/Down/Left/Right/Forward/Backward Composite binding is selected for the "position" action on the Actions panel.](Images/Add3DVectorComposite.png){width="486" height="150"}
+
+![The 3D Vector part bindings appear under the "position" action on the Actions panel.](Images/3DVectorComposite.png){width="486" height="259"
+}
 
 A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html) class. The result is a `Vector3`.
 
@@ -220,9 +222,10 @@ In addition, you can set the following parameters on a 3D vector Composite:
 
 ### One Modifier
 
-![Add Binding With One Modifier](./Images/AddBindingWithOneModifier.png)
 
-![One Modifier Composite](./Images/OneModifierComposite.png)
+![The Add Binding With One Modifier Composite binding is selected for the "fire" action on the Actions panel.](Images/AddBindingWithOneModifier.png){width="486" height="129"}
+
+![The One Modifier part bindings appear under the "fire" action on the Actions panel.](Images/OneModifierComposite.png){width="486" height="147"}
 
 A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
@@ -252,9 +255,11 @@ This Composite has no parameters.
 
 ### Two Modifiers
 
-![Add Bindings With Two Modifiers](./Images/AddBindingWithTwoModifiers.png)
 
-![Two Modifiers Composite](./Images/TwoModifiersComposite.png)
+![The Bindings With Two Modifiers Composite binding is selected for the "fire" action on the Actions panel.](Images/AddBindingWithTwoModifiers.png){width="486" height="119"}
+
+![The Two Modifiers part bindings appear under the "fire" action on the Actions panel.](Images/TwoModifiersComposite.png){width="486" height="149"}
+
 
 A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
@@ -960,4 +965,4 @@ By default, [Button](RespondingToActions.md#button) and [Pass-Through](Respondin
 
 However, you can manually enable initial state checks on these types of Actions using the checkbox in the editor:
 
-![Initial State Check](./Images/InitialStateCheck.png)
+![The Initial State Check setting appears with a checkmark under the Pass Through action on the Action panel.](./Images/InitialStateCheck.png){width="486" height="116"}

@@ -12,7 +12,7 @@ There are currently two Control types implemented out of the box: [buttons](#on-
 
 Each on-screen Control uses a [Control path](Controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
-![OnScreenButton](Images/OnScreenButton.png)
+![The OnScreenButton component displays the Control Path value as rightShoulder [Gamepad].](Images/OnScreenButton.png){width="486" height="81"}
 
 The collection of on-screen Controls present in a Scene forms one or more [Input Devices](Devices.md). The Input System creates one Input Device for each distinct type of Device the Controls reference. For example, if one on-screen button references `<Gamepad>/buttonSouth` and another on-screen button references `<Keyboard>/a`, the Input System creates both a `Gamepad` and a `Keyboard`. This happens automatically when the components are enabled. When disabled, the Input System automatically removes the Devices again.
 
@@ -29,7 +29,7 @@ To create an on-screen button:
 2. Add the [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component to it.
 3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) (for example, `<Gamepad>/buttonSouth`). The type of device referenced by the control path determines the type of virtual device created by the component.
 
-![OnScreenButton](Images/OnScreenButton.png)
+    ![The OnScreenButton component displays the Control Path value as rightShoulder [Gamepad].](Images/OnScreenButton.png){width="486" height="81"}
 
 The [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component requires the target Control to be a `Button` Control. [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) sets the target Control value to 1 when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, or 0 when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
 
@@ -41,7 +41,7 @@ To create an on-screen stick:
 2. Add the [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component to it.
 3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) (for example, `<Gamepad>/leftStick`). The type of device referenced by the control path determines the type of virtual device created by the component.
 
-![OnScreenStick](Images/OnScreenStick.png)
+    ![The OnScreenStick component displays 50 as the Movement Range value and leftStick [Gamepad] as the Control Path value.](Images/OnScreenStick.png){width="486" height="106"}
 
 The [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component requires the target Control to be a `Vector2` Control. [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) starts the movement of the stick Control when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, and stops it when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
 

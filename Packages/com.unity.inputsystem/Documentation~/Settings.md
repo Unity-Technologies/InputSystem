@@ -15,15 +15,13 @@ uid: input-system-settings
 
 To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
 
-![Input Settings](Images/InputSettings.png)
-
 This page describes each input setting in detail.
 
 ## Create Settings Asset
 
 When you first view the input settings, they are not editable, and instead a button to __Create settings asset__ is displayed at the top of the input settings window.
 
-![The Create Settings Asset button](Images/CreateSettingsAsset.png)
+![The Create settings asset button appears in the Input System Package window.](Images/CreateSettingsAsset.png){width="486" height="239"}
 
 If you want to customise the input settings, you must first click this button, which creates a settings asset in your Project. Once your project contains a settings asset, the __Create settings asset__ is no longer displayed, and the settings fields become editable. Unity saves changes to your settings in the settings asset when you save the project.
 
@@ -110,8 +108,6 @@ This setting affects the following sensors:
 
 ## Supported Devices
 
-![Supported Devices](Images/SupportedDevices.png)
-
 A Project usually supports a known set of input methods. For example, a mobile app might support only touch, and a console application might support only gamepads. A cross-platform application might support gamepads, mouse, and keyboard, but might not require XR Device support.
 
 To narrow the options that the Editor UI presents to you, and to avoid creating input Devices and consuming input that your application won't use, you can restrict the set of supported Devices on a per-project basis.
@@ -129,7 +125,7 @@ In the Editor, you might want to use input Devices that the application doesn't 
 
 To force the Editor to add all locally available Devices, even if they're not in the list of __Supported Devices__, open the [Input Debugger](Debugging.md) (menu: __Window > Analysis > Input Debugger__), and select __Options > Add Devices Not Listed in 'Supported Devices'__.
 
-![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
+![The Input Debugger appears with Add Devices Not Listed In Supported Devices selected from the Options dropdown menu.](Images/AddDevicesNotListedInSupportedDevices.png){width="486" height="297"}
 
 > [!NOTE]
 > This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.

@@ -40,7 +40,7 @@ The Input Debugger displays a tree breakdown of the state of the Input System.
 
 In the Input Debugger window, navigate to the __Devices__ list and double-click any [Input Device](Devices.md). This opens a window that displays information about the Device, including real-time state information for its Controls.
 
-![Device in Input Debugger](Images/DeviceInDebugger.png)
+![The Unity Editor window displays the Analysis option selected from the Window menu, and the Input Debugger option selected from the Analysis submenu to demonstrate how to access the devices in the Input Debugger tab.](Images/DeviceInDebugger.png)
 
 The top of the Device window displays general information about the specific Device, such as name, manufacturer, associated layout, device flags, device ID and serial number.  In addition, this section also display the current __sample frequency__ and __processing delay__ of the deivce.
 
@@ -67,13 +67,9 @@ The Input Debugger window lists all enabled [Actions](Actions.md) in the __Actio
 
 When there are [`InputUser`](UserManagement.md) instances (if you use `PlayerInput`, each `PlayerInput` instance implicitly creates one), the Input Debugger's __Users__ list displays each instance along with its paired Devices and active Actions. The listed Devices and Actions work the same way as those displayed in the [__Devices__](#debugging-devices) and [__Actions__](#debugging-actions) lists in the debugging window.
 
-![Users in Input Debugger](Images/UsersInputDebugger.png)
-
 ### Debugging layouts
 
 The [__Layouts__](Layouts.md) list in the Input Debugger window displays a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. It's useful when you want to [create a new Device mapping](HID.md#creating-a-custom-device-layout) and see how the Input System represents it.
-
-![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 
 ### Debugging remotely
 
@@ -96,13 +92,13 @@ The sample provides two visualizer components:
 
 Visualizes the current state of a single Control in real time. You can have multiple Control visualizers to visualize the state of multiple Controls. Check the `GamepadVisualizer`, `MouseVisualizer`, or `PenVisualizer` Scenes in the sample for examples.
 
-![InputControlVisualizer](Images/InputControlVisualizer.png)
+![LeftTrigger and Y appear in green in the InputControlVisualizer to show they are selected.](Images/InputControlVisualizer.png)
 
 ### `InputActionVisualizer`
 
 Visualizes the current state of a single Action in real time. You can have multiple Action visualizers to visualize the state of multiple Actions. This can also display the current value of the Action and the Control currently driving the Action, and track the state of [Interactions](Interactions.md) over time. Check the `SimpleControlsVisualizer` Scene in the sample for examples.
 
-![InputActionVisualizer](Images/InputActionVisualizer.png)
+![The Fire Action appears in green in the InputActionVisualizer to show it is selected.](Images/InputActionVisualizer.png)
 
 ## Device Simulator
 

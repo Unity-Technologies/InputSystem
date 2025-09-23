@@ -24,7 +24,7 @@ An Interaction represents a specific input pattern. For example, a [hold](#hold)
 
 Interactions drive responses on Actions. You can place them on individual Bindings or an Action as a whole, in which case they apply to every Binding on the Action. At runtime, when a particular interaction completes, this triggers the Action.
 
-![Interaction Properties](Images/InteractionProperties.png)
+![The Binding Path displays the buttonSouth [Gamepad] value set on the Interaction Properties window.](Images/InteractionProperties.png){width="486" height="585"}
 
 ## Operation
 

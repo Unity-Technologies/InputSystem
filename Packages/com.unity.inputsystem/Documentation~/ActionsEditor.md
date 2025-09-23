@@ -19,8 +19,8 @@ The **Input Actions Editor** is an editor window displayed when you open an Acti
 
 It is also displayed in the Project Settings window under **Edit** > **Project Settings** > **Input System Package** if you have an Action Asset assigned as project-wide.
 
-![image alt text](./Images/ActionsEditorCallout.png)
-*The Input Actions editor, displaying the default actions*
+![](./Images/ActionsEditorCallout.png)
+*The Input Actions editor, displaying the three panels and the default actions*
 
 ### The Actions Editor panels
 
@@ -82,18 +82,18 @@ There are more specific control types available which further filter the availab
 
 You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
 
-![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
-_The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
+![](./Images/ActionWithMultipleBindings.png)<br/>
+_The default Move action in the Actions Editor window, displaying the multiple bindings associated with it._
 
 If you select a Binding, you can edit its properties in the right-hand pane of the window:
 
-![Binding Properties](Images/BindingProperties.png)
+![The Binding Properties panel displays the Path value as Left Stick [Gamepad].](Images/BindingProperties.png)
 
 #### Picking Controls
 
-The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ drop-down list. This displays a Control picker window.
+The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ dropdown menu. This displays a Control picker window.
 
-![Control Picker](Images/InputControlPicker.png)
+![The Binding Properties panel displays the Control Picker window available from the Path dropdown menu.](Images/InputControlPicker.png)
 
 In the Control picker window, you can explore a tree of Input Devices and Controls that the Input System recognizes, and bind to these Controls. Unity filters this list by the Action's [`Control Type`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_expectedControlType) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
 
@@ -107,11 +107,12 @@ Finally, you can choose to manually edit the Binding path, instead of using the 
 
 Composite Bindings are Bindings consisting of multiple parts, which form a Control together. For instance, a [2D Vector Composite](ActionBindings.md#2d-vector) uses four buttons (left, right, up, down) to simulate a 2D stick input. See the [Composite Bindings](ActionBindings.md#composite-bindings) documentation to learn more.
 
-![2D Vector Composite](./Images/2DVectorComposite.png)
+![The WASD setting appears under the Move property on the Actions panel.](Images/2DVectorComposite.png){width="486" height="178"}
+
 
 To create a Composite Binding, in the Input Action Asset editor window, select the Add (+) icon on the Action you want to add it to, and select the Composite Binding type from the popup menu.
 
-![Add 2D Vector Composite](./Images/Add2DVectorComposite.png)
+![The Add Up/Down/Left/Right Composite binding is selected for the Move property on the Actions panel.](Images/Add2DVectorComposite.png){width="486" height="199"}
 
 This creates multiple Binding entries for the Action: one for the Composite as a whole, and then, one level below that, one for each Composite part. The Composite itself doesn't have a Binding path property, but its individual parts do, and you can edit these parts like any other Binding. Once you bind all the Composite's parts, the Composite can work together as if you bound a single control to the Action.
 
@@ -120,21 +121,21 @@ This creates multiple Binding entries for the Action: one for the Composite as a
 
 To change the type of a Composite retroactively, select the Composite, then select the new type from the **Composite Type** drop-down in the **Properties** pane.
 
-![Composite Type](./Images/CompositeType.png)
+![The Composite Type binding is set to 2D Vector binding on the Actions panel.](./Images/CompositeType.png){width="486" height="184"}
 
 To change the part of the Composite to which a particular Binding is assigned, use the **Composite Part** drop-down in the Binding's properties.
 
-![Composite Part](./Images/CompositePart.png)
+![The Composite Part binding is set to Up under the Path binding property.](./Images/CompositePart.png){width="486" height="161"}
 
 You can assign multiple Bindings to the same part. You can also duplicate individual part Bindings: right-click the Binding, then select **Duplicate** to create new part Bindings for the Composite. This can be used, for example, to create a single Composite for both "WASD" style controls and arrow keys.
 
-![Duplicated Part Bindings](./Images/DuplicatedPartBindings.png)
+![The Keyboard setting under Move on the Actions panel displays duplicated part bindings.](./Images/DuplicatedPartBindings.png){width="486" height="214"}
 
 ### Editing Control Schemes
 
 Input Action Assets can have multiple [Control Schemes](ActionBindings.md#control-schemes), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
 
-![Control Scheme Properties](Images/ControlSchemeProperties.png)
+![Gamepad appears as the Scheme Name value on the Add Control Scheme window.](Images/ControlSchemeProperties.png)
 
 To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Actions Asset. If the Actions Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that are associated with that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window.
 

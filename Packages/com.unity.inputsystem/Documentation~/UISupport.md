@@ -96,15 +96,13 @@ The UI Input Module is a component which you must add to a GameObject in your sc
 
 1. Create a new empty GameObject
 2. Click [**Add Component**](https://docs.unity3d.com/Manual/UsingComponents.html) in the inspector
-3. In the search field displayed, type "Input System UI Input Module"
+3. In the search field displayed, type `input system ui`.
 4. Select **Input System UI Input Module** to add it to the GameObject.
 
-![InputSystemUIInputModule](Images/InputSystemUIInputModuleAdd.png)
+    <img alt="The Add Component search bar displays 'input system ui' to highlight the 'Input System UI Input Module' component." src="Images/InputSystemUIInputModuleAdd.png" height="220" width="282">
 
 
 ### UI Input Module properties
-
-![InputSystemUIInputModule](Images/InputSystemUIInputModule.png)
 
 You can use the following properties to configure [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html):
 
@@ -174,9 +172,11 @@ Input from [tracked devices](../api/UnityEngine.InputSystem.TrackedDevice.html) 
 
 For this raycasting to work, you need to add [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) to the `GameObject` that has the UI's `Canvas` component. This `GameObject` will usually have a `GraphicRaycaster` component which, however, only works for 2D screen-space raycasting. You can put [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) alongside `GraphicRaycaster` and both can be enabled at the same time without advserse effect.
 
-![TrackedDeviceRayster Add Component](Images/TrackedDeviceRaycasterComponentMenu.png)
+<img src="Images/TrackedDeviceRaycasterComponentMenu.png" alt="The Graphic Raycaster component appears under the Canvas and Canvas Scaler components. The Add Component window appears with the Tracked Device Rayster component selected." width="486" height="658" >
 
-![TrackedDeviceRayster Properties](Images/TrackedDeviceRaycaster.png)
+
+<img src="Images/TrackedDeviceRaycaster.png" alt="The Tracked Device Rayster component appears under the Canvas component." width="485" height="150" >
+
 
 Clicks on tracked devices do not differ from other [pointer-type input](#pointer-type-input). Therefore, actions such as [Left Click](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_leftClick) work for tracked devices just like they work for other pointers.
 
@@ -184,7 +184,7 @@ Clicks on tracked devices do not differ from other [pointer-type input](#pointer
 
 #### Upgrading from the Input Manager and the older Standalone Input Module
 
-The Unity UI (uGUI) package contains an older equivalent module called "**[Standalone Input Module](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html)**" which performs the same kind of integration between the Unity UI and the legacy Input Manager system.
+The Unity UI (uGUI) package contains an older equivalent module called **[Standalone Input Module](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html)** which performs the same kind of integration between the Unity UI and the legacy Input Manager system.
 
 If you have one of these older Standalone Input Module components on a GameObject in your project, and the Input System is installed, Unity displays a button in the Inspector offering to automatically replace it with the equivalent newer Input System UI Input Module for you.
 
@@ -221,7 +221,7 @@ There are some additional things worth noting:
 
 The Input System can also handle multiple separate UI instances on the screen controlled separately from different input Bindings. This is useful if you want to have multiple local players share a single screen with different controllers, so that every player can control their own UI instance. To allow this, you need to replace the [Event System](https://docs.unity3d.com/Manual/script-EventSystem.html) component from Unity with the Input System's [Multiplayer Event System](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component.
 
-![MultiplayerEventSystem](Images/MultiplayerEventSystem.png)
+<img src="Images/MultiplayerEventSystem.png" alt="The Multiplayer Event System component appears without any GameObjects connected." width="535" height="154" >
 
 Unlike the Event System component, you can have multiple Multiplayer Event Systems active in the Scene at the same time. That way, you can have multiple players, each with their own UI Input Module and Multiplayer Event System components, and each player can have their own set of Actions driving their own UI instance. If you are using the [Player Input](PlayerInput.md) component, you can also set it to automatically configure the player's UI Input Module to use the player's Actions. See the documentation on [Player Input](PlayerInput.md#ui-input) to learn how.
 
@@ -255,7 +255,7 @@ To set up the Virtual Mouse component with the Unity UI system:
 > [!IMPORTANT]
 > Make sure the UI Input Module component on the UI's **Event System** does not receive navigation input from the same devices that feed into the Virtual Mouse component. If, for example, the Virtual Mouse component is set up to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels.
 
-![VirtualMouseInput](Images/VirtualMouseInput.png)
+<img src="Images/VirtualMouseInput.png" alt="The Virtual Mouse component appears with the Stick Action and Left Button Action connected to Player Move and Attack Actions." width="484" height="373" >
 
 At runtime, the component adds a virtual [Mouse](../api/UnityEngine.InputSystem.Mouse.html) device which the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component picks up. The controls of the `Mouse` are fed input based on the actions configured on the [VirtualMouseInput](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component.
 

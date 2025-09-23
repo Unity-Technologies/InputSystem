@@ -8,7 +8,7 @@ uid: input-system-player-input-manager
 
 The [`Player Input`](PlayerInput.md) system facilitates setting up local multiplayer games, where multiple players share a single screen and multiple controllers. You can set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of `PlayerInput` instances as players join and leave the game.
 
-![PlayerInputManager](Images/PlayerInputManager.png)
+![On the PlayerInputManager component, the Notification Behavior value displays Send Messages, the Join Behavior value displays Join Players When Button Is Pressed, and the Joining Enabled By Default value is checked.](Images/PlayerInputManager.png){width="486" height="279"}
 
 |Property|Description|
 |--------|-----------|
