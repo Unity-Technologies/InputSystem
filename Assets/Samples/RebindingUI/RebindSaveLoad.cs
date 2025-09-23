@@ -9,17 +9,17 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
     /// </summary>
     public class RebindSaveLoad : MonoBehaviour
     {
-        /// <summary>
-        /// The associated input action asset (Required).
-        /// </summary>
         [Tooltip("The associated input action asset to be serialized to player preferences (Required).")]
         public InputActionAsset actions;
 
-        /// <summary>
-        /// The associated player preference key.
-        /// </summary>
         [Tooltip("The player preference key to be used when serializing binding overrides to player preferences (Required).")]
         public string playerPreferenceKey;
+
+        [Tooltip("Specifies whether to load and apply binding overrides when the component is enabled")]
+        public bool loadOnEnable = true;
+
+        [Tooltip("Specifies whether to save binding overrides when the component is disabled")]
+        public bool saveOnDisable = true;
 
         /// <summary>
         /// Loads binding overrides from player preferences and applies them to the associated input action asset.
@@ -50,12 +50,14 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnEnable()
         {
-            Load();
+            if (loadOnEnable)
+                Load();
         }
 
         private void OnDisable()
         {
-            Save();
+            if (saveOnDisable)
+                Save();
         }
 
         private bool IsValidConfiguration()
