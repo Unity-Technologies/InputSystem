@@ -11,7 +11,8 @@
         "Unity.PerformanceTesting",
         "Unity.Coding.Editor",
         "Unity.InputSystem.ForUI",
-        "UnityEditor.InputSystem"
+        "UnityEditor.InputSystem",
+        "Unity.InputSystem.ForUI.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
