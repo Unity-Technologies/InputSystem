@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    [RequireComponent(typeof(Slider))]
     public class RebindActionParameterUI : MonoBehaviour
     {
         /// <summary>
@@ -31,14 +30,37 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
-        /// Parameter name of the parameter to be configured.
+        /// The preference key to be used for persistence.
         /// </summary>
-        /// <remarks>This corresponds to a binding processor parameter name when <see cref="bindingId"/> is not
-        /// null nor empty and otherwise corresponds to an action processor parameter.</remarks>
-        public string parameterName
+        public string mPreferenceKey
         {
-            get => m_ParameterName;
-            set => m_ParameterName = value;
+            get => m_PreferenceKey;
+            set => m_PreferenceKey = value;
+        }
+
+        /// <summary>
+        /// The associated slider UI component instance.
+        /// </summary>
+        public Slider slider
+        {
+            get => m_Slider;
+            set
+            {
+                if (m_Slider != null)
+                    m_Slider.onValueChanged.RemoveListener(SetParameterValue);
+                m_Slider = value;
+                if (value != null)
+                    value.onValueChanged.AddListener(SetParameterValue);
+            }
+        }
+
+        /// <summary>
+        /// The default value to apply when reset or no preference exist.
+        /// </summary>
+        public float defaultValue
+        {
+            get => m_DefaultValue;
+            set => m_DefaultValue = value;
         }
 
         [Tooltip("Reference to action that holds the parameter to be configurable via this behaviour.")]
@@ -49,68 +71,67 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [SerializeField]
         private string m_BindingId;
 
-        [Tooltip("The parameter name to be configured via this behaviour.")]
+        [Tooltip("The player preference key to be used for persistence.")]
         [SerializeField]
-        private string m_ParameterName;
+        private string m_PreferenceKey;
 
+        [Tooltip("The default value to be be used when no preference exists or when resetting")]
+        [SerializeField]
+        private float m_DefaultValue;
+
+        [Tooltip("The associated slider UI component used to change the value.")]
+        [SerializeField]
         private Slider m_Slider;
+
+        private float m_Value;
 
         public void ResetToDefault()
         {
-            if (m_Action != null && m_Action.action != null)
-                m_Action.action.RemoveAllBindingOverrides();
-
-            if (TryGetParameterValue(out var value))
-                UpdateDisplayValue(value);
+            PlayerPrefs.SetFloat(m_PreferenceKey, m_DefaultValue);
+            SetParameterValue(m_DefaultValue);
         }
 
         private void Awake()
         {
-            m_Slider = GetComponent<Slider>();
+            if (m_Slider == null)
+                m_Slider = GetComponent<Slider>();
         }
 
         private void OnEnable()
         {
-            if (TryGetParameterValue(out var value))
-                UpdateDisplayValue(value);
-            m_Slider.onValueChanged.AddListener(SetParameterValue);
+            if (!string.IsNullOrEmpty(m_PreferenceKey))
+                SetParameterValue(PlayerPrefs.GetFloat(m_PreferenceKey, m_DefaultValue));
+
+            if (m_Slider != null)
+                m_Slider.onValueChanged.AddListener(SetParameterValue);
         }
 
         private void OnDisable()
         {
-            m_Slider.onValueChanged.RemoveListener(SetParameterValue);
-        }
+            if (m_Slider != null)
+                m_Slider.onValueChanged.RemoveListener(SetParameterValue);
 
-        private bool TryGetParameterValue(out float value)
-        {
-            if (m_Action != null && !string.IsNullOrEmpty(m_ParameterName))
-            {
-                //var k = m_Action.action.GetParameterValue((ScaleVector2Processor p) => p.x);
-
-                var v = m_Action.action.GetParameterValue(m_ParameterName);
-                if (v.HasValue)
-                {
-                    var val = v.Value;
-                    if (val.type == TypeCode.Single)
-                    {
-                        value = val.ToSingle();
-                        return true;
-                    }
-                }
-            }
-
-            value = default;
-            return false;
+            if (!string.IsNullOrEmpty(m_PreferenceKey))
+                PlayerPrefs.SetFloat(m_PreferenceKey, m_Value);
         }
 
         private void SetParameterValue(float value)
         {
             // Apply parameter value as a parametric override
-            if (m_Action != null && !string.IsNullOrEmpty(m_ParameterName))
+            if (m_Action != null && m_Action.action != null)
             {
-                m_Action.action.ApplyParameterOverride(m_ParameterName, value);
+                var action = m_Action.action;
+                int bindingIndex = BindingUI.FindBindingById(action, m_BindingId);
+                var bindingMask = bindingIndex >= 0 ? action.bindings[bindingIndex] : default;
+
+                // We apply parameter override. This directly affects matching processors and interactions
+                // if they have matching parameters.
+                action.ApplyParameterOverride("scaleVector2:x", value, bindingMask);
+                action.ApplyParameterOverride("scaleVector2:y", value, bindingMask);
             }
-                
+
+            m_Value = value;
+
             UpdateDisplayValue(value);
         }
 

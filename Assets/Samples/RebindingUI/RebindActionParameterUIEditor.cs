@@ -5,16 +5,22 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
+    /// <summary>
+    /// Allows persisting a parameter override associated with a binding.
+    /// </summary>
     [CustomEditor(typeof(RebindActionParameterUI))]
     public class RebindActionParameterUIEditor : UnityEditor.Editor
     {
         protected void OnEnable()
         {
             m_Binding = new BindingUI(serializedObject);
-            m_ParameterNameProperty = serializedObject.FindProperty("m_ParameterName");
+            m_DefaultValueProperty = serializedObject.FindProperty("m_DefaultValue");
+            m_PreferenceKeyProperty = serializedObject.FindProperty("m_PreferenceKey");
+            m_SliderProperty = serializedObject.FindProperty("m_Slider");
 
             Refresh();
         }
@@ -23,97 +29,39 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             EditorGUI.BeginChangeCheck();
 
-            //EditorGUILayout.PropertyField(m_ActionProperty);
-
             // Binding section.
             m_Binding.Draw();
 
-            // Parameter section.
-            var newSelectedParameter = EditorGUILayout.Popup(m_ParameterLabel, m_SelectedParameterOption, m_Parameters);
-            if (newSelectedParameter != m_SelectedParameterOption)
+            // UI section
+            EditorGUILayout.LabelField("UI");
+            using (new EditorGUI.IndentLevelScope())
             {
-                m_SelectedParameterOption = newSelectedParameter;
+                EditorGUILayout.ObjectField(m_SliderProperty);
             }
 
-            if (EditorGUI.EndChangeCheck())
+            // Parameter section.
+            EditorGUILayout.LabelField("Parameter");
+            using (new EditorGUI.IndentLevelScope())
             {
-                serializedObject.ApplyModifiedProperties();
-                Refresh();
+                var key = EditorGUILayout.TextField("Preference Key", m_PreferenceKeyProperty.stringValue);
+                if (key != m_PreferenceKeyProperty.stringValue)
+                    m_PreferenceKeyProperty.stringValue = key;
+
+                var defaultValue = EditorGUILayout.FloatField("Default Value", m_DefaultValueProperty.floatValue);
+                if (!Mathf.Approximately(defaultValue, m_DefaultValueProperty.floatValue))
+                    m_DefaultValueProperty.floatValue = defaultValue;
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    Refresh();
+                }
             }
         }
 
         private void Refresh()
         {
-            if (!m_Binding.Refresh())
-                return;
-
-            RefreshItems();
-        }
-
-        private void RefreshItems()
-        {
-            var action = m_Binding.action;
-
-            var parameters = new List<GUIContent>();
-            var parameterValues = new List<ParameterValue>();
-
-            // Add action processors
-            var actionItems = NameAndParameters.ParseMultiple(action.processors);
-            foreach (var item in actionItems)
-            {
-                // TODO FIX
-                //parameters.Add(new GUIContent(item.name + " (Action)"));
-                //parameterValues.Add(item);
-            }
-
-            // Add binding processors
-            var bindings = action.bindings;
-            for (var i = 0; i < bindings.Count; i++)
-            {
-                var bindingItems = NameAndParameters.ParseMultiple(bindings[i].processors);
-                foreach (var item in bindingItems)
-                {
-                    //parameters.Add(new GUIContent(item.name + " (Binding)"));
-                    //parameterValues.Add(item.name);
-
-                    // Only add parameters from the active binding
-                    if (m_Binding.bindingIndex != i)
-                        continue;
-
-                    var uniformParameterType = true;
-                    var previousType = TypeCode.Empty;
-                    var processorParameters = item.parameters;
-                    foreach (var parameter in processorParameters)
-                    {
-                        if (uniformParameterType && parameter.type != previousType && previousType != TypeCode.Empty)
-                            uniformParameterType = false;
-                        previousType = parameter.type;
-
-                        // And option for individual parameter
-                        var processorParameterName = item.name + "." + parameter.name;
-                        parameters.Add(new GUIContent(processorParameterName));
-                        parameterValues.Add(new ParameterValue
-                        {
-                            bindingId = m_Binding.bindingId,
-                            name = parameter.name,
-                        });
-                    }
-
-                    // Add parameter option for all/uniform parameter modification if all parameters are of
-                    // the same type.
-                    if (!uniformParameterType)
-                        continue;
-                    parameters.Add(new GUIContent(item.name + " (Uniform)"));
-                    parameterValues.Add(new ParameterValue
-                    {
-                        bindingId = m_Binding.bindingId,
-                        name = null
-                    });
-                }
-            }
-
-            m_Parameters = parameters.ToArray();
-            m_ParameterValues = parameterValues.ToArray();
+            m_Binding.Refresh();
         }
 
         private struct ParameterValue
@@ -122,12 +70,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             public string name;
         }
 
-        private SerializedProperty m_ParameterNameProperty;
+        private SerializedProperty m_PreferenceKeyProperty;
+        private SerializedProperty m_DefaultValueProperty;
+        private SerializedProperty m_SliderProperty;
+
         private BindingUI m_Binding;
-        private GUIContent[] m_Parameters;
-        private ParameterValue[] m_ParameterValues;
-        private int m_SelectedParameterOption;
-        private readonly GUIContent m_ParameterLabel = new GUIContent("Processor Parameter");
     }
 }
 

@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             if (!IsValidConfiguration())
                 return;
 
-            var rebinds = PlayerPrefs.GetString("rebinds");
+            var rebinds = PlayerPrefs.GetString(playerPreferenceKey);
             if (string.IsNullOrEmpty(rebinds))
                 return; // OK, we may not have saved any binding overrides yet.
 
