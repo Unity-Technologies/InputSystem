@@ -1,5 +1,7 @@
 
 
+
+using UnityEngine.InputSystem.Processors;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -16,12 +18,12 @@ namespace UnityEditor.InputSystem.Processors {
                 "Vector length  below which input values will be clamped. After clamping, vector lengths will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Min",
                 () => target.min, v => target.min = v,
-                () => InputSystem.settings.defaultDeadzoneMin);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMin);
             m_MaxSetting.Initialize("Max",
                 "Vector length above which input values will be clamped. After clamping, vector lengths will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Max",
                 () => target.max, v => target.max = v,
-                () => InputSystem.settings.defaultDeadzoneMax);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMax);
         }
 
         public override void OnGUI()

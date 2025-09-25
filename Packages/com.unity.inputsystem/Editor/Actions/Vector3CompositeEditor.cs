@@ -1,3 +1,7 @@
+
+
+using UnityEngine;
+using UnityEngine.InputSystem.Composites;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -6,10 +10,10 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.InputSystem.Composites {
     #if UNITY_EDITOR
-    internal class Vector2CompositeEditor : InputParameterEditor<Vector2Composite>
+    internal class Vector3CompositeEditor : InputParameterEditor<Vector3Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
-            "How to synthesize a Vector2 from the inputs. Digital "
+            "How to synthesize a Vector3 from the inputs. Digital "
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
             + "floating-point magnitudes as read from controls.");
 
@@ -18,7 +22,7 @@ namespace UnityEditor.InputSystem.Composites {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (!InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
-            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+            target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -31,7 +35,7 @@ namespace UnityEditor.InputSystem.Composites {
 
             modeField.RegisterValueChangedCallback(evt =>
             {
-                target.mode = (Vector2Composite.Mode)evt.newValue;
+                target.mode = (Vector3Composite.Mode)evt.newValue;
                 onChangedCallback();
             });
 

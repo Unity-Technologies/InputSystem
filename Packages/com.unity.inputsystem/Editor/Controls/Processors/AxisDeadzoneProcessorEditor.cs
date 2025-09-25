@@ -1,4 +1,6 @@
 
+
+using UnityEngine.InputSystem.Processors;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -7,7 +9,7 @@ using UnityEngine.UIElements;
 namespace UnityEditor.InputSystem.Processors {
 
     #if UNITY_EDITOR
-    internal class AxisDeadzoneProcessorEditor : InputParameterEditor<AxisDeadzoneProcessor>
+    internal class AxisDeadzoneProcessorEditor : InputParameterEditor<AxisDeadzoneProcessor> 
     {
         protected override void OnEnable()
         {
@@ -15,12 +17,12 @@ namespace UnityEditor.InputSystem.Processors {
                 "Value below which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Min",
                 () => target.min, v => target.min = v,
-                () => InputSystem.settings.defaultDeadzoneMin);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMin);
             m_MaxSetting.Initialize("Max",
                 "Value above which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
                 "Default Deadzone Max",
                 () => target.max, v => target.max = v,
-                () => InputSystem.settings.defaultDeadzoneMax);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultDeadzoneMax);
         }
 
         public override void OnGUI()

@@ -1,3 +1,5 @@
+
+using UnityEngine.InputSystem.Interactions;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -5,21 +7,21 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.InputSystem.Interactions {
     #if UNITY_EDITOR
-    internal class SlowTapInteractionEditor : InputParameterEditor<SlowTapInteraction>
+    internal class TapInteractionEditor : InputParameterEditor<TapInteraction>
     {
         protected override void OnEnable()
         {
-            m_DurationSetting.Initialize("Min Tap Duration",
-                "Minimum time (in seconds) that a control has to be held for it to register as a slow tap. If the control is released "
-                + "before this time, the slow tap is canceled.",
-                "Default Slow Tap Time",
-                () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultSlowTapTime);
+            m_DurationSetting.Initialize("Max Tap Duration",
+                "Time (in seconds) within with a control has to be released again for it to register as a tap. If the control is held "
+                + "for longer than this time, the tap is canceled.",
+                "Default Tap Time",
+                () => target.duration, x => target.duration = x, () => UnityEngine.InputSystem.InputSystem.settings.defaultTapTime);
             m_PressPointSetting.Initialize("Press Point",
                 "The amount of actuation a control requires before being considered pressed. If not set, default to "
                 + "'Default Button Press Point' in the global input settings.",
                 "Default Button Press Point",
                 () => target.pressPoint, v => target.pressPoint = v,
-                () => InputSystem.settings.defaultButtonPressPoint);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultButtonPressPoint);
         }
 
         public override void OnGUI()

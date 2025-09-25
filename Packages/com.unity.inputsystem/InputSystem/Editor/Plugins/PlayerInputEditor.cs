@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 

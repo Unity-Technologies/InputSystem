@@ -6,9 +6,9 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem.EnhancedTouch {
 
     [InitializeOnLoad]
-    private class TouchSimulationEdtiorInitialization 
+    class TouchSimulationEdtiorInitialization 
     {
-        static TouchSimulation()
+        static TouchSimulationEdtiorInitialization()
         {
             // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
             // created. We don't want to trigger InputSystem initialization from there so delay-execute
@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch {
 
 
     [CustomEditor(typeof(TouchSimulation))]
-    private class TouchSimulationEditor : UnityEditor.Editor
+    class TouchSimulationEditor : UnityEditor.Editor
     {
         public void OnDisable()
         {

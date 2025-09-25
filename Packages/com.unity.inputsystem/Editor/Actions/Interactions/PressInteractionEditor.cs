@@ -1,3 +1,6 @@
+
+using UnityEngine;
+using UnityEngine.InputSystem.Interactions;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -21,7 +24,7 @@ namespace UnityEditor.InputSystem.Interactions {
                 + "'Default Button Press Point' in the global input settings.",
                 "Default Button Press Point",
                 () => target.pressPoint, v => target.pressPoint = v,
-                () => InputSystem.settings.defaultButtonPressPoint);
+                () => UnityEngine.InputSystem.InputSystem.settings.defaultButtonPressPoint);
         }
 
         public override void OnGUI()

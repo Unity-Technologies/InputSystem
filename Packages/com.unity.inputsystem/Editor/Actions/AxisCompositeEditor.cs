@@ -1,3 +1,6 @@
+
+using UnityEngine;
+using UnityEngine.InputSystem.Composites;
 #if UNITY_EDITOR
 using System;
 using UnityEditor;

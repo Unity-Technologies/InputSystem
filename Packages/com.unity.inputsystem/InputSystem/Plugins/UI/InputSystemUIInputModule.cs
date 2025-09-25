@@ -1626,7 +1626,7 @@ namespace UnityEngine.InputSystem.UI
             base.Reset();
 
             var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
-                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                UnityEditor.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
                 typeof(InputActionAsset));
             // Setting default asset and actions when creating via inspector
             Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);

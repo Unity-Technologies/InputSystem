@@ -1,3 +1,6 @@
+
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Interactions;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -20,7 +23,7 @@ namespace UnityEditor.InputSystem.Interactions
             m_DurationSetting.Initialize("Hold Time",
                 "Time (in seconds) that a control has to be held in order for it to register as a hold.",
                 "Default Hold Time",
-                () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultHoldTime);
+                () => target.duration, x => target.duration = x, () => UnityEngine.InputSystem.InputSystem.settings.defaultHoldTime);
         }
 
         public override void OnGUI()
