@@ -182,25 +182,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <returns>true if able to resolve, otherwise false.</returns>
         public bool ResolveActionAndBinding(out InputAction action, out int bindingIndex)
         {
-            bindingIndex = -1;
-
             action = m_Action?.action;
-            if (action == null)
-                return false;
 
-            if (string.IsNullOrEmpty(m_BindingId))
-                return false;
+            bindingIndex = action.FindBindingById(m_BindingId);
+            if (bindingIndex >= 0)
+                return true;
 
-            // Look up binding index.
-            var id = new Guid(m_BindingId);
-            bindingIndex = action.bindings.IndexOf(x => x.id == id);
-            if (bindingIndex == -1)
-            {
+            if (action != null && !string.IsNullOrEmpty(m_BindingId))
                 Debug.LogError($"Cannot find binding with ID '{m_BindingId}' on '{action}'", this);
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         /// <summary>

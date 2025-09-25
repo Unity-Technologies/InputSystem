@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             if (m_Action != null && m_Action.action != null)
             {
                 var action = m_Action.action;
-                int bindingIndex = BindingUI.FindBindingById(action, m_BindingId);
+                int bindingIndex = action.FindBindingById(m_BindingId);
                 var bindingMask = bindingIndex >= 0 ? action.bindings[bindingIndex] : default;
 
                 // We apply parameter override. This directly affects matching processors and interactions

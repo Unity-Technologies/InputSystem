@@ -129,15 +129,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             return true;
         }
 
-        public static int FindBindingById(InputAction action, string bindingId)
-        {
-            if (action == null || string.IsNullOrEmpty(bindingId)) return -1;
-            var id = new Guid(bindingId);
-            return action.bindings.IndexOf(x => x.id == id);
-        }
-
         public string bindingId => m_BindingIdProperty.stringValue;
-        public int bindingIndex => FindBindingById(action, m_BindingIdProperty.stringValue);
+        public int bindingIndex => action.FindBindingById(m_BindingIdProperty.stringValue);
 
         public InputAction action => ((InputActionReference)m_ActionProperty.objectReferenceValue)?.action;
 
