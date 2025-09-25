@@ -83,6 +83,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         [SerializeField]
         private Slider m_Slider;
 
+        [SerializeField]
+        private string[] m_ParameterOverrides;
+
         private float m_Value;
 
         public void ResetToDefault()

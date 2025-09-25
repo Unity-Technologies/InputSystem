@@ -5100,6 +5100,9 @@ MonoBehaviour:
   m_PreferenceKey: lookSensitivity
   m_DefaultValue: 1
   m_Slider: {fileID: 244172485}
+  m_ParameterOverrides:
+  - x
+  - y
 --- !u!114 &1214352214
 MonoBehaviour:
   m_ObjectHideFlags: 0

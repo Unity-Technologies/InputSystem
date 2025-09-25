@@ -1,10 +1,8 @@
 #if UNITY_EDITOR
 
 using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
@@ -21,6 +19,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_DefaultValueProperty = serializedObject.FindProperty("m_DefaultValue");
             m_PreferenceKeyProperty = serializedObject.FindProperty("m_PreferenceKey");
             m_SliderProperty = serializedObject.FindProperty("m_Slider");
+            m_ParameterOverridesProperty = serializedObject.FindProperty("m_ParameterOverrides");
 
             Refresh();
         }
@@ -43,19 +42,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             EditorGUILayout.LabelField("Parameter");
             using (new EditorGUI.IndentLevelScope())
             {
-                var key = EditorGUILayout.TextField("Preference Key", m_PreferenceKeyProperty.stringValue);
-                if (key != m_PreferenceKeyProperty.stringValue)
-                    m_PreferenceKeyProperty.stringValue = key;
+                EditorGUILayout.PropertyField(m_PreferenceKeyProperty);
+                EditorGUILayout.PropertyField(m_DefaultValueProperty);
+                EditorGUILayout.PropertyField(m_ParameterOverridesProperty, true);
+            }
 
-                var defaultValue = EditorGUILayout.FloatField("Default Value", m_DefaultValueProperty.floatValue);
-                if (!Mathf.Approximately(defaultValue, m_DefaultValueProperty.floatValue))
-                    m_DefaultValueProperty.floatValue = defaultValue;
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    serializedObject.ApplyModifiedProperties();
-                    Refresh();
-                }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                Refresh();
             }
         }
 
@@ -73,6 +68,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private SerializedProperty m_PreferenceKeyProperty;
         private SerializedProperty m_DefaultValueProperty;
         private SerializedProperty m_SliderProperty;
+        private SerializedProperty m_ParameterOverridesProperty;
 
         private BindingUI m_Binding;
     }
