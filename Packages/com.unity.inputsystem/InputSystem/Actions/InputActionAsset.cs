@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.InputSystem.Editor;
+using System.Globalization;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -1014,60 +1014,125 @@ namespace UnityEngine.InputSystem
         {
             if (parsedJson.version >= JsonVersion.Version1)
                 return;
-            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
+
+            if (parsedJson.maps == null || parsedJson.maps.Length == 0)
             {
-                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+                parsedJson.version = JsonVersion.Version1;
+                return;
+            }
+
+            for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+            {
+                var mapJson = parsedJson.maps[mi];
+                if (mapJson.actions == null || mapJson.actions.Length == 0)
+                    continue;
+
+                for (var ai = 0; ai < mapJson.actions.Length; ++ai)
                 {
-                    var mapJson = parsedJson.maps[mi];
-                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+                    var actionJson = mapJson.actions[ai];
+                    var raw = actionJson.processors;
+                    if (string.IsNullOrEmpty(raw))
+                        continue;
+
+                    var parts = System.Text.RegularExpressions.Regex.Split(raw, @"\s*([,;])\s*");
+                    if (parts.Length == 0)
+                        continue;
+
+                    var tokens = new List<string>();
+                    for (int i = 0; i < parts.Length; i += 2)
+                        if (!string.IsNullOrEmpty(parts[i]))
+                            tokens.Add(parts[i]);
+
+                    if (tokens.Count == 0)
+                        continue;
+
+                    var parsed = new List<NameAndParameters>(tokens.Count);
+                    foreach (var t in tokens)
+                        parsed.Add(NameAndParameters.Parse(t));
+
+                    var rebuiltTokens = new List<string>(tokens.Count);
+                    var anyProcessorChanged = false;
+
+                    for (int pi = 0; pi < parsed.Count; pi++)
                     {
-                        var actionJson = mapJson.actions[ai];
-                        var raw = actionJson.processors;
-                        if (string.IsNullOrEmpty(raw))
-                            continue;
+                        var nap = parsed[pi];
 
-                        var list = NameAndParameters.ParseMultiple(raw).ToList();
-                        var rebuilt = new List<string>(list.Count);
-                        foreach (var nap in list)
+                        var procType = InputSystem.TryGetProcessor(nap.name);
+                        if (procType == null || nap.parameters.Count == 0)
                         {
-                            var procType = InputSystem.TryGetProcessor(nap.name);
-                            if (nap.parameters.Count == 0 || procType == null)
-                            {
-                                rebuilt.Add(nap.ToString());
-                                continue;
-                            }
+                            rebuiltTokens.Add(tokens[pi]);
+                            continue;
+                        }
 
-                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
-                            var anyChanged = false;
-                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                        var dict = new Dictionary<string, string>(nap.parameters.Count, System.StringComparer.OrdinalIgnoreCase);
+                        foreach (var p in nap.parameters)
+                            dict[p.name] = p.value.ToString();
+
+                        var changedThisProcessor = false;
+
+                        foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                        {
+                            if (!field.FieldType.IsEnum)
+                                continue;
+
+                            if (!dict.TryGetValue(field.Name, out var rawVal))
+                                continue;
+
+                            if (int.TryParse(rawVal, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n))
                             {
-                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                                var values = System.Enum.GetValues(field.FieldType);
+                                var looksLikeOrdinal = n >= 0 && n < values.Length && !System.Enum.IsDefined(field.FieldType, n);
+                                if (looksLikeOrdinal)
                                 {
-                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
-                                    if (ord >= 0 && ord < values.Length)
+                                    var underlying = Convert.ToInt32(values.GetValue(n));
+                                    if (underlying != n)
                                     {
-                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
-                                        anyChanged = true;
+                                        dict[field.Name] = underlying.ToString(CultureInfo.InvariantCulture);
+                                        changedThisProcessor = true;
                                     }
                                 }
                             }
+                        }
 
-                            if (!anyChanged)
+                        if (!changedThisProcessor)
+                        {
+                            rebuiltTokens.Add(tokens[pi]);
+                        }
+                        else
+                        {
+                            var ordered = nap.parameters.Select(p =>
                             {
-                                rebuilt.Add(nap.ToString());
+                                var v = dict.TryGetValue(p.name, out var nv) ? nv : p.value.ToString();
+                                return $"{p.name}={v}";
+                            });
+
+                            var migrated = $"{nap.name}({string.Join(",", ordered)})";
+                            rebuiltTokens.Add(migrated);
+                            anyProcessorChanged = true;
+                        }
+                    }
+
+                    if (anyProcessorChanged)
+                    {
+                        var sb = new System.Text.StringBuilder(raw.Length + 16);
+                        int tokenIndex = 0;
+                        for (int partIndex = 0; partIndex < parts.Length; ++partIndex)
+                        {
+                            if ((partIndex % 2) == 0)
+                            {
+                                if (tokenIndex < rebuiltTokens.Count)
+                                    sb.Append(rebuiltTokens[tokenIndex++]);
                             }
                             else
                             {
-                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
-                                rebuilt.Add($"{nap.name}({paramText})");
+                                sb.Append(parts[partIndex]);
                             }
                         }
-
-                        actionJson.processors = string.Join(";", rebuilt);
-                        mapJson.actions[ai] = actionJson;
+                        actionJson.processors = sb.ToString();
                     }
-                    parsedJson.maps[mi] = mapJson;
+                    mapJson.actions[ai] = actionJson;
                 }
+                parsedJson.maps[mi] = mapJson;
             }
             // Bump the version so we never re-migrate
             parsedJson.version = JsonVersion.Version1;
