@@ -7,7 +7,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         static EditorInitialization() 
         {
-            Debug.Log("Input System: Initializing Editor Hooks");
             EditorHooks.m_SettingsProviderConfigKeyGetter = () => InputSettingsProvider.kEditorBuildSettingsConfigKey;
 
             EditorHooks.m_ProjectWideActionsBuildProvideractionsToIncludeInPlayerBuildSetter = (value) =>
