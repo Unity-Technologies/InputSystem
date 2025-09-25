@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Interactions;
 #if UNITY_EDITOR
@@ -29,7 +30,7 @@ namespace UnityEditor.InputSystem.Interactions
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();

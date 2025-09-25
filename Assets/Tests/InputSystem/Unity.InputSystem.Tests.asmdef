@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
+        "Unity.InputSystem.Editor",
         "Unity.InputSystem.TestFramework",
         "Unity.ugui",
         "Unity.PackageManagerDocTools.Editor",

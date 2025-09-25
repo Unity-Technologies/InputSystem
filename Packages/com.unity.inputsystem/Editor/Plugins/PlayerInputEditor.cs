@@ -89,7 +89,7 @@ namespace UnityEditor.InputSystem.Editor
             if (m_ActionsProperty.objectReferenceValue != null)
             {
                 InputActionAsset actions = m_ActionsProperty.objectReferenceValue as InputActionAsset;
-                if (actions == InputSystem.actions)
+                if (actions == UnityEngine.InputSystem.InputSystem.actions)
                 {
                     EditorGUILayout.HelpBox("Project-wide actions asset is not recommended to be used with Player " +
                         "Input because it is a singleton reference and all actions maps are enabled by default.\r\n" +

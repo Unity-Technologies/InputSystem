@@ -20,7 +20,7 @@ namespace UnityEditor.InputSystem.Composites {
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.whichSideWins = (AxisComposite.WhichSideWins)EditorGUILayout.EnumPopup(m_WhichAxisWinsLabel, target.whichSideWins);
         }

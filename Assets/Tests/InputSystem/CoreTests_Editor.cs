@@ -23,6 +23,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
+using UnityEditor.InputSystem.Interactions;
 
 #pragma warning disable CS0649
 partial class CoreTests

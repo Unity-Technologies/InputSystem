@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem.Interactions;
 #if UNITY_EDITOR
@@ -38,7 +39,7 @@ namespace UnityEditor.InputSystem.Interactions {
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();

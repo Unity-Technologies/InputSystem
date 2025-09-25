@@ -1,5 +1,6 @@
 
 
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem.Composites;
 #if UNITY_EDITOR
@@ -20,7 +21,7 @@ namespace UnityEditor.InputSystem.Composites {
         public override void OnGUI()
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+            if (!UnityEngine.InputSystem.InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
