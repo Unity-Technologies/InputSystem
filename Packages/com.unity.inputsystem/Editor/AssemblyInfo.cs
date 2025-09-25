@@ -8,4 +8,5 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.ForUI")] // To avoid minor bump
+[assembly: InternalsVisibleTo("Unity.InputSystem.ForUI.Editor")] // To avoid minor bump
 

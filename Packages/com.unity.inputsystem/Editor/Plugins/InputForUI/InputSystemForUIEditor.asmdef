@@ -1,8 +1,9 @@
 {
-    "name": "Unity.InputSystem.ForUI",
+    "name": "Unity.InputSystem.ForUI.Editor",
     "references": [
-        "Unity.InputSystem",
-        "Unity.InputSystem.Editor"
+      "Unity.InputSystem",
+      "Unity.InputSystem.Editor",
+      "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
