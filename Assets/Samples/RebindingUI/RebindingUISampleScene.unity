@@ -5101,8 +5101,8 @@ MonoBehaviour:
   m_DefaultValue: 1
   m_Slider: {fileID: 244172485}
   m_ParameterOverrides:
-  - x
-  - y
+  - scaleVector2:x
+  - scaleVector2:y
 --- !u!114 &1214352214
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -129,8 +129,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
                 // We apply parameter override. This directly affects matching processors and interactions
                 // if they have matching parameters.
-                action.ApplyParameterOverride("scaleVector2:x", value, bindingMask);
-                action.ApplyParameterOverride("scaleVector2:y", value, bindingMask);
+                foreach (var parameterOverride in m_ParameterOverrides)
+                    action.ApplyParameterOverride(parameterOverride, value, bindingMask);
             }
 
             m_Value = value;
