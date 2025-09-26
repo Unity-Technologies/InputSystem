@@ -1,14 +1,13 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
-#endif
 
 namespace UnityEngine.InputSystem.EnhancedTouch {
 
     [InitializeOnLoad]
-    class TouchSimulationEdtiorInitialization 
+    class TouchSimulationEditorInitialization 
     {
-        static TouchSimulationEdtiorInitialization()
+        static TouchSimulationEditorInitialization()
         {
             // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
             // created. We don't want to trigger InputSystem initialization from there so delay-execute
@@ -47,3 +46,4 @@ namespace UnityEngine.InputSystem.EnhancedTouch {
         }
     }
 }
+#endif
