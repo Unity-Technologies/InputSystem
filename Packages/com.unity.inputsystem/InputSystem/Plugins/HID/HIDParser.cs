@@ -267,7 +267,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 if (currentPtr >= endPtr)
                     return 0;
-                return *currentPtr;
+                return (sbyte)*currentPtr;
             }
 
             // Read short.
@@ -291,7 +291,7 @@ namespace UnityEngine.InputSystem.HID
                 var data3 = *(currentPtr + 2);
                 var data4 = *(currentPtr + 3);
 
-                return (data4 << 24) | (data3 << 24) | (data2 << 8) | data1;
+                return (data4 << 24) | (data3 << 16) | (data2 << 8) | data1;
             }
 
             Debug.Assert(false, "Should not reach here");
