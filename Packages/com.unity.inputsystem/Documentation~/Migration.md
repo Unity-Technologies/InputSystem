@@ -23,7 +23,7 @@ This is because there are a number of different ways to read input using the Inp
 
 ## Which system is enabled?
 
-When installing the new Input System, Unity prompts you to enable the new input system and disable the old one. You can change this setting at any time later, by going to **Edit > Project Settings > Player > Other Settings > Active Input Handling**, [as described here](./Installation.md#enabling-the-new-input-backends).
+When installing the new Input System, Unity prompts you to enable the new input system and disable the old one. You can change this setting at any time later, by going to **Edit > Project Settings > Player > Other Settings > Active Input Handling**, [as described here](./Installation.md#enable-the-input-backends).
 
 There are scripting symbols defined which allow you to use conditional compilation based on which system is enabled, as shown in the example below.
 

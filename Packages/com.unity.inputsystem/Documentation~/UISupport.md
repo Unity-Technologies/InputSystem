@@ -236,7 +236,7 @@ The Input System package provides a **Virtual Mouse** component for this purpose
 > [!NOTE]
 > This component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit.
 
-To see an example of the Virtual Mouse in a project, see the [Gamepad Mouse Cursor sample](Installation.md#installing-samples) included with the Input System package.
+To see an example of the Virtual Mouse in a project, see the [Gamepad Mouse Cursor sample](Installation.md#install-samples) included with the Input System package.
 
 ### Using the Virtual Mouse component
 
