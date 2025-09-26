@@ -18,6 +18,8 @@ An Input Control represents a source of values. These values can be of any struc
 > [!NOTE]
 > Controls are for input only. Output and configuration items on Input Devices are not represented as Controls.
 
+## Identification
+
 Each Control is identified by a name ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and can optionally have a display name ([`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)) that differs from the Control name. For example, the right-hand face button closest to the touchpad on a PlayStation DualShock 4 controller has the control name "buttonWest" and the display name "Square".
 
 Additionally, a Control might have one or more aliases which provide alternative names for the Control. You can access the aliases for a specific Control through its [`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases) property.
@@ -63,9 +65,7 @@ Usages can be arbitrary strings. However, a certain set of usages is very common
 
 ## Control paths
 
->Example: `<Gamepad>/leftStick/x` means "X Control on left stick of gamepad".
-
-The Input System can look up Controls using textual paths. [Bindings](ActionBindings.md) on Input Actions rely on this feature to identify the Control(s) they read input from. However, you can also use them for lookup directly on Controls and Devices, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls_System_String_).
+The Input System can look up Controls using textual paths. [Bindings](ActionBindings.md) on Input Actions rely on this feature to identify the Control(s) they read input from. For example, `<Gamepad>/leftStick/x` means "X Control on left stick of gamepad". However, you can also use them for lookup directly on Controls and Devices, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls_System_String_):
 
 ```CSharp
 var gamepad = Gamepad.all[0];
@@ -74,26 +74,17 @@ var submitButton = gamepad["{Submit}"];
 var allSubmitButtons = InputSystem.FindControls("*/{Submit}");
 ```
 
-Control paths resemble file system paths. Each path consists of one or more components separated by a forward slash:
+Control paths resemble file system paths: they contain components separated by a forward slash (`/`):
 
     component/component...
 
-Each component uses a similar syntax made up of multiple fields. Each field is optional, but at least one field must be present. All fields are case-insensitive.
+Each component itself contains a set of [fields](#component-fields) with its own syntax. Each field is individually optional, provided that at least one of the fields is present as either a name or a wildcard:
 
-    <layoutName>{usageName}controlName#(displayName)
+```structured text
+<layoutName>{usageName}#(displayName)controlName
+```
 
-The following table explains the use of each field:
-
-|Field|Description|Example|
-|-----|-----------|-------|
-|`<layoutName>`|Requires the Control at the current level to be based on the given layout. The actual layout of the Control may be the same or a layout *based* on the given layout.|`<Gamepad>/buttonSouth`|
-|`{usageName}`|Works differently for Controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. See [Device usages](Devices.md#device-usages) for more details.<br><br>For looking up a Control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the Control on the Device that has the given usage. The Control can be anywhere in the Control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
-|`controlName`|Requires the Control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and aliases ([`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
-|`#(displayName)`|Requires the Control at the current level to have the given display name (i.e. [`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
-
-You can access the literal path of a given control via its [`InputControl.path`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_path) property.
-
-If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_Parse_System_String_) API.
+You can access the literal path of a given control via its [`InputControl.path`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_path) property. If you need to, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_Parse_System_String_) API:
 
 ```CSharp
 var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
@@ -104,6 +95,36 @@ Debug.Log(parsed[0].name); // Prints an empty string.
 Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
 Debug.Log(parsed[1].layout); // Prints null.
 Debug.Log(parsed[1].name); // Prints "trigger".
+```
+
+### Component fields
+
+All fields are case-insensitive.
+
+The following table explains the use of each field:
+
+|Field|Description|Related&nbsp;links|
+|-----|-----|------------------|
+|`layoutName`|The name of the layout that the control must be based on. The actual layout of the control may be the same or a layout *based* on the given layout. For example, `<Gamepad>`.|The [Layouts](xref:input-system-layouts) user manual topic<br/><br/>The [InputControlLayout](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) class|
+|`usageName`|Works differently for Controls and Devices:<ul><li>When used on a Device (the first component of a path), it requires the device to have the given usage.  For example, `<XRController>{LeftHand}/trigger`.</li><li>For looking up a Control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the Control on the Device that has the given usage. The Control can be anywhere in the Control hierarchy of the Device. For example, `<Gamepad>/{Submit}`.</li></ul>|The [Device usages](Devices.md#device-usages) user manual topic<br/><br/>The [Control usages](#control-usages) topic on this page<<br/><br/>The [InputControl.usages](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) property|
+|`displayName`|Requires the Control at the current level to have the given display name. The display name may contain whitespace and symbols. For example:<ul><li>`<Keyboard>/#(a)` matches the key that generates the "a" character, if any, according to the current keyboard layout. </li><li>`<Gamepad>/#(Cross)` matches the button named "Cross" on the Gamepad.</li></ul>|The [Identification](#identification) topic on this page<br/><br/>The [InputControl.displayName](xref:UnityEngine.InputSystem.InputControl.displayName) property|
+|`controlName`|Requires the Control at the current level to have the given name. Takes both "proper" names such as `MyGamepad/buttonSouth`, and aliases such as `MyGamepad/South` into account.<br><br>This field can also be a wildcard (`*`) to match any name. For example, `*/{PrimaryAction}` matches any `PrimaryAction` usage on Devices with any name.|The [Identification](#identification) topic on this page<br/><br/>The [InputControl.name](xref:UnityEngine.InputSystem.InputControl.name) property for "proper" names<br/><br/>The [InputControl.aliases](xref:UnityEngine.InputSystem.InputControl.aliases) property for aliases|
+
+Here are several examples of control paths:
+
+```csharp
+// Matches all gamepads (also gamepads *based* on the Gamepad layout):
+"<Gamepad>"
+// Matches the "Submit" control on all devices:
+"*/"
+// Matches the key that prints the "a" character on the current keyboard layout:
+"<Keyboard>/#(a)"
+// Matches the X axis of the left stick on a gamepad.
+"<Gamepad>/leftStick/x"
+// Matches the orientation control of the right-hand XR controller:
+"<XRController>/orientation"
+// Matches all buttons on a gamepad.
+"<Gamepad>/<Button>"
 ```
 
 ## Control state
@@ -122,7 +143,7 @@ Gamepad.current.leftStick.x.ReadValue();
 
 Each type of Control has a specific type of values that it returns, regardless of how many different types of formats it supports for its state. You can access this value type through the [`InputControl.valueType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_valueType) property.
 
-Reading a value from a Control might apply one or more value Processors. See documentation on [Processors](UsingProcessors.md) for more information.
+Reading a value from a Control might apply one or more value Processors. Refer to the documentation on [Processors](UsingProcessors.md) for more information.
 
 [//]: # (#### Default State - TODO)
 
@@ -130,9 +151,7 @@ Reading a value from a Control might apply one or more value Processors. See doc
 
 #### Recording state history
 
-You might want to access the history of value changes on a Control (for example, in order to compute exit velocity on a touch release).
-
-To record state changes over time, you can use [`InputStateHistory`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory.html) or [`InputStateHistory<TValue>`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory-1.html). The latter restricts Controls to those of a specific value type, which in turn simplifies some of the API.
+If you want to access the history of value changes on a Control (for example, in order to compute exit velocity on a touch release), you can record state changes over time with [`InputStateHistory`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory.html) or [`InputStateHistory<TValue>`](../api/UnityEngine.InputSystem.LowLevel.InputStateHistory-1.html). The latter restricts Controls to those of a specific value type, which in turn simplifies some of the API.
 
 ```CSharp
 // Create history that records Vector2 control value changes.
@@ -206,16 +225,16 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
     Debug.Log("Left Stick actuated past 25%");
 ```
 
-There are two mechanisms that most notably make use of Control actuation:
+These two mechanisms use Control actuation:
 
 - [Interactive rebinding](ActionBindings.md#interactive-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
 - [Conflict resolution](ActionBindings.md#conflicting-inputs) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
 
 ## Noisy Controls
 
-The Input System can label a Control as "noisy". You can query this using the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property.
+The Input System can label a Control as "noisy", meaning that they can change value without needing any actual or intentional user interaction. A good example of this is a gravity sensor in a cellphone. Even if the cellphone is perfectly still, there are usually fluctuations in gravity readings. Another example is taking orientation readings from an HMD.
 
-Noisy Controls are those that can change value without any actual or intentional user interaction required. A good example of this is a gravity sensor in a cellphone. Even if the cellphone is perfectly still, there are usually fluctuations in gravity readings. Another example are orientation readings from an HMD.
+You can query whether a control is noisy with the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property.
 
 If a Control is marked as noisy, it means that:
 
@@ -271,13 +290,15 @@ If there are any non-obvious inconsistencies, 'PARANOID_READ_VALUE_CACHING_CHECK
 
 When the `'USE_OPTIMIZED_CONTROLS'` internal feature flag is set, the Input System will use faster way to use state memory for some controls instances. This is very specific optimization and should be used with caution.
 
-> __Please note__: This optimization has a performance impact on `PlayMode` as we do extra checks to ensure that the controls have the correct memory representation during development. Don't be alarmed if you see a performance drop in `PlayMode` when using this optimization as it's expected at this stage.
+> [!NOTE]
+> This optimization has a performance impact on `PlayMode` as we do extra checks to ensure that the controls have the correct memory representation during development. Don't be alarmed if you see a performance drop in `PlayMode` when using this optimization as it's expected at this stage.
 
 Most controls are flexible with regards to memory representation, like [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) can be one bit, multiple bits, a float, etc, or in [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) where x and y can have different memory representation.
 Yet for most controls there are common memory representation patterns, for example [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) are floats or single bytes. Or some [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) are two consequitive floats in memory.
 If a control matches a common representation we can bypass reading its children control and cast the memory directly to the common representation. For example if [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) is two consecutive floats in memory we can bypass reading `x` and `y` separately and just cast the state memory to `Vector2`.
 
-> __Please note__: This optimization only works if the controls don't need any processing applied to them, such as `invert`, `clamp`, `normalize`, `scale` or any other processor. If any of these are applied to the control, **there won't be any optimization applied** and the control will be read as usual.
+> [!NOTE]
+> This optimization only works if the controls don't need any processing applied to them, such as `invert`, `clamp`, `normalize`, `scale` or any other processor. If any of these are applied to the control, **there won't be any optimization applied** and the control will be read as usual.
 
 Also, [`InputControl.ApplyParameterChanges()`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_ApplyParameterChanges) **must be explicitly called** in specific changes to ensure [`InputControl.optimizedControlDataType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_optimizedControlDataType) is updated to the correct memory representation. Make sure to call it when:
 * Configuration changes after [`InputControl.FinishSetup()`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) is called.
