@@ -218,27 +218,9 @@ internal class HIDTests : CoreTestsFixture
 
         // The HID report descriptor is fetched from the device via an IOCTL.
         var deviceId = runtime.AllocateDeviceId();
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(deviceId,
-                (id, commandPtr) =>
-                {
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
-                        return reportDescriptor.Length;
 
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
-                        && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
-                    {
-                        fixed(byte* ptr = reportDescriptor)
-                        {
-                            UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
-                            return reportDescriptor.Length;
-                        }
-                    }
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
 
-                    return InputDeviceCommand.GenericFailure;
-                });
-        }
         // Report device.
         runtime.ReportNewInputDevice(
             new InputDeviceDescription
@@ -307,6 +289,111 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
 
         ////TODO: check hat switch
+    }
+
+    // This is used to mock out the IOCTL the HID device driver would use to return
+    // the report descriptor and its size.
+    unsafe void SetDeviceCommandCallbackToReturnReportDescriptor(int deviceId, byte[] reportDescriptor)
+    {
+        runtime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
+                    return reportDescriptor.Length;
+
+                if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
+                    && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
+                {
+                    fixed(byte* ptr = reportDescriptor)
+                    {
+                        UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
+                        return reportDescriptor.Length;
+                    }
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+    }
+
+    [Test]
+    [Category("HID Devices")]
+    public void Devices_CanCrateGenericHID_WithSignedLogicalMinAndMaxSticks()
+    {
+        // This is a HID report descriptor for a simple device with two analog sticks;
+        // Similar to a user that reported an issue in Discussions:
+        // https://discussions.unity.com/t/input-system-reading-invalid-values-from-hall-effect-keyboards/1684840/3
+        var reportDescriptor = new byte[]
+        {
+            0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+            0x09, 0x05,        // Usage (Game Pad)
+            0xA1, 0x01,        // Collection (Application)
+            0x85, 0x01,        //   Report ID (1)
+            0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
+            0x09, 0x30,        //   Usage (X)
+            0x09, 0x31,        //   Usage (Y)
+            0x15, 0x81,        //   Logical Minimum (-127)
+            0x25, 0x7F,        //   Logical Maximum (127)
+            0x75, 0x08,        //   Report Size (8)
+            0x95, 0x02,        //   Report Count (2)
+            0x81, 0x02,        //   Input (Data,Var,Abs)
+            0xC0,              // End Collection
+        };
+
+        // The HID report descriptor is fetched from the device via an IOCTL.
+        var deviceId = runtime.AllocateDeviceId();
+
+        // Callback to return the desired report descriptor.
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
+
+        // Report device.
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0x321,
+                    productId = 0x432
+                }.ToJson()
+            }.ToJson(), deviceId);
+
+        InputSystem.Update();
+
+        var device = (Joystick)InputSystem.GetDeviceById(deviceId);
+        Assert.That(device, Is.Not.Null);
+        Assert.That(device, Is.TypeOf<Joystick>());
+
+        // Stick vector 2 should be centered at (0,0).
+        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0f, 0f)).Using(Vector2EqualityComparer.Instance));
+
+        // Queue event with stick pushed to bottom. We assume Y axis is inverted by default in HID devices.
+        // See HID.HIDElementDescriptor.DetermineParameters()
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 0, y = 127 });
+        InputSystem.Update();
+
+        Assert.That(device.stick.ReadValue() , Is.EqualTo(new Vector2(0f, -1f)).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 0, y = -127 });
+        InputSystem.Update();
+
+        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0f, 1f)).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 127, y = 0 });
+        InputSystem.Update();
+
+        Assert.That(device.stick.ReadValue() , Is.EqualTo(new Vector2(1f, 0f)).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = -127, y = 0 });
+        InputSystem.Update();
+
+        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(-1f, 0f)).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 127, y = 127 });
+        InputSystem.Update();
+
+        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0.7071f, -0.7071f)).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
@@ -1026,11 +1113,21 @@ internal class HIDTests : CoreTestsFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    struct SimpleJoystickLayout : IInputStateTypeInfo
+    struct SimpleJoystickLayoutWithStickUshort : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
+
+        public FourCC format => new FourCC('H', 'I', 'D');
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct SimpleJoystickLayoutWithStickByte : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte reportId;
+        [FieldOffset(1)] public sbyte x;
+        [FieldOffset(2)] public sbyte y;
 
         public FourCC format => new FourCC('H', 'I', 'D');
     }
@@ -1069,7 +1166,7 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(device, Is.TypeOf<Joystick>());
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
 
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickUshort { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
