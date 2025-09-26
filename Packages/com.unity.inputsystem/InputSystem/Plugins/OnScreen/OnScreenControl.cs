@@ -203,7 +203,8 @@ namespace UnityEngine.InputSystem.OnScreen
             ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
-            InputSystem.QueueEvent(m_InputEventPtr);
+            //InputSystem.QueueEvent(m_InputEventPtr);
+            InputState.Change(m_Control.m_Device, m_InputEventPtr);
         }
 
         protected void SentDefaultValueToControl()
@@ -346,24 +347,4 @@ namespace UnityEngine.InputSystem.OnScreen
             return $"{GetType()} needs to be attached as a child to a UI Canvas and have a RectTransform component to function properly.";
         }
     }
-
-    internal static class UGUIOnScreenControlUtils
-    {
-        public static RectTransform GetCanvasRectTransform(Transform transform)
-        {
-            var parentTransform = transform.parent;
-            return parentTransform != null ? transform.parent.GetComponentInParent<RectTransform>() : null;
-        }
-    }
-
-#if UNITY_EDITOR
-    internal static class UGUIOnScreenControlEditorUtils
-    {
-        public static void ShowWarningIfNotPartOfCanvasHierarchy(OnScreenControl target)
-        {
-            if (UGUIOnScreenControlUtils.GetCanvasRectTransform(target.transform) == null)
-                UnityEditor.EditorGUILayout.HelpBox(target.GetWarningMessage(), UnityEditor.MessageType.Warning);
-        }
-    }
-#endif
 }

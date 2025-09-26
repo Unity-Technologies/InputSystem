@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             --m_EnemySpawnCount;
 
             // Rent an enemy from the enemy pool
-            var enemyComponent = m_EnemyPool.Get();
+            var enemyComponent = m_EnemyPool.Get(); // TODO Null reference here on domain reload
 
             // Make the enemy spawn on border of visible game area
             var orthoSize = gameCamera.orthographicSize;
