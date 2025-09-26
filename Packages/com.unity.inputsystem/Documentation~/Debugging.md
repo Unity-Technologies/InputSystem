@@ -3,20 +3,6 @@ uid: input-system-debugging
 ---
 # Debugging
 
-- [Debugging](#debugging)
-  - [Input Debugger](#input-debugger)
-    - [Debugging Devices](#debugging-devices)
-    - [Debugging Actions](#debugging-actions)
-    - [Debugging users and PlayerInput](#debugging-users-and-playerinput)
-    - [Debugging layouts](#debugging-layouts)
-    - [Debugging remotely](#debugging-remotely)
-  - [Input visualizers](#input-visualizers)
-    - [`InputControlVisualizer`](#inputcontrolvisualizer)
-    - [`InputActionVisualizer`](#inputactionvisualizer)
-  - [Device Simulator](#device-simulator)
-  - [Unity Remote (iOS, Android)](#unity-remote)
-  - [Other tips:](#other-tips)
-
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
 
 To open the Input Debugger, go to __Window > Analysis > Input Debugger__ from Unity's main menu.

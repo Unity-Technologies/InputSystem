@@ -3,18 +3,6 @@ uid: input-system-events
 ---
 # Input events
 
-* [Types of events](#types-of-events)
-    * [State events](#state-events)
-    * [Device events](#device-events)
-    * [Text events](#text-events)
-* [Working with events](#working-with-events)
-    * [Listening to events](#listening-to-events)
-    * [Reading state events](#reading-state-events)
-    * [Creating events](#creating-events)
-    * [Capturing events](#capturing-events)
-* [Processing events](#processing-events)
-    * [Merging of events](#merging-of-events)
-
 The Input System is event-driven. All input is delivered as events, and you can generate custom input by injecting events. You can also observe all source input by listening in on the events flowing through the system.
 
 > [!NOTE]

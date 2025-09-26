@@ -3,17 +3,6 @@ uid: input-system-gamepad
 ---
 # Gamepad Support
 
-- [Controls](#controls)
-  - [Deadzones](#deadzones)
-- [Polling](#polling)
-- [Rumble](#rumble)
-  - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
-- [PlayStation controllers](#playstation-controllers)
-- [Xbox controllers](#xbox-controllers)
-- [Switch controllers](#switch-controllers)
-- [Cursor Control](#cursor-control)
-- [Discover all connected devices](#discover-all-connected-devices)
-
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
 A gamepad can have additional Controls, such as a gyro, which the Device can expose. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.

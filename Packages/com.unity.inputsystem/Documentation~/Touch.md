@@ -3,14 +3,6 @@ uid: input-system-touch
 ---
 # Touch support
 
-- [Touch support](#touch-support)
-  - [`Touchscreen` Device](#touchscreen-device)
-    - [Controls](#controls)
-    - [Using touch with Actions](#using-touch-with-actions)
-  - [`EnhancedTouch.Touch` Class](#enhancedtouchtouch-class)
-  - [Touch Simulation](#touch-simulation)
-  - [Reading all touches](#reading-all-touches)
-
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
 * high-level support implemented in the [`EnhancedTouch.Touch`](#enhancedtouchtouch-class) class.

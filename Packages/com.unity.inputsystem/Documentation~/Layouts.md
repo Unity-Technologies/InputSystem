@@ -3,16 +3,6 @@ uid: input-system-layouts
 ---
 # Layouts
 
-* [Layout formats](#layout-formats)
-  * [Layout from type](#layout-from-type)
-  * [Layout from JSON](#layout-from-json)
-  * [Generated layouts](#generated-layouts)
-* [Layout inheritance](#layout-inheritance)
-* [Control items](#control-items)
-* [Layout overrides](#layout-overrides)
-* [Precompiled layouts](#precompiled-layouts)
-  * [Creating a precompiled layout](#creating-a-precompiled-layout)
-
 Layouts are the central mechanism by which the Input System learns about types of Input Devices and Input Controls. Each layout represents a specific composition of Input Controls. By matching the description of a Device to a layout, the Input System is able to create the correct type of Device and interpret the incoming input data correctly.
 
 > [!NOTE]

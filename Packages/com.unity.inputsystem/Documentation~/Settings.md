@@ -3,16 +3,6 @@ uid: input-system-settings
 ---
 # Input settings
 
-- [Create Settings Asset](#create-settings-asset)
-- [Update Mode](#update-mode)
-- [Background Behavior](#background-behavior)
-- [Filter Noise On Current](#filter-noise-on-current)
-- [Compensate Orientation](#compensate-orientation)
-- [Default value properties](#default-value-properties)
-- [Supported Devices](#supported-devices)
-- [Platform-specific settings](#platform-specific-settings)
-
-
 To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
 
 This page describes each input setting in detail.

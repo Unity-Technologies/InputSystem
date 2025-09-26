@@ -3,16 +3,6 @@ uid: input-system-controls
 ---
 # Controls
 
-* [Hierarchies](#control-hierarchies)
-* [Types](#control-types)
-* [Usages](#control-usages)
-* [Paths](#control-paths)
-* [State](#control-state)
-* [Actuation](#control-actuation)
-* [Noisy Controls](#noisy-controls)
-* [Synthetic Controls](#synthetic-controls)
-* [Performance Optimization](#performance-optimization)
-
 An Input Control represents a source of values. These values can be of any structured or primitive type. The only requirement is that the type is [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
 > [!NOTE]

@@ -3,23 +3,6 @@ uid: input-system-ui-support
 ---
 # UI support
 
-- [Overview and compatibility](#overview-and-compatibility)
-- [Setting up UI input](#setting-up-ui-input)
-- [Required Actions for UI](#required-actions-for-ui)
-- [The UI Input Module component](#the-ui-input-module-component)
-  - [Using the UI Input Module](#using-the-ui-input-module)
-  - [UI Input Module properties](#ui-input-module-properties)
-  - [How the bindings work](#how-the-bindings-work)
-  - [Other notes about the UI Input Module](#other-notes-about-the-ui-input-module)
-- [Multiplayer UIs](#multiplayer-uis)
-- [Virtual mouse cursor control](#virtual-mouse-cursor-control)
-  - [Using the Virtual Mouse component](#using-the-virtual-mouse-component)
-- [Distinguishing between UI and game input](#distinguishing-between-ui-and-game-input)
-  - [Handling ambiguities for pointer-type input](#handling-ambiguities-for-pointer-type-input)
-  - [Handling ambiguities for navigation-type input](#handling-ambiguities-for-navigation-type-input)
-- [Immediate Mode GUI](#immediate-mode-gui)
-
-
 ## Overview and compatibility
 
 Unity has [various UI solutions](https://docs.unity3d.com/Manual/UIToolkits.html). The Input System package's compatibility and workflow with these solutions varies depending on which UI solution you are using, and which version of Unity you are using.

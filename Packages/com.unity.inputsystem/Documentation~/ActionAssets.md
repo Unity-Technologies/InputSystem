@@ -3,11 +3,6 @@ uid: input-system-action-assets
 ---
 # Input Action Assets
 
-- [Creating Input Action Assets](#creating-input-action-assets)
-- [Editing Input Action Assets](#editing-input-action-assets)
-- [Using Input Action Assets](#using-input-action-assets)
-- [Type-safe C# API Generation](#type-safe-c-api-generation)
-
 An Input Action Asset is an Asset which contains a set of [Input Actions](Actions.md) definitions and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes). These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
 The input system creates an Action Asset when you set up the [default project-wide actions](ProjectWideActions.md), but you can also create new Action Assets directly in the Project window.

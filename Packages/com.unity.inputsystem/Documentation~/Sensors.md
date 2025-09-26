@@ -3,21 +3,6 @@ uid: input-system-sensors
 ---
 # Sensor support
 
-- [Sampling frequency](#sampling-frequency)
-- [`Accelerometer`](#accelerometer)
-- [`Gyroscope`](#gyroscope)
-- [`GravitySensor`](#gravitysensor)
-- [`AttitudeSensor`](#attitudesensor)
-- [`LinearAccelerationSensor`](#linearaccelerationsensor)
-- [`MagneticFieldSensor`](#magneticfieldsensor)
-- [`LightSensor`](#lightsensor)
-- [`PressureSensor`](#pressuresensor)
-- [`ProximitySensor`](#proximitysensor)
-- [`HumiditySensor`](#humiditysensor)
-- [`AmbientTemperatureSensor`](#ambienttemperaturesensor)
-- [`StepCounter`](#stepcounter)
-- [`HingeAngle`](#hingeangle)
-
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
 > [!NOTE]

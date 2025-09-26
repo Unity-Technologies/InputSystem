@@ -3,16 +3,6 @@ uid: input-system-migration
 ---
 # Migrating from the old Input Manager
 
-- [Read the introductory documentation first](#read-the-introductory-documentation-first)
-- [Which system is enabled?](#which-system-is-enabled)
-- [Comparison of API in the old Input Manager and the new Input System package](#comparison-of-api-in-the-old-input-manager-and-the-new-input-system-package)
-  - [Action-based input](#action-based-input)
-  - [Directly reading Gamepad and Joystick controls](#directly-reading-gamepad-and-joystick-controls)
-  - [Keyboard](#keyboard)
-  - [Mouse](#mouse)
-  - [Touch and Pen](#touch-and-pen)
-  - [Sensors](#sensors)
-
 This page is provided to help you match input-related API from Unity's old, built-in input (known as the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html)) to the corresponding API in the new Input System package.
 
 ## Read the introductory documentation first
