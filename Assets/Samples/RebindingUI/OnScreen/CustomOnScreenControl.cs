@@ -102,6 +102,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <summary>
         /// Gets or sets the on-screen stick radius in millimeters.
         /// </summary>
+        /// <remarks>Physical gamepads analog sticks have mechanical displacements of 7-8 millimeters.</remarks>
         /// <exception cref="ArgumentOutOfRangeException">If attempting to set the stick radius to a negative value.</exception>
         public float stickRadiusMillimeters
         {
@@ -114,6 +115,14 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 m_StickRadiusMillimeters = value;
             }
         }
+
+        public Vector2 stickCenter
+        {
+            get => m_Actuated ? m_StickCenter : m_NormalizedBounds.center;
+        }
+
+        private Vector2 m_StickCenter;
+        private bool m_Actuated;
 
         [Header("Bounds")]
         [Tooltip("The geometric clipping area shape")]
@@ -249,6 +258,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnGestureEvent(in GestureEvent gestureEvent)
         {
+            // TODO We cannot only use drag for this, we need to also know when it gets "activated" so we
+            //      can set stick position at that point
+
             // For button control, we consider the whole clip region as a button area.
             if (control is ButtonControl)
             {
@@ -266,12 +278,22 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 if (gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseStart) ||
                     gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseChange))
                 {
-                    // A DualSense has a mechanical displacement of ~7.4 mm.
-                    // A DualShock has a mechanical displacement of ~6.9 mm.
-
                     var deltaMillimeters = UnitConverter.PixelsToMillimeters(gestureEvent.delta);
                     var stickRadius = Vector2.ClampMagnitude(deltaMillimeters, m_StickRadiusMillimeters);
                     value = stickRadius / m_StickRadiusMillimeters;
+
+                    if (!m_Actuated)
+                    {
+                        m_Actuated = true;
+                        m_StickCenter = new Vector2(gestureEvent.start.x / Display.displays[0].renderingWidth,
+                            gestureEvent.start.y / Display.displays[0].renderingHeight);
+                        //m_StickCenter = gestureEvent.start; // TODO Convert to normalized
+                    }
+                }
+                else
+                {
+                    m_StickCenter = m_NormalizedBounds.center;
+                    m_Actuated = false;
                 }
 
                 value = m_Curve.Transform(value);

@@ -61,7 +61,7 @@ public class OnScreenControlUI : MonoBehaviour
 
         if (bounds != null)
         {
-            var rawImage = knob.GetComponent<RawImage>();
+            var rawImage = bounds.GetComponent<RawImage>();
             if (rawImage != null /*&& rawImage.texture == null*/)
             {
                 var g = new Gradient
@@ -116,9 +116,10 @@ public class OnScreenControlUI : MonoBehaviour
 
         var normalizedBounds = control.bounds;
         var stickRadiusPixels = UnitConverter.MillimetersToPixels(control.stickRadiusMillimeters);
+        var stickCenter = control.stickCenter;
         var stickViewport = camera.ScreenToViewportPoint(new Vector2(stickRadiusPixels, stickRadiusPixels));
-        var stickRect = new Rect(normalizedBounds.center.x - stickViewport.x,
-            normalizedBounds.center.y - stickViewport.y, stickViewport.x * 2, stickViewport.y * 2);
+        var stickRect = new Rect(stickCenter.x - stickViewport.x,
+            stickCenter.y - stickViewport.y, stickViewport.x * 2, stickViewport.y * 2);
 
         // Optionally transform a UI object to represent the interactable area in viewport space.
         if (area != null)
