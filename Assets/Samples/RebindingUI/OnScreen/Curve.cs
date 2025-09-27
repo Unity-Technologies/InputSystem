@@ -2,32 +2,49 @@ using System;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    public enum PredefinedCurve
+    /// <summary>
+    /// Represents a response curve for mapping normalized values onto the normalized value axis.
+    /// </summary>
+    public enum Curve
     {
+        /// <summary>
+        /// Linear curve f(x) = x.
+        /// </summary>
         Linear,
-        Quatratic,
+
+        /// <summary>
+        /// Quadratic curve f(x) = x^2.
+        /// </summary>
+        Quadratic,
+
+        /// <summary>
+        /// Cubic curve f(x) = x^3.
+        /// </summary>
         Cubic,
     }
 
-    public static class CurveExtensions
+    /// <summary>
+    /// Extension methods for <see cref="Curve"/>.
+    /// </summary>
+    internal static class CurveExtensions
     {
         /// <summary>
         /// Apply response curve shaping to vlaue <paramref name="v"/>.
         /// </summary>
-        /// <param name="v">The normalized value to be transformed.</param>
         /// <param name="curve">The response curve.</param>
+        /// <param name="v">The normalized value to be transformed.</param>
         /// <returns>Transformed normalized value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">If <paramref name="curve"/> is outside valid range.</exception>
-        public static float Transform(float x, PredefinedCurve curve)
+        public static float Transform(this Curve curve, float v)
         {
             switch (curve)
             {
-                case PredefinedCurve.Linear:
-                    return x;
-                case PredefinedCurve.Quatratic:
-                    return x * x;
-                case PredefinedCurve.Cubic:
-                    return x * x * x;
+                case Curve.Linear:
+                    return v;
+                case Curve.Quadratic:
+                    return v * v;
+                case Curve.Cubic:
+                    return v * v * v;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(curve));
             }
@@ -38,12 +55,12 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// </summary>
         /// <remarks>The provided vector is first transformed to polar form, then the vector length is scaled
         /// before it is finally converted back to euclidean space.</remarks>
-        /// <param name="v">A normalized Euclidean vector to be transformed.</param>
         /// <param name="curve">The response curve.</param>
+        /// <param name="v">A normalized Euclidean vector to be transformed.</param>
         /// <returns>Transformed normalized Euclidean vector.</returns>
-        public static Vector2 Transform(Vector2 v, PredefinedCurve curve)
+        public static Vector2 Transform(this Curve curve, Vector2 v)
         {
-            var r = Transform(v.magnitude, curve);
+            var r = curve.Transform(v.magnitude);
             var theta = Mathf.Atan2(v.y, v.x);
             return new Vector2(r * Mathf.Cos(theta), r * Mathf.Sin(theta));
         }

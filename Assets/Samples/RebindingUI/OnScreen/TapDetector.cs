@@ -2,7 +2,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    class TapDetector : ITouchProcessor
+    internal class TapDetector : ITouchProcessor
     {
         private Vector2 m_InitialPosition;
         private double m_InitialTime;
@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Valid = true;
         }
 
-        public void OnTouchBegin(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchBegin(Detector context, in TouchState[] touches, int count, int index)
         {
             if (count == 1)
             {
@@ -31,25 +31,25 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
-        public void OnTouchEnd(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchEnd(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid && IsWithinMargin(touches[index].position))
             {
                 GestureEvent @event = new GestureEvent(
                     delta: touches[index].position - m_InitialPosition,
                     duration: Time.realtimeSinceStartupAsDouble - m_InitialTime,
-                    flags: GestureFlags.TapGesture, start: m_InitialPosition);
+                    flags: GestureEvent.Flags.TapGesture, start: m_InitialPosition);
                 context.FireEvent(in @event);
             }
         }
 
-        public void OnTouchMoved(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchMoved(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid && !IsWithinMargin(touches[index].position))
                 m_Valid = false;
         }
 
-        public void OnTouchCanceled(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchCanceled(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid)
                 m_Valid = false;

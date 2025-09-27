@@ -1,26 +1,24 @@
 using System;
-using System.Text;
-using Unity.Properties;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OnScreen;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    abstract class ChangeMonitor : ITouchMonitor
+    abstract class Detector : ITouchMonitor
     {
         public delegate void GestureEventHandler(in GestureEvent gestureEvent); // ref readonly not available until C# 12.0
 
-        protected ChangeMonitor(int maxTouches)
+        protected Detector(int maxTouches)
         {
             m_Touches = new TouchState[maxTouches];
             Reset(Rect.zero, AreaShape.Rectangle, null);
         }
 
-        public virtual void Reset(Rect bounds, AreaShape shape, ChangeMonitor.GestureEventHandler handler)
+        public virtual void Reset(Rect bounds, AreaShape shape, Detector.GestureEventHandler handler)
         {
             m_Handler = handler;
             m_Bounds = bounds;
-            m_GestureFlags = GestureFlags.None;
+            m_GestureFlags = GestureEvent.Flags.None;
             m_Count = 0;
         }
 
@@ -64,7 +62,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         //set => SetValue(key, value);
         protected Rect m_Bounds;
         protected AreaShape m_Shape;
-        private GestureFlags m_GestureFlags;
+        private GestureEvent.Flags m_GestureFlags;
         private GestureEventHandler m_Handler;
         protected readonly TouchState[] m_Touches;
         protected int m_Count;
@@ -78,23 +76,23 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
     // TODO This class is doing way too much error checking. Underlying implementation should be correct but
     // there seem to be some kind of bug resulting in duplicate callbacks.
-    internal class ChangeMonitor<TProcessor> : ChangeMonitor, ITouchMonitor
+    internal class Detector<TProcessor> : Detector, ITouchMonitor
         where TProcessor : ITouchProcessor
     {
         private TProcessor m_Processor;
 
-        public ChangeMonitor(int maxTouches, TProcessor processor)
+        public Detector(int maxTouches, TProcessor processor)
             : base(maxTouches)
         {
             m_Processor = processor;
         }
 
-        /*public static ChangeMonitor<TProcessor> Create(int maxTouches, TProcessor processor)
+        /*public static Detector<TProcessor> Create(int maxTouches, TProcessor processor)
         {
-            return new ChangeMonitor<TProcessor>(maxTouches, processor);
+            return new Detector<TProcessor>(maxTouches, processor);
         }*/
 
-        public override void Reset(Rect bounds, AreaShape shape, ChangeMonitor.GestureEventHandler handler)
+        public override void Reset(Rect bounds, AreaShape shape, Detector.GestureEventHandler handler)
         {
             // Make sure we cancel any pending touches. This way processor do not need a reset method.
             for (var i = m_Count; i != 0; --i)

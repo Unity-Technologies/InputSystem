@@ -1,12 +1,15 @@
 using System;
-using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+
+// TODO Consider if we should ditch shape control on this one? Only if we want a square shaped stick it does matter.
+//      We could call that joystick in that case.
+// TODO Consider not using viewport coordinates for bounds. Instead we want a bounding rect in physical screen space.
+//      This is similar but make more sense.
+// TODO Consider support for 1D sticks
+// TODO Consider support for d-pad.
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
@@ -83,7 +86,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <summary>
         /// Gets or sets the mapping curve.
         /// </summary>
-        public PredefinedCurve curve
+        public Curve curve
         {
             get => m_Curve;
             set
@@ -93,6 +96,22 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
                 m_Curve = value;
                 OnConfigurationChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the on-screen stick radius in millimeters.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">If attempting to set the stick radius to a negative value.</exception>
+        public float stickRadiusMillimeters
+        {
+            get => m_StickRadiusMillimeters;
+            set
+            {
+                if (value < 0.0f)
+                    throw new ArgumentOutOfRangeException("stickRadiusMillimeters must be greater or equal to zero.");
+
+                m_StickRadiusMillimeters = value;
             }
         }
 
@@ -112,7 +131,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         [Tooltip("Response curve to be applied to the control value")]
         [SerializeField]
-        private PredefinedCurve m_Curve = PredefinedCurve.Linear;
+        private Curve m_Curve = Curve.Linear;
 
         [Tooltip("The stick radius in millimeters when used as an on-screen stick. " +
             "This defaults to 7.2 millimeters which is similar to the mechanical stick displacement of popular " +
@@ -126,9 +145,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             set => m_ControlPath = value;
         }
 
-        #endregion // Properties
-
         private Touchscreen m_Touchscreen;
+        private Detector m_Detector;
+
+        #endregion // Properties
 
         protected override void OnEnable()
         {
@@ -137,21 +157,18 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             // TODO This should really be reacting to changes of control path and properties
             const float threshold = 10.0f;
             if (control is ButtonControl)
-                m_ChangeMonitor = new ChangeMonitor<ActiveDetector>(1, new ActiveDetector());
+                m_Detector = new Detector<ActiveDetector>(1, new ActiveDetector());
             else if (control is StickControl)
-                m_ChangeMonitor = new ChangeMonitor<DragDetector>(1, new DragDetector(threshold));
+                m_Detector = new Detector<DragDetector>(1, new DragDetector(threshold));
             else
                 throw new Exception($"Unsupported control type: {control.GetType()}");
 
             ChangeDevice();
-
             InputSystem.onDeviceChange += OnDeviceChange;
-            //InputSystem.onEvent += OnEvent;
         }
 
         protected override void OnDisable()
         {
-            //InputSystem.onEvent -= OnEvent;
             InputSystem.onDeviceChange -= OnDeviceChange;
 
             base.OnDisable();
@@ -171,8 +188,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     if (device == m_Touchscreen)
                         ChangeDevice();
                     break;
-                case InputDeviceChange.ConfigurationChanged:
-                    // The device configuration changed, we currently ignore this.
+                case InputDeviceChange.Reconnected:
+                    ChangeDevice();
+                    break;
+                case InputDeviceChange.Disconnected:
+                    // We can ignore disconnect event if it is an unrelated device
+                    if (device == m_Touchscreen)
+                        ChangeDevice();
                     break;
                 case InputDeviceChange.Enabled:
                     // A touchscreen got enabled so we attempt to change device
@@ -184,22 +206,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     if (device == m_Touchscreen)
                         ChangeDevice();
                     break;
+                case InputDeviceChange.ConfigurationChanged:
                 case InputDeviceChange.UsageChanged:
-                    // The device usages changed, we currently ignore this.
+                    OnConfigurationChanged();
                     break;
                 case InputDeviceChange.HardReset:
-                    // The device was reset, we currently ignore this.
+                    // The device was reset, we currently ignore this and rely on event propagation.
                     break;
                 case InputDeviceChange.SoftReset:
-                    // The device was reset, we currently ignore this.
-                    break;
-                case InputDeviceChange.Reconnected:
-                    ChangeDevice();
-                    break;
-                case InputDeviceChange.Disconnected:
-                    // We can ignore disconnect event if it is an unrelated device
-                    if (device == m_Touchscreen)
-                        ChangeDevice();
+                    // The device was reset, we currently ignore this and rely on event propagation.
                     break;
                 default:
                     Debug.LogWarning($"Unhandled device change, device={device}, change={change}.");
@@ -209,8 +224,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void ChangeDevice() => ChangeDevice(Touchscreen.current);
 
-        private ChangeMonitor m_ChangeMonitor;
-
         private void ChangeDevice(Touchscreen current)
         {
             // If touchscreen device have not changed, return immediately.
@@ -218,80 +231,55 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 return;
 
             // Stop monitoring the previous device
-            if (m_Touchscreen != null && m_ChangeMonitor != null)
-                InputState.RemoveChangeMonitor(m_Touchscreen, m_ChangeMonitor);
+            if (m_Touchscreen != null && m_Detector != null)
+                InputState.RemoveChangeMonitor(m_Touchscreen, m_Detector);
 
             // Update current device
             m_Touchscreen = current;
 
             // Start monitoring the new device
-            if (m_ChangeMonitor != null)
+            if (m_Detector != null)
             {
-                m_ChangeMonitor.Reset(m_NormalizedBounds, m_Shape, OnGestureEvent);
+                m_Detector.Reset(m_NormalizedBounds, m_Shape, OnGestureEvent);
 
-                if (current != null && m_ChangeMonitor != null)
-                    InputState.AddChangeMonitor(current, m_ChangeMonitor);
+                if (current != null && m_Detector != null)
+                    InputState.AddChangeMonitor(current, m_Detector);
             }
         }
 
         private void OnGestureEvent(in GestureEvent gestureEvent)
         {
-            // TODO Button control should be whether touch is inside area
-
             // For button control, we consider the whole clip region as a button area.
             if (control is ButtonControl)
             {
-                var value = 0.0f;
-                if (gestureEvent.flags.HasFlag(GestureFlags.PhaseStart))
-                {
-                    value = 1.0f;
-                }
-
-                value = CurveExtensions.Transform(value, m_Curve);
-
+                var value = (gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseStart) ? 1.0f : 0.0f);
+                value = m_Curve.Transform(value);
                 SendValueToControl(value);
             }
             // For stick control, we map drag gesture delta as stick actuation from initial press point
             // and reset virtual stick back to zero if touch ends or is cancelled. Note that we transform
             // pixels to physical distance since on-screen controls are expected to be consistent regardless
             // of the displays physical size.
-            else if (control is StickControl && gestureEvent.flags.HasFlag(GestureFlags.DragGesture))
+            else if (control is StickControl && gestureEvent.flags.HasFlag(GestureEvent.Flags.DragGesture))
             {
                 var value = Vector2.zero;
-                if (gestureEvent.flags.HasFlag(GestureFlags.PhaseStart) ||
-                    gestureEvent.flags.HasFlag(GestureFlags.PhaseChange))
+                if (gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseStart) ||
+                    gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseChange))
                 {
                     // A DualSense has a mechanical displacement of ~7.4 mm.
                     // A DualShock has a mechanical displacement of ~6.9 mm.
 
-                    const float kMillimetersPerInch = 25.4f;
-                    var deltaPx = gestureEvent.delta;
-                    var dpi = Screen.dpi;
-                    var deltaInches = new Vector2(deltaPx.x / dpi, deltaPx.y / dpi);
-                    var deltaMillimeters = deltaInches * kMillimetersPerInch;
+                    var deltaMillimeters = UnitConverter.PixelsToMillimeters(gestureEvent.delta);
                     var stickRadius = Vector2.ClampMagnitude(deltaMillimeters, m_StickRadiusMillimeters);
                     value = stickRadius / m_StickRadiusMillimeters;
-                    Debug.Log($"{deltaMillimeters} mm, stick={value}");
                 }
 
-                // Transform to polar form before we apply curve and then inverse transform.
-                value = CurveExtensions.Transform(value, m_Curve);
-
+                value = m_Curve.Transform(value);
                 SendValueToControl(value);
             }
         }
 
-        // private void OnEvent(InputEventPtr eventPtr, InputDevice device)
-        // {
-        //     /*Touchscreen.current.GetStatePtrFromStateEvent()
-        //     if (m_Touchscreen != null && eventPtr.type == StateEvent.Type)
-        //     {
-        //         TouchState state;
-        //         device.GetStatePtrFromStateEvent(eventPtr);
-        //     }*/
-        // }
-
-        private static Material mat;
+//        private static Material mat;
 
         // public void OnRenderObject()
         // {
@@ -327,6 +315,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void OnConfigurationChanged()
         {
+            // TODO Handle configuration change
         }
 
         // TODO Fix SendValueToControl instead
@@ -355,11 +344,43 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         //            (position.y <= orthoSize + margin);
         // }
 
-        /*private void OnDrawGizmos()
+        private Rect GetScreenSpaceRect(Rect rect, int displayIndex)
+        {
+            var display = Display.displays[displayIndex];
+            var width = display.renderingWidth;
+            var height = display.renderingHeight;
+            return new Rect(
+                x: rect.xMin * width,
+                y: rect.yMin * height,
+                width: rect.width * width,
+                height: rect.height * height);
+        }
+
+        private void OnDrawGizmos()
         {
             Gizmos.color = new Color(1f, 1.0f, 0.0f, 0.75f);
-            Gizmos.DrawLine(new Vector3(0,0,0), new Vector3(100,0,0));
-        }*/
+            ScreenGizmos.DrawLine(Camera.current, new Vector2(0, 0), new Vector2(1000, 1000));
+            //Gizmos.DrawLine(new Vector3(0,0,0), new Vector3(10000,0,0));
+            //Gizmos.DrawCube(Vector3.zero, new Vector3(5,5,1e-3f));
+            //
+            // // Start drawing in screen coordinates.
+            // Handles.BeginGUI();
+            //
+            // // Get screen space rect
+            // //var r = GetScreenSpaceRect(m_NormalizedBounds, Display.activeEditorGameViewTarget);
+            //
+            // var r = new Rect(x: 0, y: -20, width: 500, height: 500);
+            //
+            // // Transform to GUI coordinates
+            //
+            //
+            // // Draw a solid rectangle with an outline.
+            // Color backgroundColor = new Color(1.0f, 0.0f, 0.0f, 0.25f);
+            // Handles.DrawSolidRectangleWithOutline(r, backgroundColor, Color.white);
+            //
+            // // End drawing in screen coordinates.
+            // Handles.EndGUI();
+        }
 
         void OnDrawGizmosSelected()
         {

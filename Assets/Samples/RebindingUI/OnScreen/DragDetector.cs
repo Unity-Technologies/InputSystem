@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Valid = false;
         }
 
-        public void OnTouchBegin(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchBegin(Detector context, in TouchState[] touches, int count, int index)
         {
             if (count == 1)
             {
@@ -27,24 +27,24 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             else if (m_Valid)
             {
                 m_Valid = false;
-                Fire(context, touches, count, index, GestureFlags.PhaseCancel);
+                Fire(context, touches, count, index, GestureEvent.Flags.PhaseCancel);
             }
         }
 
-        public void OnTouchEnd(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchEnd(Detector context, in TouchState[] touches, int count, int index)
         {
             if (!m_Valid)
                 return;
 
-            Fire(context, touches, count, index, GestureFlags.PhaseEnd);
+            Fire(context, touches, count, index, GestureEvent.Flags.PhaseEnd);
             m_Valid = false;
         }
 
-        public void OnTouchMoved(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchMoved(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid)
             {
-                Fire(context, touches, count, index, GestureFlags.PhaseChange);
+                Fire(context, touches, count, index, GestureEvent.Flags.PhaseChange);
             }
             else
             {
@@ -53,25 +53,25 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     return;
 
                 m_Valid = true;
-                Fire(context, touches, count, index, GestureFlags.PhaseStart);
+                Fire(context, touches, count, index, GestureEvent.Flags.PhaseStart);
             }
         }
 
-        public void OnTouchCanceled(ChangeMonitor context, in TouchState[] touches, int count, int index)
+        public void OnTouchCanceled(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid)
             {
                 m_Valid = false;
-                Fire(context, touches, count, index, GestureFlags.PhaseCancel);
+                Fire(context, touches, count, index, GestureEvent.Flags.PhaseCancel);
             }
         }
 
-        private void Fire(ChangeMonitor context, in TouchState[] touches, int count, int index, GestureFlags phase)
+        private void Fire(Detector context, in TouchState[] touches, int count, int index, GestureEvent.Flags phase)
         {
             GestureEvent @event = new GestureEvent(
                 delta: touches[index].position - m_InitialPosition,
                 duration: Time.realtimeSinceStartupAsDouble - m_InitialTime,
-                flags: GestureFlags.DragGesture | phase, start: m_InitialPosition);
+                flags: GestureEvent.Flags.DragGesture | phase, start: m_InitialPosition);
             context.FireEvent(in @event);
         }
 

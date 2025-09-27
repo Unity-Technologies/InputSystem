@@ -2,8 +2,8 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    interface ITouchMonitor : IInputStateChangeMonitor
+    internal interface ITouchMonitor : IInputStateChangeMonitor
     {
-        void Reset(Rect bounds, AreaShape shape, ChangeMonitor.GestureEventHandler handler);
+        void Reset(Rect bounds, AreaShape shape, Detector.GestureEventHandler handler);
     }
 }

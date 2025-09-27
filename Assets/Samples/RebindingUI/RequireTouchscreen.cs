@@ -28,7 +28,7 @@ public class RequireTouchscreen : MonoBehaviour
     private void UpdateState()
     {
         var touchscreenIsPresent = Touchscreen.current != null;
-        var activeInHierarchy = gameObject.activeSelf;
+        var activeInHierarchy = gameObject.activeInHierarchy || gameObject.activeSelf;
         if (activeInHierarchy && !touchscreenIsPresent)
             gameObject.SetActive(false);
         else if (!activeInHierarchy && touchscreenIsPresent)
