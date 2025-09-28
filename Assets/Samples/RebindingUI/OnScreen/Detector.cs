@@ -4,9 +4,15 @@ using UnityEngine.InputSystem.OnScreen;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
+    // Note that gesture event handler delegate takes an 'in' reference when 'ref readonly' would be preferrable.
+    // The reason for this is that this construct isn't available until C# 12.0.
+
+    /// <summary>
+    /// Base class for gesture detectors.
+    /// </summary>
     abstract class Detector : ITouchMonitor
     {
-        public delegate void GestureEventHandler(in GestureEvent gestureEvent); // ref readonly not available until C# 12.0
+        public delegate void GestureEventHandler(in GestureEvent gestureEvent);
 
         protected Detector(int maxTouches)
         {

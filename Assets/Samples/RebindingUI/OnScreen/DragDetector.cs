@@ -2,10 +2,13 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
-    class DragDetector : ITouchProcessor
+    /// <summary>
+    /// A gesture detector processor for "drag" a.k.a. "translate/pan" gestures.
+    /// </summary>
+    internal class DragDetector : ITouchProcessor
     {
-        private double m_InitialTime;
         private Vector2 m_InitialPosition;
+        private double m_InitialTime;
         private readonly float m_ThresholdSqr;
         private bool m_Valid;
 
@@ -17,6 +20,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Valid = false;
         }
 
+        #region ITouchProcessor implementation
+
+        /// <inheritdoc/>
         public void OnTouchBegin(Detector context, in TouchState[] touches, int count, int index)
         {
             if (count == 1)
@@ -38,6 +44,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
+        /// <inheritdoc/>
         public void OnTouchEnd(Detector context, in TouchState[] touches, int count, int index)
         {
             if (!m_Valid)
@@ -47,6 +54,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Valid = false;
         }
 
+        /// <inheritdoc/>
         public void OnTouchMoved(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid)
@@ -64,6 +72,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
+        /// <inheritdoc/>
         public void OnTouchCanceled(Detector context, in TouchState[] touches, int count, int index)
         {
             if (m_Valid)
@@ -72,6 +81,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 Fire(context, touches, count, index, GestureEvent.Flags.PhaseCancel);
             }
         }
+
+        #endregion
 
         private void Fire(Detector context, in TouchState[] touches, int count, int index, GestureEvent.Flags phase)
         {
