@@ -39,9 +39,24 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             /// </summary>
             Active = 1 << 3,
 
+            /// <summary>
+            /// Indicates that the interaction of the associated continuous gesture started.
+            /// </summary>
             PhaseStart = 1 << 28,
+
+            /// <summary>
+            /// Indicates that the interaction of the associated continuous gesture was updated and changed.
+            /// </summary>
             PhaseChange = 1 << 29,
+
+            /// <summary>
+            /// Indicates that the interaction of the associated continuous gesture ended.
+            /// </summary>
             PhaseEnd = 1 << 30,
+
+            /// <summary>
+            /// Indicates that the interaction of the associated continuous gesture was cancelled.
+            /// </summary>
             PhaseCancel = 1 << 31,
         }
 
@@ -50,6 +65,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         public readonly Vector2 delta;
         public readonly double duration;
 
+        /// <summary>
+        /// Constructs a new gesture event.
+        /// </summary>
+        /// <param name="delta">The delta of the gesture event.</param>
+        /// <param name="duration">The duration of the gesture event.</param>
+        /// <param name="flags">Flags indicating what type of event it is.</param>
+        /// <param name="start">The initial absolute position of the gesture event.</param>
         public GestureEvent(Vector2 delta, double duration, Flags flags, Vector2 start)
         {
             this.delta = delta;
@@ -58,6 +80,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             this.start = start;
         }
 
+        /// <summary>
+        /// Converts the event to string representation.
+        /// </summary>
         public override string ToString()
         {
             var sb = new StringBuilder();

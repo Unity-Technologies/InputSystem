@@ -6,7 +6,9 @@ using UnityEngine.UI;
 // Should warn about not having a canvas or parent canvas assigned.
 // Should warn about ray-casted UI consuming events.
 
-
+/// <summary>
+/// A passive UI visualization of an on-screen control in Unity UI (UGUI).
+/// </summary>
 [ExecuteInEditMode]
 public class OnScreenControlUI : MonoBehaviour
 {
@@ -16,41 +18,6 @@ public class OnScreenControlUI : MonoBehaviour
     public RectTransform area;
     public RectTransform bounds;
     public RectTransform knob;
-
-    private void OnDrawGizmosSelected()
-    {
-        // This will not produce meaningful results unless we have a rect transform (ISXB-915, ISXB-916).
-        var parentRectTransform = transform.parent as RectTransform;
-        if (parentRectTransform == null)
-            return;
-
-        Gizmos.matrix = parentRectTransform.localToWorldMatrix;
-
-        var startPos = parentRectTransform.anchoredPosition;
-
-        /*var startPos = parentRectTransform.anchoredPosition;
-        if (Application.isPlaying)
-            startPos = m_StartPos;
-*/
-        Gizmos.color = new Color32(84, 173, 219, 255);
-
-        var center = startPos;
-        /*if (Application.isPlaying && m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
-            center = m_PointerDownPos;*/
-
-        var radius = UnitConverter.MillimetersToPixels(control.stickRadiusMillimeters);
-        ScreenGizmos.DrawGizmoCircle(center, radius);
-
-        //if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
-
-        //Gizmos.color = new Color32(158, 84, 219, 255);
-        //DrawGizmoCircle(startPos, m_DynamicOriginRange);
-    }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-    }
 
     void OnEnable()
     {
@@ -118,8 +85,11 @@ public class OnScreenControlUI : MonoBehaviour
         var stickRadiusPixels = UnitConverter.MillimetersToPixels(control.stickRadiusMillimeters);
         var stickCenter = control.stickCenter;
         var stickViewport = camera.ScreenToViewportPoint(new Vector2(stickRadiusPixels, stickRadiusPixels));
-        var stickRect = new Rect(stickCenter.x - stickViewport.x,
-            stickCenter.y - stickViewport.y, stickViewport.x * 2, stickViewport.y * 2);
+        var stickRect = new Rect(
+            x: stickCenter.x - stickViewport.x,
+            y: stickCenter.y - stickViewport.y,
+            width: stickViewport.x * 2,
+            height: stickViewport.y * 2);
 
         // Optionally transform a UI object to represent the interactable area in viewport space.
         if (area != null)

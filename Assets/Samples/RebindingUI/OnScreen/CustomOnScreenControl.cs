@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             if (control is ButtonControl)
                 m_Detector = new Detector<ActiveDetector>(1, new ActiveDetector());
             else if (control is StickControl)
-                m_Detector = new Detector<DragDetector>(1, new DragDetector(threshold));
+                m_Detector = new Detector<DragDetector>(1, new DragDetector(0.0f));
             else
                 throw new Exception($"Unsupported control type: {control.GetType()}");
 

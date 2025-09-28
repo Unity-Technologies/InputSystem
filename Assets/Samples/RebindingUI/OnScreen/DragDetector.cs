@@ -23,6 +23,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             {
                 m_InitialPosition = touches[index].position;
                 m_InitialTime = Time.realtimeSinceStartupAsDouble;
+
+                // Require that we move outside "dead zone" before we consider the drag to start.
+                if (IsWithinMargin(touches[index].position))
+                    return;
+
+                m_Valid = true;
+                Fire(context, touches, count, index, GestureEvent.Flags.PhaseStart);
             }
             else if (m_Valid)
             {
@@ -78,7 +85,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private bool IsWithinMargin(Vector2 point)
         {
             var sqrMagnitude = (point - m_InitialPosition).sqrMagnitude;
-            return sqrMagnitude <= m_ThresholdSqr;
+            return sqrMagnitude < m_ThresholdSqr;
         }
     }
 }
