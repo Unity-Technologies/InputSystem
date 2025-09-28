@@ -1087,11 +1087,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5514b68a2410f4ab8a2e19c8b963b6f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem.RebindingUI::UnityEngine.InputSystem.Samples.RebindUI.CustomOnScreenControl
-  m_Shape: 0
+  m_Shape: 1
   m_NormalizedBounds:
     serializedVersion: 2
     x: 0.86
-    y: 0.2
+    y: 0.3
     width: 0.15
     height: 0.25
   m_ControlPath: <Gamepad>/buttonEast
@@ -2166,7 +2166,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &585912951
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4209,7 +4209,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &901700405
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4226,8 +4226,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 712.44666, y: -132.47499}
-  m_SizeDelta: {x: 245.6712, y: 189.24997}
+  m_AnchoredPosition: {x: 712.44666, y: -56.774994}
+  m_SizeDelta: {x: 245.6712, y: 189.25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &901700406
 MonoBehaviour:
@@ -4874,7 +4874,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1053028838
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5066,8 +5066,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 712.44666, y: -132.47502}
-  m_SizeDelta: {x: 153.08221, y: 153.0823}
+  m_AnchoredPosition: {x: 712.44666, y: -56.774963}
+  m_SizeDelta: {x: 153.08221, y: 153.08237}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1090088430
 MonoBehaviour:

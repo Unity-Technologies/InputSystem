@@ -1,57 +1,50 @@
+using System;
+
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
+    /// <summary>
+    /// Conversion utility class for physical coordinate transforms.
+    /// </summary>
     internal static class UnitConverter
     {
-        private const float kMillimetersPerInch = 25.4f;
-        private const string kWarningMessage = "Screen.dpi not available, assuming 96 DPI.";
-
-        private static float EffectivePpi(float ppi) => ppi <= 0.0f ? 96.0f : ppi;
-        private static float PixelsToMillimetersFactor(float ppi) => kMillimetersPerInch / EffectivePpi(ppi);
-        private static float MillimetersToPixelsFactor(float ppi) => EffectivePpi(ppi) / kMillimetersPerInch;
-
-        #region PixelsToMillimeters
-
-        public static float PixelsToMillimeters(float pixels, float ppi) => pixels * PixelsToMillimetersFactor(ppi);
-
-        public static float PixelsToMillimeters(float millimeters) => PixelsToMillimeters(millimeters, Screen.dpi);
+        /// <summary>
+        /// Conversion factor for millimeters per inch.
+        /// </summary>
+        /// <example>
+        /// var millimeters = 10.0f;
+        /// Debug.Log($"{millimeters} mm is equal to {millimeters / MillimetersPerInch} inches.");
+        /// </example>
+        public const float MillimetersPerInch = 25.4f;
 
         /// <summary>
-        /// Converts a pixel size to millimeters, based on Screen.dpi.
+        /// Returns a conversion factor for converting pixels to millimeters using the given pixel density.
         /// </summary>
-        /// <remarks>Screen.dpi may not be available on some platforms. In such cases, 96 DPI is assumed.</remarks>
-        public static Vector2 PixelsToMillimeters(Vector2 pixels) => PixelsToMillimeters(pixels, Screen.dpi);
-
+        /// <param name="ppi">Pixel density expressed as pixels-per-inch (PPI).</param>
+        /// <returns>Conversion ratio for converting pixels to millimeters.</returns>
+        public static float PixelsToMillimetersConversionFactor(float ppi)
+        {
+            if (ppi <= 0.0f)
+                throw new ArgumentOutOfRangeException($"Invalid pixel density: {ppi}");
+            return MillimetersPerInch / ppi;
+        }
 
         /// <summary>
-        /// Converts a size in pixels to millimeters based on the given PPI (Pixels-per-inch).
+        /// Returns a conversion factor for converting millimeters to pixels using the given pixel density.
         /// </summary>
-        /// <param name="pixels">The size in pixels (screen-space).</param>
-        /// <param name="ppi">Pixels-per-inch (PPI). If this is zero or negative DefaultPixelsPerInch will be used.</param>
-        /// <returns></returns>
-        public static Vector2 PixelsToMillimeters(Vector2 pixels, float ppi) => pixels * PixelsToMillimetersFactor(ppi);
-
-        #endregion
-
-        #region MillimetersToPixels
-
-        public static float MillimetersToPixels(float millimeters, float ppi) => millimeters * MillimetersToPixelsFactor(ppi);
-
-        public static float MillimetersToPixels(float millimeters) => MillimetersToPixels(millimeters, Screen.dpi);
+        /// <param name="ppi">Pixel density expressed as pixels-per-inch (PPI).</param>
+        /// <returns>Conversion ratio for converting millimeters to pixels.</returns>
+        public static float MillimetersToPixelsConversionFactor(float ppi)
+        {
+            if (ppi <= 0.0f)
+                throw new ArgumentOutOfRangeException($"Invalid pixel density: {ppi}");
+            return ppi / MillimetersPerInch;
+        }
 
         /// <summary>
-        /// Converts a size in millimeters to pixels based on the given PPI (Pixels-per-inch).
+        /// Given a pixel density, returns the same pixel density (if positive), or returns a fallback PPI of 96.
         /// </summary>
-        /// <param name="millimeters">The size in millimeters</param>
-        /// <param name="ppi">Pixels-per-inch (PPI). If this is zero or negative kDefaultPixelsPerInch will be used.</param>
-        /// <returns>Size expressed in pixels.</returns>
-        public static Vector2 MillimetersToPixels(Vector2 millimeters, float ppi) => millimeters * MillimetersToPixelsFactor(ppi);
-
-        /// <summary>
-        /// Converts a size in millimeters to pixels, based on Screen.dpi.
-        /// </summary>
-        /// <remarks>Screen.dpi may not be available on some platforms. In such cases, 96 DPI is assumed.</remarks>
-        public static Vector2 MillimetersToPixels(Vector2 millimeters) => MillimetersToPixels(millimeters, Screen.dpi);
-
-        #endregion
+        /// <param name="ppi">The candidate pixel density expressed as pixels-per-inch (PPI).</param>
+        /// <returns>Returns <paramref name="ppi"/> if positive, otherwise 96 PPI.</returns>
+        public static float EffectivePixelDensity(float ppi) => ppi <= 0.0f ? 96.0f : ppi;
     }
 }

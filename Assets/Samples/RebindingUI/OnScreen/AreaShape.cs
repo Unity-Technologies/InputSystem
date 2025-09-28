@@ -9,5 +9,10 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// A rectangular clipping area is used (default).
         /// </summary>
         Rectangle = 0,
+
+        /// <summary>
+        /// A ellipse shaped (or circular) clipping area is used.
+        /// </summary>
+        Ellipse = 1,
     }
 }

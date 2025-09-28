@@ -13,7 +13,7 @@ using UnityEngine.UI;
 public class OnScreenControlUI : MonoBehaviour
 {
     public Canvas canvas;
-    public Camera camera;
+    public new Camera camera;
     public CustomOnScreenControl control;
     public RectTransform area;
     public RectTransform bounds;
@@ -82,7 +82,8 @@ public class OnScreenControlUI : MonoBehaviour
             return;
 
         var normalizedBounds = control.bounds;
-        var stickRadiusPixels = UnitConverter.MillimetersToPixels(control.stickRadiusMillimeters);
+        var stickRadiusPixels = control.stickRadiusMillimeters * UnitConverter.MillimetersToPixelsConversionFactor(
+            UnitConverter.EffectivePixelDensity(Screen.dpi));
         var stickCenter = control.stickCenter;
         var stickViewport = camera.ScreenToViewportPoint(new Vector2(stickRadiusPixels, stickRadiusPixels));
         var stickRect = new Rect(

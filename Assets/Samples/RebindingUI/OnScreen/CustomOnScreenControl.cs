@@ -278,7 +278,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 if (gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseStart) ||
                     gestureEvent.flags.HasFlag(GestureEvent.Flags.PhaseChange))
                 {
-                    var deltaMillimeters = UnitConverter.PixelsToMillimeters(gestureEvent.delta);
+                    var deltaMillimeters = gestureEvent.delta * UnitConverter.PixelsToMillimetersConversionFactor(
+                        UnitConverter.EffectivePixelDensity(Screen.dpi));
                     var stickRadius = Vector2.ClampMagnitude(deltaMillimeters, m_StickRadiusMillimeters);
                     value = stickRadius / m_StickRadiusMillimeters;
 

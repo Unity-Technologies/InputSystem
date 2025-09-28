@@ -14,30 +14,38 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             Reset(Rect.zero, AreaShape.Rectangle, null);
         }
 
-        public virtual void Reset(Rect bounds, AreaShape shape, Detector.GestureEventHandler handler)
+        public virtual void Reset(Rect bounds, AreaShape shape, GestureEventHandler handler)
         {
             m_Handler = handler;
             m_Bounds = bounds;
+            m_Shape = shape;
             m_GestureFlags = GestureEvent.Flags.None;
             m_Count = 0;
         }
 
         protected bool Contains(in TouchState touch)
         {
+            // TODO Consider transforming touch into normalized instead? E.g. touch / renderingSize
+
+            var display = Display.displays[touch.displayIndex];
+            var absoluteBounds = new Rect(
+                x: m_Bounds.xMin * display.renderingWidth,
+                y: m_Bounds.yMin * display.renderingHeight,
+                width: m_Bounds.width * display.renderingWidth,
+                height: m_Bounds.height * display.renderingHeight);
+
             switch (m_Shape)
             {
                 case AreaShape.Rectangle:
                 {
-                    // TODO Caching opportunities here
-                    var display = Display.displays[touch.displayIndex];
-                    var width = display.renderingWidth;
-                    var height = display.renderingHeight;
-                    var absoluteBounds = new Rect(
-                        x: m_Bounds.xMin * width,
-                        y: m_Bounds.yMin * height,
-                        width: m_Bounds.width * width,
-                        height: m_Bounds.height * height);
                     return absoluteBounds.Contains(touch.position);
+                }
+                case AreaShape.Ellipse:
+                {
+                    var delta = touch.position - absoluteBounds.center;
+                    var radius = absoluteBounds.size / 2;
+                    var value = (delta.x * delta.x) / (radius.x * radius.x) + (delta.y * delta.y) / (radius.y * radius.y);
+                    return value <= 1f;
                 }
             }
 
