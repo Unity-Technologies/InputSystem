@@ -317,7 +317,7 @@ internal class HIDTests : CoreTestsFixture
 
     [Test]
     [Category("HID Devices")]
-    public void Devices_CanCrateGenericHID_WithSignedLogicalMinAndMaxSticks()
+    public void Devices_CanCreateGenericHID_WithSignedLogicalMinAndMaxSticks()
     {
         // This is a HID report descriptor for a simple device with two analog sticks;
         // Similar to a user that reported an issue in Discussions:

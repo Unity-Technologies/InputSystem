@@ -257,7 +257,6 @@ namespace UnityEngine.InputSystem.HID
 
                     // Update the descriptor on the device with the information we got.
                     deviceDescription.capabilities = hidDeviceDescriptor.ToJson();
-                    Debug.Log($"Parsing HID descriptor from JSON for device '{deviceDescription.capabilities}'");
                 }
                 else
                 {
