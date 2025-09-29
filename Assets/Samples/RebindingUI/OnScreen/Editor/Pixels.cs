@@ -2,8 +2,16 @@
 
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
+    /// <summary>
+    /// Utility to programatically draw pixels into a bitmap (color map).
+    /// </summary>
     internal readonly struct Pixels
     {
+        /// <summary>
+        /// Creates a new bitmap.
+        /// </summary>
+        /// <param name="width">The number of horizontal pixels.</param>
+        /// <param name="height">The number of vertical pixels.</param>
         public Pixels(int width, int height)
         {
             Width = width;
@@ -11,14 +19,23 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             Data = new Color[width * height];
         }
 
+        /// <summary>
+        /// Fills the bitmap with the given color.
+        /// </summary>
+        /// <param name="color">The fill color.</param>
         public void Fill(Color color)
         {
             for (var i = 0; i < Data.Length; i++)
                 Data[i] = color;
         }
 
-        public void FillCircle(float innerRadius,
-            float outerRadius, Gradient gradient)
+        /// <summary>
+        /// Fills a circle with the given gradient.
+        /// </summary>
+        /// <param name="innerRadius">The inner radius, set this to zero to draw a filled circle.</param>
+        /// <param name="outerRadius">The outer circle radius. Must be greater or equal to inner radius.</param>
+        /// <param name="gradient">The fill gradient.</param>
+        public void FillCircle(float innerRadius, float outerRadius, Gradient gradient)
         {
             var center = new Vector2(Width / 2f, Height / 2f);
 
@@ -56,6 +73,13 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
+        /// <summary>
+        /// Fills an arrow shape (triangle) with the given color.
+        /// </summary>
+        /// <param name="tip">The tip coordinate of the arrow.</param>
+        /// <param name="baseCenter">The base center coordinate of the arrow.</param>
+        /// <param name="baseWidth">The base width of the arrow.</param>
+        /// <param name="color">The fill color.</param>
         public void FillArrow(Vector2 tip, Vector2 baseCenter, float baseWidth, Color color)
         {
             var edgeSoftness = 1.0f; // pixels
@@ -110,8 +134,21 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             }
         }
 
+        /// <summary>
+        /// Computes the cross product of a and b.
+        /// </summary>
+        /// <param name="a">The first vector.</param>
+        /// <param name="b">The second vector.</param>
+        /// <returns>The cross product of a and b.</returns>
         private static float Cross(Vector2 a, Vector2 b) => a.x * b.y - a.y * b.x;
 
+        /// <summary>
+        /// Computes the distance from point p to the line given by a and b.
+        /// </summary>
+        /// <param name="p">The point.</param>
+        /// <param name="a">The start of the line.</param>
+        /// <param name="b">The end of the line.</param>
+        /// <returns>Distance to line.</returns>
         private static float DistanceToLine(Vector2 p, Vector2 a, Vector2 b)
         {
             var ab = b - a;
@@ -121,6 +158,11 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             return (p - proj).magnitude;
         }
 
+        /// <summary>
+        /// Converts the bitmap into a 2D texture.
+        /// </summary>
+        /// <param name="name">The name to be assigned to the texture.</param>
+        /// <returns>Texture object.</returns>
         public Texture2D ToTexture(string name)
         {
             var texture = new Texture2D(Width, Height, TextureFormat.RGBA32, false);
