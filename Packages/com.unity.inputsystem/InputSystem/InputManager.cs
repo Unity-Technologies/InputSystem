@@ -1898,7 +1898,7 @@ namespace UnityEngine.InputSystem
         private void InitializeActions()
         {
 #if UNITY_EDITOR
-            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+            m_Actions = EditorHooks.ActionsToIncludeInPlayerBuild;
 #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();

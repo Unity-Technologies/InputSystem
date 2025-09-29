@@ -9,6 +9,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
@@ -1625,8 +1626,7 @@ namespace UnityEngine.InputSystem.UI
         {
             base.Reset();
 
-            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
-                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath( EditorHooks.DefaultInputActionsAssetPath,
                 typeof(InputActionAsset));
             // Setting default asset and actions when creating via inspector
             Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);

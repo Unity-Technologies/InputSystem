@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
+        "Unity.InputSystem.Editor",
         "Unity.InputSystem.TestFramework",
         "Unity.ugui",
         "Unity.PackageManagerDocTools.Editor",
@@ -10,7 +11,8 @@
         "UnityEditor.TestRunner",
         "Unity.PerformanceTesting",
         "Unity.Coding.Editor",
-        "Unity.InputSystem.ForUI"
+        "Unity.InputSystem.ForUI",
+        "Unity.InputSystem.ForUI.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

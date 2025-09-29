@@ -43,7 +43,7 @@ public class ControlSchemesEditorTests
         var state = TestData.editorState.Generate().With(selectedControlScheme: controlScheme);
 
 
-        var newState = ControlSchemeCommands.RemoveDeviceRequirement(0)(in state);
+        var newState = UnityEngine.InputSystem.Editor.ControlSchemeCommands.RemoveDeviceRequirement(0)(in state);
 
 
         Assert.That(newState.selectedControlScheme.deviceRequirements.Count, Is.EqualTo(1));

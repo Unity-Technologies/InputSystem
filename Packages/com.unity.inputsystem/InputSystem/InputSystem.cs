@@ -2907,7 +2907,7 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                    EditorBuildSettings.AddConfigObject(EditorHooks.SettingsProviderConfigKey,
                         value, true);
                 }
                 #endif
@@ -3108,7 +3108,7 @@ namespace UnityEngine.InputSystem
 
                 // Track reference to enable including it in built Players, note that it will discard any non-persisted
                 // object reference
-                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
+                EditorHooks.ActionsToIncludeInPlayerBuild = value;
 #endif // UNITY_EDITOR
 
                 // Update underlying value
@@ -3494,9 +3494,10 @@ namespace UnityEngine.InputSystem
         // and to support the reset ability for tests.
         static InputSystem()
         {
-            #if UNITY_EDITOR
-            InitializeInEditor();
-            #else
+            //EditorInitialization takes care of initialization in the editor
+            //that ensures all hooks have been initialized which otherwise
+            //woudl be a problem since we would have dependent code running in 2 separate static constructors.
+            #if !UNITY_EDITOR 
             InitializeInPlayer();
             #endif
         }
@@ -3570,7 +3571,7 @@ namespace UnityEngine.InputSystem
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                if (EditorBuildSettings.TryGetConfigObject(EditorHooks.SettingsProviderConfigKey,
                     out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
@@ -3581,7 +3582,7 @@ namespace UnityEngine.InputSystem
 
                 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // See if we have a saved actions object
-                var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+                var savedActions = EditorHooks.ActionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                     s_Manager.actions = savedActions;
                 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -3710,7 +3711,8 @@ namespace UnityEngine.InputSystem
             ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            InputSettingsProvider.ForceReload();
+            EditorHooks.InputSettingsProviderForceReload();
+            
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
