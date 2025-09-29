@@ -136,6 +136,7 @@ namespace UnityEngine.InputSystem
             m_Asset = asset;
             m_ActionId = action.id.ToString();
             name = GetDisplayName(action);
+            m_Action = action;
 
             ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
