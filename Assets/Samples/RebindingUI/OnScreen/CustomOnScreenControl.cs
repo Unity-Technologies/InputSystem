@@ -52,22 +52,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
-        /// Gets or sets the size of the geometric clipping area.
-        /// </summary>
-        public Vector2 size
-        {
-            get => m_NormalizedBounds.size;
-            set
-            {
-                if (m_NormalizedBounds.size.Equals(value))
-                    return;
-
-                m_NormalizedBounds.size = value;
-                OnConfigurationChanged();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the bounds of the geometric clipping area.
         /// </summary>
         public Rect bounds
@@ -163,14 +147,18 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             base.OnEnable();
 
-            // TODO This should really be reacting to changes of control path and properties
-            const float threshold = 10.0f;
-            if (control is ButtonControl)
-                m_Detector = new Detector<ActiveDetector>(1, new ActiveDetector());
-            else if (control is StickControl)
-                m_Detector = new Detector<DragDetector>(1, new DragDetector(0.0f));
-            else
-                throw new Exception($"Unsupported control type: {control.GetType()}");
+            // We cannot setup detector if we have no input control
+            var c = control;
+            if (c != null)
+            {
+                // TODO This should really be reacting to changes of control path and properties
+                if (c is ButtonControl)
+                    m_Detector = new Detector<ActiveDetector>(1, new ActiveDetector());
+                else if (c is StickControl)
+                    m_Detector = new Detector<DragDetector>(1, new DragDetector(0.0f));
+                else
+                    throw new Exception($"Unsupported control type: {control.GetType()}");
+            }
 
             ChangeDevice();
             InputSystem.onDeviceChange += OnDeviceChange;

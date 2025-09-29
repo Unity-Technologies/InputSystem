@@ -26,59 +26,59 @@ public class OnScreenControlUI : MonoBehaviour
         if (camera == null)
             camera = Camera.main;
 
-        if (bounds != null)
-        {
-            var rawImage = bounds.GetComponent<RawImage>();
-            if (rawImage != null /*&& rawImage.texture == null*/)
-            {
-                var g = new Gradient
-                {
-                    colorKeys = new GradientColorKey[]
-                    {
-                        new(new Color(0.1f, 0.1f, 0.1f, 1.0f), 0.0f),
-                        new(new Color(0.1f, 0.1f, 0.1f, 1.0f), 0.8f),
-                        new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 0.9f),
-                        new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 1.0f)
-                    },
-                    mode = GradientMode.PerceptualBlend
-                };
-
-                var texture = GenerateCircleTexture(128, 64.0f, g);
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                bounds.GetComponent<RawImage>().texture = texture;
-            }
-        }
-
-        if (knob != null)
-        {
-            var rawImage = knob.GetComponent<RawImage>();
-            if (rawImage != null /*&& rawImage.texture == null*/)
-            {
-                var g = new Gradient
-                {
-                    colorKeys = new GradientColorKey[]
-                    {
-                        new(new Color(0.3f, 0.3f, 0.3f, 1.0f), 0.0f),
-                        new(new Color(0.3f, 0.3f, 0.3f, 1.0f), 0.5f),
-                        new(new Color(0.5f, 0.5f, 0.5f, 1.0f), 0.9f),
-                        new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 1.0f)
-                    },
-                    mode = GradientMode.PerceptualBlend
-                };
-
-                var texture = GenerateCircleTexture(128, 64.0f, g);
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                knob.GetComponent<RawImage>().texture = texture;
-            }
-        }
+        // if (bounds != null)
+        // {
+        //     var rawImage = bounds.GetComponent<RawImage>();
+        //     if (rawImage != null /*&& rawImage.texture == null*/)
+        //     {
+        //         var g = new Gradient
+        //         {
+        //             colorKeys = new GradientColorKey[]
+        //             {
+        //                 new(new Color(0.1f, 0.1f, 0.1f, 1.0f), 0.0f),
+        //                 new(new Color(0.1f, 0.1f, 0.1f, 1.0f), 0.8f),
+        //                 new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 0.9f),
+        //                 new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 1.0f)
+        //             },
+        //             mode = GradientMode.PerceptualBlend
+        //         };
+        //
+        //         var texture = GenerateCircleTexture(128, 64.0f, g);
+        //         texture.hideFlags = HideFlags.HideAndDontSave;
+        //         texture.filterMode = FilterMode.Bilinear;
+        //         bounds.GetComponent<RawImage>().texture = texture;
+        //     }
+        // }
+        //
+        // if (knob != null)
+        // {
+        //     var rawImage = knob.GetComponent<RawImage>();
+        //     if (rawImage != null /*&& rawImage.texture == null*/)
+        //     {
+        //         var g = new Gradient
+        //         {
+        //             colorKeys = new GradientColorKey[]
+        //             {
+        //                 new(new Color(0.3f, 0.3f, 0.3f, 1.0f), 0.0f),
+        //                 new(new Color(0.3f, 0.3f, 0.3f, 1.0f), 0.5f),
+        //                 new(new Color(0.5f, 0.5f, 0.5f, 1.0f), 0.9f),
+        //                 new(new Color(0.2f, 0.2f, 0.2f, 1.0f), 1.0f)
+        //             },
+        //             mode = GradientMode.PerceptualBlend
+        //         };
+        //
+        //         var texture = GenerateCircleTexture(128, 64.0f, g);
+        //         texture.hideFlags = HideFlags.HideAndDontSave;
+        //         texture.filterMode = FilterMode.Bilinear;
+        //         knob.GetComponent<RawImage>().texture = texture;
+        //     }
+        // }
     }
 
     void Update()
     {
         // If we do not have a control nor a camera, there is nothing we can visualize via UI.
-        if (control == null || camera == null)
+        if (control == null || camera == null || canvas == null)
             return;
 
         var normalizedBounds = control.bounds;

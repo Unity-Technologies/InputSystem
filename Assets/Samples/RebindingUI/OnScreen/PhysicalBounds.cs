@@ -1,5 +1,3 @@
-using Unity.Android.Gradle.Manifest;
-
 namespace UnityEngine.InputSystem.Samples.RebindUI
 {
     /// <summary>
@@ -64,6 +62,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     return false;
             }
         }
+
+        private RectTransform rectTransform;
 
         /// <summary>
         /// A bounding rectangle in millimeters.

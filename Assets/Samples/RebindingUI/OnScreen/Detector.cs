@@ -25,7 +25,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             m_Handler = handler;
             m_Bounds = bounds;
             m_Shape = shape;
-            m_GestureFlags = GestureEvent.Flags.None;
             m_Count = 0;
         }
 
@@ -76,7 +75,6 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         //set => SetValue(key, value);
         protected Rect m_Bounds;
         protected AreaShape m_Shape;
-        private GestureEvent.Flags m_GestureFlags;
         private GestureEventHandler m_Handler;
         protected readonly TouchState[] m_Touches;
         protected int m_Count;
