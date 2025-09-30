@@ -104,6 +104,13 @@ namespace UnityEngine.InputSystem
             if (map.m_Asset != asset)
                 return;
 
+            // First remove all actions from map (They become "singleton actions" or may get collected if not referenced).
+            if (map.m_Actions != null)
+            {
+                for (var i = map.m_Actions.Length - 1; i >= 0; --i)
+                    RemoveAction(map.m_Actions[i]);
+            }
+
             ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
             map.m_Asset = null;
             asset.OnSetupChanged();

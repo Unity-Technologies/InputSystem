@@ -53,11 +53,12 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Action != null)
+                // Note that we check m_Action since it would be null if we haven't yet resolved the action.
+                // We also need to check that m_Action.actionMap isn't null since it would be null if the
+                // action was deleted.
+                if (m_Action != null && m_Action.actionMap != null && m_Asset)
                     return m_Action;
-                if (!m_Asset)
-                    return null;
-                return (m_Action = m_Asset.FindAction(new Guid(m_ActionId)));;
+                return (m_Action = ResolveAction());
             }
         }
 
@@ -236,5 +237,20 @@ namespace UnityEngine.InputSystem
         {
             return action;
         }
+
+        private InputAction ResolveAction()
+        {
+            return m_Asset == null ? null : m_Asset.FindAction(new Guid(m_ActionId));
+        }
+
+        // OnValidate() is stripped out from player builds (editor only).
+        /*private void OnValidate()
+        {
+            var resolvedAction = ResolveAction();
+            if (resolvedAction == null)
+            {
+                Debug.Log("RESOLVED TO NULL");
+            }
+        }*/
     }
 }
