@@ -3592,8 +3592,7 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
-                "InputSettings has lost its native object");
+            Debug.Assert(HasNativeObject(settings), "InputSettings has lost its native object");
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
@@ -3696,6 +3695,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.4
+        public static bool HasNativeObject(Object obj)
+        {
+#if UNITY_6000_4_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
+        }
+
         private static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
@@ -3707,7 +3716,7 @@ namespace UnityEngine.InputSystem
             // temporary settings object.
             // NOTE: We access m_Settings directly here to make sure we're not running into asserts
             //       from the settings getter checking it has a valid object.
-            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            if (!HasNativeObject(s_Manager.m_Settings))
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;

@@ -179,6 +179,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "mediaRewind", displayName = "MediaRewind", layout = "Key", bit = (int)Key.MediaRewind)]
         [InputControl(name = "mediaForward", displayName = "MediaForward", layout = "Key", bit = (int)Key.MediaForward)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)] // Use the last bit to hold IME selected state.
+        [InputControl(name = "IMESelectedObsoleteKey", layout = "Key", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)]
         public fixed byte keys[kSizeInBytes];
 
         // will be the default in new editor [InputControl(name = "IMESelected", layout = "Button", bit = 0, sizeInBits = 1, synthetic = true)]
@@ -2370,7 +2371,9 @@ namespace UnityEngine.InputSystem
             {
                 var index = (int)key - 1;
                 if (index < 0 || index >= m_Keys.Length)
-                    throw new ArgumentOutOfRangeException(nameof(key));
+                {
+                    throw new ArgumentOutOfRangeException($"{nameof(key)}: {key}");
+                }
                 return m_Keys[index];
             }
         }
@@ -2560,7 +2563,7 @@ namespace UnityEngine.InputSystem
                 "oem3",
                 "oem4",
                 "oem5",
-                null, // IMESelected
+                "IMESelectedObsoleteKey", // IMESelected
                 "f13",
                 "f14",
                 "f15",
@@ -2580,8 +2583,6 @@ namespace UnityEngine.InputSystem
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
-                if (string.IsNullOrEmpty(keyStrings[i]))
-                    continue;
                 m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
