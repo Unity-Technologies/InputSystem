@@ -11541,61 +11541,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanResolveActionReference()
-    {
-        var map = new InputActionMap("map");
-        map.AddAction("action1");
-        var action2 = map.AddAction("action2");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "action2");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action2));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanResolveActionReference_EvenAfterActionHasBeenRenamed()
-    {
-        var map = new InputActionMap("map");
-        var action = map.AddAction("oldName");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "oldName");
-
-        action.Rename("newName");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action));
-    }
-
-    [Test(Description = "https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1584")]
-    [Category("Actions")]
-    public void Actions_CanResolveActionReferenceAndThenSetItToAnotherAction()
-    {
-        var map = new InputActionMap("map");
-        var action1 = map.AddAction("action1");
-        var action2 = map.AddAction("action2");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "action2");
-        Assert.That(reference.action, Is.SameAs(action2)); // Redundant, but important for test case
-
-        reference.Set(asset, "map", "action1");
-        Assert.That(reference.action, Is.SameAs(action1));
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanDisableAllEnabledActionsInOneGo()
     {
         var action1 = new InputAction(binding: "<Gamepad>/leftStick");

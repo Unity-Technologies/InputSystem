@@ -40,11 +40,10 @@ namespace UnityEngine.InputSystem
         /// is not initialized or if the asset has been deleted.
         /// </summary>
         /// <value>InputActionAsset of the referenced action.</value>
-        public InputActionAsset asset => m_Asset;
+        public InputActionAsset asset => m_Action?.m_ActionMap != null ? m_Action.m_ActionMap.asset : m_Asset;
 
         /// <summary>
-        /// The action that the reference resolves to. Null if the action
-        /// cannot be found.
+        /// The action that the reference resolves to. Null if the action cannot be found.
         /// </summary>
         /// <value>The action that reference points to.</value>
         /// <remarks>
@@ -54,15 +53,11 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Action == null)
-                {
-                    if (m_Asset == null)
-                        return null;
-
-                    m_Action = m_Asset.FindAction(new Guid(m_ActionId));
-                }
-
-                return m_Action;
+                if (m_Action != null)
+                    return m_Action;
+                if (!m_Asset)
+                    return null;
+                return (m_Action = m_Asset.FindAction(new Guid(m_ActionId)));;
             }
         }
 
@@ -76,10 +71,12 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionMap"/> that is itself contained in an <see cref="InputActionAsset"/>.</exception>
         public void Set(InputAction action)
         {
+            // TODO Throw if attempting to set reference on an input action reference that resides in an asset.
+
             if (action == null)
             {
-                m_Asset = default;
-                m_ActionId = default;
+                m_Asset = null;
+                m_ActionId = null;
                 return;
             }
 
@@ -133,6 +130,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Action '{action}' is not contained in asset '{asset}'", nameof(action));
 
+            // If we are setting the reference in edit-mode, we want the state to be reflected in the serialized
+            // object and hence assign serialized fields. This is a destructive operation.
             m_Asset = asset;
             m_ActionId = action.id.ToString();
             name = GetDisplayName(action);
@@ -149,8 +148,8 @@ namespace UnityEngine.InputSystem
         {
             try
             {
-                var action = this.action;
-                return $"{m_Asset.name}:{action.actionMap.name}/{action.name}";
+                var value = action;
+                return $"{m_Asset.name}:{value.actionMap.name}/{value.name}";
             }
             catch
             {
@@ -204,17 +203,21 @@ namespace UnityEngine.InputSystem
         /// Clears the cached <see cref="m_Action"/> field for all current <see cref="InputActionReference"/> objects.
         /// </summary>
         /// <remarks>
-        /// After calling this, the next call to <see cref="action"/> will retrieve a new <see cref="InputAction"/> reference from the existing <see cref="InputActionAsset"/> just as if
-        /// using it for the first time. The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue to hold their current values.
+        /// After calling this, the next call to <see cref="action"/> will retrieve a new <see cref="InputAction"/>
+        /// reference from the existing <see cref="InputActionAsset"/> just as if using it for the first time.
+        /// The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue
+        /// to hold their current values.
         ///
-        /// This method is used to clear the Action references when exiting PlayMode since those objects are no longer valid.
+        /// This method is used to clear the Action references when exiting PlayMode since those objects are no
+        /// longer valid.
         /// </remarks>
         internal static void ResetCachedAction()
         {
             var allActionRefs = Resources.FindObjectsOfTypeAll(typeof(InputActionReference));
-            foreach (InputActionReference obj in allActionRefs)
+            foreach (var obj in allActionRefs)
             {
-                obj.m_Action = null;
+                var reference = (InputActionReference)obj;
+                reference.m_Action = null;
             }
         }
 

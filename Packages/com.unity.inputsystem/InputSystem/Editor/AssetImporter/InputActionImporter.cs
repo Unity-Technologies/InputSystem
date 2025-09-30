@@ -285,8 +285,15 @@ namespace UnityEngine.InputSystem.Editor
                 .Cast<InputActionReference>();
         }
 
-        // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null, bool skipProjectWide = false)
+        /// <summary>
+        /// Gets all <see cref="InputActionReference"/> instances available in assets in the project.
+        /// By default, it only gets the assets located in the "Assets" folder.
+        /// </summary>
+        /// <param name="foldersPath"></param>
+        /// <param name="skipProjectWide"></param>
+        /// <returns></returns>
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(
+            string[] foldersPath = null, bool skipProjectWide = false)
         {
             string[] searchFolders = null;
             // If folderPath is null, search in "Assets" folder.
@@ -307,15 +314,13 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var guid in inputActionReferenceGUIDs)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                var assetInputActionReferenceList = LoadInputActionReferencesFromAsset(assetPath).ToList();
-
-                if (skipProjectWide && assetInputActionReferenceList.Count() > 0)
+                foreach (var assetInputActionReference in LoadInputActionReferencesFromAsset(assetPath))
                 {
-                    if (assetInputActionReferenceList[0].m_Asset == InputSystem.actions)
+                    if (skipProjectWide && assetInputActionReference.m_Asset == InputSystem.actions)
                         continue;
-                }
 
-                inputActionReferencesList.AddRange(assetInputActionReferenceList);
+                    inputActionReferencesList.Add(assetInputActionReference);
+                }
             }
             return inputActionReferencesList;
         }

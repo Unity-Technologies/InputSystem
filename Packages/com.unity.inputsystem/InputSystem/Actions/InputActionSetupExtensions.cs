@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem
             action.m_SingletonActionBindings = bindingsForAction;
 
             // Remove bindings to action from map.
-            var newActionMapBindingCount = actionMap.m_Bindings.Length - bindingsForAction.Length;
+            var newActionMapBindingCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length - bindingsForAction.Length : 0;
             if (newActionMapBindingCount == 0)
             {
                 actionMap.m_Bindings = null;
