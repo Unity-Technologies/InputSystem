@@ -6,6 +6,8 @@ using Object = System.Object;
 
 partial class CoreTests
 {
+    #region Helpers
+
     private static InputActionAsset CreateAssetWithTwoActions()
     {
         var map1 = new InputActionMap("map1");
@@ -25,68 +27,130 @@ partial class CoreTests
         return asset;
     }
 
-    [Test]
-    public void Actions_Reference_AssetAndActionsReturnsNull_IfNotSet()
+    private void AssertDefaults(InputActionReference reference)
     {
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
         Assert.That(reference.asset, Is.Null);
         Assert.That(reference.action, Is.Null);
+        Assert.That(reference.name, Is.EqualTo(string.Empty));
         Assert.That(reference.ToDisplayName(), Is.Null);
+        Assert.That(reference.ToString(), Is.EqualTo($" ({typeof(InputActionReference).FullName})"));
     }
 
-    [Test]
-    public void Actions_Reference_SetNull()
-    {
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(null);
-    }
+    #endregion
 
     [Test]
     [Category("Actions")]
-    public void Actions_Reference_CanResolveAction()
+    public void Actions_Reference_Defaults()
+    {
+        AssertDefaults(ScriptableObject.CreateInstance<InputActionReference>());
+    }
+
+    [TestCase(false, "map1", "action1")]
+    [TestCase(true, null, "action1")]
+    [TestCase(true, "map1", null)]
+    [Category("Actions")]
+    public void Actions_Reference_SetByNameThrows_IfAnyArgumentIsNull(bool validAsset, string mapName, string actionName)
     {
         var asset = CreateAssetWithTwoActions();
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        Assert.Throws<ArgumentNullException>(() => reference.Set(validAsset ? asset : null, mapName, actionName));
+    }
 
-        reference.Set(asset, "map1", "action2");
-
-        Assert.That(reference.action, Is.SameAs(asset.FindAction("map1/action2")));
+    [TestCase("doesNotExist", "action1")]
+    [TestCase("map1", "doesNotExist")]
+    [Category("Actions")]
+    public void Actions_Reference_SetByNameThrows_IfNoMatchingMapOrActionExists(string mapName, string actionName)
+    {
+        var asset = CreateAssetWithTwoActions();
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        Assert.Throws<ArgumentException>(() => reference.Set(asset, mapName, actionName));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_Reference_CanResolveAction_EvenAfterActionHasBeenRenamed()
+    public void Actions_Reference_SetByReferenceThrows_IfActionDoNotBelongToAnAsset()
     {
-        var map = new InputActionMap("map");
-        var action = map.AddAction("oldName");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
+        // Case 1: Action was never part of any asset
+        var action = new InputAction("action");
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        Assert.Throws<InvalidOperationException>(() => reference.Set(action));
+
+        // Case 2: Action was part of an asset but then removed
+        var asset = CreateAssetWithTwoActions();
+        var action1 = asset.FindAction("map1/action1");
+        asset.RemoveAction("map1/action1");
+        Assert.Throws<InvalidOperationException>(() => reference.Set(action1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Reference_CreateReturnsReference_WhenCreatedFromValidAction()
+    {
+        var asset = CreateAssetWithTwoActions();
+        var action = asset.FindAction("map1/action2");
+
+        var reference = InputActionReference.Create(action);
+        Assert.That(reference.action, Is.SameAs(action));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Reference_CreateReturnsNullReferenceObject_IfActionIsNull()
+    {
+        var reference = InputActionReference.Create(null);
+        Assert.That(reference.action, Is.Null);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    [Category("Actions")]
+    public void Actions_Reference_CanResolveAction_WhenSet(bool setByReference)
+    {
+        var asset = CreateAssetWithTwoActions();
+        var action = asset.FindAction("map1/action2");
 
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "oldName");
+        if (setByReference)
+            reference.Set(action);
+        else
+            reference.Set(asset, "map1", "action2");
+
+        Assert.That(reference.action, Is.SameAs(action));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Reference_CanResolveAction_AfterActionHasBeenRenamed()
+    {
+        var asset = CreateAssetWithSingleAction();
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "map2", "action3");
+        var action = asset.FindAction("map2/action3");
 
         action.Rename("newName");
+        Assert.That(reference.action, Is.SameAs(action));
+    }
 
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action));
+    [Test]
+    [Category("Actions")]
+    public void Actions_Reference_CanResolveToDefaultState_AfterActionHasBeenSetToNull()
+    {
+        var asset = CreateAssetWithTwoActions();
+        var reference = InputActionReference.Create(asset.FindAction("map1/action1"));
+        reference.Set(null);
+        AssertDefaults(reference);
     }
 
     [Test(Description = "https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1584")]
     [Category("Actions")]
-    public void Actions_Reference_CanResolveActionAfterReassignment()
+    public void Actions_Reference_CanResolveActionAfterReassignmentToActionFromAnotherAsset()
     {
         var asset1 = CreateAssetWithTwoActions();
         var asset2 = CreateAssetWithSingleAction();
 
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
         reference.Set(asset1, "map1", "action1");
-        Assert.That(reference.action, Is.Not.Null);
-        Assert.That(reference.action, Is.SameAs(asset1.FindAction("map1/action1"))); // Redundant, but important for test case
-        Assert.That(reference.asset, Is.SameAs(asset1));
-        Assert.That(reference.name, Is.EqualTo("map1/action1"));
-        Assert.That(reference.ToDisplayName(), Is.EqualTo("map1/action1"));
-        Assert.That(reference.ToString(), Is.EqualTo(":map1/action1"));
+        Assert.That(reference.action, Is.Not.Null); // Looks redundant, but important for test case to resolve
 
         reference.Set(asset2, "map2", "action3");
         Assert.That(reference.action, Is.Not.Null);
@@ -100,35 +164,38 @@ partial class CoreTests
     [TestCase(typeof(InputAction))]
     [TestCase(typeof(InputActionMap))]
     [TestCase(typeof(InputActionAsset))]
-    public void Actions_Reference_NameShouldReflectReferencedAction(Type typeToDelete)
+    public void Actions_Reference_ShouldReevaluateIfAssociatedEntityIsDeleted(Type typeToDelete)
     {
-        var map = new InputActionMap("map");
-        var action1 = map.AddAction("action1");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
+        var asset = CreateAssetWithTwoActions();
+        var action = asset.FindAction("map1/action1");
+
+        // var map = new InputActionMap("map");
+        // var action1 = map.AddAction("action1");
+        // var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        // asset.AddActionMap(map);
 
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "action1");
+        reference.Set(asset, "map1", "action1");
 
-        Assert.That(reference.action, Is.SameAs(action1));
+        Assert.That(reference.action, Is.SameAs(action));
         Assert.That(reference.asset, Is.SameAs(asset));
-        Assert.That(reference.name, Is.EqualTo("map/action1"));
-        Assert.That(reference.ToDisplayName(), Is.EqualTo("map/action1"));
-        Assert.That(reference.ToString(), Is.EqualTo(":map/action1"));
+        Assert.That(reference.name, Is.EqualTo("map1/action1"));
+        Assert.That(reference.ToDisplayName(), Is.EqualTo("map1/action1"));
+        Assert.That(reference.ToString(), Is.EqualTo(":map1/action1"));
 
         // Delete the referenced action directly or indirectly
         if (typeToDelete == typeof(InputAction))
-            asset.RemoveAction("map/action1");
+            asset.RemoveAction("map1/action1");
         else if (typeToDelete == typeof(InputActionMap))
-            asset.RemoveActionMap("map");
+            asset.RemoveActionMap("map1");
         else if (typeToDelete == typeof(InputActionAsset))
             UnityEngine.Object.DestroyImmediate(asset);
 
         // TODO reference need to react to this
         Assert.That(reference.action, Is.Null);
         Assert.That(reference.asset, Is.SameAs(asset));
-        Assert.That(reference.name, Is.EqualTo("map/action1")); // Unexpected when no longer existing
-        Assert.That(reference.ToDisplayName(), Is.EqualTo("map/action1")); // Unexpected when no longer existing
+        Assert.That(reference.name, Is.EqualTo("map1/action1")); // Unexpected when no longer existing
+        Assert.That(reference.ToDisplayName(), Is.EqualTo("map1/action1")); // Unexpected when no longer existing
         //Assert.That(reference.ToString(), Is.EqualTo(":" + new Guid(action1.m_Id))); // Unexpected when no longer existing
     }
 
@@ -141,7 +208,8 @@ partial class CoreTests
     // InputActionReference - Do not invalidate if action, action map or asset is deleted/destroyed. .action still returns the action.
     // (FIXED) InputActionAsset.RemoveActionMap - Do not remove actions within the map and they keep a stale reference to the removed map.
     // (FIXED) InputActionAsset.RemoveAction - Throws exception if action do not have any bindings.
-
+    // (FIXED) InputActionReference.Set(null) - Does not update m_Action. Hence .actions returns an incorrect reference. Also doesn't update ScriptableObject.name consistently with default ScriptableObject.
+    // (FIXED) InputActionReference.Create - Returns null if action is null which is not inline with xmldoc description and inconsistent since it is allowed to create a reference and set it to null. If you want a null reference you should not call Create in the first place.
 
     // TODO Make a test where action map is deleted
     // TODO Make a test where asset is deleted

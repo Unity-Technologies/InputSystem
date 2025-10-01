@@ -72,12 +72,12 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionMap"/> that is itself contained in an <see cref="InputActionAsset"/>.</exception>
         public void Set(InputAction action)
         {
-            // TODO Throw if attempting to set reference on an input action reference that resides in an asset.
-
             if (action == null)
             {
                 m_Asset = null;
                 m_ActionId = null;
+                m_Action = null;
+                name = string.Empty; // Scriptable object default name is empty string.
                 return;
             }
 
@@ -116,27 +116,27 @@ namespace UnityEngine.InputSystem
             if (actionMap == null)
                 throw new ArgumentException($"No action map '{mapName}' in '{asset}'", nameof(mapName));
 
-            var action = actionMap.FindAction(actionName);
-            if (action == null)
+            var foundAction = actionMap.FindAction(actionName);
+            if (foundAction == null)
                 throw new ArgumentException($"No action '{actionName}' in map '{mapName}' of asset '{asset}'",
                     nameof(actionName));
 
-            SetInternal(asset, action);
+            SetInternal(asset, foundAction);
         }
 
-        private void SetInternal(InputActionAsset asset, InputAction action)
+        private void SetInternal(InputActionAsset assetArg, InputAction actionArg)
         {
-            var actionMap = action.actionMap;
-            if (!asset.actionMaps.Contains(actionMap))
+            var actionMap = actionArg.actionMap;
+            if (!assetArg.actionMaps.Contains(actionMap))
                 throw new ArgumentException(
-                    $"Action '{action}' is not contained in asset '{asset}'", nameof(action));
+                    $"Action '{actionArg}' is not contained in asset '{assetArg}'", nameof(actionArg));
 
             // If we are setting the reference in edit-mode, we want the state to be reflected in the serialized
             // object and hence assign serialized fields. This is a destructive operation.
-            m_Asset = asset;
-            m_ActionId = action.id.ToString();
-            name = GetDisplayName(action);
-            m_Action = action;
+            m_Asset = assetArg;
+            m_ActionId = actionArg.id.ToString();
+            m_Action = actionArg;
+            name = GetDisplayName(actionArg);
 
             ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
@@ -147,23 +147,19 @@ namespace UnityEngine.InputSystem
         /// <returns>A string representation of the reference.</returns>
         public override string ToString()
         {
-            try
-            {
-                var value = action;
+            var value = action; // Indirect resolve
+            if (value == null)
+                return base.ToString();
+            if (value.actionMap != null)
                 return $"{m_Asset.name}:{value.actionMap.name}/{value.name}";
-            }
-            catch
-            {
-                if (m_Asset != null)
-                    return $"{m_Asset.name}:{m_ActionId}";
-            }
-
-            return base.ToString();
+            return $"{m_Asset.name}:{m_ActionId}";
         }
 
-        internal static string GetDisplayName(InputAction action)
+        private static string GetDisplayName(InputAction action)
         {
-            return !string.IsNullOrEmpty(action?.actionMap?.name) ? $"{action.actionMap?.name}/{action.name}" : action?.name;
+            return !string.IsNullOrEmpty(action?.actionMap?.name)
+                ? $"{action.actionMap?.name}/{action.name}"
+                : action?.name;
         }
 
         /// <summary>
@@ -193,8 +189,6 @@ namespace UnityEngine.InputSystem
         /// <returns>A new InputActionReference referencing <paramref name="action"/>.</returns>
         public static InputActionReference Create(InputAction action)
         {
-            if (action == null)
-                return null;
             var reference = CreateInstance<InputActionReference>();
             reference.Set(action);
             return reference;
@@ -232,7 +226,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         [NonSerialized] private InputAction m_Action;
 
-        // Make annoying Microsoft code analyzer happy.
+        /// <summary>
+        /// Equivalent to <see cref="InputActionReference.action"/>.
+        /// </summary>
         public InputAction ToInputAction()
         {
             return action;
@@ -240,7 +236,7 @@ namespace UnityEngine.InputSystem
 
         private InputAction ResolveAction()
         {
-            return m_Asset == null ? null : m_Asset.FindAction(new Guid(m_ActionId));
+            return m_Asset ? m_Asset.FindAction(new Guid(m_ActionId)) : null;
         }
 
         // OnValidate() is stripped out from player builds (editor only).
