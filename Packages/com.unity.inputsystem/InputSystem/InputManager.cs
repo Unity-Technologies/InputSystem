@@ -3705,7 +3705,7 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             //send pointer data to backend for OnMouseEvents
-#if UNITY_INPUTSYSTEM_HAS_MOUSE_SCRIPT_EVENTS_SUPPORTED
+#if UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS
             var pointer = Pointer.current;
             if (pointer != null && gameIsPlaying)
                 NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
