@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem.Users
         /// cref="ActivateControlScheme(InputControlScheme)"/> and related APIs like <see cref="controlScheme"/>
         /// and <see cref="controlSchemeMatch"/>).
         ///
-        /// Note that is generally does not make sense for users to share actions. Instead, each user should
+        /// Note that it generally does not make sense for users to share actions. Instead, each user should
         /// receive a set of actions private to the user.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>

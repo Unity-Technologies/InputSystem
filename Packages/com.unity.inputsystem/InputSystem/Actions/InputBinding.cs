@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         /// // A binding that belongs to the "Keyboard&amp;Mouse" and "Gamepad" group.
         /// new InputBinding
         /// {
-        ///     path = "*/{PrimaryAction},
+        ///     path = "*/{PrimaryAction}",
         ///     groups = "Keyboard&amp;Mouse;Gamepad"
         /// };
         /// </code>
@@ -281,7 +281,7 @@ namespace UnityEngine.InputSystem
         /// <code>
         /// new InputBinding
         /// {
-        ///     path = "*/{PrimaryAction},
+        ///     path = "*/{PrimaryAction}",
         ///     // Associate the binding both with the "KeyboardMouse" and
         ///     // the "Gamepad" group.
         ///     groups = "KeyboardMouse;Gamepad",

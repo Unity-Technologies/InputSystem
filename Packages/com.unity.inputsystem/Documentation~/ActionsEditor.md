@@ -72,7 +72,7 @@ The Control Type setting allows you to select the type of control expected by th
 
 For example, if you select **2D axis**, only those controls that can supply a 2D vector as value are available as options for the binding control path.
 
-There are more specific control types available which futher filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
+There are more specific control types available which further filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
 
 ### Bindings
 
