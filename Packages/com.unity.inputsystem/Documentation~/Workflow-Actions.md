@@ -14,7 +14,7 @@ In this workflow, you configure Actions in the [**Input Actions** editor](Action
 
 Open the Input System settings by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**.
 
-If you have not yet created and assigned the default [project-wide actions](ProjectWideActions.md), the Input System settings window displays a button to do this.
+If you have not yet created and assigned the default [project-wide actions](xref:project-wide-actions), the Input System settings window displays a button to do this.
 
 Once you have created and assigned the default project-wide actions, the Actions Editor is displayed:
 
@@ -101,7 +101,7 @@ public class Example : MonoBehaviour
 > You should avoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
 
 > [!NOTE]
-> The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
+> The [InputSystem.actions](xref:UnityEngine.InputSystem.InputSystem) API refers specifically to the Action Asset assigned as the [project-wide actions](xref:project-wide-actions). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
 
 ## Pros and Cons
 
@@ -109,4 +109,4 @@ This is the recommended workflow with the Input System Package, providing a flex
 
 You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at runtime](ActionBindings.html#interactive-rebinding).
 
-This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions and PlayerInput](./Workflow-PlayerInput.md) workflow.
+This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions and PlayerInput](xref:input-system-workflow-player-input) workflow.

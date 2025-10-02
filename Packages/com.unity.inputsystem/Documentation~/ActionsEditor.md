@@ -3,15 +3,15 @@ uid: input-system-configuring-input
 ---
 # Configuring Input with the Actions Editor
 
-The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md), which contain a saved configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md).
+The **Input Actions Editor** allows you to edit [Action Assets](xref:input-system-action-assets), which contain a saved configuration of [Input Actions](xref:input-system-actions) and their associated [Bindings](xref:input-system-action-bindings).
 
 It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-It also allows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
+It also allows you to define [Control Schemes](xref:input-system-action-bindings#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
 ### Action Assets and Project-Wide Actions
 
-The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](ProjectWideActions.md).
+The typical workflow for most projects is to have a single Action Asset, which is assigned as the **project-wide actions**. If you have not yet created and assigned an Actions Asset as the project-wide actions, the recommended workflow is to do this first. Read more about [project-wide actions](xref:project-wide-actions).
 
 ### Opening the Actions Editor
 
@@ -91,11 +91,11 @@ If you select a Binding, you can edit its properties in the right-hand pane of t
 
 #### Picking Controls
 
-The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ dropdown menu. This displays a Control picker window.
+The most important property of any Binding is the [control path](xref:input-system-controls#control-paths) it's bound to. To edit it, open the __Path__ dropdown menu. This displays a Control picker window.
 
 ![The Binding Properties panel displays the Control Picker window available from the Path dropdown menu.](Images/InputControlPicker.png)
 
-In the Control picker window, you can explore a tree of Input Devices and Controls that the Input System recognizes, and bind to these Controls. Unity filters this list by the Action's [`Control Type`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_expectedControlType) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
+In the Control picker window, you can explore a tree of Input Devices and Controls that the Input System recognizes, and bind to these Controls. Unity filters this list by the Action's [`Control Type`](xref:UnityEngine.InputSystem.InputAction.expectedControlType) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
 
 The Device and Control tree is organized hierarchically from generic to specific. For example, the __Gamepad__ Control path `<Gamepad>/buttonSouth` matches the lower action button on any gamepad. Alternatively, if you navigate to __Gamepad__ > __More Specific Gamepads__ and select __PS4 Controller__, and then choose the Control path `<DualShockGamepad>/buttonSouth`, this only matches the "Cross" button on PlayStation gamepads, and doesn't match any other gamepads.
 
@@ -105,7 +105,7 @@ Finally, you can choose to manually edit the Binding path, instead of using the 
 
 #### Editing Composite Bindings
 
-Composite Bindings are Bindings consisting of multiple parts, which form a Control together. For instance, a [2D Vector Composite](ActionBindings.md#2d-vector) uses four buttons (left, right, up, down) to simulate a 2D stick input. See the [Composite Bindings](ActionBindings.md#composite-bindings) documentation to learn more.
+Composite Bindings are Bindings consisting of multiple parts, which form a Control together. For instance, a [2D Vector Composite](xref:input-system-action-bindings#2d-vector) uses four buttons (left, right, up, down) to simulate a 2D stick input. See the [Composite Bindings](xref:input-system-action-bindings#composite-bindings) documentation to learn more.
 
 ![The WASD setting appears under the Move property on the Actions panel.](Images/2DVectorComposite.png){width="486" height="178"}
 
@@ -133,7 +133,7 @@ You can assign multiple Bindings to the same part. You can also duplicate indivi
 
 ### Editing Control Schemes
 
-Input Action Assets can have multiple [Control Schemes](ActionBindings.md#control-schemes), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
+Input Action Assets can have multiple [Control Schemes](xref:input-system-action-bindings#control-schemes), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
 
 ![Gamepad appears as the Scheme Name value on the Add Control Scheme window.](Images/ControlSchemeProperties.png)
 

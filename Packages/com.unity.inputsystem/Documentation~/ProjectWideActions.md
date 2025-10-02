@@ -3,13 +3,13 @@ uid: project-wide-actions
 ---
 # Project-Wide Actions
 
-The Input System stores your configuration of [Input Actions](Actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an [Action Asset](ActionAssets.md) file.
+The Input System stores your configuration of [Input Actions](xref:input-system-actions) and their associated [Bindings](xref:input-system-action-bindings), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](xref:input-system-action-bindings#control-schemes) in an [Action Asset](xref:input-system-action-assets) file.
 
 While it's possible to have more than one Action Asset in a project, most projects only ever need a single Action Asset. This is because an Action Asset can contain multiple [Action Maps](ActionsEditor.html#configure-action-maps), which each containing a set of actions relevant to the various parts of your project (such as UI navigation, gameplay, etc).
 
 The Input System's **project-wide actions** feature allows you to choose an individual Action Asset as being available project-wide, which means the actions within that asset are available more conveniently through the Input System API without needing to set up a reference to the Actions Asset.
 
-The Action Asset assigned as project-wide is also a [preloaded asset](https://docs.unity3d.com/ScriptReference/PlayerSettings.GetPreloadedAssets.html), loaded when your app starts up, and kept available until it terminates.
+The Action Asset assigned as project-wide is also a [preloaded asset](xref:UnityEditor.PlayerSettings.GetPreloadedAssets), loaded when your app starts up, and kept available until it terminates.
 
 Unless you have specific project requirements that require more than one Action Asset, the recommended workflow is to use a single Action Asset assigned as the project-wide actions, as described below.
 
@@ -33,7 +33,7 @@ The Action Asset appears in your Project view, and is named "InputSystem_Actions
 
 ## Edit project-wide actions
 
-Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
+Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](xref:input-system-configuring-input) to configure your actions.
 
 ## The default actions
 
@@ -52,7 +52,7 @@ You can also delete all action maps, or reset all the actions back to the defaul
 
 ## Using project-wide actions in code
 
-The benefit of assign an Action Asset as the project-wide actions is that you can access the actions directly through the [`InputSystem.actions`](../api/UnityEngine.InputSystem.InputSystem.html) property directly, rather than needing to set up a reference to your Action Asset first.
+The benefit of assign an Action Asset as the project-wide actions is that you can access the actions directly through the [`InputSystem.actions`](xref:UnityEngine.InputSystem.InputSystem) property directly, rather than needing to set up a reference to your Action Asset first.
 
 For example, you can get a reference to an action named "Move" in your project-wide actions using a line of code like this:
 
