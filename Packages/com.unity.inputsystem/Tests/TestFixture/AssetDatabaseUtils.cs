@@ -9,6 +9,8 @@ namespace UnityEngine.InputSystem
     /// Provides convenience functions for creating and managing assets for test purposes.
     /// Note that all returned paths are converted to Unix paths when running on Windows
     /// for consistency and to avoid mixed path names.
+    ///
+    /// This file should NOT be in this assembly, it should reside in the editor test assembly and be internal.
     public static class AssetDatabaseUtils
     {
         private const string kAssetPath = "Assets";
@@ -33,7 +35,8 @@ namespace UnityEngine.InputSystem
         }
 
         // Create an asset at the given path containing the given text content.
-        private static T CreateAssetAtPath<T>(string path, string content) where T : UnityEngine.Object
+        private static T CreateAssetAtPath<T>(string path, string content)
+            where T : ScriptableObject
         {
             Debug.Assert(!File.Exists(path));
 
@@ -42,9 +45,20 @@ namespace UnityEngine.InputSystem
             {
                 CreateDirectories(Path.GetDirectoryName(path));
 
-                File.WriteAllText(path, content);
-                AssetDatabase.ImportAsset(path);
-                obj = AssetDatabase.LoadAssetAtPath<T>(path);
+                if (content != null)
+                {
+                    // Create asset as a file with explicit content
+                    File.WriteAllText(path, content);
+                    AssetDatabase.ImportAsset(path);
+                    obj = AssetDatabase.LoadAssetAtPath<T>(path);
+                }
+                else
+                {
+                    // Use default serialization (YAML) to create asset.
+                    obj = ScriptableObject.CreateInstance<T>();
+                    AssetDatabase.CreateAsset(obj, path);
+                }
+
                 if (obj == null)
                     throw new Exception($"Failed to create asset at \"{path}\"");
             }
@@ -99,7 +113,8 @@ namespace UnityEngine.InputSystem
 
         // Creates an asset in the given directory path with an explicit or random file name containing the
         // given content or the default content based on type.
-        public static T CreateAsset<T>(string directoryPath, string filename = null, string content = null) where T : UnityEngine.Object
+        public static T CreateAsset<T>(string directoryPath, string filename = null, string content = null)
+            where T : ScriptableObject
         {
             Debug.Assert(directoryPath == null || directoryPath.Contains(RootPath()));
             Debug.Assert(filename == null || !filename.Contains("/"));
@@ -124,7 +139,7 @@ namespace UnityEngine.InputSystem
         // Creates an asset at the given path containing the specified content.
         // If path is null, a unique random file name is assigned, if content is null the default content based
         // on type (extension) is used.
-        public static T CreateAsset<T>(string path = null, string content = null) where T : UnityEngine.Object
+        public static T CreateAsset<T>(string path = null, string content = null) where T : UnityEngine.ScriptableObject
         {
             if (path == null)
                 path = RandomAssetFilePath(RootPath(), AssetFileExtensionFromType(typeof(T)));
@@ -208,7 +223,7 @@ namespace UnityEngine.InputSystem
         {
             if (type == typeof(InputActionAsset))
                 return "{}";
-            return string.Empty;
+            return null;
         }
     }
 }

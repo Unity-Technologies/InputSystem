@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor;
 
 ////REVIEW: Can we somehow make this a simple struct? The one problem we have is that we can't put struct instances as sub-assets into
 ////        the import (i.e. InputActionImporter can't do AddObjectToAsset with them). However, maybe there's a way around that. The thing
@@ -62,6 +63,41 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private static bool CanSetReference(InputActionReference reference)
+        {
+            // TODO Consider an alternative approach where importer would build a registry of immutable references.
+            //      That allows us to remove the #if UNITY_EDITOR and skip these checks.
+#if UNITY_EDITOR
+            // If the asset isn't persisted it cannot be part of an InputActionAsset file.
+            // We use this check first since it can allow us to avoid GC pressure.
+            var instanceID = reference.GetInstanceID();
+            var isPersistent = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceID, out _, out long _);
+            if (!isPersistent)
+                return true;
+
+            // "Immutable" input action references are always sub-assets of InputActionAsset.
+            var isSubAsset = AssetDatabase.IsSubAsset(instanceID);
+            if (!isSubAsset)
+                return true;
+
+            // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
+            var path = AssetDatabase.GetAssetPath(reference);
+            if (path == null)
+                return true;
+
+            // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
+            // Also we check that it is the expected type.
+            var mainAsset = AssetDatabase.LoadMainAssetAtPath(path);
+            if (mainAsset == null)
+                return true;
+
+            // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
+            return (mainAsset is not InputActionAsset);
+#else
+            return true;
+#endif
+        }
+
         /// <summary>
         /// Initialize the reference to refer to the given action.
         /// </summary>
@@ -72,6 +108,18 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionMap"/> that is itself contained in an <see cref="InputActionAsset"/>.</exception>
         public void Set(InputAction action)
         {
+            // Prevent accidental mutation of the source asset if this InputActionReference is a persisted object
+            // residing as a sub-asset within a .inputactions asset.
+            // This is not needed for players since scriptable objects aren't serialized back from within a player.
+            if (!CanSetReference(this))
+            {
+                throw new InvalidOperationException("Attempting to mutate an immutable InputActionReference instance. " +
+                    "This is not allowed since it would modify the source asset." +
+                    "Instead use InputActionReference.Create(action) to create a new " +
+                    "in-memory instance or serialize it as a separate asset if it " +
+                    "survive domain reloads.");
+            }
+
             if (action == null)
             {
                 m_Asset = null;

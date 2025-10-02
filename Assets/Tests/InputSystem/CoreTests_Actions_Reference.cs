@@ -204,7 +204,7 @@ partial class CoreTests
     // (FIXED) InputActionReference.asset - Returns incorrect asset after being .Set if .action is called before Set.
     // (FIXED) InputActionReference - Assigned with Set during play-mode corrupts InputActionAsset by mutating asset reference into pointing into potentially another asset and overwrites existign asset.
     // (FIXED) InputActionReferencePropertyDrawer - Assigns direct reference into InputActionAsset to InputActionReference fields leading to corruption.
-    // InputActionReference - Contains stale reference and looks like a valid reference if the action is deleted. .action returns removed action.
+    // InputActionReference - Contains stale reference and looks like a valid reference if the action is deleted. .action returns removed action. This is a presentation (UI) issue, reference should be fixed when referenced entities are removed to allow resolving itself after e.g. Undo.
     // InputActionReference - Do not invalidate if action, action map or asset is deleted/destroyed. .action still returns the action.
     // (FIXED) InputActionAsset.RemoveActionMap - Do not remove actions within the map and they keep a stale reference to the removed map.
     // (FIXED) InputActionAsset.RemoveAction - Throws exception if action do not have any bindings.

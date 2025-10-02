@@ -275,35 +275,34 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(string assetPath)
         {
             // Get all InputActionReferences are stored at the same asset path as InputActionAsset
             // Note we exclude 'hidden' action references (which are present to support one of the pre releases)
             return AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
-                o => o is InputActionReference && !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                o => o is InputActionReference &&
+                !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
                 .Cast<InputActionReference>();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private static readonly string[] s_DefaultAssetSearchFolders = new string[] { "Assets" };
 
         /// <summary>
         /// Gets all <see cref="InputActionReference"/> instances available in assets in the project.
         /// By default, it only gets the assets located in the "Assets" folder.
         /// </summary>
-        /// <param name="foldersPath"></param>
-        /// <param name="skipProjectWide"></param>
+        /// <param name="foldersPath">Optional array of directory paths to be searched.</param>
+        /// <param name="skipProjectWide">If true, excludes project-wide input actions from the result.</param>
         /// <returns></returns>
         internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(
             string[] foldersPath = null, bool skipProjectWide = false)
         {
-            string[] searchFolders = null;
-            // If folderPath is null, search in "Assets" folder.
-            if (foldersPath == null)
-            {
-                searchFolders = new string[] { "Assets" };
-            }
-
-            // Get all InputActionReference from assets in "Asset" folder. It does not search inside "Packages" folder.
-            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchFolders);
+            // Get all InputActionReference from assets in "Asset" folder by default.
+            // It does not search inside "Packages" folder.
+            const string inputActionReferenceFilter = "t:" +  nameof(InputActionReference);
+            var inputActionReferenceGUIDs = AssetDatabase.FindAssets(inputActionReferenceFilter,
+                foldersPath ?? s_DefaultAssetSearchFolders);
 
             // To find all the InputActionReferences, the GUID of the asset containing at least one action reference is
             // used to find the asset path. This is because InputActionReferences are stored in the asset database as sub-assets of InputActionAsset.
