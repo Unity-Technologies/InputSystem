@@ -108,5 +108,31 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         yield return null;
     }
+    
+    [UnityTest]
+    public IEnumerator Migration_FromLegacyJson_ShouldConvertOrdinal_KeepInvertVector2_AndSeparators()
+    {
+        var legacyJson = m_Asset.ToJson().Replace("\"version\": 1", "\"version\": 0").Replace("Custom(SomeEnum=10)", "Custom(SomeEnum=1)");
+
+        // Add a trailing processor to verify the semicolon separator is preserved.
+        if (!legacyJson.Contains(";InvertVector2(invertX=true)"))
+            legacyJson = legacyJson.Replace("Custom(SomeEnum=1)\"", "Custom(SomeEnum=1);InvertVector2(invertX=true)\"");
+
+        var migratedAsset = InputActionAsset.FromJson(legacyJson);
+        Assume.That(migratedAsset, Is.Not.Null, "Failed to load legacy JSON into an InputActionAsset.");
+
+        var migratedJson = migratedAsset.ToJson();
+        Assume.That(migratedJson, Is.Not.Null.And.Not.Empty, "Migrated JSON was empty.");
+
+        Assert.Less(migratedJson.IndexOf("InvertVector2(invertX=true)", StringComparison.Ordinal), migratedJson.IndexOf(",Custom(SomeEnum=20)", StringComparison.Ordinal),
+            "Expected a comma between the first and second processors, with InvertVector2 first."
+        );
+
+        Assert.Greater(migratedJson.IndexOf(";InvertVector2(invertX=true)", StringComparison.Ordinal), migratedJson.IndexOf("Custom(SomeEnum=20)", StringComparison.Ordinal),
+            "Expected a semicolon between the second and third processors, with the trailing InvertVector2 last."
+        );
+
+        yield return null;
+    }
 }
 #endif
