@@ -71,6 +71,8 @@ namespace UnityEngine.InputSystem
         /// case the reference is reset to its default state which does not reference an action.</param>
         /// <exception cref="InvalidOperationException"><paramref name="action"/> is not contained in an
         /// <see cref="InputActionMap"/> that is itself contained in an <see cref="InputActionAsset"/>.</exception>
+        /// <exception cref="InvalidOperationException">If attempting to mutate a reference object
+        /// that is backed by an .inputactions asset. This is not allowed to prevent side-effects.</exception>
         public void Set(InputAction action)
         {
             if (action == null)
@@ -101,6 +103,8 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or-
         /// <paramref name="mapName"/> is <c>null</c> or empty -or- <paramref name="actionName"/>
         /// is <c>null</c> or empty.</exception>
+        /// <exception cref="InvalidOperationException">If attempting to mutate a reference object
+        /// that is backed by by .inputactions asset. This is not allowed to prevent side-effects.</exception>
         /// <exception cref="ArgumentException">No action map called <paramref name="mapName"/> could
         /// be found in <paramref name="asset"/> -or- no action called <paramref name="actionName"/>
         /// could be found in the action map called <paramref name="mapName"/> in <paramref name="asset"/>.</exception>
@@ -234,6 +238,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Equivalent to <see cref="InputActionReference.action"/>.
         /// </summary>
+        /// <returns>The associated action reference if its a valid reference, else <c>null</c>.</returns>
         public InputAction ToInputAction()
         {
             return action;
