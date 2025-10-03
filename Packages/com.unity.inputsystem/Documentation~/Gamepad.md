@@ -11,7 +11,7 @@ Gamepad support guarantees the correct location and functioning of Controls acro
 
 > [!NOTE]
 > Generic [HID](xref:input-system-hid) gamepads will __not__ be surfaced as [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) devices but rather be created as generic [joysticks](xref:input-system-joystick). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](xref:input-system-hid#creating-a-custom-device-layout)).
-> 
+>
 > In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
 ## Controls

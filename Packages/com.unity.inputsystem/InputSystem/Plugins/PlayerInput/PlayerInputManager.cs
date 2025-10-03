@@ -20,19 +20,19 @@ namespace UnityEngine.InputSystem
     /// Manages joining and leaving of players.
     /// </summary>
     /// <remarks>
-    /// This is a singleton component. Only one instance should be active in a game at any one time. To retrieve the 
+    /// This is a singleton component. Only one instance should be active in a game at any one time. To retrieve the
     /// current instance, use the <see cref="instance"/> property.
     ///
-    /// PlayerInputManager provides the implementation of specific player joining mechanisms (<see cref="joinBehavior"/>). 
-    /// It also automatically assigns <see cref="splitScreen">split-screen areas</see>. The input system does not require 
-    /// the PlayerInputManager to have multiple <see cref="PlayerInput"/> components. However, you can always implement 
-    /// your own custom logic instead and simply instantiate multiple <see cref="xref:UnityEngine.GameObject"/>s with 
+    /// PlayerInputManager provides the implementation of specific player joining mechanisms (<see cref="joinBehavior"/>).
+    /// It also automatically assigns <see cref="splitScreen">split-screen areas</see>. The input system does not require
+    /// the PlayerInputManager to have multiple <see cref="PlayerInput"/> components. However, you can always implement
+    /// your own custom logic instead and simply instantiate multiple <see cref="xref:UnityEngine.GameObject"/>s with
     /// <see cref="PlayerInput"/> yourself.
     ///
-    /// When you use PlayerInputManager, the join behavior you define controls pairing devices to players. This means 
-    /// that <see cref="PlayerInput"/> automatically pairs the device from which the player joined. If control schemes 
-    /// are present in the PlayerInput's set of <see cref="actions"/>, the input system selects the first compatible 
-    /// device for pairing. If additional devices are required, the input system selects them from the pool of currently 
+    /// When you use PlayerInputManager, the join behavior you define controls pairing devices to players. This means
+    /// that <see cref="PlayerInput"/> automatically pairs the device from which the player joined. If control schemes
+    /// are present in the PlayerInput's set of <see cref="actions"/>, the input system selects the first compatible
+    /// device for pairing. If additional devices are required, the input system selects them from the pool of currently
     /// unpaired devices.
     /// </remarks>
     [AddComponentMenu("Input/Player Input Manager")]

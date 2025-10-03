@@ -6,15 +6,15 @@ uid: input-system-installation
 This page describes how to install and activate the Input System package for your Unity Project.
 
 > [!NOTE]
-> This version of the new Input System requires the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime. 
+> This version of the new Input System requires the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
 >
 > This package is only compatible with Unity Editor release versions 2021.3 and later. If you are working in a release version of the Editor prior to 2021.3, you need to use the package version that works with that version of the Editor, indicated by the **Release** tag in the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
 
 ## Install the package
 
-To install the new Input System: 
+To install the new Input System:
 
-1. In the main menu of the Unity Editor, go to __Window__ > __Package Manager__ to open the Unity Package Manager. 
+1. In the main menu of the Unity Editor, go to __Window__ > __Package Manager__ to open the Unity Package Manager.
 
 2. Select **Unity Registry** from the navigation panel.
 

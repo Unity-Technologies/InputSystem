@@ -57,24 +57,24 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// The `PlayerInput` class is a high-level wrapper around much of the input system's functionality
     /// which helps set up the new input system quickly. PlayerInput manages <see cref="InputAction"/>s
-    /// and has a custom UI to help set up input. Note that the input system's custom UI requires 
+    /// and has a custom UI to help set up input. Note that the input system's custom UI requires
     /// the [Unity UI](https://docs.unity3d.com/Packages/com.unity.ugui@latest) package.
     ///
-    /// The [Player Input](xref:input-system-player-input) component supports local multiplayer implicitly. 
-    /// Each PlayerInput instance represents a distinct user with its own set of devices and actions. 
+    /// The [Player Input](xref:input-system-player-input) component supports local multiplayer implicitly.
+    /// Each PlayerInput instance represents a distinct user with its own set of devices and actions.
     /// To orchestrate player management and facilitate mechanics, such as joining by device activity, use
     /// <see cref="UnityEngine.InputSystem.PlayerInputManager"/>.
     ///
     /// The way PlayerInput notifies script code of events is determined by the <see cref="notificationBehavior"/>
-    /// property. By default, this is set to <see cref="InputSystem.PlayerNotifications.SendMessages"/>, 
-    /// which uses <see cref="xref:UnityEngine.GameObject.SendMessage(System.String,System.Object)"/> to send 
+    /// property. By default, this is set to <see cref="InputSystem.PlayerNotifications.SendMessages"/>,
+    /// which uses <see cref="xref:UnityEngine.GameObject.SendMessage(System.String,System.Object)"/> to send
     /// messages to the <see cref="xref:UnityEngine.GameObject"/> that the PlayerInput is connected to.
     ///
     /// When enabled, PlayerInput creates an <see cref="InputUser"/> instance and pairs devices to the
-    /// user which are then associated to the player. If you instantiate a PlayerInput through 
+    /// user which are then associated to the player. If you instantiate a PlayerInput through
     /// <see cref="Instantiate(GameObject,int,string,int,InputDevice[])"/>
-    /// or <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/>, you can also control the set of 
-    /// devices explicitly through the PlayerInput instance. This also makes it possible to assign the same 
+    /// or <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/>, you can also control the set of
+    /// devices explicitly through the PlayerInput instance. This also makes it possible to assign the same
     /// device to two different players, for example for split-keyboard play:
     ///
     /// <code>
@@ -84,28 +84,28 @@ namespace UnityEngine.InputSystem
     ///     controlScheme: "KeyboardRight", device: Keyboard.current);
     /// </code>
     ///
-    /// If a PlayerInput instance isn't paired to a specific device, the Player Input component looks for 
-    /// compatible devices present in the input system and pairs them to the PlayerInput instance automatically. 
+    /// If a PlayerInput instance isn't paired to a specific device, the Player Input component looks for
+    /// compatible devices present in the input system and pairs them to the PlayerInput instance automatically.
     /// If the PlayerInput's set of <see cref="actions"/> have control schemes defined, the PlayerInput looks for a
     /// control scheme for which all required devices are available and doesn't pair to any other player.
-    /// The PlayerInput tries to pair using the <see cref="defaultControlScheme"/> first (if set). If the pairing is unsuccessful, 
+    /// The PlayerInput tries to pair using the <see cref="defaultControlScheme"/> first (if set). If the pairing is unsuccessful,
     /// it tries each available scheme in order. After it finds a scheme where all required devices are
     /// available, PlayerInput pairs those devices to itself and selects the given scheme.
     ///
     /// If no control schemes are defined, PlayerInput tries to bind as many unpaired
-    /// devices to itself as it can match to the bindings present in its set of <see cref="actions"/>. For example, 
+    /// devices to itself as it can match to the bindings present in its set of <see cref="actions"/>. For example,
     /// when the PlayerInput is enabled, if it finds a binding for both keyboard and gamepad, and one keyboard
     /// and two gamepads are available in the input system, the PlayerInput pairs all three devices to the player.
     ///
-    /// > [!NOTE] 
-    /// > When you use the [Player Input Manager](xref:input-system-player-input-manager) component, the 
-    /// <see cref="PlayerInputManager"/> itself controls pairing devices to players through the joining logic. 
+    /// > [!NOTE]
+    /// > When you use the [Player Input Manager](xref:input-system-player-input-manager) component, the
+    /// <see cref="PlayerInputManager"/> itself controls pairing devices to players through the joining logic.
     /// For more information, refer to the <see cref="PlayerInputManager"/> class documentation.
     ///
-    /// To change device pairings at any time, you can use either of these techniques: 
-    /// - Use <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) to manually control pairing 
-    /// using a PlayerInput's assigned <see cref="user"/> property. 
-    /// - Switch control schemes (for example, using <see cref="SwitchCurrentControlScheme(string,InputDevice[])"/>), 
+    /// To change device pairings at any time, you can use either of these techniques:
+    /// - Use <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) to manually control pairing
+    /// using a PlayerInput's assigned <see cref="user"/> property.
+    /// - Switch control schemes (for example, using <see cref="SwitchCurrentControlScheme(string,InputDevice[])"/>),
     /// if any are present in the PlayerInput's set of <see cref="actions"/>.
     ///
     /// When a player loses a paired device (such as when it is unplugged or loses power), <see cref="InputUser"/>

@@ -28,7 +28,7 @@ Each `InputBinding` has the following properties:
 |[`isComposite`](xref:UnityEngine.InputSystem.InputBinding.isComposite)|Whether the Binding acts as a [Composite](#composite-bindings).|
 |[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding.isPartOfComposite)|Whether the Binding is part of a [Composite](#composite-bindings).|
 
-To query the Bindings for a specific Action, use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings). 
+To query the Bindings for a specific Action, use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings).
 
 To query a flat list of Bindings for all Actions in an Action Map, use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings).
 
@@ -69,13 +69,13 @@ Composites can have parameters, just like [Interactions](xref:input-system-inter
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently five Composite types that come with the system out of the box: 
+There are currently five Composite types that come with the system out of the box:
 
 - [1D-Axis](#1d-axis): two buttons that pull a 1D axis in the negative and positive direction.
 - [2D-Vector](#2d-vector): represents a 4-way button setup where each button represents a cardinal direction, for example a WASD keyboard input (up-down-left-right controls).
 - [3D-Vector](#3d-vector): represents a 6-way button where two combinations each control one axis of a 3D Vector.
-- [One Modifier](#one-modifier): requires the user to hold down a "modifier" button in addition to another control, for example, "SHIFT+1". 
-- [Two Modifiers](#two-modifiers): requires the user to hold down two "modifier" buttons in addition to another control, for example, "SHIFT+CTRL+1". 
+- [One Modifier](#one-modifier): requires the user to hold down a "modifier" button in addition to another control, for example, "SHIFT+1".
+- [Two Modifiers](#two-modifiers): requires the user to hold down two "modifier" buttons in addition to another control, for example, "SHIFT+CTRL+1".
 
 You can also [add your own](#writing-custom-composites) types of Composites.
 
@@ -939,7 +939,7 @@ Press(keyboard.bKey);
 
 ### Initial state check
 
-After an Action is [enabled](xref:UnityEngine.InputSystem.InputAction.enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](xref:UnityEngine.InputSystem.InputAction.controls) to an action may already have a non-default state at that point. 
+After an Action is [enabled](xref:UnityEngine.InputSystem.InputAction.enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](xref:UnityEngine.InputSystem.InputAction.controls) to an action may already have a non-default state at that point.
 
 Using what is referred to as an "initial state check", an Action can be made to respond to such a non-default state as if the state change happened *after* the Action was enabled. The way this works is that in the first input [update](xref:UnityEngine.InputSystem.InputSystem.Update*) after the Action was enabled, all its bound controls are checked in turn. If any of them has a non-default state, the Action responds right away.
 

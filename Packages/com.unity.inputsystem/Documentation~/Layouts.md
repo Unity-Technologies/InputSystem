@@ -308,7 +308,7 @@ You can speed up this process up by "baking" the final form of a layout into a "
 
 ### Creating a precompiled layout
 
-The first step in setting up a precompiled layout is to generate it. 
+The first step in setting up a precompiled layout is to generate it.
 
 To generate a layout:
 

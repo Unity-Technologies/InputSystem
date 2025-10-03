@@ -51,7 +51,7 @@ A control can have one or more associated usages. A usage is a string that denot
 
 You can access a control's usages using the [`InputControl.usages`](xref:UnityEngine.InputSystem.InputControl.usages) property.
 
-Usages can be arbitrary strings. However, a certain set of usages is very commonly used and comes predefined in the API in the [`CommonUsages`](xref:UnityEngine.InputSystem.CommonUsages) static class. 
+Usages can be arbitrary strings. However, a certain set of usages is very commonly used and comes predefined in the API in the [`CommonUsages`](xref:UnityEngine.InputSystem.CommonUsages) static class.
 
 ## Control paths
 
@@ -224,7 +224,7 @@ These two mechanisms use control actuation:
 
 The Input System can label a control as "noisy", meaning that they can change value without needing any actual or intentional user interaction, such as a gravity [sensor](xref:UnityEngine.InputSystem.Sensor) in a cellphone, or taking orientation readings from an [XR head-mounted display](xref:UnityEngine.InputSystem.XR.XRHMD).
 
-For example, the PS4 controller has a gyroscope sensor built into the device which constantly feeds data about the angular velocity of the device, even if the device just sits there without user interaction. Conversely, the controller's sticks and buttons require user interaction to produce non-default values. 
+For example, the PS4 controller has a gyroscope sensor built into the device which constantly feeds data about the angular velocity of the device, even if the device just sits there without user interaction. Conversely, the controller's sticks and buttons require user interaction to produce non-default values.
 
 If a control is marked as noisy, it means that:
 
@@ -232,11 +232,11 @@ If a control is marked as noisy, it means that:
 
 - If enabled in the Project Settings, the system performs additional event filtering, then calls [`InputDevice.MakeCurrent`](xref:UnityEngine.InputSystem.InputDevice.MakeCurrent). If an input event for a device contains no state change on a control that is not marked noisy, then the device will not be made current based on the event. This avoids, for example, a plugged in PS4 controller constantly making itself the current gamepad ([`Gamepad.current`](xref:UnityEngine.InputSystem.Gamepad.current)) due to its sensors constantly feeding data into the system.
 
-- When the application loses focus and devices are [reset](xref:input-system-devices#device-resets) as a result, the state of noisy controls will be preserved as is. This ensures that sensor readings will remain at their last value rather than being reset to default values. However, while other controls are reset to their default value, noisy controls will not be reset but rather remain at their current value (unless the device is [running in the background](xref:input-system-devices#background-and-focus-change-behavior)). This is based on the assumption that noisy controls most often represent sensor values and snapping the last sampling value back to default will usually have undesirable effects on an application's simulation logic. 
+- When the application loses focus and devices are [reset](xref:input-system-devices#device-resets) as a result, the state of noisy controls will be preserved as is. This ensures that sensor readings will remain at their last value rather than being reset to default values. However, while other controls are reset to their default value, noisy controls will not be reset but rather remain at their current value (unless the device is [running in the background](xref:input-system-devices#background-and-focus-change-behavior)). This is based on the assumption that noisy controls most often represent sensor values and snapping the last sampling value back to default will usually have undesirable effects on an application's simulation logic.
 
 > [!NOTE]
 > To query whether a control is noisy, use the [`InputControl.noisy`](xref:UnityEngine.InputSystem.InputControl.noisy) property.
-> 
+>
 > If any control on a device is noisy, the device itself is flagged as noisy.
 
 ### Noise masks
@@ -257,7 +257,7 @@ The system considers synthetic controls for [interactive rebinding](xref:input-s
 
 ### Avoiding defensive copies
 
-Use [`InputControl<T>.value`](xref:UnityEngine.InputSystem.InputControl`1.value) instead of [`InputControl<T>.ReadValue`](xref:UnityEngine.InputSystem.InputControl`1.ReadValue) to avoid creating a copy of the control state on every call. This is because `InputControl<T>.value` returns the value as `ref readonly` while `InputControl<T>.ReadValue` always makes a copy. Note that this optimization only applies if the call site assigns the return value to a variable that has been declared `ref readonly`. Otherwise, a copy is made as before. 
+Use [`InputControl<T>.value`](xref:UnityEngine.InputSystem.InputControl`1.value) instead of [`InputControl<T>.ReadValue`](xref:UnityEngine.InputSystem.InputControl`1.ReadValue) to avoid creating a copy of the control state on every call. This is because `InputControl<T>.value` returns the value as `ref readonly` while `InputControl<T>.ReadValue` always makes a copy. Note that this optimization only applies if the call site assigns the return value to a variable that has been declared `ref readonly`. Otherwise, a copy is made as before.
 
 Additionally, be aware of defensive copies that the compiler can allocate when it is unable to determine that it can safely use the read-only reference. This means that if the compiler can't determine that the reference won't be changed, it will create a defensive copy. For more details, refer to the [.NET guidance on reducing memory allocations](https://learn.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#use-ref-readonly-return-statements).
 
@@ -278,7 +278,7 @@ Negative performance impact can occur when:
 - No readings from controls that change frequently.
 
 `USE_READ_VALUE_CACHING` is not enabled by default because it can result in the following minor behavioral changes:
-- For control processors that use a global state with cached value optimization, changing the global state of a control processor will have no effect. Reading the control value will only ever return a new value if the physical control has been actuated. 
+- For control processors that use a global state with cached value optimization, changing the global state of a control processor will have no effect. Reading the control value will only ever return a new value if the physical control has been actuated.
 
     This behavior differs from using global states without cached value optimizations, in which you can read the control value, change the global state, read the control value again, and get a new value due to the fact that the control processor runs on every call.
 - Writing to device state using low-level APIs like [`InputControl<T>.WriteValueIntoState`](xref:UnityEngine.InputSystem.InputControl`1.WriteValueIntoState(`0,System.Void*)) doesn't set the stale flag and subsequent calls to [`InputControl<T>.value`](xref:UnityEngine.InputSystem.InputControl`1.value) won't reflect those changes.
@@ -286,7 +286,7 @@ Negative performance impact can occur when:
 
 Processors that must run on every read can set their caching policy to [EvaluateOnEveryRead](xref:UnityEngine.InputSystem.InputProcessor.CachingPolicy.EvaluateOnEveryRead), which disables caching on controls that are using such processors.
 
-You can enable the `PARANOID_READ_VALUE_CACHING_CHECKS` internal feature flag to compare cached and uncached values on every read. If they don't match, the check logs an error. 
+You can enable the `PARANOID_READ_VALUE_CACHING_CHECKS` internal feature flag to compare cached and uncached values on every read. If they don't match, the check logs an error.
 
 ### Optimized control read value
 

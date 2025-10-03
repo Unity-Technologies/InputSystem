@@ -90,23 +90,23 @@ You can install Interactions on [Bindings](xref:input-system-action-bindings) or
 
 When you create Bindings for your [Actions](xref:input-system-actions), you can choose to add Interactions to the Bindings.
 
-If you're using [project-wide actions](xref:input-system-configuring-input), or [Input Action Assets](xref:input-system-action-assets), you can add any Interaction to your Bindings in the Input Action editor. 
+If you're using [project-wide actions](xref:input-system-configuring-input), or [Input Action Assets](xref:input-system-action-assets), you can add any Interaction to your Bindings in the Input Action editor.
 
 To add an Interaction:
 
 1. [Create some Bindings](xref:input-system-configuring-input#bindings).
 
-2. Select the Binding you want to add Interactions to. 
+2. Select the Binding you want to add Interactions to.
 
-    The right pane of the window shows the properties for that Binding. 
+    The right pane of the window shows the properties for that Binding.
 
-3. Click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. 
+3. Click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types.
 
-4. Choose an Interaction type to add an Interaction instance of that type. 
+4. Choose an Interaction type to add an Interaction instance of that type.
 
     The Interaction now appears in the __Interactions__ foldout. If the Interaction has any parameters, you can edit them, as well.
 
-To remove an Interaction, click the minus button next to it. 
+To remove an Interaction, click the minus button next to it.
 
 To change the [order of Interactions](#multiple-interactions-on-a-binding), click the up and down arrows.
 
@@ -259,7 +259,7 @@ A [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInte
 
 ## Writing custom Interactions
 
-You can also write a custom Interaction to use in your project. You can use custom Interactions in the UI and code the same way you use built-in Interactions. 
+You can also write a custom Interaction to use in your project. You can use custom Interactions in the UI and code the same way you use built-in Interactions.
 
 Add a class implementing the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface, like this:
 
@@ -311,7 +311,7 @@ Register your interaction with the Input System in your initialization code:
 InputSystem.RegisterInteraction<MyWiggleInteraction>();
 ```
 
-Your new Interaction is now available in the [Input Action Asset Editor window](xref:input-system-action-assets). 
+Your new Interaction is now available in the [Input Action Asset Editor window](xref:input-system-action-assets).
 
 You can also add it in code using this call:
 

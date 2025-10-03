@@ -317,10 +317,10 @@ namespace UnityEngine.InputSystem
         /// <value>True if the control produces noisy input.</value>
         /// <remarks>
         /// A control is considered "noisy" if it produces different values without necessarily requiring user
-        /// interaction. For example, <see cref="UnityEngine.InputSystem.XR.XRHMD">XR head mounted displays</see> 
-        /// or <see cref="Sensor">sensors</see> such as a <see cref="Gyroscope"/>. For more information, refer to 
+        /// interaction. For example, <see cref="UnityEngine.InputSystem.XR.XRHMD">XR head mounted displays</see>
+        /// or <see cref="Sensor">sensors</see> such as a <see cref="Gyroscope"/>. For more information, refer to
         /// [Noisy controls](xref:input-system-controls#noisy-controls).
-        /// 
+        ///
         /// The value of this property is determined by the <see cref="InputControlLayout">layout</see> that the
         /// control has been built from (using <see cref="InputControlLayout.ControlItem.isNoisy"/>).
         ///
@@ -362,15 +362,15 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// A control is considered "synthetic" if it does not correspond to an actual, physical control on the
         /// device. For example, <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
-        /// by <see cref="StickControl"/>. For more information, refer to 
+        /// by <see cref="StickControl"/>. For more information, refer to
         /// [Synthetic controls](xref:input-system-controls#synthetic-controls).
         ///
         /// The value of this property is determined by the <see cref="InputControlLayout">layout</see> that the
         /// control has been built from (using <see cref="InputControlLayout.ControlItem.isSynthetic"/>).
         ///
         /// The primary effect of being synthetic is on interactive rebinding (see
-        /// <see cref="InputActionRebindingExtensions.RebindingOperation"/>) where the input system favors 
-        /// non-synthetic controls over synthetic ones for rebinding. For more information, refer to 
+        /// <see cref="InputActionRebindingExtensions.RebindingOperation"/>) where the input system favors
+        /// non-synthetic controls over synthetic ones for rebinding. For more information, refer to
         /// [Synthetic controls](xref:input-system-controls#synthetic-controls).
         /// </remarks>
         /// <seealso cref="InputControlAttribute.synthetic"/>.
