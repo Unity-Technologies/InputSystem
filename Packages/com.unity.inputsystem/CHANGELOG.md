@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.15.0] - yyyy-mm-dd
+## [1.15.0] - 2025-10-03
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
