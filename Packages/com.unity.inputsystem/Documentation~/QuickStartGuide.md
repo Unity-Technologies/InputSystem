@@ -9,7 +9,7 @@ First, install the Input System package. For information on how to install the n
 
 The input system stores your input configuration in an **Actions Asset**. When you first install the input system package, you must create this Actions Asset.
 
-You can do this by going to by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**, then click the button labelled **Create and assign a default project-wide Action Asset**.
+You can do this by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**, then click the button labelled **Create and assign a default project-wide Action Asset**.
 
 ![The Input Actions Settings window](Images/InputSettingsNoProjectWideAsset.png)
 

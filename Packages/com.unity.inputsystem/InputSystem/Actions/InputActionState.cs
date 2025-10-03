@@ -121,6 +121,7 @@ namespace UnityEngine.InputSystem
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
         private bool m_InProcessControlStateChange;
+        private bool m_Suppressed;
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
@@ -366,6 +367,11 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
+
+        /// <summary>
+        /// Check whether the state is currently reflecting a suppressed state.
+        /// </summary>
+        public bool IsSuppressed => m_Suppressed;
 
         /// <summary>
         /// Check whether the state has any actions that are currently enabled.
@@ -1518,6 +1524,10 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    // Check if we should suppress interaction processing notifications
+                    m_Suppressed = (eventPtr != null) && eventPtr.handled &&
+                        InputSystem.s_Manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionEventNotifications;
+
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
                     // one of higher magnitude) or may even lead us to switch to processing a different binding
@@ -2424,7 +2434,8 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger, bool isDisablingAction = false)
+        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase,
+            ref TriggerState trigger, bool isDisablingAction = false)
         {
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
@@ -2499,6 +2510,11 @@ namespace UnityEngine.InputSystem
                 "actionIndex is below actionStartIndex for map that the action belongs to");
             var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
             trigger.phase = newPhase;
+
+            // Early out from CallActionListeners if suppressed
+            if (m_Suppressed)
+                return;
+
             switch (newPhase)
             {
                 case InputActionPhase.Started:
@@ -2524,7 +2540,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase,
+            ref CallbackArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;

@@ -48,18 +48,36 @@ namespace UnityEngine.InputSystem.Editor
             m_Analytics ??= new InputActionsEditorSessionAnalytic(
                 InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow);
 
+        // Unity 6.4 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
         [OnOpenAsset]
+#if UNITY_6000_4_OR_NEWER
+        public static bool OpenAsset(EntityId entityId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))
+                return false;
+
+            return OpenAsset(EditorUtility.EntityIdToObject(entityId));
+        }
+
+#else
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
-                return false;
             if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
+                return false;
+
+            return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
+        }
+
+#endif
+
+        private static bool OpenAsset(Object obj)
+        {
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;
 
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
-            var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
 
             string actionMapToSelect = null;
@@ -344,7 +362,12 @@ namespace UnityEngine.InputSystem.Editor
             // Auto-save triggers on focus-lost instead of on every change
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
-                Save(isAutoSave: true);
+                // We'd like to avoid saving in case the focus was lost due to the drop-down window being spawned.
+                // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
+                // Since at that point it stops being a separate window that steals focus.
+                // (See case ISXB-1221)
+                if (!InputControlPathEditor.IsShowingDropdown)
+                    Save(isAutoSave: true);
             #endif
 
             analytics.RegisterEditorFocusOut();

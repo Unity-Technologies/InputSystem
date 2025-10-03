@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.ForUI")] // To avoid minor bump
+[assembly: InternalsVisibleTo("Unity.AI.Assistant.Editor")]
 
 namespace UnityEngine.InputSystem
 {
@@ -16,7 +17,7 @@ namespace UnityEngine.InputSystem
         // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
         // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
         //       "-preview" suffixes here.
-        internal const string kAssemblyVersion = "1.14.2";
-        internal const string kDocUrl = "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14";
+        internal const string kAssemblyVersion = "1.15.0";
+        internal const string kDocUrl = "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.15";
     }
 }

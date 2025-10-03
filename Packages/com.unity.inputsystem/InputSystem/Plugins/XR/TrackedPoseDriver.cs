@@ -421,7 +421,11 @@ namespace UnityEngine.InputSystem.XR
 #if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera(out var cameraComponent))
             {
+                // The Unity 6.4+ replacement for this call has to be figured later
+                // See https://jira.unity3d.com/browse/XR-7591
+#pragma warning disable CS0618
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, true);
+#pragma warning restore CS0618
             }
 #endif
         }
@@ -458,7 +462,11 @@ namespace UnityEngine.InputSystem.XR
 #if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera(out var cameraComponent))
             {
+                // The Unity 6.4+ replacement for this call has to be figured later
+                // See https://jira.unity3d.com/browse/XR-7591
+#pragma warning disable CS0618
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, false);
+#pragma warning restore CS0618
             }
 #endif
         }

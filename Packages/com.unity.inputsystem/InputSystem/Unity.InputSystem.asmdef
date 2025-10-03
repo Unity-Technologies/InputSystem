@@ -111,6 +111,11 @@
             "name": "com.unity.modules.unityanalytics",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.3.0a6",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
         }
     ],
     "noEngineReferences": false

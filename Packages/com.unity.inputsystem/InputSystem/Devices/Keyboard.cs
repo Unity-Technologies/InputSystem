@@ -175,7 +175,11 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "f22", displayName = "F22", layout = "Key", bit = (int)Key.F22)]
         [InputControl(name = "f23", displayName = "F23", layout = "Key", bit = (int)Key.F23)]
         [InputControl(name = "f24", displayName = "F24", layout = "Key", bit = (int)Key.F24)]
+        [InputControl(name = "mediaPlayPause", displayName = "MediaPlayPause", layout = "Key", bit = (int)Key.MediaPlayPause)]
+        [InputControl(name = "mediaRewind", displayName = "MediaRewind", layout = "Key", bit = (int)Key.MediaRewind)]
+        [InputControl(name = "mediaForward", displayName = "MediaForward", layout = "Key", bit = (int)Key.MediaForward)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)] // Use the last bit to hold IME selected state.
+        [InputControl(name = "IMESelectedObsoleteKey", layout = "Key", bit = (int)KeyEx.RemappedIMESelected, synthetic = true)]
         public fixed byte keys[kSizeInBytes];
 
         // will be the default in new editor [InputControl(name = "IMESelected", layout = "Button", bit = 0, sizeInBits = 1, synthetic = true)]
@@ -970,6 +974,21 @@ namespace UnityEngine.InputSystem
         F24,
 
         /// <summary>
+        /// The <see cref="Keyboard.mediaPlayPause"/>.
+        /// </summary>
+        MediaPlayPause,
+
+        /// <summary>
+        /// The <see cref="Keyboard.mediaRewind"/>.
+        /// </summary>
+        MediaRewind,
+
+        /// <summary>
+        /// The <see cref="Keyboard.mediaForward"/>.
+        /// </summary>
+        MediaForward,
+
+        /// <summary>
         /// Don't use this. This is a dummy key that is only used internally to represent the IME selected state.
         /// Will be removed in the future.
         /// FIXME: This should never have been a Key but rather just an extra button or state on keyboard
@@ -1048,7 +1067,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Total number of key controls.</value>
         public const int KeyCount = (int)Key.OEM5; // Not updated to Key.F24 for not breaking the API
-        internal const int ExtendedKeyCount = (int)Key.F24;
+        internal const int ExtendedKeyCount = (int)Key.MediaForward;
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
@@ -2271,6 +2290,30 @@ namespace UnityEngine.InputSystem
         public KeyControl f24Key => this[Key.F24];
 
         /// <summary>
+        /// The Media Play/Pause key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaPlayPause"/>.
+        /// Supported on Windows and Android.
+        /// </remarks>
+        public KeyControl mediaPlayPause => this[Key.MediaPlayPause];
+
+        /// <summary>
+        /// The Media Rewind key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaRewind"/>.
+        /// Supported on Android.
+        /// </remarks>
+        public KeyControl mediaRewind => this[Key.MediaRewind];
+
+        /// <summary>
+        /// The Media Forward key on the keyboard or TV remote.
+        /// </summary>
+        /// <remarks><see cref="KeyControl"/> representing <see cref="Key.MediaForward"/>.
+        /// Supported on Android.
+        /// </remarks>
+        public KeyControl mediaForward => this[Key.MediaForward];
+
+        /// <summary>
         /// An artificial combination of <see cref="leftShiftKey"/> and <see cref="rightShiftKey"/> into one control.
         /// </summary>
         /// <remarks>
@@ -2328,7 +2371,9 @@ namespace UnityEngine.InputSystem
             {
                 var index = (int)key - 1;
                 if (index < 0 || index >= m_Keys.Length)
-                    throw new ArgumentOutOfRangeException(nameof(key));
+                {
+                    throw new ArgumentOutOfRangeException($"{nameof(key)}: {key}");
+                }
                 return m_Keys[index];
             }
         }
@@ -2518,7 +2563,7 @@ namespace UnityEngine.InputSystem
                 "oem3",
                 "oem4",
                 "oem5",
-                null, // IMESelected
+                "IMESelectedObsoleteKey", // IMESelected
                 "f13",
                 "f14",
                 "f15",
@@ -2531,12 +2576,13 @@ namespace UnityEngine.InputSystem
                 "f22",
                 "f23",
                 "f24",
+                nameof(mediaPlayPause),
+                nameof(mediaRewind),
+                nameof(mediaForward),
             };
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
-                if (string.IsNullOrEmpty(keyStrings[i]))
-                    continue;
                 m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
