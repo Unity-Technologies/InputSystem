@@ -50,7 +50,7 @@ myAction.AddCompositeBinding("Axis")
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-Each Composite consists of one Binding that has [`InputBinding.isComposite`](xref:UnityEngine.InputSystem.InputBinding.isComposite) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposiste`](xref:UnityEngine.InputSystem.InputBinding.isPartOfComposite) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings) or [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings) together form a Composite.
+Each Composite consists of one Binding that has [`InputBinding.isComposite`](xref:UnityEngine.InputSystem.InputBinding.isComposite) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding.isPartOfComposite) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings) or [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings) together form a Composite.
 
 Note that each composite part can be bound arbitrary many times.
 
@@ -503,7 +503,7 @@ playerInput.actions.FindActionMap("gameplay").ChangeBinding(0).Erase();
 
 #### Adding Bindings
 
-New bindings can be added to an Action using [`AddAction`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String,System.String)) or [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddCompositeBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String)).
+New bindings can be added to an Action using [`AddBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String,System.String)) or [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddCompositeBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String)).
 
 ```CSharp
 // Add a binding for the left mouse button to the "fire" action.
