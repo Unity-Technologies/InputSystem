@@ -195,20 +195,5 @@ partial class CoreTests
         //Assert.That(reference.ToString(), Is.EqualTo(":" + new Guid(action1.m_Id))); // Unexpected when no longer existing
     }
 
-    // List of bugs addressed on this branch:
-    // (FIXED) InputActionReference - Do not set m_Action when calling Set.
-    // (FIXED) InputActionReference.asset - Returns incorrect asset after being .Set if .action is called before Set.
-    // (FIXED) InputActionReference - Assigned with Set during play-mode corrupts InputActionAsset by mutating asset reference into pointing into potentially another asset and overwrites existign asset.
-    // (FIXED) InputActionReferencePropertyDrawer - Assigns direct reference into InputActionAsset to InputActionReference fields leading to corruption.
-    // (SOMEWHAT FIXED) InputActionReference - Contains stale reference and looks like a valid reference if the action is deleted. .action returns removed action. This is a presentation (UI) issue, reference should be fixed when referenced entities are removed to allow resolving itself after e.g. Undo.
-    // (FIXED) InputActionReference - Do not invalidate if action, action map or asset is deleted/destroyed. .action still returns the action.
-    // (FIXED) InputActionAsset.RemoveActionMap - Do not remove actions within the map and they keep a stale reference to the removed map.
-    // (FIXED) InputActionAsset.RemoveAction - Throws exception if action do not have any bindings.
-    // (FIXED) InputActionReference.Set(null) - Does not update m_Action. Hence .actions returns an incorrect reference. Also doesn't update ScriptableObject.name consistently with default ScriptableObject.
-    // (FIXED) InputActionReference.Create - Returns null if action is null which is not inline with xmldoc description and inconsistent since it is allowed to create a reference and set it to null. If you want a null reference you should not call Create in the first place.
-    // InputActionSerializationHelpers.RemoveAction - Isn't removing InputActionReference objects. This might be a bug unless importer will make sure the object is deleted.
-
-    // TODO Make a test where action map is deleted
-    // TODO Make a test where asset is deleted
-    // TODO Make an undo resolve test
+    // TODO Make an undo resolve test that destroys reference sub-asset, breaks reference, then undo and reference is valid again.
 }
