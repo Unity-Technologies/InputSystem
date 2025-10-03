@@ -28,7 +28,7 @@ The best way to resolve the situation of HIDs not working as expected is to add 
 
 ## HID output
 
-HIDs can support output (for example, to toggle lights or force feedback motors on a gamepad). Unity controls output by sending HID Output Report commands to a Device. Output reports use Device-specific data formats. To use HID Output Reports, call [`InputDevice.ExecuteCommand`](xref:UnityEngine.InputSystem.InputDevice.ExecuteCommand``1(``0@)) to send a command struct with the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#properties) property set as `"HIDO"` to a Device. The command struct contains the Device-specific data sent out to the HID.
+HIDs can support output (for example, to toggle lights or force feedback motors on a gamepad). Unity controls output by sending HID Output Report commands to a Device. Output reports use Device-specific data formats. To use HID Output Reports, call [`InputDevice.ExecuteCommand`](xref:UnityEngine.InputSystem.InputDevice.ExecuteCommand``1(``0@)) to send a command struct with the [`typeStatic`](xref:UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.typeStatic) property set as `"HIDO"` to a Device. The command struct contains the Device-specific data sent out to the HID.
 
 ## Creating a custom device layout
 

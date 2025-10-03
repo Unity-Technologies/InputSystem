@@ -3,15 +3,17 @@ uid: input-system-action-bindings
 ---
 # Input Bindings
 
-An [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) represents a connection between an [Action](xref:input-system-actions) and one or more [Controls](xref:input-system-controls) identified by a [Control path](xref:input-system-controls#control-paths). For example, the **right trigger** of a gamepad (a control) might be bound to an an action named "accelerate", so that pulling the right trigger causes a car to accelerate in your game.
+An [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) represents a connection between an [Action](xref:input-system-actions) and one or more [Controls](xref:input-system-controls) identified by a [Control path](xref:input-system-controls#control-paths). For example, the right trigger of a gamepad (a control) might be bound to an an action named "accelerate", so that pulling the right trigger causes a car to accelerate in your game.
 
-You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WSAD keys, which means input through any of these bindings will perform the action.
+You can add multiple bindings to an action, which is generally useful for supporting multiple types of input device. For example, in the default set of actions, the "Move" action has a binding to the left gamepad stick and the WASD keys, which means input through any of these bindings will perform the action.
 
 You can also bind multiple controls from the same device to an action. For example, both the left and right trigger of a gamepad could be mapped to the same action, so that pulling either trigger has the same result in your game.
 
+You can also set up [Composite](#composite-bindings) bindings, which don't bind to the controls themselves, but receive their input from **Part Bindings** and then return a value representing a composition of those inputs. For example, the right trigger on the gamepad can act as a strength multiplier on the value of the left stick.
 
+## InputBinding API access
 
-Each Binding has the following properties:
+Each `InputBinding` has the following properties:
 
 |Property|Description|
 |--------|-----------|
@@ -26,19 +28,21 @@ Each Binding has the following properties:
 |[`isComposite`](xref:UnityEngine.InputSystem.InputBinding.isComposite)|Whether the Binding acts as a [Composite](#composite-bindings).|
 |[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding.isPartOfComposite)|Whether the Binding is part of a [Composite](#composite-bindings).|
 
-To query the Bindings to a particular Action, you can use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings). To query a flat list of Bindings for all Actions in an Action Map, you can use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings).
+To query the Bindings for a specific Action, use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings). 
+
+To query a flat list of Bindings for all Actions in an Action Map, use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings).
 
 ## Composite Bindings
 
-Sometimes, you might want to have several Controls act in unison to mimic a different type of Control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector Control equivalent to mouse deltas or gamepad sticks. Another example is to use two keys to form a 1D axis equivalent to a mouse scroll axis.
+You might want to have several Controls act in unison to mimic a different type of Control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector Control equivalent to mouse deltas or gamepad sticks. Another example is to use two keys to form a 1D axis equivalent to a mouse scroll axis.
 
 This is difficult to implement with normal Bindings. You can bind a  [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl) to an action expecting a `Vector2`, but doing so results in an exception at runtime when the Input System tries to read a `Vector2` from a Control that can deliver only a `float`.
 
 Composite Bindings (that is, Bindings that are made up of other Bindings) solve this problem. Composites themselves don't bind directly to Controls; instead, they source values from other Bindings that do, and then synthesize input on the fly from those values.
 
-To see how to create Composites in the editor UI, see documentation on [editing Composite Bindings](xref:input-system-configuring-input#editing-composite-bindings).
+To see how to create Composites in the editor UI, refer to [Editing Composite Bindings](xref:input-system-configuring-input#editing-composite-bindings).
 
-To create composites in code, you can use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddCompositeBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String)) syntax.
+To create composites in code, use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddCompositeBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String)) method:
 
 ```CSharp
 myAction.AddCompositeBinding("Axis")
@@ -65,16 +69,24 @@ Composites can have parameters, just like [Interactions](xref:input-system-inter
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently five Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [3D-Vector](#3d-vector), [One Modifier](#one-modifier) and [Two Modifiers](#two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
+There are currently five Composite types that come with the system out of the box: 
 
-### 1D axis
+- [1D-Axis](#1d-axis): two buttons that pull a 1D axis in the negative and positive direction.
+- [2D-Vector](#2d-vector): represents a 4-way button setup where each button represents a cardinal direction, for example a WASD keyboard input (up-down-left-right controls).
+- [3D-Vector](#3d-vector): represents a 6-way button where two combinations each control one axis of a 3D Vector.
+- [One Modifier](#one-modifier): requires the user to hold down a "modifier" button in addition to another control, for example, "SHIFT+1". 
+- [Two Modifiers](#two-modifiers): requires the user to hold down two "modifier" buttons in addition to another control, for example, "SHIFT+CTRL+1". 
+
+You can also [add your own](#writing-custom-composites) types of Composites.
+
+### 1D Axis
 
 ![The Add Positive/Negative Binding property is selected for the "fire" action on the Actions panel.](Images/Add1DAxisComposite.png){width="486" height="133"}
 
 ![The 1D Axis Composite binding appears under the "fire" action on the Actions panel.](Images/1DAxisComposite.png){width="486" height="142"}
 
 
-A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite) class. The result is a `float`.
+The 1D Axis Composite is made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction, using the [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite) class to compute a `float`.
 
 ```CSharp
 myAction.AddCompositeBinding("1DAxis") // Or just "Axis"
@@ -82,9 +94,9 @@ myAction.AddCompositeBinding("1DAxis") // Or just "Axis"
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-The axis Composite has two part bindings.
+The axis Composite has two Part Bindings:
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
 |[`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite.positive)|`Button`|Controls pulling in the positive direction (towards [`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite.maxValue)).|
 |[`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite.negative)|`Button`|Controls pulling in the negative direction, (towards [`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite.minValue)).|
@@ -99,25 +111,24 @@ You can set the following parameters on an axis Composite:
 
 If Controls from both the `positive` and the `negative` side are actuated, then the resulting value of the axis Composite depends on the `whichSideWin` parameter setting.
 
-|[`WhichSideWins`](xref:UnityEngine.InputSystem.Composites.AxisComposite.WhichSideWins)|Description|
-|---------------|-----------|
-|(0) `Neither`|Neither side has precedence. The Composite returns the midpoint between `minValue` and `maxValue` as a result. At their default settings, this is 0.<br><br>This is the default value for this setting.|
-|(1) `Positive`|The positive side has precedence and the Composite returns `maxValue`.|
-|(2) `Negative`|The negative side has precedence and the Composite returns `minValue`.|
+| [`WhichSideWins`](xref:UnityEngine.InputSystem.Composites.AxisComposite.WhichSideWins) | Description                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| (0) `Neither`                                                | Neither side has precedence. The Composite returns the [`midpoint`](xref:UnityEngine.InputSystem.Composites.AxisComposite.midPoint) between `minValue` and `maxValue` as a result. At their default settings, this is 0.<br><br>This is the default value for this setting. |
+| (1) `Positive`                                               | The positive side has precedence and the Composite returns `maxValue`. |
+| (2) `Negative`                                               | The negative side has precedence and the Composite returns `minValue`. |
 
 > [!NOTE]
 > There is no support yet for interpolating between the positive and negative over time.
 
-### 2D vector
-
-![The Add Up/Down/Left/Right Composite binding is selected for the Move property on the Actions panel.](Images/Add2DVectorComposite.png){width="486" height="199"}
+### 2D Vector
 
 ![The Add Up/Down/Left/Right Composite binding is selected for the "Move" action on the Actions panel.](Images/Add2DVectorComposite.png){width="486" height="199"}
 
+![The WASD part bindings appear under the "Move" action on the Actions panel.](Images/2DVectorComposite.png){width="486" height="178"}
 
-A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) class. The result is a `Vector2`.
+A 2D Vector Composite represents a 4-way button setup like the D-pad on gamepads, where each button represents a cardinal direction. This type of Composite binding uses the [`Vector2Composite`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) class to compute a `Vector2`.
 
-This Composite is most useful for representing up-down-left-right controls, such as WASD keyboard input.
+This is very useful for representing up-down-left-right controls, such as WASD keyboard input.
 
 ```CSharp
 myAction.AddCompositeBinding("2DVector") // Or "Dpad"
@@ -134,16 +145,16 @@ myAction.AddCompositeBinding("2DVector(mode=2)")
     .With("Right", "<Gamepad>/leftStick/right");
 ```
 
-The 2D vector Composite has four part Bindings.
+The 2D Vector Composite has four Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
 |[`up`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.up)|`Button`|Controls representing `(0,1)` (+Y).|
 |[`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.down)|`Button`|Controls representing `(0,-1)` (-Y).|
 |[`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.left)|`Button`|Controls representing `(-1,0)` (-X).|
 |[`right`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.right)|`Button`|Controls representing `(1,0)` (+X).|
 
-In addition, you can set the following parameters on a 2D vector Composite:
+In addition, you can set this parameter on a 2D Vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
@@ -152,7 +163,7 @@ In addition, you can set the following parameters on a 2D vector Composite:
 > [!NOTE]
 > There is no support yet for interpolating between the up/down/left/right over time.
 
-### 3D vector
+### 3D Vector
 
 
 ![The Add Up/Down/Left/Right/Forward/Backward Composite binding is selected for the "position" action on the Actions panel.](Images/Add3DVectorComposite.png){width="486" height="150"}
@@ -160,7 +171,7 @@ In addition, you can set the following parameters on a 2D vector Composite:
 ![The 3D Vector part bindings appear under the "position" action on the Actions panel.](Images/3DVectorComposite.png){width="486" height="259"
 }
 
-A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) class. The result is a `Vector3`.
+A 3D Vector Composite that represents a 6-way button where two combinations each control one axis of a 3D Vector. This type of Composite binding uses the the [`Vector3Composite`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) class to compute a `Vector3`.
 
 ```CSharp
 myAction.AddCompositeBinding("3DVector")
@@ -177,9 +188,9 @@ myAction.AddCompositeBinding("3DVector(mode=2)")
     .With("Right", "<Gamepad>/leftStick/right");
 ```
 
-The 3D vector Composite has four part Bindings.
+The 3D Vector Composite has four Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
 |[`up`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.up)|`Button`|Controls representing `(0,1,0)` (+Y).|
 |[`down`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.down)|`Button`|Controls representing `(0,-1,0)` (-Y).|
@@ -201,7 +212,7 @@ In addition, you can set the following parameters on a 3D vector Composite:
 
 ![The One Modifier part bindings appear under the "fire" action on the Actions panel.](Images/OneModifierComposite.png){width="486" height="147"}
 
-A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A One Modifier Composite requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". This type of Composite binding uses the [`OneModifierComposite`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
 The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.binding) part.
 
@@ -218,7 +229,7 @@ myAction.AddCompositeBinding("OneModifier")
     .With("Modifier", "<Keyboard>/alt");
 ```
 
-The button with one modifier Composite has two part Bindings.
+The button with One Modifier Composite has two Part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
@@ -234,8 +245,7 @@ This Composite has no parameters.
 
 ![The Two Modifiers part bindings appear under the "fire" action on the Actions panel.](Images/TwoModifiersComposite.png){width="486" height="149"}
 
-
-A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Two Modifiers Composite requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". This type of Composite binding uses the [`TwoModifiersComposite`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
 The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite.binding) part.
 
@@ -248,7 +258,7 @@ myAction.AddCompositeBinding("TwoModifiers")
     .With("Modifier2", "<Keyboard>/rightShift");
 ```
 
-The button with two modifiers Composite has three part Bindings.
+The button with Two Modifiers Composite has three Part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
@@ -360,7 +370,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 
 ## Working with Bindings
 
-## Looking up Bindings
+### Looking up Bindings
 
 You can retrieve the bindings of an action using its [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction.bindings) property which returns a read-only array of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) structs.
 
@@ -398,7 +408,7 @@ Finally, you can look up the binding that corresponds to a specific control thro
         Debug.Log("Fire is not bound to LMB of the current mouse.");
 ```
 
-## Changing Bindings
+### Changing Bindings
 
 In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.ChangeBinding(UnityEngine.InputSystem.InputAction,System.Int32)) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, see [Applying Overrides](#applying-overrides).
 
@@ -441,7 +451,7 @@ playerInput.actions["move"].ChangeCompositeBinding("2DVector")
 playerInput.actions["move"].ChangeBinding("WASD")
 ```
 
-### Applying overrides
+#### Applying overrides
 
 You can override aspects of any Binding at run-time non-destructively. Specific properties of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) have an `override` variant that, if set, will take precedent over the property that they shadow.  All `override` properties are of type `String`.
 
@@ -472,7 +482,7 @@ var bindingIndex = jumpAction.GetBindingIndexForControl(Keyboard.current.spaceKe
 jumpAction.ApplyBindingOverride(bindingIndex, "<Keyboard>/enter");
 ```
 
-### Erasing Bindings
+#### Erasing Bindings
 
 You can erase a binding by calling [`Erase`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.Erase*) on the [binding accessor](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax).
 
@@ -491,7 +501,7 @@ playerInput.actions["move"].ChangeCompositeBinding("WASD").Erase();
 playerInput.actions.FindActionMap("gameplay").ChangeBinding(0).Erase();
 ```
 
-### Adding Bindings
+#### Adding Bindings
 
 New bindings can be added to an Action using [`AddAction`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String,System.String)) or [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.AddCompositeBinding(UnityEngine.InputSystem.InputAction,System.String,System.String,System.String)).
 
@@ -508,7 +518,7 @@ playerInput.actions["move"]
         .With("Right", "<Keyboard>/d");
 ```
 
-### Setting parameters
+#### Setting parameters
 
 A Binding may, either through itself or through its associated Action, lead to [processor](UsingProcessors.md), [interaction](xref:input-system-interactions), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](xref:input-system-configuring-input#bindings) of the Action editor or through the API. This configuration will give parameters their default value.
 
@@ -619,7 +629,7 @@ look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/de
 > [!NOTE]
 > Parameter overrides are *not* persisted along with an asset.
 
-## Interactive rebinding
+### Interactive rebinding
 
 > [!NOTE]
 > To download a sample project which demonstrates how to set up a rebinding user interface with Input System APIs, open the Package Manager, select the Input System Package, and choose the sample project "Rebinding UI" to download.
@@ -653,7 +663,7 @@ Refer to the scripting API reference for [`InputActionRebindingExtensions.Rebind
 
 Note that [`PerformInteractiveRebinding()`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions.PerformInteractiveRebinding(UnityEngine.InputSystem.InputAction,System.Int32)) automatically applies a set of default configurations based on the given action and targeted binding.
 
-## Saving and loading rebinds
+### Saving and loading rebinds
 
 You can serialize override properties of [Bindings](xref:UnityEngine.InputSystem.InputBinding) by serializing them as JSON strings and restoring them from these. Use [`SaveBindingOverridesAsJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions.SaveBindingOverridesAsJson(UnityEngine.InputSystem.IInputActionCollection2)) to create these strings and [`LoadBindingOverridesFromJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions.LoadBindingOverridesFromJson(UnityEngine.InputSystem.IInputActionCollection2,System.String,System.Boolean)) to restore overrides from them.
 
@@ -669,7 +679,7 @@ var rebinds = PlayerPrefs.GetString("rebinds");
 playerInput.actions.LoadBindingOverridesFromJson(rebinds);
 ```
 
-### Restoring original Bindings
+#### Restoring original Bindings
 
 You can remove Binding overrides and thus restore defaults by using [`RemoveBindingOverride`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions.RemoveBindingOverride(UnityEngine.InputSystem.InputAction,System.Int32)) or [`RemoveAllBindingOverrides`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions.RemoveAllBindingOverrides(UnityEngine.InputSystem.IInputActionCollection2)).
 
@@ -684,7 +694,7 @@ playerInput.actions["fire"].RemoveAllBindingOverrides();
 playerInput.actions.RemoveAllBindingOverrides();
 ```
 
-### Displaying Bindings
+#### Displaying Bindings
 
 It can be useful for the user to know what an Action is currently bound to (taking any potentially active rebindings into account) while rebinding UIs, and for on-screen hints while the app is running. You can use [`InputBinding.effectivePath`](xref:UnityEngine.InputSystem.InputBinding.effectivePath) to get the currently active path for a Binding (which returns [`overridePath`](xref:UnityEngine.InputSystem.InputBinding.overridePath) if set, or otherwise returns [`path`](xref:UnityEngine.InputSystem.InputBinding.path)).
 
@@ -929,14 +939,14 @@ Press(keyboard.bKey);
 
 ### Initial state check
 
-After an Action is [enabled](xref:UnityEngine.InputSystem.InputAction.enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](xref:UnityEngine.InputSystem.InputAction.controls) to an action may already have a non-default state at that point.
-x
+After an Action is [enabled](xref:UnityEngine.InputSystem.InputAction.enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](xref:UnityEngine.InputSystem.InputAction.controls) to an action may already have a non-default state at that point. 
+
 Using what is referred to as an "initial state check", an Action can be made to respond to such a non-default state as if the state change happened *after* the Action was enabled. The way this works is that in the first input [update](xref:UnityEngine.InputSystem.InputSystem.Update*) after the Action was enabled, all its bound controls are checked in turn. If any of them has a non-default state, the Action responds right away.
 
 This check is implicitly enabled for [Value](xref:input-system-responding#value) actions. If, for example, you have a `Move` Action bound to the left stick on the gamepad and the stick is already pushed in a direction when `Move` is enabled, the character will immediately start walking.
 
 By default, [Button](xref:input-system-responding#button) and [Pass-Through](xref:input-system-responding#pass-through) type Actions, do not perform this check. A button that is pressed when its respective Action is enabled first needs to be released and then pressed again for it to trigger the Action.
 
-However, you can manually enable initial state checks on these types of Actions using the checkbox in the editor:
+However, you can manually enable initial state checks on these types of Actions using the checkbox in the Editor:
 
 ![The Initial State Check setting appears with a checkmark under the Pass Through action on the Action panel.](./Images/InitialStateCheck.png){width="486" height="116"}

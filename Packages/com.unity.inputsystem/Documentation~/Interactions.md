@@ -90,9 +90,25 @@ You can install Interactions on [Bindings](xref:input-system-action-bindings) or
 
 When you create Bindings for your [Actions](xref:input-system-actions), you can choose to add Interactions to the Bindings.
 
-If you're using [project-wide actions](xref:input-system-configuring-input), or [Input Action Assets](xref:input-system-action-assets), you can add any Interaction to your Bindings in the Input Action editor. Once you [created some Bindings](xref:input-system-configuring-input#bindings), select the Binding you want to add Interactions to, so that the right pane of the window shows the properties for that Binding. Next, click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. Choose an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout. If the Interaction has any parameters, you can edit them, as well.
+If you're using [project-wide actions](xref:input-system-configuring-input), or [Input Action Assets](xref:input-system-action-assets), you can add any Interaction to your Bindings in the Input Action editor. 
 
-To remove an Interaction, click the minus button next to it. To change the [order of Interactions](#multiple-interactions-on-a-binding), click the up and down arrows.
+To add an Interaction:
+
+1. [Create some Bindings](xref:input-system-configuring-input#bindings).
+
+2. Select the Binding you want to add Interactions to. 
+
+    The right pane of the window shows the properties for that Binding. 
+
+3. Click on the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. 
+
+4. Choose an Interaction type to add an Interaction instance of that type. 
+
+    The Interaction now appears in the __Interactions__ foldout. If the Interaction has any parameters, you can edit them, as well.
+
+To remove an Interaction, click the minus button next to it. 
+
+To change the [order of Interactions](#multiple-interactions-on-a-binding), click the up and down arrows.
 
 If you create your Bindings in code, you can add Interactions like this:
 
@@ -106,7 +122,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. It is thus more or less a shortcut that avoids manually adding the same Interaction(s) to each of the Bindings.
 
-If Interactions are applied __both__ to an Action and to its Bindings, then the effect is the same as if the Action's Interactions are *appended* to the list of Interactions on each of the Bindings. This means that the Binding's Interactions are applied *first*, and then the Action's Interactions are applied *after*.
+If Interactions are applied __both__ to an Action and to its Bindings, then the effect is the same as if the Action's Interactions are appended to the list of Interactions on each of the Bindings. This means that the Binding's Interactions are applied first, and then the Action's Interactions are applied after.
 
 You can add and edit Interactions on Actions in the [Input Action Assets](xref:input-system-action-assets) editor window the [same way](#interactions-applied-to-bindings) as you would do for Bindings: select an Action to Edit, then add the Interactions in the right window pane.
 
@@ -243,7 +259,9 @@ A [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInte
 
 ## Writing custom Interactions
 
-You can also write a custom Interaction to use in your Project. You can use custom Interactions in the UI and code the same way you use built-in Interactions. Add a class implementing the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface, like this:
+You can also write a custom Interaction to use in your project. You can use custom Interactions in the UI and code the same way you use built-in Interactions. 
+
+Add a class implementing the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface, like this:
 
 ```CSharp
 // Interaction which performs when you quickly move an
@@ -287,13 +305,15 @@ public class MyWiggleInteraction : IInputInteraction
 }
 ```
 
-Now, you need to tell the Input System about your Interaction. Call this method in your initialization code:
+Register your interaction with the Input System in your initialization code:
 
 ```CSharp
 InputSystem.RegisterInteraction<MyWiggleInteraction>();
 ```
 
-Your new Interaction is now available in the [Input Action Asset Editor window](xref:input-system-action-assets). You can also add it in code like this:
+Your new Interaction is now available in the [Input Action Asset Editor window](xref:input-system-action-assets). 
+
+You can also add it in code using this call:
 
 ```CSharp
 var Action = new InputAction(Interactions: "MyWiggle(duration=0.5)");

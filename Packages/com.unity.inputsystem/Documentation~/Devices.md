@@ -9,7 +9,7 @@ To query the set of all currently present Devices, you can use [`InputSystem.dev
 
 ## Device descriptions
 
-An [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) describes a Device. The Input System uses this primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the report contains a Device description. Based on the description, the system then attempts to find a Device [layout](xref:input-system-layouts) that matches the description. This process is based on [Device matchers](#matching).
+The Input System uses the device description defined as a [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the system then attempts to find a Device [layout](xref:input-system-layouts) that matches the Device description contained in the report. This process is based on [Device matching](#matching).
 
 After a Device has been created, you can retrieve the description it was created from through the [`InputDevice.description`](xref:UnityEngine.InputSystem.InputDevice.description) property.
 
@@ -50,7 +50,7 @@ InputSystem.RegisterLayoutMatcher<MyDevice>(
 
 ```
 
-If multiple matchers are matching the same [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription), the Input System chooses the matcher that has the larger number of properties to match against.
+If multiple matchers identifies the same [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription), the Input System chooses the matcher that has the larger number of properties to match against.
 
 #### Hijacking the matching process
 
@@ -106,12 +106,12 @@ Resetting a Device resets its Controls to their default state. You can do this m
 
 There are two types of resets as determined by the second parameter to [`InputSystem.ResetDevice`](xref:UnityEngine.InputSystem.InputSystem.ResetDevice(UnityEngine.InputSystem.InputDevice,System.Boolean)):
 
-|Type|Description|
+|Reset Type|Description|
 |----|-----------|
-|"Soft" Resets|This is the default. With this type, only controls that are *not* marked as [`dontReset`](xref:input-system-layouts#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](xref:UnityEngine.InputSystem.Pointer.position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
-|"Hard" Resets|In this type, *all* controls are reset to their default value regardless of whether they have [`dontReset`](xref:input-system-layouts#control-items) set or not.|
+|**Soft** Resets|This is the default. With this type, only controls that are not marked as [`dontReset`](xref:input-system-layouts#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](xref:UnityEngine.InputSystem.Pointer.position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
+|**Hard** Resets|In this type, all controls are reset to their default value regardless of whether they have [`dontReset`](xref:input-system-layouts#control-items) set or not.|
 
-Resetting Controls this way is visible on [Actions](xref:input-system-actions). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](xref:UnityEngine.InputSystem.InputAction.performed) Actions (e.g. a button that was pressed would not appear to have been released), a reset will force clean cancellation.
+Resetting Controls this way is visible on [Actions](xref:input-system-actions). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](xref:UnityEngine.InputSystem.InputAction.performed) Actions (for example, a button that was pressed would not appear to have been released), a reset will force clean cancellation.
 
 Resets may be triggered automatically by the Input System depending on [application focus](#background-and-focus-change-behavior).
 
@@ -148,11 +148,14 @@ If the application is configured to run while in the background (that is, not ha
 
 If the application is configured this way to keep running while in the background, the player loop and thus the Input System, too, will keep running even when the application does not have focus. What happens with respect to input then depends on two factors:
 
-1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](xref:UnityEngine.InputSystem.TrackedDevice)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice.canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](xref:input-system-layouts#control-items).
-2. On two settings you can find in the project-wide [Input Settings](xref:input-system-settings). Specifically, [`InputSettings.backgroundBehavior`](xref:UnityEngine.InputSystem.InputSettings.backgroundBehavior) and [`InputSettings.editorInputBehaviorInPlayMode`](xref:UnityEngine.InputSystem.InputSettings.editorInputBehaviorInPlayMode). The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
+1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](xref:UnityEngine.InputSystem.TrackedDevice)) such as HMDs and VR controllers generally support this.
 
-> [!NOTE]
-> [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice.canRunInBackground) is overridden by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
+    To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice.canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](xref:input-system-layouts#control-items).
+
+    > [!NOTE]
+    > [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice.canRunInBackground) is overridden by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
+
+2. On two settings you can find in the project-wide [Input Settings](xref:input-system-settings): [`InputSettings.backgroundBehavior`](xref:UnityEngine.InputSystem.InputSettings.backgroundBehavior) and [`InputSettings.editorInputBehaviorInPlayMode`](xref:UnityEngine.InputSystem.InputSettings.editorInputBehaviorInPlayMode). The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
 
 The following table shows the full matrix of behaviors according to the [Input Settings](xref:input-system-settings) and whether the game is running in the editor or in the player.
 
