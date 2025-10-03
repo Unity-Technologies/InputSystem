@@ -1063,7 +1063,7 @@ namespace UnityEngine.InputSystem
                             }
                         }
 
-                        actionJson.processors = string.Join(";", rebuilt);
+                        actionJson.processors = string.Join(",", rebuilt);
                         mapJson.actions[ai] = actionJson;
                     }
                     parsedJson.maps[mi] = mapJson;
