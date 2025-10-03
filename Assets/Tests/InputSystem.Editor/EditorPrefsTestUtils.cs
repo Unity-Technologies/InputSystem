@@ -25,10 +25,34 @@ namespace Tests.InputSystem.Editor
         /// <summary>
         /// Call this from a tests TearDown routine to restore editor preferences to the state it had before the test.
         /// </summary>
+        /// <remarks>Note that if domain reloads have not been disabled and you have a domain reload mid-test,
+        /// this utility will fail to restore editor preferences since the saved data will be lost.</remarks>
         public static void RestoreEditorPrefs()
         {
             EditorPrefs.SetBool(EnterPlayModeOptionsEnabledKey, _savedEnterPlayModeOptionsEnabled);
             EditorPrefs.SetInt(EnterPlayModeOptionsKey, _savedEnterPlayModeOptions);
+        }
+
+        /// <summary>
+        /// Returns whether domain reloads are disabled.
+        /// </summary>
+        /// <returns>true if domain reloads have been disabled, else false.</returns>
+        public static bool IsDomainReloadsDisabled()
+        {
+            return EditorPrefs.GetBool(EnterPlayModeOptionsEnabledKey, false) &&
+                (EditorPrefs.GetInt(EnterPlayModeOptionsKey, (int)EnterPlayModeOptions.None) &
+                    (int)EnterPlayModeOptions.DisableDomainReload) != 0;
+        }
+
+        /// <summary>
+        /// Returns whether scene reloads are disabled.
+        /// </summary>
+        /// <returns>true if scene reloads have been disabled, else false.</returns>
+        public static bool IsSceneReloadsDisabled()
+        {
+            return EditorPrefs.GetBool(EnterPlayModeOptionsEnabledKey, false) &&
+                (EditorPrefs.GetInt(EnterPlayModeOptionsKey, (int)EnterPlayModeOptions.None) &
+                    (int)EnterPlayModeOptions.DisableSceneReload) != 0;
         }
 
         /// <summary>
@@ -44,9 +68,9 @@ namespace Tests.InputSystem.Editor
         /// </summary>
         public static void DisableDomainReload()
         {
-            EditorPrefs.SetBool(EnterPlayModeOptionsEnabledKey, true);
             EditorPrefs.SetInt(EnterPlayModeOptionsKey, (int)(EnterPlayModeOptions.DisableDomainReload |
                 EnterPlayModeOptions.DisableSceneReload));
+            EditorPrefs.SetBool(EnterPlayModeOptionsEnabledKey, true);
         }
     }
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using UnityEditor;
 
 ////REVIEW: Can we somehow make this a simple struct? The one problem we have is that we can't put struct instances as sub-assets into
 ////        the import (i.e. InputActionImporter can't do AddObjectToAsset with them). However, maybe there's a way around that. The thing
@@ -56,46 +54,13 @@ namespace UnityEngine.InputSystem
             {
                 // Note that we check m_Action since it would be null if we haven't yet resolved the action.
                 // We also need to check that m_Action.actionMap isn't null since it would be null if the
-                // action was deleted.
+                // action was deleted. Additionally we need to check m_Asset since it could also have been deleted.
                 if (m_Action != null && m_Action.actionMap != null && m_Asset)
                     return m_Action;
-                return (m_Action = ResolveAction());
+
+                // Attempt to resolve action based on asset and GUID.
+                return (m_Action = m_Asset ? m_Asset.FindAction(new Guid(m_ActionId)) : null);
             }
-        }
-
-        private static bool CanSetReference(InputActionReference reference)
-        {
-            // TODO Consider an alternative approach where importer would build a registry of immutable references.
-            //      That allows us to remove the #if UNITY_EDITOR and skip these checks.
-#if UNITY_EDITOR
-            // If the asset isn't persisted it cannot be part of an InputActionAsset file.
-            // We use this check first since it can allow us to avoid GC pressure.
-            var instanceID = reference.GetInstanceID();
-            var isPersistent = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceID, out _, out long _);
-            if (!isPersistent)
-                return true;
-
-            // "Immutable" input action references are always sub-assets of InputActionAsset.
-            var isSubAsset = AssetDatabase.IsSubAsset(instanceID);
-            if (!isSubAsset)
-                return true;
-
-            // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
-            var path = AssetDatabase.GetAssetPath(reference);
-            if (path == null)
-                return true;
-
-            // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
-            // Also we check that it is the expected type.
-            var mainAsset = AssetDatabase.LoadMainAssetAtPath(path);
-            if (mainAsset == null)
-                return true;
-
-            // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
-            return (mainAsset is not InputActionAsset);
-#else
-            return true;
-#endif
         }
 
         /// <summary>
@@ -108,18 +73,6 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionMap"/> that is itself contained in an <see cref="InputActionAsset"/>.</exception>
         public void Set(InputAction action)
         {
-            // Prevent accidental mutation of the source asset if this InputActionReference is a persisted object
-            // residing as a sub-asset within a .inputactions asset.
-            // This is not needed for players since scriptable objects aren't serialized back from within a player.
-            if (!CanSetReference(this))
-            {
-                throw new InvalidOperationException("Attempting to mutate an immutable InputActionReference instance. " +
-                    "This is not allowed since it would modify the source asset." +
-                    "Instead use InputActionReference.Create(action) to create a new " +
-                    "in-memory instance or serialize it as a separate asset if it " +
-                    "survive domain reloads.");
-            }
-
             if (action == null)
             {
                 m_Asset = null;
@@ -174,10 +127,7 @@ namespace UnityEngine.InputSystem
 
         private void SetInternal(InputActionAsset assetArg, InputAction actionArg)
         {
-            var actionMap = actionArg.actionMap;
-            if (!assetArg.actionMaps.Contains(actionMap))
-                throw new ArgumentException(
-                    $"Action '{actionArg}' is not contained in asset '{assetArg}'", nameof(actionArg));
+            CheckImmutableReference();
 
             // If we are setting the reference in edit-mode, we want the state to be reflected in the serialized
             // object and hence assign serialized fields. This is a destructive operation.
@@ -185,8 +135,6 @@ namespace UnityEngine.InputSystem
             m_ActionId = actionArg.id.ToString();
             m_Action = actionArg;
             name = GetDisplayName(actionArg);
-
-            ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
 
         /// <summary>
@@ -246,22 +194,31 @@ namespace UnityEngine.InputSystem
         /// Clears the cached <see cref="m_Action"/> field for all current <see cref="InputActionReference"/> objects.
         /// </summary>
         /// <remarks>
-        /// After calling this, the next call to <see cref="action"/> will retrieve a new <see cref="InputAction"/>
-        /// reference from the existing <see cref="InputActionAsset"/> just as if using it for the first time.
-        /// The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue
-        /// to hold their current values.
-        ///
         /// This method is used to clear the Action references when exiting PlayMode since those objects are no
         /// longer valid.
         /// </remarks>
-        internal static void ResetCachedAction()
+        internal static void InvalidateAll()
         {
+            // It might be possible that Object.FindObjectOfTypeAll(true) would be sufficient here since we only
+            // need to invalidate non-serialized data on active/loaded objects. This returns a lot more, but for
+            // now we keep it like this to not change more than we have to. Optimizing this can be done separately.
             var allActionRefs = Resources.FindObjectsOfTypeAll(typeof(InputActionReference));
             foreach (var obj in allActionRefs)
-            {
-                var reference = (InputActionReference)obj;
-                reference.m_Action = null;
-            }
+                ((InputActionReference)obj).Invalidate();
+        }
+
+        /// <summary>
+        /// Clears the cached <see cref="m_Action"/> field for this <see cref="InputActionReference"/> instance.
+        /// </summary>
+        /// <remarks>
+        /// After calling this, the next call to <see cref="action"/> will resolve a new <see cref="InputAction"/>
+        /// reference from the existing <see cref="InputActionAsset"/> just as if using it for the first time.
+        /// The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue
+        /// to hold their current values. Also the name remains valid since the underlying reference data is unmodified.
+        /// </remarks>
+        internal void Invalidate()
+        {
+            m_Action = null;
         }
 
         [SerializeField] internal InputActionAsset m_Asset;
@@ -282,19 +239,62 @@ namespace UnityEngine.InputSystem
             return action;
         }
 
-        private InputAction ResolveAction()
+        /// <summary>
+        /// Checks if this input action reference instance can be safely mutated without side effects.
+        /// </summary>
+        /// <remarks>
+        /// This check isn't needed in player builds since ScriptableObject would never be persisted if mutated
+        /// in a player.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if this input action reference is part of an
+        /// input actions asset and mutating it would have side-effects on the projects assets.</exception>
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        private void CheckImmutableReference()
         {
-            return m_Asset ? m_Asset.FindAction(new Guid(m_ActionId)) : null;
-        }
-
-        // OnValidate() is stripped out from player builds (editor only).
-        /*private void OnValidate()
-        {
-            var resolvedAction = ResolveAction();
-            if (resolvedAction == null)
+            // Note that we do a lot of checking here, but it is only for a rather slim (unintended) use case in
+            // editor and not in final builds. The alternative would be to set a non-serialized field on the reference
+            // when importing assets which would simplify this class, but it adds complexity to import stage and
+            // is more difficult to assess from a asset version portability perspective.
+            static bool CanSetReference(InputActionReference reference)
             {
-                Debug.Log("RESOLVED TO NULL");
+                // If the asset isn't persisted it cannot be part of an InputActionAsset file.
+                // We use this check first since it can allow us to avoid GC pressure.
+                var instanceID = reference.GetInstanceID();
+                var isPersistent = UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceID, out _, out long _);
+                if (!isPersistent)
+                    return true;
+
+                // "Immutable" input action references are always sub-assets of InputActionAsset.
+                var isSubAsset = UnityEditor.AssetDatabase.IsSubAsset(instanceID);
+                if (!isSubAsset)
+                    return true;
+
+                // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
+                var path = UnityEditor.AssetDatabase.GetAssetPath(reference);
+                if (path == null)
+                    return true;
+
+                // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
+                // Also we check that it is the expected type.
+                var mainAsset = UnityEditor.AssetDatabase.LoadMainAssetAtPath(path);
+                if (mainAsset == null)
+                    return true;
+
+                // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
+                return (mainAsset is not InputActionAsset);
             }
-        }*/
+
+            // Prevent accidental mutation of the source asset if this InputActionReference is a persisted object
+            // residing as a sub-asset within a .inputactions asset.
+            // This is not needed for players since scriptable objects aren't serialized back from within a player.
+            if (!CanSetReference(this))
+            {
+                throw new InvalidOperationException("Attempting to mutate an immutable InputActionReference instance. " +
+                    "This is not allowed since it would modify the source asset." +
+                    "Instead use InputActionReference.Create(action) to create a new " +
+                    "in-memory instance or serialize it as a separate asset if it " +
+                    "survive domain reloads.");
+            }
+        }
     }
 }

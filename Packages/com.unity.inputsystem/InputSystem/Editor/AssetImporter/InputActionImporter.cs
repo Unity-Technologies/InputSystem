@@ -180,6 +180,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 foreach (var action in map.actions)
                 {
+                    // Note that it is important action is set before being added to asset, otherwise the immutability
+                    // check within InputActionReference would throw.
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
                     actionReference.Set(action);
                     addObjectToAsset(action.m_Id, actionReference, actionIcon);
@@ -350,6 +352,17 @@ namespace UnityEngine.InputSystem.Editor
             return Path.GetFileNameWithoutExtension(assetPath);
         }
 
+        private static bool ContainsInputActionAssetPath(string[] assetPaths)
+        {
+            foreach (var assetPath in assetPaths)
+            {
+                if (IsInputActionAssetPath(assetPath))
+                    return true;
+            }
+
+            return false;
+        }
+
         // This processor was added to address this issue:
         // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         //
@@ -377,11 +390,29 @@ namespace UnityEngine.InputSystem.Editor
                 string[] movedAssets, string[] movedFromAssetPaths)
 #endif
             {
+                var needToInvalidate = false;
                 foreach (var assetPath in importedAssets)
                 {
                     if (IsInputActionAssetPath(assetPath))
+                    {
+                        needToInvalidate = true;
                         CheckAndRenameJsonNameIfDifferent(assetPath);
+                    }
                 }
+
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(deletedAssets);
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(movedAssets);
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(movedFromAssetPaths);
+
+                // Invalidate all references to make sure there are no dangling references after reimport among
+                // our "live objects. We only need to invalidate loaded sub-assets and not assets/prefabs/SO etc
+                // since they may still contain effectively obsolete InputActionReferences but those references
+                // will resolve.
+                if (needToInvalidate)
+                    InputActionReference.InvalidateAll();
             }
 
             private static void CheckAndRenameJsonNameIfDifferent(string assetPath)
