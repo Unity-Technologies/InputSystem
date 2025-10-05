@@ -253,9 +253,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown if this input action reference is part of an
         /// input actions asset and mutating it would have side-effects on the projects assets.</exception>
-        [System.Diagnostics.Conditional("UNITY_EDITOR")]
         private void CheckImmutableReference()
         {
+            #if UNITY_EDITOR
             // Note that we do a lot of checking here, but it is only for a rather slim (unintended) use case in
             // editor and not in final builds. The alternative would be to set a non-serialized field on the reference
             // when importing assets which would simplify this class, but it adds complexity to import stage and
@@ -300,6 +300,7 @@ namespace UnityEngine.InputSystem
                     "in-memory instance or serialize it as a separate asset if it " +
                     "survive domain reloads.");
             }
+            #endif // UNITY_EDITOR
         }
     }
 }
