@@ -414,6 +414,13 @@ namespace UnityEngine.InputSystem.XR
         }
 
         /// <summary>
+        /// This function is called when the script instance is being loaded.
+        /// </summary>
+        protected virtual void Awake()
+        {
+        }
+
+        /// <summary>
         /// This function is called when the object becomes enabled and active.
         /// </summary>
         protected void OnEnable()
@@ -435,6 +442,13 @@ namespace UnityEngine.InputSystem.XR
             UnbindActions();
             InputSystem.onAfterUpdate -= UpdateCallback;
             InputSystem.onDeviceChange -= OnDeviceChanged;
+        }
+
+        /// <summary>
+        /// This function is called when the <see cref="MonoBehaviour"/> will be destroyed.
+        /// </summary>
+        protected virtual void OnDestroy()
+        {
         }
 
         /// <summary>
