@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
+- Extended `RebindingUISample` to include example of mouse sensitivity slider and "swap controls" example.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
