@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS // Mimic implementation guard
+
 using System;
 using System.Collections;
 using NUnit.Framework;
@@ -162,3 +164,5 @@ internal sealed class InputActionReferencePropertyDrawerEditorTests
         Assert.That(fieldObj, Is.Null);
     }
 }
+
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
