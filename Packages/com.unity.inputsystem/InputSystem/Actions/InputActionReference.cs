@@ -52,10 +52,16 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                // Note that we check m_Action since it would be null if we haven't yet resolved the action.
-                // We also need to check that m_Action.actionMap isn't null since it would be null if the
-                // action was deleted. Additionally we need to check m_Asset since it could also have been deleted.
-                if (m_Action != null && m_Action.actionMap != null && m_Asset)
+                // Note that we need to check multiple things here that could invalidate the validity of the reference:
+                // 1) m_Action != null, this indicates if we have a resolved cached reference.
+                // 2) m_Action.actionMap != null, this would fail if the action has been removed from an action map
+                //    and converted into a "singleton action". This would render the reference invalid since the action
+                //    is no longer indirectly bound to m_Asset.
+                // 3) m_Action.actionMap.asset == m_Asset, needs to be checked to make sure that its action map
+                //    have not been moved to another asset which would invalidate the reference since reference is
+                //    defined by action GUID and asset reference.
+                // 4) m_Asset, a Unity object life-time check that would fail if the asset has been deleted.
+                if (m_Action != null && m_Action.actionMap != null && m_Action.actionMap.asset == m_Asset && m_Asset)
                     return m_Action;
 
                 // Attempt to resolve action based on asset and GUID.
