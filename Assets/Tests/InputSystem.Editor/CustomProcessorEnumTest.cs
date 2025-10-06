@@ -108,5 +108,58 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         yield return null;
     }
+    
+    [Test]
+    public void Migration_ShouldProduceValidActionAsset_WithEnumProcessorConverted()
+    {
+        var legacyJson = @"
+        {
+            ""name"": ""InputSystem_Actions"",
+            ""maps"": [
+                {
+                    ""name"": ""Player"",
+                    ""id"": ""df70fa95-8a34-4494-b137-73ab6b9c7d37"",
+                    ""actions"": [
+                        {
+                            ""name"": ""Move"",
+                            ""type"": ""Value"",
+                            ""id"": ""351f2ccd-1f9f-44bf-9bec-d62ac5c5f408"",
+                            ""expectedControlType"": ""Vector2"",
+                            ""processors"": ""StickDeadzone,InvertVector2(invertX=false),Custom(SomeEnum=1)"",
+                            ""interactions"": """",
+                            ""initialStateCheck"": true
+                        }
+                    ]
+                }
+            ],
+            ""controlSchemes"": [],
+            ""version"": 0
+        }";
+
+        // Parse and migrate the legacy JSON
+        var asset = InputActionAsset.FromJson(legacyJson);
+
+        // Object is valid after migration
+        Assert.That(asset, Is.Not.Null, "Migration failed to produce a valid InputActionAsset.");
+
+        var map = asset.FindActionMap("Player");
+        Assert.That(map, Is.Not.Null, "Expected Player map to exist.");
+
+        var action = map.FindAction("Move");
+        Assert.That(action, Is.Not.Null, "Expected Move action to exist.");
+
+        var processors = action.processors;
+
+        // Verify processor order and that enum was converted properly
+        Assert.That(processors, Does.Contain("StickDeadzone"), "StickDeadzone processor missing.");
+        Assert.That(processors, Does.Contain("InvertVector2(invertX=false)"), "InvertVector2 missing.");
+        Assert.That(processors, Does.Contain("Custom(SomeEnum=20)"), "Custom(SomeEnum=1) should migrate to SomeEnum=20 (OptionB).");
+
+        // Verify To JSON
+        var toJson = asset.ToJson();
+        var reloaded = InputActionAsset.FromJson(toJson);
+        Assert.That(reloaded, Is.Not.Null, "Reloaded asset after migration is null.");
+        Assert.That(reloaded.FindAction("Player/Move"), Is.Not.Null, "Reloaded asset did not contain expected Move action.");
+    }
 }
 #endif
