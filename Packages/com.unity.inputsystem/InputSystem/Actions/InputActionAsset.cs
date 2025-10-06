@@ -1027,43 +1027,37 @@ namespace UnityEngine.InputSystem
                             continue;
 
                         var list = NameAndParameters.ParseMultiple(raw).ToList();
-                        var rebuilt = new List<string>(list.Count);
+                        var converted = new List<NameAndParameters>(list.Count);
                         foreach (var nap in list)
                         {
                             var procType = InputSystem.TryGetProcessor(nap.name);
                             if (nap.parameters.Count == 0 || procType == null)
                             {
-                                rebuilt.Add(nap.ToString());
+                                converted.Add(nap);
                                 continue;
                             }
 
-                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
-                            var anyChanged = false;
-                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                            var updatedParameters = new List<NamedValue>(nap.parameters.Count);
+                            foreach (var param in nap.parameters)
                             {
-                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                                var updatedPar = param;
+                                var fieldInfo = procType.GetField(param.name, BindingFlags.Public | BindingFlags.Instance);
+                                if(fieldInfo != null && fieldInfo.FieldType.IsEnum)
                                 {
-                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
-                                    if (ord >= 0 && ord < values.Length)
+                                    var index = param.value.ToInt32();
+                                    var values = Enum.GetValues(fieldInfo.FieldType);
+                                    if(index >= 0 && index < values.Length)
                                     {
-                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
-                                        anyChanged = true;
+                                        var convertedValue = Convert.ToInt32(values.GetValue(index));
+                                        updatedPar = NamedValue.From(param.name, convertedValue);
                                     }
                                 }
+                                updatedParameters.Add(updatedPar);
                             }
-
-                            if (!anyChanged)
-                            {
-                                rebuilt.Add(nap.ToString());
-                            }
-                            else
-                            {
-                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
-                                rebuilt.Add($"{nap.name}({paramText})");
-                            }
+                            converted.Add(NameAndParameters.Create(nap.name,  updatedParameters));
                         }
 
-                        actionJson.processors = string.Join(",", rebuilt);
+                        actionJson.processors = NameAndParameters.SerializeMultiple(converted);
                         mapJson.actions[ai] = actionJson;
                     }
                     parsedJson.maps[mi] = mapJson;

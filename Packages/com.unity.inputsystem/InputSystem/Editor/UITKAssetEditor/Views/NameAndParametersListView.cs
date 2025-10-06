@@ -83,11 +83,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
         {
-            if (parametersForEachListItem == null)
-                return string.Empty;
-
-            return string.Join(NamedValue.Separator,
-                parametersForEachListItem.Select(x => x.ToString()).ToArray());
+            return NameAndParameters.SerializeMultiple(parametersForEachListItem);
         }
 
         public override void RedrawUI(InputActionsEditorState state)
