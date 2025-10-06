@@ -100,8 +100,7 @@ namespace UnityEngine.InputSystem
         /// Note that when setting sampling frequencies, there may be limits on the range of frequencies
         /// supported by the underlying hardware/platform.
         ///
-        /// To support querying sampling frequencies, a sensor device must implement <see cref="QuerySamplingFrequencyCommand"/>.
-        /// To support setting frequencies, it must implemenet <see cref="SetSamplingFrequencyCommand"/>.
+        /// To support setting frequencies, it must implement <see cref="SetSamplingFrequencyCommand"/>.
         /// </remarks>
         /// <exception cref="NotSupportedException">Thrown when reading the property and the underlying
         /// sensor does not support querying of sampling frequencies.</exception>
