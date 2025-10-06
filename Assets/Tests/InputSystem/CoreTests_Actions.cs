@@ -8239,10 +8239,12 @@ partial class CoreTests
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        asset.AddActionMap(new InputActionMap("test"));
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
         asset.RemoveActionMap("test");
 
         Assert.That(asset.actionMaps, Is.Empty);
+        Assert.That(map.asset, Is.Null);
     }
 
     [Test]
