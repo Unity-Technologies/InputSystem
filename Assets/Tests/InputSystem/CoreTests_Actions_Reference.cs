@@ -179,7 +179,9 @@ partial class CoreTests
         Assert.That(reference.ToDisplayName(), Is.EqualTo("map1/action1"));
         Assert.That(reference.ToString(), Is.EqualTo(":map1/action1"));
 
-        // Delete the referenced action directly or indirectly
+        // Remove the referenced action directly or indirectly. Note that this doesn't destroy an action or action map
+        // since they are regular reference types. However, an InputActionReference is based on asset an and action ID
+        // So if a map is removed from an asset but remains valid in memory it is no longer a valid reference.
         if (typeToDelete == typeof(InputAction))
             asset.RemoveAction("map1/action1");
         else if (typeToDelete == typeof(InputActionMap))
