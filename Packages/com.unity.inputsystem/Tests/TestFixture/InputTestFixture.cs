@@ -59,6 +59,12 @@ namespace UnityEngine.InputSystem
     /// input and device discovery or removal notifications from platform code. This ensures
     /// that while the test is running, input that may be generated on the machine running
     /// the test will not infer with it.
+    ///
+    /// Be cautious when using <see cref="NUnit.Framework.OneTimeSetUpAttribute"/> and
+    /// <see cref="NUnit.Framework.OneTimeTearDownAttribute" /> in combination with this test fixture.
+    /// Any devices or Input System related setup prior to <see cref="Setup()"/> will be invalid after this
+    /// test fixture is set up. You may of course use these NUnit features but should not affect the Input System
+    /// under test from those methods.
     /// </remarks>
     public class InputTestFixture
     {
