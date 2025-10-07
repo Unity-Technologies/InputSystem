@@ -108,26 +108,12 @@ namespace UnityEngine.InputSystem.Editor
 
             s_OnPasteCutElements.Add(this);
 
-            Undo.undoRedoPerformed += CheckForInvalidControlSchemeInOneFrame;
+            Undo.undoRedoPerformed += CloseControlSchemeView;
         }
 
-        private async void CheckForInvalidControlSchemeInOneFrame()
+        private void CloseControlSchemeView()
         {
-            try
-            {
-                await Task.Delay(1);
-                var state = stateContainer.GetState();
-                var viewState = ViewStateSelector.GetViewState(state);
-                var elementAtOrDefault = viewState.controlSchemes?.ElementAtOrDefault(viewState.selectedControlSchemeIndex);
-                if (viewState.selectedControlSchemeIndex != -1 && elementAtOrDefault == default(InputControlScheme))
-                {
-                    m_ControlSchemesView?.Cancel();
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            m_ControlSchemesView?.Cancel();
         }
 
         private void OnReset()
@@ -284,7 +270,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             base.DestroyView();
             s_OnPasteCutElements.Remove(this);
-            Undo.undoRedoPerformed -= CheckForInvalidControlSchemeInOneFrame;
+            Undo.undoRedoPerformed -= CloseControlSchemeView;
         }
 
         public void OnPaste(InputActionsEditorState state)
