@@ -56,7 +56,7 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         m_ActionMap = m_Asset.AddActionMap("Action Map");
 
-        var action = m_ActionMap.AddAction("Action", InputActionType.Value, processors: "Custom(SomeEnum=10)");
+        var action = m_ActionMap.AddAction("Action", InputActionType.Value, processors: "InvertVector2(invertX=false), Custom(SomeEnum=10)");
         
         // A binding is needed to resolve during test. 
         action.AddBinding("<Gamepad>/leftTrigger");
@@ -114,12 +114,22 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [Test]
-    public void Migration_ShouldProduceValidActionAsset_WithEnumProcessorConverted()
+    public void Migration_ShouldProduceValidActionAsset_WithAllProcessors_AndEnumConverted()
     {
         m_ActionMap.ResolveBindings();
         
-        Assert.That(m_ActionMap.m_State.processors[0].GetType(), Is.EqualTo(typeof(CustomProcessor)));
-        Assert.That((m_ActionMap.m_State.processors[0] as CustomProcessor).SomeEnum, Is.EqualTo(SomeEnum.OptionA));
+        var action = m_ActionMap.actions.First();
+        var migratedList = UnityEngine.InputSystem.Utilities.NameAndParameters.ParseMultiple(action.processors).ToList();
+        
+        Assert.That(migratedList.Count, Is.EqualTo(2), "Expected two processors.");
+        Assert.That(migratedList[0].name, Is.EqualTo("InvertVector2"), "First processor should be InvertVector2.");
+        
+        var invertX = migratedList[0].parameters.FirstOrDefault(p => p.name == "invertX");
+        Assert.That(invertX.name, Is.EqualTo("invertX"));
+        Assert.That(invertX.value.ToBoolean(), Is.False, "invertX should be false for the first processor.");
+        
+        Assert.That(m_ActionMap.m_State.processors[1].GetType(), Is.EqualTo(typeof(CustomProcessor)));
+        Assert.That((m_ActionMap.m_State.processors[1] as CustomProcessor).SomeEnum, Is.EqualTo(SomeEnum.OptionA));
     }
 }
 #endif
