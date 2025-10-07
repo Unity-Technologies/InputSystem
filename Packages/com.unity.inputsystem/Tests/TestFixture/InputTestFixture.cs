@@ -64,8 +64,9 @@ namespace UnityEngine.InputSystem
     /// <see cref="NUnit.Framework.OneTimeTearDownAttribute" /> in combination with this test fixture.
     /// For example, any devices created prior to execution of <see cref="Setup()"/> would be added to the actual
     /// Input System instead of the test fixture system and after <see cref="Setup()"/> has executed such devices
-    /// will no longer be valid. You may of course use these NUnit features but it is advised to not attemp affecting
-    /// the Input System under test from those methods.
+    /// will no longer be valid. You may of course use these NUnit features, but it is advised to not attempt affecting
+    /// the Input System under test from those methods since it would affect the real system and not the system
+    /// under test.
     /// </remarks>
     public class InputTestFixture
     {
@@ -552,8 +553,15 @@ namespace UnityEngine.InputSystem
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
             if (!control.device.added)
+            {
                 throw new ArgumentException(
                     $"Device of control '{control}' has not been added to the system", nameof(control));
+            }
+            if (!control.hasState)
+            {
+                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
+                    "Make sure the control or device was added after executing Setup().",  nameof(control));
+            }
 
             if (IsUnityTest())
                 queueEventOnly = true;

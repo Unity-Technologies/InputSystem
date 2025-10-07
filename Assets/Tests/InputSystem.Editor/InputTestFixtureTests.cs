@@ -1,112 +1,146 @@
+using System;
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 
-// Attempting to simplify code from ISXB-1637 in this file.
-
-// What is this? Its a play-mode test defined in an editor assembly.
-// This is similar to tests of input system itself. It works as expected.
-public class InputTestFixtureTestsV1 : InputTestFixture
+/// <summary>
+/// Test suite to verify test fixture API published in <see cref="InputTestFixture"/>.
+/// </summary>
+/// <remarks>
+/// This test fixture captures confusion around usage reported in
+/// https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637.
+/// </remarks>
+internal class InputTestFixtureTests : InputTestFixture
 {
-    private Keyboard _keyboard;
+    private Keyboard correctlyUsedDevice;
+    private Keyboard incorrectlyUsedDevice;
+
+    [OneTimeSetUp]
+    public void UnitySetup()
+    {
+        // This is incorrect use since it will add a device to the actual input system since it executes before
+        // the InputTestFixture.Setup() method. Hence, after Setup() has executed the device is not part of
+        // the test input system instance.
+        incorrectlyUsedDevice = InputSystem.AddDevice<Keyboard>();
+        Assert.That(InputSystem.devices.Contains(incorrectlyUsedDevice), Is.True);
+    }
+
+    [OneTimeTearDown]
+    public void UnityTearDown()
+    {
+        // Once InputTestFixture.TearDown() has executed, the state stack will have been popped and the keyboard
+        // we added before entering the test fixture should have been restored.
+        Assert.That(InputSystem.devices.Contains(incorrectlyUsedDevice), Is.True);
+    }
 
     [SetUp]
-    public void Setup()
+    public override void Setup()
     {
+        // At this point we are still using the actual system so our device created from UnitySetup() should still
+        // exist with the context.
+        Assert.That(InputSystem.devices.Contains(incorrectlyUsedDevice), Is.True);
+
+        // This is expected usage pattern, first calling base.Setup() when overriding Setup like this, then
+        // creating a fake device via the test fixture instance that only lives with the test context.
         base.Setup();
-        _keyboard = InputSystem.AddDevice<Keyboard>();
+        correctlyUsedDevice = InputSystem.AddDevice<Keyboard>();
+
+        // Since we have now entered a temporary test state our device created in UnitySetup() will no longer exist
+        // with this context.
+        Assert.That(InputSystem.devices.Contains(incorrectlyUsedDevice), Is.False);
     }
 
     [TearDown]
-    public void TearDown()
+    public override void TearDown()
     {
-        InputSystem.RemoveDevice(_keyboard);
+        // This is expected usage pattern, we might want to do something with the device here, but it needs
+        // to happen before base.TearDown() since it would delete the fake device.
+        Assert.That(InputSystem.devices.Contains(correctlyUsedDevice), Is.True);
+        InputSystem.RemoveDevice(correctlyUsedDevice);
+
+        // Restore state
         base.TearDown();
+
+        // Our test device should no longer exist with the system since we are back to real instance
+        Assert.That(InputSystem.devices.Contains(correctlyUsedDevice), Is.False);
+    }
+
+    #region Editor playmode tests
+
+    [Test]
+    public void Press_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
+    {
+        Press(correctlyUsedDevice.spaceKey);
+        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.True);
     }
 
     [Test]
-    public void Test1()
+    public void Press_ShouldThrow_WithinPlayModeTestFixtureContextIfInvalidDevice()
     {
-        Press(_keyboard.spaceKey);
+        Assert.That(incorrectlyUsedDevice.spaceKey.isPressed, Is.False);
+        Assert.Throws<ArgumentException>(() => Press(incorrectlyUsedDevice.spaceKey));
     }
 
     [Test]
-    public void Test2()
+    public void Release_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
-        Press(_keyboard.spaceKey);
-    }
-}
-
-// What is this? Its a play-mode test defined in an editor assembly.
-// It uses OneTimeSetUp and OneTimeTearDown to create device which collides with SetUp and TearDown behavior
-// of the inherited InputTestFixture.
-//
-// Results in (Similar to reported stack trace):
-// System.ArgumentNullException : Value cannot be null.
-//     Parameter name: source
-//         ---
-//     at (wrapper managed-to-native) Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(void*,void*,long)
-// at UnityEngine.InputSystem.LowLevel.DeltaStateEvent.From (UnityEngine.InputSystem.InputControl control,
-// UnityEngine.InputSystem.LowLevel.InputEventPtr& eventPtr, Unity.Collections.Allocator allocator) [0x000e5]
-// in Packages/com.unity.inputsystem/InputSystem/Events/DeltaStateEvent.cs:99
-public class InputTestFixtureTestsV2 : InputTestFixture
-{
-    private Keyboard _keyboard;
-
-    [OneTimeSetUp]
-    public void UnitySetup()
-    {
-        _keyboard = InputSystem.AddDevice<Keyboard>();
-    }
-
-    [OneTimeTearDown]
-    public void UnityTearDown()
-    {
-        InputSystem.RemoveDevice(_keyboard);
+        Press(correctlyUsedDevice.spaceKey);
+        Release(correctlyUsedDevice.spaceKey);
+        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.False);
     }
 
     [Test]
-    public void Test1()
+    public void Release_ShouldThrow_WithinPlayModeTestFixtureContextIfInvalidDevice()
     {
-        Press(_keyboard.spaceKey);
+        Assert.That(incorrectlyUsedDevice.spaceKey.isPressed, Is.False);
+        Assert.Throws<ArgumentException>(() => Release(incorrectlyUsedDevice.spaceKey));
     }
 
     [Test]
-    public void Test2()
+    public void PressAndRelease_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
-        Press(_keyboard.spaceKey);
-    }
-}
-
-// What is this? This is similar to the repro project for this bug.
-public class InputTestFixtureTestsV3 : InputTestFixture
-{
-    private Keyboard _keyboard;
-
-    [OneTimeSetUp]
-    public void UnitySetup()
-    {
-        _keyboard = InputSystem.AddDevice<Keyboard>();
+        PressAndRelease(correctlyUsedDevice.spaceKey);
+        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.False);
     }
 
-    [OneTimeTearDown]
-    public void UnityTearDown()
+    [Test]
+    public void PressAndRelease_ShouldThrow_WithinPlayModeTestFixtureContextIfInvalidDevice()
     {
-        InputSystem.RemoveDevice(_keyboard);
+        PressAndRelease(incorrectlyUsedDevice.spaceKey);
+        Assert.Throws<ArgumentException>(() => PressAndRelease(incorrectlyUsedDevice.spaceKey));
     }
+
+    [Test]
+    public void Click_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
+    {
+        Click(correctlyUsedDevice.spaceKey);
+        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.False);
+    }
+
+    [Test]
+    public void Click_ShouldThrow_WithinPlayModeTestFixtureContextIfInvalidDevice()
+    {
+        Click(correctlyUsedDevice.spaceKey);
+        Assert.Throws<ArgumentException>(() => Click(incorrectlyUsedDevice.spaceKey));
+    }
+
+    // TODO Add remaining
+
+    #endregion // Playmode tests
+
+    #region // Edit-mode tests
 
     [UnityTest]
-    public IEnumerator Test1()
+    public IEnumerator Press_ShouldMutateDeviceState_WithinEditModeTestFixtureContext()
     {
-        Press(_keyboard.spaceKey);
-        yield break;
+        Press(correctlyUsedDevice.spaceKey);
+        yield return null; // Need to yield control to see change in next frame when running in edit-mode
+        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.True);
     }
 
-    [UnityTest]
-    public IEnumerator Test2()
-    {
-        Press(_keyboard.spaceKey);
-        yield break;
-    }
+    // TODO Add remaining tests
+
+    #endregion // Edit-mode tests
 }
