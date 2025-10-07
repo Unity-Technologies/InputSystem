@@ -81,9 +81,12 @@ namespace UnityEngine.InputSystem.Editor
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
-        private static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
+        internal static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
         {
-            return NameAndParameters.SerializeMultiple(parametersForEachListItem);
+            if(parametersForEachListItem == null)
+                return string.Empty;
+
+            return string.Join(NamedValue.Separator, parametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
         public override void RedrawUI(InputActionsEditorState state)
