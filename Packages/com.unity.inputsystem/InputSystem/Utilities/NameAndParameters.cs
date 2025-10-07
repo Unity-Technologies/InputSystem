@@ -37,12 +37,11 @@ namespace UnityEngine.InputSystem.Utilities
 
         internal static NameAndParameters Create(string name, IList<NamedValue> parameters)
         {
-            var result = new NameAndParameters
+            return new NameAndParameters
             {
                 name = name,
                 parameters = new ReadOnlyArray<NamedValue>(parameters.ToArray())
             };
-            return result;
         }
 
         public static IEnumerable<NameAndParameters> ParseMultiple(string text)
