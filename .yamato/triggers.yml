@@ -17,16 +17,11 @@ all_functional_tests:
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_4_-_macos
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_4_-_windows
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_tvos
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
@@ -83,16 +78,11 @@ all_functional_tests:
 all_mobile_tests:
   name: All Mobile Tests
   dependencies:
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_tvos
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
@@ -126,16 +116,11 @@ all_performance_tests:
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_4_-_macos
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_4_-_windows
-  - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_2022_3_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_2_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_3_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_4_-_tvos
-  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2021_3_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2021_3_-_android_-_mono
-  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2021_3_-_ios
-  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2021_3_-_tvos
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_ios

@@ -44,7 +44,7 @@ public abstract class BaseRecipe: RecipeBase
                 // Skip tests on 2021.3 as it is longer supported
                 if (version == "2021.3")
                     continue;
-                
+
                 builders.Add(ProduceJob(package, platform, version));
             }
         }
