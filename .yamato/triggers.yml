@@ -2,9 +2,6 @@
 all_functional_tests:
   name: All Functional Tests
   dependencies:
-  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2021_3_-_macos
-  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2021_3_-_windows
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2022_3_-_macos
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_2022_3_-_windows
@@ -45,9 +42,6 @@ all_functional_tests:
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_ios
-  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2021_3_-_macos
-  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2021_3_-_windows
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_windows
@@ -63,9 +57,6 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_4_-_macos
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_4_-_windows
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2021_3_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2021_3_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_windows
@@ -120,9 +111,6 @@ all_mobile_tests:
 all_performance_tests:
   name: All Performance Tests
   dependencies:
-  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2021_3_-_macos
-  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2021_3_-_windows
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2022_3_-_macos
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_2022_3_-_windows
@@ -163,9 +151,6 @@ all_performance_tests:
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_4_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_4_-_android_-_mono
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_4_-_ios
-  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2021_3_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2021_3_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_windows
@@ -181,9 +166,6 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_4_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_4_-_windows
-  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2021_3_-_macos
-  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2021_3_-_ubuntu
-  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2021_3_-_windows
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_windows
