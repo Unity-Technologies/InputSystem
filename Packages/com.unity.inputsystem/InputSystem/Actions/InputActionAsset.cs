@@ -1016,6 +1016,11 @@ namespace UnityEngine.InputSystem
                 return;
             if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
             {
+                List<NameAndParameters> parsedList = null;            
+                var converted = new List<NameAndParameters>(8);       
+                var updatedParameters = new List<NamedValue>(4);    
+                var enumValuesCache = new Dictionary<Type, Array>(8);
+
                 for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
                 {
                     var mapJson = parsedJson.maps[mi];
@@ -1026,37 +1031,48 @@ namespace UnityEngine.InputSystem
                         if (string.IsNullOrEmpty(raw))
                             continue;
 
-                        var list = NameAndParameters.ParseMultiple(raw).ToList();
-                        var converted = new List<NameAndParameters>(list.Count);
-                        foreach (var nap in list)
+                        if (!NameAndParameters.ParseMultiple(raw, ref parsedList) || parsedList.Count == 0)
+                            continue;
+
+                        converted.Clear();
+
+                        for (int i = 0; i < parsedList.Count; ++i)
                         {
+                            var nap = parsedList[i];
                             var procType = InputSystem.TryGetProcessor(nap.name);
                             if (nap.parameters.Count == 0 || procType == null)
                             {
                                 converted.Add(nap);
                                 continue;
                             }
-
-                            var updatedParameters = new List<NamedValue>(nap.parameters.Count);
-                            foreach (var param in nap.parameters)
+                            updatedParameters.Clear();
+                            for (int k = 0; k < nap.parameters.Count; ++k)
                             {
+                                var param = nap.parameters[k];
                                 var updatedPar = param;
+
                                 var fieldInfo = procType.GetField(param.name, BindingFlags.Public | BindingFlags.Instance);
-                                if(fieldInfo != null && fieldInfo.FieldType.IsEnum)
+                                if (fieldInfo != null && fieldInfo.FieldType.IsEnum)
                                 {
                                     var index = param.value.ToInt32();
-                                    var values = Enum.GetValues(fieldInfo.FieldType);
-                                    if(index >= 0 && index < values.Length)
+                                    if (index >= 0)
                                     {
-                                        var convertedValue = Convert.ToInt32(values.GetValue(index));
-                                        updatedPar = NamedValue.From(param.name, convertedValue);
+                                        if (!enumValuesCache.TryGetValue(fieldInfo.FieldType, out var values))
+                                        {
+                                            values = Enum.GetValues(fieldInfo.FieldType);
+                                            enumValuesCache[fieldInfo.FieldType] = values;
+                                        }
+                                        if (index < values.Length)
+                                        {
+                                            var convertedValue = Convert.ToInt32(values.GetValue(index));
+                                            updatedPar = NamedValue.From(param.name, convertedValue);
+                                        }
                                     }
                                 }
                                 updatedParameters.Add(updatedPar);
                             }
-                            converted.Add(NameAndParameters.Create(nap.name,  updatedParameters));
+                            converted.Add(NameAndParameters.Create(nap.name, updatedParameters));
                         }
-
                         actionJson.processors = NameAndParameters.SerializeMultiple(converted);
                         mapJson.actions[ai] = actionJson;
                     }
