@@ -1073,7 +1073,7 @@ namespace UnityEngine.InputSystem
                             }
                             converted.Add(NameAndParameters.Create(nap.name, updatedParameters));
                         }
-                        actionJson.processors = NameAndParametersListView.ToSerializableString(converted);
+                        actionJson.processors = NameAndParameters.ToSerializableString(converted);
                         mapJson.actions[ai] = actionJson;
                     }
                     parsedJson.maps[mi] = mapJson;
