@@ -546,7 +546,7 @@ namespace UnityEngine.InputSystem
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
         /// <exception cref="ArgumentNullException">If control is null.</exception>
         /// <exception cref="ArgumentException">If the device associated with <paramref name="control"/> has not
-        /// been added to the system or if the control do not have any associated state. The latter may only
+        /// been added to the system or if the control does not have any associated state. The latter may only
         /// happen if attempting to set a control of a device created outside the test context.</exception>
         /// <exception cref="NotSupportedException">If attempting to set a control of a test device in an
         /// editor assembly. [UnityTest] in editor assemblies is not supported by this test fixture.</exception>
@@ -566,7 +566,7 @@ namespace UnityEngine.InputSystem
             if (IsUnityTest())
             {
                 if (IsEditMode())
-                    throw new NotSupportedException("InputTestFixture.Set do not support edit mode (editor assembly) [UnityTest].");
+                    throw new NotSupportedException("InputTestFixture.Set does not support edit mode (editor assembly) [UnityTest].");
                 queueEventOnly = true;
             }
 
