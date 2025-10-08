@@ -108,7 +108,6 @@ internal class InputTestFixtureTests : InputTestFixture
     [Test]
     public void PressAndRelease_ShouldThrow_WithinPlayModeTestFixtureContextIfInvalidDevice()
     {
-        PressAndRelease(incorrectlyUsedDevice.spaceKey);
         Assert.Throws<ArgumentException>(() => PressAndRelease(incorrectlyUsedDevice.spaceKey));
     }
 
@@ -133,14 +132,32 @@ internal class InputTestFixtureTests : InputTestFixture
     #region // Edit-mode tests
 
     [UnityTest]
-    public IEnumerator Press_ShouldMutateDeviceState_WithinEditModeTestFixtureContext()
+    public IEnumerator Press_ShouldThrow_WithinEditModeTestFixtureContext()
     {
-        Press(correctlyUsedDevice.spaceKey);
-        yield return null; // Need to yield control to see change in next frame when running in edit-mode
-        Assert.That(correctlyUsedDevice.spaceKey.isPressed, Is.True);
+        Assert.Throws<NotSupportedException>(() => Press(correctlyUsedDevice.spaceKey));
+        yield break;
     }
 
-    // TODO Add remaining tests
+    [UnityTest]
+    public IEnumerator Release_ShouldThrow_WithinEditModeTestFixtureContext()
+    {
+        Assert.Throws<NotSupportedException>(() => Release(correctlyUsedDevice.spaceKey));
+        yield break;
+    }
+
+    [UnityTest]
+    public IEnumerator PressAndRelease_ShouldThrow_WithinEditModeTestFixtureContext()
+    {
+        Assert.Throws<NotSupportedException>(() => PressAndRelease(correctlyUsedDevice.spaceKey));
+        yield break;
+    }
+
+    [UnityTest]
+    public IEnumerator Click_ShouldThrow_WithinEditModeTestFixtureContext()
+    {
+        Assert.Throws<NotSupportedException>(() => Click(correctlyUsedDevice.spaceKey));
+        yield break;
+    }
 
     #endregion // Edit-mode tests
 }

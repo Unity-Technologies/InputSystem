@@ -541,6 +541,12 @@ namespace UnityEngine.InputSystem
         /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
         /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
+        /// <exception cref="ArgumentNullException">If control is null.</exception>
+        /// <exception cref="ArgumentException">If the device associated with <paramref name="control"/> has not
+        /// been added to the system or if the control do not have any associated state. The latter may only
+        /// happen if attempting to set a control of a device created outside the test context.</exception>
+        /// <exception cref="NotSupportedException">If attempting to set a control of a test device in an
+        /// editor assembly. [UnityTest] in editor assemblies is not supported by this test fixture.</exception>
         /// <example>
         /// <code>
         /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
@@ -564,7 +570,11 @@ namespace UnityEngine.InputSystem
             }
 
             if (IsUnityTest())
+            {
+                if (IsEditMode())
+                    throw new NotSupportedException("InputTestFixture.Set do not support edit mode (editor assembly) [UnityTest].");
                 queueEventOnly = true;
+            }
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
@@ -927,6 +937,15 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        /// <summary>
+        /// Returns true if running inside an Edit Mode test (Editor assembly).
+        /// Returns false if running in Play Mode.
+        /// </summary>
+        private static bool IsEditMode()
+        {
+            return Application.isEditor && !Application.isPlaying;
+        }
 
         #if UNITY_EDITOR
         /// <summary>
