@@ -561,16 +561,7 @@ namespace UnityEngine.InputSystem
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-            if (!control.device.added)
-            {
-                throw new ArgumentException(
-                    $"Device of control '{control}' has not been added to the system", nameof(control));
-            }
-            if (!control.hasState)
-            {
-                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
-                    "Make sure the control or device was added after executing Setup().",  nameof(control));
-            }
+            CheckValidity(control.device, control);
 
             if (IsUnityTest())
             {
@@ -691,6 +682,7 @@ namespace UnityEngine.InputSystem
                 if (screen == null)
                     screen = InputSystem.AddDevice<Touchscreen>();
             }
+            CheckValidity(screen);
 
             InputSystem.QueueStateEvent(screen, new TouchState
             {
@@ -940,6 +932,25 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        private static void CheckValidity(InputDevice device, InputControl control)
+        {
+            if (!device.added)
+            {
+                throw new ArgumentException(
+                    $"Device '{device}' has not been added to the system", nameof(device));
+            }
+            if (!control.hasState)
+            {
+                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
+                    "Make sure the control or device was added after executing Setup().",  nameof(control));
+            }
+        }
+
+        private static void CheckValidity(InputControl control)
+        {
+            CheckValidity(control.device, control);
+        }
 
         /// <summary>
         /// Returns true if running inside an Edit Mode test (Editor assembly).
