@@ -277,7 +277,7 @@ namespace UnityEngine.InputSystem.HID
                     return 0;
                 var data1 = *currentPtr;
                 var data2 = *(currentPtr + 1);
-                return (short)(data2 << 8) | data1;
+                return (short)((data2 << 8) | data1);
             }
 
             // Read int.

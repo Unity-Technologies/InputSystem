@@ -1122,21 +1122,11 @@ internal class HIDTests : CoreTestsFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    struct SimpleJoystickLayoutWithStickUshort : IInputStateTypeInfo
+    struct SimpleJoystickLayoutWithStick : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
-
-        public FourCC format => new FourCC('H', 'I', 'D');
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    struct SimpleJoystickLayoutWithStickByte : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public byte reportId;
-        [FieldOffset(1)] public sbyte x;
-        [FieldOffset(2)] public sbyte y;
 
         public FourCC format => new FourCC('H', 'I', 'D');
     }
@@ -1175,7 +1165,7 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(device, Is.TypeOf<Joystick>());
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
 
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickUshort { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStick { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
