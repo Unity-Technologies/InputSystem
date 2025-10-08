@@ -575,7 +575,7 @@ namespace UnityEngine.InputSystem
             if (IsUnityTest())
             {
                 if (IsEditMode())
-                    throw new NotSupportedException("InputTestFixture.Set do not support edit mode (editor assembly) [UnityTest].");
+                    throw new NotSupportedException("InputTestFixture.Set does not support edit mode (editor assembly) [UnityTest].");
                 queueEventOnly = true;
             }
 
