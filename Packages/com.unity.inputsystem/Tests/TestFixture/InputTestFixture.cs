@@ -60,8 +60,8 @@ namespace UnityEngine.InputSystem
     /// that while the test is running, input that may be generated on the machine running
     /// the test will not infer with it.
     ///
-    /// Be cautious when using <code>NUnit.Framework.OneTimeSetUpAttribute</code> and
-    /// <code>NUnit.Framework.OneTimeTearDownAttribute</code> in combination with this test fixture.
+    /// Be cautious when using <c>NUnit.Framework.OneTimeSetUpAttribute</c> and
+    /// <c>NUnit.Framework.OneTimeTearDownAttribute</c> in combination with this test fixture.
     /// For example, any devices created prior to execution of <see cref="Setup()"/> would be added to the actual
     /// Input System instead of the test fixture system and after <see cref="Setup()"/> has executed such devices
     /// will no longer be valid. You may of course use these NUnit features, but it is advised to not attempt affecting
