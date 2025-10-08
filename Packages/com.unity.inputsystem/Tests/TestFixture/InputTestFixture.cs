@@ -67,6 +67,9 @@ namespace UnityEngine.InputSystem
     /// will no longer be valid. You may of course use these NUnit features, but it is advised to not attempt affecting
     /// the Input System under test from those methods since it would affect the real system and not the system
     /// under test.
+    ///
+    /// This test fixture is designed for play-mode tests and is generally not supported for edit-mode tests.
+    /// Both <c>[Test]</c> and <c>[UnityTest]</c> are supported, but only in play-mode.
     /// </remarks>
     public class InputTestFixture
     {
