@@ -317,12 +317,26 @@ internal class HIDTests : CoreTestsFixture
 
     [Test]
     [Category("HID Devices")]
-    public void Devices_CanCreateGenericHID_WithSignedLogicalMinAndMaxSticks()
+
+    // These descriptor values were generated with the Microsoft HID Authoring descriptor tool in
+    // https://github.com/microsoft/hidtools for the expexted values.
+    // Logical min 0, logical max 65535
+    [TestCase(16, new byte[] {0x16, 0x00, 0x00}, new byte[] { 0x27, 0xFF, 0xFF, 0x00, 0x00 }, 0, 65535, 0.01f)]
+    // Logical min -32768, logical max 32767
+    [TestCase(16, new byte[] {0x16, 0x00, 0x80}, new byte[] {0x26, 0xFF, 0x7F}, -32768, 32767, 0.01f)]
+    // Logical min 0, logical max 255
+    [TestCase(8, new byte[] {0x15, 00}, new byte[] {0x26, 0xFF, 0x00}, 0, 255, 0.01f)]
+    // Logical min -128, logical max 127
+    [TestCase(8, new byte[] {0x15, 0x80}, new byte[] {0x25, 0x7F}, -128, 127, 0.01f)]
+    // Logical min -16, logical max 15 (below 8 bit boundary)
+    [TestCase(5, new byte[] {0x15, 0xF0}, new byte[] {0x25, 0x0F}, -16, 15, 0)]
+    // Logical min 0, logical max 31 (below 8 bit boundary)
+    [TestCase(5, new byte[] {0x15, 0x00}, new byte[] {0x25, 0x1F}, 0, 31, 0)]
+    public void Devices_CanParseHIDDescritpor_WithSignedLogicalMinAndMaxSticks(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected, float errorMargin)
     {
-        // This is a HID report descriptor for a simple device with two analog sticks;
-        // Similar to a user that reported an issue in Discussions:
-        // https://discussions.unity.com/t/input-system-reading-invalid-values-from-hall-effect-keyboards/1684840/3
-        var reportDescriptor = new byte[]
+        // Dynamically create HID report descriptor for two analog sticks with parameterized logical min/max
+
+        var reportDescriptorStart = new byte[]
         {
             0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
             0x09, 0x05,        // Usage (Game Pad)
@@ -330,14 +344,22 @@ internal class HIDTests : CoreTestsFixture
             0x85, 0x01,        //   Report ID (1)
             0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
             0x09, 0x30,        //   Usage (X)
-            0x09, 0x31,        //   Usage (Y)
-            0x15, 0x81,        //   Logical Minimum (-127)
-            0x25, 0x7F,        //   Logical Maximum (127)
-            0x75, 0x08,        //   Report Size (8)
-            0x95, 0x02,        //   Report Count (2)
-            0x81, 0x02,        //   Input (Data,Var,Abs)
-            0xC0,              // End Collection
         };
+
+        var reportDescriptorEnd = new byte[]
+        {
+            0x75, reportSizeBits,   //   Report Size (8)
+            0x95, 0x01,             //   Report Count (1)
+            0x81, 0x02,             //   Input (Data,Var,Abs)
+            0xC0,                   //   End Collection
+        };
+
+        // Concatenate to form final descriptor based on test parameters where logical min/max bytes
+        // are inserted in the middle.
+        var reportDescriptor = reportDescriptorStart.Concat(logicalMinBytes).
+            Concat(logicalMaxBytes).
+            Concat(reportDescriptorEnd).
+            ToArray();
 
         // The HID report descriptor is fetched from the device via an IOCTL.
         var deviceId = runtime.AllocateDeviceId();
@@ -350,7 +372,7 @@ internal class HIDTests : CoreTestsFixture
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
-                manufacturer = "TestVendor",
+                manufacturer = "TestLogicalMinMaxParsing",
                 product = "TestHID",
                 capabilities = new HID.HIDDeviceDescriptor
                 {
@@ -365,35 +387,22 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<Joystick>());
 
-        // Stick vector 2 should be centered at (0,0).
+        var parsedDescriptor = JsonUtility.FromJson<HID.HIDDeviceDescriptor>(device.description.capabilities);
+
+        // Check we parsed the values as expected
+        foreach (var element in parsedDescriptor.elements)
+        {
+            if (element.usage == (int)HID.GenericDesktop.X)
+            {
+                Assert.That(element.logicalMin, Is.EqualTo(logicalMinExpected));
+                Assert.That(element.logicalMax, Is.EqualTo(logicalMaxExpected));
+            }
+            else
+                Assert.Fail("Could not find X and Y elements in descriptor");
+        }
+
+        // Stick vector 2 should be centered at (0,0) when initialized
         Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0f, 0f)).Using(Vector2EqualityComparer.Instance));
-
-        // Queue event with stick pushed to bottom. We assume Y axis is inverted by default in HID devices.
-        // See HID.HIDElementDescriptor.DetermineParameters()
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 0, y = 127 });
-        InputSystem.Update();
-
-        Assert.That(device.stick.ReadValue() , Is.EqualTo(new Vector2(0f, -1f)).Using(Vector2EqualityComparer.Instance));
-
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 0, y = -127 });
-        InputSystem.Update();
-
-        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0f, 1f)).Using(Vector2EqualityComparer.Instance));
-
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 127, y = 0 });
-        InputSystem.Update();
-
-        Assert.That(device.stick.ReadValue() , Is.EqualTo(new Vector2(1f, 0f)).Using(Vector2EqualityComparer.Instance));
-
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = -127, y = 0 });
-        InputSystem.Update();
-
-        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(-1f, 0f)).Using(Vector2EqualityComparer.Instance));
-
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStickByte { reportId = 1, x = 127, y = 127 });
-        InputSystem.Update();
-
-        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0.7071f, -0.7071f)).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
