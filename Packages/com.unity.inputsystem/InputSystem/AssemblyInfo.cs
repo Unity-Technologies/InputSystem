@@ -9,6 +9,9 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.ForUI")] // To avoid minor bump
 [assembly: InternalsVisibleTo("Unity.AI.Assistant.Editor")]
+[assembly: InternalsVisibleTo("Unity.Modules.Input.Tests.Editor")]
+[assembly: InternalsVisibleTo("Unity.Modules.Input.Tests.Common")]
+[assembly: InternalsVisibleTo("Unity.Modules.Input.Tests.Playmode")]
 
 namespace UnityEngine.InputSystem
 {
