@@ -157,8 +157,8 @@ namespace UnityEngine.InputSystem
             if (value == null)
                 return base.ToString();
             if (value.actionMap != null)
-                return $"{m_Asset.name}:{value.actionMap.name}/{value.name}";
-            return $"{m_Asset.name}:{m_ActionId}";
+                return m_Asset != null ? $"{m_Asset.name}:{value.actionMap.name}/{value.name}" : $"{value.actionMap.name}/{value.name}";
+            return m_Asset != null ? $"{m_Asset.name}:{m_ActionId}" : m_ActionId;
         }
 
         private static string GetDisplayName(InputAction action)

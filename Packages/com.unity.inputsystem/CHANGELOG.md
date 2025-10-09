@@ -37,7 +37,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where `InputActionSetupExtensions.Remove` will result in `NullReferenceException` if the action being removed has no bindings. (ISXB-1688).
 - Fixed an issue where assigning a ``MonoBehaviour` field of type `InputActionReference` to an instance stored in `.inputactions` asset via `InputActionReference.Set` in playmode corrupts the originally referenced asset. (ISXB-1692).
 - Fixed an issue where `InputActionReference.Create(null)` returns `null` instead "of a reference object to the given action" as documented behaviour for the API. (ISXB-1693)
-- Fixed an issue where `InputActtionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
+- Fixed an issue where `InputActionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
 - Fixed an issue where Inspector field of type `InputActionReference` isn't reflecting broken reference in case action is deleted from asset, action map is deleted from asset, or the asset itself is deleted. (ISXB-1701)
 
 ## [1.14.2] - 2025-08-05
