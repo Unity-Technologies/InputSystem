@@ -32,7 +32,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed formatting issues on processor documentation page
-- Fixed an issue where a warning would be appear due to code referencing the obsolete com.unity.modules.vr package.
+
+### Changed
+- Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
 
 ## [1.14.2] - 2025-08-05
 
