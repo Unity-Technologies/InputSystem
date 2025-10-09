@@ -268,15 +268,8 @@ namespace UnityEngine.InputSystem
             // is more difficult to assess from a asset version portability perspective.
             static bool CanSetReference(InputActionReference reference)
             {
-                // If the asset isn't persisted it cannot be part of an InputActionAsset file.
-                // We use this check first since it can allow us to avoid GC pressure.
-                var instanceID = reference.GetInstanceID();
-                var isPersistent = UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceID, out _, out long _);
-                if (!isPersistent)
-                    return true;
-
                 // "Immutable" input action references are always sub-assets of InputActionAsset.
-                var isSubAsset = UnityEditor.AssetDatabase.IsSubAsset(instanceID);
+                var isSubAsset = UnityEditor.AssetDatabase.IsSubAsset(reference);
                 if (!isSubAsset)
                     return true;
 
@@ -288,7 +281,7 @@ namespace UnityEngine.InputSystem
                 // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
                 // Also we check that it is the expected type.
                 var mainAsset = UnityEditor.AssetDatabase.LoadMainAssetAtPath(path);
-                if (mainAsset == null)
+                if (!mainAsset)
                     return true;
 
                 // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
