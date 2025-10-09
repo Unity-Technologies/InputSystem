@@ -610,11 +610,6 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        bool HasStereoCamera(out Camera cameraComponent)
-        {
-            return TryGetComponent(out cameraComponent) && cameraComponent.stereoEnabled;
-        }
-
         // Evaluates whether the given action has at least one resolved control and may generate input.
         private static bool HasResolvedControl(InputAction action)
         {
