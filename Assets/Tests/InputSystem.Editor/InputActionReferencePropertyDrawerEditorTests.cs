@@ -106,6 +106,7 @@ internal sealed class InputActionReferencePropertyDrawerEditorTests
         var drawer = new InputActionReferencePropertyDrawer();
         yield return RenderDrawer(drawer);
         Assert.That(onGuiCalled, Is.True);
+        Assert.That(fieldCalled, Is.False);
     }
 
     [UnityTest]
@@ -115,6 +116,7 @@ internal sealed class InputActionReferencePropertyDrawerEditorTests
         var drawer = new InputActionReferencePropertyDrawer();
         yield return RenderDrawer(drawer, true);
         Assert.That(onGuiCalled, Is.True);
+        Assert.That(fieldCalled, Is.True);
         Assert.That(fieldObj, Is.Null);
     }
 
@@ -136,6 +138,7 @@ internal sealed class InputActionReferencePropertyDrawerEditorTests
         var drawer = new InputActionReferencePropertyDrawer();
         yield return RenderDrawer(drawer, true);
         Assert.That(onGuiCalled, Is.True);
+        Assert.That(fieldCalled, Is.True);
         Assert.That(fieldObj, Is.SameAs(reference));
     }
 
@@ -161,6 +164,7 @@ internal sealed class InputActionReferencePropertyDrawerEditorTests
         var drawer = new InputActionReferencePropertyDrawer();
         yield return RenderDrawer(drawer, true);
         Assert.That(onGuiCalled, Is.True);
+        Assert.That(fieldCalled, Is.True);
         Assert.That(fieldObj, Is.Null);
     }
 }
