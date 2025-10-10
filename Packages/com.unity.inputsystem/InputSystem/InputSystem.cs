@@ -3695,7 +3695,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.4
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
         public static bool HasNativeObject(Object obj)
         {
 #if UNITY_6000_3_OR_NEWER
