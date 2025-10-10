@@ -24,8 +24,18 @@ namespace Editor
                 Debug.Log($"Skipped updating precompiled layout: '{filePath}'. No difference.");
                 return;
             }
+
+            try
+            {
+                File.WriteAllText(path, code);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return;
+            }
+
             Debug.Log($"Updated precompiled layout: '{filePath}'. {Path.GetFullPath(filePath)}");
-            Debug.Log(code);
         }
 
         private static void GeneratePrecompiledLayouts(string path)
