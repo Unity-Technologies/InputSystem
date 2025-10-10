@@ -17,6 +17,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 internal class InputTestFixtureTests : InputTestFixture
 {
     private Keyboard correctlyUsedKeyboard;
+
     private Keyboard incorrectlyUsedDevice;
     private Gamepad incorrectlyUsedGamepad;
     private Touchscreen incorrectlyUsedTouchscreen;
@@ -40,7 +41,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [OneTimeTearDown]
     public void UnityTearDown()
     {
-        // Once InputTestFixture.TearDown() has executed, the state stack will have been popped and the keyboard
+        // Once InputTestFixture.TearDown() has executed, the state stack will have been popped and the correctlyUsedKeyboard
         // we added before entering the test fixture should have been restored.
         Assert.That(InputSystem.devices.Contains(incorrectlyUsedDevice), Is.True);
         Assert.That(InputSystem.devices.Contains(incorrectlyUsedGamepad), Is.True);
@@ -59,7 +60,6 @@ internal class InputTestFixtureTests : InputTestFixture
         // This is expected usage pattern, first calling base.Setup() when overriding Setup like this, then
         // creating a fake device via the test fixture instance that only lives with the test context.
         base.Setup();
-        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
 
         // Since we have now entered a temporary test state our device created in UnitySetup() will no longer exist
         // with this context.
@@ -71,11 +71,6 @@ internal class InputTestFixtureTests : InputTestFixture
     [TearDown]
     public override void TearDown()
     {
-        // This is expected usage pattern, we might want to do something with the device here, but it needs
-        // to happen before base.TearDown() since it would delete the fake device.
-        Assert.That(InputSystem.devices.Contains(correctlyUsedKeyboard), Is.True);
-        InputSystem.RemoveDevice(correctlyUsedKeyboard);
-
         // Restore state
         base.TearDown();
 
@@ -92,6 +87,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [Test]
     public void Press_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Press(correctlyUsedKeyboard.spaceKey);
         Assert.That(correctlyUsedKeyboard.spaceKey.isPressed, Is.True);
     }
@@ -105,6 +101,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [Test]
     public void Release_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Press(correctlyUsedKeyboard.spaceKey);
         Release(correctlyUsedKeyboard.spaceKey);
         Assert.That(correctlyUsedKeyboard.spaceKey.isPressed, Is.False);
@@ -119,6 +116,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [Test]
     public void PressAndRelease_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         PressAndRelease(correctlyUsedKeyboard.spaceKey);
         Assert.That(correctlyUsedKeyboard.spaceKey.isPressed, Is.False);
     }
@@ -132,6 +130,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [Test]
     public void Click_ShouldMutateDeviceState_WithinPlayModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Click(correctlyUsedKeyboard.spaceKey);
         Assert.That(correctlyUsedKeyboard.spaceKey.isPressed, Is.False);
     }
@@ -194,6 +193,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [UnityTest]
     public IEnumerator Press_ShouldThrow_WithinEditModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Assert.Throws<NotSupportedException>(() => Press(correctlyUsedKeyboard.spaceKey));
         yield break;
     }
@@ -201,6 +201,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [UnityTest]
     public IEnumerator Release_ShouldThrow_WithinEditModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Assert.Throws<NotSupportedException>(() => Release(correctlyUsedKeyboard.spaceKey));
         yield break;
     }
@@ -208,6 +209,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [UnityTest]
     public IEnumerator PressAndRelease_ShouldThrow_WithinEditModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Assert.Throws<NotSupportedException>(() => PressAndRelease(correctlyUsedKeyboard.spaceKey));
         yield break;
     }
@@ -215,6 +217,7 @@ internal class InputTestFixtureTests : InputTestFixture
     [UnityTest]
     public IEnumerator Click_ShouldThrow_WithinEditModeTestFixtureContext()
     {
+        correctlyUsedKeyboard = InputSystem.AddDevice<Keyboard>();
         Assert.Throws<NotSupportedException>(() => Click(correctlyUsedKeyboard.spaceKey));
         yield break;
     }

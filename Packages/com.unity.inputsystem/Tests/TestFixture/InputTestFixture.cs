@@ -940,11 +940,13 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Device '{device}' has not been added to the system", nameof(device));
             }
-            if (!control.hasState)
-            {
-                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
-                    "Make sure the control or device was added after executing Setup().",  nameof(control));
-            }
+
+            // var manager = InputSystem.s_Manager;
+            // if (manager == null || !manager.HasDevice(device))
+            // {
+            //     throw new ArgumentException($"Control '{control}' does not have any associated state. " +
+            //         "Make sure the control or device was added after executing Setup().",  nameof(control));
+            // }
         }
 
         private static void CheckValidity(InputControl control)

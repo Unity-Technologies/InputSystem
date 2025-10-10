@@ -996,9 +996,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        // Allows determining if the device has an associated state pointer
-        internal unsafe bool hasState => currentStatePtr != null;
-
         // This data is initialized by InputDeviceBuilder.
         internal InternedString m_Name;
         internal string m_Path;
