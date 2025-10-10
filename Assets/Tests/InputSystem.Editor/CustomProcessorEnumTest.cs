@@ -47,19 +47,15 @@ internal class CustomProcessor : InputProcessor<float>
 internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEditorWindow>
 {
     InputActionAsset m_Asset;
-    InputActionMap m_ActionMap;
 
     public override void OneTimeSetUp()
     {
         base.OneTimeSetUp();
         m_Asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
 
-        m_ActionMap = m_Asset.AddActionMap("Action Map");
+        var actionMap = m_Asset.AddActionMap("Action Map");
 
-        var action = m_ActionMap.AddAction("Action", InputActionType.Value, processors: "InvertVector2(invertX=false), Custom(SomeEnum=10)");
-        
-        // A binding is needed to resolve during test. 
-        action.AddBinding("<Gamepad>/leftTrigger");
+        actionMap.AddAction("Action", InputActionType.Value, processors: "Custom(SomeEnum=10)");
     }
 
     public override void OneTimeTearDown()
@@ -112,24 +108,57 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         yield return null;
     }
-
+    
     [Test]
-    public void Migration_ShouldProduceValidActionAsset_WithAllProcessors_AndEnumConverted()
+    public void Migration_ShouldProduceValidActionAsset_WithEnumProcessorConverted()
     {
-        m_ActionMap.ResolveBindings();
+        var legacyJson = @"
+        {
+            ""name"": ""InputSystem_Actions"",
+            ""maps"": [
+                {
+                    ""name"": ""Player"",
+                    ""id"": ""df70fa95-8a34-4494-b137-73ab6b9c7d37"",
+                    ""actions"": [
+                        {
+                            ""name"": ""Move"",
+                            ""type"": ""Value"",
+                            ""id"": ""df70fa95-8a34-4494-b137-73ab6b9c7d37"",
+                            ""expectedControlType"": ""Vector2"",
+                            ""processors"": ""StickDeadzone,InvertVector2(invertX=false),Custom(SomeEnum=1)"",
+                            ""interactions"": """",
+                            ""initialStateCheck"": true
+                        }
+                    ]
+                }
+            ],
+            ""controlSchemes"": [],
+            ""version"": 0
+        }";
+    
+        var asset = InputActionAsset.FromJson(legacyJson);
+        Assert.That(asset, Is.Not.Null, "Migration failed to produce a valid InputActionAsset.");
+    
+        var map = asset.FindActionMap("Player");
+        Assert.That(map, Is.Not.Null, "Expected Player map to exist.");
+    
+        var action = map.FindAction("Move");
+        action.AddBinding("<Gamepad>/leftTrigger");
+        Assert.That(action, Is.Not.Null, "Expected Move action to exist.");
+    
+        var parsed = UnityEngine.InputSystem.Utilities.NameAndParameters.ParseMultiple(action.processors).ToList();
+        Assert.That(parsed.Count, Is.EqualTo(3), "Expected three processors.");
+        Assert.That(parsed[0].name, Is.EqualTo("StickDeadzone"));
+        Assert.That(parsed[1].name, Is.EqualTo("InvertVector2"));
         
-        var action = m_ActionMap.actions.First();
-        var migratedList = UnityEngine.InputSystem.Utilities.NameAndParameters.ParseMultiple(action.processors).ToList();
+        map.ResolveBindings();
         
-        Assert.That(migratedList.Count, Is.EqualTo(2), "Expected two processors.");
-        Assert.That(migratedList[0].name, Is.EqualTo("InvertVector2"), "First processor should be InvertVector2.");
-        
-        var invertX = migratedList[0].parameters.FirstOrDefault(p => p.name == "invertX");
+        var invertX = parsed[1].parameters.FirstOrDefault(p => p.name == "invertX");
         Assert.That(invertX.name, Is.EqualTo("invertX"));
-        Assert.That(invertX.value.ToBoolean(), Is.False, "invertX should be false for the first processor.");
-        
-        Assert.That(m_ActionMap.m_State.processors[1].GetType(), Is.EqualTo(typeof(CustomProcessor)));
-        Assert.That((m_ActionMap.m_State.processors[1] as CustomProcessor).SomeEnum, Is.EqualTo(SomeEnum.OptionA));
+        Assert.That(invertX.value.ToBoolean(), Is.False);
+
+        Assert.That(map.m_State.processors[2].GetType(), Is.EqualTo(typeof(CustomProcessor)));
+        Assert.That((map.m_State.processors[2] as CustomProcessor).SomeEnum, Is.EqualTo(SomeEnum.OptionB));
     }
 }
 #endif
