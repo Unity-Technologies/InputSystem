@@ -2479,8 +2479,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -23.19, y: 325.5}
-  m_SizeDelta: {x: 19.4, y: 17.7}
+  m_AnchoredPosition: {x: 146.3, y: 325}
+  m_SizeDelta: {x: 30, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &725406579
 MonoBehaviour:
@@ -5664,16 +5664,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5514b68a2410f4ab8a2e19c8b963b6f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem.RebindingUI::UnityEngine.InputSystem.Samples.RebindUI.CustomOnScreenControl
-  m_Shape: 0
-  m_NormalizedBounds:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 0
-    height: 0
-  m_ControlPath: 
-  m_Curve: 0
-  m_StickRadiusMillimeters: 7.2
 --- !u!224 &1492503865
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6004,7 +5994,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -16.600098}
+  m_AnchoredPosition: {x: 0, y: -16.600159}
   m_SizeDelta: {x: -800, y: -1366.7998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1617608010
@@ -7053,11 +7043,11 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
+    m_MinSize: 2
+    m_MaxSize: 300
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
