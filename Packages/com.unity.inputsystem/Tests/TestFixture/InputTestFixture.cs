@@ -941,12 +941,15 @@ namespace UnityEngine.InputSystem
                     $"Device '{device}' has not been added to the system", nameof(device));
             }
 
-            // var manager = InputSystem.s_Manager;
-            // if (manager == null || !manager.HasDevice(device))
-            // {
-            //     throw new ArgumentException($"Control '{control}' does not have any associated state. " +
-            //         "Make sure the control or device was added after executing Setup().",  nameof(control));
-            // }
+            // Guards against a device from another scope being used. This is a direct way to evaluate whether
+            // the device is associated with the current manager state or not since device state isn't consistently
+            // pushed/popped in the current design.
+            var manager = InputSystem.s_Manager;
+            if (manager == null || !manager.HasDevice(device))
+            {
+                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
+                    "Make sure the control or device was added after executing Setup().",  nameof(control));
+            }
         }
 
         private static void CheckValidity(InputControl control)
