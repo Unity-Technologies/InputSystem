@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Editor;
 
 namespace Editor
 {
-    internal class RegeneratePrecompiledLayouts
+    internal static class RegeneratePrecompiledLayouts
     {
         private static void GeneratePrecompiledLayout(string path, string layoutName)
         {
@@ -27,7 +27,7 @@ namespace Editor
 
             try
             {
-                File.WriteAllText(path, code);
+                File.WriteAllText(filePath, code);
             }
             catch (Exception e)
             {
@@ -35,7 +35,7 @@ namespace Editor
                 return;
             }
 
-            Debug.Log($"Updated precompiled layout: '{filePath}'. {Path.GetFullPath(filePath)}");
+            Debug.Log($"Updated precompiled layout: '{filePath}'.");
         }
 
         private static void GeneratePrecompiledLayouts(string path)
