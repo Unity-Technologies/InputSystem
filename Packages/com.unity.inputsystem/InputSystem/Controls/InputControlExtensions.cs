@@ -1114,6 +1114,8 @@ namespace UnityEngine.InputSystem
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
             {
+                if (!control.HasValueChangeInEvent(eventPtr))
+                    continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
                 return control;
