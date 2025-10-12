@@ -10,13 +10,19 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Extended `RebindingUISample` to include example of mouse sensitivity slider and "swap controls" example.
 
+### Added
+- Added an example of how to switch two similar controls to the `RebindingUISample`. This is accessible via a "swap sticks button" which allows swapping the bindings of the "move" and "look" gamepad bindings.
+
+### Fixed
+- Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
 
 ## [1.15.0] - 2025-10-03
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
-- Extended `RebindingUISample` to include example of mouse sensitivity slider and "swap controls" example.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
