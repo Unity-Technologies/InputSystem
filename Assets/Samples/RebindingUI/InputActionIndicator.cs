@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             if (action != null && action.action != null)
             {
-                action.action.performed += OnPerformed; // TODO Problem here after domain reload, InputAction.addperformed(), CallbackArray.AddCallback,. InputArrayExtensions.Contains
+                action.action.performed += OnPerformed;
             }
         }
 
