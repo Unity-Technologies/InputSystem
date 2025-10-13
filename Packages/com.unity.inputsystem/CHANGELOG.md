@@ -10,7 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
-
+### Fixed
+- Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
 
 ## [1.15.0] - 2025-10-03
 
