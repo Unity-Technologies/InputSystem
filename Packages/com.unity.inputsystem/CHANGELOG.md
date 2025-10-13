@@ -11,10 +11,10 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Changed
-- Extended `RebindingUISample` to include example of mouse sensitivity slider and "swap controls" example.
+- Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 
 ### Added
-- Added an example of how to switch two similar controls to the `RebindingUISample`. This is accessible via a "swap sticks button" which allows swapping the bindings of the "move" and "look" gamepad bindings.
+- Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
 
 ### Fixed
 - Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
