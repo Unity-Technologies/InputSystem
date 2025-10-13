@@ -49,8 +49,8 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 var newSelectedBinding = EditorGUILayout.Popup(m_BindingLabel, selectedBindingIndex, bindingOptions);
                 if (newSelectedBinding != selectedBindingIndex)
                 {
-                    var bindingId = bindingOptionValues[newSelectedBinding];
-                    m_BindingIdProperty.stringValue = bindingId;
+                    var id = bindingOptionValues[newSelectedBinding];
+                    m_BindingIdProperty.stringValue = id;
                     selectedBindingIndex = newSelectedBinding;
                 }
 
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
             for (var i = 0; i < bindingCount; ++i)
             {
                 var binding = bindings[i];
-                var bindingId = binding.id.ToString();
+                var id = binding.id.ToString();
                 var haveBindingGroups = !string.IsNullOrEmpty(binding.groups);
 
                 // If we don't have a binding groups (control schemes), show the device that if there are, for example,
@@ -120,9 +120,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 }
 
                 bindingOptions[i] = new GUIContent(displayString);
-                bindingOptionValues[i] = bindingId;
+                bindingOptionValues[i] = id;
 
-                if (currentBindingId == bindingId)
+                if (currentBindingId == id)
                     selectedBindingIndex = i;
             }
 
