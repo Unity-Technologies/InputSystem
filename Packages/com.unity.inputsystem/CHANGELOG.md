@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added an example of how to switch two similar controls to the `RebindingUISample`. This is accessible via a "swap sticks button" which allows swapping the bindings of the "move" and "look" gamepad bindings.
 
 ### Fixed
+- Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
 - Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
 
 ## [1.15.0] - 2025-10-03
