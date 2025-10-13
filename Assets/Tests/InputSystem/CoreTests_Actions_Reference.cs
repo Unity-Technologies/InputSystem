@@ -189,13 +189,10 @@ partial class CoreTests
         else if (typeToDelete == typeof(InputActionAsset))
             UnityEngine.Object.DestroyImmediate(asset);
 
-        // TODO reference need to react to this
         Assert.That(reference.action, Is.Null);
         Assert.That(reference.asset, Is.SameAs(asset));
         Assert.That(reference.name, Is.EqualTo("map1/action1")); // Unexpected when no longer existing
         Assert.That(reference.ToDisplayName(), Is.EqualTo("map1/action1")); // Unexpected when no longer existing
-        //Assert.That(reference.ToString(), Is.EqualTo(":" + new Guid(action1.m_Id))); // Unexpected when no longer existing
+        Assert.That(reference.ToString(), Is.EqualTo($"map1/action1 ({typeof(InputActionReference).FullName})")); // Unexpected when no longer existing
     }
-
-    // TODO Make an undo resolve test that destroys reference sub-asset, breaks reference, then undo and reference is valid again.
 }
