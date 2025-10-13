@@ -176,12 +176,42 @@ publish_dry_run_inputsystem:
         unzip: true
       packages:
         ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_macos
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-macos
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-macos
+        unzip: true
+      packages:
+        ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_ubuntu
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-ubuntu
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-ubuntu
+        unzip: true
+      packages:
+        ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_windows
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-windows
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-windows
+        unzip: true
+      packages:
+        ignore_artifact: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
 
 # Publish  for inputsystem to https://artifactory-slo.bf.unity3d.com/artifactory/api/npm/upm-npm
 publish_inputsystem:
@@ -358,10 +388,40 @@ publish_inputsystem:
         unzip: true
       packages:
         ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_macos
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-macos
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-macos
+        unzip: true
+      packages:
+        ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_ubuntu
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-ubuntu
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-ubuntu
+        unzip: true
+      packages:
+        ignore_artifact: true
+  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_4_-_windows
+    specific_options:
+      UTR:
+        location: results/UTR/validate-inputsystem-6000.4-windows
+        unzip: true
+      pvp-results:
+        location: results/pvp/validate-inputsystem-6000.4-windows
+        unzip: true
+      packages:
+        ignore_artifact: true
   variables:
     UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
-    UPMPVP_CONTEXT_WRENCH: 0.12.2.0
+    UPMPVP_CONTEXT_WRENCH: 1.0.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 0.12.2.0
+    Wrench: 1.0.1.0
 

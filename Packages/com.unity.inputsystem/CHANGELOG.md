@@ -9,7 +9,13 @@ Due to package verification, the latest version below is the unpublished version
 however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
-- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+
+### Fixed
+- Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
+- Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+
+## [1.15.0] - 2025-10-03
 
 ### Changed
 - Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
@@ -27,6 +33,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the compilation warnings when used with Unity 6.4 (ISX-2349).
 - Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- Fixed an issue where the onAnyButtonPress callback would be triggered multiple times during unrelated events when a button is held down. See [ISXB-1005](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1005).
+- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Fixed formatting issues on processor documentation page
 
 ## [1.14.2] - 2025-08-05
 
