@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
             if (string.IsNullOrEmpty(playerPreferenceKey))
             {
-                Debug.LogWarning("Unable to load binding overrides from player preferences without a key");
+                Debug.LogWarning("Unable to load binding overrides from player preferences without a non-empty preference key.");
                 return false;
             }
 
