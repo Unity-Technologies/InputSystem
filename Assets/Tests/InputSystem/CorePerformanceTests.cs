@@ -123,7 +123,6 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         Measure.Method(() =>
         {
-            int keyIndex = 0;
             foreach (var key in keyboard.allKeys)
             {
                 key.ReadValue();
