@@ -9,6 +9,7 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.ForUI")] // To avoid minor bump
 [assembly: InternalsVisibleTo("Unity.AI.Assistant.Editor")]
+[assembly: InternalsVisibleTo("Unity.InputSystem.EditorDevelopmentTools")]
 
 namespace UnityEngine.InputSystem
 {
