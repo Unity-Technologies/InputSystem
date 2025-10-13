@@ -64,8 +64,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         {
             if (actions == null)
             {
-                Debug.LogWarning("Unable to apply binding overrides from player preferences without an associated " +
-                    "action asset.");
+                Debug.LogWarning("Unable to apply binding overrides from player preferences without an associated action asset.");
                 return false;
             }
 
