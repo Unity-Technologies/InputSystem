@@ -1,7 +1,7 @@
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA || UNITY_STANDALONE_LINUX
 using UnityEngine.InputSystem.DualShock.LowLevel;
 #endif
 using UnityEngine.InputSystem.Processors;
@@ -18,7 +18,7 @@ using UnityEngine.InputSystem.HID;
 
 internal class DualShockTests : CoreTestsFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_STANDALONE_LINUX
     public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)
         where TDevice : DualShockGamepad
         where TState : struct, IInputStateTypeInfo

@@ -1188,6 +1188,11 @@ namespace UnityEngine.InputSystem
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
 
+        internal bool HasDevice(InputDevice device)
+        {
+            return device.m_DeviceIndex < m_DevicesCount && ReferenceEquals(m_Devices[device.m_DeviceIndex], device);
+        }
+
         public InputDevice AddDevice(Type type, string name = null)
         {
             if (type == null)

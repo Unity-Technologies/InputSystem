@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.DualShock
             //       or none at all. E.g. when connected via Bluetooth on OSX, the DualShock will
             //       not return anything from IOHIDDevice_GetProduct() and IOHIDevice_GetManufacturer()
             //       even though it will report the expected results when plugged in via USB.
-            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR
+            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR || UNITY_STANDALONE_LINUX
             InputSystem.RegisterLayout<DualSenseGamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")

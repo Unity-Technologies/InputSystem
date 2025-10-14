@@ -10,7 +10,17 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 
+### Added
+- Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
+
+### Fixed
+- Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
+- Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
 
 ## [1.15.0] - 2025-10-03
 
@@ -30,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the compilation warnings when used with Unity 6.4 (ISX-2349).
 - Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- Fixed an issue where the onAnyButtonPress callback would be triggered multiple times during unrelated events when a button is held down. See [ISXB-1005](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1005).
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed formatting issues on processor documentation page
 
