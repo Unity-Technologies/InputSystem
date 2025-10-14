@@ -14,6 +14,12 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
 - Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
 - Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue in `InputActionReference` where `Set` was not updating the cached action leading to incorrect evaluation of `InputActionReference.action` after first being cached, then set, then read again. This could lead to reference not being reset if set programmatically during play-mode. [ISXB-1584](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1584).
+- Fixed an issue where `InputActionSetupExtensions.Remove` will result in `NullReferenceException` if the action being removed has no bindings. (ISXB-1688).
+- Fixed an issue where assigning a ``MonoBehaviour` field of type `InputActionReference` to an instance stored in `.inputactions` asset via `InputActionReference.Set` in playmode corrupts the originally referenced asset. (ISXB-1692).
+- Fixed an issue where `InputActionReference.Create(null)` returns `null` instead "of a reference object to the given action" as documented behaviour for the API. (ISXB-1693)
+- Fixed an issue where `InputActionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
+- Fixed an issue where Inspector field of type `InputActionReference` isn't reflecting broken reference in case action is deleted from asset, action map is deleted from asset, or the asset itself is deleted. (ISXB-1701)
 
 ## [1.15.0] - 2025-10-03
 
@@ -36,12 +42,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where the onAnyButtonPress callback would be triggered multiple times during unrelated events when a button is held down. See [ISXB-1005](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1005).
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed formatting issues on processor documentation page.
-- Fixed an issue in `InputActionReference` where `Set` was not updating the cached action leading to incorrect evaluation of `InputActionReference.action` after first being cached, then set, then read again. This could lead to reference not being reset if set programmatically during play-mode. [ISXB-1584](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1584).
-- Fixed an issue where `InputActionSetupExtensions.Remove` will result in `NullReferenceException` if the action being removed has no bindings. (ISXB-1688).
-- Fixed an issue where assigning a ``MonoBehaviour` field of type `InputActionReference` to an instance stored in `.inputactions` asset via `InputActionReference.Set` in playmode corrupts the originally referenced asset. (ISXB-1692).
-- Fixed an issue where `InputActionReference.Create(null)` returns `null` instead "of a reference object to the given action" as documented behaviour for the API. (ISXB-1693)
-- Fixed an issue where `InputActionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
-- Fixed an issue where Inspector field of type `InputActionReference` isn't reflecting broken reference in case action is deleted from asset, action map is deleted from asset, or the asset itself is deleted. (ISXB-1701)
 
 ## [1.14.2] - 2025-08-05
 
