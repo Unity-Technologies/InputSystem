@@ -48,9 +48,9 @@ namespace UnityEngine.InputSystem.Editor
             m_Analytics ??= new InputActionsEditorSessionAnalytic(
                 InputActionsEditorSessionAnalytic.Data.Kind.EditorWindow);
 
-        // Unity 6.4 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
+        // Unity 6.3 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
         [OnOpenAsset]
-#if UNITY_6000_4_OR_NEWER
+#if UNITY_6000_3_OR_NEWER
         public static bool OpenAsset(EntityId entityId, int line)
         {
             if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))

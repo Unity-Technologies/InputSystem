@@ -13,9 +13,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-// Suppress warnings from local variables for control references
-// that we don't end up using.
+// Suppress warnings from local variables for control references that we don't end up using.
 #pragma warning disable CS0219
+
+// Suppress warnings from obsolete code when references from auto-generated code from the same code base.
+#pragma warning disable CS0618
 
 namespace UnityEngine.InputSystem
 {
