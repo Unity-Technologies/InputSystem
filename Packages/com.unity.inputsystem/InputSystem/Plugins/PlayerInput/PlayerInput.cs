@@ -131,7 +131,6 @@ namespace UnityEngine.InputSystem
     ///
     /// Both behaviors described in the previous two paragraphs are automatically disabled if more than one
     /// PlayerInput is active.
-    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
