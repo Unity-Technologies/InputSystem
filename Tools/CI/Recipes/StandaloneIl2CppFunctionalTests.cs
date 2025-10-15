@@ -40,6 +40,7 @@ public class StandaloneIl2CppFunctionalTests: BaseRecipe
                     .WithCategory("!Performance")
                     .WithExtraArgs("--clean-library", "--api-profile=NET_4_6")
                     .WithRerun(1, true)
+                    .WithTimeout(3600)
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
