@@ -37,6 +37,7 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
                 .WithPerformanceDataReporting(true)
                 .WithPerformanceProject("InputSystem")
                 .WithPlayerSavePath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/logs"))
             .WithPlatform(platform);
 
@@ -97,6 +98,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
                 .WithPerformanceDataReporting(true)
                 .WithPerformanceProject("InputSystem")
                 .WithPlayerLoadPath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/test-results"))
             .WithPlatform(platform);
 
