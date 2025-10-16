@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Utilities
 
         internal static string ToSerializableString(IEnumerable<NameAndParameters> list)
         {
-            if(list == null)
+            if (list == null)
                 return string.Empty;
 
             return string.Join(NamedValue.Separator, list.Select(x => x.ToString()).ToArray());

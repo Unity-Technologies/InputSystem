@@ -109,7 +109,7 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
 
         yield return null;
     }
-    
+
     [Test]
     [Description("Regression test for case ISXB-1674")]
     public void Migration_ShouldProduceValidActionAsset_WithEnumProcessorConverted()
@@ -151,12 +151,12 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
             }";
 
         var asset = InputActionAsset.FromJson(k_Json);
-        
-        // Enable the action to call rebinding 
+
+        // Enable the action to call rebinding
         asset.FindAction("Move").Enable();
 
         var map = asset.FindActionMap("Player");
-        
+
         // Directly tests the outcome of the migration and parsing logic, which is the core goal.
         var instantiatedProcessors = map.m_State.processors;
         Assert.That(map.m_State.totalProcessorCount, Is.EqualTo(3), "Should create exactly three processors.");

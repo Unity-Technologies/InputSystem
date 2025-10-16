@@ -1016,9 +1016,9 @@ namespace UnityEngine.InputSystem
                 return;
             if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
             {
-                List<NameAndParameters> parsedList = null;            
-                var converted = new List<NameAndParameters>(8);       
-                var updatedParameters = new List<NamedValue>(4);    
+                List<NameAndParameters> parsedList = null;
+                var converted = new List<NameAndParameters>(8);
+                var updatedParameters = new List<NamedValue>(4);
                 var enumValuesCache = new Dictionary<Type, Array>(8);
 
                 for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
