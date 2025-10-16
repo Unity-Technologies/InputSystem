@@ -12,7 +12,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -37,7 +37,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_android_-_mono:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -59,7 +59,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=ios
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -77,7 +77,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=tvOS
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=tvOS
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -99,7 +99,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_android_-_il2cpp:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -124,7 +124,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_android_-_mono:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -146,7 +146,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=ios
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -164,7 +164,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=tvOS
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=tvOS
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -186,7 +186,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_android_-_il2cpp:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -211,7 +211,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_android_-_mono:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -233,7 +233,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=ios
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -251,7 +251,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=tvOS
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=tvOS
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -273,7 +273,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_android_-_il2cpp:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -298,7 +298,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_android_-_mono:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -320,7 +320,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_ios:
     flavor: m1.mac
     model: SE-Gen3
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=ios
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -338,7 +338,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=tvOS
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=tvOS
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -360,7 +360,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_android_-_il2cpp:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -385,7 +385,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_android_-_mono:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=android
+      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -407,7 +407,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_ios:
     flavor: m1.mac
     model: SE-Gen3
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=ios
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -425,7 +425,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_tvos:
     type: Unity::mobile::appletv
     flavor: m1.mac
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --artifacts-path=build/test-results --platform=tvOS
+  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=tvOS
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:

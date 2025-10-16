@@ -10,7 +10,7 @@ inputsystem-editorperformancetests_-_2022_3_-_macos:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -28,7 +28,7 @@ inputsystem-editorperformancetests_-_2022_3_-_ubuntu:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
@@ -47,7 +47,7 @@ inputsystem-editorperformancetests_-_2022_3_-_windows:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 2022.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
@@ -65,7 +65,7 @@ inputsystem-editorperformancetests_-_6000_0_-_macos:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -83,7 +83,7 @@ inputsystem-editorperformancetests_-_6000_0_-_ubuntu:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
@@ -102,7 +102,7 @@ inputsystem-editorperformancetests_-_6000_0_-_windows:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
@@ -120,7 +120,7 @@ inputsystem-editorperformancetests_-_6000_2_-_macos:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -138,7 +138,7 @@ inputsystem-editorperformancetests_-_6000_2_-_ubuntu:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
@@ -157,7 +157,7 @@ inputsystem-editorperformancetests_-_6000_2_-_windows:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.2/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
@@ -175,7 +175,7 @@ inputsystem-editorperformancetests_-_6000_3_-_macos:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -193,7 +193,7 @@ inputsystem-editorperformancetests_-_6000_3_-_ubuntu:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
@@ -212,7 +212,7 @@ inputsystem-editorperformancetests_-_6000_3_-_windows:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
@@ -230,7 +230,7 @@ inputsystem-editorperformancetests_-_6000_4_-_macos:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -248,7 +248,7 @@ inputsystem-editorperformancetests_-_6000_4_-_ubuntu:
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
   artifacts:
@@ -267,7 +267,7 @@ inputsystem-editorperformancetests_-_6000_4_-_windows:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --artifacts-path=artifacts
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
