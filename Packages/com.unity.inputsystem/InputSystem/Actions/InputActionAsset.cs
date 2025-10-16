@@ -1028,10 +1028,8 @@ namespace UnityEngine.InputSystem
                     {
                         var actionJson = mapJson.actions[ai];
                         var raw = actionJson.processors;
-                        if (string.IsNullOrEmpty(raw))
-                            continue;
 
-                        if (!NameAndParameters.ParseMultiple(raw, ref parsedList) || parsedList.Count == 0)
+                        if (!NameAndParameters.ParseMultiple(raw, ref parsedList))
                             continue;
 
                         converted.Clear();
