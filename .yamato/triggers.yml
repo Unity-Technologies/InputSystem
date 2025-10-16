@@ -53,19 +53,14 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_4_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_2_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_2_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_2_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_macos
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_windows
   - path: .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
@@ -75,29 +70,6 @@ all_functional_tests:
       NOT pull_request.changes.all match "**/*.md"
     cancel_old_ci: true
     cancel_leftover_jobs: Always
-all_mobile_tests:
-  name: All Mobile Tests
-  dependencies:
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_tvos
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_tvos
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
-  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_tvos
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_0_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_2_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_3_-_ios
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_il2cpp
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_mono
-  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_4_-_ios
 all_performance_tests:
   name: All Performance Tests
   dependencies:
@@ -166,6 +138,15 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_4_-_macos
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_4_-_windows
+nightly_trigger:
+  name: Nightly trigger
+  dependencies:
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_2_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_ubuntu
+  - path: .yamato/triggers.yml#all_performance_tests
   triggers:
     recurring:
     - branch: develop

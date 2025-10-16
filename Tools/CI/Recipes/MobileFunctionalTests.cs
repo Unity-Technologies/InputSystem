@@ -35,6 +35,7 @@ public class MobileFunctionalBuildJobs: MobileBaseRecipe
                 .WithRerun(1, true)
                 .WithBuildOnly()
                 .WithPlayerSavePath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/logs"))
             .WithPlatform(platform);
 
@@ -94,6 +95,7 @@ public class MobileFunctionalTests: MobileBaseRecipe
                 .WithCategory("!Performance")
                 .WithRerun(1)
                 .WithPlayerLoadPath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/test-results"))
             .WithPlatform(platform);
         
