@@ -91,6 +91,12 @@ public class MobilePerformanceTests: MobileBaseRecipe
         if (platform.System == SystemType.Android)
             job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
 
+        if (platform.System == SystemType.Android || platform.System == SystemType.AndroidMacOS)
+        {
+            var utrDownloadCommand = UtrCommand.Download(platform.System);
+            job.WithCommands(utrDownloadCommand);
+        }
+
         var utrCommand = UtrCommand.Run(platform.System, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
                 .WithCategory("Performance")
@@ -106,6 +112,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
             .WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
+
         return job;
     }
 }
