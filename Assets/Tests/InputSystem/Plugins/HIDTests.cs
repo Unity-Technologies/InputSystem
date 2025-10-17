@@ -298,6 +298,9 @@ internal class HIDTests : CoreTestsFixture
         runtime.SetDeviceCommandCallback(deviceId,
             (id, commandPtr) =>
             {
+                if (commandPtr == null)
+                    return InputDeviceCommand.GenericFailure;
+
                 if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
                     return reportDescriptor.Length;
 
@@ -317,22 +320,29 @@ internal class HIDTests : CoreTestsFixture
 
     [Test]
     [Category("HID Devices")]
-
     // These descriptor values were generated with the Microsoft HID Authoring descriptor tool in
-    // https://github.com/microsoft/hidtools for the expexted values.
+    // https://github.com/microsoft/hidtools for the expected value:
     // Logical min 0, logical max 65535
-    [TestCase(16, new byte[] {0x16, 0x00, 0x00}, new byte[] { 0x27, 0xFF, 0xFF, 0x00, 0x00 }, 0, 65535, 0.01f)]
+    [TestCase(16, new byte[] {0x16, 0x00, 0x00}, new byte[] { 0x27, 0xFF, 0xFF, 0x00, 0x00 }, 0, 65535)]
     // Logical min -32768, logical max 32767
-    [TestCase(16, new byte[] {0x16, 0x00, 0x80}, new byte[] {0x26, 0xFF, 0x7F}, -32768, 32767, 0.01f)]
+    [TestCase(16, new byte[] {0x16, 0x00, 0x80}, new byte[] {0x26, 0xFF, 0x7F}, -32768, 32767)]
     // Logical min 0, logical max 255
-    [TestCase(8, new byte[] {0x15, 00}, new byte[] {0x26, 0xFF, 0x00}, 0, 255, 0.01f)]
+    [TestCase(8, new byte[] {0x15, 00}, new byte[] {0x26, 0xFF, 0x00}, 0, 255)]
     // Logical min -128, logical max 127
-    [TestCase(8, new byte[] {0x15, 0x80}, new byte[] {0x25, 0x7F}, -128, 127, 0.01f)]
+    [TestCase(8, new byte[] {0x15, 0x80}, new byte[] {0x25, 0x7F}, -128, 127)]
     // Logical min -16, logical max 15 (below 8 bit boundary)
-    [TestCase(5, new byte[] {0x15, 0xF0}, new byte[] {0x25, 0x0F}, -16, 15, 0)]
+    [TestCase(5, new byte[] {0x15, 0xF0}, new byte[] {0x25, 0x0F}, -16, 15)]
     // Logical min 0, logical max 31 (below 8 bit boundary)
-    [TestCase(5, new byte[] {0x15, 0x00}, new byte[] {0x25, 0x1F}, 0, 31, 0)]
-    public void Devices_CanParseHIDDescritpor_WithSignedLogicalMinAndMaxSticks(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected, float errorMargin)
+    [TestCase(5, new byte[] {0x15, 0x00}, new byte[] {0x25, 0x1F}, 0, 31)]
+    // Logical min -4096, logical max 4095 (crosses byte boundary)
+    [TestCase(13, new byte[] {0x16, 0x00, 0xF0}, new byte[] {0x26, 0xFF, 0x0F}, -4096, 4095)]
+    // Logical min 0, logical max 8191 (crosses byte boundary)
+    [TestCase(13, new byte[] {0x15, 0x00}, new byte[] {0x26, 0xFF, 0x1F}, 0, 8191)]
+    // Logical min 0, logical max 16777215 (24 bit)
+    [TestCase(24, new byte[] {0x15, 0x00}, new byte[] {0x27, 0xFF, 0xFF, 0xFF, 0x00}, 0, 16777215)]
+    // Logical min -8388608, logical max 8388607 (24 bit)
+    [TestCase(24, new byte[] {0x17, 0x00, 0x00, 0x80, 0xFF}, new byte[] {0x27, 0xFF, 0xFF, 0x7F, 0x00}, -8388608, 8388607)]
+    public void Devices_CanParseHIDDescritpor_WithSignedLogicalMinAndMaxSticks(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected)
     {
         // Dynamically create HID report descriptor for two analog sticks with parameterized logical min/max
 
