@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
 - Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
 - Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
+- Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off on 2022.3.XX. This was  was previously only available on Unity 6 versions since 1.11.0. [ISXB-1296]
 
 ## [1.15.0] - 2025-10-03
 

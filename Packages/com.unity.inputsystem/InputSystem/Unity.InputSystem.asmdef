@@ -99,7 +99,7 @@
         },
         {
             "name": "Unity",
-            "expression": "6000.0.15",
+            "expression": ">=2022.3.69 && <6000.0 || >=6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
         {
