@@ -4,7 +4,7 @@
 inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceTests - 2022.3 - Android - il2cpp
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -29,7 +29,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp:
 inputsystem-mobileperformancetests_-_2022_3_-_android_-_mono:
   name: InputSystem-MobilePerformanceTests - 2022.3 - Android - mono
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -91,7 +91,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_tvos:
 inputsystem-mobileperformancetests_-_6000_0_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceTests - 6000.0 - Android - il2cpp
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -116,7 +116,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_android_-_il2cpp:
 inputsystem-mobileperformancetests_-_6000_0_-_android_-_mono:
   name: InputSystem-MobilePerformanceTests - 6000.0 - Android - mono
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -178,7 +178,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_tvos:
 inputsystem-mobileperformancetests_-_6000_2_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceTests - 6000.2 - Android - il2cpp
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -203,7 +203,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_android_-_il2cpp:
 inputsystem-mobileperformancetests_-_6000_2_-_android_-_mono:
   name: InputSystem-MobilePerformanceTests - 6000.2 - Android - mono
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -265,7 +265,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_tvos:
 inputsystem-mobileperformancetests_-_6000_3_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceTests - 6000.3 - Android - il2cpp
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -290,7 +290,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_android_-_il2cpp:
 inputsystem-mobileperformancetests_-_6000_3_-_android_-_mono:
   name: InputSystem-MobilePerformanceTests - 6000.3 - Android - mono
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -352,7 +352,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_tvos:
 inputsystem-mobileperformancetests_-_6000_4_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceTests - 6000.4 - Android - il2cpp
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
@@ -377,7 +377,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_android_-_il2cpp:
 inputsystem-mobileperformancetests_-_6000_4_-_android_-_mono:
   name: InputSystem-MobilePerformanceTests - 6000.4 - Android - mono
   agent:
-    image: package-ci/win10:default
+    image: mobile/android-execution-base:v2.3785910
     type: Unity::mobile::shield
     flavor: b1.xlarge
   commands:
