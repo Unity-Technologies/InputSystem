@@ -119,7 +119,7 @@
         },
 	{
 	    "name": "Unity",
-            "expression": "6000.4.0a1",
+            "expression": "6000.4.0a4",
             "define": "UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS"
 	}
     ],
