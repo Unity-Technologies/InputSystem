@@ -182,25 +182,15 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <returns>true if able to resolve, otherwise false.</returns>
         public bool ResolveActionAndBinding(out InputAction action, out int bindingIndex)
         {
-            bindingIndex = -1;
-
             action = m_Action?.action;
-            if (action == null)
-                return false;
 
-            if (string.IsNullOrEmpty(m_BindingId))
-                return false;
+            bindingIndex = action.FindBindingById(m_BindingId);
+            if (bindingIndex >= 0)
+                return true;
 
-            // Look up binding index.
-            var id = new Guid(m_BindingId);
-            bindingIndex = action.bindings.IndexOf(x => x.id == id);
-            if (bindingIndex == -1)
-            {
+            if (action != null && !string.IsNullOrEmpty(m_BindingId))
                 Debug.LogError($"Cannot find binding with ID '{m_BindingId}' on '{action}'", this);
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -248,6 +238,30 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                 action.RemoveBindingOverride(bindingIndex);
             }
             UpdateBindingDisplay();
+        }
+
+        /// <summary>
+        /// Attempts to swap associated binding of this instance with another instance.
+        /// </summary>
+        /// <remarks>It is expected that the other control is of a compatible type.</remarks>
+        /// <param name="other">The other instance to swap binding with.</param>
+        /// <returns>true if successfully swapped, else false.</returns>
+        public void SwapBinding(RebindActionUI other)
+        {
+            if (this == other)
+                return; // Silently ignore any request to swap binding with itself
+            if (ongoingRebind != null || other.ongoingRebind != null)
+                throw new Exception("Cannot swap bindings when interactive rebinding is ongoing");
+            if (!ResolveActionAndBinding(out var action, out var bindingIndex))
+                throw new Exception("Failed to resolve action and binding index");
+            if (!other.ResolveActionAndBinding(out var otherAction, out var otherBindingIndex))
+                throw new Exception("Failed to resolve action and binding index");
+
+            // Apply binding override to target binding based on swapped effective binding paths.
+            var effectivePath = action.bindings[bindingIndex].effectivePath;
+            var otherEffectivePath = otherAction.bindings[otherBindingIndex].effectivePath;
+            action.ApplyBindingOverride(bindingIndex, otherEffectivePath);
+            otherAction.ApplyBindingOverride(otherBindingIndex, effectivePath);
         }
 
         /// <summary>

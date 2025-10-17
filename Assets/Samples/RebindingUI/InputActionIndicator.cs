@@ -34,7 +34,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         private void OnEnable()
         {
             if (action != null && action.action != null)
+            {
                 action.action.performed += OnPerformed;
+            }
         }
 
         private void OnDisable()
