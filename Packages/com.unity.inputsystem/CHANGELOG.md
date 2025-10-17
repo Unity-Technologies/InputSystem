@@ -16,6 +16,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
+- Added support for (MonoBehavior OnMouse events) [https://docs.unity3d.com/ScriptReference/MonoBehaviour.html] when running the Input System on Unity 6000.4 or newer.
+- Added tests and a sample for MonoBehavior OnMouse events using the InputSystem package.
 
 ### Fixed
 - Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
@@ -30,8 +32,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
-- Added support for (MonoBehavior OnMouse events) [https://docs.unity3d.com/ScriptReference/MonoBehaviour.html] when running the Input System on Unity 6.4 or newer.
-- Added tests and a sample for MonoBehavior OnMouse events using the InputSystem package.
 - Added a new fluent API `WithSuppressedActionPropagation()` to `UnityEngine.InputSystem.InputActionRebindingExtensions` that allows suppressing actions from firing during interactive rebinding while allowing state updates to avoid actions triggering after state event suppression (default). ISXB-1546.
 - Added a new Monobehavior `InputActionLabel` to rebinding sample to allow dynamic text showing relevant binding for an `InputAction`.
 
