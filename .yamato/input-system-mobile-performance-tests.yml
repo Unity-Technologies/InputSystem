@@ -10,10 +10,10 @@ inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -36,10 +36,10 @@ inputsystem-mobileperformancetests_-_2022_3_-_android_-_mono:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -99,10 +99,10 @@ inputsystem-mobileperformancetests_-_6000_0_-_android_-_il2cpp:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -125,10 +125,10 @@ inputsystem-mobileperformancetests_-_6000_0_-_android_-_mono:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -188,10 +188,10 @@ inputsystem-mobileperformancetests_-_6000_2_-_android_-_il2cpp:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -214,10 +214,10 @@ inputsystem-mobileperformancetests_-_6000_2_-_android_-_mono:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -277,10 +277,10 @@ inputsystem-mobileperformancetests_-_6000_3_-_android_-_il2cpp:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -303,10 +303,10 @@ inputsystem-mobileperformancetests_-_6000_3_-_android_-_mono:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -366,10 +366,10 @@ inputsystem-mobileperformancetests_-_6000_4_-_android_-_il2cpp:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results
@@ -392,10 +392,10 @@ inputsystem-mobileperformancetests_-_6000_4_-_android_-_mono:
   commands:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output UnifiedTestRunner.exe
+  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner.exe --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
+      utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=android
   after:
   - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
   - command: if not exist build\test-results mkdir build\test-results

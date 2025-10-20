@@ -87,17 +87,17 @@ public class MobilePerformanceTests: MobileBaseRecipe
             platform = Settings.iOS15Platform;
         
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
+        var utrExecutable = "UnifiedTestRunner";
 
         if (platform.System == SystemType.Android)
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-
-        if (platform.System == SystemType.Android || platform.System == SystemType.AndroidMacOS)
         {
-            var utrDownloadCommand = UtrCommand.Download(platform.System);
+            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);            
+            utrExecutable = "utr.bat";
+            var utrDownloadCommand = UtrCommand.Download(platform.System, "utr.bat");
             job.WithCommands(utrDownloadCommand);
         }
 
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
                 .WithCategory("Performance")
                 .WithRerun(1)
