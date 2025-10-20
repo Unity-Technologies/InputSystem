@@ -87,15 +87,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
             platform = Settings.iOS15Platform;
         
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
-        var utrExecutable = "UnifiedTestRunner";
-
-        if (platform.System == SystemType.Android)
-        {
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);            
-            utrExecutable = "utr.bat";
-            var utrDownloadCommand = UtrCommand.Download(platform.System, "utr.bat");
-            job.WithCommands(utrDownloadCommand);
-        }
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
         var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
