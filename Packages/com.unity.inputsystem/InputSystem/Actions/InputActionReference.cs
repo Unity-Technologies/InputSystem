@@ -293,10 +293,11 @@ namespace UnityEngine.InputSystem
             // This is not needed for players since scriptable objects aren't serialized back from within a player.
             if (!CanSetReference(this))
             {
-                throw new InvalidOperationException("Attempting to mutate an immutable InputActionReference instance. " +
-                    "This is not allowed since it would modify the source asset." +
-                    "Instead use InputActionReference.Create(action) to create a new " +
-                    "in-memory instance or serialize it as a separate asset if it " +
+                throw new InvalidOperationException("Attempting to modify an immutable InputActionReference instance " +
+                    "that is part of an .inputactions asset. This is not allowed since it would modify the source " +
+                    "asset in which the reference is serialized and potentially corrupt it. " +
+                    "Instead use InputActionReference.Create(action) to create a new mutable " +
+                    "in-memory instance or serialize it as a separate asset if the intent is for changes to " +
                     "survive domain reloads.");
             }
             #endif // UNITY_EDITOR
