@@ -3712,7 +3712,7 @@ namespace UnityEngine.InputSystem
             //send pointer data to backend for OnMouseEvents
 #if UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS
             var pointer = Pointer.current;
-            if (pointer != null && gameIsPlaying)
+            if (pointer != null && pointer.added && gameIsPlaying)
                 NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
 #endif
             m_CurrentUpdate = default;
