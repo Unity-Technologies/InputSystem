@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
+- Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
 
 ### Added
 - Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
