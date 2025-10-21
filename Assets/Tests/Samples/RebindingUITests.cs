@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Samples.RebindUI;
@@ -11,6 +12,14 @@ using UnityEngine.UI;
 
 public class RebindingUITests : CoreTestsFixture
 {
+    private int m_Counter;
+
+    public override void Setup()
+    {
+        base.Setup();
+        m_Counter = 0;
+    }
+
     [Test]
     [Category("Samples")]
     public void Samples_CanCreateRebindingUI()
@@ -173,6 +182,74 @@ public class RebindingUITests : CoreTestsFixture
         Assert.That(rebind.ongoingRebind.started, Is.True);
         Assert.That(rebind.ongoingRebind.candidates, Is.Empty);
         Assert.That(bindingLabel.text, Is.EqualTo("<Waiting...>"));
+    }
+
+    [UnityTest]
+    [Category("Samples")]
+    public IEnumerator Samples_RebindingUI_InvokeUnityEventForwardsEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction(name: "first", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth");
+        var action2 = map.AddAction(name: "second", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+
+        action1.Enable();
+        action2.Enable();
+
+        UnityAction incrementByOne = () => ++ m_Counter;
+        UnityAction incrementByTwo = () => m_Counter += 2;
+
+        var go = new GameObject();
+        var invoke = go.AddComponent<InvokeUnityEvent>();
+
+        // Setup both action and unity event
+        invoke.action = InputActionReference.Create(action1);
+        invoke.onPerformed.AddListener(incrementByOne);
+
+        // Press button and check that unity event is invoked
+        PressAndRelease(gamepad.buttonNorth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(1));
+
+        // Switch action
+        invoke.action = InputActionReference.Create(action2);
+
+        // Press button and check that no unity event is invoked
+        PressAndRelease(gamepad.buttonNorth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(1));
+
+        // Press other button and check that no unity event is invoked
+        PressAndRelease(gamepad.buttonSouth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(2));
+
+        // Remove event
+        invoke.onPerformed = null;
+
+        // Press other button and check that nothing happens
+        PressAndRelease(gamepad.buttonSouth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(2));
+
+        // Add other event and set action to null
+        var unityEvent = new UnityEvent();
+        unityEvent.AddListener(incrementByTwo);
+        invoke.onPerformed = unityEvent;
+        invoke.action = null;
+
+        // Press other button and check that nothing happens
+        PressAndRelease(gamepad.buttonSouth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(2));
+
+        // Set action back to initial configuration
+        invoke.action = InputActionReference.Create(action1);
+        PressAndRelease(gamepad.buttonNorth);
+        yield return null;
+        Assert.That(m_Counter, Is.EqualTo(4));
     }
 
     private class TestEventSystem : EventSystem

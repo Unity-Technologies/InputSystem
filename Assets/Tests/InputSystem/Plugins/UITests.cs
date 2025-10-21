@@ -2766,6 +2766,81 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    public IEnumerator UI_CanNavigateUI_WithLocalMultiPlayerRoot_Null_UsingGamepads()
+    {
+        // Setup navigation
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var scene = CreateTestUI(makeSelectable: true);
+
+        // Create actions for navigation
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var moveAction = map.AddAction("move", type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+        var submitAction = map.AddAction("submit", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+
+        // Assign actions to the UI module
+        scene.uiModule.move = InputActionReference.Create(moveAction);
+        scene.uiModule.submit = InputActionReference.Create(submitAction);
+        map.Enable();
+
+        // Test 1: Assign localMultiPlayerRoot to a value
+        scene.eventSystem.playerRoot = scene.parentGameObject;
+
+        // Initial selection
+        scene.eventSystem.SetSelectedGameObject(scene.leftGameObject);
+        yield return null;
+
+        // Move right
+        Set(gamepad.leftStick, new Vector2(1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was set");
+
+        // Move left
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+        Set(gamepad.leftStick, new Vector2(-1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was set");
+
+        // Reset stick position
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+
+        // Test 2: With localMultiPlayerRoot set to null
+        scene.eventSystem.playerRoot = null;
+
+        // Reset selection
+        scene.eventSystem.SetSelectedGameObject(scene.leftGameObject);
+        yield return null;
+
+        // Move right
+        Set(gamepad.leftStick, new Vector2(1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was null");
+
+        // Move left
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+        Set(gamepad.leftStick, new Vector2(-1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was null");
+
+        // Submit
+        PressAndRelease(gamepad.buttonSouth);
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.Submit), "Submit event was not received when localMultiPlayerRoot was null");
+
+        // Checking that localMultiPlayerRoot is null
+        Assert.AreEqual(null, scene.uiModule.localMultiPlayerRoot);
+    }
+
+    [UnityTest]
+    [Category("UI")]
     // Check that two players can have separate UI, and that both selections will stay active when
     // clicking on UI with the mouse, using MultiPlayerEventSystem.playerRoot to match UI to the players.
     public IEnumerator UI_CanOperateMultiplayerUIGloballyUsingMouse()

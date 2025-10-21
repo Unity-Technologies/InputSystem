@@ -107,7 +107,7 @@ InputSystem.onEvent
     {
         foreach (var control in eventPtr.EnumerateChangedControls())
             Debug.Log($"Control {control} changed value to {control.ReadValueFromEventAsObject(eventPtr)}");
-    };
+    });
 ```
 
 This is significantly more efficient than manually iterating over [`InputDevice.allControls`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_allControls) and reading out the value of each control from the event.
