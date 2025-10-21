@@ -1,3 +1,6 @@
+---
+uid: input-system-contributing
+---
 # Contributing
 
 The [full source code](https://github.com/Unity-Technologies/InputSystem) for the Input System is available on GitHub. This is also where most of the Input System's development happens.
@@ -6,7 +9,9 @@ The [full source code](https://github.com/Unity-Technologies/InputSystem) for th
 
 ## Reporting bugs
 
-Please follow Unity's standard [bug reporting guidelines](https://unity3d.com/unity/qa/bug-reporting) to report any bugs related to the Input System. Don't forget to submit a Project that the developer who picks up your report can use to reproduce the issue. Be sure to mention that the bug is specific to the Input System package in the description, so it gets forwarded to the correct team at Unity.
+To report documentation problems, please use the feedback section at the bottom of the page containing the problem.
+
+To report bugs related to the Input System Please follow Unity's standard [bug reporting guidelines](https://unity3d.com/unity/qa/bug-reporting). Don't forget to submit a Project that the developer who picks up your report can use to reproduce the issue. Be sure to mention that the bug is specific to the Input System package in the description, so it gets forwarded to the correct team at Unity.
 
 ## Discussion
 

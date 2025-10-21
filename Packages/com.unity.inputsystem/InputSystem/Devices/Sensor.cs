@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the sensors return values through their device
+////      (e.g. GravitySensor should itself be an InputControl returning a Vector3 value which is the gravity value)
+
 ////REVIEW: Is there a better way than having all the sensor classes?
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -86,7 +89,6 @@ namespace UnityEngine.InputSystem
     /// a given sensor can be sampled.
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Sensor : InputDevice
     {
         /// <summary>
@@ -98,8 +100,7 @@ namespace UnityEngine.InputSystem
         /// Note that when setting sampling frequencies, there may be limits on the range of frequencies
         /// supported by the underlying hardware/platform.
         ///
-        /// To support querying sampling frequencies, a sensor device must implement <see cref="QuerySamplingFrequencyCommand"/>.
-        /// To support setting frequencies, it must implemenet <see cref="SetSamplingFrequencyCommand"/>.
+        /// To support setting frequencies, it must implement <see cref="SetSamplingFrequencyCommand"/>.
         /// </remarks>
         /// <exception cref="NotSupportedException">Thrown when reading the property and the underlying
         /// sensor does not support querying of sampling frequencies.</exception>
@@ -155,10 +156,9 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
-    [Scripting.Preserve]
     public class Accelerometer : Sensor
     {
-        public Vector3Control acceleration { get; private set; }
+        public Vector3Control acceleration { get; protected set; }
 
         /// <summary>
         /// The accelerometer that was last added or had activity last.
@@ -193,13 +193,12 @@ namespace UnityEngine.InputSystem
     /// Input device representing a gyroscope sensor.
     /// </summary>
     /// <remarks>
-    /// A gyroscope let's you measure the angular velocity of a device, and can be useful to control content by rotating a device.
+    /// A gyroscope lets you measure the angular velocity of a device, and can be useful to control content by rotating a device.
     /// </remarks>
     [InputControlLayout(stateType = typeof(GyroscopeState))]
-    [Scripting.Preserve]
     public class Gyroscope : Sensor
     {
-        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control angularVelocity { get; protected set; }
 
         /// <summary>
         /// The gyroscope that was last added or had activity last.
@@ -238,10 +237,9 @@ namespace UnityEngine.InputSystem
     /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of linear acceleration (see <see cref="LinearAccelerationSensor"/>).
     /// </remarks>
     [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
-    [Scripting.Preserve]
     public class GravitySensor : Sensor
     {
-        public Vector3Control gravity { get; private set; }
+        public Vector3Control gravity { get; protected set; }
 
         /// <summary>
         /// The gravity sensor that was last added or had activity last.
@@ -281,10 +279,9 @@ namespace UnityEngine.InputSystem
     /// An attitude sensor let's you determine the orientation of a device, and can be useful to control content by rotating a device.
     /// </remarks>
     [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
-    [Scripting.Preserve]
     public class AttitudeSensor : Sensor
     {
-        public QuaternionControl attitude { get; private set; }
+        public QuaternionControl attitude { get; protected set; }
 
         /// <summary>
         /// The attitude sensor that was last added or had activity last.
@@ -324,10 +321,9 @@ namespace UnityEngine.InputSystem
     /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of gravity (see <see cref="GravitySensor"/>).
     /// </remarks>
     [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
-    [Scripting.Preserve]
     public class LinearAccelerationSensor : Sensor
     {
-        public Vector3Control acceleration { get; private set; }
+        public Vector3Control acceleration { get; protected set; }
 
         /// <summary>
         /// The linear acceleration sensor that was last added or had activity last.
@@ -362,7 +358,6 @@ namespace UnityEngine.InputSystem
     /// Input device representing the magnetic field affecting the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Magnetic Field")]
-    [Scripting.Preserve]
     public class MagneticFieldSensor : Sensor
     {
         /// <summary>
@@ -373,7 +368,7 @@ namespace UnityEngine.InputSystem
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
         [InputControl(displayName = "Magnetic Field", noisy = true)]
-        public Vector3Control magneticField { get; private set; }
+        public Vector3Control magneticField { get; protected set; }
 
         /// <summary>
         /// The linear acceleration sensor that was last added or had activity last.
@@ -408,14 +403,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient light measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Light")]
-    [Scripting.Preserve]
     public class LightSensor : Sensor
     {
         /// <summary>
         /// Light level in SI lux units.
         /// </summary>
         [InputControl(displayName = "Light Level", noisy = true)]
-        public AxisControl lightLevel { get; private set; }
+        public AxisControl lightLevel { get; protected set; }
 
         /// <summary>
         /// The light sensor that was last added or had activity last.
@@ -450,14 +444,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the atmospheric pressure measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Pressure")]
-    [Scripting.Preserve]
     public class PressureSensor : Sensor
     {
         /// <summary>
         /// Atmospheric pressure in hPa (millibar).
         /// </summary>
         [InputControl(displayName = "Atmospheric Pressure", noisy = true)]
-        public AxisControl atmosphericPressure { get; private set; }
+        public AxisControl atmosphericPressure { get; protected set; }
 
         /// <summary>
         /// The pressure sensor that was last added or had activity last.
@@ -495,14 +488,13 @@ namespace UnityEngine.InputSystem
     /// The proximity sensor is usually used by phones to determine if the user is holding the phone to their ear or not.
     /// </remarks>
     [InputControlLayout(displayName = "Proximity")]
-    [Scripting.Preserve]
     public class ProximitySensor : Sensor
     {
         /// <summary>
         /// Proximity sensor distance measured in centimeters.
         /// </summary>
         [InputControl(displayName = "Distance", noisy = true)]
-        public AxisControl distance { get; private set; }
+        public AxisControl distance { get; protected set; }
 
         /// <summary>
         /// The proximity sensor that was last added or had activity last.
@@ -537,14 +529,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient air humidity measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Humidity")]
-    [Scripting.Preserve]
     public class HumiditySensor : Sensor
     {
         /// <summary>
         /// Relative ambient air humidity in percent.
         /// </summary>
         [InputControl(displayName = "Relative Humidity", noisy = true)]
-        public AxisControl relativeHumidity { get; private set; }
+        public AxisControl relativeHumidity { get; protected set; }
 
         /// <summary>
         /// The humidity sensor that was last added or had activity last.
@@ -579,14 +570,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient air temperature measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Ambient Temperature")]
-    [Scripting.Preserve]
     public class AmbientTemperatureSensor : Sensor
     {
         /// <summary>
         /// Temperature in degree Celsius.
         /// </summary>
         [InputControl(displayName = "Ambient Temperature", noisy = true)]
-        public AxisControl ambientTemperature { get; private set; }
+        public AxisControl ambientTemperature { get; protected set; }
 
         /// <summary>
         /// The ambient temperature sensor that was last added or had activity last.
@@ -620,15 +610,17 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Input device representing the foot steps taken by the user as measured by the device playing the content.
     /// </summary>
+    /// <remarks>
+    /// On iOS, access to the step counter must be enabled via <see cref="InputSettings.iOSSettings.motionUsage"/>.
+    /// </remarks>
     [InputControlLayout(displayName = "Step Counter")]
-    [Scripting.Preserve]
     public class StepCounter : Sensor
     {
         /// <summary>
         /// The number of steps taken by the user since the last reboot while activated.
         /// </summary>
         [InputControl(displayName = "Step Counter", noisy = true)]
-        public IntegerControl stepCounter { get; private set; }
+        public IntegerControl stepCounter { get; protected set; }
 
         /// <summary>
         /// The step counter that was last added or had activity last.
@@ -655,6 +647,49 @@ namespace UnityEngine.InputSystem
         protected override void FinishSetup()
         {
             stepCounter = GetChildControl<IntegerControl>("stepCounter");
+            base.FinishSetup();
+        }
+    }
+
+    /// <summary>
+    /// Hinge angle sensor.
+    /// This sensor is usually available on foldable devices.
+    ///  Note: The step resolution for angle is device dependentent, on Android you can query the sensor resolution by querying device capabilities.
+    /// </summary>
+    [InputControlLayout(displayName = "Hinge Angle")]
+    public class HingeAngle : Sensor
+    {
+        /// <summary>
+        /// The angle in degrees on how much the device is unfolded.
+        /// </summary>
+        /// <value>0 means fully folded, 180 means fully unfolded.</value>
+        public AxisControl angle { get; protected set; }
+
+        /// <summary>
+        /// The hinge angle sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current hinge angle sensor or <c>null</c>.</value>
+        public static HingeAngle current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        /// <inheritdoc />
+        protected override void FinishSetup()
+        {
+            angle = GetChildControl<AxisControl>("angle");
             base.FinishSetup();
         }
     }

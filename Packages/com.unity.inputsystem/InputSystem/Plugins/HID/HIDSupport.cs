@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -88,7 +89,25 @@ namespace UnityEngine.InputSystem.HID
         public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages
         {
             get => s_SupportedHIDUsages;
-            set => s_SupportedHIDUsages = value.ToArray();
+            set
+            {
+                s_SupportedHIDUsages = value.ToArray();
+
+                // Add HIDs we now support.
+                InputSystem.s_Manager.AddAvailableDevicesThatAreNowRecognized();
+
+                // Remove HIDs we no longer support.
+                for (var i = 0; i < InputSystem.devices.Count; ++i)
+                {
+                    var device = InputSystem.devices[i];
+                    if (device is HID hid && !s_SupportedHIDUsages.Contains(new HIDPageUsage(hid.hidDescriptor.usagePage, hid.hidDescriptor.usage)))
+                    {
+                        // Remove the entire generated layout. This will also remove all devices based on it.
+                        InputSystem.RemoveLayout(device.layout);
+                        --i;
+                    }
+                }
+            }
         }
 
         /// <summary>

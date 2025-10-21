@@ -60,6 +60,11 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!ptr.IsA<DeltaStateEvent>())
                 throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into DeltaStateEvent");
 
+            return FromUnchecked(ptr);
+        }
+
+        internal static DeltaStateEvent* FromUnchecked(InputEventPtr ptr)
+        {
             return (DeltaStateEvent*)ptr.data;
         }
 
@@ -71,19 +76,23 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!device.added)
                 throw new ArgumentException($"Device for control '{control}' has not been added to system",
                     nameof(control));
+            if (control.currentStatePtr == null) // Protects statePtr assignment below
+                throw new ArgumentNullException($"Control '{control}' does not have an associated state");
 
             ref var deviceStateBlock = ref device.m_StateBlock;
             ref var controlStateBlock = ref control.m_StateBlock;
 
             var stateFormat = deviceStateBlock.format; // The event is sent against the *device* so that's the state format we use.
-            var stateSize = controlStateBlock.alignedSizeInBytes;
-            // Bit offset does not have to be in the first byte. We grab the entire bitfield here.
-            stateSize += controlStateBlock.bitOffset / 8;
+            var stateSize = 0u;
+            if (controlStateBlock.bitOffset != 0)
+                stateSize = (controlStateBlock.bitOffset + controlStateBlock.sizeInBits + 7) / 8;
+            else
+                stateSize = controlStateBlock.alignedSizeInBytes;
             var stateOffset = controlStateBlock.byteOffset;
             var statePtr = (byte*)control.currentStatePtr + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) * 2 + stateSize;
 
-            var buffer = new NativeArray<byte>((int)eventSize, allocator);
+            var buffer = new NativeArray<byte>((int)eventSize.AlignToMultipleOf(4), allocator);
             var stateEventPtr = (DeltaStateEvent*)buffer.GetUnsafePtr();
 
             stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.deviceId, InputRuntime.s_Instance.currentTime);

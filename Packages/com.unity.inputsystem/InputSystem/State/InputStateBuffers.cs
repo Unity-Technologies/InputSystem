@@ -37,9 +37,14 @@ namespace UnityEngine.InputSystem.LowLevel
         public void* defaultStateBuffer;
 
         /// <summary>
-        /// Buffer that contains bitflags for noisy and non-noisy controls, to identify significant device changes.
+        /// Buffer that contains a bit mask that masks out all noisy controls.
         /// </summary>
         public void* noiseMaskBuffer;
+
+        /// <summary>
+        /// Buffer that contains a bit mask that masks out all dontReset controls.
+        /// </summary>
+        public void* resetMaskBuffer;
 
         // Secretly we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
@@ -55,27 +60,34 @@ namespace UnityEngine.InputSystem.LowLevel
             // buffer and [deviceIndex*2+1] is back buffer. Each device
             // has its buffers swapped individually with SwapDeviceBuffers().
             public void** deviceToBufferMapping;
+            public int deviceCount;
 
             public bool valid => deviceToBufferMapping != null;
 
             public void SetFrontBuffer(int deviceIndex, void* ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2] = ptr;
+                if (deviceIndex < deviceCount)
+                    deviceToBufferMapping[deviceIndex * 2] = ptr;
             }
 
             public void SetBackBuffer(int deviceIndex, void* ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
+                if (deviceIndex < deviceCount)
+                    deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
             }
 
             public void* GetFrontBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2];
+                if (deviceIndex < deviceCount)
+                    return deviceToBufferMapping[deviceIndex * 2];
+                return null;
             }
 
             public void* GetBackBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2 + 1];
+                if (deviceIndex < deviceCount)
+                    return deviceToBufferMapping[deviceIndex * 2 + 1];
+                return null;
             }
 
             public void SwapBuffers(int deviceIndex)
@@ -119,6 +131,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal static void* s_DefaultStateBuffer;
         internal static void* s_NoiseMaskBuffer;
+        internal static void* s_ResetMaskBuffer;
         internal static DoubleBuffers s_CurrentBuffers;
 
         public static void* GetFrontBufferForDevice(int deviceIndex)
@@ -160,8 +173,8 @@ namespace UnityEngine.InputSystem.LowLevel
             totalSize += mappingTableSizePerBuffer;
             #endif
 
-            // Plus 2 more buffers (1 for default states, and one for noise masks).
-            totalSize += sizePerBuffer * 2;
+            // Plus 3 more buffers (one for default states, one for noise masks, and one for dontReset masks).
+            totalSize += sizePerBuffer * 3;
 
             // Allocate.
             m_AllBuffers = UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
@@ -181,6 +194,7 @@ namespace UnityEngine.InputSystem.LowLevel
             // Default state and noise filter buffers go last.
             defaultStateBuffer = ptr;
             noiseMaskBuffer = ptr + sizePerBuffer;
+            resetMaskBuffer = ptr + sizePerBuffer * 2;
         }
 
         private static DoubleBuffers SetUpDeviceToBufferMappings(int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
@@ -190,7 +204,11 @@ namespace UnityEngine.InputSystem.LowLevel
             var mappings = (void**)(bufferPtr + sizePerBuffer * 2);  // Put mapping table at end.
             bufferPtr += sizePerBuffer * 2 + mappingTableSizePerBuffer;
 
-            var buffers = new DoubleBuffers {deviceToBufferMapping = mappings};
+            var buffers = new DoubleBuffers
+            {
+                deviceToBufferMapping = mappings,
+                deviceCount = deviceCount
+            };
 
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -226,7 +244,11 @@ namespace UnityEngine.InputSystem.LowLevel
             if (s_NoiseMaskBuffer == noiseMaskBuffer)
                 s_NoiseMaskBuffer = null;
 
+            if (s_ResetMaskBuffer == resetMaskBuffer)
+                s_ResetMaskBuffer = null;
+
             noiseMaskBuffer = null;
+            resetMaskBuffer = null;
 
             totalSize = 0;
             sizePerBuffer = 0;
@@ -253,6 +275,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 MigrateSingleBuffer(defaultStateBuffer, devices, deviceCount, oldBuffers.defaultStateBuffer);
                 MigrateSingleBuffer(noiseMaskBuffer, devices, deviceCount, oldBuffers.noiseMaskBuffer);
+                MigrateSingleBuffer(resetMaskBuffer, devices, deviceCount, oldBuffers.resetMaskBuffer);
             }
 
             // Assign state blocks. This is where devices will receive their updates state offsets. Up

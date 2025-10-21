@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC Type => new FourCC('Q', 'R', 'I', 'B');
 
-        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

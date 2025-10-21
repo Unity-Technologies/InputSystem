@@ -1,7 +1,6 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.XR.Haptics
 {
@@ -52,4 +51,3 @@ namespace UnityEngine.InputSystem.XR.Haptics
         }
     }
 }
-#endif // ENABLE_VR

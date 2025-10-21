@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -42,17 +41,17 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", processors = "AutoWindowSpace", dontReset = true)]
 #else
-        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", dontReset = true)]
 #endif
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
+        [InputControl(layout = "Delta", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure")]
+        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
         public float pressure;
 
         [InputControl(layout = "Vector2", displayName = "Radius", usage = "Radius")]
@@ -60,6 +59,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [InputControl(name = "press", displayName = "Press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
+
+        [InputControl(name = "displayIndex", layout = "Integer", displayName = "Display Index")]
+        public ushort displayIndex;
 
         public FourCC format => kFormat;
     }
@@ -84,7 +86,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Pen"/>
     /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -96,11 +97,11 @@ namespace UnityEngine.InputSystem
         /// Within player code, the coordinates are in the coordinate space of Unity's <c>Display</c>.
         ///
         /// Within editor code, the coordinates are in the coordinate space of the current <c>EditorWindow</c>
-        /// This means that if you query <see cref="Mouse.position"/> in <c>EditorWindow.OnGUI</c>, for example,
+        /// This means that if you query the <see cref="Mouse"/> <see cref="position"/> in <c>EditorWindow.OnGUI</c>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <c>Event.mousePosition</c>).
         /// </remarks>
-        public Vector2Control position { get; private set; }
+        public Vector2Control position { get; protected set; }
 
         /// <summary>
         /// The current window-space motion delta of the pointer.
@@ -124,7 +125,7 @@ namespace UnityEngine.InputSystem
         /// the delta is automatically set to <c>(0,0)</c>. More precisely, deltas will reset as part
         /// of <see cref="InputSystem.onBeforeUpdate"/>. This happens every time regardless of whether
         /// there are pending motion events for the pointer or not. But because it happens in
-        /// <see cref="InputSystem.onBeforeUpdate"/> (i.e. <em>before</em> events are processed),
+        /// <see cref="InputSystem.onBeforeUpdate"/> (that is, <em>before</em> events are processed),
         /// subsequent motion deltas are incorporated normally.
         ///
         /// Note that the resetting is visible to <see cref="InputAction"/>s. This means that when
@@ -145,7 +146,7 @@ namespace UnityEngine.InputSystem
         /// not <c>(2,2)</c> even though that's the value received from the event.
         /// </remarks>
         /// <seealso cref="InputControlExtensions.AccumulateValueInEvent"/>
-        public Vector2Control delta { get; private set; }
+        public DeltaControl delta { get; protected set; }
 
         ////REVIEW: move this down to only TouchScreen?
         /// <summary>
@@ -156,7 +157,7 @@ namespace UnityEngine.InputSystem
         /// Usually, only touch input has radius detection.
         /// </remarks>
         /// <seealso cref="TouchControl.radius"/>
-        public Vector2Control radius { get; private set; }
+        public Vector2Control radius { get; protected set; }
 
         /// <summary>
         /// Normalized pressure with which the pointer is currently pressed while in contact with the pointer surface.
@@ -169,7 +170,7 @@ namespace UnityEngine.InputSystem
         /// Note that it is possible for the value to go above 1 even though it is considered normalized. The reason is
         /// that calibration on the system can put the maximum pressure point below the physically supported maximum value.
         /// </remarks>
-        public AxisControl pressure { get; private set; }
+        public AxisControl pressure { get; protected set; }
 
         /// <summary>
         /// Whether the pointer is pressed down.
@@ -180,7 +181,14 @@ namespace UnityEngine.InputSystem
         /// the screen/tablet surface. For touchscreens (<see cref="Touchscreen"/>), it means that there is at least
         /// one finger touching the screen.
         /// </remarks>
-        public ButtonControl press { get; private set; }
+        public ButtonControl press { get; protected set; }
+
+        /// <summary>
+        /// The index of the display the Pointer is currently on. This is useful for multiple screen setups.
+        /// This may not be supported on all platforms. When unsupported, this will always produce the index of the primary display i.e. zero.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public IntegerControl displayIndex { get; protected set; }
 
         /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
@@ -208,10 +216,11 @@ namespace UnityEngine.InputSystem
         protected override void FinishSetup()
         {
             position = GetChildControl<Vector2Control>("position");
-            delta = GetChildControl<Vector2Control>("delta");
+            delta = GetChildControl<DeltaControl>("delta");
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             press = GetChildControl<ButtonControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
 
             base.FinishSetup();
         }
@@ -231,11 +240,8 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr">The input event.</param>
         protected unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            var statePtr = currentStatePtr;
-
-            delta.x.AccumulateValueInEvent(statePtr, eventPtr);
-            delta.y.AccumulateValueInEvent(statePtr, eventPtr);
-
+            ////FIXME: This stuff makes pointer events too expensive; find a better way.
+            delta.AccumulateValueInEvent(currentStatePtr, eventPtr);
             InputState.Change(this, eventPtr);
         }
 

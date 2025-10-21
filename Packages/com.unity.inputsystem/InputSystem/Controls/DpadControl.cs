@@ -15,14 +15,12 @@ namespace UnityEngine.InputSystem.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
-    [Scripting.Preserve]
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
-        [Scripting.Preserve]
-        internal class DpadAxisControl : AxisControl
+        public class DpadAxisControl : AxisControl
         {
-            public int component;
+            public int component { get; set; }
 
             protected override void FinishSetup()
             {
@@ -37,7 +35,7 @@ namespace UnityEngine.InputSystem.Controls
 
             public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
             {
-                var value = (m_Parent as DpadControl).ReadUnprocessedValueFromState(statePtr);
+                var value = ((DpadControl)m_Parent).ReadUnprocessedValueFromState(statePtr);
                 return value[component];
             }
         }
@@ -52,25 +50,25 @@ namespace UnityEngine.InputSystem.Controls
         /// The button representing the vertical upwards state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Up, displayName = "Up")]
-        public ButtonControl up { get; private set; }
+        public ButtonControl up { get; set; }
 
         /// <summary>
         /// The button representing the vertical downwards state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Down, displayName = "Down")]
-        public ButtonControl down { get; private set; }
+        public ButtonControl down { get; set; }
 
         /// <summary>
         /// The button representing the horizontal left state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Left, displayName = "Left")]
-        public ButtonControl left { get; private set; }
+        public ButtonControl left { get; set; }
 
         /// <summary>
         /// The button representing the horizontal right state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
-        public ButtonControl right { get; private set; }
+        public ButtonControl right { get; set; }
 
         ////TODO: should have X and Y child controls as well
 
@@ -91,17 +89,25 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromStateWithCaching(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromStateWithCaching(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromStateWithCaching(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromStateWithCaching(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            throw new NotImplementedException();
+            var upIsPressed = up.IsValueConsideredPressed(value.y);
+            var downIsPressed = down.IsValueConsideredPressed(value.y * -1f);
+            var leftIsPressed = left.IsValueConsideredPressed(value.x * -1f);
+            var rightIsPressed = right.IsValueConsideredPressed(value.x);
+
+            up.WriteValueIntoState(upIsPressed && !downIsPressed ? value.y : 0f, statePtr);
+            down.WriteValueIntoState(downIsPressed && !upIsPressed ? value.y * -1f : 0f, statePtr);
+            left.WriteValueIntoState(leftIsPressed && !rightIsPressed ? value.x * -1f : 0f, statePtr);
+            right.WriteValueIntoState(rightIsPressed && !leftIsPressed ? value.x : 0f, statePtr);
         }
 
         /// <summary>

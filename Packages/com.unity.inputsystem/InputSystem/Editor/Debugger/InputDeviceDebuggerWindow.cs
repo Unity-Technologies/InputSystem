@@ -1,11 +1,17 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 ////TODO: allow selecting events and saving out only the selected ones
 
@@ -37,7 +43,10 @@ namespace UnityEngine.InputSystem.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
-        private const int kDefaultEventTraceSizeInMB = 1;
+        // ATM the debugger window is super slow and repaints are very expensive. So keep the total
+        // number of events we can fit at a relatively low size until we have fixed that problem.
+        private const int kDefaultEventTraceSizeInKB = 512;
+        private const int kMaxEventsPerTrace = 1024;
 
         internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
 
@@ -84,6 +93,10 @@ namespace UnityEngine.InputSystem.Editor
 
                 InputSystem.onDeviceChange -= OnDeviceChange;
                 InputState.onChange -= OnDeviceStateChange;
+                InputSystem.onSettingsChange -= NeedControlValueRefresh;
+                Application.focusChanged -= OnApplicationFocusChange;
+                EditorApplication.playModeStateChanged += OnPlayModeChange;
+                EditorApplication.update -= OnEditorUpdate;
             }
 
             m_EventTrace?.Dispose();
@@ -126,6 +139,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Product", m_Device.description.product);
             if (!string.IsNullOrEmpty(m_Device.description.manufacturer))
                 EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
+            if (!string.IsNullOrEmpty(m_Device.description.version))
+                EditorGUILayout.LabelField("Version", m_Device.description.version);
             if (!string.IsNullOrEmpty(m_Device.description.serial))
                 EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
@@ -135,6 +150,19 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
+            const string sampleFrequencyTooltip = "Displays the current event or sample frequency of this device in Hertz (Hz) averaged over measurement period of 1 second. " +
+                "The target frequency is device and backend dependent and may not be supported by all devices nor backends. " +
+                "The Polling Frequency indicates system polling target frequency.";
+            if (!string.IsNullOrEmpty(m_DeviceFrequencyString))
+                EditorGUILayout.LabelField(new GUIContent("Sample Frequency", sampleFrequencyTooltip), new GUIContent(m_DeviceFrequencyString), EditorStyles.label);
+            const string processingDelayTooltip =
+                "Displays the average, minimum and maximum observed input processing delay. This shows the time from " +
+                "when an input event is first created within Unity until its processed by the Input System. " +
+                "Note that this excludes additional input latency introduced by OS, driver or device communication. " +
+                "It also doesn't include output latency introduced by script processing, rendering, swap-chains, display refresh latency etc.";
+            if (!string.IsNullOrEmpty(m_DeviceLatencyString))
+                EditorGUILayout.LabelField(new GUIContent("Processing Delay", processingDelayTooltip),
+                    new GUIContent(m_DeviceLatencyString), EditorStyles.label);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -143,10 +171,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawControlTree()
         {
-            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            var label = m_InputUpdateTypeShownInControlTree == InputUpdateType.Editor
+                ? Contents.editorStateContent
+                : Contents.playerStateContent;
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"Controls ({updateTypeToShow} State)", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.Label(label, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
             // Allow plugins to add toolbar buttons.
@@ -168,11 +198,12 @@ namespace UnityEngine.InputSystem.Editor
                 m_NeedControlValueRefresh = false;
             }
 
-            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-            m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
+            if (m_Device.disabledInFrontend)
+                EditorGUILayout.HelpBox("Device is DISABLED. Control values will not receive updates. "
+                    + "To force-enable the device, you can right-click it in the input debugger and use 'Enable Device'.", MessageType.Info);
+
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_ControlTree.OnGUI(rect);
-            EditorGUILayout.EndScrollView();
         }
 
         private void DrawEventList()
@@ -185,10 +216,10 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Playing...", EditorStyles.miniLabel);
 
             // Text field to determine size of event trace.
-            var currentTraceSizeInBytes = m_EventTrace.allocatedSizeInBytes / (1024 * 1024);
-            var oldSizeText = currentTraceSizeInBytes + " MB";
+            var currentTraceSizeInKb = m_EventTrace.allocatedSizeInBytes / 1024;
+            var oldSizeText = currentTraceSizeInKb + " KB";
             var newSizeText = EditorGUILayout.DelayedTextField(oldSizeText, Styles.toolbarTextField, GUILayout.Width(75));
-            if (oldSizeText != newSizeText && StringHelpers.FromNicifiedMemorySize(newSizeText, out var newSizeInBytes, defaultMultiplier: 1024 * 1024))
+            if (oldSizeText != newSizeText && StringHelpers.FromNicifiedMemorySize(newSizeText, out var newSizeInBytes, defaultMultiplier: 1024))
                 m_EventTrace.Resize(newSizeInBytes);
 
             // Button to clear event trace.
@@ -259,6 +290,12 @@ namespace UnityEngine.InputSystem.Editor
 
             GUILayout.EndHorizontal();
 
+            if (m_ReloadEventTree)
+            {
+                m_ReloadEventTree = false;
+                m_EventTree.Reload();
+            }
+
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);
         }
@@ -271,32 +308,37 @@ namespace UnityEngine.InputSystem.Editor
             m_DeviceIdString = device.deviceId.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
-            var flags = new List<string>();
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
-                flags.Add("Native");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
-                flags.Add("Remote");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
-                flags.Add("UpdateBeforeRender");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
-                flags.Add("HasStateCallbacks");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
-                flags.Add("Disabled");
-            m_DeviceFlagsString = string.Join(", ", flags.ToArray());
+            UpdateDeviceFlags();
 
-            // Set up event trace. The default trace size of 1mb fits a ton of events and will
+            // Query the sampling frequency of the device.
+            // We do this synchronously here for simplicity.
+            var queryFrequency = QuerySamplingFrequencyCommand.Create();
+            var result = device.ExecuteCommand(ref queryFrequency);
+            var targetFrequency = float.NaN;
+            if (result >= 0)
+                targetFrequency = queryFrequency.frequency;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            m_SampleFrequencyCalculator = new SampleFrequencyCalculator(targetFrequency, realtimeSinceStartup);
+            m_InputLatencyCalculator = new InputLatencyCalculator(realtimeSinceStartup);
+
+            // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace =
-                    new InputEventTrace(
-                        (kDefaultEventTraceSizeInMB * (1024 * 1024)).AlignToMultipleOf((int)device.stateBlock.alignedSizeInBytes))
-                { deviceId = device.deviceId };
-            m_EventTrace.onEvent += _ =>
             {
-                ////FIXME: this is very inefficient
-                m_EventTree.Reload();
-            };
+                var deviceStateSize = (int)device.stateBlock.alignedSizeInBytes;
+                var traceSizeInBytes = (kDefaultEventTraceSizeInKB * 1024).AlignToMultipleOf(deviceStateSize);
+                if (traceSizeInBytes / deviceStateSize > kMaxEventsPerTrace)
+                    traceSizeInBytes = kMaxEventsPerTrace * deviceStateSize;
+
+                m_EventTrace =
+                    new InputEventTrace(traceSizeInBytes)
+                {
+                    deviceId = device.deviceId
+                };
+            }
+
+            m_EventTrace.onEvent += _ => m_ReloadEventTree = true;
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 
@@ -310,18 +352,150 @@ namespace UnityEngine.InputSystem.Editor
 
             AddToList();
 
+            InputSystem.onSettingsChange += NeedControlValueRefresh;
             InputSystem.onDeviceChange += OnDeviceChange;
             InputState.onChange += OnDeviceStateChange;
+            Application.focusChanged += OnApplicationFocusChange;
+            EditorApplication.playModeStateChanged += OnPlayModeChange;
+            EditorApplication.update += OnEditorUpdate;
+        }
+
+        private void OnEditorUpdate()
+        {
+            StringBuilder sb = null;
+            bool needControlValueRefresh = false;
+            var realtimeSinceStartup = Time.realtimeSinceStartupAsDouble;
+            if (m_SampleFrequencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceFrequencyString = CreateDeviceFrequencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (m_InputLatencyCalculator.Update(realtimeSinceStartup))
+            {
+                m_DeviceLatencyString = CreateDeviceLatencyString(ref sb);
+                needControlValueRefresh = true;
+            }
+            if (needControlValueRefresh)
+                NeedControlValueRefresh();
+        }
+
+        private string CreateDeviceFrequencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display achievable frequency for device
+            const string frequencyFormat = "0.000 Hz";
+            sb.Append(m_SampleFrequencyCalculator.frequency.ToString(frequencyFormat, CultureInfo.InvariantCulture));
+
+            // Display target frequency reported for device
+            sb.Append(" (Target @ ");
+            sb.Append(float.IsNaN(m_SampleFrequencyCalculator.targetFrequency)
+                ? "n/a"
+                : m_SampleFrequencyCalculator.targetFrequency.ToString(frequencyFormat));
+
+            // Display system-wide polling frequency
+            sb.Append(", Polling-Frequency @ ");
+            sb.Append(InputSystem.pollingFrequency.ToString(frequencyFormat));
+            sb.Append(')');
+
+            return sb.ToString();
+        }
+
+        private static void FormatLatency(StringBuilder sb, float value)
+        {
+            const string latencyFormat = "0.000 ms";
+            if (float.IsNaN(value))
+            {
+                sb.Append("n/a");
+                return;
+            }
+
+            var millis = 1000.0f * value;
+            sb.Append(millis <= 1000.0f
+                ? (millis).ToString(latencyFormat, CultureInfo.InvariantCulture)
+                : ">1000.0 ms");
+        }
+
+        private string CreateDeviceLatencyString(ref StringBuilder sb)
+        {
+            if (sb == null)
+                sb = new StringBuilder();
+            else
+                sb.Clear();
+
+            // Display latency in seconds for device
+            sb.Append("Average: ");
+            FormatLatency(sb, m_InputLatencyCalculator.averageLatencySeconds);
+            sb.Append(", Min: ");
+            FormatLatency(sb, m_InputLatencyCalculator.minLatencySeconds);
+            sb.Append(", Max: ");
+            FormatLatency(sb, m_InputLatencyCalculator.maxLatencySeconds);
+
+            return sb.ToString();
+        }
+
+        private void UpdateDeviceFlags()
+        {
+            var flags = new List<string>();
+            if (m_Device.native)
+                flags.Add("Native");
+            if (m_Device.remote)
+                flags.Add("Remote");
+            if (m_Device.updateBeforeRender)
+                flags.Add("UpdateBeforeRender");
+            if (m_Device.hasStateCallbacks)
+                flags.Add("HasStateCallbacks");
+            if (m_Device.hasEventMerger)
+                flags.Add("HasEventMerger");
+            if (m_Device.hasEventPreProcessor)
+                flags.Add("HasEventPreProcessor");
+            if (m_Device.disabledInFrontend)
+                flags.Add("DisabledInFrontend");
+            if (m_Device.disabledInRuntime)
+                flags.Add("DisabledInRuntime");
+            if (m_Device.disabledWhileInBackground)
+                flags.Add("DisabledWhileInBackground");
+            if (m_Device.canDeviceRunInBackground)
+                flags.Add("CanRunInBackground");
+            m_DeviceFlags = m_Device.m_DeviceFlags;
+            m_DeviceFlagsString = string.Join(", ", flags.ToArray());
         }
 
         private void RefreshControlTreeValues()
         {
-            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            m_InputUpdateTypeShownInControlTree = DetermineUpdateTypeToShow(m_Device);
             var currentUpdateType = InputState.currentUpdateType;
 
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, m_InputUpdateTypeShownInControlTree);
             m_ControlTree.RefreshControlValues();
             InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "device", Justification = "Keep this for future implementation")]
+        internal static InputUpdateType DetermineUpdateTypeToShow(InputDevice device)
+        {
+            if (EditorApplication.isPlaying)
+            {
+                // In play mode, while playing, we show player state. Period.
+
+                switch (InputSystem.settings.updateMode)
+                {
+                    case InputSettings.UpdateMode.ProcessEventsManually:
+                        return InputUpdateType.Manual;
+
+                    case InputSettings.UpdateMode.ProcessEventsInFixedUpdate:
+                        return InputUpdateType.Fixed;
+
+                    default:
+                        return InputUpdateType.Dynamic;
+                }
+            }
+
+            // Outside of play mode, always show editor state.
+            return InputUpdateType.Editor;
         }
 
         // We will lose our device on domain reload and then look it back up the first
@@ -331,18 +505,24 @@ namespace UnityEngine.InputSystem.Editor
         private string m_DeviceIdString;
         private string m_DeviceUsagesString;
         private string m_DeviceFlagsString;
+        private string m_DeviceFrequencyString;
+        private string m_DeviceLatencyString;
+        private InputDevice.DeviceFlags m_DeviceFlags;
         private InputControlTreeView m_ControlTree;
         private InputEventTreeView m_EventTree;
         private bool m_NeedControlValueRefresh;
+        private bool m_ReloadEventTree;
         private InputEventTrace.ReplayController m_ReplayController;
         private InputEventTrace m_EventTrace;
+        private InputUpdateType m_InputUpdateTypeShownInControlTree;
+        private InputLatencyCalculator m_InputLatencyCalculator;
+        private SampleFrequencyCalculator m_SampleFrequencyCalculator;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private TreeViewState m_EventTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
-        [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
@@ -360,6 +540,23 @@ namespace UnityEngine.InputSystem.Editor
             s_OpenDebuggerWindows?.Remove(this);
         }
 
+        private void NeedControlValueRefresh()
+        {
+            m_NeedControlValueRefresh = true;
+            Repaint();
+        }
+
+        private void OnPlayModeChange(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode || change == PlayModeStateChange.EnteredEditMode)
+                NeedControlValueRefresh();
+        }
+
+        private void OnApplicationFocusChange(bool focus)
+        {
+            NeedControlValueRefresh();
+        }
+
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             if (device.deviceId != m_DeviceId)
@@ -371,25 +568,21 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
+                if (m_DeviceFlags != device.m_DeviceFlags)
+                    UpdateDeviceFlags();
                 Repaint();
             }
         }
 
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
-            ////REVIEW: Ideally we would defer the refresh until we repaint. That way, we would not refresh on every single
-            ////        state change but rather only once for a repaint. However, for some reason, if we move the refresh
-            ////        into OnGUI, something in Unity blows up and takes forever. It seems that we are invalidating some
-            ////        cached material data over and over and over so that OnGUI suddenly becomes crazy expensive.
+            if (device == m_Device)
+            {
+                m_InputLatencyCalculator.ProcessSample(eventPtr);
+                m_SampleFrequencyCalculator.ProcessSample(eventPtr);
 
-            ////FIXME: Reading values here means we won't be showing the effect of EditorWindowSpaceProcessor correctly. In the
-            ////       input update, there is no current EditorWindow so no window to be relative to. However, even if we read the
-            ////       values in OnGUI(), the result would always be relative to the debugger window (that'd probably be fine).
-
-            if (InputState.currentUpdateType != InputSystem.s_Manager.defaultUpdateType)
-                return;
-            m_ControlTree?.RefreshControlValues();
-            Repaint();
+                NeedControlValueRefresh();
+            }
         }
 
         private static class Styles
@@ -417,6 +610,8 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent loadContent = new GUIContent("Load");
             public static GUIContent recordFramesContent = new GUIContent("Record Frames");
             public static GUIContent stateContent = new GUIContent("State");
+            public static GUIContent editorStateContent = new GUIContent("Controls (Editor State)");
+            public static GUIContent playerStateContent = new GUIContent("Controls (Player State)");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

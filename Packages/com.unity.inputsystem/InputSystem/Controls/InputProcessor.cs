@@ -25,15 +25,16 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.processors"/>
     /// <seealso cref="InputControlLayout.ControlItem.processors"/>
     /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
-    [Preserve]
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public abstract class InputProcessor
     {
         /// <summary>
         /// Process an input value, given as an object, and return the processed value as an object.
         /// </summary>
-        /// <param name="value">A value of type <see cref="valueType"/>.</param>
+        /// <param name="value">A value matching the processor's value type.</param>
         /// <param name="control">Optional control that the value originated from. Must have the same value type
-        /// that the processor has (<see cref="valueType"/>).</param>
+        /// that the processor has.</param>
         /// <returns>A processed value based on <paramref name="value"/>.</returns>
         /// <remarks>
         /// This method allocates GC heap memory. To process values without allocating GC memory, it is necessary to either know
@@ -42,6 +43,17 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public abstract object ProcessAsObject(object value, InputControl control);
 
+        /// <summary>
+        /// Process an input value stored in the given memory buffer.
+        /// </summary>
+        /// <param name="buffer">Memory buffer containing the input value. Must be at least large enough
+        /// to hold one full value as indicated by <paramref name="bufferSize"/>.</param>
+        /// <param name="bufferSize">Size (in bytes) of the value inside <paramref name="buffer"/>.</param>
+        /// <param name="control">Optional control that the value originated from. Must have the same value type
+        /// that the processor has.</param>
+        /// <remarks>
+        /// This method allows processing values of arbitrary size without allocating memory on the GC heap.
+        /// </remarks>
         public abstract unsafe void Process(void* buffer, int bufferSize, InputControl control);
 
         internal static TypeTable s_Processors;
@@ -64,6 +76,27 @@ namespace UnityEngine.InputSystem
 
             return TypeHelpers.GetGenericTypeArgumentFromHierarchy(processorType, typeof(InputProcessor<>), 0);
         }
+
+        /// <summary>
+        /// Caching policy regarding usage of return value from processors.
+        /// </summary>
+        public enum CachingPolicy
+        {
+            /// <summary>
+            /// Cache result value if unprocessed value has not been changed.
+            /// </summary>
+            CacheResult = 0,
+
+            /// <summary>
+            /// Process value every call to <see cref="InputControl{TValue}.ReadValue()"/> even if unprocessed value has not been changed.
+            /// </summary>
+            EvaluateOnEveryRead = 1
+        }
+
+        /// <summary>
+        /// Caching policy of the processor. Override this property to provide a different value.
+        /// </summary>
+        public virtual CachingPolicy cachingPolicy => CachingPolicy.CacheResult;
     }
 
     /// <summary>
@@ -84,10 +117,6 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
-    /// // To register the processor, call
-    /// //
-    /// //    InputSystem.RegisterProcessor&lt;ScalingProcessor&gt;("scale");
-    /// //
     /// public class ScalingProcessor : InputProcessor&lt;float&gt;
     /// {
     ///     // This field can be set as a parameter. See examples below.
@@ -123,7 +152,6 @@ namespace UnityEngine.InputSystem
     /// editing UIs for processors.
     /// </remarks>
     /// <seealso cref="InputSystem.RegisterProcessor"/>
-    [Scripting.Preserve]
     public abstract class InputProcessor<TValue> : InputProcessor
         where TValue : struct
     {

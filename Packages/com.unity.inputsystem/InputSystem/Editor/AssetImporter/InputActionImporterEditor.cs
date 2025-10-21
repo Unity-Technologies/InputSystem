@@ -3,7 +3,11 @@ using System;
 using System.IO;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
+#if UNITY_2020_2_OR_NEWER
+using UnityEditor.AssetImporters;
+#else
 using UnityEditor.Experimental.AssetImporters;
+#endif
 
 ////TODO: support for multi-editing
 
@@ -17,17 +21,35 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
+            var inputActionAsset = GetAsset();
+
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
             // like in other types of editors.
-            #if UNITY_2019_2_OR_NEWER
             serializedObject.Update();
-            #endif
-
-            // Button to pop up window to edit the asset.
-            if (GUILayout.Button("Edit asset"))
-                InputActionEditorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
 
             EditorGUILayout.Space();
+
+            if (inputActionAsset == null)
+                EditorGUILayout.HelpBox("The currently selected object is not an editable input action asset.",
+                    MessageType.Info);
+
+            // Button to pop up window to edit the asset.
+            using (new EditorGUI.DisabledScope(inputActionAsset == null))
+            {
+                if (GUILayout.Button(GetOpenEditorButtonText(inputActionAsset), GUILayout.Height(30)))
+                    OpenEditor(inputActionAsset);
+            }
+
+            EditorGUILayout.Space();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Project-wide Input Actions Asset UI.
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
+                inputActionAsset ? inputActionAsset.name : "Null", "Project-wide Input Actions",
+                (value) => InputSystem.actions = value, !EditorApplication.isPlayingOrWillChangePlaymode);
+
+            EditorGUILayout.Space();
+#endif
 
             // Importer settings UI.
             var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
@@ -39,8 +61,13 @@ namespace UnityEngine.InputSystem.Editor
                 var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
                 EditorGUILayout.BeginHorizontal();
-                var assetPath = AssetDatabase.GetAssetPath(GetAsset());
-                var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+
+                string defaultFileName = "";
+                if (inputActionAsset != null)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(inputActionAsset);
+                    defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+                }
 
                 wrapperCodePathProperty.PropertyFieldWithDefaultText(m_WrapperCodePathLabel, defaultFileName);
 
@@ -59,7 +86,10 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, CSharpCodeHelpers.MakeTypeName(GetAsset().name));
+                string typeName = null;
+                if (inputActionAsset != null)
+                    typeName = CSharpCodeHelpers.MakeTypeName(inputActionAsset?.name);
+                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, typeName ?? "<Class name>");
 
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
@@ -70,21 +100,64 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
 
-            #if UNITY_2019_2_OR_NEWER
             // Using ApplyRevertGUI requires calling Update and ApplyModifiedProperties around the serializedObject,
             // and will print warning messages otherwise (see warning message in ApplyRevertGUI implementation).
             serializedObject.ApplyModifiedProperties();
-            #endif
 
             ApplyRevertGUI();
         }
 
         private InputActionAsset GetAsset()
         {
-            var asset = (InputActionAsset)assetTarget;
-            if (asset == null)
-                throw new InvalidOperationException("Asset editor has not been initialized yet");
-            return asset;
+            return assetTarget as InputActionAsset;
+        }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        protected override bool ShouldHideOpenButton()
+        {
+            return IsProjectWideActionsAsset();
+        }
+
+        private bool IsProjectWideActionsAsset()
+        {
+            return IsProjectWideActionsAsset(GetAsset());
+        }
+
+        private static bool IsProjectWideActionsAsset(InputActionAsset asset)
+        {
+            return !ReferenceEquals(asset, null) && InputSystem.actions == asset;
+        }
+
+#endif
+
+        private string GetOpenEditorButtonText(InputActionAsset asset)
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (IsProjectWideActionsAsset(asset))
+                return "Edit in Project Settings Window";
+#endif
+            return "Edit Asset";
+        }
+
+        private static void OpenEditor(InputActionAsset asset)
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Redirect to Project-settings Input Actions editor if this is the project-wide actions asset
+            if (IsProjectWideActionsAsset(asset))
+            {
+                SettingsService.OpenProjectSettings(InputSettingsPath.kSettingsRootPath);
+                return;
+            }
+
+            // Redirect to UI-Toolkit window editor if not configured to use IMGUI explicitly
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                InputActionsEditorWindow.OpenEditor(asset);
+            else
+                InputActionEditorWindow.OpenEditor(asset);
+#else
+            // Redirect to IMGUI editor
+            InputActionEditorWindow.OpenEditor(asset);
+#endif
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");

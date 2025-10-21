@@ -5,11 +5,92 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
-    [Preserve]
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetCompletionPercentageOfTimeoutOnInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var actionWithoutInteraction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        var holdAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=2)");
+        var tapAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "tap(duration=2)");
+        var multiTapAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "multitap(tapCount=2,tapTime=2,tapDelay=2)");
+
+        actionWithoutInteraction.Enable();
+        holdAction.Enable();
+        tapAction.Enable();
+        multiTapAction.Enable();
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 1;
+        Press(gamepad.buttonSouth);
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 2;
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0.5).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0.5).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1f / (3f * 2f)).Within(0.0001));
+
+        // Note that just advancing time is enough to advance towards completion. No InputSystem.Update()
+        // is required.
+        currentTime = 4;
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001)); // Has not yet canceled because we haven't updated.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(2f / (3f * 2f)).Within(0.0001));
+
+        InputSystem.Update();
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001)); // Has cancelled now.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001)); // Also cancelled because we went past tap delay.
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        // Check with multiple timeouts on MultiTap.
+
+        currentTime = 6;
+        Press(gamepad.buttonSouth);
+
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 7;
+        Release(gamepad.buttonSouth);
+
+        // Note the system now treats the first timeout as complete.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(2f / (3f * 2f)).Within(0.0001));
+
+        currentTime = 8;
+        Press(gamepad.buttonSouth);
+
+        // Same here.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(4f / (3f * 2f)).Within(0.0001));
+
+        currentTime = 10;
+
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+    }
+
     class InteractionThatOnlyPerforms : IInputInteraction<float>
     {
         // Get rid of unused field warning.
@@ -93,8 +174,37 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
+    public void Actions_WithMultipleInteractions_DoNotThrowWhenUsingMultipleMaps()
     {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        map1.AddAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        // https://fogbugz.unity3d.com/f/cases/1392559
+        // Having `press` after `hold` ensures that we have an interaction waiting in performed state and
+        // thus also exercise that path in InputActionState.
+        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "hold(duration=0.4),press");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map2.Enable();
+
+        Assert.DoesNotThrow(() =>
+        {
+            Press(gamepad.buttonNorth);
+            Release(gamepad.buttonNorth);
+        });
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenTransitioningFromOneInteractionToNext_GetCallbacks()
+    {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
@@ -112,7 +222,7 @@ internal partial class CoreTests
 
             // Expire the tap. The system should transitioning from the tap to a slowtap.
             // Note the starting time of the slowTap will be 0 not 2.
-            runtime.currentTime = 2;
+            currentTime = 2;
             InputSystem.Update();
 
             Assert.That(trace,
@@ -121,10 +231,54 @@ internal partial class CoreTests
         }
     }
 
+    // https://jira.unity3d.com/browse/ISXB-310
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenTransitioningFromOneInteractionToNextAlreadyPerformed_GetCallbacksAndResetOtherInteractions()
+    {
+        ResetTime();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+            interactions: "multiTap(tapCount=3),multiTap,Tap");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Trigger the second interaction with a double tap which also internally performs a tap on the third one.
+            PressAndRelease(gamepad.buttonSouth);
+            PressAndRelease(gamepad.buttonSouth, 0.2);
+            currentTime = 2;
+            InputSystem.Update();
+            Assert.That(trace,
+                Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 0)
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
+                    .AndThen(Started<MultiTapInteraction>(action, gamepad.buttonSouth))
+                    .AndThen(Performed<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 0.2)));
+
+            trace.Clear();
+
+            // Trigger the third interaction with a tap and ensure that doesn't come from the previous one.
+            PressAndRelease(gamepad.buttonSouth, time: 4);
+            currentTime = 6;
+            InputSystem.Update();
+            Assert.That(trace,
+                Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 4)
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
+                    .AndThen(Started<MultiTapInteraction>(action, gamepad.buttonSouth, time: 4))
+                    .AndThen(Canceled<MultiTapInteraction>(action, gamepad.buttonSouth, duration: 2))
+                    .AndThen(Started<TapInteraction>(action, gamepad.buttonSouth, time: 4))
+                    .AndThen(Performed<TapInteraction>(action, gamepad.buttonSouth, time: 4)));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformPressInteraction()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // We add a second input device (and bind to it), to test that the binding
@@ -147,7 +301,7 @@ internal partial class CoreTests
         using (var releaseOnly = new InputActionTrace(releaseOnlyAction))
         using (var pressAndRelease = new InputActionTrace(pressAndReleaseAction))
         {
-            runtime.currentTime = 1;
+            currentTime = 1;
             Press(gamepad.buttonSouth);
 
             Assert.That(pressOnly,
@@ -162,7 +316,7 @@ internal partial class CoreTests
             releaseOnly.Clear();
             pressAndRelease.Clear();
 
-            runtime.currentTime = 2;
+            currentTime = 2;
             Release(gamepad.buttonSouth);
 
             Assert.That(pressOnly, Canceled<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1));
@@ -177,7 +331,7 @@ internal partial class CoreTests
             releaseOnly.Clear();
             pressAndRelease.Clear();
 
-            runtime.currentTime = 5;
+            currentTime = 5;
             Press(gamepad.buttonSouth);
 
             Assert.That(pressOnly,
@@ -187,6 +341,46 @@ internal partial class CoreTests
             Assert.That(pressAndRelease,
                 Started<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, value: 1.0)
                     .AndThen(Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, duration: 0, value: 1.0)));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformPressInteraction_UsingReleasePointWhenBoundToAxisControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        InputSystem.settings.buttonReleaseThreshold = 0.75f; // Puts release point at 0.375.
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "press");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftTrigger, 0.35f);
+
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: 0.35f));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.5f);
+
+            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.5f));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.4f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.3f);
+
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: 0.3f));
         }
     }
 
@@ -293,10 +487,135 @@ internal partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1346786/
+    [Test]
+    [Category("Actions")]
+    public void Actions_HoldInteraction_DoesNotGetStuck_WhenHeldAndReleasedInSameEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.4)");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Press(gamepad.buttonSouth, time: 10, queueEventOnly: true);
+            Release(gamepad.buttonSouth, time: 10.41, queueEventOnly: true);
+            currentTime = 10.5;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10, value: 1.0)
+                    .AndThen(Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)) // Note the zero value; button is already released.
+                    .AndThen(Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)));
+        }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1251231/
+    [Test]
+    [Category("Actions")]
+    public void Actions_HoldInteraction_CanBePerformedWhenInvolvingMoreThanOneControl()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        // Add several bindings just to ensure that if conflict resolution is in the mix,
+        // things don't go sideways.
+
+        var action = new InputAction(interactions: "hold(duration=2)");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Keyboard>/a")
+            .With("Button", "<Keyboard>/s");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Mouse>/leftButton")
+            .With("Button", "<Mouse>/rightButton");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Button", "<Mouse>/rightButton");
+
+        action.Enable();
+
+        var startedCount = 0;
+        var performedCount = 0;
+        var canceledCount = 0;
+
+        action.started += _ => ++ startedCount;
+        action.performed += _ => ++ performedCount;
+        action.canceled += _ => ++ canceledCount;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.Zero);
+
+        // Release before hold time.
+        InputSystem.QueueStateEvent(keyboard, default(KeyboardState));
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.EqualTo(1));
+
+        currentTime += 3;
+
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(binding: "<Keyboard>/space", interactions: "hold(duration=0.4)");
+        action.AddBinding("<Keyboard>/s");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Press and hold.
+            Press(keyboard.spaceKey, time: 10);
+
+            Assert.That(trace, Started<HoldInteraction>(action, keyboard.spaceKey, time: 10, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+            trace.Clear();
+
+            // Exceed hold time. Make sure action performs and *stays* performed.
+            currentTime = 10.5;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Performed<HoldInteraction>(action, keyboard.spaceKey, time: 10.5, duration: 0.5, value: 1.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+
+            trace.Clear();
+
+            // Release.
+            Release(keyboard.spaceKey, time: 10.6);
+
+            Assert.That(trace, Canceled<HoldInteraction>(action, keyboard.spaceKey, duration: 0.6, time: 10.6, value: 0.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(action.ReadValue<float>(), Is.Zero);
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformTapInteraction()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -352,6 +671,78 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformTapInteractionWithAnalogControls()
+    {
+        ResetTime();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", type: InputActionType.Button,
+            interactions: "tap(duration=0.2)");
+
+        // This is the default value, which makes the release point to be 0.75 * 0.5 = 0.375.
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        action.Enable();
+
+        currentTime = 0f;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            currentTime = 0.1f;
+            Set(gamepad.leftTrigger, 0.3f);
+            currentTime = 0.2f;
+            Set(gamepad.leftTrigger, 0.54f);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action, value: 0.54f, time: 0.2f));
+            trace.Clear();
+
+            // Assert that a timeout will ocurr and a canceled event will be triggered.
+            currentTime = 0.5f;
+            Set(gamepad.leftTrigger, 0.9f);
+            Assert.That(trace,
+                Canceled<TapInteraction>(action));
+            trace.Clear();
+
+            // Maintain a value above the press point for a while to assess that a start event is not triggered.
+            // This was the case where the tap interaction was previously re-starting.
+            currentTime = 1.2f;
+            Set(gamepad.leftTrigger, 0.52f);
+
+            Assert.That(trace, Is.Empty);
+
+            // Go below the release point so check that no cancel event is triggered, since it didn't start.
+            // This was the case where the tap interaction was previously re-starting and then would cancel after
+            // timeout.
+            currentTime = 1.5f;
+            Set(gamepad.leftTrigger, 0.2f);
+
+            Assert.That(trace, Is.Empty);
+
+            // Go above the press point again and check that a start event is triggered.
+            currentTime = 2.0f;
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action));
+            trace.Clear();
+
+            currentTime = 2.10f;
+            Set(gamepad.leftTrigger, 0.4f);
+
+            // Check that the tap is performed.
+            currentTime = 2.15f;
+            Set(gamepad.leftTrigger, 0.2f);
+            Assert.That(trace,
+                Performed<TapInteraction>(action));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -365,7 +756,7 @@ internal partial class CoreTests
             trace.SubscribeTo(action);
 
             // Press button.
-            runtime.currentTime = 1;
+            currentTime = 1;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 1);
             InputSystem.Update();
 
@@ -379,7 +770,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Release before tap time and make sure the double tap cancels.
-            runtime.currentTime = 12;
+            currentTime = 12;
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 1.75);
             InputSystem.Update();
 
@@ -394,7 +785,7 @@ internal partial class CoreTests
 
             // Press again and then release before tap time. Should see only the start from
             // the initial press.
-            runtime.currentTime = 2.5;
+            currentTime = 2.5;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 2);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2.25);
             InputSystem.Update();
@@ -410,7 +801,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Wait for longer than tapDelay and make sure we're seeing a cancellation.
-            runtime.currentTime = 4;
+            currentTime = 4;
             InputSystem.Update();
 
             actions = trace.ToArray();
@@ -425,7 +816,7 @@ internal partial class CoreTests
 
             // Now press and release within tap time. Then press again within delay time but release
             // only after tap time. Should we started and canceled.
-            runtime.currentTime = 6;
+            currentTime = 6;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 4.7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 4.9);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 5);
@@ -448,7 +839,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Finally perform a full, proper double tap cycle.
-            runtime.currentTime = 8;
+            currentTime = 8;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 7.25);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 7.5);
@@ -474,6 +865,11 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCustomizeButtonPressPointsOfInteractions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var pressAction = new InputAction("PressAction", binding: "<Gamepad>/leftTrigger", interactions: "press(pressPoint=0.234)");
@@ -497,11 +893,13 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.123f);
 
-            Assert.That(trace, Is.Empty);
+            Assert.That(trace, Started<PressInteraction>(pressAction));
+
+            trace.Clear();
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Started<PressInteraction>(pressAction).AndThen(Performed<PressInteraction>(pressAction)));
+            Assert.That(trace, Performed<PressInteraction>(pressAction));
 
             trace.Clear();
 
@@ -529,7 +927,6 @@ internal partial class CoreTests
         }
     }
 
-    [Preserve]
     private class CancelingTestInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -580,5 +977,22 @@ internal partial class CoreTests
 
         Assert.That(canceledCount, Is.EqualTo(1));
         Assert.That(canceledValue, Is.EqualTo(0.0));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1354098/
+    [Test]
+    [Category("Actions")]
+    public void Actions_DoesNotThrowWhenDeviceIsDisconnectedWhileControlIsPressed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("Action",
+            binding: "<Gamepad>/buttonSouth",
+            interactions: "Press,Press"); // this bug occurs when there are multiple interactions on a binding
+        action.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(() => InputSystem.RemoveDevice(gamepad), Throws.Nothing);
     }
 }

@@ -4,6 +4,26 @@ apiRules:
       uidRegex: ^System\.Object\..*$
       type: Method
   - exclude:
+      # ControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.ControlBuilder$
+      type: Type
+  - exclude:
+      # ControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.ControlBuilder\..*$
+      type: Member
+  - exclude:
+      # DeviceBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.DeviceBuilder$
+      type: Type
+  - exclude:
+      # DeviceBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.DeviceBuilder\..*$
+      type: Member
+  - exclude:
+      # InputControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.Setup.*$
+      type: Method
+  - exclude:
       hasAttribute:
         uid: System.ObsoleteAttribute
       type: Member
@@ -11,3 +31,67 @@ apiRules:
       hasAttribute:
         uid: System.ObsoleteAttribute
       type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.Samples\..*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.InputSystem\.runInBackground$
+      type: Member
+  - exclude:
+      uidRegex: ^Unity\.XR\.Oculus\.Input(?:\..+)*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^Unity\.XR\.GoogleVr(?:\..+)*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^Unity\.XR\.OpenVR(?:\..+)*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^UnityEngine\.XR\.WindowsMR\.Input(?:\..+)*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Haptics(?:\..+)*$
+      type: Namespace
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRControllerWithRumble$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRControllerWithRumble\..*$
+      type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRSupport$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRSupport\..*$
+      type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.FeatureType$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.UsageHint$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRFeatureDescriptor$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.XRDeviceDescriptor$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Bone$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.Eyes$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.BoneControl$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.XR\.EyesControl$
+      type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.Users\.InputUser\.platformUserAccount.*$
+      type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.Users\.InputUser\.FindUserByAccount.*$
+      type: Method
+

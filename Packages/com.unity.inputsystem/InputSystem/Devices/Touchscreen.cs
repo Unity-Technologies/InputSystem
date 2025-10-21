@@ -1,11 +1,12 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 ////TODO: property that tells whether a Touchscreen is multi-touch capable
 
@@ -17,7 +18,14 @@ using UnityEngine.Profiling;
 
 ////TODO: startTimes are baked *external* times; reset touch when coming out of play mode
 
+////TODO: detect and diagnose touchId=0 events
+
 ////REVIEW: where should we put handset vibration support? should that sit on the touchscreen class? be its own separate device?
+
+////REVIEW: Given that Touchscreen is no use for polling, should we remove Touchscreen.current?
+
+////REVIEW: Should Touchscreen reset individual TouchControls to default(TouchState) after a touch has ended? This would allow
+////        binding to a TouchControl as a whole and the action would correctly cancel if the touch ends
 
 namespace UnityEngine.InputSystem.LowLevel
 {
@@ -25,16 +33,22 @@ namespace UnityEngine.InputSystem.LowLevel
     [Flags]
     internal enum TouchFlags : byte
     {
-        // NOTE: Leaving the first 4 bits for native.
-
         IndirectTouch = 1 << 0,
-        PrimaryTouch = 1 << 4,
-        Tap = 1 << 5,
+
+        // NOTE: Leaving the first 3 bits for native.
+
+        PrimaryTouch = 1 << 3,
+        TapPress = 1 << 4,
+        TapRelease = 1 << 5,
 
         // Indicates that the touch that established this primary touch has ended but that when
         // it did, there were still other touches going on. We end the primary touch when the
         // last touch leaves the screen.
         OrphanedPrimaryTouch = 1 << 6,
+
+        // This is only used by EnhancedTouch to mark touch records that have begun in the same
+        // frame as the current touch record.
+        BeganInSameFrame = 1 << 7,
     }
 
     ////REVIEW: add timestamp directly to touch?
@@ -62,6 +76,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('T', 'O', 'U', 'C');
 
+        ////REVIEW: this should really be a uint
         /// <summary>
         /// Numeric ID of the touch.
         /// </summary>
@@ -76,7 +91,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true, dontReset = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -85,7 +100,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position of the touch.</value>
         /// <seealso cref="TouchControl.position"/>
-        [InputControl(displayName = "Position")]
+        [InputControl(displayName = "Position", dontReset = true)]
         [FieldOffset(4)]
         public Vector2 position;
 
@@ -94,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space movement delta.</value>
         /// <seealso cref="TouchControl.delta"/>
-        [InputControl(displayName = "Delta")]
+        [InputControl(displayName = "Delta", layout = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
@@ -142,20 +157,23 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(33)]
         public byte tapCount;
 
-        // Not currently used, but still needed in this struct for padding,
-        // as il2cpp does not implement FieldOffset.
+        /// <summary>
+        /// The index of the display that was touched.
+        /// </summary>
+        [InputControl(name = "displayIndex", displayName = "Display Index", layout = "Integer")]
         [FieldOffset(34)]
-        byte displayIndex;
+        public byte displayIndex;
 
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
-        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
+        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 4)]
         [FieldOffset(35)]
         public byte flags;
 
-        // Wasting four bytes in the name of alignment here. Need the explicit fields as il2cpp doesn't respect
-        // the explicit field offsets.
+        // Need four bytes of alignment here for the startTime double. Using that for storing updateStepCounts.
+        // They aren't needed directly by Touchscreen but are used by EnhancedTouch and since we have the four
+        // bytes, may just as well use them instead of wasting them on padding.
         [FieldOffset(36)]
-        internal int padding;
+        internal uint updateStepCount;
 
         // NOTE: The following data is NOT sent by native but rather data we add on the managed side to each touch.
 
@@ -203,9 +221,8 @@ namespace UnityEngine.InputSystem.LowLevel
         phase == TouchPhase.Stationary;
 
         /// <summary>
-        /// Whether  TODO
+        /// Whether, after not having any touch contacts, this is part of the first touch contact that started.
         /// </summary>
-        /// <value>Whether the touch is the first TODO</value>
         /// <remarks>
         /// This flag will be set internally by <see cref="Touchscreen"/>. Generally, it is
         /// not necessary to set this bit manually when feeding data to Touchscreens.
@@ -248,13 +265,43 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public bool isTap
         {
-            get => (flags & (byte)TouchFlags.Tap) != 0;
+            get => isTapPress;
+            set => isTapPress = value;
+        }
+
+        internal bool isTapPress
+        {
+            get => (flags & (byte)TouchFlags.TapPress) != 0;
             set
             {
                 if (value)
-                    flags |= (byte)TouchFlags.Tap;
+                    flags |= (byte)TouchFlags.TapPress;
                 else
-                    flags &= (byte)~TouchFlags.Tap;
+                    flags &= (byte)~TouchFlags.TapPress;
+            }
+        }
+
+        internal bool isTapRelease
+        {
+            get => (flags & (byte)TouchFlags.TapRelease) != 0;
+            set
+            {
+                if (value)
+                    flags |= (byte)TouchFlags.TapRelease;
+                else
+                    flags &= (byte)~TouchFlags.TapRelease;
+            }
+        }
+
+        internal bool beganInSameFrame
+        {
+            get => (flags & (byte)TouchFlags.BeganInSameFrame) != 0;
+            set
+            {
+                if (value)
+                    flags |= (byte)TouchFlags.BeganInSameFrame;
+                else
+                    flags &= (byte)~TouchFlags.BeganInSameFrame;
             }
         }
 
@@ -323,10 +370,11 @@ namespace UnityEngine.InputSystem.LowLevel
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
-        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
+        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta", layout = "Delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
+        [InputControl(name = "displayIndex", useStateFrom = "primaryTouch/displayIndex", format = "BYTE")] // added format to override the Pointer's USHT value
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
@@ -365,6 +413,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     public enum TouchPhase
     {
+        ////REVIEW: Why have a separate None instead of just making this equivalent to either Ended or Canceled?
         /// <summary>
         /// No activity has been registered on the touch yet.
         /// </summary>
@@ -443,8 +492,7 @@ namespace UnityEngine.InputSystem
     /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
-    public class Touchscreen : Pointer, IInputStateCallbackReceiver
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger, ICustomDeviceReset
     {
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
@@ -460,7 +508,7 @@ namespace UnityEngine.InputSystem
         /// of <c>primaryTouch</c> will only transition to <see cref="TouchPhase.Ended"/> once the last finger
         /// has been lifted off the screen.
         /// </remarks>
-        public TouchControl primaryTouch { get; private set; }
+        public TouchControl primaryTouch { get; protected set; }
 
         /// <summary>
         /// Array of all <see cref="TouchControl"/>s on the device.
@@ -472,7 +520,17 @@ namespace UnityEngine.InputSystem
         /// this means that this array will usually have a fixed length of 10 entries but
         /// it may deviate from that.
         /// </remarks>
-        public ReadOnlyArray<TouchControl> touches { get; private set; }
+        public ReadOnlyArray<TouchControl> touches { get; protected set; }
+
+
+        static readonly ProfilerMarker k_TouchscreenUpdateMarker = new ProfilerMarker("Touchscreen.OnNextUpdate");
+        static readonly ProfilerMarker k_TouchAllocateMarker = new ProfilerMarker("TouchAllocate");
+
+        protected TouchControl[] touchControlArray
+        {
+            get => touches.m_Array;
+            set => touches = new ReadOnlyArray<TouchControl>(value);
+        }
 
         /// <summary>
         /// The touchscreen that was added or updated last or null if there is no
@@ -540,7 +598,7 @@ namespace UnityEngine.InputSystem
         //
         // NOTE: We do *NOT* make a effort here to prevent us from losing short-lived touches. This is different
         //       from the old input system where individual touches were not reused until the next frame. This meant
-        //       that additional touches potentially had to be allocated in order to accomodate new touches coming
+        //       that additional touches potentially had to be allocated in order to accommodate new touches coming
         //       in from the system.
         //
         //       The rationale for *NOT* doing this is that:
@@ -553,7 +611,7 @@ namespace UnityEngine.InputSystem
 
         protected new unsafe void OnNextUpdate()
         {
-            Profiler.BeginSample("Touchscreen.OnNextUpdate");
+            k_TouchscreenUpdateMarker.Begin();
 
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
             ////      (also obsoletes the need for the if() check below)
@@ -580,7 +638,7 @@ namespace UnityEngine.InputSystem
             if (primaryTouchState->tapCount > 0 && InputState.currentTime >= primaryTouchState->startTime + s_TapTime + s_TapDelayTime)
                 InputState.Change(primaryTouch.tapCount, (byte)0);
 
-            Profiler.EndSample();
+            k_TouchscreenUpdateMarker.End();
         }
 
         /// <summary>
@@ -589,24 +647,26 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr"></param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
+            var eventType = eventPtr.type;
+
+            // We don't allow partial updates for TouchStates.
+            if (eventType == DeltaStateEvent.Type)
+                return;
+
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
-            if (eventPtr.stateFormat != TouchState.Format)
+            var stateEventPtr = StateEvent.FromUnchecked(eventPtr);
+            if (stateEventPtr->stateFormat != TouchState.Format)
             {
                 InputState.Change(this, eventPtr);
                 return;
             }
 
-            // We don't allow partial updates for TouchStates.
-            if (eventPtr.IsA<DeltaStateEvent>())
-                return;
-
-            Profiler.BeginSample("TouchAllocate");
+            k_TouchAllocateMarker.Begin();
 
             // For performance reasons, we read memory here directly rather than going through
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
             // unlike other devices, is hardwired to a single memory layout only.
 
-            var stateEventPtr = StateEvent.From(eventPtr);
             var statePtr = currentStatePtr;
             var currentTouchState = (TouchState*)((byte*)statePtr + touches[0].stateBlock.byteOffset);
             var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
@@ -622,14 +682,16 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                newTouchState = new TouchState();
+                newTouchState = default;
                 UnsafeUtility.MemCpy(UnsafeUtility.AddressOf(ref newTouchState), stateEventPtr->state, stateEventPtr->stateSizeInBytes);
             }
 
             // Make sure we're not getting thrown off by noise on fields that we don't want to
             // pick up from input.
             newTouchState.tapCount = 0;
-            newTouchState.isTap = false;
+            newTouchState.isTapPress = false;
+            newTouchState.isTapRelease = false;
+            newTouchState.updateStepCount = InputUpdate.s_UpdateStepCount;
 
             ////REVIEW: The logic in here makes us inherently susceptible to the ordering of the touch events in the event
             ////        stream. I believe we have platforms (Android?) that send us touch events finger-by-finger (or touch-by-touch?)
@@ -702,7 +764,7 @@ namespace UnityEngine.InputSystem
                                     if (isTap)
                                         TriggerTap(primaryTouch, ref newTouchState, eventPtr);
                                     else
-                                        InputState.Change(primaryTouch, newTouchState, eventPtr: eventPtr);
+                                        InputState.Change(primaryTouch, ref newTouchState, eventPtr: eventPtr);
                                 }
                                 else
                                 {
@@ -712,13 +774,13 @@ namespace UnityEngine.InputSystem
                                     var newPrimaryTouchState = newTouchState;
                                     newPrimaryTouchState.phase = TouchPhase.Moved;
                                     newPrimaryTouchState.isOrphanedPrimaryTouch = true;
-                                    InputState.Change(primaryTouch, newPrimaryTouchState, eventPtr: eventPtr);
+                                    InputState.Change(primaryTouch, ref newPrimaryTouchState, eventPtr: eventPtr);
                                 }
                             }
                             else
                             {
                                 // Primary touch was updated.
-                                InputState.Change(primaryTouch, newTouchState, eventPtr: eventPtr);
+                                InputState.Change(primaryTouch, ref newTouchState, eventPtr: eventPtr);
                             }
                         }
                         else
@@ -759,10 +821,10 @@ namespace UnityEngine.InputSystem
                         }
                         else
                         {
-                            InputState.Change(touches[i], newTouchState, eventPtr: eventPtr);
+                            InputState.Change(touches[i], ref newTouchState, eventPtr: eventPtr);
                         }
 
-                        Profiler.EndSample();
+                        k_TouchAllocateMarker.End();
                         return;
                     }
                 }
@@ -770,7 +832,7 @@ namespace UnityEngine.InputSystem
                 // Couldn't find an entry. Either it was a touch that we previously ran out of available
                 // entries for or it's an event sent out of sequence. Ignore the touch to be consistent.
 
-                Profiler.EndSample();
+                k_TouchAllocateMarker.End();
                 return;
             }
 
@@ -800,12 +862,12 @@ namespace UnityEngine.InputSystem
                     if (primaryTouchState->isNoneEndedOrCanceled)
                     {
                         newTouchState.isPrimaryTouch = true;
-                        InputState.Change(primaryTouch, newTouchState, eventPtr: eventPtr);
+                        InputState.Change(primaryTouch, ref newTouchState, eventPtr: eventPtr);
                     }
 
-                    InputState.Change(touches[i], newTouchState, eventPtr: eventPtr);
+                    InputState.Change(touches[i], ref newTouchState, eventPtr: eventPtr);
 
-                    Profiler.EndSample();
+                    k_TouchAllocateMarker.End();
                     return;
                 }
             }
@@ -815,7 +877,7 @@ namespace UnityEngine.InputSystem
             // NOTE: Getting here means we're having fewer touch entries than the number of concurrent touches supported
             //       by the backend (or someone is simply sending us nonsense data).
 
-            Profiler.EndSample();
+            k_TouchAllocateMarker.End();
         }
 
         void IInputStateCallbackReceiver.OnNextUpdate()
@@ -837,8 +899,43 @@ namespace UnityEngine.InputSystem
             // This method is used to give the input system an offset based on which the input system can compute relative
             // offsets into the state of eventPtr for controls that are part of the control hierarchy rooted at 'control'.
 
-            if (!eventPtr.IsA<StateEvent>() || StateEvent.From(eventPtr)->stateFormat != TouchState.Format)
+            if (!eventPtr.IsA<StateEvent>())
                 return false;
+
+            var stateEventPtr = StateEvent.FromUnchecked(eventPtr);
+            if (stateEventPtr->stateFormat != TouchState.Format)
+                return false;
+
+            // If we get a null control and a TouchState event, all the system wants to know is what
+            // state offset to use to make sense of the event.
+            if (control == null)
+            {
+                // We can't say which specific touch this would go to (if any at all) without going through
+                // the same logic that we run through in OnStateEvent. For the sake of just being able to read
+                // out data from a touch event, it'd be enough to return the offset of *any* TouchControl here.
+                // But for the sake of being able to compare the data in an event to that in the Touchscreen,
+                // this would not be enough. Thus we make an attempt here at locating a touch record which *should*
+                // be receiving the event if it were to be processed by OnStateEvent.
+
+                var currentTouchState = (TouchState*)((byte*)currentStatePtr + touches[0].stateBlock.byteOffset);
+                var eventTouchState = (TouchState*)stateEventPtr->state;
+                var eventTouchId = eventTouchState->touchId;
+                var eventTouchPhase = eventTouchState->phase;
+
+                var touchControlCount = touches.Count;
+                for (var i = 0; i < touchControlCount; ++i)
+                {
+                    var touch = &currentTouchState[i];
+                    if (touch->touchId == eventTouchId || (!touch->isInProgress && eventTouchPhase.IsActive()))
+                    {
+                        offset = primaryTouch.m_StateBlock.byteOffset + primaryTouch.m_StateBlock.alignedSizeInBytes - m_StateBlock.byteOffset +
+                            (uint)(i * UnsafeUtility.SizeOf<TouchState>());
+                        return true;
+                    }
+                }
+
+                return false;
+            }
 
             // The only controls we can read out from a TouchState event are those that are part of TouchControl
             // (and part of this Touchscreen).
@@ -859,8 +956,74 @@ namespace UnityEngine.InputSystem
             if (touchControl != primaryTouch)
                 return false;
 
-            offset = touchControl.stateBlock.byteOffset;
+            offset = touchControl.stateBlock.byteOffset - m_StateBlock.byteOffset;
             return true;
+        }
+
+        // Implement our own custom reset so that we can cancel touches instead of just wiping them
+        // with default state.
+        unsafe void ICustomDeviceReset.Reset()
+        {
+            var statePtr = currentStatePtr;
+
+            //// https://jira.unity3d.com/browse/ISX-930
+            ////TODO: Figure out a proper way to distinguish the source / reason for a state change.
+            ////      What we're doing here is constructing an event solely for the purpose of Finger.ShouldRecordTouch() not
+            ////      ignoring the state change like it does for delta resets.
+
+            using (var buffer = new NativeArray<byte>(StateEvent.GetEventSizeWithPayload<TouchState>(), Allocator.Temp))
+            {
+                var eventPtr = (StateEvent*)buffer.GetUnsafePtr();
+
+                eventPtr->baseEvent = new InputEvent(StateEvent.Type, buffer.Length, deviceId);
+
+                var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
+                if (primaryTouchState->phase.IsActive())
+                {
+                    UnsafeUtility.MemCpy(eventPtr->state, primaryTouchState, UnsafeUtility.SizeOf<TouchState>());
+                    ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                    InputState.Change(primaryTouch.phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                }
+
+                var touchStates = (TouchState*)((byte*)statePtr + touches[0].stateBlock.byteOffset);
+                var touchCount = touches.Count;
+                for (var i = 0; i < touchCount; ++i)
+                {
+                    if (touchStates[i].phase.IsActive())
+                    {
+                        UnsafeUtility.MemCpy(eventPtr->state, &touchStates[i], UnsafeUtility.SizeOf<TouchState>());
+                        ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                        InputState.Change(touches[i].phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                    }
+                }
+            }
+        }
+
+        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != TouchState.Format || nextEvent->stateFormat != TouchState.Format)
+                return false;
+
+            var currentState = (TouchState*)currentEvent->state;
+            var nextState = (TouchState*)nextEvent->state;
+
+            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags)
+                return false;
+
+            nextState->delta += currentState->delta;
+
+            return true;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases
@@ -874,12 +1037,15 @@ namespace UnityEngine.InputSystem
             // that got tapped and to primaryTouch.
 
             // Press.
-            state.isTap = true;
-            InputState.Change(control, state, eventPtr: eventPtr);
+            state.isTapPress = true;
+            state.isTapRelease = false;
+            InputState.Change(control, ref state, eventPtr: eventPtr);
 
             // Release.
-            state.isTap = false;
-            InputState.Change(control, state, eventPtr: eventPtr);
+            state.isTapPress = false;
+            state.isTapRelease = true;
+            InputState.Change(control, ref state, eventPtr: eventPtr);
+            state.isTapRelease = false;
         }
 
         internal static float s_TapTime;

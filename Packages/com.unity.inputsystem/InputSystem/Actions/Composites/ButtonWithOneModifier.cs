@@ -1,8 +1,10 @@
+using System;
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
-////TODO: generalize the WithModifier composites so that they work with any kind of control, not just buttons
+////TODO: remove this once we can break the API
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -44,7 +46,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="ButtonWithTwoModifiers"/>
-    [Preserve]
+    [DesignTimeVisible(false)] // Obsoleted by OneModifierComposite
     [DisplayStringFormat("{modifier}+{button}")]
     public class ButtonWithOneModifier : InputBindingComposite<float>
     {
@@ -74,6 +76,77 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int button;
 
         /// <summary>
+        /// If set to <c>true</c>, <see cref="modifier"/> can be pressed after <see cref="button"/> and the composite will
+        /// still trigger. Default is false.
+        /// </summary>
+        /// <remarks>
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
+        /// goes into pressed state for the composite as a whole to trigger. This means that binding to, for example, <c>Shift+B</c>,
+        /// the <c>shift</c> key has to be pressed before pressing the <c>B</c> key. This is the behavior usually expected with
+        /// keyboard shortcuts.
+        ///
+        /// This parameter can be used to bypass this behavior and allow any timing between <see cref="modifier"/> and <see cref="button"/>.
+        /// The only requirement is for them both to concurrently be in pressed state.
+        ///
+        /// To don't depends on the setting please consider using <see cref="modifiersOrder"/> instead.
+        /// </remarks>
+        [Tooltip("Obsolete please use modifiers Order. If enabled, this will override the Input Consumption setting, allowing the modifier keys to be pressed after the button and the composite will still trigger.")]
+        [Obsolete("Use ModifiersOrder.Unordered with 'modifiersOrder' instead")]
+        public bool overrideModifiersNeedToBePressedFirst;
+
+        /// <summary>
+        /// Determines how a <c>modifiers</c> keys need to be pressed in order or not.
+        /// </summary>
+        public enum ModifiersOrder
+        {
+            /// <summary>
+            /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+            /// <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
+            /// goes into pressed state for the composite as a whole to trigger. This means that binding to, for example, <c>Shift+B</c>,
+            /// the <c>shift</c> key has to be pressed before pressing the <c>B</c> key. This is the behavior usually expected with
+            /// keyboard shortcuts.
+            ///
+            /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+            /// modifiers can be pressed after the button and the composite will still trigger.
+            /// </summary>
+            Default = 0,
+
+            /// <summary>
+            /// <see cref="modifier"/> is required to be in pressed state before or at the same
+            /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
+            /// for example, <c>Ctrl+B</c>, the <c>ctrl</c> key have to be pressed before pressing the <c>B</c> key.
+            /// This is the behavior usually expected with keyboard shortcuts.
+            /// </summary>
+            Ordered = 1,
+
+            /// <summary>
+            /// <see cref="modifier"/> can be pressed after <see cref="button"/>
+            /// and the composite will still trigger. The only requirement is for all of them to concurrently be in pressed state.
+            /// </summary>
+            Unordered = 2
+        }
+
+        /// <summary>
+        /// If set to <c>Ordered</c> or <c>Unordered</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
+        /// </summary>
+        /// <remarks>
+        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// <see cref="modifier"/> is required to be in pressed state before or at the same time that <see cref="button"/>
+        /// goes into pressed state for the composite as a whole to trigger. This means that binding to, for example, <c>Shift+B</c>,
+        /// the <c>shift</c> key has to be pressed before pressing the <c>B</c> key. This is the behavior usually expected with
+        /// keyboard shortcuts.
+        ///
+        /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+        /// modifiers can be pressed after the button and the composite will still trigger.
+        ///
+        /// This parameter can be used to bypass this behavior and enforce the timing order or allow any timing between <see cref="modifier"/> and <see cref="button"/>.
+        /// The only requirement is for them both to concurrently be in pressed state.
+        /// </remarks>
+        [Tooltip("By default it follows the Input Consumption setting to determine if the modifers keys need to be pressed first.")]
+        public ModifiersOrder modifiersOrder = ModifiersOrder.Default;
+
+        /// <summary>
         /// Return the value of the <see cref="button"/> part if <see cref="modifier"/> is pressed. Otherwise
         /// return 0.
         /// </summary>
@@ -81,10 +154,25 @@ namespace UnityEngine.InputSystem.Composites
         /// <returns>The current value of the composite.</returns>
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            if (context.ReadValueAsButton(modifier))
+            if (ModifierIsPressed(ref context))
                 return context.ReadValue<float>(button);
 
             return default;
+        }
+
+        private bool ModifierIsPressed(ref InputBindingCompositeContext context)
+        {
+            var modifierDown = context.ReadValueAsButton(modifier);
+
+            if (modifierDown && modifiersOrder == ModifiersOrder.Ordered)
+            {
+                var timestamp = context.GetPressTime(button);
+                var timestamp1 = context.GetPressTime(modifier);
+
+                return timestamp1 <= timestamp;
+            }
+
+            return modifierDown;
         }
 
         /// <summary>
@@ -95,6 +183,21 @@ namespace UnityEngine.InputSystem.Composites
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             return ReadValue(ref context);
+        }
+
+        protected override void FinishSetup(ref InputBindingCompositeContext context)
+        {
+            if (modifiersOrder == ModifiersOrder.Default)
+            {
+                // Legacy. We need to reference the obsolete member here so temporarily
+                // turn off the warning.
+#pragma warning disable CS0618
+                if (overrideModifiersNeedToBePressedFirst)
+#pragma warning restore CS0618
+                    modifiersOrder = ModifiersOrder.Unordered;
+                else
+                    modifiersOrder = InputSystem.settings.shortcutKeysConsumeInput ? ModifiersOrder.Ordered : ModifiersOrder.Unordered;
+            }
         }
     }
 }

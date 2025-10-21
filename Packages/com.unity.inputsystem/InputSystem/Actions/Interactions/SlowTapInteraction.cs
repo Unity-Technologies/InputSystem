@@ -1,20 +1,21 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
-////REVIEW: this is confusing when considered next to HoldInteraction
+////REVIEW: this is confusing when considered next to HoldInteraction; also it's confusingly named
 
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed held for at least the set
+    /// Performs the action if the control is pressed and held for at least the set
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>
-    [Preserve]
     [DisplayName("Long Tap")]
     public class SlowTapInteraction : IInputInteraction
     {
@@ -87,9 +88,21 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+#endif
             m_DurationSetting.OnGUI();
             m_PressPointSetting.OnGUI();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+        }
+
+#endif
 
         private CustomOrDefaultSetting m_DurationSetting;
         private CustomOrDefaultSetting m_PressPointSetting;

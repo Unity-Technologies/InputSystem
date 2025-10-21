@@ -8,6 +8,8 @@ using System.Runtime.Serialization;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: *kill* variants!
+
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
@@ -29,6 +31,31 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: useStateFrom seems like a half-measure; it solves the problem of setting up state blocks but they often also
 ////        require a specific set of processors
+
+////REVIEW: Can we allow aliases to be paths rather than just plain names? This would allow changing the hierarchy around while
+////        keeping backwards-compatibility.
+
+// Q: Why is there this layout system instead of just new'ing everything up in hand-written C# code?
+// A: The current approach has a couple advantages.
+//
+//    * Since it's data-driven, entire layouts can be represented as just data. They can be added to already deployed applications,
+//      can be sent over the wire, can be analyzed by tools, etc.
+//
+//    * The layouts can be rearranged in powerful ways, even on the fly. Data can be inserted or modified all along the hierarchy
+//      both from within a layout itself as well as from outside through overrides. The resulting compositions would often be very
+//      hard/tedious to set up in a linear C# inheritance hierarchy and likely result in repeated reallocation and rearranging of
+//      already created setups.
+//
+//    * Related to that, the data-driven layouts make it possible to significantly change the data model without requiring changes
+//      to existing layouts. This, too, would be more complicated if every device would simply new up everything directly.
+//
+//    * We can generate code from them. Means we can, for example, generate code for the DOTS runtime from the same information
+//      that exists in the input system but without depending on its InputDevice C# implementation.
+//
+//    The biggest drawback, other than code complexity, is that building an InputDevice from an InputControlLayout is slow.
+//    This is somewhat offset by having a code generator that can "freeze" a specific layout into simple C# code. For these,
+//    the result is code at least as efficient (but likely *more* efficient) than the equivalent in a code-only layout approach
+//    while at the same time offering all the advantages of the data-driven approach.
 
 namespace UnityEngine.InputSystem.Layouts
 {
@@ -156,12 +183,14 @@ namespace UnityEngine.InputSystem.Layouts
             public PrimitiveValue minValue { get; internal set; }
             public PrimitiveValue maxValue { get; internal set; }
 
-            // If true, the layout will not add a control but rather a modify a control
-            // inside the hierarchy added by 'layout'. This allows, for example, to modify
-            // just the X axis control of the left stick directly from within a gamepad
-            // layout instead of having to have a custom stick layout for the left stick
-            // than in turn would have to make use of a custom axis layout for the X axis.
-            // Instead, you can just have a control layout with the name "leftStick/x".
+            /// <summary>
+            /// If true, the item will not add a control but rather a modify a control
+            /// inside the hierarchy added by <see cref="layout"/>. This allows, for example, to modify
+            /// just the X axis control of the left stick directly from within a gamepad
+            /// layout instead of having to have a custom stick layout for the left stick
+            /// than in turn would have to make use of a custom axis layout for the X axis.
+            /// Instead, you can just have a control layout with the name <c>"leftStick/x"</c>.
+            /// </summary>
             public bool isModifyingExistingControl
             {
                 get => (flags & Flags.isModifyingExistingControl) == Flags.isModifyingExistingControl;
@@ -184,6 +213,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// (such as the device orientation) that is being measured is not changing.
             /// </remarks>
             /// <seealso cref="InputControl.noisy"/>
+            /// <seealso cref="InputControlAttribute.noisy"/>
             public bool isNoisy
             {
                 get => (flags & Flags.IsNoisy) == Flags.IsNoisy;
@@ -206,6 +236,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// if any key on the keyboard is pressed.
             /// </remarks>
             /// <seealso cref="InputControl.synthetic"/>
+            /// <seealso cref="InputControlAttribute.synthetic"/>
             public bool isSynthetic
             {
                 get => (flags & Flags.IsSynthetic) == Flags.IsSynthetic;
@@ -215,6 +246,31 @@ namespace UnityEngine.InputSystem.Layouts
                         flags |= Flags.IsSynthetic;
                     else
                         flags &= ~Flags.IsSynthetic;
+                }
+            }
+
+            /// <summary>
+            /// Get or set whether the control should be excluded when performing a device reset.
+            /// </summary>
+            /// <value>If true, the control will not get reset in a device reset. Off by default.</value>
+            /// <remarks>
+            /// Some controls like, for example, mouse positions do not generally make sense to reset when a
+            /// device is reset. By setting this flag on, the control's state will be excluded in resets.
+            ///
+            /// Note that a full reset can still be forced through <see cref="InputSystem.ResetDevice"/> in
+            /// which case controls that have this flag set will also get reset.
+            /// </remarks>
+            /// <seealso cref="InputSystem.ResetDevice"/>
+            /// <seealso cref="InputControlAttribute.dontReset"/>
+            public bool dontReset
+            {
+                get => (flags & Flags.DontReset) == Flags.DontReset;
+                internal set
+                {
+                    if (value)
+                        flags |= Flags.DontReset;
+                    else
+                        flags &= ~Flags.DontReset;
                 }
             }
 
@@ -263,6 +319,7 @@ namespace UnityEngine.InputSystem.Layouts
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 ////FIXME: allow overrides to unset this
                 result.isNoisy = isNoisy || other.isNoisy;
+                result.dontReset = dontReset || other.dontReset;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
 
@@ -339,6 +396,7 @@ namespace UnityEngine.InputSystem.Layouts
                 IsNoisy = 1 << 1,
                 IsSynthetic = 1 << 2,
                 IsFirstDefinedInThisLayout = 1 << 3,
+                DontReset = 1 << 4,
             }
         }
 
@@ -366,11 +424,9 @@ namespace UnityEngine.InputSystem.Layouts
         /// List of child controls defined for the layout.
         /// </summary>
         /// <value>Child controls defined for the layout.</value>
-        /// <remarks>
-        /// Note that this list TODO
-        /// </remarks>
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
+        ////FIXME: this should be a `bool?`
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
 
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
@@ -416,6 +472,51 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Flags |= Flags.HideInUI;
                 else
                     m_Flags &= ~Flags.HideInUI;
+            }
+        }
+
+        /// <summary>
+        /// Mark the input device created from this layout as noisy, irrespective of whether or not any
+        /// of its controls have been marked as noisy.
+        /// </summary>
+        /// <seealso cref="InputControlLayoutAttribute.isNoisy"/>
+        public bool isNoisy
+        {
+            get => (m_Flags & Flags.IsNoisy) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsNoisy;
+                else
+                    m_Flags &= ~Flags.IsNoisy;
+            }
+        }
+
+        /// <summary>
+        /// Override value for <see cref="InputDevice.canRunInBackground"/>. If this is set by the
+        /// layout, it will prevent <see cref="QueryCanRunInBackground"/> from being issued. However, other
+        /// logic that affects <see cref="InputDevice.canRunInBackground"/> may still force a specific value
+        /// on a device regardless of what's set in the layout.
+        /// </summary>
+        /// <seealso cref="InputDevice.canRunInBackground"/>
+        /// <seealso cref="InputSettings.backgroundBehavior"/>
+        public bool? canRunInBackground
+        {
+            get => (m_Flags & Flags.CanRunInBackgroundIsSet) != 0 ? (bool?)((m_Flags & Flags.CanRunInBackground) != 0) : null;
+            internal set
+            {
+                if (!value.HasValue)
+                {
+                    m_Flags &= ~Flags.CanRunInBackgroundIsSet;
+                }
+                else
+                {
+                    m_Flags |= Flags.CanRunInBackgroundIsSet;
+                    if (value.Value)
+                        m_Flags |= Flags.CanRunInBackground;
+                    else
+                        m_Flags &= ~Flags.CanRunInBackground;
+                }
             }
         }
 
@@ -566,7 +667,19 @@ namespace UnityEngine.InputSystem.Layouts
             /// </summary>
             /// <value>Name of base layout.</value>
             /// <seealso cref="InputControlLayout.baseLayouts"/>
-            public string extendsLayout { get; set; }
+            public string extendsLayout
+            {
+                get => m_ExtendsLayout;
+                set
+                {
+                    if (!string.IsNullOrEmpty(value))
+                        m_ExtendsLayout = value;
+                    else
+                        m_ExtendsLayout = null;
+                }
+            }
+
+            private string m_ExtendsLayout;
 
             /// <summary>
             /// For device layouts, whether the device wants an extra update
@@ -645,9 +758,22 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder DontReset(bool value)
+                {
+                    builder.m_Controls[index].dontReset = value;
+                    return this;
+                }
+
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     builder.m_Controls[index].sizeInBits = sizeInBits;
+                    return this;
+                }
+
+                public ControlBuilder WithRange(float minValue, float maxValue)
+                {
+                    builder.m_Controls[index].minValue = minValue;
+                    builder.m_Controls[index].maxValue = maxValue;
                     return this;
                 }
 
@@ -809,7 +935,7 @@ namespace UnityEngine.InputSystem.Layouts
                     m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
                     m_StateSizeInBytes = stateSizeInBytes,
-                    m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
+                    m_BaseLayouts = !string.IsNullOrEmpty(extendsLayout) ? new InlinedArray<InternedString>(new InternedString(extendsLayout)) : default,
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
                 };
@@ -866,6 +992,8 @@ namespace UnityEngine.InputSystem.Layouts
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,
                 m_DisplayName = layoutAttribute?.displayName,
+                canRunInBackground = layoutAttribute?.canRunInBackgroundInternal,
+                isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -911,6 +1039,9 @@ namespace UnityEngine.InputSystem.Layouts
             IsGenericTypeOfDevice = 1 << 0,
             HideInUI = 1 << 1,
             IsOverride = 1 << 2,
+            CanRunInBackground = 1 << 3,
+            CanRunInBackgroundIsSet = 1 << 4,
+            IsNoisy = 1 << 5
         }
 
         private InputControlLayout(string name, Type type)
@@ -999,12 +1130,12 @@ namespace UnityEngine.InputSystem.Layouts
                         continue;
                 }
 
-                AddControlItemsFromMember(member, attributes, controlItems, layoutName);
+                AddControlItemsFromMember(member, attributes, controlItems);
             }
         }
 
         private static void AddControlItemsFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
+            InputControlAttribute[] attributes, List<ControlItem> controlItems)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each occurrence. However, it can also
@@ -1015,17 +1146,15 @@ namespace UnityEngine.InputSystem.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null);
-                ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
-                controlItems.Add(controlLayout);
+                var controlItem = CreateControlItemFromMember(member, null);
+                controlItems.Add(controlItem);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute);
-                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
-                    controlItems.Add(controlLayout);
+                    var controlItem = CreateControlItemFromMember(member, attribute);
+                    controlItems.Add(controlItem);
                 }
             }
         }
@@ -1127,6 +1256,11 @@ namespace UnityEngine.InputSystem.Layouts
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine whether it's a dontReset control.
+            var dontReset = false;
+            if (attribute != null)
+                dontReset = attribute.dontReset;
+
             // Determine if it's a synthetic control.
             var isSynthetic = false;
             if (attribute != null)
@@ -1170,6 +1304,7 @@ namespace UnityEngine.InputSystem.Layouts
                 isModifyingExistingControl = isModifyingChildControlByPath,
                 isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
+                dontReset = dontReset,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
                 defaultState = defaultState,
@@ -1440,16 +1575,6 @@ namespace UnityEngine.InputSystem.Layouts
             return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, VariantSeparator[0]);
         }
 
-        private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
-            IEnumerable<ControlItem> controlLayouts, string layoutName)
-        {
-            var name = controlItem.name;
-            foreach (var existing in controlLayouts)
-                if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    existing.variants == controlItem.variants)
-                    throw new InvalidOperationException($"Duplicate control '{name}' in layout '{layoutName}'");
-        }
-
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,
             out InlinedArray<InternedString> baseLayouts, out InputDeviceMatcher deviceMatcher)
         {
@@ -1488,6 +1613,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string[] extendMultiple;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
+            public string runInBackground;
             public string[] commonUsages;
             public string displayName;
             public string description;
@@ -1531,7 +1657,8 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Description = description,
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
-                    m_Variants = new InternedString(variant)
+                    m_Variants = new InternedString(variant),
+                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1546,18 +1673,26 @@ namespace UnityEngine.InputSystem.Layouts
                 // Before render behavior.
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
-                    var beforeRenderLowerCase = beforeRender.ToLower();
+                    var beforeRenderLowerCase = beforeRender.ToLowerInvariant();
                     if (beforeRenderLowerCase == "ignore")
                         layout.m_UpdateBeforeRender = false;
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}' (should be 'ignore' or 'update')");
                 }
 
-                // Add common usages.
-                if (commonUsages != null)
-                    layout.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
+                // CanRunInBackground flag.
+                if (!string.IsNullOrEmpty(runInBackground))
+                {
+                    var runInBackgroundLowerCase = runInBackground.ToLowerInvariant();
+                    if (runInBackgroundLowerCase == "enabled")
+                        layout.canRunInBackground = true;
+                    else if (runInBackgroundLowerCase == "disabled")
+                        layout.canRunInBackground = false;
+                    else
+                        throw new InvalidOperationException($"Invalid runInBackground setting '{beforeRender}' (should be 'enabled' or 'disabled')");
+                }
 
                 // Add controls.
                 if (controls != null)
@@ -1568,7 +1703,6 @@ namespace UnityEngine.InputSystem.Layouts
                         if (string.IsNullOrEmpty(control.name))
                             throw new InvalidOperationException($"Control with no name in layout '{name}");
                         var controlLayout = control.ToLayout();
-                        ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
                         controlLayouts.Add(controlLayout);
                     }
                     layout.m_Controls = controlLayouts.ToArray();
@@ -1582,7 +1716,7 @@ namespace UnityEngine.InputSystem.Layouts
                 return new LayoutJson
                 {
                     name = layout.m_Name,
-                    type = layout.type.AssemblyQualifiedName,
+                    type = layout.type?.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
                     description = layout.m_Description,
@@ -1591,7 +1725,9 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
+                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
+                    beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };
             }
         }
@@ -1626,6 +1762,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string displayName;
             public string shortDisplayName;
             public bool noisy;
+            public bool dontReset;
             public bool synthetic;
 
             // This should be an object type field and allow any JSON primitive value type as well
@@ -1660,6 +1797,7 @@ namespace UnityEngine.InputSystem.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingExistingControl = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    dontReset = dontReset,
                     isSynthetic = synthetic,
                     isFirstDefinedInThisLayout = true,
                     arraySize = arraySize,
@@ -1731,6 +1869,7 @@ namespace UnityEngine.InputSystem.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        dontReset = item.dontReset,
                         synthetic = item.isSynthetic,
                         arraySize = item.arraySize,
                         defaultState = item.defaultState.ToString(),
@@ -1754,12 +1893,19 @@ namespace UnityEngine.InputSystem.Layouts
                 public InputDeviceMatcher deviceMatcher;
             }
 
+            public struct PrecompiledLayout
+            {
+                public Func<InputDevice> factoryMethod;
+                public string metadata;
+            }
+
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, Func<InputControlLayout>> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InternedString[]> layoutOverrides;
             public HashSet<InternedString> layoutOverrideNames;
+            public Dictionary<InternedString, PrecompiledLayout> precompiledLayouts;
             ////TODO: find a smarter approach that doesn't require linearly scanning through all matchers
             ////  (also ideally shouldn't be a List but with Collection being a struct and given how it's
             ////  stored by InputManager.m_Layouts and in s_Layouts; we can't make it a plain array)
@@ -1774,6 +1920,7 @@ namespace UnityEngine.InputSystem.Layouts
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
                 layoutOverrideNames = new HashSet<InternedString>();
                 layoutMatchers = new List<LayoutMatcher>();
+                precompiledLayouts = new Dictionary<InternedString, PrecompiledLayout>();
             }
 
             public InternedString TryFindLayoutForType(Type layoutType)
@@ -1898,6 +2045,7 @@ namespace UnityEngine.InputSystem.Layouts
                             overrideLayout.isOverride = false;
                             overrideLayout.isGenericTypeOfDevice = layout.isGenericTypeOfDevice;
                             overrideLayout.m_Name = layout.name;
+                            overrideLayout.m_BaseLayouts = layout.m_BaseLayouts;
 
                             layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);
@@ -2033,6 +2181,14 @@ namespace UnityEngine.InputSystem.Layouts
             public bool IsGeneratedLayout(InternedString layout)
             {
                 return layoutBuilders.ContainsKey(layout);
+            }
+
+            public IEnumerable<InternedString> GetBaseLayouts(InternedString layout, bool includeSelf = true)
+            {
+                if (includeSelf)
+                    yield return layout;
+                while (baseLayoutTable.TryGetValue(layout, out layout))
+                    yield return layout;
             }
 
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)

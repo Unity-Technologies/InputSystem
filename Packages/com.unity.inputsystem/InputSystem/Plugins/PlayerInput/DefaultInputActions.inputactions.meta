@@ -11,6 +11,4 @@ ScriptedImporter:
   generateWrapperCode: 0
   wrapperCodePath: 
   wrapperClassName: 
-  wrapperCodeNamespace: 
-  generateActionEvents: 0
-  generateInterfaces: 0
+  wrapperCodeNamespace: UnityEngine.InputSystem

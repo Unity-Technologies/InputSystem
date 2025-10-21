@@ -2,9 +2,12 @@ using System;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
+
+////TODO: handle display strings for this in some form; shouldn't display generic gamepad binding strings, for example, for OSCs
 
 ////TODO: give more control over when an OSC creates a new devices; going simply by name of layout only is inflexible
 
@@ -32,16 +35,42 @@ namespace UnityEngine.InputSystem.OnScreen
     /// types of device layouts (e.g. one control references 'buttonWest' on
     /// a gamepad and another references 'leftButton' on a mouse), then a device
     /// is created for each type referenced by the setup.
+    ///
+    /// The <see cref="OnScreenControl"/> works by simulating events from the device specified in the <see cref="OnScreenControl.controlPath"/>
+    /// property. Some parts of the Input System, such as the <see cref="PlayerInput"/> component, can be set up to
+    /// auto-switch <see cref="PlayerInput.neverAutoSwitchControlSchemes"/> to a new device when input from them is detected.
+    /// When a device is switched, any currently running inputs from the previously active device are cancelled.
+    ///
+    /// To avoid this situation, you need to ensure, depending on your case, that the Mouse, Pen, Touchsceen and/or XRController devices are not used in a concurent
+    /// control schemes of the simulated device.
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
+        /// <summary>
+        /// The control path (see <see cref="InputControlPath"/>) for the control that the on-screen
+        /// control will feed input into.
+        /// </summary>
+        /// <remarks>
+        /// A device will be created from the device layout referenced by the control path (see
+        /// <see cref="InputControlPath.TryGetDeviceLayout"/>). The path is then used to look up
+        /// <see cref="control"/> on the device. The resulting control will be fed values from
+        /// the on-screen control.
+        ///
+        /// Multiple on-screen controls sharing the same device layout will together create a single
+        /// virtual device. If, for example, one component uses <c>"&lt;Gamepad&gt;/buttonSouth"</c>
+        /// and another uses <c>"&lt;Gamepad&gt;/leftStick"</c> as the control path, a single
+        /// <see cref="Gamepad"/> will be created and the first component will feed data to
+        /// <see cref="Gamepad.buttonSouth"/> and the second component will feed data to
+        /// <see cref="Gamepad.leftStick"/>.
+        /// </remarks>
+        /// <seealso cref="InputControlPath"/>
         public string controlPath
         {
             get => controlPathInternal;
             set
             {
                 controlPathInternal = value;
-                if (enabled)
+                if (isActiveAndEnabled)
                     SetupInputControl();
             }
         }
@@ -50,8 +79,8 @@ namespace UnityEngine.InputSystem.OnScreen
         /// The actual control that is fed input from the on-screen control.
         /// </summary>
         /// <remarks>
-        /// This is only valid while the on-screen control is enabled. Otherwise, it is null. Also,
-        /// if no <see cref="controlPath"/> has been set, this will remain null even if the component is enabled.
+        /// This is only valid while the on-screen control is enabled. Otherwise, it is <c>null</c>. Also,
+        /// if no <see cref="controlPath"/> has been set, this will remain <c>null</c> even if the component is enabled.
         /// </remarks>
         public InputControl control => m_Control;
 
@@ -60,7 +89,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private InputEventPtr m_InputEventPtr;
 
         /// <summary>
-        ///
+        /// Accessor for the <see cref="controlPath"/> of the component. Must be implemented by subclasses.
         /// </summary>
         /// <remarks>
         /// Moving the definition of how the control path is stored into subclasses allows them to
@@ -71,9 +100,9 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void SetupInputControl()
         {
-            Debug.Assert(m_Control == null);
-            Debug.Assert(m_NextControlOnDevice == null);
-            Debug.Assert(!m_InputEventPtr.valid);
+            Debug.Assert(m_Control == null, "InputControl already initialized");
+            Debug.Assert(m_NextControlOnDevice == null, "Previous InputControl has not been properly uninitialized (m_NextControlOnDevice still set)");
+            Debug.Assert(!m_InputEventPtr.valid, "Previous InputControl has not been properly uninitialized (m_InputEventPtr still set)");
 
             // Nothing to do if we don't have a control path.
             var path = controlPathInternal;
@@ -119,6 +148,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     Debug.LogException(exception);
                     return;
                 }
+                InputSystem.AddDeviceUsage(device, "OnScreen");
 
                 // Create event buffer.
                 var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);
@@ -166,23 +196,66 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Control == null)
                 return;
 
-            ////TODO: only cast once
             if (!(m_Control is InputControl<TValue> control))
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        private void OnEnable()
+        protected void SentDefaultValueToControl()
         {
-            SetupInputControl();
+            if (m_Control == null)
+                return;
+
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
+            m_Control.ResetToDefaultStateInEvent(m_InputEventPtr);
+            InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        private void OnDisable()
+        // Used by PlayerInput auto switch for scheme to prevent using Pointer device.
+        internal static bool HasAnyActive => s_nbActiveInstances != 0;
+        private static int s_nbActiveInstances = 0;
+
+        protected virtual void OnEnable()
         {
+            ++s_nbActiveInstances;
+            SetupInputControl();
+            if (m_Control == null)
+                return;
+            // if we are in single player and if it the first active switch to the target device.
+            if (s_nbActiveInstances == 1 &&
+                PlayerInput.isSinglePlayer)
+            {
+                var firstPlayer = PlayerInput.GetPlayerByIndex(0);
+                if (firstPlayer?.neverAutoSwitchControlSchemes == false)
+                {
+                    var devices = firstPlayer.devices;
+                    bool deviceFound = false;
+                    // skip is the device is already part of the current scheme
+                    foreach (var device in devices)
+                    {
+                        if (m_Control.device.deviceId == device.deviceId)
+                        {
+                            deviceFound = true;
+                            break;
+                        }
+                    }
+                    if (!deviceFound)
+                    {
+                        firstPlayer.SwitchCurrentControlScheme(m_Control.device);
+                    }
+                }
+            }
+        }
+
+        protected virtual void OnDisable()
+        {
+            --s_nbActiveInstances;
             if (m_Control == null)
                 return;
 
@@ -202,6 +275,14 @@ namespace UnityEngine.InputSystem.OnScreen
                 else
                 {
                     s_OnScreenDevices[i] = deviceInfo;
+
+                    // We're keeping the device but we're disabling the on-screen representation
+                    // for one of its controls. If the control isn't in default state, reset it
+                    // to that now. This is what ensures that if, for example, OnScreenButton is
+                    // disabled after OnPointerDown, we reset its button control to zero even
+                    // though we will not see an OnPointerUp.
+                    if (!m_Control.CheckStateIsAtDefault())
+                        SentDefaultValueToControl();
                 }
 
                 m_Control = null;
@@ -259,5 +340,30 @@ namespace UnityEngine.InputSystem.OnScreen
         }
 
         private static InlinedArray<OnScreenDeviceInfo> s_OnScreenDevices;
+
+        internal string GetWarningMessage()
+        {
+            return $"{GetType()} needs to be attached as a child to a UI Canvas and have a RectTransform component to function properly.";
+        }
     }
+
+    internal static class UGUIOnScreenControlUtils
+    {
+        public static RectTransform GetCanvasRectTransform(Transform transform)
+        {
+            var parentTransform = transform.parent;
+            return parentTransform != null ? transform.parent.GetComponentInParent<RectTransform>() : null;
+        }
+    }
+
+#if UNITY_EDITOR
+    internal static class UGUIOnScreenControlEditorUtils
+    {
+        public static void ShowWarningIfNotPartOfCanvasHierarchy(OnScreenControl target)
+        {
+            if (UGUIOnScreenControlUtils.GetCanvasRectTransform(target.transform) == null)
+                UnityEditor.EditorGUILayout.HelpBox(target.GetWarningMessage(), UnityEditor.MessageType.Warning);
+        }
+    }
+#endif
 }

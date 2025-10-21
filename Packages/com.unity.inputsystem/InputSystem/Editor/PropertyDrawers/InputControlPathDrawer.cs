@@ -24,8 +24,8 @@ namespace UnityEngine.InputSystem.Editor
     [CustomPropertyDrawer(typeof(InputControlAttribute))]
     internal sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
     {
-        private InputControlPathEditor m_Editor;
         private InputControlPickerState m_PickerState;
+        private InputControlPathEditor m_Editor;
 
         public void Dispose()
         {
@@ -41,11 +41,10 @@ namespace UnityEngine.InputSystem.Editor
                 m_Editor = new InputControlPathEditor(property, m_PickerState,
                     () => property.serializedObject.ApplyModifiedProperties(),
                     label: label);
-                m_Editor.SetExpectedControlLayoutFromAttribute();
             }
 
             EditorGUI.BeginProperty(position, label, property);
-            m_Editor.OnGUI(position);
+            m_Editor.OnGUI(position, label, property, () => property.serializedObject.ApplyModifiedProperties());
             EditorGUI.EndProperty();
         }
     }

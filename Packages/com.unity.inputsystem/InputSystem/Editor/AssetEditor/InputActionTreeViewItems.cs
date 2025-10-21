@@ -1,7 +1,14 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#endif
 
 ////TODO: sync expanded state of SerializedProperties to expanded state of tree (will help preserving expansion in inspector)
 
@@ -18,6 +25,25 @@ namespace UnityEngine.InputSystem.Editor
         public abstract GUIStyle colorTagStyle { get; }
         public string name { get; }
         public Guid guid { get; }
+        public virtual bool showWarningIcon => false;
+
+        // For some operations (like copy-paste), we want to include information that we have filtered out.
+        internal List<ActionTreeItemBase> m_HiddenChildren;
+        public bool hasChildrenIncludingHidden => hasChildren || (m_HiddenChildren != null && m_HiddenChildren.Count > 0);
+        public IEnumerable<ActionTreeItemBase> hiddenChildren => m_HiddenChildren ?? Enumerable.Empty<ActionTreeItemBase>();
+        public IEnumerable<ActionTreeItemBase> childrenIncludingHidden
+        {
+            get
+            {
+                if (hasChildren)
+                    foreach (var child in children)
+                        if (child is ActionTreeItemBase item)
+                            yield return item;
+                if (m_HiddenChildren != null)
+                    foreach (var child in m_HiddenChildren)
+                        yield return child;
+            }
+        }
 
         // Action data is generally stored in arrays. Action maps are stored in m_ActionMaps arrays in assets,
         // actions are stored in m_Actions arrays on maps and bindings are stored in m_Bindings arrays on maps.
@@ -219,8 +245,21 @@ namespace UnityEngine.InputSystem.Editor
         public override GUIStyle colorTagStyle => Styles.greenRect;
         public bool isSingletonAction => actionMapProperty == null;
 
-        public override string expectedControlLayout =>
-            property.FindPropertyRelative("m_ExpectedControlType").stringValue;
+        public override string expectedControlLayout
+        {
+            get
+            {
+                var expectedControlType = property.FindPropertyRelative("m_ExpectedControlType").stringValue;
+                if (!string.IsNullOrEmpty(expectedControlType))
+                    return expectedControlType;
+
+                var type = property.FindPropertyRelative("m_Type").intValue;
+                if (type == (int)InputActionType.Button)
+                    return "Button";
+
+                return null;
+            }
+        }
 
         public SerializedProperty bindingsArrayProperty => isSingletonAction
         ? property.FindPropertyRelative("m_SingletonActionBindings")
@@ -348,6 +387,7 @@ namespace UnityEngine.InputSystem.Editor
         public string path { get; }
         public string groups { get; }
         public string action { get; }
+        public override bool showWarningIcon => InputSystem.ShouldDrawWarningIconForBinding(path);
 
         public override bool canRename => false;
         public override GUIStyle colorTagStyle => Styles.blueRect;
@@ -355,23 +395,32 @@ namespace UnityEngine.InputSystem.Editor
         public string displayPath =>
             !string.IsNullOrEmpty(path) ? InputControlPath.ToHumanReadableString(path) : "<No Binding>";
 
+        private ActionTreeItem actionItem
+        {
+            get
+            {
+                // Find the action we're under.
+                for (var node = parent; node != null; node = node.parent)
+                    if (node is ActionTreeItem item)
+                        return item;
+                return null;
+            }
+        }
+
         public override string expectedControlLayout
         {
             get
             {
-                // Find the action we're under and return its expected control layout.
-                for (var item = parent; item != null; item = item.parent)
-                {
-                    if (item is ActionTreeItem actionItem)
-                        return actionItem.expectedControlLayout;
-                }
-                return string.Empty;
+                var currentActionItem = actionItem;
+                return currentActionItem != null ? currentActionItem.expectedControlLayout : string.Empty;
             }
         }
 
         public override void DeleteData()
         {
-            var bindingsArrayProperty = property.GetParentProperty();
+            var currentActionItem = actionItem;
+            Debug.Assert(currentActionItem != null, "BindingTreeItem should always have a parent action");
+            var bindingsArrayProperty = currentActionItem.bindingsArrayProperty;
             InputActionSerializationHelpers.DeleteBinding(bindingsArrayProperty, guid);
         }
 
@@ -419,6 +468,8 @@ namespace UnityEngine.InputSystem.Editor
         public override GUIStyle colorTagStyle => Styles.blueRect;
         public override bool canRename => true;
 
+        public string compositeName => NameAndParameters.ParseName(path);
+
         public override void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameComposite(property, newName);
@@ -461,7 +512,10 @@ namespace UnityEngine.InputSystem.Editor
             var item = new CompositeBindingTreeItem(bindingProperty);
 
             item.depth = parent.depth + 1;
-            item.displayName = !string.IsNullOrEmpty(item.name) ? item.name : ObjectNames.NicifyVariableName(item.path);
+            item.displayName = !string.IsNullOrEmpty(item.name)
+                ? item.name
+                : ObjectNames.NicifyVariableName(NameAndParameters.ParseName(item.path));
+
             parent.AddChild(item);
 
             return item;
@@ -489,7 +543,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ExpectedControlLayout == null)
                 {
                     var partName = name;
-                    var compositeName = ((CompositeBindingTreeItem)parent).name;
+                    var compositeName = ((CompositeBindingTreeItem)parent).compositeName;
                     var layoutName = InputBindingComposite.GetExpectedControlLayoutName(compositeName, partName);
                     m_ExpectedControlLayout = layoutName ?? "";
                 }

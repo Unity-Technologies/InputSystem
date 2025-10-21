@@ -1,13 +1,22 @@
+using System;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
+
+////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
+
+////TODO: add ability to perform on final press rather than on release
 
 ////TODO: change this so that the interaction stays performed when the tap count is reached until the button is released
 
 namespace UnityEngine.InputSystem.Interactions
 {
+    ////REVIEW: Why is this deriving from IInputInteraction<float>? It goes by actuation just like Hold etc.
     /// <summary>
     /// Interaction that requires multiple taps (press and release within <see cref="tapTime"/>) spaced no more
     /// than <see cref="tapDelay"/> seconds apart. This equates to a chain of <see cref="TapInteraction"/> with
@@ -19,7 +28,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// <see cref="InputActionPhase.Performed"/>) or the multi-tap is aborted by a timeout being hit (in which
     /// case the interaction will trigger <see cref="InputActionPhase.Canceled"/>).
     /// </remarks>
-    [Scripting.Preserve]
     public class MultiTapInteraction : IInputInteraction<float>
     {
         /// <summary>
@@ -61,8 +69,9 @@ namespace UnityEngine.InputSystem.Interactions
         public float pressPoint;
 
         private float tapTimeOrDefault => tapTime > 0.0 ? tapTime : InputSystem.settings.defaultTapTime;
-        internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
+        internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : InputSystem.settings.multiTapDelayTime;
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
@@ -83,12 +92,21 @@ namespace UnityEngine.InputSystem.Interactions
                         m_CurrentTapPhase = TapPhase.WaitingForNextRelease;
                         m_CurrentTapStartTime = context.time;
                         context.Started();
-                        context.SetTimeout(tapTimeOrDefault);
+
+                        var maxTapTime = tapTimeOrDefault;
+                        var maxDelayInBetween = tapDelayOrDefault;
+                        context.SetTimeout(maxTapTime);
+
+                        // We'll be using multiple timeouts so set a total completion time that
+                        // effects the result of InputAction.GetTimeoutCompletionPercentage()
+                        // such that it accounts for the total time we allocate for the interaction
+                        // rather than only the time of one single timeout.
+                        context.SetTotalTimeoutCompletionTime(maxTapTime * tapCount + (tapCount - 1) * maxDelayInBetween);
                     }
                     break;
 
                 case TapPhase.WaitingForNextRelease:
-                    if (!context.ControlIsActuated(pressPointOrDefault))
+                    if (!context.ControlIsActuated(releasePointOrDefault))
                     {
                         if (context.time - m_CurrentTapStartTime <= tapTimeOrDefault)
                         {
@@ -167,8 +185,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapDelaySetting.Initialize("Max Tap Spacing",
                 "The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.",
                 "Default Tap Spacing",
-                () => target.tapDelay, x => target.tapDelay = x, () => target.tapDelayOrDefault,
-                defaultComesFromInputSettings: false);
+                () => target.tapDelay, x => target.tapDelay = x, () => InputSystem.settings.multiTapDelayTime);
             m_PressPointSetting.Initialize("Press Point",
                 "The amount of actuation a control requires before being considered pressed. If not set, default to "
                 + "'Default Button Press Point' in the global input settings.",
@@ -179,11 +196,36 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+#endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
             m_PressPointSetting.OnGUI();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var tapCountField = new IntegerField(m_TapCountLabel.text)
+            {
+                value = target.tapCount,
+                tooltip = m_TapCountLabel.tooltip
+            };
+            tapCountField.RegisterValueChangedCallback(evt =>
+            {
+                target.tapCount = evt.newValue;
+                onChangedCallback?.Invoke();
+            });
+            root.Add(tapCountField);
+
+            m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);
+            m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+        }
+
+#endif
 
         private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
 

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine.InputSystem.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -26,8 +28,6 @@ namespace UnityEngine.InputSystem
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
-        public bool hasFocus => m_HasFocus;
-
         ~InputTestRuntime()
         {
             Dispose();
@@ -47,6 +47,12 @@ namespace UnityEngine.InputSystem
 
             lock (m_Lock)
             {
+                if (type == InputUpdateType.Dynamic && !dontAdvanceUnscaledGameTimeNextDynamicUpdate)
+                {
+                    unscaledGameTime += 1 / 30f;
+                    dontAdvanceUnscaledGameTimeNextDynamicUpdate = false;
+                }
+
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -60,7 +66,10 @@ namespace UnityEngine.InputSystem
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
                 if (type == InputUpdateType.Dynamic && !dontAdvanceTimeNextDynamicUpdate)
+                {
                     currentTime += advanceTimeEachDynamicUpdate;
+                    dontAdvanceTimeNextDynamicUpdate = false;
+                }
 
                 if (onUpdate != null)
                 {
@@ -68,10 +77,25 @@ namespace UnityEngine.InputSystem
                         (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
                         m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
 
-                    onUpdate(type, ref buffer);
+                    try
+                    {
+                        onUpdate(type, ref buffer);
+                    }
+                    catch (Exception e)
+                    {
+                        // Same order as in NativeInputRuntime
+                        Debug.LogException(e);
+                        Debug.LogError($"{e.GetType().Name} during event processing of {type} update; resetting event buffer");
+
+                        // Rethrow exception for test runtime to enable us to assert against it in tests.
+                        m_EventCount = 0;
+                        m_EventWritePosition = 0;
+                        throw;
+                    }
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
+
                     if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
                         NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
                         m_EventBuffer = buffer.data;
@@ -81,8 +105,6 @@ namespace UnityEngine.InputSystem
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
-
-                dontAdvanceTimeNextDynamicUpdate = false;
             }
         }
 
@@ -112,6 +134,20 @@ namespace UnityEngine.InputSystem
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
+        }
+
+        public unsafe void SetCanRunInBackground(int deviceId)
+        {
+            SetDeviceCommandCallback(deviceId,
+                (id, command) =>
+                {
+                    if (command->type == QueryCanRunInBackground.Type)
+                    {
+                        ((QueryCanRunInBackground*)command)->canRunInBackground = true;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                    return InputDeviceCommand.GenericFailure;
+                });
         }
 
         public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
@@ -316,13 +352,18 @@ namespace UnityEngine.InputSystem
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
+#if UNITY_EDITOR
+        public Action onPlayerLoopInitialization { get; set; }
+#endif
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
-        public float pollingFrequency { get; set; }
+        public bool isPlayerFocused => m_HasFocus;
+        public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
+        public bool dontAdvanceUnscaledGameTimeNextDynamicUpdate { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
@@ -330,7 +371,10 @@ namespace UnityEngine.InputSystem
 
         public bool runInBackground { get; set; } = false;
 
+        public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+        public bool normalizeScrollWheelDelta { get; set; } = true;
+        public float scrollWheelDeltaPerTick { get; set; } = 1.0f;
 
         public List<PairedUser> userAccountPairings
         {
@@ -358,42 +402,83 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool isInBatchMode { get; set; }
-
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
-        public bool isPaused { get; set; }
+        public bool isEditorActive { get; set; } = true;
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            get => m_UnityRemoteMessageHandler;
+            set => m_UnityRemoteMessageHandler = value;
+        }
+
+        public bool? unityRemoteGyroEnabled;
+        public float? unityRemoteGyroUpdateInterval;
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
 
         public int eventCount => m_EventCount;
 
+        internal const int kDefaultEventBufferSize = 1024 * 512;
+
         private bool m_HasFocus = true;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;
         private int m_EventWritePosition;
-        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(kDefaultEventBufferSize, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 
         public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
         public Action<string, object> onSendAnalyticsEvent { get; set; }
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            onRegisterAnalyticsEvent?.Invoke(name, maxPerHour, maxPropertiesPerEvent);
-        }
+            #if UNITY_2023_2_OR_NEWER
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            onSendAnalyticsEvent?.Invoke(name, data);
+            // Mimic editor analytics for Unity 2023.2+ invoking TryGatherData to send
+            var analyticInfoAttribute = analytic.GetType().GetCustomAttributes(
+                typeof(AnalyticInfoAttribute), true).FirstOrDefault() as AnalyticInfoAttribute;
+            var info = analytic.info;
+            #if UNITY_EDITOR
+            // Registration handled by framework
+            #else
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements); // only to avoid writing two tests per Unity version (registration handled by framework)
+            #endif
+            if (analytic.TryGatherData(out var data, out var ex) && data != null && analyticInfoAttribute != null)
+                onSendAnalyticsEvent?.Invoke(analyticInfoAttribute.eventName, data);
+            else if (ex != null)
+                throw ex; // rethrow for visibility in test scope
+
+            #else
+
+            var info = analytic.info;
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements);
+
+            if (analytic.TryGatherData(out var data, out var error))
+                onSendAnalyticsEvent?.Invoke(info.Name, data);
+            else
+                throw error; // For visibility in tests
+
+            #endif // UNITY_2023_2_OR_NEWER
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR

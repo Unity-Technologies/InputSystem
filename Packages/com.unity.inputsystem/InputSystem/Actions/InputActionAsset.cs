@@ -1,7 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
+
+////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
 
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
@@ -14,27 +19,33 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// An asset containing action maps and control schemes.
+    /// An asset that contains action maps and control schemes.
     /// </summary>
     /// <remarks>
     /// InputActionAssets can be created in code but are usually stored in JSON format on
-    /// disk with the ".inputactions" extension and are imported by Unity using a custom
+    /// disk with the ".inputactions" extension. Unity imports them with a custom
     /// importer.
     ///
     /// To create an InputActionAsset in code, use the <c>Singleton</c> API and populate the
     /// asset with the methods found in <see cref="InputActionSetupExtensions"/>. Alternatively,
-    /// you can load an InputActionAsset directly from a string in JSON format using <see cref="FromJson"/>.
+    /// you can use <see cref="FromJson"/> to load an InputActionAsset directly from a string in JSON format.
     ///
     /// <example>
     /// <code>
     /// // Create and configure an asset in code.
     /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
-    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// var actionMap1 = asset1.AddActionMap("map1");
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>
     ///
-    /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
+    /// If you use the API to modify an InputActionAsset while in Play mode,
+    /// it does not survive the transition back to Edit Mode. Unity tracks and reloads modified assets
+    /// from disk when exiting Play mode. This is done so that you can realistically test the input
+    /// related functionality of your application i.e. control rebinding etc, without inadvertently changing
+    /// the input asset.
+    ///
+    /// Each asset can contain arbitrary many action maps that you can enable and disable individually
     /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
     /// (see <see cref="Enable"/> and <see cref="Disable"/>). The name of each action map must be unique.
     /// The list of action maps can be queried from <see cref="actionMaps"/>.
@@ -63,7 +74,7 @@ namespace UnityEngine.InputSystem
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
-    public class InputActionAsset : ScriptableObject, IInputActionCollection
+    public class InputActionAsset : ScriptableObject, IInputActionCollection2
     {
         /// <summary>
         /// File extension (without the dot) for InputActionAssets in JSON format.
@@ -74,6 +85,8 @@ namespace UnityEngine.InputSystem
         /// InputActionAssets.
         /// </remarks>
         public const string Extension = "inputactions";
+        ////REVIEW: actually pre-populate with some stuff?
+        internal const string kDefaultAssetLayoutJson = "{}";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.
@@ -110,6 +123,34 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         /// <seealso cref="InputActionSetupExtensions.RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
+
+        /// <summary>
+        /// Iterate over all bindings in the asset.
+        /// </summary>
+        /// <remarks>
+        /// This iterates over all action maps in <see cref="actionMaps"/> and, within each
+        /// map, over the set of <see cref="InputActionMap.bindings"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.bindings"/>
+        public IEnumerable<InputBinding> bindings
+        {
+            get
+            {
+                var numActionMaps = m_ActionMaps.LengthSafe();
+                if (numActionMaps == 0)
+                    yield break;
+
+                for (var i = 0; i < numActionMaps; ++i)
+                {
+                    var actionMap = m_ActionMaps[i];
+                    var bindings = actionMap.m_Bindings;
+                    var numBindings = bindings.LengthSafe();
+
+                    for (var n = 0; n < numBindings; ++n)
+                        yield return bindings[n];
+                }
+            }
+        }
 
         /// <summary>
         /// Binding mask to apply to all action maps and actions in the asset.
@@ -151,7 +192,7 @@ namespace UnityEngine.InputSystem
 
                 m_BindingMask = value;
 
-                ReResolveIfNecessary();
+                ReResolveIfNecessary(fullResolve: true);
             }
         }
 
@@ -200,49 +241,11 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionMap.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                if (m_DevicesCount < 0)
-                    return null;
-                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-            }
+            get => m_Devices.Get();
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesCount < 0)
-                        return; // No change.
-
-                    if (m_DevicesArray != null & m_DevicesCount > 0)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = -1;
-                }
-                else
-                {
-                    // See if the array actually changes content. Avoids re-resolving when there
-                    // is no need to.
-                    if (m_DevicesCount == value.Value.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DevicesCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-                        if (noChange)
-                            return;
-                    }
-
-                    if (m_DevicesCount > 0)
-                        m_DevicesArray.Clear(ref m_DevicesCount);
-                    m_DevicesCount = 0;
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                }
-
-                ReResolveIfNecessary();
+                if (m_Devices.Set(value))
+                    ReResolveIfNecessary(fullResolve: false);
             }
         }
 
@@ -258,13 +261,13 @@ namespace UnityEngine.InputSystem
         /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
         /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
         /// <remarks>
-        /// This method is equivalent to <see cref="FindAction(string)"/> except that it throws
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except that it throws
         /// <see cref="KeyNotFoundException"/> if no action with the given name or ID
         /// could be found.
         /// </remarks>
         /// <exception cref="KeyNotFoundException">No action was found matching <paramref name="actionNameOrId"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c> or empty.</exception>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction this[string actionNameOrId]
         {
             get
@@ -274,6 +277,21 @@ namespace UnityEngine.InputSystem
                     throw new KeyNotFoundException($"Cannot find action '{actionNameOrId}' in '{this}'");
                 return action;
             }
+        }
+        /// <summary>
+        /// File‐format version constants for InputActionAsset JSON.
+        /// </summary>
+        static class JsonVersion
+        {
+            /// <summary>The original JSON version format for InputActionAsset.</summary>
+            public const int Version0 = 0;
+
+            /// <summary>Updated JSON version format for InputActionAsset.</summary>
+            /// <remarks>Changes representation of parameter values from being serialized by value to being serialized by value.</remarks>
+            public const int Version1 = 1;
+
+            /// <summary>The current version.</summary>
+            public const int Current  = Version1;
         }
 
         /// <summary>
@@ -296,14 +314,14 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
-            var fileJson = new WriteFileJson
+            var hasContent = m_ActionMaps.LengthSafe() > 0 || m_ControlSchemes.LengthSafe() > 0;
+            return JsonUtility.ToJson(new WriteFileJson
             {
+                version = hasContent ? JsonVersion.Current : JsonVersion.Version0,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
-            };
-
-            return JsonUtility.ToJson(fileJson, true);
+            }, true);
         }
 
         /// <summary>
@@ -381,6 +399,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
+            MigrateJson(ref parsedJson);
             parsedJson.ToAsset(this);
         }
 
@@ -473,7 +492,7 @@ namespace UnityEngine.InputSystem
         /// in the asset.
         /// </summary>
         /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
-        /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
+        /// a simple name (e.g. "fire"). In the former case, the name is split at the '/' slash and the first part is used to find
         /// a map with that name and the second part is used to find an action with that name inside the map. In the
         /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
         /// is returned. Note that name comparisons are case-insensitive.
@@ -483,6 +502,20 @@ namespace UnityEngine.InputSystem
         /// cannot be found, throw <c>ArgumentException</c>.</param>
         /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
         /// <remarks>
+        /// Note that no lookup structures are used internally to speed the operation up. Instead, the search is done
+        /// linearly. For repeated access of an action, it is thus generally best to look up actions once ahead of
+        /// time and cache the result.
+        ///
+        /// If multiple actions have the same name and <paramref name="actionNameOrId"/> is not an ID and not an
+        /// action name qualified by a map name (that is, in the form of <c>"mapName/actionName"</c>), the action that
+        /// is returned will be from the first map in <see cref="actionMaps"/> that has an action with the given name.
+        /// An exception is if, of the multiple actions with the same name, some are enabled and some are disabled. In
+        /// this case, the first action that is enabled is returned.
+        ///
+        /// If an action name contains a slash "/", e.g. "yaw/pitch" and there is also a map called "yaw" which
+        /// contains an action "pitch", the action "pitch" within the map "yaw" will be returned instead of the
+        /// action named "yaw/pitch".
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
@@ -525,19 +558,11 @@ namespace UnityEngine.InputSystem
 
             if (m_ActionMaps != null)
             {
-                // Check if we have a "map/action" path.
+                // Check if we have a "map/action" path. If we do we either has a "map/action" path or a simple
+                // action name containing a slash. We first attempt matching it to a "map/action" and only if that
+                // fails do we attempt to search for a "some/action" name.
                 var indexOfSlash = actionNameOrId.IndexOf('/');
-                if (indexOfSlash == -1)
-                {
-                    // No slash so it's just a simple action name.
-                    for (var i = 0; i < m_ActionMaps.Length; ++i)
-                    {
-                        var action = m_ActionMaps[i].FindAction(actionNameOrId);
-                        if (action != null)
-                            return action;
-                    }
-                }
-                else
+                if (indexOfSlash >= 0)
                 {
                     // Have a path. First search for the map, then for the action.
                     var mapName = new Substring(actionNameOrId, 0, indexOfSlash);
@@ -553,23 +578,61 @@ namespace UnityEngine.InputSystem
                             continue;
 
                         var actions = map.m_Actions;
-                        for (var n = 0; n < actions.Length; ++n)
+                        if (actions != null)
                         {
-                            var action = actions[n];
-                            if (Substring.Compare(action.name, actionName,
-                                StringComparison.InvariantCultureIgnoreCase) == 0)
-                                return action;
+                            for (var n = 0; n < actions.Length; ++n)
+                            {
+                                var action = actions[n];
+                                if (Substring.Compare(action.name, actionName,
+                                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                                    return action;
+                            }
                         }
-
                         break;
                     }
                 }
+
+                // Check if there is an action with the given name regardless of containing map.
+                // If multiple actions exist with the same identifier, the first enabled one is returned.
+                // If no enabled action exist, the first is returned.
+                InputAction firstActionFound = null;
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var action = m_ActionMaps[i].FindAction(actionNameOrId);
+                    if (action != null)
+                    {
+                        if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
+                            return action;
+                        if (firstActionFound == null)
+                            firstActionFound = action;
+                    }
+                }
+                if (firstActionFound != null)
+                    return firstActionFound;
             }
 
             if (throwIfNotFound)
                 throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'");
 
             return null;
+        }
+
+        /// <inheritdoc/>
+        public int FindBinding(InputBinding mask, out InputAction action)
+        {
+            var numMaps = m_ActionMaps.LengthSafe();
+
+            for (var i = 0; i < numMaps; ++i)
+            {
+                var actionMap = m_ActionMaps[i];
+
+                var bindingIndex = actionMap.FindBinding(mask, out action);
+                if (bindingIndex >= 0)
+                    return bindingIndex;
+            }
+
+            action = null;
+            return -1;
         }
 
         /// <summary>
@@ -709,6 +772,52 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Return true if the asset contains bindings (in any of its action maps) that are usable
+        /// with the given <paramref name="device"/>.
+        /// </summary>
+        /// <param name="device">An arbitrary input device.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Find out if the actions of the given PlayerInput can be used with
+        /// // a gamepad.
+        /// if (playerInput.actions.IsUsableWithDevice(Gamepad.all[0]))
+        ///     /* ... */;
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.IsUsableWithDevice"/>
+        /// <seealso cref="InputControlScheme.SupportsDevice"/>
+        public bool IsUsableWithDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // If we have control schemes, we let those dictate our search.
+            var numControlSchemes = m_ControlSchemes.LengthSafe();
+            if (numControlSchemes > 0)
+            {
+                for (var i = 0; i < numControlSchemes; ++i)
+                {
+                    if (m_ControlSchemes[i].SupportsDevice(device))
+                        return true;
+                }
+            }
+            else
+            {
+                // Otherwise, we'll go search bindings. Slow.
+                var actionMapCount = m_ActionMaps.LengthSafe();
+                for (var i = 0; i < actionMapCount; ++i)
+                    if (m_ActionMaps[i].IsUsableWithDevice(device))
+                        return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Enable all action maps in the asset.
         /// </summary>
         /// <remarks>
@@ -751,7 +860,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Enumerate all actions in the asset.
         /// </summary>
-        /// <returns>Enumerate over all actions in the asset.</returns>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
         /// <remarks>
         /// Actions will be enumerated one action map in <see cref="actionMaps"/>
         /// after the other. The actions from each map will be yielded in turn.
@@ -773,12 +882,45 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Enumerate all actions in the asset.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
+        /// <seealso cref="GetEnumerator"/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
-        private void ReResolveIfNecessary()
+        internal void MarkAsDirty()
+        {
+#if UNITY_EDITOR
+            InputSystem.TrackDirtyInputActionAsset(this);
+#endif
+        }
+
+        internal bool IsEmpty()
+        {
+            return actionMaps.Count == 0 && controlSchemes.Count == 0;
+        }
+
+        internal void OnWantToChangeSetup()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnWantToChangeSetup();
+        }
+
+        internal void OnSetupChanged()
+        {
+            MarkAsDirty();
+
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnSetupChanged();
+            else
+                m_SharedStateForAllMaps = null;
+        }
+
+        private void ReResolveIfNecessary(bool fullResolve)
         {
             if (m_SharedStateForAllMaps == null)
                 return;
@@ -786,7 +928,15 @@ namespace UnityEngine.InputSystem
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
-            m_ActionMaps[0].LazyResolveBindings();
+            m_ActionMaps[0].LazyResolveBindings(fullResolve);
+        }
+
+        internal void ResolveBindingsIfNecessary()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                foreach (var map in m_ActionMaps)
+                    if (map.ResolveBindingsIfNecessary())
+                        break;
         }
 
         private void OnDestroy()
@@ -803,6 +953,9 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        [SerializeField] internal bool m_IsProjectWide;
+        #endif
 
         ////TODO: make this persistent across domain reloads
         /// <summary>
@@ -810,14 +963,23 @@ namespace UnityEngine.InputSystem
         /// </summary>
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
+        [NonSerialized] internal int m_ParameterOverridesCount;
+        [NonSerialized] internal InputActionRebindingExtensions.ParameterOverride[] m_ParameterOverrides;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 
         [Serializable]
         internal struct WriteFileJson
         {
+            public int version;
             public string name;
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct WriteFileJsonNoName
+        {
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
         }
@@ -825,6 +987,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -840,6 +1003,74 @@ namespace UnityEngine.InputSystem
                     foreach (var map in asset.m_ActionMaps)
                         map.m_Asset = asset;
             }
+        }
+
+        /// <summary>
+        /// If parsedJson.version is older than Current, rewrite every
+        /// action.processors entry to replace “enumName(Ordinal=…)” with
+        /// “enumName(Value=…)” and bump parsedJson.version.
+        /// </summary>
+        internal void MigrateJson(ref ReadFileJson parsedJson)
+        {
+            if (parsedJson.version >= JsonVersion.Version1)
+                return;
+            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
+            {
+                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+                {
+                    var mapJson = parsedJson.maps[mi];
+                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+                    {
+                        var actionJson = mapJson.actions[ai];
+                        var raw = actionJson.processors;
+                        if (string.IsNullOrEmpty(raw))
+                            continue;
+
+                        var list = NameAndParameters.ParseMultiple(raw).ToList();
+                        var rebuilt = new List<string>(list.Count);
+                        foreach (var nap in list)
+                        {
+                            var procType = InputSystem.TryGetProcessor(nap.name);
+                            if (nap.parameters.Count == 0 || procType == null)
+                            {
+                                rebuilt.Add(nap.ToString());
+                                continue;
+                            }
+
+                            var dict = nap.parameters.ToDictionary(p => p.name, p => p.value.ToString());
+                            var anyChanged = false;
+                            foreach (var field in procType.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType.IsEnum))
+                            {
+                                if (dict.TryGetValue(field.Name, out var ordS) && int.TryParse(ordS, out var ord))
+                                {
+                                    var values = Enum.GetValues(field.FieldType).Cast<object>().ToArray();
+                                    if (ord >= 0 && ord < values.Length)
+                                    {
+                                        dict[field.Name] = Convert.ToInt32(values[ord]).ToString();
+                                        anyChanged = true;
+                                    }
+                                }
+                            }
+
+                            if (!anyChanged)
+                            {
+                                rebuilt.Add(nap.ToString());
+                            }
+                            else
+                            {
+                                var paramText = string.Join(",", dict.Select(kv => $"{kv.Key}={kv.Value}"));
+                                rebuilt.Add($"{nap.name}({paramText})");
+                            }
+                        }
+
+                        actionJson.processors = string.Join(";", rebuilt);
+                        mapJson.actions[ai] = actionJson;
+                    }
+                    parsedJson.maps[mi] = mapJson;
+                }
+            }
+            // Bump the version so we never re-migrate
+            parsedJson.version = JsonVersion.Version1;
         }
     }
 }

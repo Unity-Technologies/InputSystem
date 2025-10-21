@@ -12,8 +12,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: can we have a read-only version of this
 
-////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
-
 ////REVIEW: move this to .LowLevel? this one is pretty peculiar to use and doesn't really work like what you'd expect given C#'s List<>
 
 namespace UnityEngine.InputSystem
@@ -198,6 +196,32 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Resizes the list to be exactly <paramref name="size"/> entries. If this is less than the
+        /// current <see cref="Count"/>, additional entries are dropped. If it is more than the
+        /// current <see cref="Count"/>, additional <c>null</c> entries are appended to the list.
+        /// </summary>
+        /// <param name="size">The new value for <see cref="Count"/>.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="size"/> is negative.</exception>
+        /// <remarks>
+        /// <see cref="Capacity"/> is increased if necessary. It will, however, not be decreased if it
+        /// is larger than <paramref name="size"/> entries.
+        /// </remarks>
+        public void Resize(int size)
+        {
+            if (size < 0)
+                throw new ArgumentOutOfRangeException(nameof(size), "Size cannot be negative");
+
+            if (Capacity < size)
+                Capacity = size;
+
+            // Initialize newly added entries (if any) such that they produce NULL entries.
+            if (size > Count)
+                UnsafeUtility.MemSet((byte*)m_Indices.GetUnsafePtr() + Count * sizeof(ulong), Byte.MaxValue, size - Count);
+
+            m_Count = size;
+        }
+
+        /// <summary>
         /// Add a control to the list.
         /// </summary>
         /// <param name="item">Control to add. Allowed to be <c>null</c>.</param>
@@ -348,15 +372,29 @@ namespace UnityEngine.InputSystem
 
         public int IndexOf(TControl item)
         {
+            return IndexOf(item, 0);
+        }
+
+        public int IndexOf(TControl item, int startIndex, int count = -1)
+        {
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "startIndex cannot be negative");
+
             if (m_Count == 0)
                 return -1;
+
+            if (count < 0)
+                count = Mathf.Max(m_Count - startIndex, 0);
+
+            if (startIndex + count > m_Count)
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             var index = ToIndex(item);
             var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
 
-            for (var i = 0; i < m_Count; ++i)
-                if (indices[i] == index)
-                    return i;
+            for (var i = 0; i < count; ++i)
+                if (indices[startIndex + i] == index)
+                    return startIndex + i;
 
             return -1;
         }
@@ -374,6 +412,11 @@ namespace UnityEngine.InputSystem
         public bool Contains(TControl item)
         {
             return IndexOf(item) != -1;
+        }
+
+        public bool Contains(TControl item, int startIndex, int count = -1)
+        {
+            return IndexOf(item, startIndex, count) != -1;
         }
 
         public void SwapElements(int index1, int index2)
@@ -476,9 +519,9 @@ namespace UnityEngine.InputSystem
                 return kInvalidIndex;
 
             var device = control.device;
-            var deviceIndex = device.m_DeviceIndex;
+            var deviceId = device.m_DeviceId;
             var controlIndex = !ReferenceEquals(device, control)
-                ? ArrayHelpers.IndexOfReference(device.m_ChildrenForEachControl, control) + 1
+                ? device.m_ChildrenForEachControl.IndexOfReference<InputControl, InputControl>(control) + 1
                 : 0;
 
             // There is a known documented bug with the new Rosyln
@@ -486,11 +529,11 @@ namespace UnityEngine.InputSystem
             // was perfectly legal in previous CSC compiler.
             // Below is silly conversion to get rid of warning, or we can pragma
             // out the warning.
-            //return ((ulong)deviceIndex << 32) | (ulong)controlIndex;
-            var shiftedDeviceIndex = (ulong)deviceIndex << 32;
+            //return ((ulong)deviceId << 32) | (ulong)controlIndex;
+            var shiftedDeviceId = (ulong)deviceId << 32;
             var unsignedControlIndex = (ulong)controlIndex;
 
-            return shiftedDeviceIndex | unsignedControlIndex;
+            return shiftedDeviceId | unsignedControlIndex;
         }
 
         private static TControl FromIndex(ulong index)
@@ -498,10 +541,12 @@ namespace UnityEngine.InputSystem
             if (index == kInvalidIndex)
                 return null;
 
-            var deviceIndex = (int)(index >> 32);
+            var deviceId = (int)(index >> 32);
             var controlIndex = (int)(index & 0xFFFFFFFF);
 
-            var device = InputSystem.devices[deviceIndex];
+            var device = InputSystem.GetDeviceById(deviceId);
+            if (device == null)
+                return null;
             if (controlIndex == 0)
                 return (TControl)(InputControl)device;
 

@@ -1,9 +1,15 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
 ////       happen is that point, trackedDevicePosition, and trackedDeviceOrientation have initial state checks. However, for touch,
@@ -12,6 +18,9 @@ using UnityEngine.Serialization;
 ////REVIEW: I think this would be much better served by having a composite type input for each of the three basic types of input (pointer, navigation, tracked)
 ////        I.e. there'd be a PointerInput, a NavigationInput, and a TrackedInput composite. This would solve several problems in one go and make
 ////        it much more obvious which inputs go together.
+////        NOTE: This does not actually solve the problem. Even if, for example, we have a PointerInput value struct and a PointerInputComposite
+////              that binds the individual inputs to controls, and then we use it to bind touch0 as a pointer input source, there may still be multiple
+////              touchscreens and thus multiple touches coming in through the same composite. This leads back to the same situation.
 
 ////REVIEW: The current input model has too much complexity for pointer input; find a way to simplify this.
 
@@ -20,6 +29,9 @@ using UnityEngine.Serialization;
 ////REVIEW: how does this/uGUI support two-finger right-clicks with touch? [GESTURES]
 
 ////TODO: add ability to query which device was last used with any of the actions
+////REVIEW: also give access to the last/current UI event?
+
+////TODO: ToString() method a la PointerInputModule
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -27,17 +39,83 @@ namespace UnityEngine.InputSystem.UI
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// This module processes all UI input based on the Input System. It is the "glue" between UI systems (UGUI, UITK)
+    /// and the Input System.
+    /// </para>
+    /// <para>
+    /// When adding this component from code (such as through <c>GameObject.AddComponent</c>), the
+    /// resulting module will automatically have <see cref="DefaultInputActions"/> assigned to it.
+    /// If you want to use your own actions, you should create an <see cref="InputActionAsset"/> with the necessary
+    /// UI actions. You can copy the default actions and edit them as you need. To have editable Input Actions
+    /// out-of-the box you can use the project-wide actions through InputSystem.actions. More information about this
+    /// can be read in the <a href="../Manual/InputActions.html">manual</a> documentation.
+    /// </para>
+    /// <para>
+    /// This module can be configured in the Editor > Inspector when added as a component to a <c>GameObject</c>.
+    /// </para>
+    /// <para>
     /// This UI input module has the advantage over other such modules that it doesn't have to know
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
+    /// </para>
     /// </remarks>
+    /// <seealso cref="BaseInputModule"/>
+    /// <seealso cref="InputActionAsset"/>
+    /// <seealso cref="InputAction"/>
+    /// <seealso cref="EventSystem"/>
+    /// <seealso cref="AssignDefaultActions"/>
+    /// <example>
+    /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    /// using UnityEngine.InputSystem.UI;
+    /// using UnityEngine.EventSystems;
+    ///
+    /// class InputSystemUIInputModuleExample : MonoBehaviour
+    /// {
+    ///     private InputSystemUIInputModule uiModule;
+    ///
+    ///     // Configure the InputSystemUIInputModule component programmatically on Start()
+    ///     // But a lot of this could be done at runtime as well.
+    ///     void Start()
+    ///     {
+    ///         // Find the EventSystem in the scene
+    ///         var eventSystem = EventSystem.current;
+    ///
+    ///         // Get the InputSystemUIInputModule component
+    ///         uiModule = eventSystem.GetComponent&lt;InputSystemUIInputModule&gt;();
+    ///
+    ///         // Using the default input actions just as an example. Another InputActionAsset can be used.
+    ///         DefaultInputActions defaultInputActions = new DefaultInputActions();
+    ///         // Example on how to assign individual actions programmatically
+    ///         uiModule.actionsAsset = defaultInputActions.asset;
+    ///         uiModule.leftClick = InputActionReference.Create(defaultInputActions.UI.Click);
+    ///         uiModule.scrollWheel = InputActionReference.Create(defaultInputActions.UI.ScrollWheel);
+    ///
+    ///         // Set other fields programmatically
+    ///         uiModule.deselectOnBackgroundClick = true;
+    ///         uiModule.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+    ///         uiModule.cursorLockBehavior = InputSystemUIInputModule.CursorLockBehavior.ScreenCenter;
+    ///     }
+    ///
+    ///     // Example on how programmatically set the move repeat delay based on the move repeat rate
+    ///     void SetMoveRepeat(float value)
+    ///     {
+    ///         uiModule.moveRepeatRate = value;
+    ///         uiModule.moveRepeatDelay = value * (1.2f);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
         /// Whether to clear the current selection when a click happens that does not hit any <c>GameObject</c>.
         /// </summary>
-        /// <value>If true (default), clicking outside of any GameObject will reset the current selection.</value>
         /// <remarks>
+        /// If true (default), clicking outside of any GameObject will reset the current selection
         /// By toggling this behavior off, background clicks will keep the current selection. I.e.
         /// <c>EventSystem.currentSelectedGameObject</c> will not be changed.
         /// </remarks>
@@ -50,7 +128,16 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// How to deal with the presence of pointer-type input from multiple devices.
         /// </summary>
-        /// <value>Wh </value>
+        /// <remarks>
+        /// By default, this is set to <see cref="UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack"/> which will
+        /// treat input from <see cref="Mouse"/> and <see cref="Pen"/> devices as coming from a single on-screen pointer
+        /// but will treat input from devices such as <see cref="XR.XRController"/> and <see cref="Touchscreen"/> as
+        /// their own discrete pointers.
+        ///
+        /// The primary effect of this setting is to determine whether the user can concurrently point at more than
+        /// a single UI element or not. Whenever multiple pointers are allowed, more than one element may have a pointer
+        /// over it at any one point and thus several elements can be interacted with concurrently.
+        /// </remarks>
         public UIPointerBehavior pointerBehavior
         {
             get => m_PointerBehavior;
@@ -58,8 +145,88 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
+        /// Where to position the pointer when the cursor is locked.
+        /// </summary>
+        /// <remarks>
+        /// By default, the pointer is positioned at -1, -1 in screen space when the cursor is locked. This has implications
+        /// for using ray casters like <see cref="PhysicsRaycaster"/> because the raycasts will be sent from the pointer
+        /// position. By setting the value of <see cref="cursorLockBehavior"/> to <see cref="CursorLockBehavior.ScreenCenter"/>,
+        /// the raycasts will be sent from the center of the screen. This is useful when trying to interact with world space UI
+        /// using the <see cref="IPointerEnterHandler"/> and <see cref="IPointerExitHandler"/> interfaces when the cursor
+        /// is locked.
+        /// </remarks>
+        /// <see cref="Cursor.lockState"/>
+        public CursorLockBehavior cursorLockBehavior
+        {
+            get => m_CursorLockBehavior;
+            set => m_CursorLockBehavior = value;
+        }
+
+        /// <summary>
+        /// A root game object to support correct navigation in local multi-player UIs.
+        /// <remarks>
+        /// In local multi-player games where each player has their own UI, players should not be able to navigate into
+        /// another player's UI. Each player should have their own instance of an InputSystemUIInputModule, and this property
+        /// should be set to the root game object containing all UI objects for that player. If set, navigation using the
+        /// <see cref="InputSystemUIInputModule.move"/> action will be constrained to UI objects under that root.
+        /// </remarks>
+        /// </summary>
+        internal GameObject localMultiPlayerRoot
+        {
+            get => m_LocalMultiPlayerRoot;
+            set => m_LocalMultiPlayerRoot = value;
+        }
+
+        /// <summary>
+        /// A multiplier value that allows you to adjust the scroll wheel speed sent to uGUI (Unity UI) components.
+        /// </summary>
+        /// <remarks>
+        /// This value controls the magnitude of the PointerEventData.scrollDelta value, when the scroll wheel is rotated one tick. It acts as a multiplier, so a value of 1 passes through the original value and behaves the same as the legacy Standalone Input Module.
+        ///
+        /// A value larger than one increases the scrolling speed per tick, and a value less than one decreases the speed.
+        ///
+        /// You can set this to a negative value to invert the scroll direction. A value of zero prevents mousewheel scrolling from working at all.
+        ///
+        /// Note: this has no effect on UI Toolkit content, only uGUI components.
+        /// </remarks>
+        public float scrollDeltaPerTick
+        {
+            get => m_ScrollDeltaPerTick;
+            set => m_ScrollDeltaPerTick = value;
+        }
+
+        /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
+        /// <remarks>
+        /// There's no need to call this method directly unless for specific reasons.
+        /// It is called by <c>EventSystem</c> when the input module is made current.
+        /// It sets <see cref="EventSystem.currentSelectedGameObject"/> to
+        /// <see cref="EventSystem.firstSelectedGameObject"/>  if nothing is selected.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.EventSystems;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class ActivateModuleExample : MonoBehaviour
+        /// {
+        ///     private InputSystemUIInputModule uiModule;
+        ///     void Start()
+        ///     {
+        ///         // Find the EventSystem in the scene
+        ///         var eventSystem = EventSystem.current;
+        ///
+        ///         // Get the InputSystemUIInputModule component
+        ///         uiModule = eventSystem.GetComponent&lt;InputSystemUIInputModule&gt;();
+        ///
+        ///         // Manually activate the module
+        ///         uiModule.ActivateModule();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public override void ActivateModule()
         {
             base.ActivateModule();
@@ -80,6 +247,11 @@ namespace UnityEngine.InputSystem.UI
         /// to this are touches as a <see cref="Touchscreen"/> may have multiple pointers (one for each active
         /// finger). For touch, you can use the <see cref="TouchControl.touchId"/> of the touch.
         ///
+        /// Note that for touch, a pointer will stay valid for one frame before being removed. In other words,
+        /// when <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/> is received for a touch
+        /// and the touch was over a <c>GameObject</c>, the associated pointer is still considered over that
+        /// object for the frame in which the touch ended.
+        ///
         /// To check whether any pointer is over a <c>GameObject</c>, simply pass a negative value such as -1.</param>
         /// <returns>True if the given pointer is currently hovering over a <c>GameObject</c>.</returns>
         /// <remarks>
@@ -88,6 +260,14 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// This method can be invoked via <c>EventSystem.current.IsPointerOverGameObject</c>.
         ///
+        /// Be aware that this method relies on state set up during UI event processing that happens in <c>EventSystem.Update</c>,
+        /// that is, as part of <c>MonoBehaviour</c> updates. This step happens <em>after</em> input processing.
+        /// Thus, calling this method earlier than that in the frame will make it poll state from <em>last</em> frame.
+        ///
+        /// Calling this method from within an <see cref="InputAction"/> callback (such as <see cref="InputAction.performed"/>)
+        /// will result in a warning. See the "UI vs Game Input" sample shipped with the Input System package for
+        /// how to deal with this fact.
+        /// </remarks>
         /// <example>
         /// <code>
         /// // In general, the pointer ID corresponds to the device ID:
@@ -107,11 +287,14 @@ namespace UnityEngine.InputSystem.UI
         /// EventSystem.current.IsPointerOverGameObject(); // Equivalent.
         /// </code>
         /// </example>
-        /// </remarks>
         /// <seealso cref="ExtendedPointerEventData.touchId"/>
         /// <seealso cref="InputDevice.deviceId"/>
         public override bool IsPointerOverGameObject(int pointerOrTouchId)
         {
+            if (InputSystem.isProcessingEvents)
+                Debug.LogWarning(
+                    "Calling IsPointerOverGameObject() from within event processing (such as from InputAction callbacks) will not work as expected; it will query UI state from the last frame");
+
             var stateIndex = -1;
 
             if (pointerOrTouchId < 0)
@@ -131,21 +314,78 @@ namespace UnityEngine.InputSystem.UI
             else
             {
                 stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
-
-                if (stateIndex == -1)
-                {
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        var eventData = m_PointerStates[i].eventData;
-                        if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
-                            return eventData.pointerEnter != null;
-                    }
-                }
             }
+
             if (stateIndex == -1)
                 return false;
 
             return m_PointerStates[stateIndex].eventData.pointerEnter != null;
+        }
+
+        /// <summary>
+        /// Returns the most recent raycast information for a given pointer or touch.
+        /// </summary>
+        /// <param name="pointerOrTouchId">ID of the pointer or touch. Meaning this should correspond to either
+        /// <c>PointerEventData.pointerId</c> or <see cref="ExtendedPointerEventData.touchId"/>. The pointer ID
+        /// generally corresponds to the <see cref="InputDevice.deviceId"/> of the pointer device. An exception
+        /// to this are touches as a <see cref="Touchscreen"/> may have multiple pointers (one for each active
+        /// finger). For touch, you can use the <see cref="TouchControl.touchId"/> of the touch.
+        ///
+        /// Negative values will return an invalid <see cref="RaycastResult"/>.</param>
+        /// <returns>The most recent raycast information.</returns>
+        /// <remarks>
+        /// This method is for the most recent raycast, but depending on when it's called is not guaranteed to be for the current frame.
+        /// This method can be used to determine raycast distances and hit information for visualization.
+        /// <br />
+        /// Use <see cref="RaycastResult.isValid"/> to determine if pointer hit anything.
+        /// </remarks>
+        /// <seealso cref="ExtendedPointerEventData.touchId"/>
+        /// <seealso cref="InputDevice.deviceId"/>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.EventSystems;
+        /// using UnityEngine.InputSystem;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class GetLastRaycastResultExample : MonoBehaviour
+        /// {
+        ///     public InputSystemUIInputModule uiModule;
+        ///
+        ///     void PrintLastRaycastResult(int pointerId)
+        ///     {
+        ///         if (uiModule)
+        ///         {
+        ///             // Retrieve the last raycast result for the given pointer ID
+        ///             RaycastResult raycastResult = uiModule.GetLastRaycastResult(pointerId);
+        ///
+        ///             // Check if the raycast result is valid
+        ///             if (raycastResult.isValid)
+        ///             {
+        ///                 // Print details about the raycast result
+        ///                 Debug.Log($"Pointer ID: {pointerId}");
+        ///                 Debug.Log($"Hit GameObject: {raycastResult.gameObject.name}");
+        ///                 Debug.Log($"Distance: {raycastResult.distance}");
+        ///                 Debug.Log($"World Position: {raycastResult.worldPosition}");
+        ///             }
+        ///         }
+        ///
+        ///     }
+        ///
+        ///     void Update()
+        ///     {
+        ///         PrintLastRaycastResult(Mouse.current.deviceId);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        public RaycastResult GetLastRaycastResult(int pointerOrTouchId)
+        {
+            var stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
+            if (stateIndex == -1)
+                return default;
+
+            return m_PointerStates[stateIndex].eventData.pointerCurrentRaycast;
         }
 
         private RaycastResult PerformRaycast(ExtendedPointerEventData eventData)
@@ -205,23 +445,30 @@ namespace UnityEngine.InputSystem.UI
         // Mouse, pen, touch, and tracked device pointer input all go through here.
         private void ProcessPointer(ref PointerModel state)
         {
-            if (!state.changedThisFrame)
-                return;
-
             var eventData = state.eventData;
 
             // Sync position.
             var pointerType = eventData.pointerType;
             if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
             {
-                eventData.position = new Vector2(-1, -1);
+                eventData.position = m_CursorLockBehavior == CursorLockBehavior.OutsideScreen ?
+                    new Vector2(-1, -1) :
+                    new Vector2(Screen.width / 2f, Screen.height / 2f);
                 ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
                 eventData.delta = default;
             }
             else if (pointerType == UIPointerType.Tracked)
             {
-                eventData.trackedDeviceOrientation = state.worldOrientation;
-                eventData.trackedDevicePosition = state.worldPosition;
+                var position = state.worldPosition;
+                var rotation = state.worldOrientation;
+                if (m_XRTrackingOrigin != null)
+                {
+                    position = m_XRTrackingOrigin.TransformPoint(position);
+                    rotation = m_XRTrackingOrigin.rotation * rotation;
+                }
+
+                eventData.trackedDeviceOrientation = rotation;
+                eventData.trackedDevicePosition = position;
             }
             else
             {
@@ -250,7 +497,18 @@ namespace UnityEngine.InputSystem.UI
             eventData.button = PointerEventData.InputButton.Left;
             state.leftButton.CopyPressStateTo(eventData);
 
+            // Unlike StandaloneInputModule, we process moves before processing buttons. This way
+            // UI elements get pointer enters/exits before they get button ups/downs and clicks.
             ProcessPointerMovement(ref state, eventData);
+
+            // We always need to process move-related events in order to get PointerEnter and Exit events
+            // when we change UI state (e.g. show/hide objects) without moving the pointer. This unfortunately
+            // also means that we will invariably raycast on every update.
+            // However, after that, early out at this point when there's no changes to the pointer state (except
+            // for tracked pointers as the tracking origin may have moved).
+            if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
+                return;
+
             ProcessPointerButton(ref state.leftButton, eventData);
             ProcessPointerButtonDrag(ref state.leftButton, eventData);
             ProcessPointerScroll(ref state, eventData);
@@ -268,8 +526,6 @@ namespace UnityEngine.InputSystem.UI
 
             ProcessPointerButton(ref state.middleButton, eventData);
             ProcessPointerButtonDrag(ref state.middleButton, eventData);
-
-            state.OnFrameFinished();
         }
 
         // if we are using a MultiplayerEventSystem, ignore any transforms
@@ -287,10 +543,9 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerMovement(ref PointerModel pointer, ExtendedPointerEventData eventData)
         {
             var currentPointerTarget =
-                // If the pointer is a touch that was released this frame, we generate pointer-exit events
+                // If the pointer is a touch that was released the *previous* frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+                eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
 
@@ -299,6 +554,17 @@ namespace UnityEngine.InputSystem.UI
 
         private void ProcessPointerMovement(ExtendedPointerEventData eventData, GameObject currentPointerTarget)
         {
+#if UNITY_2021_1_OR_NEWER
+            // If the pointer moved, send move events to all UI elements the pointer is
+            // currently over.
+            var wasMoved = eventData.IsPointerMoving();
+            if (wasMoved)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
+            }
+#endif
+
             // If we have no target or pointerEnter has been deleted,
             // we just send exit events to anything we are tracking
             // and then exit.
@@ -319,31 +585,83 @@ namespace UnityEngine.InputSystem.UI
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
                 return;
 
-            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
+            Transform commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
+            Transform pointerParent = ((Component)currentPointerTarget.GetComponentInParent<IPointerExitHandler>())?.transform;
 
             // We walk up the tree until a common root and the last entered and current entered object is found.
             // Then send exit and enter events up to, but not including, the common root.
+            // ** or when !m_SendPointerEnterToParent, stop when meeting a gameobject with an exit event handler
             if (eventData.pointerEnter != null)
             {
-                for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
+                var current = eventData.pointerEnter.transform;
+                while (current != null)
                 {
+                    // if we reach the common root break out!
+                    if (sendPointerHoverToParent && current == commonRoot)
+                        break;
+
+                    // if we reach a PointerExitEvent break out!
+                    if (!sendPointerHoverToParent && current == pointerParent)
+                        break;
+
+#if UNITY_2021_3_OR_NEWER
+                    eventData.fullyExited = current != commonRoot && eventData.pointerEnter != currentPointerTarget;
+#endif
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
+
+                    if (sendPointerHoverToParent)
+                        current = current.parent;
+
+                    // if we reach the common root break out!
+                    if (current == commonRoot)
+                        break;
+
+                    if (!sendPointerHoverToParent)
+                        current = current.parent;
                 }
             }
 
+            // now issue the enter call up to but not including the common root
+            Transform oldPointerEnter = eventData.pointerEnter ? eventData.pointerEnter.transform : null;
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
-                for (var current = currentPointerTarget.transform;
-                     current != null && current != commonRoot && !PointerShouldIgnoreTransform(current);
-                     current = current.parent)
+                Transform current = currentPointerTarget.transform;
+                while (current != null && !PointerShouldIgnoreTransform(current))
                 {
+#if UNITY_2021_3_OR_NEWER
+                    eventData.reentered = current == commonRoot && current != oldPointerEnter;
+                    // if we are sending the event to parent, they are already in hover mode at that point. No need to bubble up the event.
+                    if (sendPointerHoverToParent && eventData.reentered)
+                        break;
+#endif
+
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+#if UNITY_2021_1_OR_NEWER
+                    if (wasMoved)
+                        ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+#endif
                     eventData.hovered.Add(current.gameObject);
+
+                    // stop when encountering an object with the pointerEnterHandler
+                    if (!sendPointerHoverToParent && current.GetComponent<IPointerEnterHandler>() != null)
+                        break;
+
+                    if (sendPointerHoverToParent)
+                        current = current.parent;
+
+                    // if we reach the common root break out!
+                    if (current == commonRoot)
+                        break;
+
+                    if (!sendPointerHoverToParent)
+                        current = current.parent;
                 }
             }
         }
+
+        private const float kClickSpeed = 0.3f;
 
         private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerEventData eventData)
         {
@@ -355,11 +673,14 @@ namespace UnityEngine.InputSystem.UI
             // Button press.
             if (button.wasPressedThisFrame)
             {
+                button.pressTime = InputRuntime.s_Instance.unscaledGameTime;
+
                 eventData.delta = Vector2.zero;
                 eventData.dragging = false;
                 eventData.pressPosition = eventData.position;
                 eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
                 eventData.eligibleForClick = true;
+                eventData.useDragThreshold = true;
 
                 var selectHandler = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
 
@@ -371,23 +692,29 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerDown, if present.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
 
-                // Detect clicks.
-                // NOTE: StandaloneInputModule does this *after* the click handler has been invoked -- which doesn't seem to
-                //       make sense. We do it *before* IPointerClickHandler.
-                var time = InputRuntime.s_Instance.unscaledGameTime;
-                const float clickSpeed = 0.3f;
-                if (newPressed == eventData.lastPress && (time - eventData.clickTime) < clickSpeed)
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
-                eventData.clickTime = time;
-
-                // We didn't find a press handler, so we turn it into a click.
+                // If no GO responded to OnPointerDown, look for one that responds to OnPointerClick.
+                // NOTE: This only looks up the handler. We don't invoke OnPointerClick here.
                 if (newPressed == null)
-                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                    newPressed = pointerClickHandler;
 
+                // Reset click state if delay to last release was too long or if we didn't
+                // press on the same object as last time. The latter part we don't know until
+                // we've actually run the press handler.
+                button.clickedOnSameGameObject = newPressed == eventData.lastPress && button.pressTime - eventData.clickTime <= kClickSpeed;
+                if (eventData.clickCount > 0 && !button.clickedOnSameGameObject)
+                {
+                    eventData.clickCount = default;
+                    eventData.clickTime = default;
+                }
+
+                // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
+                // become null.
                 eventData.pointerPress = newPressed;
+#if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
+                eventData.pointerClick = pointerClickHandler;
+#endif
                 eventData.rawPointerPress = currentOverGo;
 
                 // Save the drag handler for drag events during this mouse down.
@@ -400,12 +727,48 @@ namespace UnityEngine.InputSystem.UI
             // Button release.
             if (button.wasReleasedThisFrame)
             {
+                // Check for click. Release must be on same GO that we pressed on and we must not
+                // have moved beyond our move tolerance (doing so will set eligibleForClick to false).
+                // NOTE: There's two difference to click handling here compared to StandaloneInputModule.
+                //       1) StandaloneInputModule counts clicks entirely on press meaning that clickCount is increased
+                //          before a click has actually happened.
+                //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
+                //          click and OnPointerClick is thus never invoked.
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+#if UNITY_2020_1_OR_NEWER
+                var isClick = eventData.pointerClick != null && eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
+#else
+                var isClick = eventData.pointerPress != null && eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+#endif
+                if (isClick)
+                {
+                    // Count clicks.
+                    if (button.clickedOnSameGameObject)
+                    {
+                        // We re-clicked on the same UI element within 0.3 seconds so count
+                        // it as a repeat click.
+                        ++eventData.clickCount;
+                    }
+                    else
+                    {
+                        // First click on this object.
+                        eventData.clickCount = 1;
+                    }
+                    eventData.clickTime = InputRuntime.s_Instance.unscaledGameTime;
+                }
+
+                // Invoke OnPointerUp.
                 ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
 
-                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
-                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                // Invoke OnPointerClick or OnDrop.
+                if (isClick)
+                {
+#if UNITY_2020_1_OR_NEWER
+                    ExecuteEvents.Execute(eventData.pointerClick, eventData, ExecuteEvents.pointerClickHandler);
+#else
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
+#endif
+                }
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
 
@@ -418,6 +781,8 @@ namespace UnityEngine.InputSystem.UI
 
                 eventData.dragging = false;
                 eventData.pointerDrag = null;
+
+                button.ignoreNextClick = false;
             }
 
             button.CopyPressStateFrom(eventData);
@@ -430,6 +795,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData.pointerDrag == null)
                 return;
 
+            // Detect drags.
             if (!eventData.dragging)
             {
                 if (!eventData.useDragThreshold || (eventData.pressPosition - eventData.position).sqrMagnitude >=
@@ -437,6 +803,7 @@ namespace UnityEngine.InputSystem.UI
                                                                                                ? m_TrackedDeviceDragThresholdMultiplier
                                                                                                : 1))
                 {
+                    // Started dragging. Invoke OnBeginDrag.
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
                     eventData.dragging = true;
                 }
@@ -453,6 +820,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerPress = null;
                     eventData.rawPointerPress = null;
                 }
+
                 ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
                 button.CopyPressStateFrom(eventData);
             }
@@ -516,23 +884,27 @@ namespace UnityEngine.InputSystem.UI
 
                     if (allow)
                     {
-                        var eventData = m_NavigationState.eventData;
+                        var eventData = m_NavigationState.eventData as ExtendedAxisEventData;
                         if (eventData == null)
                         {
-                            eventData = new AxisEventData(eventSystem);
+                            eventData = new ExtendedAxisEventData(eventSystem);
                             m_NavigationState.eventData = eventData;
                         }
                         eventData.Reset();
 
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
+                        eventData.device = navigationState.device;
 
-                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
-                        usedSelectionChange = eventData.used;
+                        if (IsMoveAllowed(eventData))
+                        {
+                            ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                            usedSelectionChange = eventData.used;
 
-                        m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
-                        m_NavigationState.lastMoveTime = time;
-                        m_NavigationState.lastMoveDirection = moveDirection;
+                            m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
+                            m_NavigationState.lastMoveTime = time;
+                            m_NavigationState.lastMoveDirection = moveDirection;
+                        }
                     }
                 }
                 else
@@ -546,14 +918,69 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                var data = GetBaseEventData();
-                if (m_NavigationState.cancelButton.wasPressedThisFrame)
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPerformedThisDynamicUpdate() for
+                //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
+                //       a click will register on button *up*, but consistent with how other UI systems work where
+                //       click occurs on key press. This nuance in behavior becomes important in combination with
+                //       action enable/disable changes in response to submit or cancel. We react to button *down*
+                //       instead of *up*, so button *up* will come in *after* we have applied the state change.
+                var submitAction = m_SubmitAction?.action;
+                var cancelAction = m_CancelAction?.action;
+
+                var data = m_SubmitCancelState.eventData as ExtendedSubmitCancelEventData;
+                if (data == null)
+                {
+                    data = new ExtendedSubmitCancelEventData(eventSystem);
+                    m_SubmitCancelState.eventData = data;
+                }
+                data.Reset();
+
+                data.device = m_SubmitCancelState.device;
+
+                if (cancelAction != null && cancelAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && m_NavigationState.submitButton.wasPressedThisFrame)
+                if (!data.used && submitAction != null && submitAction.WasPerformedThisDynamicUpdate())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
+        }
 
-            m_NavigationState.OnFrameFinished();
+        private bool IsMoveAllowed(AxisEventData eventData)
+        {
+            if (m_LocalMultiPlayerRoot == null)
+                return true;
+
+            if (eventSystem.currentSelectedGameObject == null)
+                return true;
+
+            var selectable = eventSystem.currentSelectedGameObject.GetComponent<Selectable>();
+
+            if (selectable == null)
+                return true;
+
+            Selectable navigationTarget = null;
+            switch (eventData.moveDir)
+            {
+                case MoveDirection.Right:
+                    navigationTarget = selectable.FindSelectableOnRight();
+                    break;
+
+                case MoveDirection.Up:
+                    navigationTarget = selectable.FindSelectableOnUp();
+                    break;
+
+                case MoveDirection.Left:
+                    navigationTarget = selectable.FindSelectableOnLeft();
+                    break;
+
+                case MoveDirection.Down:
+                    navigationTarget = selectable.FindSelectableOnDown();
+                    break;
+            }
+
+            if (navigationTarget == null)
+                return true;
+
+            return navigationTarget.transform.IsChildOf(m_LocalMultiPlayerRoot.transform);
         }
 
         [FormerlySerializedAs("m_RepeatDelay")]
@@ -570,6 +997,10 @@ namespace UnityEngine.InputSystem.UI
         // Hide this while we still have to figure out what to do with this.
         private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
+        [Tooltip("Transform representing the real world origin for tracking devices. When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.")]
+        [SerializeField]
+        private Transform m_XRTrackingOrigin;
+
         /// <summary>
         /// Delay in seconds between an initial move action and a repeated move action while <see cref="move"/> is actuated.
         /// </summary>
@@ -579,7 +1010,6 @@ namespace UnityEngine.InputSystem.UI
         /// </remarks>
         /// <seealso cref="moveRepeatRate"/>
         /// <seealso cref="AxisEventData"/>
-        /// <see cref="move"/>
         public float moveRepeatDelay
         {
             get => m_MoveRepeatDelay;
@@ -596,15 +1026,26 @@ namespace UnityEngine.InputSystem.UI
         /// Note that a maximum of one <see cref="AxisEventData"/> will be sent per frame. This means that even if multiple time
         /// increments of the repeat delay have passed since the last update, only one move repeat event will be generated.
         /// </remarks>
-        /// <seealso cref="moveRepeatDelay"/>
-        /// <seealso cref="AxisEventData"/>
-        /// <see cref="move"/>
         public float moveRepeatRate
         {
             get => m_MoveRepeatRate;
             set => m_MoveRepeatRate = value;
         }
 
+        private bool explictlyIgnoreFocus => InputSystem.settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus;
+
+        private bool shouldIgnoreFocus
+        {
+            // By default, key this on whether running the background is enabled or not. Rationale is that
+            // if running in the background is enabled, we already have rules in place what kind of input
+            // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
+            // react.
+            get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground;
+        }
+
+        /// <summary>
+        /// (Obsolete) <inheritdoc cref="moveRepeatRate"/>
+        /// </summary>
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
         public float repeatRate
         {
@@ -612,11 +1053,30 @@ namespace UnityEngine.InputSystem.UI
             set => moveRepeatRate = value;
         }
 
+        /// <summary>
+        /// (Obsolete) <inheritdoc cref="moveRepeatDelay"/>
+        /// </summary>
         [Obsolete("'repeatDelay' has been obsoleted; use 'moveRepeatDelay' instead. (UnityUpgradable) -> moveRepeatDelay", false)]
         public float repeatDelay
         {
             get => moveRepeatDelay;
             set => moveRepeatDelay = value;
+        }
+
+        /// <summary>
+        /// A <see cref="Transform"/> representing the real world origin for tracking devices.
+        /// </summary>
+        /// <remarks>
+        /// This is used to convert real world positions and rotations for all <see cref="UIPointerType.Tracked"/>
+        /// pointers into Unity's global space.
+        /// When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.
+        /// If unset, or set to null, the Unity world origin will be used as the basis for all tracked positions and
+        /// rotations.
+        /// </remarks>
+        public Transform xrTrackingOrigin
+        {
+            get => m_XRTrackingOrigin;
+            set => m_XRTrackingOrigin = value;
         }
 
         /// <summary>
@@ -633,28 +1093,50 @@ namespace UnityEngine.InputSystem.UI
             if (property == newValue || (property != null && newValue != null && property.action == newValue.action))
                 return;
 
-            if (property != null && actionsHooked)
+            if (property != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
                 property.action.canceled -= actionCallback;
             }
 
+            var oldActionNull = property?.action == null;
+            var oldActionEnabled = property?.action != null && property.action.enabled;
+
+            TryDisableInputAction(property);
             property = newValue;
 
             #if DEBUG
-            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough)
+            // We source inputs from arbitrary pointers through a set of pointer-related actions (point, click, etc). This means that in any frame,
+            // multiple pointers may pipe input through to the same action and we do not want the disambiguation code in InputActionState.ShouldIgnoreControlStateChange()
+            // to prevent input from getting to us. Thus, these actions should generally be set to InputActionType.PassThrough.
+            //
+            // We treat navigation actions differently as there is only a single NavigationModel for the UI that all navigation input feeds into.
+            // Thus, those actions should be configured with disambiguation active (i.e. Move should be a Value action and Submit and Cancel should
+            // be Button actions). This is especially important for Submit and Cancel as we get proper press and release action this way.
+            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough && !IsNavigationAction(newValue))
             {
-                Debug.LogWarning("Actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
-                    + $"input from multiple devices (action {newValue.action} is set to {newValue.action.type})", this);
+                Debug.LogWarning("Pointer-related actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
+                    + $"input from multiple pointers (action {newValue.action} is set to {newValue.action.type})", this);
             }
             #endif
 
-            if (newValue != null && actionsHooked)
+            if (newValue?.action != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
                 property.action.canceled += actionCallback;
             }
+
+            if (isActiveAndEnabled && newValue?.action != null && (oldActionEnabled || oldActionNull))
+                EnableInputAction(property);
         }
+
+        #if DEBUG
+        private bool IsNavigationAction(InputActionReference reference)
+        {
+            return reference == m_SubmitAction || reference == m_CancelAction || reference == m_MoveAction;
+        }
+
+        #endif
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
@@ -665,6 +1147,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Together with <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
         ///
         /// <example>
         /// <code>
@@ -680,10 +1165,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
         public InputActionReference point
         {
             get => m_PointAction;
@@ -702,6 +1183,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
         ///
         /// <example>
         /// <code>
@@ -722,10 +1206,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="point"/>
         public InputActionReference scrollWheel
         {
             get => m_ScrollWheelAction;
@@ -744,6 +1224,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that together with <see cref="point"/>, this action is necessary for a pointer to be functional. The other clicks
         /// and <see cref="scrollWheel"/> are optional, however.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
         ///
         /// <example>
         /// <code>
@@ -765,10 +1248,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference leftClick
         {
             get => m_LeftClickAction;
@@ -787,6 +1266,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
         ///
         /// <example>
         /// <code>
@@ -813,10 +1295,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="rightClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference middleClick
         {
             get => m_MiddleClickAction;
@@ -835,6 +1313,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
         ///
         /// <example>
         /// <code>
@@ -861,10 +1342,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="leftClick"/>
-        /// <seealso cref="middleClick"/>
-        /// <seealso cref="scrollWheel"/>
-        /// <seealso cref="point"/>
         public InputActionReference rightClick
         {
             get => m_RightClickAction;
@@ -881,6 +1358,9 @@ namespace UnityEngine.InputSystem.UI
         /// This action together with <see cref="submit"/> and <see cref="cancel"/> form the sources for navigation-style
         /// UI input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -903,8 +1383,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="submit"/>
-        /// <seealso cref="cancel"/>
         public InputActionReference move
         {
             get => m_MoveAction;
@@ -921,6 +1399,8 @@ namespace UnityEngine.InputSystem.UI
         /// This action together with <see cref="move"/> and <see cref="cancel"/> form the sources for navigation-style
         /// UI input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.Button"/>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -943,12 +1423,10 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="move"/>
-        /// <seealso cref="cancel"/>
         public InputActionReference submit
         {
             get => m_SubmitAction;
-            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitDelegate);
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -961,6 +1439,8 @@ namespace UnityEngine.InputSystem.UI
         /// This action together with <see cref="move"/> and <see cref="submit"/> form the sources for navigation-style
         /// UI input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.Button"/>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -983,12 +1463,10 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="move"/>
-        /// <seealso cref="submit"/>
         public InputActionReference cancel
         {
             get => m_CancelAction;
-            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnCancelDelegate);
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnSubmitCancelDelegate);
         }
 
         /// <summary>
@@ -1001,6 +1479,9 @@ namespace UnityEngine.InputSystem.UI
         /// UI input from <see cref="TrackedDevice"/>. Other than that, UI input for tracked devices is no different from "normal"
         /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Quaternion"</c>.
         ///
         /// <example>
         /// <code>
@@ -1023,7 +1504,6 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="trackedDevicePosition"/>
         public InputActionReference trackedDeviceOrientation
         {
             get => m_TrackedDeviceOrientationAction;
@@ -1041,6 +1521,9 @@ namespace UnityEngine.InputSystem.UI
         /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector3"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -1062,13 +1545,96 @@ namespace UnityEngine.InputSystem.UI
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="trackedDeviceOrientation"/>
         public InputActionReference trackedDevicePosition
         {
             get => m_TrackedDevicePositionAction;
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
         }
 
+        // We should dispose the static default actions thing because otherwise it will survive domain reloads
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetDefaultActions()
+        {
+            if (defaultActions != null)
+            {
+                defaultActions.Dispose();
+                defaultActions = null;
+            }
+        }
+
+        /// <summary>
+        /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
+        /// Useful for creating <see cref="InputSystemUIInputModule"/> at runtime.
+        /// </summary>
+        /// <remarks>
+        /// This instantiates <see cref="DefaultInputActions"/> and assigns it to <see cref="actionsAsset"/>. It also
+        /// assigns all the various individual actions such as <see cref="point"/> and <see cref="leftClick"/>.
+        ///
+        /// Note that if an <c>InputSystemUIInputModule</c> component is programmatically added to a <c>GameObject</c>,
+        /// it will automatically receive the default actions as part of its <c>OnEnable</c> method. Use <see cref="UnassignActions"/>
+        /// to remove these assignments.
+        /// </remarks>
+        /// <example>
+        /// <code source="../../../DocCodeSamples.Tests/InputSystemUIInputModuleAssignActionsExample.cs"/>
+        /// </example>
+        public void AssignDefaultActions()
+        {
+            if (defaultActions == null)
+            {
+                defaultActions = new DefaultInputActions();
+            }
+            actionsAsset = defaultActions.asset;
+            cancel = InputActionReference.Create(defaultActions.UI.Cancel);
+            submit = InputActionReference.Create(defaultActions.UI.Submit);
+            move = InputActionReference.Create(defaultActions.UI.Navigate);
+            leftClick = InputActionReference.Create(defaultActions.UI.Click);
+            rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
+            middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
+            point = InputActionReference.Create(defaultActions.UI.Point);
+            scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+            trackedDeviceOrientation = InputActionReference.Create(defaultActions.UI.TrackedDeviceOrientation);
+            trackedDevicePosition = InputActionReference.Create(defaultActions.UI.TrackedDevicePosition);
+        }
+
+        private static DefaultInputActions defaultActions;
+
+        /// <summary>
+        /// Remove all action assignments.
+        /// </summary>
+        /// <remarks>
+        /// Resets <see cref="actionsAsset"/> reference as well as all individual
+        /// actions references, such as <see cref="leftClick"/> , and removes the correspondent callbacks hooked for
+        /// <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/>
+        ///
+        /// It also disposes <see cref="defaultActions"/>.
+        ///
+        /// If the current actions were enabled by the UI input module, they will be disabled in the process.
+        /// </remarks>
+        /// <seealso cref="AssignDefaultActions"/>
+        /// <example>
+        /// <code source="../../../DocCodeSamples.Tests/InputSystemUIInputModuleAssignActionsExample.cs"/>
+        /// </example>
+        public void UnassignActions()
+        {
+            defaultActions?.Dispose();
+            defaultActions = default;
+            actionsAsset = default;
+            cancel = default;
+            submit = default;
+            move = default;
+            leftClick = default;
+            rightClick = default;
+            middleClick = default;
+            point = default;
+            scrollWheel = default;
+            trackedDeviceOrientation = default;
+            trackedDevicePosition = default;
+        }
+
+        /// <summary>
+        /// (Obsolete) This API has been obsoleted; use <see cref="leftClick"/> instead.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
         public InputActionReference trackedDeviceSelect
         {
@@ -1076,6 +1642,22 @@ namespace UnityEngine.InputSystem.UI
             set => throw new InvalidOperationException();
         }
 
+#if UNITY_EDITOR
+        /// <inheritdoc/>
+        protected override void Reset()
+        {
+            base.Reset();
+
+            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
+                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                typeof(InputActionAsset));
+            // Setting default asset and actions when creating via inspector
+            Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);
+        }
+
+#endif
+
+        /// <inheritdoc/>
         protected override void Awake()
         {
             base.Awake();
@@ -1083,6 +1665,7 @@ namespace UnityEngine.InputSystem.UI
             m_NavigationState.Reset();
         }
 
+        /// <inheritdoc/>
         protected override void OnDestroy()
         {
             base.OnDestroy();
@@ -1090,88 +1673,164 @@ namespace UnityEngine.InputSystem.UI
             UnhookActions();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnable()
         {
             base.OnEnable();
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AppendWithCapacity(m_OnControlsChangedDelegate);
+            InputActionState.s_GlobalState.onActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
+
+            if (HasNoActions())
+                AssignDefaultActions();
+
+            ResetPointers();
 
             HookActions();
             EnableAllActions();
         }
 
+        /// <inheritdoc/>
         protected override void OnDisable()
         {
-            base.OnDisable();
+            ResetPointers();
 
-            var i = InputActionState.s_OnActionControlsChanged.IndexOfReference(m_OnControlsChangedDelegate);
-            if (i != -1)
-                InputActionState.s_OnActionControlsChanged.RemoveAtWithCapacity(i);
-
+            InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
             DisableAllActions();
             UnhookActions();
+
+            // In the case we've been initialized with default actions, we want to release them
+            if (defaultActions != null && defaultActions.asset == actionsAsset)
+            {
+                UnassignActions();
+            }
+
+            base.OnDisable();
         }
 
-        private bool IsAnyActionEnabled()
+        private void ResetPointers()
         {
-            return (m_PointAction?.action?.enabled ?? true) &&
-                (m_LeftClickAction?.action?.enabled ?? true) &&
-                (m_RightClickAction?.action?.enabled ?? true) &&
-                (m_MiddleClickAction?.action?.enabled ?? true) &&
-                (m_MoveAction?.action?.enabled ?? true) &&
-                (m_SubmitAction?.action?.enabled ?? true) &&
-                (m_CancelAction?.action?.enabled ?? true) &&
-                (m_ScrollWheelAction?.action?.enabled ?? true) &&
-                (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
-                (m_TrackedDevicePositionAction?.action?.enabled ?? true);
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                if (SendPointerExitEventsAndRemovePointer(i))
+                    --i;
+            }
+
+            m_CurrentPointerId = -1;
+            m_CurrentPointerIndex = -1;
+            m_CurrentPointerType = UIPointerType.None;
+        }
+
+        private bool HasNoActions()
+        {
+            if (m_ActionsAsset != null)
+                return false;
+
+            return m_PointAction?.action == null
+                && m_LeftClickAction?.action == null
+                && m_RightClickAction?.action == null
+                && m_MiddleClickAction?.action == null
+                && m_SubmitAction?.action == null
+                && m_CancelAction?.action == null
+                && m_ScrollWheelAction?.action == null
+                && m_TrackedDeviceOrientationAction?.action == null
+                && m_TrackedDevicePositionAction?.action == null;
         }
 
         private void EnableAllActions()
         {
-            if (!IsAnyActionEnabled())
-            {
-                m_PointAction?.action?.Enable();
-                m_LeftClickAction?.action?.Enable();
-                m_RightClickAction?.action?.Enable();
-                m_MiddleClickAction?.action?.Enable();
-                m_MoveAction?.action?.Enable();
-                m_SubmitAction?.action?.Enable();
-                m_CancelAction?.action?.Enable();
-                m_ScrollWheelAction?.action?.Enable();
-                m_TrackedDeviceOrientationAction?.action?.Enable();
-                m_TrackedDevicePositionAction?.action?.Enable();
-                m_OwnsEnabledState = true;
-            }
+            EnableInputAction(m_PointAction);
+            EnableInputAction(m_LeftClickAction);
+            EnableInputAction(m_RightClickAction);
+            EnableInputAction(m_MiddleClickAction);
+            EnableInputAction(m_MoveAction);
+            EnableInputAction(m_SubmitAction);
+            EnableInputAction(m_CancelAction);
+            EnableInputAction(m_ScrollWheelAction);
+            EnableInputAction(m_TrackedDeviceOrientationAction);
+            EnableInputAction(m_TrackedDevicePositionAction);
         }
 
         private void DisableAllActions()
         {
-            if (m_OwnsEnabledState)
-            {
-                m_OwnsEnabledState = false;
-                m_PointAction?.action?.Disable();
-                m_LeftClickAction?.action?.Disable();
-                m_RightClickAction?.action?.Disable();
-                m_MiddleClickAction?.action?.Disable();
-                m_MoveAction?.action?.Disable();
-                m_SubmitAction?.action?.Disable();
-                m_CancelAction?.action?.Disable();
-                m_ScrollWheelAction?.action?.Disable();
-                m_TrackedDeviceOrientationAction?.action?.Disable();
-                m_TrackedDevicePositionAction?.action?.Disable();
-            }
+            TryDisableInputAction(m_PointAction, true);
+            TryDisableInputAction(m_LeftClickAction, true);
+            TryDisableInputAction(m_RightClickAction, true);
+            TryDisableInputAction(m_MiddleClickAction, true);
+            TryDisableInputAction(m_MoveAction, true);
+            TryDisableInputAction(m_SubmitAction, true);
+            TryDisableInputAction(m_CancelAction, true);
+            TryDisableInputAction(m_ScrollWheelAction, true);
+            TryDisableInputAction(m_TrackedDeviceOrientationAction, true);
+            TryDisableInputAction(m_TrackedDevicePositionAction, true);
         }
 
-        private int GetPointerStateIndexFor(int pointerId)
+        private void EnableInputAction(InputActionReference inputActionReference)
         {
-            if (pointerId == m_CurrentPointerId)
+            var action = inputActionReference?.action;
+            if (action == null)
+                return;
+
+            if (s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
+            {
+                referenceState.refCount++;
+                s_InputActionReferenceCounts[action] = referenceState;
+            }
+            else
+            {
+                // if the action is already enabled but its reference count is zero then it was enabled by
+                // something outside the input module and the input module should never disable it.
+                referenceState = new InputActionReferenceState {refCount = 1, enabledByInputModule = !action.enabled};
+                s_InputActionReferenceCounts.Add(action, referenceState);
+            }
+
+            action.Enable();
+        }
+
+        private void TryDisableInputAction(InputActionReference inputActionReference, bool isComponentDisabling = false)
+        {
+            var action = inputActionReference?.action;
+            if (action == null)
+                return;
+
+            // Don't decrement refCount when we were not responsible for incrementing it.
+            // I.e. when we were not enabled yet. When OnDisabled is called, isActiveAndEnabled will
+            // already have been set to false. In that case we pass isComponentDisabling to check if we
+            // came from OnDisabled and therefore need to allow disabling.
+            if (!isActiveAndEnabled && !isComponentDisabling)
+                return;
+
+            if (!s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
+                return;
+
+            if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
+            {
+                action.Disable();
+                s_InputActionReferenceCounts.Remove(action);
+                return;
+            }
+
+            referenceState.refCount--;
+            s_InputActionReferenceCounts[action] = referenceState;
+        }
+
+        private int GetPointerStateIndexFor(int pointerOrTouchId)
+        {
+            if (pointerOrTouchId == m_CurrentPointerId)
                 return m_CurrentPointerIndex;
 
             for (var i = 0; i < m_PointerIds.length; ++i)
-                if (m_PointerIds[i] == pointerId)
+                if (m_PointerIds[i] == pointerOrTouchId)
                     return i;
+
+            // Search for Device or Touch Ids as a fallback
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                var eventData = m_PointerStates[i].eventData;
+                if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
+                    return i;
+            }
 
             return -1;
         }
@@ -1183,10 +1842,24 @@ namespace UnityEngine.InputSystem.UI
             return ref m_PointerStates.additionalValues[index - 1];
         }
 
-        private ref PointerModel GetPointerStateFor(ref InputAction.CallbackContext context)
+        private int GetDisplayIndexFor(InputControl control)
         {
-            var index = GetPointerStateIndexFor(context.control);
-            return ref GetPointerStateForIndex(index);
+            int displayIndex = 0;
+            if (control.device is Pointer pointerCast)
+            {
+                displayIndex = pointerCast.displayIndex.ReadValue();
+                Debug.Assert(displayIndex <= byte.MaxValue, "Display index was larger than expected");
+            }
+            return displayIndex;
+        }
+
+        private int GetPointerStateIndexFor(ref InputAction.CallbackContext context)
+        {
+            if (CheckForRemovedDevice(ref context))
+                return -1;
+
+            var phase = context.phase;
+            return GetPointerStateIndexFor(context.control, createIfNotExists: phase != InputActionPhase.Canceled);
         }
 
         // This is the key method for determining which pointer a particular input is associated with.
@@ -1200,29 +1873,36 @@ namespace UnityEngine.InputSystem.UI
         //
         // Quite a lot going on in this method but we're dealing with three different UI interaction paradigms
         // here which we all support from a single input path and allow seamless switching between.
-        private int GetPointerStateIndexFor(InputControl control)
+        private int GetPointerStateIndexFor(InputControl control, bool createIfNotExists = true)
         {
             Debug.Assert(control != null, "Control must not be null");
 
             ////REVIEW: Any way we can cut down on the hops all over memory that we're doing here?
             var device = control.device;
 
-            ////TODO: We're repeatedly inspecting the control setup here. Do this once and only redo it if the control setup changes.
-
-            ////REVIEW: It seems wrong that we are picking up an input here that is *NOT* reflected in our actions. We just end
-            ////        up reading a touchId control implicitly instead of allowing actions to deliver IDs to us. On the other hand,
-            ////        making that setup explicit in actions may be quite awkward and not nearly as robust.
             // Determine the pointer (and touch) ID. We default the pointer ID to the device
             // ID of the InputDevice.
+            var controlParent = control.parent;
             var pointerId = device.deviceId;
             var touchId = 0;
-            var controlParent = control.parent;
+            var touchPosition = Vector2.zero;
+
+            // Need to check if it's a touch so that we get a correct pointerId.
             if (controlParent is TouchControl touchControl)
-                touchId = touchControl.touchId.ReadValue();
+            {
+                touchId = touchControl.touchId.value;
+                touchPosition = touchControl.position.value;
+            }
             // Could be it's a toplevel control on Touchscreen (like "<Touchscreen>/position"). In that case,
             // read the touch ID from primaryTouch.
             else if (controlParent is Touchscreen touchscreen)
-                touchId = touchscreen.primaryTouch.touchId.ReadValue();
+            {
+                touchId = touchscreen.primaryTouch.touchId.value;
+                touchPosition = touchscreen.primaryTouch.position.value;
+            }
+
+            int displayIndex = GetDisplayIndexFor(control);
+
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
 
@@ -1247,6 +1927,9 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            if (!createIfNotExists)
+                return -1;
+
             // Determine pointer type.
             var pointerType = UIPointerType.None;
             if (touchId != 0)
@@ -1256,35 +1939,6 @@ namespace UnityEngine.InputSystem.UI
             else if (HaveControlForDevice(device, trackedDevicePosition))
                 pointerType = UIPointerType.Tracked;
 
-            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
-            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
-            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType != UIPointerType.None)
-            {
-                if (pointerType == UIPointerType.MouseOrPen)
-                {
-                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-                else
-                {
-                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-            }
             ////REVIEW: For touch, probably makes sense to force-ignore any input other than from primaryTouch.
             // If the behavior is SingleUnifiedPointer, we only ever create a single pointer state
             // and use that for all pointer input that is coming in.
@@ -1293,7 +1947,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_CurrentPointerIndex == -1)
                 {
-                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, device);
+                    m_CurrentPointerIndex = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
                 }
                 else
                 {
@@ -1304,15 +1958,31 @@ namespace UnityEngine.InputSystem.UI
                     ref var pointer = ref GetPointerStateForIndex(m_CurrentPointerIndex);
 
                     var eventData = pointer.eventData;
+                    eventData.control = control;
                     eventData.device = device;
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
+#if UNITY_2022_3_OR_NEWER
+                    eventData.displayIndex = displayIndex;
+#endif
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
                     eventData.trackedDevicePosition = default;
+
+                    // We only have a single pointer state and current frame press state values was based on previous eventData.
+                    // Make sure these get updated when we switch.
+                    if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                    {
+                        pointer.leftButton.OnEndFrame();
+                        pointer.rightButton.OnEndFrame();
+                        pointer.middleButton.OnEndFrame();
+                    }
                 }
+
+                if (pointerType == UIPointerType.Touch)
+                    GetPointerStateForIndex(m_CurrentPointerIndex).screenPosition = touchPosition;
 
                 m_CurrentPointerId = pointerId;
                 m_CurrentPointerType = pointerType;
@@ -1326,7 +1996,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
-                index = AllocatePointer(pointerId, touchId, pointerType, device);
+                index = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
             }
             else
             {
@@ -1348,7 +2018,7 @@ namespace UnityEngine.InputSystem.UI
                 if (pointerDevice != null && !(pointerDevice is Touchscreen)) // Touchscreen only temporarily allocate pointer states.
                 {
                     // Create MouseOrPen style pointer.
-                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointerDevice);
+                    index = AllocatePointer(pointerDevice.deviceId, displayIndex, 0, UIPointerType.MouseOrPen, pointControls.Value[0], pointerDevice);
                 }
                 else
                 {
@@ -1360,16 +2030,19 @@ namespace UnityEngine.InputSystem.UI
                     if (trackedDevice != null)
                     {
                         // Create a Tracked style pointer.
-                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, trackedDevice);
+                        index = AllocatePointer(trackedDevice.deviceId, displayIndex, 0, UIPointerType.Tracked, positionControls.Value[0], trackedDevice);
                     }
                     else
                     {
                         // We got input from a non-pointer device and apparently there's no pointer we can route the
                         // input into. Just create a pointer state for the device and leave it at that.
-                        index = AllocatePointer(pointerId, 0, UIPointerType.None, device);
+                        index = AllocatePointer(pointerId, displayIndex, 0, UIPointerType.None, control, device);
                     }
                 }
             }
+
+            if (pointerType == UIPointerType.Touch)
+                GetPointerStateForIndex(index).screenPosition = touchPosition;
 
             m_CurrentPointerId = pointerId;
             m_CurrentPointerIndex = index;
@@ -1378,7 +2051,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device)
+        private int AllocatePointer(int pointerId, int displayIndex, int touchId, UIPointerType pointerType, InputControl control, InputDevice device, InputControl touchControl = null)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1394,39 +2067,62 @@ namespace UnityEngine.InputSystem.UI
             if (eventData == null)
                 eventData = new ExtendedPointerEventData(eventSystem);
 
+            eventData.pointerId = pointerId;
+#if UNITY_2022_3_OR_NEWER
+            eventData.displayIndex = displayIndex;
+#endif
+            eventData.touchId = touchId;
+            eventData.pointerType = pointerType;
+            eventData.control = control;
+            eventData.device = device;
+
             // Allocate state.
             m_PointerIds.AppendWithCapacity(pointerId);
-            return m_PointerStates.AppendWithCapacity(new PointerModel(pointerId, touchId, pointerType, device, eventData));
+            return m_PointerStates.AppendWithCapacity(new PointerModel(eventData));
         }
 
-        private void SendPointerExitEventsAndRemovePointer(int index)
+        // Returns true if the pointer was successfully removed (ISXB-1258)
+        private bool SendPointerExitEventsAndRemovePointer(int index)
         {
             var eventData = m_PointerStates[index].eventData;
             if (eventData.pointerEnter != null)
                 ProcessPointerMovement(eventData, null);
 
-            RemovePointerAtIndex(index);
+            return RemovePointerAtIndex(index);
         }
 
-        private void RemovePointerAtIndex(int index)
+        private bool RemovePointerAtIndex(int index)
         {
+            // Pointers might have been reset before (e.g. when calling OnDisable) which would make m_PointerStates
+            // empty (ISXB-687).
+            if (m_PointerStates.length == 0)
+                return false;
+
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
             var eventData = m_PointerStates[index].eventData;
             Debug.Assert(eventData != null, "Pointer state should have an event instance!");
 
+            // Update current pointer, if necessary.
+            if (index == m_CurrentPointerIndex)
+            {
+                m_CurrentPointerId = -1;
+                m_CurrentPointerIndex = -1;
+                m_CurrentPointerType = default;
+            }
+            else if (m_CurrentPointerIndex == m_PointerIds.length - 1)
+            {
+                // We're about to move the last entry so update the index it will
+                // be at.
+                m_CurrentPointerIndex = index;
+            }
+
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
-
-            if (index == m_CurrentPointerIndex)
-            {
-                m_CurrentPointerId = -1;
-                m_CurrentPointerIndex = -1;
-            }
 
             // Put event instance back in place at one past last entry of array (which we know we have
             // as we just erased one entry). This entry will be the next one that will be used when we
@@ -1449,6 +2145,8 @@ namespace UnityEngine.InputSystem.UI
                 m_PointerStates.firstValue.eventData = eventData;
             else
                 m_PointerStates.additionalValues[m_PointerStates.length - 1].eventData = eventData;
+
+            return true;
         }
 
         // Remove any pointer that no longer has the ability to point.
@@ -1458,14 +2156,18 @@ namespace UnityEngine.InputSystem.UI
             {
                 ref var state = ref GetPointerStateForIndex(i);
                 var device = state.eventData.device;
-                if (!HaveControlForDevice(device, point) &&
-                    !HaveControlForDevice(device, trackedDevicePosition) &&
-                    !HaveControlForDevice(device, trackedDeviceOrientation))
+                if (!device.added || // Check if device was removed altogether.
+                    (!HaveControlForDevice(device, point) &&
+                     !HaveControlForDevice(device, trackedDevicePosition) &&
+                     !HaveControlForDevice(device, trackedDeviceOrientation)))
                 {
-                    SendPointerExitEventsAndRemovePointer(i);
-                    --i;
+                    // Only decrement 'i' if the pointer was successfully removed
+                    if (SendPointerExitEventsAndRemovePointer(i))
+                        --i;
                 }
             }
+
+            m_NeedToPurgeStalePointers = false;
         }
 
         private static bool HaveControlForDevice(InputDevice device, InputActionReference actionReference)
@@ -1482,107 +2184,336 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        private void OnPoint(InputAction.CallbackContext context)
+        // The pointer actions we unfortunately cannot poll as we may be sourcing input from multiple pointers.
+
+        private void OnPointCallback(InputAction.CallbackContext context)
         {
-            ref var state = ref GetPointerStateFor(ref context);
+            // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
+            // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
+            // and we want to avoid doing a read of touch IDs in GetPointerStateFor() on an already removed
+            // touchscreen.
+            if (CheckForRemovedDevice(ref context) || context.canceled)
+                return;
+
+            var index = GetPointerStateIndexFor(context.control);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
-        ////REVIEW: How should we handle clickCount here? There's only one for the entire device yet right and middle clicks
-        ////        are independent of left clicks. ATM we ignore native click counts and do click detection for all clicks
-        ////        ourselves just like StandaloneInputModule does.
+        // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
+        //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
-        private void OnLeftClick(InputAction.CallbackContext context)
+        private bool IgnoreNextClick(ref InputAction.CallbackContext context, bool wasPressed)
         {
-            ref var state = ref GetPointerStateFor(ref context);
+            // If explicitly ignoring focus due to setting, never ignore clicks
+            if (explictlyIgnoreFocus)
+                return false;
+            // If a currently active click is cancelled (by focus change), ignore next click if device cannot run in background.
+            // This prevents the cancelled click event being registered when focus is returned i.e. if
+            // the button was released while another window was focused.
+            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
+        }
+
+        private void OnLeftClickCallback(InputAction.CallbackContext context)
+        {
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.leftButton.isPressed;
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.leftButton.ignoreNextClick = true;
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
-        private void OnRightClick(InputAction.CallbackContext context)
+        private void OnRightClickCallback(InputAction.CallbackContext context)
         {
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.rightButton.isPressed;
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.rightButton.ignoreNextClick = true;
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
-        private void OnMiddleClick(InputAction.CallbackContext context)
+        private void OnMiddleClickCallback(InputAction.CallbackContext context)
         {
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.middleButton.isPressed;
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.middleButton.ignoreNextClick = true;
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
-        internal const float kPixelPerLine = 20;
-
-        private void OnScroll(InputAction.CallbackContext context)
+        private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
         {
-            ref var state = ref GetPointerStateFor(ref context);
-            // The old input system reported scroll deltas in lines, we report pixels.
-            // Need to scale as the UI system expects lines.
-            state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
+            // When a device is removed, we want to simply cancel ongoing pointer
+            // operations. Most importantly, we want to prevent GetPointerStateFor()
+            // doing ReadValue() on touch ID controls when a touchscreen has already
+            // been removed.
+            if (context.canceled && !context.control.device.added)
+            {
+                m_NeedToPurgeStalePointers = true;
+                return true;
+            }
+            return false;
         }
 
-        private void OnMove(InputAction.CallbackContext context)
+        private void OnScrollCallback(InputAction.CallbackContext context)
         {
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
+
+            var scrollDelta = context.ReadValue<Vector2>();
+
+            // ISXB-704: convert input value to BaseInputModule convention.
+            state.scrollDelta = (scrollDelta / InputSystem.scrollWheelDeltaPerTick) * scrollDeltaPerTick;
+
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
+        }
+
+        private void OnMoveCallback(InputAction.CallbackContext context)
+        {
+            ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
+            m_NavigationState.device = context.control.device;
         }
 
-        private void OnSubmit(InputAction.CallbackContext context)
+        private void OnSubmitCancelCallback(InputAction.CallbackContext context)
         {
-            m_NavigationState.submitButton.isPressed = context.ReadValueAsButton();
+            m_SubmitCancelState.device = context.control.device;
         }
 
-        private void OnCancel(InputAction.CallbackContext context)
+        private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
         {
-            m_NavigationState.cancelButton.isPressed = context.ReadValueAsButton();
-        }
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
 
-        private void OnTrackedDeviceOrientation(InputAction.CallbackContext context)
-        {
-            ref var state = ref GetPointerStateFor(ref context);
+            ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
-        private void OnTrackedDevicePosition(InputAction.CallbackContext context)
+        private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
         {
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(ref context);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
+#if UNITY_2022_3_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnControlsChanged(object obj)
         {
-            PurgeStalePointers();
+            m_NeedToPurgeStalePointers = true;
         }
 
+        private void FilterPointerStatesByType()
+        {
+            var pointerTypeToProcess = UIPointerType.None;
+            // Read all pointers device states
+            // Find first pointer that has changed this frame to be processed later
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                ref var state = ref GetPointerStateForIndex(i);
+                state.eventData.ReadDeviceState();
+                state.CopyTouchOrPenStateFrom(state.eventData);
+                if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
+                    pointerTypeToProcess = state.pointerType;
+            }
+
+            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
+            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
+            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerTypeToProcess != UIPointerType.None)
+            {
+                // var pointerTypeToProcess = m_PointerStates.firstValue.pointerType;
+                if (pointerTypeToProcess == UIPointerType.MouseOrPen)
+                {
+                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
+                        {
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
+                        }
+                    }
+                }
+                else
+                {
+                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
+                        {
+                            if (SendPointerExitEventsAndRemovePointer(i))
+                                --i;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc cref="BaseInputModule.Process"/>
+        /// <remarks>
+        /// <para>This method is automatically called by <see cref="EventSystem.Update()"/> once per frame.
+        /// There is no need to call it manually. Unless for specific use cases.
+        /// </para>
+        /// It processes all <see cref="UIPointerType"/> and <see cref="UIPointerBehavior"/> pointer types,
+        /// as well as navigation input state from <see cref="m_PointerStates"/> and <see cref="m_NavigationState"/>.
+        /// These fields hold state based on the actions set up for the UI action map of <see cref="actionsAsset"/>.
+        /// The InputAction callbacks are responsible for updating their state, which means state can change multiple
+        /// times during a frame, even though it will only be processed once per frame. For example, in case there are
+        /// multiple clicks or touches in a single frame, they can allocate multiple pointers in the same frame, which
+        /// will all then be processed by frame when <see cref="EventSystem.Update()"/> calls this method.
+        /// <para>
+        /// Also, this method is responsible for purging stale pointers when a device is removed, and for filtering
+        /// pointer states
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem.UI;
+        ///
+        /// public class CustomInputModuleProcessor : MonoBehaviour
+        /// {
+        ///     // Reference to the InputSystemUIInputModule, set in the Inspector
+        ///     public InputSystemUIInputModule uiModule;
+        ///
+        ///     void Update()
+        ///     {
+        ///         // Process the input module in the Update loop for a specific case
+        ///         // if this needs to be called outside the EventSystem.Update() event
+        ///         if (uiModule != null)
+        ///         {
+        ///             uiModule.Process();
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="UIPointerType"/>
+        /// <seealso cref="UIPointerBehavior"/>
+        /// <seealso cref="BaseInputModule.Process"/>
+        /// <seealso cref="actionsAsset"/>
         public override void Process()
         {
+            if (m_NeedToPurgeStalePointers)
+                PurgeStalePointers();
+
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if (!eventSystem.isFocused)
+            if (!eventSystem.isFocused && !shouldIgnoreFocus)
             {
-                m_NavigationState.OnFrameFinished();
                 for (var i = 0; i < m_PointerStates.length; ++i)
                     m_PointerStates[i].OnFrameFinished();
             }
             else
             {
+                // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
+
+                FilterPointerStatesByType();
+
+                // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
+
                     ProcessPointer(ref state);
 
                     // If it's a touch and the touch has ended, release the pointer state.
-                    // NOTE: We have no guarantee that the system reuses touch IDs so the touch ID we used
-                    //       as a pointer ID may be a one-off thing.
-                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed)
+                    // NOTE: We defer this by one frame such that OnPointerUp happens in the frame of release
+                    //       and OnPointerExit happens one frame later. This is so that IsPointerOverGameObject()
+                    //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
+                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
-                        RemovePointerAtIndex(i);
-                        --i;
+                        if (RemovePointerAtIndex(i))
+                            --i;
+                        continue;
                     }
+
+                    state.OnFrameFinished();
                 }
             }
         }
+
+#if UNITY_2021_1_OR_NEWER
+        public override int ConvertUIToolkitPointerId(PointerEventData sourcePointerData)
+        {
+            // Case 1369081: when using SingleUnifiedPointer, the same (default) pointerId should be sent to UIToolkit
+            // regardless of pointer type or finger id.
+            if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                return UIElements.PointerId.mousePointerId;
+
+            return sourcePointerData is ExtendedPointerEventData ep
+                ? ep.uiToolkitPointerId
+                : base.ConvertUIToolkitPointerId(sourcePointerData);
+        }
+
+#endif
+
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
+        const float kSmallestScrollDeltaPerTick = 0.00001f;
+        public override Vector2 ConvertPointerEventScrollDeltaToTicks(Vector2 scrollDelta)
+        {
+            if (Mathf.Abs(scrollDeltaPerTick) < kSmallestScrollDeltaPerTick)
+                return Vector2.zero;
+
+            return scrollDelta / scrollDeltaPerTick;
+        }
+
+#endif
+
+#if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
+        public override NavigationDeviceType GetNavigationEventDeviceType(BaseEventData eventData)
+        {
+            if (eventData is not INavigationEventData eed)
+                return NavigationDeviceType.Unknown;
+            if (eed.device is Keyboard)
+                return NavigationDeviceType.Keyboard;
+            return NavigationDeviceType.NonKeyboard;
+        }
+
+#endif
 
         private void HookActions()
         {
@@ -1590,25 +2521,23 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             if (m_OnPointDelegate == null)
-                m_OnPointDelegate = OnPoint;
+                m_OnPointDelegate = OnPointCallback;
             if (m_OnLeftClickDelegate == null)
-                m_OnLeftClickDelegate = OnLeftClick;
+                m_OnLeftClickDelegate = OnLeftClickCallback;
             if (m_OnRightClickDelegate == null)
-                m_OnRightClickDelegate = OnRightClick;
+                m_OnRightClickDelegate = OnRightClickCallback;
             if (m_OnMiddleClickDelegate == null)
-                m_OnMiddleClickDelegate = OnMiddleClick;
+                m_OnMiddleClickDelegate = OnMiddleClickCallback;
             if (m_OnScrollWheelDelegate == null)
-                m_OnScrollWheelDelegate = OnScroll;
+                m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
-                m_OnMoveDelegate = OnMove;
-            if (m_OnSubmitDelegate == null)
-                m_OnSubmitDelegate = OnSubmit;
-            if (m_OnCancelDelegate == null)
-                m_OnCancelDelegate = OnCancel;
+                m_OnMoveDelegate = OnMoveCallback;
+            if (m_OnSubmitCancelDelegate == null)
+                m_OnSubmitCancelDelegate = OnSubmitCancelCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
-                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientation;
+                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
-                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePosition;
+                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePositionCallback;
 
             SetActionCallbacks(true);
         }
@@ -1626,11 +2555,11 @@ namespace UnityEngine.InputSystem.UI
             m_ActionsHooked = install;
             SetActionCallback(m_PointAction, m_OnPointDelegate, install);
             SetActionCallback(m_MoveAction, m_OnMoveDelegate, install);
+            SetActionCallback(m_SubmitAction, m_OnSubmitCancelDelegate, install);
+            SetActionCallback(m_CancelAction, m_OnSubmitCancelDelegate, install);
             SetActionCallback(m_LeftClickAction, m_OnLeftClickDelegate, install);
             SetActionCallback(m_RightClickAction, m_OnRightClickDelegate, install);
             SetActionCallback(m_MiddleClickAction, m_OnMiddleClickDelegate, install);
-            SetActionCallback(m_SubmitAction, m_OnSubmitDelegate, install);
-            SetActionCallback(m_CancelAction, m_OnCancelDelegate, install);
             SetActionCallback(m_ScrollWheelAction, m_OnScrollWheelDelegate, install);
             SetActionCallback(m_TrackedDeviceOrientationAction, m_OnTrackedDeviceOrientationDelegate, install);
             SetActionCallback(m_TrackedDevicePositionAction, m_OnTrackedDevicePositionDelegate, install);
@@ -1669,7 +2598,7 @@ namespace UnityEngine.InputSystem.UI
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
-            var newActionMap = m_ActionsAsset.FindActionMap(oldActionMap.name);
+            var newActionMap = m_ActionsAsset?.FindActionMap(oldActionMap.name);
             if (newActionMap == null)
                 return null;
 
@@ -1680,6 +2609,9 @@ namespace UnityEngine.InputSystem.UI
             return InputActionReference.Create(newAction);
         }
 
+        /// <summary>
+        ///  The <see cref="InputActionAsset"/> that contains the necessary UI actions used by the UI module.
+        /// </summary>
         public InputActionAsset actionsAsset
         {
             get => m_ActionsAsset;
@@ -1687,8 +2619,8 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (value != m_ActionsAsset)
                 {
-                    var wasEnabled = IsAnyActionEnabled();
-                    DisableAllActions();
+                    UnhookActions();
+
                     m_ActionsAsset = value;
 
                     point = UpdateReferenceForNewAsset(point);
@@ -1699,8 +2631,10 @@ namespace UnityEngine.InputSystem.UI
                     scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
                     submit = UpdateReferenceForNewAsset(submit);
                     cancel = UpdateReferenceForNewAsset(cancel);
-                    if (wasEnabled)
-                        EnableAllActions();
+                    trackedDeviceOrientation = UpdateReferenceForNewAsset(trackedDeviceOrientation);
+                    trackedDevicePosition = UpdateReferenceForNewAsset(trackedDevicePosition);
+
+                    HookActions();
                 }
             }
         }
@@ -1719,14 +2653,26 @@ namespace UnityEngine.InputSystem.UI
 
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
 
-        private bool m_OwnsEnabledState;
-        private bool m_ActionsHooked;
+        // See ISXB-766 for a history of where the 6.0f value comes from
+        // (we used to have 120 per tick on Windows and divided it by 20.)
+        [SerializeField] private float m_ScrollDeltaPerTick = 6.0f;
+
+        private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
+
+        private struct InputActionReferenceState
+        {
+            public int refCount;
+            public bool enabledByInputModule;
+        }
+
+        [NonSerialized] private bool m_ActionsHooked;
+        [NonSerialized] private bool m_NeedToPurgeStalePointers;
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
-        private Action<InputAction.CallbackContext> m_OnSubmitDelegate;
-        private Action<InputAction.CallbackContext> m_OnCancelDelegate;
+        private Action<InputAction.CallbackContext> m_OnSubmitCancelDelegate;
         private Action<InputAction.CallbackContext> m_OnLeftClickDelegate;
         private Action<InputAction.CallbackContext> m_OnRightClickDelegate;
         private Action<InputAction.CallbackContext> m_OnMiddleClickDelegate;
@@ -1736,13 +2682,48 @@ namespace UnityEngine.InputSystem.UI
         private Action<object> m_OnControlsChangedDelegate;
 
         // Pointer-type input (also tracking-type).
-        private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
-        private int m_CurrentPointerIndex = -1;
-        private UIPointerType m_CurrentPointerType = UIPointerType.None;
-        private InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
-        private InlinedArray<PointerModel> m_PointerStates;
+        [NonSerialized] private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
+        [NonSerialized] private int m_CurrentPointerIndex = -1;
+        [NonSerialized] internal UIPointerType m_CurrentPointerType = UIPointerType.None;
+        internal InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
+        internal InlinedArray<PointerModel> m_PointerStates;
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+        private SubmitCancelModel m_SubmitCancelState;
+
+        [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
+
+#if UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT
+        // Needed for testing.
+        internal new bool sendPointerHoverToParent
+        {
+            get => base.sendPointerHoverToParent;
+            set => base.sendPointerHoverToParent = value;
+        }
+#else
+        private bool sendPointerHoverToParent => true;
+#endif
+
+        /// <summary>
+        /// Controls the origin point of raycasts when the cursor is locked.
+        /// </summary>
+        public enum CursorLockBehavior
+        {
+            /// <summary>
+            /// The internal pointer position will be set to -1, -1. This short-circuits the raycasting
+            /// logic so no objects will be intersected. This is the default setting.
+            /// </summary>
+            OutsideScreen,
+
+            /// <summary>
+            /// Raycasts will originate from the center of the screen. This mode can be useful for
+            /// example to check in pointer-driven FPS games if the player is looking at some world-space
+            /// object that implements the <see cref="IPointerEnterHandler"/> and <see cref="IPointerExitHandler"/>
+            /// interfaces.
+            /// </summary>
+            ScreenCenter
+        }
     }
 }
+#endif

@@ -1,4 +1,3 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 namespace UnityEngine.InputSystem.XR.Haptics
 {
     public struct BufferedRumble
@@ -25,4 +24,3 @@ namespace UnityEngine.InputSystem.XR.Haptics
         }
     }
 }
-#endif // ENABLE_VR

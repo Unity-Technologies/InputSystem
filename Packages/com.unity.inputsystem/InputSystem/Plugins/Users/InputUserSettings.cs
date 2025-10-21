@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.Users
     /// This class implements several user adjustable input behaviors commonly found in games, such
     /// as mouse sensitivity and axis inversion.
     ///
-    /// Note that the behaviors only work in combination with actions, i.e. for users that have
+    /// Note that the behaviors only work in combination with actions, that is, for users that have
     /// actions associated with them via <see cref="InputUser.AssociateActionsWithUser(IInputActionCollection)"/>.
     /// The behaviors do not alter the input as present directly on the devices. Meaning that, for example,
     /// <see cref="invertMouseX"/> will not impact <see cref="Vector2.x"/> of <see cref="Mouse.delta"/> but will

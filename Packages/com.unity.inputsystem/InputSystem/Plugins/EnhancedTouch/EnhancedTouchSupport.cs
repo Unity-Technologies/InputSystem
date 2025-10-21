@@ -1,11 +1,23 @@
+using System;
+using System.Diagnostics;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+////REVIEW: this *really* should be renamed to TouchPolling or something like that
+
+////REVIEW: Should this auto-enable itself when the API is used? Problem with this is that it means the first touch inputs will get missed
+////        as by the time the API is polled, we're already into the first frame.
 
 ////TODO: gesture support
-////TODO: mouse/touch simulation support
 ////TODO: high-frequency touch support
 
 ////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
+
+////TODO: as soon as we can break the API, remove the EnhancedTouchSupport class altogether and rename UnityEngine.InputSystem.EnhancedTouch to TouchPolling
+
+////FIXME: does not survive domain reloads
 
 namespace UnityEngine.InputSystem.EnhancedTouch
 {
@@ -78,6 +90,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onBeforeUpdate += Touch.BeginUpdate;
             InputSystem.onSettingsChange += OnSettingsChange;
 
+            #if UNITY_EDITOR
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeDomainReload;
+            #endif
+
             SetUpState();
         }
 
@@ -99,14 +115,30 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onBeforeUpdate -= Touch.BeginUpdate;
             InputSystem.onSettingsChange -= OnSettingsChange;
 
+            #if UNITY_EDITOR
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeDomainReload;
+            #endif
+
             TearDownState();
+        }
+
+        internal static void Reset()
+        {
+            Touch.s_GlobalState.touchscreens = default;
+            Touch.s_GlobalState.playerState.Destroy();
+            Touch.s_GlobalState.playerState = default;
+            #if UNITY_EDITOR
+            Touch.s_GlobalState.editorState.Destroy();
+            Touch.s_GlobalState.editorState = default;
+            #endif
+            s_Enabled = 0;
         }
 
         private static void SetUpState()
         {
-            Touch.s_PlayerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
+            Touch.s_GlobalState.playerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual | InputUpdateType.Fixed;
             #if UNITY_EDITOR
-            Touch.s_EditorState.updateMask = InputUpdateType.Editor;
+            Touch.s_GlobalState.editorState.updateMask = InputUpdateType.Editor;
             #endif
 
             s_UpdateMode = InputSystem.settings.updateMode;
@@ -115,19 +147,19 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 OnDeviceChange(device, InputDeviceChange.Added);
         }
 
-        private static void TearDownState()
+        internal static void TearDownState()
         {
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Removed);
 
-            Touch.s_PlayerState.Destroy();
+            Touch.s_GlobalState.playerState.Destroy();
             #if UNITY_EDITOR
-            Touch.s_EditorState.Destroy();
+            Touch.s_GlobalState.editorState.Destroy();
             #endif
 
-            Touch.s_PlayerState = default;
+            Touch.s_GlobalState.playerState = default;
             #if UNITY_EDITOR
-            Touch.s_EditorState = default;
+            Touch.s_GlobalState.editorState = default;
             #endif
         }
 
@@ -158,6 +190,24 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 return;
             TearDownState();
             SetUpState();
+        }
+
+        #if UNITY_EDITOR
+        private static void OnBeforeDomainReload()
+        {
+            // We need to release NativeArrays we're holding before losing track of them during domain reloads.
+            Touch.s_GlobalState.playerState.Destroy();
+            Touch.s_GlobalState.editorState.Destroy();
+        }
+
+        #endif
+
+        [Conditional("DEVELOPMENT_BUILD")]
+        [Conditional("UNITY_EDITOR")]
+        internal static void CheckEnabled()
+        {
+            if (!enabled)
+                throw new InvalidOperationException("EnhancedTouch API is not enabled; call EnhancedTouchSupport.Enable()");
         }
     }
 }

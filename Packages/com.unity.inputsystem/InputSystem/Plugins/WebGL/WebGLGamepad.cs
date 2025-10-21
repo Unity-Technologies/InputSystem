@@ -1,4 +1,4 @@
-#if UNITY_WEBGL || UNITY_EDITOR
+#if UNITY_WEBGL || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
@@ -19,7 +19,11 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
         [InputControl(name = "leftStick", offset = 0)]
         [InputControl(name = "rightStick", offset = 8)]
         [InputControl(name = "leftStick/y", parameters = "invert")]
+        [InputControl(name = "leftStick/up", parameters = "clamp=2,clampMin=-1,clampMax=0,invert")]
+        [InputControl(name = "leftStick/down", parameters = "clamp=2,clampMin=0,clampMax=1,invert=false")]
         [InputControl(name = "rightStick/y", parameters = "invert")]
+        [InputControl(name = "rightStick/up", parameters = "clamp=2,clampMin=-1,clampMax=0,invert")]
+        [InputControl(name = "rightStick/down", parameters = "clamp=2,clampMin=0,clampMax=1,invert=false")]
         // All the buttons we need to bump from single bits to full floats and reset bit offsets.
         [InputControl(name = "buttonSouth", offset = ButtonOffset + 0 * 4, bit = 0, format = "FLT")]
         [InputControl(name = "buttonEast", offset = ButtonOffset + 1 * 4, bit = 0, format = "FLT")]
@@ -144,10 +148,8 @@ namespace UnityEngine.InputSystem.WebGL
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.
     /// </summary>
-    ///
     /// <seealso href="https://w3c.github.io/gamepad/#remapping"/>
     [InputControlLayout(stateType = typeof(WebGLGamepadState), displayName = "WebGL Gamepad (\"standard\" mapping)")]
-    [Scripting.Preserve]
     public class WebGLGamepad : Gamepad
     {
     }

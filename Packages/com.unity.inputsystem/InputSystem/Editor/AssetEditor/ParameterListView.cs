@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UIElements;
 
 ////TODO: show description of interaction or processor when selected
 
@@ -197,6 +199,24 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 NamedValue.ApplyAllToObject(instance, m_Parameters.Select(x => x.value));
 
                 m_ParameterEditor = (InputParameterEditor)Activator.CreateInstance(parameterEditorType);
+
+                // We have to jump through some hoops here to create instances of any CustomOrDefaultSetting fields on the
+                // parameter editor. This is because those types changed from structs to classes when UIToolkit was
+                // introduced, and we don't want to force users to have to create those instances manually on any of their
+                // own editors.
+                var genericArgumentType = TypeHelpers.GetGenericTypeArgumentFromHierarchy(parameterEditorType,
+                    typeof(InputParameterEditor<>), 0);
+                if (genericArgumentType != null)
+                {
+                    var fieldInfos = parameterEditorType
+                        .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var customOrDefaultGenericType = typeof(InputParameterEditor<>.CustomOrDefaultSetting);
+                    var customOrDefaultType = customOrDefaultGenericType.MakeGenericType(genericArgumentType);
+                    foreach (var customOrDefaultEditorField in fieldInfos.Where(f => f.FieldType == customOrDefaultType))
+                    {
+                        customOrDefaultEditorField.SetValue(m_ParameterEditor, Activator.CreateInstance(customOrDefaultEditorField.FieldType));
+                    }
+                }
                 m_ParameterEditor.SetTarget(instance);
             }
             else
@@ -227,6 +247,110 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public void OnDrawVisualElements(VisualElement root)
+        {
+            if (m_ParameterEditor != null)
+            {
+                m_ParameterEditor.OnDrawVisualElements(root, OnValuesChanged);
+                return;
+            }
+
+            if (m_Parameters == null)
+                return;
+
+            void OnValueChanged(ref EditableParameterValue parameter, object result, int i)
+            {
+                parameter.value.value = PrimitiveValue.FromObject(result).ConvertTo(parameter.value.type);
+                m_Parameters[i] = parameter;
+            }
+
+            void OnEditEnd()
+            {
+                onChange?.Invoke();
+            }
+
+            for (var i = 0; i < m_Parameters.Length; i++)
+            {
+                var parameter = m_Parameters[i];
+                var label = m_ParameterLabels[i];
+                var closedIndex = i;
+
+                if (parameter.isEnum)
+                {
+                    var names = parameter.enumNames.Select(c => c.text).ToList();
+                    var rawValue = parameter.value.value.ToInt32();
+                    var selectedIndex = parameter.enumValues.IndexOf(rawValue);
+                    if (selectedIndex < 0 || selectedIndex >= names.Count)
+                        selectedIndex = 0;
+
+                    var field = new DropdownField(label.text, names, selectedIndex)
+                    {
+                        tooltip = label.tooltip
+                    };
+
+                    field.RegisterValueChangedCallback(evt =>
+                    {
+                        var newBackingValue = parameter.enumValues[field.index];
+                        parameter.value.value = PrimitiveValue.FromObject(newBackingValue).ConvertTo(parameter.value.type);
+                        m_Parameters[closedIndex] = parameter;
+                        onChange?.Invoke();
+                    });
+
+                    field.RegisterCallback<BlurEvent>(_ => onChange?.Invoke());
+                    root.Add(field);
+                }
+                else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
+                {
+                    var longValue = parameter.value.value.ToInt64();
+                    var field = new LongField(label.text) { value = longValue, tooltip = label.tooltip };
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    root.Add(field);
+                }
+                else if (parameter.value.type.IsInt())
+                {
+                    var intValue = parameter.value.value.ToInt32();
+                    var field = new IntegerField(label.text) { value = intValue, tooltip = label.tooltip };
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    root.Add(field);
+                }
+                else if (parameter.value.type == TypeCode.Single)
+                {
+                    var floatValue = parameter.value.value.ToSingle();
+                    var field = new FloatField(label.text) { value = floatValue, tooltip = label.tooltip };
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    root.Add(field);
+                }
+                else if (parameter.value.type == TypeCode.Double)
+                {
+                    var floatValue = parameter.value.value.ToDouble();
+                    var field = new DoubleField(label.text) { value = floatValue, tooltip = label.tooltip };
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    root.Add(field);
+                }
+                else if (parameter.value.type == TypeCode.Boolean)
+                {
+                    var boolValue = parameter.value.value.ToBoolean();
+                    var field = new Toggle(label.text) { value = boolValue, tooltip = label.tooltip };
+                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterValueChangedCallback(_ => OnEditEnd());
+                    root.Add(field);
+                }
+            }
+        }
+
+#endif
+
+        private void OnValuesChanged()
+        {
+            ReadParameterValuesFrom(m_ParameterEditor.target);
+            onChange?.Invoke();
+        }
+
         public void OnGUI()
         {
             // If we have a dedicated parameter editor, let it do all the work.
@@ -242,6 +366,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 return;
             }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // handled by OnDrawVisualElements with UI Toolkit
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+#endif
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;

@@ -43,8 +43,10 @@ namespace UnityEngine.InputSystem.Editor
         public static Texture2D LoadIcon(string name)
         {
             var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-            var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+            var scale = Mathf.Clamp(Mathf.CeilToInt(EditorGUIUtility.pixelsPerPoint), 0, 4);
             var scalePostFix = scale > 1 ? $"@{scale}x" : "";
+            if (name.IndexOfAny(Path.GetInvalidFileNameChars()) > -1)
+                name = string.Join("_", name.Split(Path.GetInvalidFileNameChars()));
             var path = Path.Combine(kIconPath, skinPrefix + name + scalePostFix + ".png");
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }

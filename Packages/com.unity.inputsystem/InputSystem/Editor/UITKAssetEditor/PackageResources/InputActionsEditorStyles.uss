@@ -1,0 +1,204 @@
+.unity-input-actions-editor-hidden {
+    display: none;
+}
+
+.asset-menu-button-dark-theme {
+    background-image: resource('d__Menu.png');
+}
+
+.asset-menu-button {
+    background-image: resource('_Menu.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.body-panel-container {
+    min-width: 150px;
+    border-right-width: 0;
+}
+
+#actions-container {
+    min-width: 225px;
+}
+
+#selected-action-map-dropdown > .unity-popup-field__input {
+    -unity-font-style: normal;
+}
+
+#add-new-action-map-button {
+    border-width: 0;
+}
+
+#add-new-action-button {
+    border-width: 0;
+}
+
+#bindings-container {
+    min-width: 225px;
+    border-left-width: 0;
+    margin-left: 0;
+}
+
+.add-interaction-processor-button {
+    padding-top: 0;
+    font-size: 12px;
+    border-width: 0;
+    background-color: transparent;
+    margin-right: 5px;
+}
+
+.header {
+    height: 22px;
+    flex-direction: row;
+    margin-left: 10px;
+    margin-right: 7px;
+    margin-top: 1px;
+    margin-bottom: 7px;
+}
+
+.header-label {
+    font-size: 19px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    flex-grow: 1;
+}
+
+.header-search-box {
+    justify-content: flex-start;
+    position: relative;
+    right: auto;
+    width: 171px;
+    border-left-color: rgb(23, 23, 23);
+    border-right-color: rgb(23, 23, 23);
+    border-top-color: rgb(23, 23, 23);
+    border-bottom-color: rgb(23, 23, 23);
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    align-items: auto;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.tree-view-item-icon{
+    justify-content: center;
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png');
+    width: 16px;
+    height: 16px;
+}
+
+.body-panel-header {
+    background-color: var(--unity-colors-toolbar-background);
+    border-bottom-color: var(--unity-colors-toolbar-border);
+    flex-direction: row;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 5px;
+    padding-right: 3px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-bottom-width: 1px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    align-items: center;
+    justify-content: flex-start;
+    -unity-text-align: middle-left;
+}
+
+.properties-foldout {
+    margin: 0;
+    padding-bottom: 15px;
+}
+
+.properties-foldout-toggle {
+    background-color: var(--input-editor-colors-properties-foldout);
+}
+
+.name-and-parameter-empty-label {
+    margin-top: 5px;
+    font-size: 12px;
+    color: rgb(130, 130, 130);
+}
+
+.name-and-parameters-list-foldout {
+}
+
+.name-and-parameters-list-view .name-and-parameters-list-foldout-button {
+    width: 12px;
+    height: 12px;
+    background-color: transparent;
+    border-width: 0;
+}
+
+.name-and-parameters-list-view .open-settings-button {
+    width: 120px;
+    align-items: flex-end;
+}
+
+.float-field {
+    width: 50px;
+    display: initial;
+}
+
+.name-and-parameters-list-view .up {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
+}
+
+.name-and-parameters-list-view .upDarkTheme {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronUp.png');
+}
+
+.name-and-parameters-list-view .down {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronDown.png');
+}
+
+.name-and-parameters-list-view .downDarkTheme {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronDown.png');
+}
+
+.name-and-parameters-list-view .delete {
+    background-image: resource('Toolbar Minus.png');
+}
+
+.name-and-parameters-list-view .deleteDarkTheme {
+    background-image: resource('d_Toolbar Minus.png');
+}
+
+.add-binging-button-dark-theme {
+    background-image: resource('d_Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-binging-button {
+    background-image: resource('Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.search-field {
+    display: none;
+    width: 190px;
+}
+
+#control-scheme-usage-title {
+    margin: 3px;
+    -unity-font-style: bold;
+}
+
+.matching-controls {
+    display: flex;
+    flex-grow: 1;
+}
+
+.matching-controls-labels {
+    margin: 1px;
+}

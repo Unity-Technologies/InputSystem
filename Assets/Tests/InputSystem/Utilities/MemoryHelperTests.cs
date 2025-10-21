@@ -238,4 +238,54 @@ internal class MemoryHelperTests
             Assert.That(toPtr[5], Is.EqualTo(0x01));
         }
     }
+
+    [Test]
+    [Category("Utilities")]
+    public unsafe void Utilities_CanCopyBitRegion()
+    {
+        using (var from = new NativeArray<byte>(6, Allocator.Temp))
+        using (var to = new NativeArray<byte>(6, Allocator.Temp))
+        {
+            var fromPtr = (byte*)from.GetUnsafePtr();
+            var toPtr = (byte*)to.GetUnsafePtr();
+
+            fromPtr[0] = 0x00;
+            fromPtr[1] = 0x01;
+            fromPtr[2] = 0x12;
+            fromPtr[3] = 0x10;
+            fromPtr[4] = 0x88;
+            fromPtr[5] = 0xC1;
+
+            MemoryHelpers.MemCpyBitRegion(toPtr, fromPtr, 18, 4);
+
+            Assert.That(toPtr[0], Is.Zero);
+            Assert.That(toPtr[1], Is.Zero);
+            Assert.That(toPtr[2], Is.EqualTo(0x10));
+            Assert.That(toPtr[3], Is.Zero);
+            Assert.That(toPtr[4], Is.Zero);
+            Assert.That(toPtr[5], Is.Zero);
+
+            UnsafeUtility.MemClear(toPtr, 6);
+
+            MemoryHelpers.MemCpyBitRegion(toPtr, fromPtr, 28, 8);
+
+            Assert.That(toPtr[0], Is.Zero);
+            Assert.That(toPtr[1], Is.Zero);
+            Assert.That(toPtr[2], Is.Zero);
+            Assert.That(toPtr[3], Is.EqualTo(0x10));
+            Assert.That(toPtr[4], Is.EqualTo(0x08));
+            Assert.That(toPtr[5], Is.Zero);
+
+            UnsafeUtility.MemClear(toPtr, 6);
+
+            MemoryHelpers.MemCpyBitRegion(toPtr, fromPtr, 0, 6 * 8);
+
+            Assert.That(toPtr[0], Is.EqualTo(0x00));
+            Assert.That(toPtr[1], Is.EqualTo(0x01));
+            Assert.That(toPtr[2], Is.EqualTo(0x12));
+            Assert.That(toPtr[3], Is.EqualTo(0x10));
+            Assert.That(toPtr[4], Is.EqualTo(0x88));
+            Assert.That(toPtr[5], Is.EqualTo(0xC1));
+        }
+    }
 }

@@ -15,11 +15,17 @@ namespace UnityEngine.InputSystem
         /// </summary>
         JoinPlayersWhenButtonIsPressed,
 
+        /// <summary>
+        /// Listen for button presses on devices that are not paired to any player. If the control
+        /// they triggered matches a specific action and joining is allowed, join a new player using
+        /// the device the button was pressed on.
+        /// </summary>
         JoinPlayersWhenJoinActionIsTriggered,
 
         /// <summary>
-        /// Do not join players automatically. Call <see cref="JoinPlayerFromUI"/> or <see cref="JoinPlayerFromAction"/>
-        /// explicitly in order to join new players. Alternatively, just create GameObjects with <see cref="PlayerInput"/>
+        /// Don't join players automatically. Call <see cref="PlayerInputManager.JoinPlayerFromUI"/>
+        /// or <see cref="PlayerInputManager.JoinPlayerFromAction"/> explicitly in order to join new
+        /// players. Alternatively, just create GameObjects with <see cref="PlayerInput"/>
         /// components directly and they will be joined automatically.
         /// </summary>
         /// <remarks>
@@ -27,8 +33,7 @@ namespace UnityEngine.InputSystem
         /// are involved. While initial engagement required by <see cref="JoinPlayersWhenButtonIsPressed"/> or
         /// <see cref="JoinPlayersWhenJoinActionIsTriggered"/> allows pairing a single device reliably to a player,
         /// additional devices that may be required by a control scheme will still get paired automatically out of the
-        /// pool of available devices. This means that, for example, if a given player joins by clicking a mouse button
-        /// ...
+        /// pool of available devices.
         /// </remarks>
         JoinPlayersManually,
     }

@@ -53,6 +53,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int GetIndexOfArrayElement(this SerializedProperty property)
         {
+            if (property == null)
+                return -1;
             var propertyPath = property.propertyPath;
             if (propertyPath[propertyPath.Length - 1] != ']')
                 return -1;
@@ -378,6 +380,13 @@ namespace UnityEngine.InputSystem.Editor
         public static Type GetFieldType(this SerializedProperty property)
         {
             return GetField(property)?.FieldType;
+        }
+
+        public static void SetStringValue(this SerializedProperty property, string propertyName, string value)
+        {
+            var propertyRelative = property?.FindPropertyRelative(propertyName);
+            if (propertyRelative != null)
+                propertyRelative.stringValue = value;
         }
     }
 }

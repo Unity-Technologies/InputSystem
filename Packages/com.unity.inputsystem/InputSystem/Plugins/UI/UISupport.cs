@@ -1,5 +1,7 @@
 using UnityEngine.InputSystem;
 
+////FIXME: This should be UnityEngine.InputSystem.UI
+
 #if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 public
 #else

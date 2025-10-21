@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:VisualElement name="SchemeName">
+            <ui:TextField picking-mode="Ignore" label="Scheme Name" value="New control scheme" text="New Control Scheme" name="control-scheme-name" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:MultiColumnListView focusable="true" reorderable="true" show-foldout-header="false" show-add-remove-footer="true" reorder-mode="Animated" show-border="true" show-bound-collection-size="false" name="control-schemes-list-view" show-alternating-row-backgrounds="ContentOnly" style="flex-grow: 1;">
+                <ui:Columns>
+                    <ui:Column name="device-type" title="Device Type" width="250" resizable="false" sortable="false" />
+                    <ui:Column name="required" title="Required" width="70" resizable="false" sortable="false" />
+                </ui:Columns>
+            </ui:MultiColumnListView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-direction: row; align-items: stretch; justify-content: space-around;">
+        <ui:Button text="Cancel" display-tooltip-when-elided="true" name="cancel-button" style="flex-grow: 1;" />
+        <ui:Button text="Save" display-tooltip-when-elided="true" name="save-button" style="flex-grow: 1;" />
+    </ui:VisualElement>
+</ui:UXML>

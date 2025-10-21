@@ -1,0 +1,52 @@
+// This file is generated. Do not modify by hand.
+// XML documentation file not found. To check if public methods have XML comments,
+// make sure the XML doc file is present and located next to the scraped dll
+namespace UnityEngine.InputSystem
+{
+    public class InputTestFixture
+    {
+        public double currentTime { get; set; }
+        public InputTestFixture() {}
+        public static void AssertButtonPress<TState>(InputDevice device, TState state, params Controls.ButtonControl[] buttons) where TState : struct, LowLevel.IInputStateTypeInfo, new();
+        public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public InputTestFixture.ActionConstraint Canceled(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = default(InputControl), object value = default(object), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>)) where TInteraction : IInputInteraction;
+        public InputTestFixture.ActionConstraint Canceled<TValue>(InputAction action, UnityEngine.InputSystem.InputControl<TValue> control, TValue value, System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>)) where TValue : struct, new();
+        public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default(Vector2), bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public void Click(Controls.ButtonControl button, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false);
+        public void EndTouch(int touchId, Vector2 position, Vector2 delta = default(Vector2), bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public void Move(UnityEngine.InputSystem.InputControl<Vector2> positionControl, Vector2 position, System.Nullable<Vector2> delta = default(System.Nullable<Vector2>), double time = -1d, double timeOffset = 0d, bool queueEventOnly = false);
+        public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default(Vector2), bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public InputTestFixture.ActionConstraint Performed(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = default(InputControl), object value = default(object), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>)) where TInteraction : IInputInteraction;
+        public InputTestFixture.ActionConstraint Performed<TValue>(InputAction action, UnityEngine.InputSystem.InputControl<TValue> control, TValue value, System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>)) where TValue : struct, new();
+        public void Press(Controls.ButtonControl button, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false);
+        public void PressAndRelease(Controls.ButtonControl button, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false);
+        public void Release(Controls.ButtonControl button, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false);
+        public void Set<TValue>(UnityEngine.InputSystem.InputControl<TValue> control, TValue state, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false) where TValue : struct, new();
+        public void Set<TValue>(InputDevice device, string path, TValue state, double time = -1d, double timeOffset = 0d, bool queueEventOnly = false) where TValue : struct, new();
+        public void SetKeyboardLayout(string name, Keyboard keyboard = default(Keyboard));
+        public void SetKeyInfo(Key key, string displayName, int scanCode = 0);
+        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default(Vector2), bool queueEventOnly = true, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        [NUnit.Framework.SetUp] public virtual void Setup();
+        public InputTestFixture.ActionConstraint Started(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Started<TInteraction>(InputAction action, InputControl control = default(InputControl), object value = default(object), System.Nullable<double> time = default(System.Nullable<double>)) where TInteraction : IInputInteraction;
+        public InputTestFixture.ActionConstraint Started<TValue>(InputAction action, UnityEngine.InputSystem.InputControl<TValue> control, TValue value, System.Nullable<double> time = default(System.Nullable<double>)) where TValue : struct, new();
+        [NUnit.Framework.TearDown] public virtual void TearDown();
+        public void Trigger(InputAction action);
+        public void Trigger<TValue>(InputAction action, UnityEngine.InputSystem.InputControl<TValue> control, TValue value) where TValue : struct, new();
+        public class ActionConstraint : NUnit.Framework.Constraints.Constraint
+        {
+            public InputAction action { get; set; }
+            public InputControl control { get; set; }
+            public System.Nullable<double> duration { get; set; }
+            public System.Type interaction { get; set; }
+            public InputActionPhase phase { get; set; }
+            public System.Nullable<double> time { get; set; }
+            public object value { get; set; }
+            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = default(object), System.Type interaction = default(System.Type), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>)) {}
+            public InputTestFixture.ActionConstraint AndThen(InputTestFixture.ActionConstraint constraint);
+            public override NUnit.Framework.Constraints.ConstraintResult ApplyTo(object actual);
+        }
+    }
+}

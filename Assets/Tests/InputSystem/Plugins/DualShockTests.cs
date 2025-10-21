@@ -1,22 +1,24 @@
-using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA || UNITY_STANDALONE_LINUX
 using UnityEngine.InputSystem.DualShock.LowLevel;
+#endif
 using UnityEngine.InputSystem.Processors;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.HID;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
 using UnityEngine.InputSystem.HID;
 #endif
 
-internal class DualShockTests : InputTestFixture
+internal class DualShockTests : CoreTestsFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_STANDALONE_LINUX
     public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)
         where TDevice : DualShockGamepad
         where TState : struct, IInputStateTypeInfo
@@ -63,26 +65,45 @@ internal class DualShockTests : InputTestFixture
         Assert.That(gamepad.leftStickButton.isPressed);
         Assert.That(gamepad.rightStickButton.isPressed);
 
+        ////REVIEW: Should we just kill these buttons? Do they provide any value?
+        // PS controller adds buttons for the left and right trigger. Make sure these are marked as
+        // synthetic so they don't get picked up as double input.
+        // https://fogbugz.unity3d.com/f/cases/1293734
+        Assert.That(gamepad["leftTriggerButton"].synthetic, Is.True);
+        Assert.That(gamepad["rightTriggerButton"].synthetic, Is.True);
+
         return gamepad;
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
+    }
+
+    internal struct DualShock4HIDInputReportRaw : IInputStateTypeInfo
+    {
+        public byte commandId;
+        public DualShock4GamepadHID.DualShock4HIDGenericInputReport report;
+
+        public FourCC format => DualShock4GamepadHID.DualShock4HIDGenericInputReport.Format;
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShock4AsHID()
     {
-        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReport>(
-            new DualShock4HIDInputReport
+        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReportRaw>(
+            new DualShock4HIDInputReportRaw
             {
-                leftStickX = 32,
-                leftStickY = 64,
-                rightStickX = 128,
-                rightStickY = 255,
-                leftTrigger = 20,
-                rightTrigger = 40,
-                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
-                buttons2 = 0xff,
-                buttons3 = 0xff
+                commandId = 0x01,
+                report = new DualShock4GamepadHID.DualShock4HIDGenericInputReport
+                {
+                    leftStickX = 32,
+                    leftStickY = 64,
+                    rightStickX = 128,
+                    rightStickY = 255,
+                    leftTrigger = 20,
+                    rightTrigger = 40,
+                    buttons0 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                    buttons1 = 0xff,
+                    buttons2 = 0xff
+                }
             }
         );
 
@@ -139,19 +160,40 @@ internal class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID()
+    [TestCase(0x54C, 0x9CC)]
+    [TestCase(0x54C, 0x5C4)]
+    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID(int vendorId, int productId)
     {
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "HID",
             capabilities = new HID.HIDDeviceDescriptor
             {
-                vendorId = 0x54C,
-                productId = 0x9CC,
+                vendorId = vendorId,
+                productId = productId,
             }.ToJson()
         });
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(0x54C, 0xCE6)]
+    [TestCase(0x54C, 0xDF2)] //Dualsense Edge
+    public void Devices_SupportsDualsenseAsHID_WithJustPIDAndVID(int vendorId, int productId)
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = vendorId,
+                productId = productId,
+            }.ToJson()
+        });
+
+        Assert.That(device, Is.AssignableTo<DualSenseGamepadHID>());
     }
 
 #if UNITY_WSA
@@ -227,6 +269,160 @@ internal class DualShockTests : InputTestFixture
         Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.123f * 255)));
         Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.456f * 255)));
         Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.789f * 255)));
+
+        receivedCommand = null;
+        gamepad.SetMotorSpeedsAndLightBarColor(0.5f, 0.5f, new Color(0.5f, 0.5f, 0.5f));
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.5f * 255)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualSense_AxisJitter_DoesntMakeDeviceCurrent()
+    {
+        var device1 = InputSystem.AddDevice<DualSenseGamepadHID>();
+        var device2 = InputSystem.AddDevice<DualSenseGamepadHID>();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is with-in axis dead zone doesn't make device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is outside of dead zone makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.JitterMaskLow - 1,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with button change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
+                buttons1 = 1,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with trigger change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
+                buttons1 = 1,
+                leftTrigger = 1,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualShock4_AxisJitter_DoesntMakeDeviceCurrent()
+    {
+        var device1 = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var device2 = InputSystem.AddDevice<DualShock4GamepadHID>();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is with-in axis dead zone doesn't make device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport()
+            {
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is outside of dead zone makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualShock4GamepadHID.JitterMaskLow - 1,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with button change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
+                buttons2 = 1,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with trigger change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
+                buttons2 = 1,
+                leftTrigger = 1,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
     }
 
 #endif

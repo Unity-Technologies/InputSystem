@@ -17,7 +17,9 @@ using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
-internal class HIDTests : InputTestFixture
+// No HID devices on Android
+#if (!UNITY_ANDROID && !UNITY_IOS && !UNITY_TVOS) || UNITY_EDITOR
+internal class HIDTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -106,16 +108,60 @@ internal class HIDTests : InputTestFixture
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].product, Is.EqualTo("TestHID"));
 
         HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>(
             new[] {new HIDSupport.HIDPageUsage((HID.UsagePage) 5678, 1234)}
         );
 
-        runtime.ReportNewInputDevice(descriptionJson, deviceId);
-        InputSystem.Update();
-
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
+        Assert.That(InputSystem.devices[0], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestHID"));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>(
+            new[] {new HIDSupport.HIDPageUsage((HID.UsagePage) 5678, 1234)}
+        );
+
+        // No change.
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
+        Assert.That(InputSystem.devices[0], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestHID"));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        // Add another.
+        var descriptionJson2 = new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            manufacturer = "TestVendor",
+            product = "OtherTestHID",
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson();
+        var deviceId2 = runtime.AllocateDeviceId();
+
+        runtime.ReportNewInputDevice(descriptionJson2, deviceId2);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.GetDeviceById(deviceId2), Is.Not.Null);
+        Assert.That(InputSystem.devices[1], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[1].description.product, Is.EqualTo("OtherTestHID"));
+        Assert.That(((HID)InputSystem.devices[1]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[1]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
+        Assert.That(InputSystem.GetDeviceById(deviceId2), Is.Null);
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(2));
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Exactly(1).With.Property("product").EqualTo("TestHID"));
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Exactly(1).With.Property("product").EqualTo("OtherTestHID"));
     }
 
     [Test]
@@ -442,12 +488,13 @@ internal class HIDTests : InputTestFixture
     struct SimpleAxisState : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
-        [FieldOffset(1)] public ushort x;
-        [FieldOffset(3)] public short y;
+        [FieldOffset(1)] public ushort rz;
+        [FieldOffset(3)] public short vz;
         [FieldOffset(5)] public byte rx;
         [FieldOffset(6)] public sbyte ry;
         [FieldOffset(7)] public ushort vx;
         [FieldOffset(9)] public short vy;
+        [FieldOffset(11)] public int x;
 
         public FourCC format => new FourCC('H', 'I', 'D');
     }
@@ -488,6 +535,8 @@ internal class HIDTests : InputTestFixture
                 .AddElement(HID.GenericDesktop.Vx, 16).WithLogicalMinMax(0, 10000)
                 // 16bit [-10000..10000]
                 .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
+                // 32bit [int min..int max]
+                .AddElement(HID.GenericDesktop.X, 32).WithLogicalMinMax(int.MinValue, int.MaxValue)
                 .Finish();
 
         runtime.ReportNewInputDevice(
@@ -506,12 +555,13 @@ internal class HIDTests : InputTestFixture
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MinValue,
-            y = short.MinValue,
+            rz = ushort.MinValue,
+            vz = short.MinValue,
             rx = byte.MinValue,
             ry = sbyte.MinValue,
             vx = 0,
             vy = -10000,
+            x = int.MinValue
         });
         InputSystem.Update();
 
@@ -521,17 +571,19 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
 
         // Test upper bound.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MaxValue,
-            y = short.MaxValue,
+            rz = ushort.MaxValue,
+            vz = short.MaxValue,
             rx = byte.MaxValue,
             ry = sbyte.MaxValue,
             vx = 10000,
             vy = 10000,
+            x = int.MaxValue
         });
         InputSystem.Update();
 
@@ -541,17 +593,19 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
 
         // Test center.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MaxValue / 2,
-            y = 0,
+            rz = ushort.MaxValue / 2,
+            vz = 0,
             rx = byte.MaxValue / 2,
             ry = 0,
             vx = 10000 / 2,
             vy = 0,
+            x = 0
         });
         InputSystem.Update();
 
@@ -562,6 +616,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.004));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
     }
 
     // https://github.com/Unity-Technologies/InputSystem/issues/134
@@ -1256,4 +1311,59 @@ internal class HIDTests : InputTestFixture
         Assert.That(HID.UsagePageToString((HID.UsagePage) 0xff01), Is.EqualTo("Vendor-Defined"));
         Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
     }
+
+    // https://fogbugz.unity3d.com/f/cases/1335465/
+    [Test]
+    [Category("Devices")]
+    [TestCase("/")]
+    [TestCase("\\")]
+    [TestCase(">")]
+    [TestCase("<")]
+    [TestCase(" ")]
+    public void Devices_CanHaveReservedCharactersInHIDDeviceNames(string characterStr)
+    {
+        // Il2cpp seems to have trouble with slashes in character literals used in attributes
+        // so we pass the character as a string instead.
+        var character = characterStr[0];
+
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.Button.Primary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 32, reportSizeInBits = 1 },
+                new HID.HIDElementDescriptor { usage = (int)HID.Button.Secondary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 33, reportSizeInBits = 1 },
+            }
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "Test" + character + "HID",
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device.name, Is.EqualTo("TestVendor Test" + (character == '/' ? InputControlPath.SeparatorReplacement : character) + "HID"));
+        Assert.That(device.displayName, Is.EqualTo("Test" + character + "HID"));
+
+        var action = new InputAction(binding: "<Keyboard>/space");
+
+        // Interactively rebind the action to refer to the device's button.
+        using (action.PerformInteractiveRebinding()
+               .OnMatchWaitForAnother(0)
+               .Start())
+        {
+            Press((ButtonControl)device["button2"]);
+        }
+
+        Assert.That(InputControlPath.TryGetDeviceLayout(action.bindings[0].effectivePath), Is.EqualTo(device.layout));
+        Assert.That(InputControlPath.TryGetControlLayout(action.bindings[0].effectivePath), Is.EqualTo("Button"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { device["button2"]}));
+    }
 }
+#endif

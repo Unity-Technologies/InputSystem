@@ -109,7 +109,7 @@ namespace InputSamples.Drawing
 
         #endif
 
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
         {
             InputSystem.RegisterBindingComposite<PointerInputComposite>();

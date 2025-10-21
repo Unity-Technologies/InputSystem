@@ -1,17 +1,18 @@
 using System;
+using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
+using System.Reflection;
 using UnityEditor;
+using UnityEditorInternal;
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-#if !UNITY_2019_2_OR_NEWER
-// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
-#pragma warning disable 618
-#endif
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
@@ -40,7 +41,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
             if (commandPtr == null)
-                throw new System.ArgumentNullException(nameof(commandPtr));
+                throw new ArgumentNullException(nameof(commandPtr));
 
             return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
@@ -65,8 +66,9 @@ namespace UnityEngine.InputSystem.LowLevel
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
+                            // Always report the original exception first to confuse users less about what it the actual failure.
                             Debug.LogException(e);
+                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
                             buffer.Reset();
                         }
 
@@ -120,6 +122,46 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        #if UNITY_EDITOR
+        private struct InputSystemPlayerLoopRunnerInitializationSystem {};
+        public Action onPlayerLoopInitialization
+        {
+            get => m_PlayerLoopInitialization;
+            set
+            {
+                // This is a hot-fix for a critical problem in input system, case 1368559, case 1367556, case 1372830
+                // TODO move it to a proper native callback instead
+                if (value != null)
+                {
+                    // Inject ourselves directly to PlayerLoop.Initialization as first subsystem to run,
+                    // Use InputSystemPlayerLoopRunnerInitializationSystem as system type
+                    var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+                    var initStepIndex = playerLoop.subSystemList.IndexOf(x => x.type == typeof(PlayerLoop.Initialization));
+                    if (initStepIndex >= 0)
+                    {
+                        var systems = playerLoop.subSystemList[initStepIndex].subSystemList;
+
+                        // Check if we're not already injected
+                        if (!systems.Select(x => x.type)
+                            .Contains(typeof(InputSystemPlayerLoopRunnerInitializationSystem)))
+                        {
+                            ArrayHelpers.InsertAt(ref systems, 0, new UnityEngine.LowLevel.PlayerLoopSystem
+                            {
+                                type = typeof(InputSystemPlayerLoopRunnerInitializationSystem),
+                                updateDelegate = () => m_PlayerLoopInitialization?.Invoke()
+                            });
+
+                            playerLoop.subSystemList[initStepIndex].subSystemList = systems;
+                            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+                        }
+                    }
+                }
+
+                m_PlayerLoopInitialization = value;
+            }
+        }
+        #endif
+
         public Action<int, string> onDeviceDiscovered
         {
             get => NativeInputSystem.onDeviceDiscovered;
@@ -165,12 +207,20 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        public bool isPlayerFocused => Application.isFocused;
+
         public float pollingFrequency
         {
+            #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+            get => NativeInputSystem.GetPollingFrequency();
+            #else
             get => m_PollingFrequency;
+            #endif
             set
             {
+                #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 m_PollingFrequency = value;
+                #endif
                 NativeInputSystem.SetPollingFrequency(value);
             }
         }
@@ -183,13 +233,31 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
         public float unscaledGameTime => Time.unscaledTime;
 
-        public bool runInBackground => Application.runInBackground;
+        public bool runInBackground
+        {
+            get =>
+                Application.runInBackground ||
+                // certain platforms ignore the runInBackground flag and always run. Make sure we're
+                // not running on one of those and set the values when running on specific platforms.
+                m_RunInBackground;
+            set => m_RunInBackground = value;
+        }
+
+        bool m_RunInBackground;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
         private Action<InputUpdateType> m_OnBeforeUpdate;
         private Func<InputUpdateType, bool> m_OnShouldRunUpdate;
+        #if UNITY_EDITOR
+        private Action m_PlayerLoopInitialization;
+        #endif
+        #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+        // From Unity 6000.3.0a2 (TODO Update comment and manifest before landing PR) this is handled by module
+        // and initial value is suggested by the platform based on its supported device set.
+        // In older version this is stored here and package override module/platform.
         private float m_PollingFrequency = 60.0f;
+        #endif
         private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
         {
@@ -221,15 +289,72 @@ namespace UnityEngine.InputSystem.LowLevel
             m_FocusChangedMethod(focus);
         }
 
+        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
-        public bool isInBatchMode => Application.isBatchMode;
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        public bool normalizeScrollWheelDelta
+        {
+            get => NativeInputSystem.normalizeScrollWheelDelta;
+            set => NativeInputSystem.normalizeScrollWheelDelta = value;
+        }
 
+        public float scrollWheelDeltaPerTick
+        {
+            get => NativeInputSystem.GetScrollWheelDeltaPerTick();
+        }
+#endif
         #if UNITY_EDITOR
 
         public bool isInPlayMode => EditorApplication.isPlaying;
-        public bool isPaused => EditorApplication.isPaused;
+        public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            set
+            {
+                if (m_UnityRemoteMessageHandler == value)
+                    return;
+
+                if (m_UnityRemoteMessageHandler != null)
+                {
+                    var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
+                    removeMethod?.Invoke(null, new[] { m_UnityRemoteMessageHandler });
+                    m_UnityRemoteMessageHandler = null;
+                }
+
+                if (value != null)
+                {
+                    var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
+                    addMethod?.Invoke(null, new[] { value });
+                    m_UnityRemoteMessageHandler = value;
+                }
+            }
+        }
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
+            setMethod?.Invoke(null, new object[] { value });
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
+            setMethod?.Invoke(null, new object[] { interval });
+        }
+
+        private MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+            if (genericRemoteClass == null)
+                return null;
+
+            return genericRemoteClass.GetMethod(methodName);
+        }
+
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
         private Action<PlayModeStateChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
 
@@ -271,27 +396,33 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if UNITY_ANALYTICS
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
+        #if ENABLE_CLOUD_SERVICES_ANALYTICS
+            #if (UNITY_EDITOR)
+                #if (UNITY_2023_2_OR_NEWER)
+            EditorAnalytics.SendAnalytic(analytic);
+                #else
+            // The preprocessor filtering is a workaround for the fact that the AnalyticsResult enum is not available before 2023.1.0a14 when not using the built-in Unity Analytics module.
+                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+                    #endif // UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+                #endif // UNITY_2023_2_OR_NEWER
+            #elif (UNITY_ANALYTICS) // Implicitly: !UNITY_EDITOR
+            var info = analytic.info;
+            Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            if (analytic.TryGatherData(out var data, out var error))
+                Analytics.Analytics.SendEvent(info.Name, data);
+            else
+                Debug.Log(error);     // Non fatal
+            #endif //UNITY_EDITOR
+        #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            #if UNITY_ANALYTICS
-            #if UNITY_EDITOR
-            EditorAnalytics.SendEventWithLimit(name, data);
-            #else
-            Analytics.Analytics.SendEvent(name, data);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
-        }
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

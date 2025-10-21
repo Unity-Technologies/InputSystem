@@ -4,12 +4,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Samples.InGameHints;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using UnityEngine.InputSystem.Switch;
+#endif
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
-public class InGameHintsTests : InputTestFixture
+public class InGameHintsTests : CoreTestsFixture
 {
     [UnityTest]
     [Category("Samples")]
@@ -33,7 +35,8 @@ public class InGameHintsTests : InputTestFixture
         var player = new GameObject();
         player.SetActive(false); // Avoid PlayerInput grabbing devices before we have its configuration in place.
         var playerInput = player.AddComponent<PlayerInput>();
-        playerInput.actions = new InGameHintsActions().asset;
+        var inGameHintsActions = new InGameHintsActions();
+        playerInput.actions = inGameHintsActions.asset;
         playerInput.defaultActionMap = "Gameplay";
         playerInput.defaultControlScheme = "Keyboard&Mouse";
 
@@ -56,19 +59,25 @@ public class InGameHintsTests : InputTestFixture
 
         // Switch to PS4 controller.
         Press(ps4Controller.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press Cross "));
 
         // Switch to Xbox controller.
         Press(xboxController.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press A "));
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
         // Switch to Switch controller.
         Press(switchController.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press B "));
 #endif
+
+        // Disable before destruction to avoid asset
+        inGameHintsActions.Disable();
     }
 }

@@ -15,6 +15,10 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
+////TODO: make RebindingOperation dispose its memory automatically; re-allocating is not a problem
+
+////TODO: add simple method to RebindingOperation that will create keyboard binding paths by character rather than by key name
+
 ////FIXME: properly work with composites
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
@@ -33,11 +37,28 @@ namespace UnityEngine.InputSystem
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
+    ///
+    /// To implement user-controlled rebinding, create a UI with a button to trigger rebinding.
+    /// If the user clicks the button to bind a control to an action, use `InputAction.PerformInteractiveRebinding`
+    /// to handle the rebinding, as in the following example:
+    /// <example>
+    /// <code>
+    /// void RemapButtonClicked(InputAction actionToRebind)
+    /// {
+    ///   var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+    ///   // To avoid accidental input from mouse motion
+    ///   .WithControlsExcluding("Mouse")
+    ///   .OnMatchWaitForAnother(0.1f)
+    ///   .Start();
+    /// }
+    /// </code>
+    /// </example>
+    /// You can install the Tanks Demo sample from the Input System package using the Package Manager window, which has an example of an interactive rebinding UI.
     /// </remarks>
     /// <seealso cref="InputActionSetupExtensions"/>
     /// <seealso cref="InputBinding"/>
     /// <seealso cref="InputAction.bindings"/>
-    public static class InputActionRebindingExtensions
+    public static partial class InputActionRebindingExtensions
     {
         /// <summary>
         /// Get the index of the first binding in <see cref="InputAction.bindings"/> on <paramref name="action"/>
@@ -55,6 +76,29 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(action));
 
             var bindings = action.bindings;
+            for (var i = 0; i < bindings.Count; ++i)
+                if (bindingMask.Matches(bindings[i]))
+                    return i;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Get the index of the first binding in <see cref="InputActionMap.bindings"/> on <paramref name="actionMap"/>
+        /// that matches the given binding mask.
+        /// </summary>
+        /// <param name="actionMap">An input action map.</param>
+        /// <param name="bindingMask">Binding mask to match (see <see cref="InputBinding.Matches"/>).</param>
+        /// <returns>The first binding on the action matching <paramref name="bindingMask"/> or -1 if no binding
+        /// on the action matches the mask.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding.Matches"/>
+        public static int GetBindingIndex(this InputActionMap actionMap, InputBinding bindingMask)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException(nameof(actionMap));
+
+            var bindings = actionMap.bindings;
             for (var i = 0; i < bindings.Count; ++i)
                 if (bindingMask.Matches(bindings[i]))
                     return i;
@@ -142,27 +186,33 @@ namespace UnityEngine.InputSystem
             var state = actionMap.m_State;
             Debug.Assert(state != null, "Bindings are expected to have been resolved at this point");
 
-            // Find index of control in state.
-            var controlIndex = Array.IndexOf(state.controls, control);
-            if (controlIndex == -1)
-                return -1;
-
-            // Map to binding index.
+            var controls = state.controls;
+            var controlCount = state.totalControlCount;
+            var bindingStates = state.bindingStates;
+            var controlIndexToBindingIndex = state.controlIndexToBindingIndex;
             var actionIndex = action.m_ActionIndexInState;
-            var bindingCount = state.totalBindingCount;
-            for (var i = 0; i < bindingCount; ++i)
+
+            // Go through all controls in the state until we find our control.
+            for (var i = 0; i < controlCount; ++i)
             {
-                var bindingStatePtr = &state.bindingStates[i];
-                if (bindingStatePtr->actionIndex == actionIndex && bindingStatePtr->controlStartIndex <= controlIndex &&
-                    controlIndex < bindingStatePtr->controlStartIndex + bindingStatePtr->controlCount)
-                {
-                    var bindingIndexInMap = state.GetBindingIndexInMap(i);
-                    return action.BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
-                }
+                if (controls[i] != control)
+                    continue;
+
+                // The control may be the same one we're looking for but may be bound to a completely
+                // different action. Skip anything that isn't related to our action.
+                var bindingIndexInState = controlIndexToBindingIndex[i];
+                if (bindingStates[bindingIndexInState].actionIndex != actionIndex)
+                    continue;
+
+                // Got it.
+                var bindingIndexInMap = state.GetBindingIndexInMap(bindingIndexInState);
+                return action.BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
             }
 
             return -1;
         }
+
+        ////TODO: add option to make it *not* take bound controls into account when creating display strings
 
         /// <summary>
         /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
@@ -268,6 +318,8 @@ namespace UnityEngine.InputSystem
             var bindings = action.bindings;
             for (var i = 0; i < bindings.Count; ++i)
             {
+                if (bindings[i].isPartOfComposite)
+                    continue;
                 if (!bindingMask.Matches(bindings[i]))
                     continue;
 
@@ -329,7 +381,7 @@ namespace UnityEngine.InputSystem
         /// <paramref name="action"/> for which to get a display string.</param>
         /// <param name="deviceLayoutName">Receives the name of the <see cref="InputControlLayout"/> used for the
         /// device in the given binding, if applicable. Otherwise is set to <c>null</c>. If, for example, the binding
-        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad</c>.</param>
+        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad"</c>.</param>
         /// <param name="controlPath">Receives the path to the control on the device referenced in the given binding,
         /// if applicable. Otherwise is set to <c>null</c>. If, for example, the binding is <c>"&lt;Gamepad&gt;/leftStick/x"</c>,
         /// the resulting value is <c>"leftStick/x"</c>.</param>
@@ -351,12 +403,12 @@ namespace UnityEngine.InputSystem
         /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
         ///
         /// // Prints "A", then "Gamepad", then "dpad/up".
-        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad", out var deviceLayoutNameA, out var controlPathA));
+        /// Debug.Log(action.GetBindingDisplayString(0, out var deviceLayoutNameA, out var controlPathA));
         /// Debug.Log(deviceLayoutNameA);
         /// Debug.Log(controlPathA);
         ///
         /// // Prints "LMB", then "Mouse", then "leftButton".
-        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("KeyboardMouse", out var deviceLayoutNameB, out var controlPathB));
+        /// Debug.Log(action.GetBindingDisplayString(1, out var deviceLayoutNameB, out var controlPathB));
         /// Debug.Log(deviceLayoutNameB);
         /// Debug.Log(controlPathB);
         /// </code>
@@ -364,6 +416,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
         /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingIndex(InputAction,InputBinding)"/>
         public static unsafe string GetBindingDisplayString(this InputAction action, int bindingIndex,
             out string deviceLayoutName, out string controlPath,
             InputBinding.DisplayStringOptions options = default)
@@ -398,7 +451,12 @@ namespace UnityEngine.InputSystem
                 // Get the display string for each part.
                 var partStrings = new string[partCount];
                 for (var i = 0; i < partCount; ++i)
-                    partStrings[i] = action.GetBindingDisplayString(firstPartIndex + i, options);
+                {
+                    var partString = action.GetBindingDisplayString(firstPartIndex + i, options);
+                    if (string.IsNullOrEmpty(partString))
+                        partString = " ";
+                    partStrings[i] = partString;
+                }
 
                 // Put the parts together based on the display format string for
                 // the composite.
@@ -426,6 +484,9 @@ namespace UnityEngine.InputSystem
                                 result = partStrings[i];
                         }
 
+                        if (string.IsNullOrEmpty(result))
+                            result = " ";
+
                         return result;
                     });
             }
@@ -447,7 +508,7 @@ namespace UnityEngine.InputSystem
                 control = actionState.controls[bindingStatePtr->controlStartIndex];
             }
 
-            // Take interactions applied to the action into account.
+            // Take interactions applied to the action into account (except if explicitly forced off).
             var binding = bindings[bindingIndex];
             if (string.IsNullOrEmpty(binding.effectiveInteractions))
                 binding.overrideInteractions = action.interactions;
@@ -547,9 +608,19 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
+            var enabled = action.enabled;
+            if (enabled)
+                action.Disable();
+
             bindingOverride.action = action.name;
             var actionMap = action.GetOrCreateActionMap();
             ApplyBindingOverride(actionMap, bindingOverride);
+
+            if (enabled)
+            {
+                action.Enable();
+                action.RequestInitialStateCheckOnEnabledAction();
+            }
         }
 
         /// <summary>
@@ -625,10 +696,17 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Apply the given binding override to all bindings in the map that are matched by the override.
         /// </summary>
-        /// <param name="actionMap"></param>
-        /// <param name="bindingOverride"></param>
+        /// <param name="actionMap">An action map. Overrides will be applied to its <see cref="InputActionMap.bindings"/>.</param>
+        /// <param name="bindingOverride">Binding that is matched (see <see cref="InputBinding.Matches"/>) against
+        /// the <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>. The binding's
+        /// <see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideInteractions"/>, and
+        /// <see cref="InputBinding.overrideProcessors"/> properties will be copied over to any matching binding.</param>
         /// <returns>The number of bindings overridden in the given map.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputActionMap.bindings"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
         public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
@@ -654,18 +732,29 @@ namespace UnityEngine.InputSystem
             }
 
             if (matchCount > 0)
-            {
-                actionMap.ClearPerActionCachedBindingData();
-                actionMap.LazyResolveBindings();
-            }
+                actionMap.OnBindingModified();
 
             return matchCount;
         }
 
+        /// <summary>
+        /// Copy the override properties (<see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideProcessors"/>,
+        /// and <see cref="InputBinding.overrideInteractions"/>) from <paramref name="bindingOverride"/> over to the
+        /// binding at index <paramref name="bindingIndex"/> in <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">Action map whose bindings to modify.</param>
+        /// <param name="bindingIndex">Index of the binding to modify in <see cref="InputActionMap.bindings"/> of
+        /// <paramref name="actionMap"/>.</param>
+        /// <param name="bindingOverride">Binding whose override properties (<see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/>) to copy.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is not a valid index for
+        /// <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>.</exception>
         public static void ApplyBindingOverride(this InputActionMap actionMap, int bindingIndex, InputBinding bindingOverride)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+
             var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
                 throw new ArgumentOutOfRangeException(nameof(bindingIndex),
@@ -675,8 +764,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         /// <summary>
@@ -737,12 +825,55 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Restore all bindings in the map to their defaults.
+        /// </summary>
+        /// <param name="actions">Collection of actions to remove overrides from.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
+        public static void RemoveAllBindingOverrides(this IInputActionCollection2 actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            using (DeferBindingResolution())
+            {
+                // Go through all actions and then through the bindings in their action maps
+                // and reset the bindings for those actions. Bit of a roundabout and inefficient
+                // way but should be okay. Problem is that IInputActionCollection2 doesn't give
+                // us quite the same level of access as InputActionMap and InputActionAsset do.
+                foreach (var action in actions)
+                {
+                    var actionMap = action.GetOrCreateActionMap();
+                    var bindings = actionMap.m_Bindings;
+                    var numBindings = bindings.LengthSafe();
+
+                    for (var i = 0; i < numBindings; ++i)
+                    {
+                        ref var binding = ref bindings[i];
+                        if (!binding.TriggersAction(action))
+                            continue;
+                        binding.RemoveOverrides();
+                    }
+
+                    actionMap.OnBindingModified();
+                }
+            }
+        }
+
+        /// <summary>
         /// Remove all binding overrides on <paramref name="action"/>, i.e. clear all <see cref="InputBinding.overridePath"/>,
         /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/> set on bindings
         /// for the given action.
         /// </summary>
         /// <param name="action">Action to remove overrides from.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
             if (action == null)
@@ -765,8 +896,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         ////REVIEW: are the IEnumerable variations worth having?
@@ -777,7 +907,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
-
 
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
@@ -790,49 +919,58 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
         }
 
-        /// <summary>
-        /// Restore all bindings in the map to their defaults.
-        /// </summary>
-        /// <param name="actionMap">Action map to remove overrides from.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
-        public static void RemoveAllBindingOverrides(this InputActionMap actionMap)
-        {
-            if (actionMap == null)
-                throw new ArgumentNullException(nameof(actionMap));
-
-            if (actionMap.m_Bindings == null)
-                return; // No bindings in map.
-
-            var emptyBinding = new InputBinding();
-            var bindingCount = actionMap.m_Bindings.Length;
-            for (var i = 0; i < bindingCount; ++i)
-                ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        ////REVIEW: how does this system work in combination with actual user overrides
-        ////        (answer: we rebind based on the base path not the override path; thus user overrides are unaffected;
-        ////        and hopefully operate on more than just the path; probably action+path or something)
         ////TODO: add option to suppress any non-matching binding by setting its override to an empty path
         ////TODO: need ability to do this with a list of controls
-        // For all bindings in the given action, if a binding matches a control in the given control
-        // hierarchy, set an override on the binding to refer specifically to that control.
-        //
-        // Returns the number of overrides that have been applied.
-        //
-        // Use case: Say you have a local co-op game and a single action map that represents the
-        //           actions of any single player. To end up with action maps that are specific to
-        //           a certain player, you could, for example, clone the action map four times, and then
-        //           take four gamepad devices and use the methods here to have bindings be overridden
-        //           on each map to refer to a specific gamepad instance.
-        //
-        //           Another example is having two XRControllers and two action maps can be on either hand.
-        //           At runtime you can dynamically override and re-override the bindings on the action maps
-        //           to use them with the controllers as desired.
+
+        /// <summary>
+        /// For all bindings in the <paramref name="action"/>, if a binding matches a control in the given control
+        /// hierarchy, set an override on the binding to refer specifically to that control.
+        /// </summary>
+        /// <param name="action">An action whose bindings to modify.</param>
+        /// <param name="control">A control hierarchy or an entire <see cref="InputDevice"/>.</param>
+        /// <returns>The number of binding overrides that have been applied to the given action.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method can be used to restrict bindings that otherwise apply to a wide set of possible
+        /// controls.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create two gamepads.
+        /// var gamepad1 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var gamepad2 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Create an action that binds to the A button on gamepads.
+        /// var action = new InputAction();
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        ///
+        /// // When we enable the action now, it will bind to both
+        /// // gamepad1.buttonSouth and gamepad2.buttonSouth.
+        /// action.Enable();
+        ///
+        /// // But let's say we want the action to specifically work
+        /// // only with the first gamepad. One way to do it is like
+        /// // this:
+        /// action.ApplyBindingOverridesOnMatchingControls(gamepad1);
+        ///
+        /// // As "&lt;Gamepad&gt;/buttonSouth" matches the gamepad1.buttonSouth
+        /// // control, an override will automatically be applied such that
+        /// // the binding specifically refers to that button on that gamepad.
+        /// </code>
+        /// </example>
+        ///
+        /// Note that for actions that are part of <see cref="InputActionMap"/>s and/or
+        /// <see cref="InputActionAsset"/>s, it is possible to restrict actions to
+        /// specific device without having to set overrides. See <see cref="InputActionMap.bindingMask"/>
+        /// and <see cref="InputActionAsset.bindingMask"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.devices"/>
+        /// <seealso cref="InputActionAsset.devices"/>
         public static int ApplyBindingOverridesOnMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
@@ -857,6 +995,58 @@ namespace UnityEngine.InputSystem
             return numMatchingControls;
         }
 
+        /// <summary>
+        /// For all bindings in the <paramref name="actionMap"/>, if a binding matches a control in the given control
+        /// hierarchy, set an override on the binding to refer specifically to that control.
+        /// </summary>
+        /// <param name="actionMap">An action map whose bindings to modify.</param>
+        /// <param name="control">A control hierarchy or an entire <see cref="InputDevice"/>.</param>
+        /// <returns>The number of binding overrides that have been applied to the given action.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method can be used to restrict bindings that otherwise apply to a wide set of possible
+        /// controls. It will go through <see cref="InputActionMap.bindings"/> and apply overrides to
+        /// <example>
+        /// <code>
+        /// // Create two gamepads.
+        /// var gamepad1 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var gamepad2 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Create an action map with an action for the A and B buttons
+        /// // on gamepads.
+        /// var actionMap = new InputActionMap();
+        /// var aButtonAction = actionMap.AddAction("a", binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// var bButtonAction = actionMap.AddAction("b", binding: "&lt;Gamepad&gt;/buttonEast");
+        ///
+        /// // When we enable the action map now, the actions will bind
+        /// // to the buttons on both gamepads.
+        /// actionMap.Enable();
+        ///
+        /// // But let's say we want the actions to specifically work
+        /// // only with the first gamepad. One way to do it is like
+        /// // this:
+        /// actionMap.ApplyBindingOverridesOnMatchingControls(gamepad1);
+        ///
+        /// // Now binding overrides on the actions will be set to specifically refer
+        /// // to the controls on the first gamepad.
+        /// </code>
+        /// </example>
+        ///
+        /// Note that for actions that are part of <see cref="InputActionMap"/>s and/or
+        /// <see cref="InputActionAsset"/>s, it is possible to restrict actions to
+        /// specific device without having to set overrides. See <see cref="InputActionMap.bindingMask"/>
+        /// and <see cref="InputActionAsset.bindingMask"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // For an InputActionMap, we could alternatively just do:
+        /// actionMap.devices = new InputDevice[] { gamepad1 };
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.devices"/>
+        /// <seealso cref="InputActionAsset.devices"/>
         public static int ApplyBindingOverridesOnMatchingControls(this InputActionMap actionMap, InputControl control)
         {
             if (actionMap == null)
@@ -877,12 +1067,281 @@ namespace UnityEngine.InputSystem
             return numMatchingControls;
         }
 
+        /// <summary>
+        /// Return a JSON string containing all overrides applied to bindings in the given set of <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A collection of <see cref="InputAction"/>s such as an <see cref="InputActionAsset"/> or
+        /// an <see cref="InputActionMap"/>.</param>
+        /// <returns>A JSON string containing a serialized version of the overrides applied to bindings in the given set of actions.</returns>
+        /// <remarks>
+        /// This method can be used to serialize the overrides, i.e. <see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/>, applied to
+        /// bindings in the set of actions. Only overrides will be saved.
+        ///
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        public static string SaveBindingOverridesAsJson(this IInputActionCollection2 actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            var overrides = new List<InputActionMap.BindingOverrideJson>();
+            foreach (var binding in actions.bindings)
+                actions.AddBindingOverrideJsonTo(binding, overrides);
+
+            if (overrides.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = overrides});
+        }
+
+        /// <summary>
+        /// Return a string in JSON format that contains all overrides applied <see cref="InputAction.bindings"/>
+        /// of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">An action for which to extract binding overrides.</param>
+        /// <returns>A string in JSON format containing binding overrides for <paramref name="action"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This overrides can be restored using <seealso cref="LoadBindingOverridesFromJson(InputAction,string,bool)"/>.
+        /// </remarks>
+        public static string SaveBindingOverridesAsJson(this InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var isSingletonAction = action.isSingletonAction;
+            var actionMap = action.GetOrCreateActionMap();
+            var list = new List<InputActionMap.BindingOverrideJson>();
+
+            foreach (var binding in action.bindings)
+            {
+                // If we're not looking at a singleton action, the bindings in the map may be
+                // for other actions. Skip all that are.
+                if (!isSingletonAction && !binding.TriggersAction(action))
+                    continue;
+
+                actionMap.AddBindingOverrideJsonTo(binding, list, isSingletonAction ? action : null);
+            }
+
+            if (list.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = list});
+        }
+
+        private static void AddBindingOverrideJsonTo(this IInputActionCollection2 actions, InputBinding binding,
+            List<InputActionMap.BindingOverrideJson> list, InputAction action = null)
+        {
+            if (!binding.hasOverrides)
+                return;
+
+            ////REVIEW: should this throw if there's no existing GUID on the binding? or should we rather have
+            ////        move avenues for locating a binding on an action?
+
+            if (action == null)
+                action = actions.FindAction(binding.action);
+
+            string actionName = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : "";
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, actionName);
+
+            list.Add(@override);
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings in <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A set of actions and their bindings, such as an <see cref="InputActionMap"/>, an
+        /// <see cref="InputActionAsset"/>, or a C# wrapper class generated from an .inputactions asset.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="actions"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this IInputActionCollection2 actions, string json, bool removeExisting = true)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    actions.RemoveAllBindingOverrides();
+
+                actions.LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">Action to restore bindings on.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(InputAction)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="action"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this InputAction action, string json, bool removeExisting = true)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    action.RemoveAllBindingOverrides();
+
+                action.GetOrCreateActionMap().LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        private static void LoadBindingOverridesFromJsonInternal(this IInputActionCollection2 actions, string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            var overrides = JsonUtility.FromJson<InputActionMap.BindingOverrideListJson>(json);
+            foreach (var entry in overrides.bindings)
+            {
+                // Try to find the binding by ID.
+                if (!string.IsNullOrEmpty(entry.id))
+                {
+                    var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
+                    if (bindingIndex != -1)
+                    {
+                        action.ApplyBindingOverride(bindingIndex, InputActionMap.BindingOverrideJson.ToBinding(entry));
+                        continue;
+                    }
+                }
+                Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
+            }
+        }
+
         ////TODO: allow overwriting magnitude with custom values; maybe turn more into an overall "score" for a control
 
         /// <summary>
         /// An ongoing rebinding operation.
         /// </summary>
         /// <remarks>
+        /// <example>
+        /// An example for how to use this class comes with the Input System package in the form of the "Rebinding UI" sample
+        /// that can be installed from the Package Manager UI in the Unity editor. The sample comes with a reusable <c>RebindActionUI</c>
+        /// component that also has a dedicated custom inspector.
+        /// </example>
+        ///
+        /// The most convenient way to use this class is by using <see cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>.
+        /// This method sets up many default behaviors based on the information found in the given action.
+        ///
+        /// Note that instances of this class <em>must</em> be disposed of to not leak memory on the unmanaged heap.
+        ///
+        /// <example>
+        /// <code>
+        /// using TMPro;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class RebindButton : MonoBehaviour
+        /// {
+        ///
+        ///     // A MonoBehaviour that can be hooked up to a UI.Button control.
+        ///     // This example requires you to set up a Text Mesh Pro text field,
+        ///     // And a UI button which calls the OnClick method in this script.
+        ///
+        ///     public InputActionReference actionReference; // Reference to an action to rebind.
+        ///     public int bindingIndex; // Index into m_Action.bindings for binding to rebind.
+        ///     public TextMeshProUGUI displayText; // Text in UI that receives the binding display string.
+        ///     private InputActionRebindingExtensions.RebindingOperation rebind;
+        ///
+        ///     public void OnEnable()
+        ///     {
+        ///         UpdateDisplayText();
+        ///     }
+        ///
+        ///     public void OnDisable()
+        ///     {
+        ///         rebind?.Dispose();
+        ///     }
+        ///
+        ///     public void OnClick()
+        ///     {
+        ///         var l_rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
+        ///         l_rebind.Start();
+        ///     }
+        ///
+        ///     private void UpdateDisplayText()
+        ///     {
+        ///         displayText.text = actionReference.action.GetBindingDisplayString(bindingIndex);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// The goal of a rebind is always to generate a control path (see <see cref="InputControlPath"/>) usable
+        /// with a binding. By default, the generated path will be installed in <see cref="InputBinding.overridePath"/>.
+        /// This is non-destructive as the original path is left intact in the form of <see cref="InputBinding.path"/>.
+        ///
         /// This class acts as both a configuration interface for rebinds as well as a controller while
         /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so can avoid allocating
         /// additional GC memory (the class internally retains state that it can reuse for multiple rebinds).
@@ -892,19 +1351,14 @@ namespace UnityEngine.InputSystem
         /// cached for as long as the rebind operation is not disposed of.
         ///
         /// To reset the configuration of a rebind operation without releasing its memory, call <see cref="Reset"/>.
+        /// Note that changing configuration while a rebind is in progress in not allowed and will throw
+        /// <see cref="InvalidOperationException"/>.
         ///
-        /// <example>
-        /// <code>
-        /// var rebind = new RebindingOperation()
-        ///     .WithAction(myAction)
-        ///     .WithBindingGroup("Gamepad")
-        ///     .WithCancelingThrough("&lt;Keyboard&gt;/escape");
-        ///
-        /// rebind.Start();
-        /// </code>
-        /// </example>
-        ///
-        /// Note that instances of this class <em>must</em> be disposed of to not leak memory on the unmanaged heap.
+        /// Note that it is also possible to use this class for selecting controls interactively without also
+        /// having an <see cref="InputAction"/> or even associated <see cref="InputBinding"/>s. To set this up,
+        /// configure the rebind accordingly with the respective methods (such as <see cref="WithExpectedControlType{Type}"/>)
+        /// and use <see cref="OnApplyBinding"/> to intercept the binding override process and instead use custom
+        /// logic to do something with the resulting path (or to even just use the control list found in <see cref="candidates"/>).
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public sealed class RebindingOperation : IDisposable
@@ -936,14 +1390,46 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="AddCandidate"/>
             /// <seealso cref="RemoveCandidate"/>
+            /// <seealso cref="scores"/>
+            /// <seealso cref="magnitudes"/>
             public InputControlList<InputControl> candidates => m_Candidates;
 
             /// <summary>
             /// The matching score for each control in <see cref="candidates"/>.
             /// </summary>
+            /// <value>A relative floating-point score for each control in <see cref="candidates"/>.</value>
             /// <remarks>
+            /// Candidates are ranked and sorted by their score. By default, a score is computed for each candidate
+            /// control automatically. However, this can be overridden using <see cref="OnComputeScore"/>.
+            ///
+            /// Default scores are directly based on magnitudes (see <see cref="InputControl.EvaluateMagnitude()"/>).
+            /// The greater the magnitude of actuation, the greater the score associated with the control. This means,
+            /// for example, that if both X and Y are actuated on a gamepad stick, the axis with the greater amount
+            /// of actuation will get scored higher and thus be more likely to get picked.
+            ///
+            /// In addition, 1 is added to each default score if the respective control is non-synthetic (see <see
+            /// cref="InputControl.synthetic"/>). This will give controls that correspond to actual controls present
+            /// on the device precedence over those added internally. For example, if both are actuated, the synthetic
+            /// <see cref="Controls.StickControl.up"/> button on stick controls will be ranked lower than the <see
+            /// cref="Gamepad.buttonSouth"/> which is an actual button on the device.
             /// </remarks>
+            /// <seealso cref="OnComputeScore"/>
+            /// <seealso cref="candidates"/>
+            /// <seealso cref="magnitudes"/>
             public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
+
+            /// <summary>
+            /// The matching control actuation level (see <see cref="InputControl.EvaluateMagnitude()"/> for each control in <see cref="candidates"/>.
+            /// </summary>
+            /// <value><see cref="InputControl.EvaluateMagnitude()"/> result for each <see cref="InputControl"/> in <see cref="candidates"/>.</value>
+            /// <remarks>
+            /// This array mirrors <see cref="candidates"/>, i.e. each entry corresponds to the entry in <see cref="candidates"/> at
+            /// the same index.
+            /// </remarks>
+            /// <seealso cref="InputControl.EvaluateMagnitude()"/>
+            /// <seealso cref="candidates"/>
+            /// <seealso cref="scores"/>
+            public ReadOnlyArray<float> magnitudes => new ReadOnlyArray<float>(m_Magnitudes, 0, m_Candidates.Count);
 
             /// <summary>
             /// The control currently deemed the best candidate.
@@ -963,6 +1449,8 @@ namespace UnityEngine.InputSystem
 
                     return m_Candidates[0];
                 }
+
+                ////TODO: allow setting this directly from a callback
             }
 
             /// <summary>
@@ -983,14 +1471,38 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <value>True if the rebind has been completed.</value>
             /// <seealso cref="OnComplete(Action{RebindingOperation})"/>
+            /// <seealso cref="OnComplete"/>
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
+            /// <summary>
+            /// Whether the rebind has been cancelled.
+            /// </summary>
+            /// <seealso cref="OnCancel"/>
             public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
             public double startTime => m_StartTime;
 
             public float timeout => m_Timeout;
 
+            /// <summary>
+            /// Name of the control layout that the rebind is looking for.
+            /// </summary>
+            /// <remarks>
+            /// This is optional but in general, rebinds will be more successful when the operation knows
+            /// what kind of input it is looking for.
+            ///
+            /// If an action is supplied with <see cref="WithAction"/> (automatically done by <see cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>),
+            /// the expected control type is automatically set to <see cref="InputAction.expectedControlType"/> or, if that is
+            /// not set, to <c>"Button"</c> in case the action has type <see cref="InputActionType.Button"/>.
+            ///
+            /// If a binding is supplied with <see cref="WithTargetBinding"/> and the binding is a part binding (see <see cref="InputBinding.isPartOfComposite"/>),
+            /// the expected control type is automatically set to that expected by the respective part of the composite.
+            ///
+            /// If this is set, any input on controls that are not of the expected type is ignored. If this is not set,
+            /// any control that matches all of the other criteria is considered for rebinding.
+            /// </remarks>
+            /// <seealso cref="InputControl.layout"/>
+            /// <seealso cref="InputAction.expectedControlType"/>
             public string expectedControlType => m_ExpectedLayout;
 
             /// <summary>
@@ -1045,13 +1557,17 @@ namespace UnityEngine.InputSystem
             /// For this reason, a rebind can be configured to automatically swallow any input event except the ones having
             /// input on controls matching <see cref="WithControlsExcluding"/>.
             ///
-            /// Not at all input necessarily should be suppressed. For example, it can be desirable to have UI that
+            /// Note that not all input should necessarily be suppressed. For example, it can be desirable to have UI that
             /// allows the user to cancel an ongoing rebind by clicking with the mouse. This means that mouse position and
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.
+            ///
+            /// See <see cref="WithActionEventNotificationsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// actions during rebind.
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
             {
+                ThrowIfRebindInProgress();
                 if (value)
                     m_Flags |= Flags.SuppressMatchingEvents;
                 else
@@ -1084,26 +1600,29 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithCancelingThrough(string binding)
             {
+                ThrowIfRebindInProgress();
                 m_CancelBinding = binding;
                 return this;
             }
 
             public RebindingOperation WithCancelingThrough(InputControl control)
             {
+                ThrowIfRebindInProgress();
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
-
                 return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlType(string layoutName)
             {
+                ThrowIfRebindInProgress();
                 m_ExpectedLayout = new InternedString(layoutName);
                 return this;
             }
 
             public RebindingOperation WithExpectedControlType(Type type)
             {
+                ThrowIfRebindInProgress();
                 if (type != null && !typeof(InputControl).IsAssignableFrom(type))
                     throw new ArgumentException($"Type '{type.Name}' is not an InputControl", "type");
                 m_ControlType = type;
@@ -1113,22 +1632,117 @@ namespace UnityEngine.InputSystem
             public RebindingOperation WithExpectedControlType<TControl>()
                 where TControl : InputControl
             {
+                ThrowIfRebindInProgress();
                 return WithExpectedControlType(typeof(TControl));
             }
 
             ////TODO: allow targeting bindings by name (i.e. be able to say WithTargetBinding("Left"))
+            /// <summary>
+            /// Rebinding a specific <see cref="InputBinding"/> on an <see cref="InputAction"/> as identified
+            /// by the given index into <see cref="InputAction.bindings"/>.
+            /// </summary>
+            /// <param name="bindingIndex">Index into <see cref="InputAction.bindings"/> of the action supplied
+            /// by <see cref="WithAction"/>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Note that if the given binding is a part binding of a composite (see <see cref="InputBinding.isPartOfComposite"/>),
+            /// then the expected control type (see <see cref="WithExpectedControlType(string)"/>) is implicitly changed to
+            /// match the type of control expected by the given part. If, for example, the composite the part belongs to
+            /// is a <see cref="Composites.Vector2Composite"/>, then the expected control type is implicitly changed to
+            /// <see cref="Controls.ButtonControl"/>.
+            ///
+            /// <example>
+            /// <code>
+            /// // Create an action with a WASD setup.
+            /// var moveAction = new InputAction(expectedControlType: "Vector2");
+            /// moveAction.AddCompositeBinding("2DVector")
+            ///     .With("Up", "&lt;Keyboard&gt;/w")
+            ///     .With("Down", "&lt;Keyboard&gt;/s")
+            ///     .With("Left", "&lt;Keyboard&gt;/a")
+            ///     .With("Right", "&lt;Keyboard&gt;/d");
+            ///
+            /// // Start a rebind of the "Up" binding.
+            /// moveAction.PerformInteractiveRebinding()
+            ///     .WithTargetBinding(1)
+            ///     .Start();
+            /// </code>
+            /// </example>
+            /// </remarks>
+            /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is negative.</exception>
+            /// <seealso cref="WithAction"/>
+            /// <seealso cref="InputAction.bindings"/>
+            /// <seealso cref="WithBindingMask"/>
+            /// <seealso cref="WithBindingGroup"/>
             public RebindingOperation WithTargetBinding(int bindingIndex)
             {
+                if (bindingIndex < 0)
+                    throw new ArgumentOutOfRangeException(nameof(bindingIndex));
+
                 m_TargetBindingIndex = bindingIndex;
+
+                ////REVIEW: This works nicely with this method but doesn't work as nicely with other means of selecting bindings (by group or mask).
+
+                if (m_ActionToRebind != null && bindingIndex < m_ActionToRebind.bindings.Count)
+                {
+                    var binding = m_ActionToRebind.bindings[bindingIndex];
+
+                    // If it's a composite, this also changes the type of the control we're looking for.
+                    if (binding.isPartOfComposite)
+                    {
+                        var composite = m_ActionToRebind.ChangeBinding(bindingIndex).PreviousCompositeBinding().binding.GetNameOfComposite();
+                        var partName = binding.name;
+                        var expectedLayout = InputBindingComposite.GetExpectedControlLayoutName(composite, partName);
+                        if (!string.IsNullOrEmpty(expectedLayout))
+                            WithExpectedControlType(expectedLayout);
+                    }
+
+                    // If the binding is part of a control scheme, only accept controls
+                    // that also match device requirements.
+                    var asset = action.actionMap?.asset;
+                    if (asset != null && !string.IsNullOrEmpty(binding.groups))
+                    {
+                        foreach (var group in binding.groups.Split(InputBinding.Separator))
+                        {
+                            var controlSchemeIndex =
+                                asset.controlSchemes.IndexOf(x => group.Equals(x.bindingGroup, StringComparison.InvariantCultureIgnoreCase));
+                            if (controlSchemeIndex == -1)
+                                continue;
+
+                            ////TODO: make this deal with and/or requirements
+
+                            var controlScheme = asset.controlSchemes[controlSchemeIndex];
+                            foreach (var requirement in controlScheme.deviceRequirements)
+                                WithControlsHavingToMatchPath(requirement.controlPath);
+                        }
+                    }
+                }
+
                 return this;
             }
 
+            /// <summary>
+            /// Apply the rebinding to all <see cref="InputAction.bindings"/> of the action given by <see cref="WithAction"/>
+            /// which are match the given binding mask (see <see cref="InputBinding.Matches"/>).
+            /// </summary>
+            /// <param name="bindingMask">A binding mask. See <see cref="InputBinding.Matches"/>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <seealso cref="WithBindingGroup"/>
+            /// <seealso cref="WithTargetBinding"/>
             public RebindingOperation WithBindingMask(InputBinding? bindingMask)
             {
                 m_BindingMask = bindingMask;
                 return this;
             }
 
+            /// <summary>
+            /// Apply the rebinding to all <see cref="InputAction.bindings"/> of the action given by <see cref="WithAction"/>
+            /// which are associated with the given binding group (see <see cref="InputBinding.groups"/>).
+            /// </summary>
+            /// <param name="group">A binding group. See <see cref="InputBinding.groups"/>. A binding matches if any of its
+            /// group associates matches.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <seealso cref="WithBindingMask"/>
+            /// <seealso cref="WithTargetBinding"/>
             public RebindingOperation WithBindingGroup(string group)
             {
                 return WithBindingMask(new InputBinding {groups = group});
@@ -1150,12 +1764,21 @@ namespace UnityEngine.InputSystem
             /// we're usually interested in the fact that it came from a gamepad.
             /// </remarks>
             /// <seealso cref="InputBinding.overridePath"/>
+            /// <seealso cref="OnGeneratePath"/>
             public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
             {
                 m_Flags |= Flags.DontGeneralizePathOfSelectedControl;
                 return this;
             }
 
+            /// <summary>
+            /// Instead of applying the generated path as an <see cref="InputBinding.overridePath"/>,
+            /// create a new binding on the given action (see <see cref="WithAction"/>).
+            /// </summary>
+            /// <param name="group">Binding group (see <see cref="InputBinding.groups"/>) to apply to the new binding.
+            /// This determines, for example, which control scheme (if any) the binding is associated with.</param>
+            /// <returns></returns>
+            /// <seealso cref="OnApplyBinding"/>
             public RebindingOperation WithRebindAddingNewBinding(string group = null)
             {
                 m_Flags |= Flags.AddNewBinding;
@@ -1189,8 +1812,11 @@ namespace UnityEngine.InputSystem
             /// Note that you can also use this method to <em>lower</em> the default threshold of 0.2
             /// in case you want more controls to make it through the matching process.
             /// </remarks>
+            /// <seealso cref="magnitudes"/>
+            /// <seealso cref="InputControl.EvaluateMagnitude()"/>
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
+                ThrowIfRebindInProgress();
                 if (magnitude < 0)
                     throw new ArgumentException($"Magnitude has to be positive but was {magnitude}",
                         nameof(magnitude));
@@ -1214,6 +1840,7 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="InputControl.noisy"/>
             public RebindingOperation WithoutIgnoringNoisyControls()
             {
+                ThrowIfRebindInProgress();
                 m_Flags |= Flags.DontIgnoreNoisyControls;
                 return this;
             }
@@ -1238,8 +1865,10 @@ namespace UnityEngine.InputSystem
             /// are accepted if <em>any</em> of the given paths matches. To reset the list, call <see
             /// cref="Reset"/>.
             /// </remarks>
+            /// <seealso cref="InputControlPath.Matches"/>
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
+                ThrowIfRebindInProgress();
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_IncludePathCount; ++i)
@@ -1249,6 +1878,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            ////REVIEW: This API has been confusing for users who usually will do something like WithControlsExcluding("Mouse"); find a more intuitive way to do this
             /// <summary>
             /// Prevent specific controls from being considered as candidate controls.
             /// </summary>
@@ -1274,8 +1904,10 @@ namespace UnityEngine.InputSystem
             /// This method can be called repeatedly to add multiple exclusions. To reset the list,
             /// call <see cref="Reset"/>.
             /// </remarks>
+            /// <seealso cref="InputControlPath.Matches"/>
             public RebindingOperation WithControlsExcluding(string path)
             {
+                ThrowIfRebindInProgress();
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_ExcludePathCount; ++i)
@@ -1285,24 +1917,73 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// If no match materializes with <paramref name="timeInSeconds"/>, cancel the rebind automatically.
+            /// </summary>
+            /// <param name="timeInSeconds">Time in seconds to wait for a successful rebind. Disabled if timeout is less than or equal to 0.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Limiting rebinds by time can be useful in situations where a rebind may potentially put the user in a situation where
+            /// there is no other way to escape the rebind. For example, if <see cref="WithMatchingEventsBeingSuppressed"/> is engaged,
+            /// input may be consumed by the rebind and thus not reach the UI if <see cref="WithControlsExcluding"/> has not also been
+            /// configured accordingly.
+            ///
+            /// By default, no timeout is set.
+            /// </remarks>
+            /// <seealso cref="timeout"/>
             public RebindingOperation WithTimeout(float timeInSeconds)
             {
+                ThrowIfRebindInProgress();
                 m_Timeout = timeInSeconds;
                 return this;
             }
 
+            /// <summary>
+            /// Delegate to invoke when the rebind completes successfully.
+            /// </summary>
+            /// <param name="callback">A delegate to invoke when the rebind is <see cref="completed"/>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Note that by the time this is invoked, the rebind has been fully applied, that is
+            /// <see cref="OnApplyBinding"/> has been executed.
+            /// </remarks>
             public RebindingOperation OnComplete(Action<RebindingOperation> callback)
             {
                 m_OnComplete = callback;
                 return this;
             }
 
+            /// <summary>
+            /// Delegate to invoke when the rebind is cancelled instead of completing. This happens when either an
+            /// input is received from a control explicitly set up to trigger cancellation (see <see cref="WithCancelingThrough(string)"/>
+            /// and <see cref="WithCancelingThrough(InputControl)"/>) or when <see cref="Cancel"/> is called
+            /// explicitly.
+            /// </summary>
+            /// <param name="callback">Delegate to invoke when the rebind is cancelled.</param>
+            /// <returns></returns>
+            /// <seealso cref="WithCancelingThrough(string)"/>
+            /// <seealso cref="Cancel"/>
+            /// <seealso cref="canceled"/>
             public RebindingOperation OnCancel(Action<RebindingOperation> callback)
             {
                 m_OnCancel = callback;
                 return this;
             }
 
+            /// <summary>
+            /// Delegate to invoke when the rebind has found one or more controls that it considers
+            /// potential matches. This allows modifying priority of matches or adding or removing
+            /// matches altogether.
+            /// </summary>
+            /// <param name="callback">Callback to invoke when one or more suitable controls have been found.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// The matches will be contained in <see cref="candidates"/>. In the callback, you can,
+            /// for example, alter the contents of the list in order to customize the selection process.
+            /// You can remove candidates with <see cref="AddCandidate"/> and/or remove candidates
+            /// with <see cref="RemoveCandidate"/>.
+            /// </remarks>
+            /// <seealso cref="candidates"/>
             public RebindingOperation OnPotentialMatch(Action<RebindingOperation> callback)
             {
                 m_OnPotentialMatch = callback;
@@ -1310,35 +1991,146 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Set function to call when generating the final binding path for a control
+            /// Set function to call when generating the final binding path (see <see cref="InputBinding.path"/>) for a control
             /// that has been selected.
             /// </summary>
-            /// <param name="callback">Delegate to call </param>
-            /// <returns></returns>
+            /// <param name="callback">Delegate to call for when to generate a binding path.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// A rebind will by default create a path that it deems most useful for the purpose of rebinding. However, this
+            /// logic may be undesirable for your use case. By supplying a custom callback you can bypass this logic and thus replace it.
+            ///
+            /// When a matching control is singled out, the default logic will look for the device that introduces the given
+            /// control. For example, if the A button is pressed on an Xbox gamepad, the resulting path will be <c>"&lt;Gamepad&gt;/buttonSouth"</c>
+            /// as it is the <see cref="Gamepad"/> device that introduces the south face button on gamepads. Thus, the binding will work
+            /// with any other gamepad, not just the Xbox controller.
+            ///
+            /// If the delegate returns a null or empty string, the default logic will be re-engaged.
+            /// </remarks>
+            /// <seealso cref="InputBinding.path"/>
+            /// <seealso cref="WithoutGeneralizingPathOfSelectedControl"/>
             public RebindingOperation OnGeneratePath(Func<InputControl, string> callback)
             {
                 m_OnGeneratePath = callback;
                 return this;
             }
 
+            /// <summary>
+            /// Delegate to invoke for compute the matching score for a candidate control.
+            /// </summary>
+            /// <param name="callback">A delegate that computes matching scores.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// By default, the actuation level of a control is used as its matching score. For a <see cref="Controls.StickControl"/>,
+            /// for example, the vector magnitude of the control will be its score. So, a stick that is actuated just a little
+            /// will have a lower score than a stick that is actuated to maximum extent in one direction.
+            ///
+            /// The control with the highest score will be the one appearing at index 0 in <see cref="candidates"/> and thus
+            /// will be the control picked by the rebind as the top candidate.
+            ///
+            /// By installing a custom delegate, it is possible to customize the scoring and apply custom logic to boost
+            /// or lower scores of controls.
+            ///
+            /// The first argument to the delegate is the control that is being added to <see cref="candidates"/> and the
+            /// second argument is a pointer to the input event that contains an input on the control.
+            /// </remarks>
+            /// <seealso cref="scores"/>
+            /// <seealso cref="candidates"/>
             public RebindingOperation OnComputeScore(Func<InputControl, InputEventPtr, float> callback)
             {
                 m_OnComputeScore = callback;
                 return this;
             }
 
+            /// <summary>
+            /// Apply a generated binding <see cref="InputBinding.path"/> as the final step to complete a rebind.
+            /// </summary>
+            /// <param name="callback">Delegate to invoke in order to the apply the generated binding path.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Once a binding path has been generated (see <see cref="OnGeneratePath"/>) from a candidate control,
+            /// the last step is to apply the path. The default logic will take the supplied action (see <see cref="WithAction"/>)
+            /// and apply the path as an <see cref="InputBinding.overridePath"/> on all bindings that have been selected
+            /// for rebinding with <see cref="WithTargetBinding"/>, <see cref="WithBindingMask"/>, or <see cref="WithBindingGroup"/>.
+            ///
+            /// To customize this process, you can supply a custom delegate via this method. If you do so, the default
+            /// logic is bypassed and the step left entirely to the delegate. This also makes it possible to use
+            /// rebind operations without even having an action or even <see cref="InputBinding"/>s.
+            /// </remarks>
             public RebindingOperation OnApplyBinding(Action<RebindingOperation, string> callback)
             {
                 m_OnApplyBinding = callback;
                 return this;
             }
 
+            /// <summary>
+            /// If a successful match has been found, wait for the given time for a better match to appear before
+            /// committing to the match.
+            /// </summary>
+            /// <param name="seconds">Time in seconds to wait until committing to a match.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// While this adds a certain amount of lag to the operation, the lag is not really perceptible if the timeout
+            /// is kept short.
+            ///
+            /// What this helps with is controls such as sticks where, when moved out of the deadzone, the initial direction
+            /// that the user presses may not be the one actually intended. For example, the user may be pressing slightly
+            /// more in the X direction before finally very clearly going more strongly in the Y direction. If the rebind
+            /// does not wait for a bit but instead takes the first actuation as is, the rebind may appear overly brittle.
+            ///
+            /// An alternative to timeouts is to set higher magnitude thresholds with <see cref="WithMagnitudeHavingToBeGreaterThan"/>.
+            /// The default threshold is 0.2f. By setting it to 0.6f or even higher, timeouts may be unnecessary.
+            /// </remarks>
             public RebindingOperation OnMatchWaitForAnother(float seconds)
             {
                 m_WaitSecondsAfterMatch = seconds;
                 return this;
             }
 
+            /// <summary>
+            /// Ensures state changes are allowed to propagate during rebinding but suppresses action event
+            /// notifications to prevent unexpected actions triggering as soon as rebinding ends
+            /// (event suppression stops).
+            /// </summary>
+            /// <param name="value">If true, disables action event notifications for changes driven by handled events
+            /// during rebinding, if false this feature is disabled.</param>
+            /// <remarks>
+            /// If events are suppressed during rebinding using <see cref="WithMatchingEventsBeingSuppressed"/>
+            /// without suppressing action event notifications, events will not update their associated device state
+            /// and be suppressed earlier in the processing chain. This may lead to unexpected actions triggering
+            /// as soon as rebinding completes (event suppression stops), due to missed recording of state transitions.
+            /// Action event notification resumes to normal as soon as rebinding operation completes or cancels.
+            ///
+            /// When this configuration is active, any events suppressed via
+            /// <see cref="WithMatchingEventsBeingSuppressed"/> will still be allowed to update their associated
+            /// device state but will not propagate into action interaction event notifications which could cause
+            /// undesirable triggering of actions caused by the difference between device state prior to rebinding
+            /// and after rebinding.
+            ///
+            /// Note that if event suppression is not active, this setting will have no effect.
+            ///
+            /// In addition to interaction event notifications, the following APIs will also return false when the
+            /// action reflects a state subject for suppression: <see cref="InputAction.WasPerformedThisFrame"/>,
+            /// <see cref="InputAction.WasPressedThisFrame"/>, <see cref="InputAction.WasReleasedThisFrame"/>.
+            /// </remarks>
+            /// <returns>Reference to this rebinding operation.</returns>
+            public RebindingOperation WithActionEventNotificationsBeingSuppressed(bool value = true)
+            {
+                ThrowIfRebindInProgress();
+                m_TargetInputEventHandledPolicy = value
+                    ? InputEventHandledPolicy.SuppressActionEventNotifications
+                    : InputEventHandledPolicy.SuppressStateUpdates;
+                return this;
+            }
+
+            /// <summary>
+            /// Start the rebinding. This should be invoked after the rebind operation has been fully configured.
+            /// </summary>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <exception cref="InvalidOperationException">The rebind has been configure incorrectly. For example, no action has
+            /// been given but no <see cref="OnApplyBinding"/> callback has been installed either.</exception>
+            /// <seealso cref="Cancel"/>
+            /// <seealso cref="Dispose"/>
             public RebindingOperation Start()
             {
                 // Ignore if already started.
@@ -1353,7 +2145,10 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
-                m_StartTime = InputRuntime.s_Instance.currentTime;
+                m_StartTime = InputState.currentTime;
+
+                m_SavedInputEventHandledPolicy = InputSystem.s_Manager.inputEventHandledPolicy;
+                InputSystem.s_Manager.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -1370,6 +2165,11 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Cancel an ongoing rebind. This will invoke the callback supplied by <see cref="OnCancel"/> (if any).
+            /// </summary>
+            /// <seealso cref="Start"/>
+            /// <see cref="started"/>
             public void Cancel()
             {
                 if (!started)
@@ -1389,7 +2189,18 @@ namespace UnityEngine.InputSystem
                 OnComplete();
             }
 
-            public void AddCandidate(InputControl control, float score)
+            /// <summary>
+            /// Add a candidate to <see cref="candidates"/>. This will also add values to <see cref="scores"/> and
+            /// <see cref="magnitudes"/>. If the control has already been added, it's values are simply updated based
+            /// on the given arguments.
+            /// </summary>
+            /// <param name="control">A control that is meant to be considered as a candidate for the rebind.</param>
+            /// <param name="score">The score to associate with the control (see <see cref="scores"/>). By default, the control with the highest
+            /// score will be picked by the rebind.</param>
+            /// <param name="magnitude">Actuation level of the control to enter into <see cref="magnitudes"/>.</param>
+            /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+            /// <seealso cref="RemoveCandidate"/>
+            public void AddCandidate(InputControl control, float score, float magnitude = -1)
             {
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
@@ -1403,14 +2214,23 @@ namespace UnityEngine.InputSystem
                 else
                 {
                     // Otherwise, add it.
-                    var candidateCount = m_Candidates.Count;
+                    var scoreCount = m_Candidates.Count;
+                    var magnitudeCount = m_Candidates.Count;
                     m_Candidates.Add(control);
-                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref scoreCount, score);
+                    ArrayHelpers.AppendWithCapacity(ref m_Magnitudes, ref magnitudeCount, magnitude);
                 }
 
                 SortCandidatesByScore();
             }
 
+            /// <summary>
+            /// Remove a control from the list of <see cref="candidates"/>. This also removes its entries from
+            /// <see cref="scores"/> and <see cref="magnitudes"/>.
+            /// </summary>
+            /// <param name="control">Control to remove from <see cref="candidates"/>.</param>
+            /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+            /// <seealso cref="AddCandidate"/>
             public void RemoveCandidate(InputControl control)
             {
                 if (control == null)
@@ -1425,6 +2245,10 @@ namespace UnityEngine.InputSystem
                 ArrayHelpers.EraseAtWithCapacity(m_Scores, ref candidateCount, index);
             }
 
+            /// <summary>
+            /// Release all memory held by the option, especially unmanaged memory which will not otherwise
+            /// be freed.
+            /// </summary>
             public void Dispose()
             {
                 UnhookOnEvent();
@@ -1451,6 +2275,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation Reset()
             {
+                Cancel();
                 m_ActionToRebind = default;
                 m_BindingMask = default;
                 m_ControlType = default;
@@ -1464,6 +2289,7 @@ namespace UnityEngine.InputSystem
                 m_Timeout = default;
                 m_WaitSecondsAfterMatch = default;
                 m_Flags = default;
+                m_StartingActuations?.Clear();
                 return this;
             }
 
@@ -1491,41 +2317,46 @@ namespace UnityEngine.InputSystem
             private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
                 // Ignore if not a state event.
-                if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                var eventType = eventPtr.type;
+                if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                     return;
 
-                // Go through controls and see if there's anything interesting in the event.
-                var controls = device.allControls;
-                var controlCount = controls.Count;
+                ////TODO: add callback that shows the candidate *and* the event to the user (this is particularly useful when we are suppressing
+                ////      and thus throwing away events)
+
+                // Go through controls in the event and see if there's anything interesting.
+                // NOTE: We go through quite a few steps and operations here. However, the chief goal here is trying to be as robust
+                //       as we can in isolating the control the user really means to single out. If this code here does its job, that
+                //       control should always pop up as the first entry in the candidates list (if the configuration of the rebind
+                //       operation is otherwise sane).
                 var haveChangedCandidates = false;
                 var suppressEvent = false;
-                for (var i = 0; i < controlCount; ++i)
+                var controlEnumerationFlags =
+                    InputControlExtensions.Enumerate.IncludeNonLeafControls
+                    | InputControlExtensions.Enumerate.IncludeSyntheticControls;
+                if ((m_Flags & Flags.DontIgnoreNoisyControls) != 0)
+                    controlEnumerationFlags |= InputControlExtensions.Enumerate.IncludeNoisyControls;
+                foreach (var control in eventPtr.EnumerateControls(controlEnumerationFlags, device))
                 {
-                    var control = controls[i];
-
-                    // Skip controls that have no state in the event.
-                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                    if (statePtr == null)
-                        continue;
+                    var statePtr = control.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+                    Debug.Assert(statePtr != null, "If EnumerateControls() returns a control, GetStatePtrFromStateEvent should not return null for it");
 
                     // If the control that cancels has been actuated, abort the operation now.
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeInState(statePtr))
+                        control.HasValueChangeInState(statePtr))
                     {
+                        // ISXB-1595: Mark event as handled, otherwise the direct cancellation may affect actions bound
+                        // to the same control. Since the cancellation is part of the rebind process it should be
+                        // treated as matched input.
+                        eventPtr.handled = true;
+
                         OnCancel();
                         break;
                     }
 
-                    // Skip noisy controls.
-                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
-                        continue;
-
-                    // If controls must not match certain path, make sure the control doesn't.
+                    // If controls must not match certain paths, make sure the control doesn't.
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
-
-                    // The control is not explicitly excluded so we suppress the event, if that's enabled.
-                    suppressEvent = true;
 
                     // If controls have to match a certain path, check if this one does.
                     if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
@@ -1543,20 +2374,57 @@ namespace UnityEngine.InputSystem
                         !InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
                         continue;
 
+                    ////REVIEW: shouldn't we generally require any already actuated control to go back to 0 actuation before considering it for a rebind?
+
                     // Skip controls that are in their default state.
                     // NOTE: This is the cheapest check with respect to looking at actual state. So
                     //       do this first before looking further at the state.
                     if (control.CheckStateIsAtDefault(statePtr))
+                    {
+                        // For controls that were already actuated when we started the rebind, we record starting actuations below.
+                        // However, when such a control goes back to default state, we want to reset that recorded value. This makes
+                        // sure that if, for example, a key is down when the rebind started, when the key is released and then pressed
+                        // again, we don't compare to the previously recorded magnitude of 1 but rather to 0.
+                        if (!m_StartingActuations.ContainsKey(control))
+                            // ...but we also need to record the first time this control appears in it's default state for the case where
+                            // the user is holding a discrete control when rebinding starts. On the first release, we'll record here a
+                            // starting actuation of 0, then when the key is pressed again, the code below will successfully compare the
+                            // starting value of 0 to the pressed value of 1. If we didn't set this to zero on release, the user would
+                            // have to release the key, press and release again, and on the next press, it would register as actuated.
+                            m_StartingActuations.Add(control, 0);
+
+                        m_StartingActuations[control] = 0;
+
                         continue;
+                    }
+
+                    // At this point the control is a potential candidate for rebinding and therefore the event may need to be suppressed, if that's enabled.
+                    suppressEvent = true;
 
                     var magnitude = control.EvaluateMagnitude(statePtr);
-                    if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
-                        continue; // No, so skip.
+                    if (magnitude >= 0)
+                    {
+                        // Determine starting actuation.
+                        if (m_StartingActuations.TryGetValue(control, out var startingMagnitude) == false)
+                        {
+                            // Haven't seen this control changing actuation yet. Record its current actuation as its
+                            // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
+                            startingMagnitude = control.magnitude;
+                            m_StartingActuations.Add(control, startingMagnitude);
+                        }
 
+                        // Ignore control if it hasn't exceeded the magnitude threshold relative to its starting actuation yet.
+                        if (Mathf.Abs(startingMagnitude - magnitude) < m_MagnitudeThreshold)
+                            continue;
+                    }
+
+                    ////REVIEW: this would be more useful by providing the default score *to* the callback (which may alter it or just replace it altogether)
                     // Compute score.
                     float score;
                     if (m_OnComputeScore != null)
+                    {
                         score = m_OnComputeScore(control, eventPtr);
+                    }
                     else
                     {
                         score = magnitude;
@@ -1580,19 +2448,21 @@ namespace UnityEngine.InputSystem
                             m_Scores[candidateIndex] = score;
 
                             if (m_WaitSecondsAfterMatch > 0)
-                                m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                                m_LastMatchTime = InputState.currentTime;
                         }
                     }
                     else
                     {
                         // No, so add it.
-                        var candidateCount = m_Candidates.Count;
+                        var scoreCount = m_Candidates.Count;
+                        var magnitudeCount = m_Candidates.Count;
                         m_Candidates.Add(control);
-                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref scoreCount, score);
+                        ArrayHelpers.AppendWithCapacity(ref m_Magnitudes, ref magnitudeCount, magnitude);
                         haveChangedCandidates = true;
 
                         if (m_WaitSecondsAfterMatch > 0)
-                            m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                            m_LastMatchTime = InputState.currentTime;
                     }
                 }
 
@@ -1633,8 +2503,10 @@ namespace UnityEngine.InputSystem
                 {
                     for (var j = i; j > 0 && m_Scores[j - 1] < m_Scores[j]; --j)
                     {
-                        m_Scores.SwapElements(j, j - 1);
-                        m_Candidates.SwapElements(j, j - 1);
+                        var k = j - 1;
+                        m_Scores.SwapElements(j, k);
+                        m_Candidates.SwapElements(j, k);
+                        m_Magnitudes.SwapElements(j, k);
                     }
                 }
             }
@@ -1676,7 +2548,7 @@ namespace UnityEngine.InputSystem
                 // If we don't have a match yet but we have a timeout and have expired it,
                 // cancel the operation.
                 if (m_LastMatchTime < 0 && m_Timeout > 0 &&
-                    InputRuntime.s_Instance.currentTime - m_StartTime > m_Timeout)
+                    InputState.currentTime - m_StartTime > m_Timeout)
                 {
                     Cancel();
                     return;
@@ -1691,7 +2563,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 // Complete if timeout has expired.
-                if (InputRuntime.s_Instance.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
+                if (InputState.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
                     Complete();
             }
 
@@ -1778,9 +2650,12 @@ namespace UnityEngine.InputSystem
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
                 m_StartTime = -1;
+                m_StartingActuations.Clear();
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
+
+                InputSystem.s_Manager.inputEventHandledPolicy = m_SavedInputEventHandledPolicy;
             }
 
             private void ThrowIfRebindInProgress()
@@ -1789,6 +2664,7 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException("Cannot reconfigure rebinding while operation is in progress");
             }
 
+            ////TODO: this *must* be publicly accessible
             /// <summary>
             /// Based on the chosen control, generate an override path to rebind to.
             /// </summary>
@@ -1823,10 +2699,13 @@ namespace UnityEngine.InputSystem
             private string m_CancelBinding;
             private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
             private float[] m_Scores; // Scores for the controls in m_Candidates.
+            private float[] m_Magnitudes;
             private double m_LastMatchTime; // Last input event time we discovered a better match.
             private double m_StartTime;
             private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
+            private InputEventHandledPolicy m_SavedInputEventHandledPolicy;
+            private InputEventHandledPolicy m_TargetInputEventHandledPolicy;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
@@ -1841,6 +2720,10 @@ namespace UnityEngine.InputSystem
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
 
+            // Controls may already be actuated by the time we start a rebind. For those, we track starting actuations
+            // individually and require them to cross the actuation threshold WRT the starting actuation.
+            private Dictionary<InputControl, float> m_StartingActuations = new Dictionary<InputControl, float>();
+
             [Flags]
             private enum Flags
             {
@@ -1852,7 +2735,7 @@ namespace UnityEngine.InputSystem
                 DontIgnoreNoisyControls = 1 << 6,
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,
-                SuppressMatchingEvents = 1 << 9,
+                SuppressMatchingEvents = 1 << 9
             }
         }
 
@@ -1868,9 +2751,22 @@ namespace UnityEngine.InputSystem
         /// <exception cref="InvalidOperationException">The binding at <paramref name="bindingIndex"/> is a composite binding.</exception>
         /// <remarks>
         /// This method will automatically perform a set of configuration on the <see cref="RebindingOperation"/>
-        /// based on the action and, if specified, binding.
+        /// based on the action and, if specified, binding. In particular, it will apply the following default
+        /// configuration:
         ///
-        /// TODO
+        /// <ul>
+        /// <li><see cref="RebindingOperation.WithAction"/> will be called with <paramref name="action"/></li>
+        /// <li>The default timeout will be set to 0.05f seconds with <see cref="RebindingOperation.OnMatchWaitForAnother"/>.</li>
+        /// <li>Pointer <see cref="Pointer.delta"/> and <see cref="Pointer.position"/> as well as touch <see cref="Controls.TouchControl.position"/>
+        /// and <see cref="Controls.TouchControl.delta"/> controls will be excluded with <see cref="RebindingOperation.WithControlsExcluding"/>.
+        /// This prevents mouse movement or touch leading to rebinds as it will generally be used to operate the UI.</li>
+        /// <li><see cref="RebindingOperation.WithMatchingEventsBeingSuppressed"/> will be invoked to suppress input funneled into rebinds
+        /// from being picked up elsewhere.</li>
+        /// <li>Except if the rebind is looking for a button, <see cref="Keyboard.escapeKey"/> will be set up to cancel the rebind
+        /// using <see cref="RebindingOperation.WithCancelingThrough(string)"/>.</li>
+        /// <li>If <paramref name="bindingIndex"/> is given, <see cref="RebindingOperation.WithTargetBinding"/> is invoked to
+        /// target the given binding with the rebind.</li>
+        /// </ul>
         ///
         /// Note that rebind operations must be disposed of once finished in order to not leak memory.
         ///
@@ -1930,46 +2826,6 @@ namespace UnityEngine.InputSystem
                         $"Cannot perform rebinding on composite binding '{bindings[bindingIndex]}' of '{action}'");
 
                 rebind.WithTargetBinding(bindingIndex);
-
-                // If the binding is a part binding, switch from the action's expected control type to
-                // that expected by the composite's part.
-                if (bindings[bindingIndex].isPartOfComposite)
-                {
-                    // Search for composite.
-                    var compositeIndex = bindingIndex - 1;
-                    while (compositeIndex > 0 && !bindings[compositeIndex].isComposite)
-                        --compositeIndex;
-
-                    if (compositeIndex >= 0 && bindings[compositeIndex].isComposite)
-                    {
-                        var compositeName = bindings[compositeIndex].GetNameOfComposite();
-                        var controlTypeExpectedByPart = InputBindingComposite.GetExpectedControlLayoutName(compositeName, bindings[bindingIndex].name);
-
-                        if (!string.IsNullOrEmpty(controlTypeExpectedByPart))
-                            rebind.WithExpectedControlType(controlTypeExpectedByPart);
-                    }
-                }
-
-                // If the binding is part of a control scheme, only accept controls
-                // that also match device requirements.
-                var bindingGroups = bindings[bindingIndex].groups;
-                var asset = action.actionMap?.asset;
-                if (asset != null && !string.IsNullOrEmpty(action.bindings[bindingIndex].groups))
-                {
-                    foreach (var group in bindingGroups.Split(InputBinding.Separator))
-                    {
-                        var controlSchemeIndex =
-                            asset.controlSchemes.IndexOf(x => group.Equals(x.bindingGroup, StringComparison.InvariantCultureIgnoreCase));
-                        if (controlSchemeIndex == -1)
-                            continue;
-
-                        ////TODO: make this deal with and/or requirements
-
-                        var controlScheme = asset.controlSchemes[controlSchemeIndex];
-                        foreach (var requirement in controlScheme.deviceRequirements)
-                            rebind.WithControlsHavingToMatchPath(requirement.controlPath);
-                    }
-                }
             }
 
             return rebind;
@@ -1984,7 +2840,7 @@ namespace UnityEngine.InputSystem
         /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
         /// is complete and the final binding setup is in place.
         /// </remarks>
-        internal static IDisposable DeferBindingResolution()
+        internal static DeferBindingResolutionWrapper DeferBindingResolution()
         {
             if (s_DeferBindingResolutionWrapper == null)
                 s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
@@ -1994,7 +2850,7 @@ namespace UnityEngine.InputSystem
 
         private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
 
-        private class DeferBindingResolutionWrapper : IDisposable
+        internal class DeferBindingResolutionWrapper : IDisposable
         {
             public void Acquire()
             {
@@ -2005,7 +2861,8 @@ namespace UnityEngine.InputSystem
             {
                 if (InputActionMap.s_DeferBindingResolution > 0)
                     --InputActionMap.s_DeferBindingResolution;
-                InputActionState.DeferredResolutionOfBindings();
+                if (InputActionMap.s_DeferBindingResolution == 0)
+                    InputActionState.DeferredResolutionOfBindings();
             }
         }
     }

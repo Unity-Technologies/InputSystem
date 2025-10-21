@@ -26,6 +26,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Children.Add(child);
         }
 
+        public int GetIndexOfChild(AdvancedDropdownItem child)
+        {
+            return m_Children.IndexOf(child);
+        }
+
         static readonly AdvancedDropdownItem k_SeparatorItem = new SeparatorDropdownItem();
 
         public AdvancedDropdownItem(string name)

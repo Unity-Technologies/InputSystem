@@ -1,6 +1,16 @@
 using System;
 using System.Linq;
 
+////REVIEW: Can we somehow make this a simple struct? The one problem we have is that we can't put struct instances as sub-assets into
+////        the import (i.e. InputActionImporter can't do AddObjectToAsset with them). However, maybe there's a way around that. The thing
+////        is that we really want to store the asset reference plus the action GUID on the *user* side, i.e. the referencing side. Right
+////        now, what happens is that InputActionImporter puts these objects along with the reference and GUID they contain in the
+////        *imported* object, i.e. right with the asset. This partially defeats the whole purpose of having these objects and it means
+////        that now the GUID doesn't really matter anymore. Rather, it's the file ID that now has to be stable.
+////
+////        If we always store the GUID and asset reference on the user side, we can put the serialized data *anywhere* and it'll remain
+////        save and proper no matter what we do in InputActionImporter.
+
 ////REVIEW: should this throw if you try to assign an action that is not a singleton?
 
 ////REVIEW: akin to this, also have an InputActionMapReference?
@@ -125,6 +135,7 @@ namespace UnityEngine.InputSystem
 
             m_Asset = asset;
             m_ActionId = action.id.ToString();
+            name = GetDisplayName(action);
 
             ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
@@ -147,6 +158,19 @@ namespace UnityEngine.InputSystem
             }
 
             return base.ToString();
+        }
+
+        internal static string GetDisplayName(InputAction action)
+        {
+            return !string.IsNullOrEmpty(action?.actionMap?.name) ? $"{action.actionMap?.name}/{action.name}" : action?.name;
+        }
+
+        /// <summary>
+        /// Return a string representation useful for showing in UI.
+        /// </summary>
+        internal string ToDisplayName()
+        {
+            return string.IsNullOrEmpty(name) ? GetDisplayName(action) : name;
         }
 
         /// <summary>
@@ -173,6 +197,24 @@ namespace UnityEngine.InputSystem
             var reference = CreateInstance<InputActionReference>();
             reference.Set(action);
             return reference;
+        }
+
+        /// <summary>
+        /// Clears the cached <see cref="m_Action"/> field for all current <see cref="InputActionReference"/> objects.
+        /// </summary>
+        /// <remarks>
+        /// After calling this, the next call to <see cref="action"/> will retrieve a new <see cref="InputAction"/> reference from the existing <see cref="InputActionAsset"/> just as if
+        /// using it for the first time. The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue to hold their current values.
+        ///
+        /// This method is used to clear the Action references when exiting PlayMode since those objects are no longer valid.
+        /// </remarks>
+        internal static void ResetCachedAction()
+        {
+            var allActionRefs = Resources.FindObjectsOfTypeAll(typeof(InputActionReference));
+            foreach (InputActionReference obj in allActionRefs)
+            {
+                obj.m_Action = null;
+            }
         }
 
         [SerializeField] internal InputActionAsset m_Asset;

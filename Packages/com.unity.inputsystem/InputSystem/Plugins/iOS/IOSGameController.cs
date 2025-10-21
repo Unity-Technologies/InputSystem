@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || PACKAGE_DOCS_GENERATION
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Layouts;
@@ -77,25 +77,21 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
         public iOSGameControllerState WithButton(iOSButton button, bool value = true, float rawValue = 1.0f)
         {
-            fixed(float* buttonsPtr = buttonValues)
-            {
-                buttonsPtr[(int)button] = rawValue;
-            }
+            buttonValues[(int)button] = rawValue;
 
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
-                buttons |= (uint)1 << (int)button;
+                buttons |= bit;
             else
-                buttons &= ~(uint)1 << (int)button;
+                buttons &= ~bit;
 
             return this;
         }
 
         public iOSGameControllerState WithAxis(iOSAxis axis, float value)
         {
-            fixed(float* axisPtr = this.axisValues)
-            {
-                axisPtr[(int)axis] = value;
-            }
+            axisValues[(int)axis] = value;
             return this;
         }
     }
@@ -111,7 +107,6 @@ namespace UnityEngine.InputSystem.iOS
     /// be represented as an iOSGameController.
     /// </remarks>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
-    [Scripting.Preserve]
     public class iOSGameController : Gamepad
     {
     }
@@ -120,8 +115,7 @@ namespace UnityEngine.InputSystem.iOS
     /// An Xbox One Bluetooth controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
-    [Scripting.Preserve]
-    public class XboxOneGampadiOS : UnityEngine.InputSystem.XInput.XInputController
+    public class XboxOneGampadiOS : XInput.XInputController
     {
     }
 
@@ -129,9 +123,16 @@ namespace UnityEngine.InputSystem.iOS
     /// A PlayStation DualShock 4 controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualShock 4 Gamepad")]
-    [Scripting.Preserve]
     public class DualShock4GampadiOS : DualShockGamepad
     {
     }
+
+    /// <summary>
+    /// A PlayStation DualSense controller connected to an iOS device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualSense Gamepad")]
+    public class DualSenseGampadiOS : DualShockGamepad
+    {
+    }
 }
-#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS

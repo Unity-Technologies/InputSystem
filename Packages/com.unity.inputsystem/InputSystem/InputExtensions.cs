@@ -7,11 +7,36 @@ namespace UnityEngine.InputSystem
     /// </summary>
     public static class InputExtensions
     {
+        /// <summary>
+        /// Return true if the given phase is <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>.
+        /// </summary>
+        /// <param name="phase">An action phase.</param>
+        /// <returns>True if the phase is started or performed.</returns>
+        /// <seealso cref="InputAction.phase"/>
+        public static bool IsInProgress(this InputActionPhase phase)
+        {
+            return phase == InputActionPhase.Started || phase == InputActionPhase.Performed;
+        }
+
+        /// <summary>
+        /// Return true if the given phase is <see cref="TouchPhase.Canceled"/> or <see cref="TouchPhase.Ended"/>, i.e.
+        /// if a touch with that phase would no longer be ongoing.
+        /// </summary>
+        /// <param name="phase">A touch phase.</param>
+        /// <returns>True if the phase indicates a touch that has ended.</returns>
+        /// <seealso cref="Controls.TouchControl.phase"/>
         public static bool IsEndedOrCanceled(this TouchPhase phase)
         {
             return phase == TouchPhase.Canceled || phase == TouchPhase.Ended;
         }
 
+        /// <summary>
+        /// Return true if the given phase is <see cref="TouchPhase.Began"/>, <see cref="UnityEngine.TouchPhase.Moved"/>, or
+        /// <see cref="TouchPhase.Stationary"/>, i.e. if a touch with that phase would indicate an ongoing touch.
+        /// </summary>
+        /// <param name="phase">A touch phase.</param>
+        /// <returns>True if the phase indicates a touch that is ongoing.</returns>
+        /// <seealso cref="Controls.TouchControl.phase"/>
         public static bool IsActive(this TouchPhase phase)
         {
             switch (phase)
@@ -28,8 +53,8 @@ namespace UnityEngine.InputSystem
         /// Check if a <see cref="Key"/> enum value represents a modifier key.
         /// </summary>
         /// <param name="key">The key enum value you want to check.</param>
+        /// <returns><c>true</c> if <paramref name="key"/> represents a modifier key, else <c>false</c>.</returns>
         /// <remarks>
-        /// Returns true if this key is a modifier key, false otherwise.
         /// Modifier keys are any keys you can hold down to modify the output of other keys pressed simultaneously,
         /// such as the "shift" or "control" keys.
         /// </remarks>
@@ -55,9 +80,7 @@ namespace UnityEngine.InputSystem
         /// Check if a <see cref="Key"/> enum value represents key generating text input.
         /// </summary>
         /// <param name="key">The key enum value you want to check.</param>
-        /// <remarks>
-        /// Returns true if this key is a key generating non-whitespace character input, false otherwise.
-        /// </remarks>
+        /// <returns><c>true</c> if <paramref name="key"/> represents a key generating non-whitespace text input, else <c>false</c>.</returns>
         public static bool IsTextInputKey(this Key key)
         {
             switch (key)
@@ -105,12 +128,27 @@ namespace UnityEngine.InputSystem
                 case Key.F10:
                 case Key.F11:
                 case Key.F12:
+                case Key.F13:
+                case Key.F14:
+                case Key.F15:
+                case Key.F16:
+                case Key.F17:
+                case Key.F18:
+                case Key.F19:
+                case Key.F20:
+                case Key.F21:
+                case Key.F22:
+                case Key.F23:
+                case Key.F24:
                 case Key.OEM1:
                 case Key.OEM2:
                 case Key.OEM3:
                 case Key.OEM4:
                 case Key.OEM5:
-                case Key.IMESelected:
+                case Key.MediaPlayPause:
+                case Key.MediaForward:
+                case Key.MediaRewind:
+                case KeyEx.IMESelected:
                     return false;
             }
             return true;

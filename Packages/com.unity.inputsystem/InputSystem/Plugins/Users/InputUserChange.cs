@@ -73,51 +73,11 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="InputUser.lostDevices"/>
         DeviceRegained,
 
-        /// <summary>
-        /// A user has either switched accounts at the platform level.
-        /// </summary>
-        /// <remarks>
-        /// This means that the user is now playing with a different user account. This is relevant for persisting
-        /// settings as well as for features such as achievements.
-        ///
-        /// This is detected via <see cref="DeviceConfigurationEvent"/>s. If a device is currently paired to a user
-        /// but then notifies that its configuration has changed and the platform user we have on record for the
-        /// device is no longer the same, this notification is sent after the platform user data (<see cref="InputUser.platformUserAccountHandle"/>
-        /// and related APIs) has been updated.
-        ///
-        /// In response, the application may want to update the user name displayed in the UI. When displaying user
-        /// profile images, an updated image should also be requested from the platform APIs using the user account
-        /// information obtained from <see cref="InputUser"/>.
-        ///
-        /// Note that the notification may also mean that the device is no longer associated with a user account.
-        /// In that case <see cref="InputUser.platformUserAccountHandle"/> will be invalid.
-        /// </remarks>
-        /// <seealso cref="InputUser.platformUserAccountHandle"/>
-        /// <seealso cref="InputUser.platformUserAccountName"/>
-        /// <seealso cref="InputUser.platformUserAccountId"/>
+        ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
         AccountChanged,
-
         AccountNameChanged,
-
-        /// <summary>
-        /// The user was asked to select an account during the device pairing process.
-        /// </summary>
-        /// <remarks>
-        /// In most cases, it makes sense to pause the game while account picking is in progress.
-        /// </remarks>
         AccountSelectionInProgress,
-
-        /// <summary>
-        /// The user canceled the account selection process that was initiated.
-        /// </summary>
         AccountSelectionCanceled,
-
-        /// <summary>
-        /// The user completed the account selection process.
-        /// </summary>
-        /// <remarks>
-        /// Like <see cref="AccountChanged"/>, this means that the account details may have changed.
-        /// </remarks>
         AccountSelectionComplete,
 
         ////REVIEW: send notifications about the matching status of the control scheme? maybe ControlSchemeActivated, ControlSchemeDeactivated,

@@ -38,9 +38,18 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool valid => m_EventPtr != null;
 
         /// <summary>
-        ///
+        /// Whether the event is considered "handled" and should not be processed further.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <remarks>
+        /// This is used in two ways. Setting it from inside <see cref="InputSystem.onEvent"/> will
+        /// cause the event to not be processed further. If it is a <see cref="StateEvent"/> or
+        /// <see cref="DeltaStateEvent"/>, the <see cref="InputDevice"/> targeted by the event will
+        /// not receive the state change.
+        ///
+        /// Setting this flag from inside a state change monitor (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>)
+        /// will prevent other monitors on the same <see cref="IInputStateChangeMonitor"/> not receiving the state change.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The event pointer instance is not <see cref="valid"/>.</exception>
         public bool handled
         {
             get
@@ -140,10 +149,11 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             get
             {
-                if (IsA<StateEvent>())
-                    return StateEvent.From(this)->stateFormat;
-                if (IsA<DeltaStateEvent>())
-                    return DeltaStateEvent.From(this)->stateFormat;
+                var eventType = type;
+                if (eventType == StateEvent.Type)
+                    return StateEvent.FromUnchecked(this)->stateFormat;
+                if (eventType == DeltaStateEvent.Type)
+                    return DeltaStateEvent.FromUnchecked(this)->stateFormat;
                 throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
             }
         }

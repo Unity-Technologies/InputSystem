@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 
+////TODO: event diagnostics should have a bool here
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -26,18 +28,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (s_Settings.simulateTouch == value)
                     return;
                 s_Settings.simulateTouch = value;
-                OnChange();
-            }
-        }
-
-        public static bool lockInputToGameView
-        {
-            get => s_Settings.lockInputToGameView;
-            set
-            {
-                if (s_Settings.lockInputToGameView == value)
-                    return;
-                s_Settings.lockInputToGameView = value;
                 OnChange();
             }
         }
@@ -87,7 +77,6 @@ namespace UnityEngine.InputSystem.Editor
         [Serializable]
         internal struct SerializedState
         {
-            public bool lockInputToGameView;
             public bool addDevicesNotSupportedByProject;
             public bool autoSaveInputActionAssets;
             public bool simulateTouch;
@@ -103,12 +92,16 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static void Load()
         {
+            s_Settings = new SerializedState();
+            if (!File.Exists(kSavePath))
+                return;
+
             try
             {
                 var json = File.ReadAllText(kSavePath);
                 s_Settings = JsonUtility.FromJson<SerializedState>(json);
             }
-            catch (Exception)
+            catch
             {
                 s_Settings = new SerializedState();
             }

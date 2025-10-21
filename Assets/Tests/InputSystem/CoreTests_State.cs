@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -313,6 +315,60 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [TestCase("Axis")]
+    [TestCase("Double")]
+    public void State_CanStoreControlAsMultiBitfield(string controlType)
+    {
+        var json = @"
+        {
+            ""name"" : ""TestDevice"",
+            ""controls"" : [
+                {
+                    ""name"" : ""max"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 127
+                },
+                {
+                    ""name"" : ""min"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 1,
+                    ""bit"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 0
+                },
+                {
+                    ""name"" : ""mid"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 2,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 63
+                }
+            ]
+        }".Replace("__CONTROLTYPE__", controlType);
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        var min = device["min"];
+        var max = device["max"];
+        var mid = device["mid"];
+
+        var minValue = min.ReadValueAsObject();
+        var maxValue = max.ReadValueAsObject();
+        var midValue = mid.ReadValueAsObject();
+
+        Assert.That(minValue, Is.EqualTo(0).Within(0.00001));
+        Assert.That(maxValue, Is.EqualTo(1).Within(0.00001));
+        Assert.That(midValue, Is.EqualTo(0.5).Within(1 / 128f)); // Precision dictated by number of bits we have available.
+    }
+
+    [Test]
+    [Category("State")]
     public void State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         var json = @"
@@ -405,12 +461,15 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
     }
 
-    // The way we keep state does not allow observing the state change on the final
-    // state of the button. However, actions will still see the change.
     [Test]
     [Category("State")]
-    public void State_PressingAndReleasingButtonInSameFrame_DoesNotShowStateChange()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void State_PressingAndReleasingButtonInSameFrame_ShowsStateChange(bool usesReadValueCaching)
     {
+        var originalSetting = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, usesReadValueCaching);
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
@@ -421,9 +480,45 @@ partial class CoreTests
 
         InputSystem.Update();
 
+        // We don't listen for inter-frame press/releases until we see them being requested, so the first time we try
+        // to detect it for a given device+ButtonControl, we'll miss the event.
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, originalSetting);
     }
 
     [Test]
@@ -599,7 +694,9 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        // InputTestFixture puts this at ExactlyAsInPlayer. Give us a setting that allows
+        // gamepad input to go through to the editor.
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -648,7 +745,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
-    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
@@ -758,6 +854,17 @@ partial class CoreTests
         Assert.That(positionMonitorFired);
     }
 
+    [Test]
+    [Category("State")]
+    public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
+    {
+        runtime.currentTime = 2;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
+
+        Assert.That(InputState.currentTime, Is.EqualTo(1));
+        Assert.Greater(InputRuntime.s_Instance.currentTime, InputState.currentTime);
+    }
+
     // For certain actions, we want to be able to tell whether a specific input arrives in time.
     // For example, we may want to only trigger an action if a specific button was released within
     // a certain amount of time. To support this, the system allows putting timeouts on individual
@@ -792,15 +899,15 @@ partial class CoreTests
             });
 
         // Add and immediately expire timeout.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 1234);
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);
         Assert.That(!monitorFired);
         Assert.That(receivedTimerIndex.Value, Is.EqualTo(1234));
-        Assert.That(receivedTime.Value, Is.EqualTo(runtime.currentTime).Within(0.00001));
+        Assert.That(receivedTime.Value, Is.EqualTo(currentTime).Within(0.00001));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
 
         timeoutFired = false;
@@ -809,7 +916,7 @@ partial class CoreTests
 
         // Add timeout and perform a state change. Then advance past timeout time
         // and make sure we *DO* get a notification.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
@@ -819,7 +926,7 @@ partial class CoreTests
 
         monitorFired = false;
 
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(!monitorFired);
@@ -829,7 +936,7 @@ partial class CoreTests
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 1423);
         InputState.RemoveChangeMonitorTimeout(monitor, timerIndex: 1423);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -856,7 +963,7 @@ partial class CoreTests
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor,
-                    runtime.currentTime + 1);
+                    InputState.currentTime + 1);
             }, timerExpiredCallback:
             (control, time, monitorIndex, timerIndex) =>
             {
@@ -871,7 +978,7 @@ partial class CoreTests
         Assert.That(monitorFired);
 
         // Expire timer.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);
@@ -897,13 +1004,13 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
 
         // Trigger first timeout.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutCount, Is.EqualTo(1));
 
         // Trigger second timeout.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutCount, Is.EqualTo(2));
@@ -964,6 +1071,8 @@ partial class CoreTests
     [Category("State")]
     public void State_RemovingMonitorRemovesTimeouts()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
@@ -975,7 +1084,7 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
         InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
 
-        runtime.currentTime = 4;
+        currentTime = 4;
         InputSystem.Update();
     }
 
@@ -1049,12 +1158,14 @@ partial class CoreTests
     [Category("State")]
     public void State_UpdatingStateDirectly_DoesNotModifyTimestampOfDeviceAndDoesNotMakeItCurrent()
     {
+        ResetTime();
+
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad2));
 
-        runtime.currentTime = 123;
+        currentTime = 123;
         InputState.Change(gamepad1, new GamepadState {leftTrigger = 0.123f});
 
         Assert.That(gamepad1.lastUpdateTime, Is.Zero.Within(0.0001));
@@ -1088,10 +1199,13 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = (device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
-            device3.stateBlock.alignedSizeInBytes).AlignToMultipleOf(4);
+        var combinedDeviceStateSize =
+            device1.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device2.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
+        var sizeOfSpecialBuffers = sizeOfSingleBuffer * 3; // Noise mask, default state, and dontReset mask.
 
         const int kDoubleBufferCount =
             #if UNITY_EDITOR
@@ -1105,15 +1219,12 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
-        // QueueEvent aligns to 4-byte boundaries.
-        eventByteCount = eventByteCount.AlignToMultipleOf(4);
-
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSpecialBuffers));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
-        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.0000001));
+        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.000001));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.0000001));
     }
@@ -1178,10 +1289,10 @@ partial class CoreTests
             Assert.That(history[1].ReadValue(), Is.EqualTo(0.234).Within(0.00001));
             Assert.That(history[2].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
             Assert.That(history[3].ReadValue(), Is.EqualTo(0.456).Within(0.00001));
-            Assert.That(history[0].time, Is.EqualTo(0.111));
-            Assert.That(history[1].time, Is.EqualTo(0.222));
-            Assert.That(history[2].time, Is.EqualTo(0.333));
-            Assert.That(history[3].time, Is.EqualTo(0.444));
+            Assert.That(history[0].time, Is.EqualTo(0.111).Within(0.0001));
+            Assert.That(history[1].time, Is.EqualTo(0.222).Within(0.0001));
+            Assert.That(history[2].time, Is.EqualTo(0.333).Within(0.0001));
+            Assert.That(history[3].time, Is.EqualTo(0.444).Within(0.0001));
             Assert.That(history[0].control, Is.SameAs(gamepad1.leftTrigger));
             Assert.That(history[1].control, Is.SameAs(gamepad1.leftTrigger));
             Assert.That(history[2].control, Is.SameAs(gamepad2.rightTrigger));
@@ -1558,7 +1669,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_ExcludesEditorInputByDefault()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1577,7 +1688,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_CanCaptureEditorInput()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1595,6 +1706,162 @@ partial class CoreTests
     }
 
     #endif
+
+    [Test]
+    [Category("State")]
+    // single bit
+    [TestCase(InputStateBlock.kFormatBit, 5, 1, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatBit, 10, 1, 1u, 1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 1, 0u, -1, -1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 25, 1, 1u, 1, 1.0f)]
+    // multiple bits/
+    [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101, 0.8333282470703125f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue, 0.666656494140625f)]
+    [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, 1073741823, 1.0f)] // excess-K
+    [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, int.MaxValue, 1.0f)] // excess-K
+    // primitive types
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 64, 32, 1231231231u, 1231231231, 0.573336720466613769531f)]
+    [TestCase(InputStateBlock.kFormatInt, 96, 32, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0x80000000u, int.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 64, 32, 1231231231u, 1231231231, 0.286668360233306884766f)]
+    [TestCase(InputStateBlock.kFormatUInt, 96, 32, 0x7fffffffu, int.MaxValue, 0.5f)] // no test for uint.MaxValue
+    [TestCase(InputStateBlock.kFormatShort, 16, 16, 0u, 0, 0.0000152587890625f)]
+    [TestCase(InputStateBlock.kFormatShort, 32, 16, 12312u, 12312, 0.3757534027099609375f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x7fffu, (int)short.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x8000u, (int)short.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 16, 16, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 32, 16, 12312u, 12312, 0.18786907196044921875f)]
+    [TestCase(InputStateBlock.kFormatUShort, 48, 16, 0xffffu, (int)ushort.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 8, 8, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 16, 8, 123u, 123, 0.482352942228317260742f)]
+    [TestCase(InputStateBlock.kFormatByte, 24, 8, 0xffu, 255, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 8, 8, 0u, 0, 0.00392156885936856269836f)]
+    [TestCase(InputStateBlock.kFormatSByte, 16, 8, 123u, 123, 0.968627452850341796875f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x7fu, (int)sbyte.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x80u, (int)sbyte.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x0u, null, 0.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x3f800000u, null, 1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0xbf800000u, null, -1.0f)]
+    [TestCase(InputStateBlock.kFormatDouble, 64, 64, 0x0u, null, 0.0f)]
+    public unsafe void State_CanReadAndWriteBitFormat(int format, int bitOffset, int bitSize, uint bitValue, int? expectedIntValue = null, float? expectedFloatValue = null)
+    {
+        const int bufferSize = 16; // make buffer a bit larger to have guard bits
+        if (bitOffset + bitSize > bufferSize * 8)
+            throw new ArgumentException(
+                $"bit offset and bit size are outside of data buffer range ({bitOffset}, {bitSize})");
+
+        var dataRead = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+        var dataWrite = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+
+        for (var testOperation = 0; testOperation < 3; ++testOperation)
+        {
+            // write all 1's so we can track some false negatives
+            UnsafeUtility.MemSet(dataRead, 0xff, bufferSize);
+
+            // clear bits that are 0
+            for (var i = 0; i < bitSize; ++i)
+            {
+                var value = (bitValue >> i) & 1;
+                if (value != 0)
+                    continue;
+                var bytePosition = (i + bitOffset) / 8;
+                var bitPosition = (i + bitOffset) % 8;
+                dataRead[bytePosition] &= (byte)~(1UL << bitPosition);
+            }
+
+            // prepare write array
+            for (var i = 0; i < bufferSize; ++i)
+                dataWrite[i] = (byte)~dataRead[i];
+
+            var block = new InputStateBlock
+            {
+                format = new FourCC(format),
+                byteOffset = (uint)(bitOffset / 8),
+                bitOffset = (uint)(bitOffset % 8),
+                sizeInBits = (uint)bitSize
+            };
+
+            var testWrittenBinaryData = false;
+
+            switch (testOperation)
+            {
+                case 0:
+                    if (expectedIntValue.HasValue)
+                    {
+                        testWrittenBinaryData = true;
+                        Assert.That(block.ReadInt(dataRead), Is.EqualTo(expectedIntValue.Value));
+                        block.WriteInt(dataWrite, expectedIntValue.Value);
+                        Assert.That(block.ReadInt(dataWrite), Is.EqualTo(expectedIntValue.Value));
+                    }
+                    break;
+                case 1:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedFloatValue == -1.0f || expectedFloatValue == 0.0f || expectedFloatValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0f : 0.00005f;
+                        Assert.That(block.ReadFloat(dataRead), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                        block.WriteFloat(dataWrite, expectedFloatValue.Value);
+                        Assert.That(block.ReadFloat(dataWrite), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                    }
+                    break;
+                case 2:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        var expectedDoubleValue = (double)expectedFloatValue;
+
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedDoubleValue == -1.0f || expectedDoubleValue == 0.0f || expectedDoubleValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0 : 0.00005;
+                        Assert.That(block.ReadDouble(dataRead), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                        block.WriteDouble(dataWrite, expectedDoubleValue);
+                        Assert.That(block.ReadDouble(dataWrite), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                    }
+                    break;
+            }
+
+            if (!testWrittenBinaryData) continue;
+
+            // now all bits except for expected bits should be different
+            var validWrite = true;
+            for (var i = 0; i < bufferSize * 8; ++i)
+            {
+                var bytePosition = i / 8;
+                var bitPosition = i % 8;
+                var readBit = (dataRead[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
+                var writeBit = (dataWrite[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
+                validWrite &= (i >= bitOffset && i < bitOffset + bitSize)
+                    ? readBit == writeBit
+                    : readBit != writeBit;
+            }
+
+            if (!validWrite)
+            {
+                var sb = new StringBuilder();
+                sb.Append($"Offset {bitOffset} size {bitSize} in bits, read, write, xor:\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataRead[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataWrite[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append(((dataRead[i / 8] ^ dataWrite[i / 8]) & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                throw new AssertionException($"Written data is not matching expected data: {sb}");
+            }
+        }
+
+        UnsafeUtility.Free(dataRead, Allocator.Temp);
+        UnsafeUtility.Free(dataWrite, Allocator.Temp);
+    }
 
     [Test]
     [Category("State")]

@@ -1,10 +1,26 @@
+---
+uid: input-system-gamepad
+---
 # Gamepad Support
+
+- [Controls](#controls)
+  - [Deadzones](#deadzones)
+- [Polling](#polling)
+- [Rumble](#rumble)
+  - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
+- [PlayStation controllers](#playstation-controllers)
+- [Xbox controllers](#xbox-controllers)
+- [Switch controllers](#switch-controllers)
+- [Cursor Control](#cursor-control)
+- [Discover all connected devices](#discover-all-connected-devices)
 
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
 A gamepad can have additional Controls, such as a gyro, which the Device can expose. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.
 
 Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
+
+>NOTE: Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#creating-a-custom-device-layout)).
 
 >NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
@@ -46,6 +62,45 @@ Gamepad.current["Y"]
 Gamepad.current[GamepadButton.Triangle]
 Gamepad.current["Triangle"]
 ```
+
+### Deadzones
+
+Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
+
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](ProcessorTypes.md#stick-deadzone) on the sticks, like this:
+
+```JSON
+     {
+        "name" : "MyGamepad",
+        "extend" : "Gamepad",
+        "controls" : [
+            {
+                "name" : "leftStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            },
+            {
+                "name" : "rightStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            }
+        ]
+    }
+```
+
+You can do the same in your C# state structs.
+
+```C#
+    public struct MyDeviceState
+    {
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl leftStick;
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl rightStick;
+    }
+```
+
+The gamepad layout already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
+
+
 
 ## Polling
 
@@ -103,24 +158,28 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 * [`DualShock3GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock3GamepadHID.html): A DualShock 3 controller connected to a desktop computer using the HID interface. Currently only supported on macOS. Doesn't support [rumble](#rumble).
 
 * [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface. Supported on macOS, Windows, UWP, and Linux.
+*
+* [`DualSenseGamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualSenseGamepadHID.html): A DualSense controller connected to a desktop computer using the HID interface. Supported on macOS, Windows.
 
 * [`DualShock4GampadiOS`](../api/UnityEngine.InputSystem.iOS.DualShock4GampadiOS.html): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
 
-[`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class.
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_UnityEngine_Color_): Used to set the color of the light bar on the controller.
 
-* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Used to set the color of the light bar on the controller.
+Note that, due to limitations in the USB driver and/or the hardware, only one IOCTL (input/output control) command can be serviced at a time. [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_UnityEngine_Color_) and [`SetMotorSpeeds(Single, Single)`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_SetMotorSpeeds_System_Single_System_Single_) functionality on Dualshock 4 is implemented using IOCTL commands, and so if either method is called in quick succession, it is likely that only the first command will successfully complete. The other commands will be dropped. If there is a need to set both lightbar color and rumble motor speeds at the same time, use the [`SetMotorSpeedsAndLightBarColor(Single, Single, Color)`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html#UnityEngine_InputSystem_DualShock_DualShock4GamepadHID_SetMotorSpeedsAndLightBarColor_System_Single_System_Single_UnityEngine_Color_) method.
 
 >__Note__:
 >* Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other DualShock-specific functionality.
 >* Unity doesn't support connecting a PlayStation controller to a desktop machine using the DualShock 4 USB Wireless Adaptor. Use USB or Bluetooth to connect it.
 
-## Xbox
+## Xbox controllers
 
 Xbox controllers are well supported on different Devices. The Input System implements these using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, which derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html). On Windows and UWP, Unity uses the XInput API to connect to any type of supported XInput controller, including all Xbox One or Xbox 360-compatible controllers. These controllers are represented as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (for example, a wheel or a gamepad).
 
 On other platforms Unity, uses derived classes to represent Xbox controllers:
 
-* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
+* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This class is only used when the `360Controller` driver is in use, and as such you shouldn't see it in use on modern versions of macOS - it is provided primarily for legacy reasons, and for scenarios where macOS 10.15 may still be used.
+
+* [`XboxGamepadMacOSNative`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOSNative.html): Any Xbox gamepad connected to a Mac (macOS 11.0 or higher) via USB. On modern macOS versions, you will get this class instead of `XboxGamepadMacOS`
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.
 
@@ -130,6 +189,48 @@ On other platforms Unity, uses derived classes to represent Xbox controllers:
 >* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
 >* Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other Xbox-specific functionality.
 
-## Switch
+## Switch controllers
 
 The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.
+
+>__Note__: This support does not currently work for Switch Pro controllers connected via wired USB. Instead, the Switch Pro controller *must* be connected via Bluetooth. This is due to the controller using a prioprietary communication protocol on top of HID which does not allow treating the controller like any other HID.
+
+>__Note__: Switch Joy-Cons are not currently supported on desktop.
+
+## Cursor Control
+
+To give gamepads and joysticks control over a hardware or software cursor, you can use the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. See [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control) in the UI section of the manual.
+
+## Discover all connected devices
+
+There are various ways to discover the currently connected devices, as shown in the code samples below.
+
+To query a list of all connected devices (does not allocate; read-only access):
+```
+InputSystem.devices
+```
+
+To get notified when a device is added or removed:
+```
+InputSystem.onDeviceChange +=
+    (device, change) =>
+    {
+        if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
+        {
+            Debug.Log($"Device '{device}' was {change}");
+        }
+    }
+```
+
+To find all gamepads and joysticks:
+```
+var devices = InputSystem.devices;
+for (var i = 0; i < devices.Count; ++i)
+{
+    var device = devices[i];
+    if (device is Joystick || device is Gamepad)
+    {
+        Debug.Log("Found " + device);
+    }
+}
+```

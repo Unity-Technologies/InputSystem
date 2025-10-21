@@ -1,10 +1,8 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
-using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.Scripting;
+using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -31,7 +29,7 @@ namespace UnityEngine.InputSystem.XR
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
     /// <summary>
-    /// The type of data a <see cref="XRFeatureDescriptor>"/> exposes.
+    /// The type of data a <see cref="XRFeatureDescriptor"/> exposes.
     /// </summary>
     public enum FeatureType
     {
@@ -77,7 +75,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public FeatureType featureType;
         /// <summary>
-        /// The overall size of the feature.  This is only filled in when the <see cref="XRFeatureDescriptor.featureType"/> is <see cref="FeatureType.Custom"/>.
+        /// The overall size of the feature.  This is only filled in when the <see cref="featureType"/> is <see cref="FeatureType.Custom"/>.
         /// </summary>
         public uint customSize;
     }
@@ -101,30 +99,28 @@ namespace UnityEngine.InputSystem.XR
         /// The serial number of the device.  An empty string if no serial number is available.
         /// </summary>
         public string serialNumber;
-#if UNITY_2019_3_OR_NEWER
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE)
         public InputDeviceCharacteristics characteristics;
-#else //UNITY_2019_3_OR_NEWER
-        /// <summary>
-        /// The role of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
-        /// </summary>
-        public InputDeviceRole deviceRole;
-#endif //UNITY_2019_3_OR_NEWER
+#else
+        [SerializeField]
+        private uint characteristics;
+#endif
         /// <summary>
         /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
         /// </summary>
         public int deviceId;
         /// <summary>
-        /// A list of all input features.  <seealso cref="XRFeatureDescriptor"/>
+        /// A list of all input features.  <see cref="XRFeatureDescriptor"/>
         /// </summary>
         public List<XRFeatureDescriptor> inputFeatures;
 
         /// <summary>
         /// Converts this structure to a JSON string.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A JSON string.</returns>
         public string ToJson()
         {
             return JsonUtility.ToJson(this);
@@ -149,15 +145,44 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The index with the device's controls array where the parent bone resides.
         /// </summary>
-        public uint parentBoneIndex { get; set; }
+        public uint m_ParentBoneIndex;
+
         /// <summary>
         /// The tracked position of the bone.
         /// </summary>
-        public Vector3 position { get; set; }
+        public Vector3 m_Position;
+
         /// <summary>
         /// The tracked rotation of the bone.
         /// </summary>
-        public Quaternion rotation { get; set; }
+        public Quaternion m_Rotation;
+
+        /// <summary>
+        /// The index with the device's controls array where the parent bone resides.
+        /// </summary>
+        public uint parentBoneIndex
+        {
+            get => m_ParentBoneIndex;
+            set => m_ParentBoneIndex = value;
+        }
+
+        /// <summary>
+        /// The tracked position of the bone.
+        /// </summary>
+        public Vector3 position
+        {
+            get => m_Position;
+            set => m_Position = value;
+        }
+
+        /// <summary>
+        /// The tracked rotation of the bone.
+        /// </summary>
+        public Quaternion rotation
+        {
+            get => m_Rotation;
+            set => m_Rotation = value;
+        }
     }
 
     /// <summary>
@@ -168,45 +193,104 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The tracked position of the left eye.
         /// </summary>
-        public Vector3 leftEyePosition { get; set; }
+        public Vector3 m_LeftEyePosition;
         /// <summary>
         /// The tracked rotation of the left eye.
         /// </summary>
-        public Quaternion leftEyeRotation { get; set; }
+        public Quaternion m_LeftEyeRotation;
         /// <summary>
         /// The tracked position of the right eye.
         /// </summary>
-        public Vector3 rightEyePosition { get; set; }
+        public Vector3 m_RightEyePosition;
         /// <summary>
         /// The tracked rotation of the right eye.
         /// </summary>
-        public Quaternion rightEyeRotation { get; set; }
+        public Quaternion m_RightEyeRotation;
         /// <summary>
         /// The point in 3D space that the pair of eyes is looking.
         /// </summary>
-        public Vector3 fixationPoint { get; set; }
+        public Vector3 m_FixationPoint;
         /// <summary>
         /// The amount [0-1] the left eye is open or closed.  1.0 is fully open.
         /// </summary>
-        public float leftEyeOpenAmount { get; set; }
+        public float m_LeftEyeOpenAmount;
         /// <summary>
         /// The amount [0-1] the right eye is open or closed.  1.0 is fully open.
         /// </summary>
-        public float rightEyeOpenAmount { get; set; }
+        public float m_RightEyeOpenAmount;
+
+        /// <summary>
+        /// The tracked position of the left eye.
+        /// </summary>
+        public Vector3 leftEyePosition
+        {
+            get => m_LeftEyePosition;
+            set => m_LeftEyePosition = value;
+        }
+
+        /// <summary>
+        /// The tracked rotation of the left eye.
+        /// </summary>
+        public Quaternion leftEyeRotation
+        {
+            get => m_LeftEyeRotation;
+            set => m_LeftEyeRotation = value;
+        }
+
+        /// <summary>
+        /// The tracked position of the right eye.
+        /// </summary>
+        public Vector3 rightEyePosition
+        {
+            get => m_RightEyePosition;
+            set => m_RightEyePosition = value;
+        }
+
+        /// <summary>
+        /// The tracked rotation of the right eye.
+        /// </summary>
+        public Quaternion rightEyeRotation
+        {
+            get => m_RightEyeRotation;
+            set => m_RightEyeRotation = value;
+        }
+
+        /// <summary>
+        /// The point in 3D space that the pair of eyes is looking.
+        /// </summary>
+        public Vector3 fixationPoint
+        {
+            get => m_FixationPoint;
+            set => m_FixationPoint = value;
+        }
+
+        /// <summary>
+        /// The amount [0-1] the left eye is open or closed.  1.0 is fully open.
+        /// </summary>
+        public float leftEyeOpenAmount
+        {
+            get => m_LeftEyeOpenAmount;
+            set => m_LeftEyeOpenAmount = value;
+        }
+
+        /// <summary>
+        /// The amount [0-1] the right eye is open or closed.  1.0 is fully open.
+        /// </summary>
+        public float rightEyeOpenAmount
+        {
+            get => m_RightEyeOpenAmount;
+            set => m_RightEyeOpenAmount = value;
+        }
     }
 
-    [Preserve]
     public class BoneControl : InputControl<Bone>
     {
-        [Preserve]
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
-        public IntegerControl parentBoneIndex { get; private set; }
-        [Preserve]
+        public IntegerControl parentBoneIndex { get; set; }
         [InputControl(offset = 4, displayName = "Position")]
-        public Vector3Control position { get; private set; }
-        [Preserve]
+        public Vector3Control position { get; set; }
         [InputControl(offset = 16, displayName = "Rotation")]
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; set; }
 
         protected override void FinishSetup()
         {
@@ -221,9 +305,9 @@ namespace UnityEngine.InputSystem.XR
         {
             return new Bone()
             {
-                parentBoneIndex = (uint)parentBoneIndex.ReadUnprocessedValueFromState(statePtr),
-                position = position.ReadUnprocessedValueFromState(statePtr),
-                rotation = rotation.ReadUnprocessedValueFromState(statePtr)
+                parentBoneIndex = (uint)parentBoneIndex.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
         }
 
@@ -235,30 +319,22 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
-    [Preserve]
     public class EyesControl : InputControl<Eyes>
     {
-        [Preserve]
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
-        public Vector3Control leftEyePosition { get; private set; }
-        [Preserve]
+        public Vector3Control leftEyePosition { get; set; }
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
-        public QuaternionControl leftEyeRotation { get; private set; }
-        [Preserve]
+        public QuaternionControl leftEyeRotation { get; set; }
         [InputControl(offset = 28, displayName = "RightEyePosition")]
-        public Vector3Control rightEyePosition { get; private set; }
-        [Preserve]
+        public Vector3Control rightEyePosition { get; set; }
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
-        public QuaternionControl rightEyeRotation { get; private set; }
-        [Preserve]
+        public QuaternionControl rightEyeRotation { get; set; }
         [InputControl(offset = 56, displayName = "FixationPoint")]
-        public Vector3Control fixationPoint { get; private set; }
-        [Preserve]
+        public Vector3Control fixationPoint { get; set; }
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
-        public AxisControl leftEyeOpenAmount { get; private set; }
-        [Preserve]
+        public AxisControl leftEyeOpenAmount { get; set; }
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
-        public AxisControl rightEyeOpenAmount { get; private set; }
+        public AxisControl rightEyeOpenAmount { get; set; }
 
         protected override void FinishSetup()
         {
@@ -277,13 +353,13 @@ namespace UnityEngine.InputSystem.XR
         {
             return new Eyes()
             {
-                leftEyePosition = leftEyePosition.ReadUnprocessedValueFromState(statePtr),
-                leftEyeRotation = leftEyeRotation.ReadUnprocessedValueFromState(statePtr),
-                rightEyePosition = rightEyePosition.ReadUnprocessedValueFromState(statePtr),
-                rightEyeRotation = rightEyeRotation.ReadUnprocessedValueFromState(statePtr),
-                fixationPoint = fixationPoint.ReadUnprocessedValueFromState(statePtr),
-                leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromState(statePtr),
-                rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromState(statePtr)
+                leftEyePosition = leftEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                leftEyeRotation = leftEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyePosition = rightEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyeRotation = rightEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                fixationPoint = fixationPoint.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
         }
 
@@ -315,6 +391,8 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+            InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
 
@@ -323,7 +401,8 @@ namespace UnityEngine.InputSystem.XR
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
 
-            #if !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
+            // Built-in layouts replaced by the com.unity.xr.windowsmr package.
+#if !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
             InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
@@ -339,9 +418,10 @@ namespace UnityEngine.InputSystem.XR
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
                     .WithProduct(@"(^(Hand -))")
             );
-            #endif
+#endif
 
-            #if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
+            // Built-in layouts replaced by the com.unity.xr.oculus package.
+#if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
             InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
@@ -368,9 +448,10 @@ namespace UnityEngine.InputSystem.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
                     .WithProduct("^(Oculus Tracked Remote)"));
-            #endif
+#endif
 
-            #if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
+            // Built-in layouts replaced by the com.unity.xr.googlevr package.
+#if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
             InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
@@ -379,9 +460,10 @@ namespace UnityEngine.InputSystem.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
                     .WithProduct("^(Daydream Controller)"));
-            #endif
+#endif
 
-            #if !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
+            // Built-in layouts replaced by the com.unity.xr.openvr package.
+#if !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
@@ -422,8 +504,8 @@ namespace UnityEngine.InputSystem.XR
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(HTC V2-XD/XE)")
             );
-            #endif
+#endif
+#endif
         }
     }
 }
-#endif // ENABLE_VR

@@ -1,7 +1,7 @@
+#if ENABLE_VR || UNITY_GAMECORE
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
-
 using UnityEngine.UI;
 
 public class XRHaptics : MonoBehaviour
@@ -90,3 +90,5 @@ public class XRHaptics : MonoBehaviour
         }
     }
 }
+
+#endif

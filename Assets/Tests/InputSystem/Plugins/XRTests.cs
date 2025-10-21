@@ -1,16 +1,18 @@
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if ENABLE_VR || UNITY_GAMECORE
 using System;
-using NUnit.Framework;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XR;
+using UnityEngine.TestTools;
 using UnityEngine.XR;
 
 using Usages = UnityEngine.InputSystem.CommonUsages;
@@ -19,20 +21,18 @@ using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
 using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
-internal class XRTests : InputTestFixture
+internal class XRTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
-    [TestCase(InputDeviceRole.Generic, "XRHMD", typeof(XRHMD))]
-    [TestCase(InputDeviceRole.LeftHanded, "XRController", typeof(XRController))]
-    [TestCase(InputDeviceRole.RightHanded, "XRController", typeof(XRController))]
-    [TestCase(InputDeviceRole.HardwareTracker, null, typeof(UnityEngine.InputSystem.InputDevice))]
-    [TestCase(InputDeviceRole.TrackingReference, null, typeof(UnityEngine.InputSystem.InputDevice))]
-    [TestCase(InputDeviceRole.GameController, null, typeof(UnityEngine.InputSystem.InputDevice))]
-    [TestCase(InputDeviceRole.Unknown, null, typeof(UnityEngine.InputSystem.InputDevice))]
-    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(InputDeviceRole role, string baseLayoutName, Type expectedType)
+    [TestCase(InputDeviceCharacteristics.HeadMounted, "XRHMD", typeof(XRHMD))]
+    [TestCase((InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller), "XRController", typeof(XRController))]
+    [TestCase((InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left), "XRController", typeof(XRController))]
+    [TestCase(InputDeviceCharacteristics.TrackedDevice, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceCharacteristics.None, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    public void Devices_XRDeviceCharacteristicsDeterminesTypeOfDevice(InputDeviceCharacteristics characteristics, string baseLayoutName, Type expectedType)
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(characteristics);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -44,15 +44,20 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout(
             $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
+
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
+        if (baseLayoutName == null)
+            Assert.That(generatedLayout.baseLayouts, Is.Empty);
+        else
+            Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.LeftHanded);
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
+
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -76,7 +81,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.HeadMounted);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -93,7 +98,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.HeadMounted);
         deviceDescription.manufacturer = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -117,7 +122,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        Assert.AreEqual(createdDevice.layout, "XRInputV1::Manufacturer::XRThisLayoutShouldhave1ValidName");
+        Assert.AreEqual(createdDevice.layout, "XRInputV1::__Manufacturer::XR_ThisLayoutShouldhave1ValidName");
     }
 
     [Test]
@@ -143,7 +148,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRDevicesWithNoOrInvalidCapabilities_DoNotCreateLayouts()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.HeadMounted);
         deviceDescription.capabilities = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -226,7 +231,7 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 9));
 
         var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
@@ -252,7 +257,7 @@ internal class XRTests : InputTestFixture
         var vec2Control = generatedLayout["Vector2"];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.offset, Is.EqualTo(12));
-        Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
+        Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Stick")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
@@ -327,112 +332,529 @@ internal class XRTests : InputTestFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
-    [Preserve]
-    private class TestHMD : UnityEngine.InputSystem.InputDevice
+    class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
-        public QuaternionControl quaternion { get; private set; }
+        public QuaternionControl rotation { get; protected set; }
         [InputControl]
-        public Vector3Control vector3 { get; private set; }
+        public Vector3Control position { get; protected set; }
+        [InputControl]
+        public IntegerControl trackingState { get; protected set; }
         protected override void FinishSetup()
         {
             base.FinishSetup();
-            quaternion = GetChildControl<QuaternionControl>("quaternion");
-            vector3 = GetChildControl<Vector3Control>("vector3");
+            rotation = GetChildControl<QuaternionControl>("rotation");
+            position = GetChildControl<Vector3Control>("position");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+        }
+    }
+
+    [InputControlLayout(updateBeforeRender = true)]
+    class TestHMDWithoutTrackingState : UnityEngine.InputSystem.InputDevice
+    {
+        [InputControl]
+        public QuaternionControl rotation { get; protected set; }
+        [InputControl]
+        public Vector3Control position { get; protected set; }
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+            rotation = GetChildControl<QuaternionControl>("rotation");
+            position = GetChildControl<Vector3Control>("position");
+        }
+    }
+
+    [TestCase(InputTrackingState.None, true)]
+    [TestCase(InputTrackingState.None, false)]
+    [TestCase(InputTrackingState.Position, false)]
+    [TestCase(InputTrackingState.Rotation, false)]
+    [TestCase(InputTrackingState.Position | InputTrackingState.Rotation, false)]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_CanConstrainWithTrackingState(InputTrackingState trackingState, bool ignoreTrackingState)
+    {
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+        var positionValid = ignoreTrackingState || (trackingState & InputTrackingState.Position) != 0;
+        var rotationValid = ignoreTrackingState || (trackingState & InputTrackingState.Rotation) != 0;
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = ignoreTrackingState;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
+            tpd.trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+            device.trackingState.WriteValueIntoEvent((int)trackingState, stateEvent);
+
+            // Constrained by Tracking State only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(positionValid ? position : Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotationValid ? rotation : Quaternion.identity));
+
+            // Constrained by both Tracking State and PositionOnly Tracking Type
+            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(positionValid ? position : Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
+
+            // Constrained by both Tracking State and RotationOnly Tracking Type
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotationValid ? rotation : Quaternion.identity));
         }
     }
 
     [Test]
     [Category("Components")]
-    public void Components_CanUpdateGameObjectTransformThroughTrackedPoseDriver()
+    public void Components_TrackedPoseDriver_CanConstrainWithUpdateType()
     {
-        var position = new Vector3(1.0f, 2.0f, 3.0f);
+        var position = new Vector3(1f, 2f, 3f);
         var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
 
         var go = new GameObject();
         var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = true;
+        var transform = tpd.transform;
         var device = InputSystem.AddDevice<TestHMD>();
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            var positionAction = new InputAction();
-            positionAction.AddBinding("<TestHMD>/vector3");
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
 
-            var rotationAction = new InputAction();
-            rotationAction.AddBinding("<TestHMD>/quaternion");
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
 
-            tpd.positionAction = positionAction;
-            tpd.rotationAction = rotationAction;
-
-            // before render only
-            var go1 = tpd.gameObject;
-            go1.transform.position = Vector3.zero;
-            go1.transform.rotation = new Quaternion(0, 0, 0, 0);
+            // BeforeRender only
             tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
-
-            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
-            device.vector3.WriteValueIntoEvent(position, stateEvent);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
 
-            var go2 = tpd.gameObject;
-            go2.transform.position = Vector3.zero;
-            go2.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            // update only
-            var go3 = tpd.gameObject;
-            go3.transform.position = Vector3.zero;
-            go3.transform.rotation = new Quaternion(0, 0, 0, 0);
+            // Update only
             tpd.updateType = TrackedPoseDriver.UpdateType.Update;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            var go4 = tpd.gameObject;
-            go4.transform.position = Vector3.zero;
-            go4.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
 
-            // check the rot/pos case also Update AND Render.
+            // Update and BeforeRender
             tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
-            var go5 = tpd.gameObject;
-            go5.transform.position = Vector3.zero;
-            go5.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
-            var go6 = tpd.gameObject;
-            go6.transform.position = Vector3.zero;
-            go6.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
         }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_CanConstrainWithTrackingType()
+    {
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.ignoreTrackingState = true;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+
+            // Position only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
+
+            // Rotation only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            // Rotation and Position
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_EnablesAndDisablesDirectActions()
+    {
+        var positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+        var rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
+        var trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
+
+        var go = new GameObject();
+        var component = go.AddComponent<TrackedPoseDriver>();
+        component.enabled = false;
+        component.positionInput = positionInput;
+        component.rotationInput = rotationInput;
+        component.trackingStateInput = trackingStateInput;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
+
+        component.enabled = true;
+
+        Assert.That(positionInput.action.enabled, Is.True);
+        Assert.That(rotationInput.action.enabled, Is.True);
+        Assert.That(trackingStateInput.action.enabled, Is.True);
+
+        component.enabled = false;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_DoesNotEnableOrDisableReferenceActions()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("Position", binding: "<TestHMD>/position");
+        map.AddAction("Rotation", binding: "<TestHMD>/rotation");
+        map.AddAction("Tracking State", binding: "<TestHMD>/trackingState");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var positionReference = ScriptableObject.CreateInstance<InputActionReference>();
+        var rotationReference = ScriptableObject.CreateInstance<InputActionReference>();
+        var trackingStateReference = ScriptableObject.CreateInstance<InputActionReference>();
+        positionReference.Set(asset, "map", "Position");
+        rotationReference.Set(asset, "map", "Rotation");
+        trackingStateReference.Set(asset, "map", "Tracking State");
+
+        var positionInput = new InputActionProperty(positionReference);
+        var rotationInput = new InputActionProperty(rotationReference);
+        var trackingStateInput = new InputActionProperty(trackingStateReference);
+
+        var go = new GameObject();
+        var component = go.AddComponent<TrackedPoseDriver>();
+        component.enabled = false;
+        component.positionInput = positionInput;
+        component.rotationInput = rotationInput;
+        component.trackingStateInput = trackingStateInput;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
+
+        component.enabled = true;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
+
+        component.enabled = false;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
+    }
+
+    [UnityTest]
+    [Category("Components")]
+    public IEnumerator CanUseTrackedPoseDriverWithoutTrackingAction()
+    {
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+
+        var positionAction = new InputAction(binding: "<XRController>/devicePosition");
+        var rotationAction = new InputAction(binding: "<XRController>/deviceRotation");
+        tpd.positionInput = new InputActionProperty(positionAction);
+        tpd.rotationInput = new InputActionProperty(rotationAction);
+
+        yield return null;
+
+        Assert.That(positionAction.controls.Count, Is.EqualTo(0));
+        Assert.That(rotationAction.controls.Count, Is.EqualTo(0));
+
+        var device = InputSystem.AddDevice<XRController>();
+        InputSystem.AddDeviceUsage(device, "RightHand");
+
+        yield return null;
+
+        Assert.That(positionAction.controls.Count, Is.EqualTo(1));
+        Assert.That(rotationAction.controls.Count, Is.EqualTo(1));
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            device.devicePosition.WriteValueIntoEvent(position, stateEvent);
+            device.deviceRotation.WriteValueIntoEvent(rotation, stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+        }
+
+        yield return null;
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_RequiresResolvedTrackingStateBindings()
+    {
+        // Tests the scenario that a single TrackedPoseDriver component has multiple bindings,
+        // some to a device with tracking state and some to a device without tracking state.
+        // The use case is having the Main Camera track an XRHMD (that has tracking state)
+        // or a HandheldARInputDevice (which does not have tracking state), so the tracking
+        // state should have an effective value of Position | Rotation.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMDWithoutTrackingState>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            var positionAction = new InputAction(binding: "<TestHMD>/position");
+            positionAction.AddBinding("<TestHMDWithoutTrackingState>/position");
+            var rotationAction = new InputAction(binding: "<TestHMD>/rotation");
+            rotationAction.AddBinding("<TestHMDWithoutTrackingState>/rotation");
+            var trackingStateAction = new InputAction(binding: "<TestHMD>/trackingState");
+
+            tpd.positionInput = new InputActionProperty(positionAction);
+            tpd.rotationInput = new InputActionProperty(rotationAction);
+            tpd.trackingStateInput = new InputActionProperty(trackingStateAction);
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenTrackedDeviceRemoved()
+    {
+        // Tests the scenario that XR controller devices (which have tracking state) are removed
+        // (e.g. due to being set down on a table) that the Transform pose will be retained
+        // when the tracking state is not ignored.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
+            tpd.trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+            device.trackingState.WriteValueIntoEvent((int)(InputTrackingState.Position | InputTrackingState.Rotation), stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            InputSystem.RemoveDevice(device);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            // Ensure the pose is retained even after OnEnable makes the behavior poll the input again
+            tpd.enabled = false;
+            tpd.enabled = true;
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenNoActionIsBound(bool ignoreTrackingState)
+    {
+        // Tests/reproduces the scenario described in https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699
+        // i.e. that rotation and/or position is not updated if device is not connected.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        // Setup GameObject to have a position and rotation that is different from identity transform
+        var go = new GameObject();
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+
+        // Configure TrackedPoseDriver
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = ignoreTrackingState;
+
+        var transform = tpd.transform;
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+        // Ensure that position and/or rotation is not affected by update.
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_PoseControlsCanBeCreatedBySubcontrols()
+    {
+        runtime.ReportNewInputDevice(PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
+        Assert.That(generatedLayout, Is.Not.Null);
+
+        // A Pose control parent was created based off sub-controls
+        var pose = generatedLayout["PoseControl"];
+        Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
     }
 
     private const int kNumBaseHMDControls = 10;
 
-    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
+    InputDeviceRole RoleFromCharacteristics(InputDeviceCharacteristics characteristics)
+    {
+        if ((characteristics & InputDeviceCharacteristics.Left) != 0)
+            return InputDeviceRole.LeftHanded;
+        if ((characteristics & InputDeviceCharacteristics.Right) != 0)
+            return InputDeviceRole.RightHanded;
+        if ((characteristics & InputDeviceCharacteristics.TrackingReference) != 0)
+            return InputDeviceRole.TrackingReference;
+        if ((characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
+            return InputDeviceRole.Generic;
+        if ((characteristics & InputDeviceCharacteristics.HeldInHand) != 0)
+            return InputDeviceRole.Generic;
+        if ((characteristics & InputDeviceCharacteristics.EyeTracking) != 0)
+            return InputDeviceRole.Generic;
+        if ((characteristics & InputDeviceCharacteristics.Camera) != 0)
+            return InputDeviceRole.Generic;
+        if ((characteristics & InputDeviceCharacteristics.Controller) != 0)
+            return InputDeviceRole.GameController;
+        if ((characteristics & InputDeviceCharacteristics.TrackedDevice) != 0)
+            return InputDeviceRole.HardwareTracker;
+
+        return InputDeviceRole.LegacyController;
+    }
+
+    private static InputDeviceDescription CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics deviceCharacteristics)
     {
         return new InputDeviceDescription
         {
@@ -441,9 +863,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
-#if !UNITY_2019_3_OR_NEWER
-                deviceRole = role,
-#endif
+                characteristics = deviceCharacteristics,
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -465,10 +885,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
-#if !UNITY_2019_3_OR_NEWER
-                deviceRole = InputDeviceRole.Generic,
-#endif
-
+                characteristics = InputDeviceCharacteristics.HeadMounted,
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -502,9 +919,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if !UNITY_2019_3_OR_NEWER
-                    deviceRole = InputDeviceRole.Generic,
-#endif
+                    characteristics = InputDeviceCharacteristics.HeadMounted,
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -576,9 +991,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if !UNITY_2019_3_OR_NEWER
-                    deviceRole = InputDeviceRole.Generic,
-#endif
+                    characteristics = InputDeviceCharacteristics.HeadMounted,
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -692,5 +1105,152 @@ internal class XRTests : InputTestFixture
             get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
+
+    [StructLayout(LayoutKind.Explicit)]
+    internal unsafe struct PoseDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte isTracked;
+        [FieldOffset(4)] public uint trackingState;
+        [FieldOffset(8)] public Vector3 position;
+        [FieldOffset(20)] public Quaternion rotation;
+        [FieldOffset(36)] public Vector3 velocity;
+        [FieldOffset(48)] public Vector3 angularVelocity;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription()
+            {
+                interfaceName = XRUtilities.InterfaceCurrent,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/isTracked",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/trackingState",
+                            featureType = FeatureType.DiscreteStates,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/position",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/rotation",
+                            featureType = FeatureType.Rotation,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/velocity",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/angularVelocity",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        }
+                    }
+                }.ToJson()
+            };
+        }
+
+        public FourCC format
+        {
+            get { return new FourCC('X', 'R', 'S', '0'); }
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_XRAxisControls_AreClampedToOneMagnitude()
+    {
+        runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        InputSystem.QueueStateEvent(device, new TestXRDeviceState
+        {
+            button = 0,
+            discreteState = 0,
+            axis = -2f,
+            axis2D = -Vector2.one,
+            axis3D = Vector3.zero,
+            rotation = Quaternion.identity,
+            lastElement = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That((device["Axis"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/x"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_PoseControl_IsOptimized()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+
+        runtime.ReportNewInputDevice(PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        Assert.That((device["posecontrol"] as PoseControl).optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatPose));
+    }
+
+    // ISXB-405
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingUnusualDevice_ShouldntCrashTheSystem()
+    {
+        var deviceDescr =
+            "{\"interface\":\"XRInputV1\",\"type\":\"\",\"product\":\"OpenXR Right Hand\",\"manufacturer\":\"\",\"serial\":\"\",\"version\":\"\",\"capabilities\":\"{\\\"deviceName\\\":\\\"OpenXR Right Hand\\\",\\\"manufacturer\\\":\\\"\\\",\\\"serialNumber\\\":\\\"\\\",\\\"characteristics\\\":620,\\\"deviceId\\\":4294967297,\\\"inputFeatures\\\":[{\\\"name\\\":\\\"Is Tracked\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"IsTracked\\\",\\\"id\\\":1429429695}],\\\"featureType\\\":1,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Tracking State\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"TrackingState\\\",\\\"id\\\":1636970542}],\\\"featureType\\\":2,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Palm\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Wrist\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Data\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"HandData\\\",\\\"id\\\":2609730070}],\\\"featureType\\\":7,\\\"customSize\\\":4294967295}],\\\"CanQueryForDeviceStateAtTime\\\":false}\"}";
+
+        runtime.ReportNewInputDevice(deviceDescr);
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        Assert.That(device, Is.Not.Null);
+    }
+
+    [Test]
+    [Category("Commands")]
+    public void Commands_GetHapticCapabilitiesCommand_UsesCorrectPayloadSize()
+    {
+        unsafe
+        {
+            // Check that the payload of the command matches the low-level struct defined in IUnityXRInput.h (UnityXRHapticCapabilities)
+            // and used in XRInputSubsystem by checking the size. The sizes are required to match for the event to be
+            // sent to the device.
+            Assert.That(sizeof(UnityEngine.InputSystem.XR.Haptics.HapticCapabilities), Is.EqualTo(sizeof(UnityEngine.XR.HapticCapabilities)));
+            Assert.That(sizeof(UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) - InputDeviceCommand.BaseCommandSize, Is.EqualTo(sizeof(UnityEngine.XR.HapticCapabilities)));
+        }
+    }
 }
-#endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#endif
