@@ -42,7 +42,11 @@ In the Input Debugger window, navigate to the __Devices__ list and double-click 
 
 ![Device in Input Debugger](Images/DeviceInDebugger.png)
 
-The top of the Device window displays general information about the specific Device, such as name, manufacturer, and serial number.
+The top of the Device window displays general information about the specific Device, such as name, manufacturer, associated layout, device flags, device ID and serial number.  In addition, this section also display the current __sample frequency__ and __processing delay__ of the deivce.
+
+__Sample frequency__ indicates the frequency in Hertz (Hz) at which the Input System is currently processing samples or events. For devices receiving events this reflects the current flow of events received by the system. For devices receiving periodic readings this reflects the achievable sample rate of the system. The latter may be compared to the globally configured target sampling frequency, while achievable event frequency is uncorrelated to the sample polling frequency setting.
+
+__Processing delay__ indicates the average, minimum and maximum latency contribution from creating an input event or reading until the Input System has processed the same input event. Note that this excludes any additional input delay caused by OS, drivers or device communication. Also note that this excludes any additional output latency that may be caused by additional processing, rendering, GPU swap-chains or display refresh rate.
 
 The __Controls__ section lists the Device's Controls and their individual states. This is useful when debugging input issues, because you can verify whether the data that the Input System receives from the Input Device is what you expect it to be. There are two buttons at the top of this panel:
 

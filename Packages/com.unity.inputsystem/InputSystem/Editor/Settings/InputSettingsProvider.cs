@@ -116,11 +116,18 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+                    CustomUpdateModeHelpBox();
+
                 var runInBackground = Application.runInBackground;
                 using (new EditorGUI.DisabledScope(!runInBackground))
                     EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
                 if (!runInBackground)
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+                EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
+#endif
 
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
@@ -180,6 +187,22 @@ namespace UnityEngine.InputSystem.Editor
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private void CustomUpdateModeHelpBox()
+        {
+            var message =
+                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
+            Uri link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
+            GUILayout.BeginVertical();
+            GUILayout.Label(message, EditorStyles.label);
+            if (GUILayout.Button("Read more", EditorStyles.linkLabel))
+                System.Diagnostics.Process.Start(link.AbsoluteUri);
+            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
 
         private static void ShowPlatformSettings()
@@ -266,6 +289,7 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
+            m_ScrollDeltaBehavior = m_SettingsObject.FindProperty("m_ScrollDeltaBehavior");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
@@ -281,6 +305,9 @@ namespace UnityEngine.InputSystem.Editor
             m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+            m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "Controls whether the value returned by the Scroll Wheel Delta is normalized (to be uniform across all platforms), or returns the non-normalized platform-specific range which can vary between platforms.");
+#endif
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
                 + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
@@ -404,6 +431,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private int m_SettingsDirtyCount;
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
+        [NonSerialized] private SerializedProperty m_ScrollDeltaBehavior;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
@@ -427,6 +455,9 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        private GUIContent m_ScrollDeltaBehaviorContent;
+#endif
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;

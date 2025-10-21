@@ -26,8 +26,12 @@ namespace UnityEngine.InputSystem.Editor
             m_ChildViews = new List<IView>();
         }
 
-        protected void OnStateChanged(InputActionsEditorState state)
+        protected void OnStateChanged(InputActionsEditorState state, UIRebuildMode editorRebuildMode)
         {
+            // Return early if rebuilding the editor UI isn't required (ISXB-1171)
+            if (editorRebuildMode == UIRebuildMode.None)
+                return;
+
             UpdateView(state);
         }
 
@@ -70,9 +74,9 @@ namespace UnityEngine.InputSystem.Editor
             view.DestroyView();
         }
 
-        public void Dispatch(Command command)
+        public void Dispatch(Command command, UIRebuildMode editorRebuildMode = UIRebuildMode.Rebuild)
         {
-            stateContainer.Dispatch(command);
+            stateContainer.Dispatch(command, editorRebuildMode);
         }
 
         public abstract void RedrawUI(TViewState viewState);

@@ -279,8 +279,8 @@ namespace UnityEngine.InputSystem
     ///
     /// The set of composites available in the system is extensible. While some composites are
     /// such as <see cref="Composites.Vector2Composite"/> and <see cref="Composites.ButtonWithOneModifier"/>
-    /// are available out of the box, new composites can be implemented by anyone and simply be
-    /// registered with <see cref="InputSystem.RegisterBindingComposite{T}"/>.
+    /// are available out of the box, new composites can be implemented by anyone and simply be autodiscover
+    /// or manually registered with <see cref="InputSystem.RegisterBindingComposite{T}"/>.
     ///
     /// See the "Custom Composite" sample (can be installed from package manager UI) for a detailed example
     /// of how to create a custom composite.

@@ -204,7 +204,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="path">A control path such as "&lt;XRController>{LeftHand}/position".</param>
         /// <param name="deviceLayoutName">Receives the name of the device layout that the control path was resolved to.
-        /// This is useful </param>
+        /// This is useful if you want to decide on an icon to display that represents the device.</param>
         /// <param name="controlPath">Receives the path to the referenced control on the device or <c>null</c> if not applicable.
         /// For example, with a <paramref name="path"/> of <c>"&lt;Gamepad&gt;/dpad/up"</c>, the resulting control path
         /// will be <c>"dpad/up"</c>. This is useful when trying to look up additional resources (such as images) based on the
@@ -559,7 +559,7 @@ namespace UnityEngine.InputSystem
                         return true; // Wildcard at end of string so rest is matched.
 
                     ++posInStr;
-                    nextChar = char.ToLower(str[posInStr], CultureInfo.InvariantCulture);
+                    nextChar = char.ToLowerInvariant(str[posInStr]);
 
                     while (posInMatchTo < matchToLength && matchToLowerCase[posInMatchTo] != nextChar)
                         ++posInMatchTo;
@@ -567,7 +567,7 @@ namespace UnityEngine.InputSystem
                     if (posInMatchTo == matchToLength)
                         return false; // Matched all the way to end of matchTo but there's more in str after the wildcard.
                 }
-                else if (char.ToLower(nextChar, CultureInfo.InvariantCulture) != matchToLowerCase[posInMatchTo])
+                else if (char.ToLowerInvariant(nextChar) != matchToLowerCase[posInMatchTo])
                 {
                     return false;
                 }
@@ -1156,7 +1156,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 var charInComponent = component[indexInComponent];
-                if (charInComponent == nextCharInPath || char.ToLower(charInComponent, CultureInfo.InvariantCulture) == char.ToLower(nextCharInPath, CultureInfo.InvariantCulture))
+                if (charInComponent == nextCharInPath || char.ToLowerInvariant(charInComponent) == char.ToLowerInvariant(nextCharInPath))
                 {
                     ++indexInComponent;
                     ++indexInPath;

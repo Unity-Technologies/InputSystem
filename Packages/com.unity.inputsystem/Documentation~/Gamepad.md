@@ -3,16 +3,16 @@ uid: input-system-gamepad
 ---
 # Gamepad Support
 
-- [Gamepad Support](#gamepad-support)
-  - [Controls](#controls)
-    - [Deadzones](#deadzones)
-  - [Polling](#polling)
-  - [Rumble](#rumble)
-    - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
-  - [PlayStation controllers](#playstation-controllers)
-  - [Xbox controllers](#xbox-controllers)
-  - [Switch controllers](#switch-controllers)
-  - [Cursor Control](#cursor-control)
+- [Controls](#controls)
+  - [Deadzones](#deadzones)
+- [Polling](#polling)
+- [Rumble](#rumble)
+  - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
+- [PlayStation controllers](#playstation-controllers)
+- [Xbox controllers](#xbox-controllers)
+- [Switch controllers](#switch-controllers)
+- [Cursor Control](#cursor-control)
+- [Discover all connected devices](#discover-all-connected-devices)
 
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
@@ -67,7 +67,7 @@ Gamepad.current["Triangle"]
 
 Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
 
-To add a deadzone to gamepad stick, put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](ProcessorTypes.md#stick-deadzone) on the sticks, like this:
 
 ```JSON
      {
@@ -177,7 +177,9 @@ Xbox controllers are well supported on different Devices. The Input System imple
 
 On other platforms Unity, uses derived classes to represent Xbox controllers:
 
-* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
+* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This class is only used when the `360Controller` driver is in use, and as such you shouldn't see it in use on modern versions of macOS - it is provided primarily for legacy reasons, and for scenarios where macOS 10.15 may still be used.
+
+* [`XboxGamepadMacOSNative`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOSNative.html): Any Xbox gamepad connected to a Mac (macOS 11.0 or higher) via USB. On modern macOS versions, you will get this class instead of `XboxGamepadMacOS`
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.
 
@@ -198,3 +200,37 @@ The Input System support Switch Pro controllers on desktop computers via the [`S
 ## Cursor Control
 
 To give gamepads and joysticks control over a hardware or software cursor, you can use the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. See [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control) in the UI section of the manual.
+
+## Discover all connected devices
+
+There are various ways to discover the currently connected devices, as shown in the code samples below.
+
+To query a list of all connected devices (does not allocate; read-only access):
+```
+InputSystem.devices
+```
+
+To get notified when a device is added or removed:
+```
+InputSystem.onDeviceChange +=
+    (device, change) =>
+    {
+        if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
+        {
+            Debug.Log($"Device '{device}' was {change}");
+        }
+    }
+```
+
+To find all gamepads and joysticks:
+```
+var devices = InputSystem.devices;
+for (var i = 0; i < devices.Count; ++i)
+{
+    var device = devices[i];
+    if (device is Joystick || device is Gamepad)
+    {
+        Debug.Log("Found " + device);
+    }
+}
+```

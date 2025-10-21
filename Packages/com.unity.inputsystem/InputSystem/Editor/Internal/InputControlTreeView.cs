@@ -4,7 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Profiling;
+using Unity.Profiling;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
@@ -22,6 +28,8 @@ namespace UnityEngine.InputSystem.Editor
         public byte[] stateBuffer;
         public byte[][] multipleStateBuffers;
         public bool showDifferentOnly;
+
+        static readonly ProfilerMarker k_InputBuildControlTreeMarker = new ProfilerMarker("BuildControlTree");
 
         public static InputControlTreeView Create(InputControl rootControl, int numValueColumns, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
         {
@@ -97,20 +105,20 @@ namespace UnityEngine.InputSystem.Editor
                 headerContent = new GUIContent("Type")
             };
             columns[(int)ColumnId.Format] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Format")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Format") };
             columns[(int)ColumnId.Offset] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Offset")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Offset") };
             columns[(int)ColumnId.Bit] =
-                new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
+                new MultiColumnHeaderState.Column { width = 40, headerContent = new GUIContent("Bit") };
             columns[(int)ColumnId.Size] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Size (Bits)") };
             columns[(int)ColumnId.Optimized] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Optimized")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Optimized") };
 
             if (numValueColumns == 1)
             {
                 columns[(int)ColumnId.Value] =
-                    new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
+                    new MultiColumnHeaderState.Column { width = 120, headerContent = new GUIContent("Value") };
             }
             else
             {
@@ -136,20 +144,20 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            Profiler.BeginSample("BuildControlTree");
+            k_InputBuildControlTreeMarker.Begin();
 
             var id = 1;
 
             // Build tree from control down the control hierarchy.
             var rootItem = BuildControlTreeRecursive(m_RootControl, 0, ref id);
 
-            Profiler.EndSample();
+            k_InputBuildControlTreeMarker.End();
 
             // Wrap root control in invisible item required by TreeView.
             return new TreeViewItem
             {
                 id = 0,
-                children = new List<TreeViewItem> {rootItem},
+                children = new List<TreeViewItem> { rootItem },
                 depth = -1
             };
         }

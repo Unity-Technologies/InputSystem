@@ -17,7 +17,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
         private bool m_HasEditFocus;
-        private bool m_IgnoreActionChangedCallback;
         private bool m_IsActivated;
         private static bool m_IMGUIDropdownVisible;
         StateContainer m_StateContainer;
@@ -25,10 +24,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private InputActionsEditorView m_View;
 
+        private InputActionsEditorSessionAnalytic m_ActionEditorAnalytics;
+
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
-        {
-        }
+        {}
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
@@ -43,8 +43,14 @@ namespace UnityEngine.InputSystem.Editor
             // Setup root element with focus monitoring
             m_RootVisualElement = rootElement;
             m_RootVisualElement.focusable = true;
-            m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnEditFocusLost);
-            m_RootVisualElement.RegisterCallback<FocusInEvent>(OnEditFocus);
+            m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnFocusOut);
+            m_RootVisualElement.RegisterCallback<FocusInEvent>(OnFocusIn);
+
+            // Always begin a session when activated (note that OnActivate isn't called when navigating back
+            // to editor from another setting category)
+            m_ActionEditorAnalytics = new InputActionsEditorSessionAnalytic(
+                InputActionsEditorSessionAnalytic.Data.Kind.EmbeddedInProjectSettings);
+            m_ActionEditorAnalytics.Begin();
 
             CreateUI();
 
@@ -57,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
             // Note that focused element will be set if we are navigating back to an existing instance when switching
             // setting in the left project settings panel since this doesn't recreate the editor.
             if (m_RootVisualElement?.focusController?.focusedElement != null)
-                OnEditFocus(null);
+                OnFocusIn();
 
             m_IsActivated = true;
         }
@@ -74,8 +80,8 @@ namespace UnityEngine.InputSystem.Editor
 
             if (m_RootVisualElement != null)
             {
-                m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnEditFocusLost);
-                m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnEditFocus);
+                m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnFocusIn);
+                m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnFocusOut);
             }
 
             // Make sure any remaining changes are actually saved
@@ -85,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             // Hence we guard against duplicate OnDeactivate() calls.
             if (m_HasEditFocus)
             {
-                OnEditFocusLost(null);
+                OnFocusOut();
                 m_HasEditFocus = false;
             }
 
@@ -93,14 +99,18 @@ namespace UnityEngine.InputSystem.Editor
 
             m_IsActivated = false;
 
+            // Always end a session when deactivated.
+            m_ActionEditorAnalytics?.End();
+
             m_View?.DestroyView();
         }
 
-        private void OnEditFocus(FocusInEvent @event)
+        private void OnFocusIn(FocusInEvent @event = null)
         {
             if (!m_HasEditFocus)
             {
                 m_HasEditFocus = true;
+                m_ActionEditorAnalytics.RegisterEditorFocusIn();
                 m_ActiveSettingsProvider = this;
                 SetIMGUIDropdownVisible(false, false);
             }
@@ -152,17 +162,20 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void OnEditFocusLost(FocusOutEvent @event)
+        private void OnFocusOut(FocusOutEvent @event = null)
         {
             // This can be used to detect focus lost events of container elements, but will not detect window focus.
             // Note that `event.relatedTarget` contains the element that gains focus, which is null if we select
             // elements outside of project settings Editor Window. Also note that @event is null when we call this
             // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
+
+            m_ActionEditorAnalytics.RegisterEditorFocusOut();
+
             DelayFocusLost(element == null);
         }
 
-        private void OnStateChanged(InputActionsEditorState newState)
+        private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
         {
 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action, auto-saved on edit-focus lost
@@ -197,7 +210,7 @@ namespace UnityEngine.InputSystem.Editor
             // Construct from InputSystem.actions asset
             var asset = InputSystem.actions;
             var hasAsset = asset != null;
-            m_State = (asset != null) ? new InputActionsEditorState(new SerializedObject(asset)) : default;
+            m_State = (asset != null) ? new InputActionsEditorState(m_ActionEditorAnalytics, new SerializedObject(asset)) : default;
 
             // Dynamically show a section indicating that an asset is missing if not currently having an associated asset
             var missingAssetSection = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
@@ -245,7 +258,7 @@ namespace UnityEngine.InputSystem.Editor
             // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_State);
+                m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
                 m_StateContainer.StateChanged += OnStateChanged;
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));

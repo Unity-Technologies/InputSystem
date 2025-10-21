@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             var symbolName = MakeIdentifier(name, suffix);
             if (char.IsLower(symbolName[0]))
-                symbolName = char.ToUpper(symbolName[0]) + symbolName.Substring(1);
+                symbolName = char.ToUpperInvariant(symbolName[0]) + symbolName.Substring(1);
             return symbolName;
         }
 

@@ -60,27 +60,34 @@ namespace UnityEngine.InputSystem.LowLevel
             // buffer and [deviceIndex*2+1] is back buffer. Each device
             // has its buffers swapped individually with SwapDeviceBuffers().
             public void** deviceToBufferMapping;
+            public int deviceCount;
 
             public bool valid => deviceToBufferMapping != null;
 
             public void SetFrontBuffer(int deviceIndex, void* ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2] = ptr;
+                if (deviceIndex < deviceCount)
+                    deviceToBufferMapping[deviceIndex * 2] = ptr;
             }
 
             public void SetBackBuffer(int deviceIndex, void* ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
+                if (deviceIndex < deviceCount)
+                    deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
             }
 
             public void* GetFrontBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2];
+                if (deviceIndex < deviceCount)
+                    return deviceToBufferMapping[deviceIndex * 2];
+                return null;
             }
 
             public void* GetBackBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2 + 1];
+                if (deviceIndex < deviceCount)
+                    return deviceToBufferMapping[deviceIndex * 2 + 1];
+                return null;
             }
 
             public void SwapBuffers(int deviceIndex)
@@ -197,7 +204,11 @@ namespace UnityEngine.InputSystem.LowLevel
             var mappings = (void**)(bufferPtr + sizePerBuffer * 2);  // Put mapping table at end.
             bufferPtr += sizePerBuffer * 2 + mappingTableSizePerBuffer;
 
-            var buffers = new DoubleBuffers {deviceToBufferMapping = mappings};
+            var buffers = new DoubleBuffers
+            {
+                deviceToBufferMapping = mappings,
+                deviceCount = deviceCount
+            };
 
             for (var i = 0; i < deviceCount; ++i)
             {

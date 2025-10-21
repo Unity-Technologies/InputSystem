@@ -320,25 +320,37 @@ namespace UnityEngine.InputSystem
                             }
 
                             // Instantiate interactions.
-                            var interactionString = unresolvedBinding.effectiveInteractions;
-                            if (!string.IsNullOrEmpty(interactionString))
+                            if (isPartOfComposite)
                             {
-                                // Add interactions from binding.
-                                firstInteractionIndex = InstantiateWithParameters(InputInteraction.s_Interactions, interactionString,
-                                    ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
-                                if (firstInteractionIndex != InputActionState.kInvalidIndex)
-                                    numInteractions = totalInteractionCount - firstInteractionIndex;
-                            }
-                            if (!string.IsNullOrEmpty(action.m_Interactions))
-                            {
-                                // Add interactions from action.
-                                var index = InstantiateWithParameters(InputInteraction.s_Interactions, action.m_Interactions,
-                                    ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
-                                if (index != InputActionState.kInvalidIndex)
+                                // Composite's part use composite interactions
+                                if (currentCompositeBindingIndex != InputActionState.kInvalidIndex)
                                 {
-                                    if (firstInteractionIndex == InputActionState.kInvalidIndex)
-                                        firstInteractionIndex = index;
-                                    numInteractions += totalInteractionCount - index;
+                                    firstInteractionIndex = bindingStatesPtr[currentCompositeBindingIndex].interactionStartIndex;
+                                    numInteractions = bindingStatesPtr[currentCompositeBindingIndex].interactionCount;
+                                }
+                            }
+                            else
+                            {
+                                var interactionString = unresolvedBinding.effectiveInteractions;
+                                if (!string.IsNullOrEmpty(interactionString))
+                                {
+                                    // Add interactions from binding.
+                                    firstInteractionIndex = InstantiateWithParameters(InputInteraction.s_Interactions, interactionString,
+                                        ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
+                                    if (firstInteractionIndex != InputActionState.kInvalidIndex)
+                                        numInteractions = totalInteractionCount - firstInteractionIndex;
+                                }
+                                if (!string.IsNullOrEmpty(action.m_Interactions))
+                                {
+                                    // Add interactions from action.
+                                    var index = InstantiateWithParameters(InputInteraction.s_Interactions, action.m_Interactions,
+                                        ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
+                                    if (index != InputActionState.kInvalidIndex)
+                                    {
+                                        if (firstInteractionIndex == InputActionState.kInvalidIndex)
+                                            firstInteractionIndex = index;
+                                        numInteractions += totalInteractionCount - index;
+                                    }
                                 }
                             }
 

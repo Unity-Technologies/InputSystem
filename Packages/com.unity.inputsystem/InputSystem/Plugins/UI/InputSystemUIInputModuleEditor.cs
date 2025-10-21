@@ -100,6 +100,11 @@ namespace UnityEngine.InputSystem.UI.Editor
                 .Concat(m_AvailableActionReferencesInAssetDatabase?.Select(x => MakeActionReferenceNameUsableInGenericMenu(x.name)) ?? new string[0]).ToArray();
         }
 
+        public void OnDisable()
+        {
+            new InputComponentEditorAnalytic(InputSystemComponent.InputSystemUIInputModule).Send();
+        }
+
         public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)
         {
             module.actionsAsset = action;

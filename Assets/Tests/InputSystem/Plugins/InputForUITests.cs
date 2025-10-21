@@ -7,14 +7,16 @@ using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools;
+using UnityEngine.TestTools.Constraints;
 #if UNITY_EDITOR
-using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
-using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
+using Is = NUnit.Framework.Is;
 
 // Note that these tests do not verify InputForUI default bindings at all.
 // It only verifies integration with Project-wide Input Actions.
@@ -462,6 +464,8 @@ public class InputForUITests : InputTestFixture
         Assert.AreEqual(10, m_InputForUIEvents.Count);
     }
 
+    const float kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
+
     [Test]
     [Category(kTestCategory)]
     [TestCase(true)]
@@ -475,7 +479,6 @@ public class InputForUITests : InputTestFixture
         }
         Update();
 
-        var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
         var mouse = InputSystem.AddDevice<Mouse>();
         Update();
         // Make the minimum step of scroll delta to be ±1.0f
@@ -488,6 +491,31 @@ public class InputForUITests : InputTestFixture
             asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: 1} }
         });
     }
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+    [Category(kTestCategory)]
+    [TestCase(1.0f)]
+    [TestCase(120.0f)]
+    public void UIActionScroll_ReceivesNormalizedScrollWheelDelta(float scrollWheelDeltaPerTick)
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Update();
+
+        // Set scroll delta with a custom range.
+        ((InputTestRuntime)InputRuntime.s_Instance).scrollWheelDeltaPerTick = scrollWheelDeltaPerTick;
+        Set(mouse.scroll, new Vector2(0, scrollWheelDeltaPerTick));
+        Update();
+
+        // UI should receive scroll delta in its expected range.
+        Assert.AreEqual(1, m_InputForUIEvents.Count);
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.Scroll, eventSource: EventSource.Mouse, scroll: {x: 0, y: -kScrollUGUIScaleFactor} }
+        });
+    }
+
+#endif
 
     #endregion
 
@@ -507,10 +535,9 @@ public class InputForUITests : InputTestFixture
         LogAssert.NoUnexpectedReceived();
     }
 
-    [Ignore("We currently allow a PWA asset without an UI action map and rely on defaults instead. This allows users that do not want it or use something else to avoid using it.")]
-    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
+    [Test(Description = "Verifies that user-supplied project-wide actions do not generate warnings if action map is missing. We use default actions in this case.")]
     [Category(kTestCategory)]
-    public void ActionsWithoutUIMap_ShouldGenerateWarnings()
+    public void ActionsWithoutUIMap_ShouldNotGenerateWarnings()
     {
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
@@ -518,8 +545,21 @@ public class InputForUITests : InputTestFixture
         InputSystem.s_Manager.actions = asset;
         Update();
 
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if the UI map is present but actions are missing.")]
+    [Category(kTestCategory)]
+    public void ActionsWithUIMap_MissingActions_ShouldGenerateWarnings()
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
+        asset.AddActionMap(new InputActionMap("UI")); // An empty UI map should log warnings.
+
+        InputSystem.s_Manager.actions = asset;
+        Update();
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
         if (InputActionAssetVerifier.DefaultReportPolicy == InputActionAssetVerifier.ReportPolicy.ReportAll)
         {
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
@@ -531,8 +571,6 @@ public class InputForUITests : InputTestFixture
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset '{link}' could not be found."));
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset '{link}' could not be found."));
         }
-        // else: expect suppression of child errors
-        LogAssert.NoUnexpectedReceived();
     }
 
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if any required action is missing.")]
@@ -654,6 +692,13 @@ public class InputForUITests : InputTestFixture
     }
 
 #endif // UNITY_EDITOR
+
+    [Test]
+    public void Update_DoesntAllocate()
+    {
+        Update(); // Warm-up internals
+        Assert.That(Update, Is.Not.AllocatingGCMemory());
+    }
 
     static void Update()
     {
