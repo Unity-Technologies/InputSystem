@@ -30,6 +30,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where `InputActionReference.Create(null)` returns `null` instead "of a reference object to the given action" as documented behaviour for the API. (ISXB-1693)
 - Fixed an issue where `InputActionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
 - Fixed an issue where Inspector field of type `InputActionReference` isn't reflecting broken reference in case action is deleted from asset, action map is deleted from asset, or the asset itself is deleted. (ISXB-1701)
+- Fixed HID parsing not handling logical minimum and maximum values correctly when they are negative. This applies for platforms that parse HID descriptors in the package, e.g. macOS at the moment.
+- Fix usage of correct data format for stick axes in HID Layout Builder ([User contribution](https://github.com/Unity-Technologies/InputSystem/pull/2245))
 
 ## [1.15.0] - 2025-10-03
 
