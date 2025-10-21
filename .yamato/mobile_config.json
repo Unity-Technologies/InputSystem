@@ -32,7 +32,7 @@
         },
         "run": {
             "type": "Unity::mobile::shield",
-            "image": "package-ci/win10:default",
+            "image": "mobile/android-execution-base:v2.3785910",
             "flavor": "b1.xlarge"
         }
     }

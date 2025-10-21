@@ -41,6 +41,10 @@ public abstract class BaseRecipe: RecipeBase
             var supportedVersions = package.SupportedEditorVersions;
             foreach (var version in supportedVersions)
             {
+                // Skip tests on 2021.3 as it is longer supported
+                if (version == "2021.3")
+                    continue;
+
                 builders.Add(ProduceJob(package, platform, version));
             }
         }

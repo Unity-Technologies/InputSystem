@@ -1326,8 +1326,8 @@ namespace UnityEngine.InputSystem
         ///
         ///     public void OnClick()
         ///     {
-        ///         var rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
-        ///         rebind.Start();
+        ///         var l_rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
+        ///         l_rebind.Start();
         ///     }
         ///
         ///     private void UpdateDisplayText()

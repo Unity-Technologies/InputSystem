@@ -41,6 +41,7 @@ public class StandalonePerformanceTests: BaseRecipe
                     .WithRerun(1, true)
                     .WithPerformanceDataReporting(true)
                     .WithPerformanceProject("InputSystem")
+                    .WithTimeout(3600)
                     .WithArtifacts("artifacts"))))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
