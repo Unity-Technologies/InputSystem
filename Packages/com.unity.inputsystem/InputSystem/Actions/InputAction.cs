@@ -1259,7 +1259,7 @@ namespace UnityEngine.InputSystem
         public unsafe bool WasPressedThisFrame()
         {
             var state = GetOrCreateActionMap().m_State;
-            if (state != null)
+            if (state != null && !state.IsSuppressed)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
@@ -1448,7 +1448,7 @@ namespace UnityEngine.InputSystem
         {
             var state = GetOrCreateActionMap().m_State;
 
-            if (state != null)
+            if (state != null && !state.IsSuppressed)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;

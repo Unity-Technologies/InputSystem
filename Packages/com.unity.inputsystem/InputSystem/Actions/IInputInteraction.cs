@@ -239,7 +239,7 @@ namespace UnityEngine.InputSystem
         ///                 if (actuationTime >= 1)
         ///                     context.Performed();
         ///                 else
-        ///                     context.Cancelled();
+        ///                     context.Canceled();
         ///             }
         ///
         ///             // Control changed value somewhere above 3/4 of its actuation. Doesn't

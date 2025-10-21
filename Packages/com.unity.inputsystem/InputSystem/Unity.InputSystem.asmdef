@@ -33,11 +33,6 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
         },
         {
-            "name": "com.unity.modules.vr",
-            "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_VR"
-        },
-        {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
@@ -116,6 +111,11 @@
             "name": "Unity",
             "expression": "6000.3.0",
             "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_DEFINES_EVENT_PACKING_ALIGNMENT"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.3.0a6",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
         }
     ],
     "noEngineReferences": false
