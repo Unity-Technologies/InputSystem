@@ -1673,7 +1673,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Before render behavior.
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
-                    var beforeRenderLowerCase = beforeRender.ToLower();
+                    var beforeRenderLowerCase = beforeRender.ToLowerInvariant();
                     if (beforeRenderLowerCase == "ignore")
                         layout.m_UpdateBeforeRender = false;
                     else if (beforeRenderLowerCase == "update")
@@ -1685,7 +1685,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // CanRunInBackground flag.
                 if (!string.IsNullOrEmpty(runInBackground))
                 {
-                    var runInBackgroundLowerCase = runInBackground.ToLower();
+                    var runInBackgroundLowerCase = runInBackground.ToLowerInvariant();
                     if (runInBackgroundLowerCase == "enabled")
                         layout.canRunInBackground = true;
                     else if (runInBackgroundLowerCase == "disabled")

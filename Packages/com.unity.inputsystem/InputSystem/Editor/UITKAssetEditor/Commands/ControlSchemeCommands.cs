@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 state.m_Analytics?.RegisterControlSchemeEdit();
                 return state.With(selectedControlScheme: new InputControlScheme(
-                    MakeUniqueControlSchemeName(state, kNewControlSchemeName)));
+                    MakeUniqueControlSchemeName(state, kNewControlSchemeName)), selectedDeviceRequirementIndex: -1);
             };
         }
 

@@ -327,7 +327,6 @@ namespace UnityEngine.InputSystem.Utilities
                 return baseName;
 
             var name = baseName;
-            var nameLowerCase = name.ToLower();
             var nameIsUnique = false;
             var namesTried = 1;
 
@@ -351,10 +350,9 @@ namespace UnityEngine.InputSystem.Utilities
                 foreach (var existing in existingSet)
                 {
                     var existingName = getNameFunc(existing);
-                    if (existingName.ToLower() == nameLowerCase)
+                    if (existingName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                     {
                         name = $"{baseName}{namesTried}";
-                        nameLowerCase = name.ToLower();
                         nameIsUnique = false;
                         ++namesTried;
                         break;

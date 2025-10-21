@@ -278,16 +278,32 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                 if (parameter.isEnum)
                 {
-                    var intValue = parameter.value.value.ToInt32();
-                    var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), intValue);
-                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, field.index, closedIndex));
-                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    var names = parameter.enumNames.Select(c => c.text).ToList();
+                    var rawValue = parameter.value.value.ToInt32();
+                    var selectedIndex = parameter.enumValues.IndexOf(rawValue);
+                    if (selectedIndex < 0 || selectedIndex >= names.Count)
+                        selectedIndex = 0;
+
+                    var field = new DropdownField(label.text, names, selectedIndex)
+                    {
+                        tooltip = label.tooltip
+                    };
+
+                    field.RegisterValueChangedCallback(evt =>
+                    {
+                        var newBackingValue = parameter.enumValues[field.index];
+                        parameter.value.value = PrimitiveValue.FromObject(newBackingValue).ConvertTo(parameter.value.type);
+                        m_Parameters[closedIndex] = parameter;
+                        onChange?.Invoke();
+                    });
+
+                    field.RegisterCallback<BlurEvent>(_ => onChange?.Invoke());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
                 {
                     var longValue = parameter.value.value.ToInt64();
-                    var field = new LongField(label.text) { value = longValue };
+                    var field = new LongField(label.text) { value = longValue, tooltip = label.tooltip };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -295,7 +311,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type.IsInt())
                 {
                     var intValue = parameter.value.value.ToInt32();
-                    var field = new IntegerField(label.text) { value = intValue };
+                    var field = new IntegerField(label.text) { value = intValue, tooltip = label.tooltip };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -303,7 +319,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Single)
                 {
                     var floatValue = parameter.value.value.ToSingle();
-                    var field = new FloatField(label.text) { value = floatValue };
+                    var field = new FloatField(label.text) { value = floatValue, tooltip = label.tooltip };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -311,7 +327,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Double)
                 {
                     var floatValue = parameter.value.value.ToDouble();
-                    var field = new DoubleField(label.text) { value = floatValue };
+                    var field = new DoubleField(label.text) { value = floatValue, tooltip = label.tooltip };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -319,7 +335,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Boolean)
                 {
                     var boolValue = parameter.value.value.ToBoolean();
-                    var field = new Toggle(label.text) { value = boolValue };
+                    var field = new Toggle(label.text) { value = boolValue, tooltip = label.tooltip };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterValueChangedCallback(_ => OnEditEnd());
                     root.Add(field);
@@ -352,7 +368,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // handled by OnDrawVisualElements with UI Toolkit
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
 #endif
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)

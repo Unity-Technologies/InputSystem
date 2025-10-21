@@ -33,11 +33,6 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
         },
         {
-            "name": "com.unity.modules.vr",
-            "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_VR"
-        },
-        {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
@@ -94,6 +89,16 @@
         },
         {
             "name": "Unity",
+            "expression": "6000.1.0b9",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.2.0a4",
+            "define": "UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE"
+        },
+        {
+            "name": "Unity",
             "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
@@ -101,6 +106,11 @@
             "name": "com.unity.modules.unityanalytics",
             "expression": "1",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.3.0a6",
+            "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
         }
     ],
     "noEngineReferences": false

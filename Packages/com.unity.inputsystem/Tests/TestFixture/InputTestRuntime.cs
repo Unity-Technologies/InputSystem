@@ -359,7 +359,7 @@ namespace UnityEngine.InputSystem
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
         public bool isPlayerFocused => m_HasFocus;
-        public float pollingFrequency { get; set; }
+        public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
@@ -402,11 +402,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool isInBatchMode { get; set; }
-
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
-        public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
         public Func<IntPtr, bool> onUnityRemoteMessage
         {

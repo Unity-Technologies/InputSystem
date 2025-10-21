@@ -76,6 +76,8 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!device.added)
                 throw new ArgumentException($"Device for control '{control}' has not been added to system",
                     nameof(control));
+            if (control.currentStatePtr == null) // Protects statePtr assignment below
+                throw new ArgumentNullException($"Control '{control}' does not have an associated state");
 
             ref var deviceStateBlock = ref device.m_StateBlock;
             ref var controlStateBlock = ref control.m_StateBlock;
