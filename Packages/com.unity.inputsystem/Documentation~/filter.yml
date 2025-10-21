@@ -88,3 +88,10 @@ apiRules:
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.XR\.EyesControl$
       type: Type
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.Users\.InputUser\.platformUserAccount.*$
+      type: Member
+  - exclude:
+      uidRegex: ^UnityEngine\.InputSystem\.Users\.InputUser\.FindUserByAccount.*$
+      type: Method
+
