@@ -26,6 +26,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space position of the mouse in pixels.
         /// </summary>
         /// <value>Position of mouse on screen.</value>
+        /// <remarks>
+        /// On Windows, delta originates from RAWINPUT API.
+        /// Note: This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.delta"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
+        /// </remarks>
         /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point", dontReset = true)] // Mouse should stay put when we reset devices.
         [FieldOffset(0)]
@@ -35,6 +39,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space motion delta of the mouse in pixels.
         /// </summary>
         /// <value>Mouse movement.</value>
+        /// <remarks>
+        /// On Windows, delta originates from RAWINPUT API.
+        /// Note: This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.position"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
+        /// </remarks>
         /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion", layout = "Delta")]
         [FieldOffset(8)]
@@ -163,18 +171,37 @@ namespace UnityEngine.InputSystem
     /// An input device representing a mouse.
     /// </summary>
     /// <remarks>
-    /// Adds a scroll wheel and a typical 3-button setup with a left, middle, and right
-    /// button.
+    /// Adds a scroll wheel and a typical 5-button setup with a left, middle, right,
+    /// forward and backward button.
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
+    /// <example>
+    ///
+    /// <code>
+    /// using UnityEngine;
+    /// using UnityEngine.InputSystem;
+    ///
+    /// public class ExampleScript : MonoBehaviour
+    /// {
+    ///     void Update()
+    ///     {
+    ///         // If there is a current mouse and the left button was pressed
+    ///         if (Mouse.current != null &amp;&amp; Mouse.current.leftButton.wasPressedThisFrame)
+    ///         {
+    ///              // handle left mouse button being pressed
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="Pointer"/>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
-        /// The horizontal and vertical scroll wheels.
+        /// Control representing horizontal and vertical scroll wheels of a Mouse device.
         /// </summary>
-        /// <value>Control representing the mouse scroll wheels.</value>
         /// <remarks>
         /// The <c>x</c> component corresponds to the horizontal scroll wheel, the
         /// <c>y</c> component to the vertical scroll wheel. Most mice do not have
@@ -183,58 +210,57 @@ namespace UnityEngine.InputSystem
         public DeltaControl scroll { get; protected set; }
 
         /// <summary>
-        /// The left mouse button.
+        /// Control representing left button of a Mouse device.
         /// </summary>
-        /// <value>Control representing the left mouse button.</value>
         public ButtonControl leftButton { get; protected set; }
 
         /// <summary>
-        /// The middle mouse button.
+        /// Control representing middle button of a Mouse device.
         /// </summary>
-        /// <value>Control representing the middle mouse button.</value>
         public ButtonControl middleButton { get; protected set; }
 
         /// <summary>
-        /// The right mouse button.
+        /// Control representing right button of a Mouse device.
         /// </summary>
-        /// <value>Control representing the right mouse button.</value>
         public ButtonControl rightButton { get; protected set; }
 
         /// <summary>
-        /// The first side button, often labeled/used as "back".
+        /// Control representing the first side button, often labeled/used as "back", of a Mouse device.
         /// </summary>
-        /// <value>Control representing the back button on the mouse.</value>
         /// <remarks>
         /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_4</c>.
         /// </remarks>
         public ButtonControl backButton { get; protected set; }
 
         /// <summary>
-        /// The second side button, often labeled/used as "forward".
+        /// Control representing the second side button, often labeled/used as "forward", of a Mouse device.
         /// </summary>
-        /// <value>Control representing the forward button on the mouse.</value>
         /// <remarks>
         /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_5</c>.
         /// </remarks>
         public ButtonControl forwardButton { get; protected set; }
 
         /// <summary>
-        /// Number of times any of the mouse buttons has been clicked in succession within
+        /// Control representing the number of times any of the mouse buttons has been clicked in succession within
         /// the system-defined click time threshold.
         /// </summary>
-        /// <value>Control representing the mouse click count.</value>
         public IntegerControl clickCount { get; protected set;  }
 
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
         /// connected to the system.
         /// </summary>
-        /// <seealso cref="InputDevice.MakeCurrent"/>
+        /// <remarks>
+        /// To set a mouse device as current, use <see cref="Mouse.MakeCurrent"/>.
+        /// </remarks>
         public new static Mouse current { get; private set; }
 
         /// <summary>
         /// Called when the mouse becomes the current mouse.
         /// </summary>
+        /// <remarks>
+        /// This is called automatically by the system when there is input on a connected mouse.
+        /// </remarks>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
@@ -266,7 +292,9 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
-        /// Move the operating system's mouse cursor.
+        /// Move the operating system's mouse cursor by performing a device command in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" >
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" >ioctl</a>
+        /// on UNIX-like systems.
         /// </summary>
         /// <param name="position">New position in player window space.</param>
         /// <remarks>
@@ -305,7 +333,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Implements <see cref="IInputStateCallbackReceiver.OnStateEvent"/> for the mouse.
         /// </summary>
-        /// <param name="eventPtr"></param>
+        /// <param name="eventPtr">Pointer to an <see cref="InputEvent"/>. Makes it easier to
+        /// work with InputEvents and hides the unsafe operations necessary to work with them.
+        /// </param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             scroll.AccumulateValueInEvent(currentStatePtr, eventPtr);

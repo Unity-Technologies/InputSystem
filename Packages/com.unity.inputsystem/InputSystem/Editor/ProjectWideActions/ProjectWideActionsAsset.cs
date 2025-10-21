@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
                 private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
 #endif
                 {
-                    if (!migratedInputActionAssets)
+                    if (!migratedInputActionAssets && importedAssets.Contains(kAssetPathInputManager))
                     {
                         MoveInputManagerAssetActionsToProjectWideInputActionAsset();
                         migratedInputActionAssets = true;
@@ -47,51 +47,80 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private static void MoveInputManagerAssetActionsToProjectWideInputActionAsset()
+            private static void MoveInputManagerAssetActionsToProjectWideInputActionAsset(bool allowRetry = true)
             {
                 var objects = AssetDatabase.LoadAllAssetsAtPath(EditorHelpers.GetPhysicalPath(kAssetPathInputManager));
                 if (objects == null)
                     return;
 
-                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetNameProjectWideInputActions) as InputActionAsset;
-                if (inputActionsAsset != default)
+                var inputActionsAssets = objects.Where(o => o != null && o.name == kAssetNameProjectWideInputActions && o is InputActionAsset);
+
+                if (!inputActionsAssets.Any()) return;
+
+                Debug.Log("Migrating Project-wide Input Actions from InputManager.asset to InputSystem_Actions.inputactions asset");
+
+                // workarround for serialization bug with ScriptableObject in ProjectSettings during reimporting all asset, it should not be null
+                if (allowRetry)
                 {
-                    // Found some actions in the InputManager.asset file
-                    //
-                    string path = ProjectWideActionsAsset.kDefaultAssetPath;
-
-                    if (File.Exists(EditorHelpers.GetPhysicalPath(path)))
+                    foreach (InputActionAsset inputActionsAsset in inputActionsAssets)
                     {
-                        // We already have a path containing inputactions, find a new unique filename
-                        //
-                        //  eg  Assets/InputSystem_Actions.inputactions ->
-                        //      Assets/InputSystem_Actions (1).inputactions ->
-                        //      Assets/InputSystem_Actions (2).inputactions ...
-                        //
-                        string[] files = Directory.GetFiles("Assets", "*.inputactions");
-                        List<string> names = new List<string>();
-                        for (int i = 0; i < files.Length; i++)
+                        if (inputActionsAsset.m_ActionMaps == null)
                         {
-                            names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
+                            // unload asset to avoid serialization bug and will try again later
+                            Resources.UnloadAsset(inputActionsAsset);
+                            Debug.Log($"Unexpected null action map encounted during the migration, will try again once later");
+                            EditorApplication.delayCall += () => { MoveInputManagerAssetActionsToProjectWideInputActionAsset(allowRetry: false); };
+                            return;
                         }
-                        string unique = ObjectNames.GetUniqueName(names.ToArray(), kDefaultAssetName);
-                        path = "Assets/" + unique + ".inputactions";
-                    }
-
-                    var json = inputActionsAsset.ToJson();
-                    InputActionAssetManager.SaveAsset(EditorHelpers.GetPhysicalPath(path), json);
-
-                    Debug.Log($"Migrated Project-wide Input Actions from '{kAssetPathInputManager}' to '{path}' asset");
-
-                    // Update current project-wide settings if needed (don't replace if already set to something else)
-                    //
-                    if (InputSystem.actions == null || InputSystem.actions.name == kAssetNameProjectWideInputActions)
-                    {
-                        InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
-                        Debug.Log($"Loaded Project-wide Input Actions from '{path}' asset");
                     }
                 }
 
+                foreach (InputActionAsset inputActionsAsset in inputActionsAssets)
+                {
+                    if (inputActionsAsset != default)
+                    {
+                        // sanity check to avoid saving a badly serialized asset or empty asset
+                        if (inputActionsAsset.m_ActionMaps.LengthSafe() == 0)
+                        {
+                            continue;
+                        }
+                        string path = ProjectWideActionsAsset.kDefaultAssetPath;
+
+                        if (File.Exists(EditorHelpers.GetPhysicalPath(path)))
+                        {
+                            // We already have a path containing inputactions, find a new unique filename
+                            //
+                            //  eg  Assets/InputSystem_Actions.inputactions ->
+                            //      Assets/InputSystem_Actions (1).inputactions ->
+                            //      Assets/InputSystem_Actions (2).inputactions ...
+                            //
+                            string[] files = Directory.GetFiles("Assets", "*.inputactions");
+                            List<string> names = new List<string>();
+                            for (int i = 0; i < files.Length; i++)
+                            {
+                                names.Add(System.IO.Path.GetFileNameWithoutExtension(files[i]));
+                            }
+                            string unique = ObjectNames.GetUniqueName(names.ToArray(), kDefaultAssetName);
+                            path = "Assets/" + unique + ".inputactions";
+                        }
+
+                        var json = inputActionsAsset.ToJson();
+                        InputActionAssetManager.SaveAsset(EditorHelpers.GetPhysicalPath(path), json);
+
+                        Debug.Log($"Migrated Project-wide Input Actions from '{kAssetPathInputManager}' to '{path}' asset");
+
+                        // Update current project-wide settings if needed (don't replace if already set to something else)
+                        //
+                        if (InputSystem.actions == null || InputSystem.actions.name == kAssetNameProjectWideInputActions)
+                        {
+                            InputSystem.actions = (InputActionAsset)AssetDatabase.LoadAssetAtPath(path, typeof(InputActionAsset));
+                            Debug.Log($"Loaded Project-wide Input Actions from '{path}' asset");
+                        }
+                    }
+                }
+
+
+                bool hasChanged = false;
                 // Handle deleting all InputActionAssets as older 1.8.0 pre release could create more than one project wide input asset in the file
                 foreach (var obj in objects)
                 {
@@ -100,14 +129,19 @@ namespace UnityEngine.InputSystem.Editor
                         var actionReference = obj as InputActionReference;
                         AssetDatabase.RemoveObjectFromAsset(obj);
                         Object.DestroyImmediate(actionReference);
+                        hasChanged = true;
                     }
                     else if (obj is InputActionAsset)
                     {
                         AssetDatabase.RemoveObjectFromAsset(obj);
+                        hasChanged = true;
                     }
                 }
 
-                AssetDatabase.SaveAssets();
+                if (hasChanged == true)
+                {
+                    AssetDatabase.SaveAssets();
+                }
             }
         }
 

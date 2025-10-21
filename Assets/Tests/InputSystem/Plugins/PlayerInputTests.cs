@@ -17,6 +17,7 @@ using UnityEngine.TestTools.Constraints;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using UnityEngine.InputSystem.OnScreen;
 
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
@@ -107,7 +108,6 @@ internal class PlayerInputTests : CoreTestsFixture
         var ui = prefab.AddComponent<InputSystemUIInputModule>();
         player.uiInputModule = ui;
         player.actions = InputActionAsset.FromJson(kActions);
-        ui.actionsAsset = player.actions;
 
         InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Keyboard>();
@@ -116,6 +116,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
+        ui.actionsAsset = instance.actions;
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
@@ -148,11 +149,11 @@ internal class PlayerInputTests : CoreTestsFixture
         eventSystemGO.SetActive(true);
         playerGO.SetActive(true);
 
-        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
-        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
-        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
-        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
-        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
+        Assert.That(player.actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(uiModule.actionsAsset.FindActionMap("UI").enabled, Is.True);
+        Assert.That(uiModule.actionsAsset["UI/Navigate"].controls, Is.Empty);
+        Assert.That(uiModule.actionsAsset["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(uiModule.actionsAsset["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
     }
 
     [Test]
@@ -390,7 +391,8 @@ internal class PlayerInputTests : CoreTestsFixture
         var actions = InputActionAsset.FromJson(kActions);
         playerInput.actions = actions;
 
-        Assert.That(playerInput.actions, Is.SameAs(actions));
+        Assert.That(playerInput.actions.actionMaps.Count, Is.EqualTo(actions.actionMaps.Count));
+        Assert.That(playerInput.actions.actionMaps[0].name, Is.EqualTo(actions.actionMaps[0].name));
     }
 
     [Test]
@@ -406,13 +408,13 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = actions1;
 
-        Assert.That(actions1.actionMaps[0].enabled, Is.True);
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
         Assert.That(actions2.actionMaps[0].enabled, Is.False);
 
         playerInput.actions = actions2;
 
+        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
         Assert.That(actions1.actionMaps[0].enabled, Is.False);
-        Assert.That(actions2.actionMaps[0].enabled, Is.True);
     }
 
     [Test]
@@ -478,6 +480,22 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
         Assert.That(playerInput1.actions, Is.SameAs(ui1.actionsAsset));
         Assert.That(playerInput2.actions, Is.SameAs(ui2.actionsAsset));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_ActionFromCodeGeneratedActionIsTheSameBeingReferenced()
+    {
+        var go = new GameObject();
+
+        var playerInput = go.AddComponent<PlayerInput>();
+        var ui = go.AddComponent<InputSystemUIInputModule>();
+        var defaultActions = new DefaultInputActions();
+
+        playerInput.uiInputModule = ui;
+        playerInput.actions = defaultActions.asset;
+
+        Assert.That(defaultActions.UI.Submit == playerInput.actions.FindAction("Submit"), Is.True);
     }
 
     [Test]
@@ -661,6 +679,58 @@ internal class PlayerInputTests : CoreTestsFixture
             new Message("OnControlsChanged", playerInput), // Control scheme switch.
             new Message("OnFire", 1f)
         }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_AutoSwitchControlSchemesInSinglePlayerWithOnScreenControl_AutoSwitchToTargetDeviceAndIgnoreMouse()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+
+        var onScreenButton = go.AddComponent<OnScreenButton>();
+        onScreenButton.enabled = false;
+        onScreenButton.controlPath = "<Gamepad>/buttonSouth";
+
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        // enable the OnScreenButton, it should switch to Gamepad
+        onScreenButton.enabled = true;
+        var gamepad = onScreenButton.control.device;
+        Assert.That(gamepad, Is.TypeOf<Gamepad>());
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+        InputSystem.Update();
+
+        // The controlScheme shouldn't have changed
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+
+        // disabling the OnScreenButton to ensure that it will now switch to Keyboard&Mouse as expected
+        onScreenButton.enabled = false;
+
+        // Perform mouse move and click. to try to switch to Keyboard&Mouse scheme
+        Move(mouse.position, new Vector2(0.123f, 0.234f));
+        Click(mouse.leftButton);
+        Move(mouse.position, new Vector2(100f, 100f));
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Keyboard&Mouse"));
     }
 
     [Test]
@@ -1661,7 +1731,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         // Make sure that no cloning of actions happened on the prefab.
         // https://fogbugz.unity3d.com/f/cases/1319756/
-        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions, Is.SameAs(playerPrefabActions));
+
+        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions.actionMaps.Count, Is.EqualTo(playerPrefabActions.actionMaps.Count));
         Assert.That(playerPrefab.GetComponent<PlayerInput>().m_ActionsInitialized, Is.False);
     }
 
@@ -2095,10 +2166,266 @@ internal class PlayerInputTests : CoreTestsFixture
 
     [Test]
     [Category("PlayerInput")]
-    [Ignore("TODO")]
-    public void TODO_PlayerInput_CanSetUpSplitScreen_AndManuallyAllocatePlayersToScreens()
+    public void PlayerInput_CanSetUpSplitScreen_AndManuallyAllocatePlayersToScreens()
     {
-        Assert.Fail();
+        var actions = InputActionAsset.FromJson(kActions);
+
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.AddComponent<Camera>();
+        playerPrefab.GetComponent<PlayerInput>().camera = playerPrefab.GetComponent<Camera>();
+        playerPrefab.GetComponent<PlayerInput>().actions = actions;
+
+        var manager = new GameObject();
+        var managerComponent = manager.AddComponent<PlayerInputManager>();
+        managerComponent.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersManually;
+        managerComponent.playerPrefab = playerPrefab;
+        managerComponent.splitScreen = true;
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+        var gamepad4 = InputSystem.AddDevice<Gamepad>();
+
+        var playerIndex = 0;
+
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true),
+            Is.EquivalentTo(new[] { gamepad1, gamepad2, gamepad3, gamepad4 }));
+
+        // Join two players manually and make sure we get two screen side-by-side.
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad1);
+        playerIndex++;
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad2);
+        playerIndex++;
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(2));
+
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true),
+            Is.EquivalentTo(new[] { gamepad3, gamepad4 }));
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(1));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(1));
+
+        // Player #2: Upper Right.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(1));
+
+        // Add one more player and make sure we got a 2x2 setup.
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad3);
+        playerIndex++;
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(3));
+
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true),
+            Is.EquivalentTo(new[] { gamepad4 }));
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(1));
+        Assert.That(PlayerInput.all[2].splitScreenIndex, Is.EqualTo(2));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #2: Upper Right.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #3: Lower Left.
+        Assert.That(PlayerInput.all[2].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Join one more player and make sure we got a fully filled 2x2 setup.
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad4);
+        playerIndex++;
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
+
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(PlayerInput.all[3].devices, Is.EquivalentTo(new[] { gamepad4 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true), Is.Empty);
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(1));
+        Assert.That(PlayerInput.all[2].splitScreenIndex, Is.EqualTo(2));
+        Assert.That(PlayerInput.all[3].splitScreenIndex, Is.EqualTo(3));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #2: Upper Right.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #3: Lower Left.
+        Assert.That(PlayerInput.all[2].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #4: Lower Right.
+        Assert.That(PlayerInput.all[3].camera.rect.x, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[3].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Unjoin the player in the upper right and make sure the other players stay where they are.
+        Object.DestroyImmediate(PlayerInput.all[1].gameObject);
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(3));
+
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad4 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true),
+            Is.EquivalentTo(new[] { gamepad2 }));
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(2));
+        Assert.That(PlayerInput.all[2].splitScreenIndex, Is.EqualTo(3));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #3: Lower Left.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #4: Lower Right.
+        Assert.That(PlayerInput.all[2].camera.rect.x, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.width, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Join a new player but manually allocate the next index.
+        // The split-screen setup goes to 3x2 because we are adding it to the end leaving the second empty
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad2);
+        playerIndex++;
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
+
+        // PlayerInput.all is sorted by playerIndex so the player we just joined should be in the last slot.
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad4 }));
+        Assert.That(PlayerInput.all[3].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true), Is.Empty);
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(2));
+        Assert.That(PlayerInput.all[2].splitScreenIndex, Is.EqualTo(3));
+        Assert.That(PlayerInput.all[3].splitScreenIndex, Is.EqualTo(4));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Upper Middle will be empty
+
+        // Player #3: Upper Right.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(2 * (1 / 3.0)).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #4: Lower Left.
+        Assert.That(PlayerInput.all[2].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #2: Lower Middle.
+        Assert.That(PlayerInput.all[3].camera.rect.x, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[3].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Join yet another player and make sure the split-screen setup goes to 3x2.
+        var gamepad5 = InputSystem.AddDevice<Gamepad>();
+        managerComponent.JoinPlayer(playerIndex, playerIndex, "Gamepad", gamepad5);
+        playerIndex++;
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(5));
+
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad4 }));
+        Assert.That(PlayerInput.all[3].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[4].devices, Is.EquivalentTo(new[] { gamepad5 }));
+        Assert.That(InputUser.GetUnpairedInputDevices().ToArray(dispose: true), Is.Empty);
+
+        Assert.That(PlayerInput.all[0].splitScreenIndex, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[1].splitScreenIndex, Is.EqualTo(2));
+        Assert.That(PlayerInput.all[2].splitScreenIndex, Is.EqualTo(3));
+        Assert.That(PlayerInput.all[3].splitScreenIndex, Is.EqualTo(4));
+        Assert.That(PlayerInput.all[4].splitScreenIndex, Is.EqualTo(5));
+
+        // Player #1: Upper Left.
+        Assert.That(PlayerInput.all[0].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[0].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[0].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Upper Middle will be empty
+
+        // Player #3: Upper Right.
+        Assert.That(PlayerInput.all[1].camera.rect.x, Is.EqualTo(2 * (1 / 3.0)).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.y, Is.EqualTo(0.5).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #4: Lower Left.
+        Assert.That(PlayerInput.all[2].camera.rect.x, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[2].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #2: Lower Middle.
+        Assert.That(PlayerInput.all[3].camera.rect.x, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[3].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[3].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
+
+        // Player #5: Lower Right.
+        Assert.That(PlayerInput.all[4].camera.rect.x, Is.EqualTo(2 * (1 / 3.0)).Within(0.00001));
+        Assert.That(PlayerInput.all[4].camera.rect.y, Is.EqualTo(0));
+        Assert.That(PlayerInput.all[4].camera.rect.width, Is.EqualTo(1 / 3.0).Within(0.00001));
+        Assert.That(PlayerInput.all[4].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
     }
 
     // https://fogbugz.unity3d.com/f/cases/1260625/
@@ -2352,6 +2679,39 @@ internal class PlayerInputTests : CoreTestsFixture
         player.SetActive(false); // Should cause full rebinding and not assert
     }
 
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_DelegatesAreUpdate_WhenActionMapAddedAfterAssignment()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "Other";
+        var actionAsset = InputActionAsset.FromJson(kActions);
+        playerInput.actions = actionAsset;
+
+        // Disable the asset while adding another action map to it as none
+        // of the actions in the asset can be enabled during modification
+        //
+        playerInput.actions.Disable();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var newActionMap = playerInput.actions.AddActionMap("NewMap");
+        var newAction = newActionMap.AddAction("NewAction");
+        newAction.AddBinding("<Keyboard>/k", groups: "Keyboard");
+        playerInput.actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        playerInput.actions.Enable();
+
+        playerInput.currentActionMap = newActionMap;
+        playerInput.ActivateInput();
+        listener.messages.Clear();
+
+        Press(keyboard.kKey);
+
+        Assert.That(listener.messages, Has.Exactly(1).With.Property("name").EqualTo("OnNewAction"));
+    }
+
     private struct Message : IEquatable<Message>
     {
         public string name { get; set; }
@@ -2422,6 +2782,11 @@ internal class PlayerInputTests : CoreTestsFixture
         public void OnOtherAction(InputValue value)
         {
             messages?.Add(new Message { name = "OnOtherAction", value = value.Get<float>() });
+        }
+
+        public void OnNewAction(InputValue value)
+        {
+            messages?.Add(new Message { name = "OnNewAction", value = value.Get<float>() });
         }
 
         // ReSharper disable once UnusedMember.Local

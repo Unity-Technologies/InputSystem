@@ -51,5 +51,5 @@ Your game can listen to the following notifications:
 
 |Notification|Description|
 |------------|-----------|
-|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player joined the game. Passes the [`PlayerInput`](PlayerInput.md`PlayerInputManager` sends a `Player Joined` notification for each of these.|
+|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player joined the game. Passes the [`PlayerInput`](PlayerInput.md`PlayerInputManager` sends a `Player Joined` notification for each of these).|
 |[`PlayerLeftMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerLeftMessage)|A player left the game. Passes the [`PlayerInput`](PlayerInput.md) instance of the player who left.|

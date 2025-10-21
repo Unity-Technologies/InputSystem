@@ -31,8 +31,21 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Dispatch((in InputActionsEditorState state) =>
                 {
-                    m_NewName = ControlSchemeCommands.MakeUniqueControlSchemeName(state,
-                        ((TextField)evt.currentTarget).value);
+                    // If the name is the same as the current name, don't change it
+                    var newName = ((TextField)evt.currentTarget).value.Trim();
+                    if (string.IsNullOrEmpty(newName) || String.Compare(newName, state.selectedControlScheme.name) == 0)
+                    {
+                        m_NewName = String.Empty;
+                        // write back the value to the text field if the name was empty
+                        ((TextField)evt.currentTarget).value = state.selectedControlScheme.name;
+                    }
+                    else
+                    {
+                        m_NewName = ControlSchemeCommands.MakeUniqueControlSchemeName(state, newName);
+                        // write back the value to the text field if the name was not unique
+                        ((TextField)evt.currentTarget).value = m_NewName;
+                    }
+
                     return state.With(selectedControlScheme: state.selectedControlScheme);
                 });
             });
@@ -50,7 +63,6 @@ namespace UnityEngine.InputSystem.Editor
             m_ModalWindow.Add(popupWindow);
             root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
-            m_ModalWindow.RegisterCallback<ClickEvent>(evt => CloseView());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
             m_ListView = controlSchemeVisualElement.Q<MultiColumnListView>(kControlSchemesListView);
@@ -95,7 +107,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(InputControlScheme viewState)
         {
-            rootElement.Q<TextField>(kControlSchemeNameTextField).value = viewState.name;
+            rootElement.Q<TextField>(kControlSchemeNameTextField).value = string.IsNullOrEmpty(m_NewName) ? viewState.name : m_NewName;
 
             m_ListView.itemsSource?.Clear();
             m_ListView.itemsSource = viewState.deviceRequirements.Count > 0 ?
@@ -133,7 +145,7 @@ namespace UnityEngine.InputSystem.Editor
             // the changes retained. However, if a different ControlScheme is selected or the Asset
             // Editor window is closed, then the changes are lost.
 
-            m_NewName = "";
+            m_NewName = string.Empty;
             OnClosing?.Invoke(this);
         }
 

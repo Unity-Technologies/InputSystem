@@ -9,6 +9,11 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////TODO: Add "Revert" button
 
 ////TODO: add helpers to very quickly set up certain common configs (e.g. "FPS Controls" in add-action context menu;
@@ -37,28 +42,43 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAssetEditor.RegisterType<InputActionEditorWindow>();
         }
 
+        // Unity 6.3 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
+        [OnOpenAsset]
+#if UNITY_6000_3_OR_NEWER
+        public static bool OpenAsset(EntityId entityId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))
+                return false;
+
+            return OpenAsset(EditorUtility.EntityIdToObject(entityId));
+        }
+
+#else
+        public static bool OpenAsset(int instanceId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
+                return false;
+
+            return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
+        }
+
+#endif
+
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
-        [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceId, int line)
+        private static bool OpenAsset(Object obj)
         {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return false;
 #endif
-            var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!InputActionImporter.IsInputActionAssetPath(path))
-                return false;
-
             string mapToSelect = null;
             string actionToSelect = null;
 
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
-            var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
             if (asset == null)
             {
@@ -245,7 +265,7 @@ namespace UnityEngine.InputSystem.Editor
             if (asset == null)
                 return;
 
-            m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
+            m_ActionAssetManager = new InputActionAssetManager(asset) { onDirtyChanged = OnDirtyChanged };
             //m_ActionAssetManager.Initialize(); // TODO No longer needed when using constructor
 
             InitializeTrees();
@@ -515,7 +535,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_Toolbar.selectedDeviceRequirement != null)
                 {
                     // Single device selected from set of devices in control scheme.
-                    controlPathsToMatch = new[] {m_Toolbar.selectedDeviceRequirement.Value.controlPath};
+                    controlPathsToMatch = new[] { m_Toolbar.selectedDeviceRequirement.Value.controlPath };
                 }
                 else if (m_Toolbar.selectedControlScheme != null)
                 {
@@ -581,14 +601,14 @@ namespace UnityEngine.InputSystem.Editor
             LoadPropertiesForSelection();
         }
 
-        #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
         private void OnLostFocus()
         {
             if (InputEditorUserSettings.autoSaveInputActionAssets)
                 m_ActionAssetManager.SaveChangesToAsset();
         }
 
-        #endif
+#endif
 
         private void Apply()
         {
@@ -598,11 +618,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionMapsTree.UpdateSerializedObjectDirtyCount();
             m_ActionsTree.UpdateSerializedObjectDirtyCount();
 
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // If auto-save should be triggered on focus lost, only mark asset as dirty
             m_ActionAssetManager.MarkDirty();
             titleContent = m_DirtyTitle;
-            #else
+#else
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
             // put us into dirty state.
             if (InputEditorUserSettings.autoSaveInputActionAssets)
@@ -614,7 +634,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionAssetManager.MarkDirty();
                 titleContent = m_DirtyTitle;
             }
-            #endif
+#endif
         }
 
         private void OnGUI()

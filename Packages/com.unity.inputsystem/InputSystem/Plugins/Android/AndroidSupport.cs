@@ -105,6 +105,11 @@ namespace UnityEngine.InputSystem.Android
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.StepCounter));
+            InputSystem.RegisterLayout<AndroidHingeAngle>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(kAndroidInterface)
+                    .WithDeviceClass("AndroidSensor")
+                    .WithCapability("sensorType", AndroidSensorType.HingeAngle));
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }

@@ -30,6 +30,148 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    // ISXB-925: Feature flag values should live with containing settings instance.
+    [TestCase(InputFeatureNames.kUseReadValueCaching)]
+    [TestCase(InputFeatureNames.kUseOptimizedControls)]
+    [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
+    [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
+    [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
+    #endif
+    public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
+    {
+        using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+        {
+            InputSystem.settings = settings.value;
+
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            settings.value.SetInternalFeatureFlag(featureName, true);
+            Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.True);
+
+            using (var other = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
+            {
+                InputSystem.settings = other.value;
+
+                Assert.That(InputSystem.settings.IsFeatureEnabled(featureName), Is.False);
+            }
+        }
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisRenderingFrameOperatesIndependentlyFromInputUpdateStep()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisDynamicUpdate(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is called and the action state chenges
+
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasPerformedThisDynamicUpdate
+
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisFrameOperatesIndependentlyFromRenderingFrame()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is not called and the action state does not change
+        yield return null;
+        yield return null;
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasXYZThisRenderingFrame but does affect the WasXYZThisFrame
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_WasStateReachedThisFrameAndWasStateReachedThisRenderingFrameCanOperateSimultanously()
+    {
+        var updateMode = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var simpleAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        simpleAction.Enable();
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        yield return null; // InputSystem.Update is not called and the action state does not change
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
+
+        InputSystem.Update(); // a manual update happens between two frames, that does not affect the output of the WasXYZThisRenderingFrame but does affect the WasXYZThisFrame
+
+        Assert.That(simpleAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasPressedThisFrame(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
+
+        yield return null;
+
+        Assert.That(simpleAction.WasPerformedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasPressedThisDynamicUpdate(), Is.True);
+        Assert.That(simpleAction.WasReleasedThisDynamicUpdate(), Is.True);
+
+        yield return null;
+
+        Assert.That(simpleAction.WasCompletedThisDynamicUpdate(), Is.False);
+
+        //Reset State
+        InputSystem.settings.updateMode = updateMode;
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
@@ -291,22 +433,67 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", true)]
     [TestCase("leftShift", null, "space", false)]
     [TestCase("leftShift", "leftAlt", "space", false)]
-    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
-        bool legacyComposites)
+    public void Actions_WhenShortcutsDisabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcutIfOverridden(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
         if (!string.IsNullOrEmpty(modifier2))
         {
-            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(modifiersOrder=1)")
                 .With("Modifier1", "<Keyboard>/" + modifier1)
                 .With("Modifier2", "<Keyboard>/" + modifier2)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
         else
         {
-            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(modifiersOrder=1)")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += _ => wasPerformed = true;
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+            Press((ButtonControl)keyboard[modifier2]);
+
+        Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space", true, true)]
+    [TestCase("leftShift", "leftAlt", "space", true, true)]
+    [TestCase("leftShift", null, "space", false, true)]
+    [TestCase("leftShift", "leftAlt", "space", false, true)]
+    [TestCase("leftShift", null, "space", true, false)]
+    [TestCase("leftShift", "leftAlt", "space", true, false)]
+    [TestCase("leftShift", null, "space", false, false)]
+    [TestCase("leftShift", "leftAlt", "space", false, false)]
+    public void Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
+        bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + (overrideModifiersNeedToBePressedFirst ? "(overrideModifiersNeedToBePressedFirst)" : "(modifiersOrder=2)"))
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + (overrideModifiersNeedToBePressedFirst ? "(overrideModifiersNeedToBePressedFirst)" : "(modifiersOrder=2)"))
                 .With("Modifier", "<Keyboard>/" + modifier1)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
@@ -1441,6 +1628,46 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
         InputSystem.Update();
         Assert.That(receivedCalls, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnable_FromCallbackWhileOtherCompositeBindingIsProgress()
+    {
+        // Enables "Modifier must be pressed first" behavior on all Composite Bindings
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+
+        var withModiferReceivedCalls = 0;
+        var actionWithModifier = map.AddAction("OneModifier", type: InputActionType.Button);
+        actionWithModifier.AddCompositeBinding("OneModifier")
+            .With("Binding", "<Keyboard>/space")
+            .With("Modifier", "<Keyboard>/ctrl");
+        actionWithModifier.performed += _ => ++ withModiferReceivedCalls;
+
+        var actionWithoutModifier = map.AddAction("One", type: InputActionType.Button, binding: "<Keyboard>/space");
+        actionWithoutModifier.performed += _ => actionWithModifier.Disable();
+
+        map.Enable();
+
+        // Press the SPACE key used by both binding
+        // actionWithModifier : SPACE key binding state will have current time but without a preceding CTRL key it will not trigger
+        // actionWithoutModifier : SPACE key binding will trigger the performed lambda which will disable actionWithModifier
+        PressAndRelease(keyboard.spaceKey);
+        InputSystem.Update();
+        Assume.That(actionWithModifier.enabled, Is.False);
+
+        // Re-enable action which has been disabled by actionWithoutModifier
+        actionWithModifier.Enable();
+
+        // Press the CTRL+SPACE to trigger actionWithModifier and not actionWithoutModifier
+        Press(keyboard.leftCtrlKey, queueEventOnly: true);
+        Press(keyboard.spaceKey);
+        InputSystem.Update();
+        Assert.That(withModiferReceivedCalls, Is.EqualTo(1));
+        Assert.That(actionWithModifier.enabled, Is.True);
     }
 
     [Test]
@@ -4712,6 +4939,7 @@ partial class CoreTests
 
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
+        var yawPitch = map.AddAction("Yaw/Pitch");
 
         Assert.That(map.FindAction("action1"), Is.SameAs(action1));
         Assert.That(map.FindAction("action2"), Is.SameAs(action2));
@@ -4720,6 +4948,10 @@ partial class CoreTests
         // Lookup is case-insensitive.
         Assert.That(map.FindAction("Action1"), Is.SameAs(action1));
         Assert.That(map.FindAction("Action2"), Is.SameAs(action2));
+
+        // Lookup allows '/' within action name (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306)
+        // yawPitchAction = _actions.FindAction("Yaw/Pitch");
+        Assert.That(map.FindAction("Yaw/Pitch"), Is.SameAs(yawPitch));
     }
 
     [Test]
@@ -4983,8 +5215,8 @@ partial class CoreTests
     static string MinimalJson(string name = null)
     {
         if (name != null)
-            return "{\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
-        return "{\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+            return "{\n    \"version\": 0,\n    \"name\": \"" + name + "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+        return "{\n    \"version\": 0,\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
     }
 
     [Test]
@@ -5182,6 +5414,36 @@ partial class CoreTests
         composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
         composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
 
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Description("ISXB-494 Changing composite of action inside a map triggered exception that wasn't caught by previous test.")]
+    public void Actions_CanChangeBindingPart_ToExistingCompositeInActionMap()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actionMap = new InputActionMap("Map");
+        var action = actionMap.AddAction("Action", InputActionType.Value, expectedControlLayout: "Axis");
+
+        action.AddCompositeBinding("Axis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+
+        Assert.That(action.bindings, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey, keyboard.dKey }));
+
+        var composite = action.ChangeCompositeBinding("Axis");
+
+        composite.InsertPartBinding("Negative", "<Keyboard>/leftArrow");
+        composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
+
+        ValidateCompositeBindingsOnAction(action);
+    }
+
+    private void ValidateCompositeBindingsOnAction(InputAction action)
+    {
         Assert.That(action.bindings, Has.Count.EqualTo(5));
         Assert.That(action.bindings,
             Has.Exactly(1).With.Property("isComposite").EqualTo(true).And.With.Property("isPartOfComposite").EqualTo(false).And.With
@@ -7823,6 +8085,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Description("ISXB-895 Can attempt to lookup non-existent action in asset by path")]
+    public void Actions_CanAttemptToLookUpNonExistentActionInAssetByPath()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null);
+
+        var map = asset.AddActionMap("Map");
+        Assert.That(asset.FindAction("Map/Action1"), Is.Null); // ISXB-895 using a path to find non-existent (NullReferenceException)
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanLookUpActionInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -7836,6 +8111,7 @@ partial class CoreTests
         var action1 = map1.AddAction("action1");
         var action2 = map1.AddAction("action2");
         var action3 = map2.AddAction("action3");
+        var action4 = map2.AddAction("Yaw/Pitch");
 
         Assert.That(asset.FindAction("action1"), Is.SameAs(action1));
         Assert.That(asset.FindAction("action2"), Is.SameAs(action2));
@@ -7849,12 +8125,36 @@ partial class CoreTests
         Assert.That(asset.FindAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
         Assert.That(asset.FindAction($"{{{action3.id.ToString()}}}"), Is.SameAs(action3));
 
+        // Lookup allows '/' within action name (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306)
+        // yawPitchAction = _actions.FindAction("Yaw/Pitch");
+        Assert.That(asset.FindAction("Yaw/Pitch"), Is.SameAs(action4));
+
         // Shouldn't allocate.
         var map1action1 = "map1/action1";
         Assert.That(() =>
         {
             asset.FindAction(map1action1);
         }, Is.Not.AllocatingGCMemory());
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Description("See https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306")]
+    public void Actions_CanLookUpActionInAssetByNameIfHavingActionAndMapActionWithSameName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("Yaw");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var action1 = map1.AddAction("Yaw/Pitch");
+        var action2 = map2.AddAction("Pitch");
+
+        // map/action should be selected first
+        Assert.That(asset.FindAction("Yaw/Pitch"), Is.SameAs(action2));
     }
 
     // Since we allow looking up by action name without any map qualification, ambiguities result when several
@@ -9531,6 +9831,165 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateComposite_WithMultipleBindingsPerPart()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control and additional arrow key support on the same composite.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S, Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow, Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftArrow, Key.DownArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow, Key.UpArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -9769,6 +10228,112 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
+    }
+
+    // Ensure that https://jira.unity3d.com/browse/ISXB-619 regress
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithCompositeWithMultipleInteractions_Works()
+    {
+        // Will ensure that :
+        // PressRelease AW trigger a tap
+        // Long PressRelease AW trigger a hold
+        // PressRelease AW trigger a tap
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad", interactions: "tap,hold(duration=2)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        IInputInteraction performedInteraction = null;
+        IInputInteraction canceledInteraction = null;
+        action.performed += ctx =>
+        {
+            performedInteraction = ctx.interaction;
+        };
+        action.canceled += ctx =>
+        {
+            canceledInteraction = ctx.interaction;
+        };
+
+        // PressRelease AW trigger a tap
+        currentTime = 0;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // nothing triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f; // half of the tap time to ensure that it performs.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        // tap should be triggered
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+
+        // Long PressRelease AW trigger a hold
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        // tap should be canceled
+        currentTime += InputSystem.settings.defaultTapTime * 4.0;
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(TapInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // After (defaultTapTime*4 + 2) seconds hold should be performed with duration=2
+        currentTime += 2;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        performedInteraction = null;
+
+        // hold should be canceled
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.TypeOf(typeof(HoldInteraction)));
+        Assert.That(performedInteraction, Is.Null);
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 5;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        // PressRelease AW trigger a tap to ensure that is still working
+        currentTime += 1;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
+
+        currentTime += InputSystem.settings.defaultTapTime / 2.0f;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.TypeOf(typeof(TapInteraction)));
+        performedInteraction = null;
+        canceledInteraction = null;
+
+        // Should be no other remaining events
+        currentTime += 100;
+        InputSystem.Update();
+        Assert.That(canceledInteraction, Is.Null);
+        Assert.That(performedInteraction, Is.Null);
     }
 
     [Test]
@@ -12028,100 +12593,5 @@ partial class CoreTests
 
         Assert.That(map.enabled, Is.True);
         Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
-    }
-
-    // ResetDevice wasn't properly clearly Composite key state, i.e. BindingState.pressTime
-    // https://jira.unity3d.com/browse/ISXB-746
-    [Test]
-    [TestCase(false)]
-    [TestCase(true)]
-    [Category("Actions")]
-    public void Actions_CompositeBindingResetWhenResetDeviceCalledWhileExecutingAction(bool useTwoModifierComposite)
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        bool actionPerformed;
-
-        // Enables "Modifier must be pressed first" behavior on all Composite Bindings
-        InputSystem.settings.shortcutKeysConsumeInput = true;
-
-        const string modifier1 = "<Keyboard>/shift";
-        const string modifier2 = "<Keyboard>/ctrl";
-        const string key = "<Keyboard>/F1";
-
-        var map = new InputActionMap();
-        var resetAction = map.AddAction("resetAction");
-
-        if (!useTwoModifierComposite)
-        {
-            resetAction.AddCompositeBinding("OneModifier")
-                .With("Modifier", modifier1)
-                .With("Binding", key);
-        }
-        else
-        {
-            resetAction.AddCompositeBinding("TwoModifiers")
-                .With("Modifier1", modifier1)
-                .With("Modifier2", modifier2)
-                .With("Binding", key);
-        }
-
-        resetAction.performed += (InputAction.CallbackContext ctx) =>
-        {
-            // Disable the Keyboard while action is being performed.
-            // This simulates an "OnFocusLost" event occurring while processing the Action, e.g. when switching primary displays or moving the main window
-            actionPerformed = true;
-            InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, false, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-        };
-
-        map.Enable();
-
-        actionPerformed = false;
-        Press(keyboard.leftShiftKey);
-        Press(keyboard.leftCtrlKey);
-        Press(keyboard.f1Key);
-
-        Assert.IsTrue(actionPerformed);
-
-        // Re enable the Keyboard (before keys are released) and execute Action again
-        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-
-        actionPerformed = false;
-        Release(keyboard.leftShiftKey);
-        Release(keyboard.leftCtrlKey);
-        Release(keyboard.f1Key);
-
-        Press(keyboard.leftCtrlKey);
-        Press(keyboard.leftShiftKey);
-        Press(keyboard.f1Key);
-
-        Assert.IsTrue(actionPerformed);
-
-        actionPerformed = false;
-        Release(keyboard.leftCtrlKey);
-        Release(keyboard.leftShiftKey);
-        Release(keyboard.f1Key);
-
-        // Re enable the Keyboard (after keys are released) and execute Action one more time
-        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-
-        Press(keyboard.leftCtrlKey);
-        Press(keyboard.leftShiftKey);
-        Press(keyboard.f1Key);
-
-        Assert.IsTrue(actionPerformed);
-
-        actionPerformed = false;
-        Press(keyboard.leftShiftKey);
-        Press(keyboard.leftCtrlKey);
-        Press(keyboard.f1Key);
-
-        // Re enable the Keyboard (before keys are released) and verify Action isn't triggered when Key pressed first
-        InputSystem.s_Manager.EnableOrDisableDevice(keyboard.device, true, InputManager.DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-
-        Press(keyboard.f1Key);
-        Press(keyboard.leftCtrlKey);
-        Press(keyboard.leftShiftKey);
-
-        Assert.IsFalse(actionPerformed);
     }
 }

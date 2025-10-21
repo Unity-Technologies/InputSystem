@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -83,6 +83,11 @@ namespace UnityEngine.InputSystem
 
     public static partial class InputSystem
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
+#endif
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
+
         #region Layouts
 
         /// <summary>
@@ -1359,7 +1364,7 @@ namespace UnityEngine.InputSystem
         /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
         ///
-        /// The default polling frequency is 60 Hz.
+        /// The default polling frequency is at least 60 Hz or what is suitable for the target device.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
         /// <see cref="InputEvent.time"/> patterns. At 60 Hz, for example, timestamps for a specific,
@@ -3010,16 +3015,10 @@ namespace UnityEngine.InputSystem
         #region Actions
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
-        // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
-        // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
-        // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
-        //
-        // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
-        // state ensures that the they are active in all of these MonoBehavior methods:
-        //
-        //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
-        //
+
+        // This is called from InitializeInEditor() and InitializeInPlayer() to make sure
+        // project-wide actions are all active in they are active in all of these MonoBehavior methods:
+        // Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
         private static void EnableActions()
         {
 #if UNITY_EDITOR
@@ -3423,6 +3422,12 @@ namespace UnityEngine.InputSystem
             set => s_Manager.m_Runtime.runInBackground = value;
         }
 
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        internal static float scrollWheelDeltaPerTick => InputRuntime.s_Instance.scrollWheelDeltaPerTick;
+#else
+        internal const float scrollWheelDeltaPerTick = 1.0f;
+#endif
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
@@ -3526,7 +3531,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.InitializeInEditor");
+            k_InputInitializeInEditorMarker.Begin();
 
             Reset(runtime: runtime);
 
@@ -3587,17 +3592,25 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
-            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
-                "InputSettings has lost its native object");
-            #endif
+            Debug.Assert(HasNativeObject(settings), "InputSettings has lost its native object");
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
+            // The warning is delayed to delay call (called a short while after the Asset are loaded, on Inspector update) to make sure it doesn't pop up while the editor is still loading or assets are not fully loaded -
+            // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
+            EditorApplication.delayCall += ShowRestartWarning;
+
+            RunInitialUpdate();
+
+            k_InputInitializeInEditorMarker.End();
+        }
+
+        private static void ShowRestartWarning()
+        {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.m_Runtime.isInBatchMode)
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -3610,16 +3623,7 @@ namespace UnityEngine.InputSystem
                 }
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled.
-            // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
-            EnableActions();
-#endif
-
-            RunInitialUpdate();
-
-            Profiler.EndSample();
+            EditorApplication.delayCall -= ShowRestartWarning;
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3639,9 +3643,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    EnableActions();
-                    #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3661,6 +3663,9 @@ namespace UnityEngine.InputSystem
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
+
+                    // Clear the Action reference from all InputActionReference objects
+                    InputActionReference.ResetCachedAction();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
@@ -3690,6 +3695,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
+        public static bool HasNativeObject(Object obj)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
+        }
+
         private static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
@@ -3701,7 +3716,7 @@ namespace UnityEngine.InputSystem
             // temporary settings object.
             // NOTE: We access m_Settings directly here to make sure we're not running into asserts
             //       from the settings getter checking it has a valid object.
-            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            if (!HasNativeObject(s_Manager.m_Settings))
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
@@ -3807,7 +3822,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
 
@@ -3842,7 +3857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            k_InputResetMarker.Begin();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
@@ -3863,7 +3878,7 @@ namespace UnityEngine.InputSystem
                 s_Manager.UninstallGlobals();
             }
 
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,
             // this should get replaced with an actual InputSettings asset.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
@@ -3896,13 +3911,12 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            // Note this is too early for editor ! actions is not setup yet.
+            // This is the point where we initialise project-wide actions for the Editor Play-mode, Editor Tests and Player Tests.
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
             #endif
 
-            Profiler.EndSample();
+            k_InputResetMarker.End();
         }
 
         /// <summary>

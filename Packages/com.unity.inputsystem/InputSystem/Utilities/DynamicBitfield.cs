@@ -51,6 +51,16 @@ namespace UnityEngine.InputSystem
             array[bitIndex / 64] &= ~(1UL << (bitIndex % 64));
         }
 
+        public bool AnyBitIsSet()
+        {
+            for (var i = 0; i < array.length; ++i)
+            {
+                if (array[i] != 0)
+                    return true;
+            }
+            return false;
+        }
+
         private static int BitCountToULongCount(int bitCount)
         {
             return (bitCount + 63) / 64;

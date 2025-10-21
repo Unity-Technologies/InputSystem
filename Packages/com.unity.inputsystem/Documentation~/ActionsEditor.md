@@ -7,7 +7,7 @@ The **Input Actions Editor** allows you to edit [Action Assets](ActionAssets.md)
 
 It allows you to group collections of Actions into [Action Maps](ActionsEditor.html#configure-action-maps), which represent different input scenarios in your project (such as UI navigation, gameplay, etc.)
 
-It also alows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
+It also allows you to define [Control Schemes](ActionBindings.md#control-schemes) which are a way to enable or disable a set of devices, or respond to which type of device is being used. This is often useful if you want to customise your UI based on whether your users are using mouse, keyboard, or gamepad as their chosen input.
 
 ### Action Assets and Project-Wide Actions
 
@@ -45,8 +45,6 @@ The Input Actions editor is divided into three panels (marked A, B & C above).
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action, either right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
-*
-
 
 ## Action type and Control type
 
@@ -56,7 +54,7 @@ If you select an Action, you can edit its properties in the right-hand pane of t
 
 #### Action Type
 
-The Action Type setting allows to to select between **Button**, **Value** or **PassThrough**.
+Use the Action Type setting to select **Button**, **Value** or **PassThrough**.
 
 These options relate to whether this action should represent a discrete on/off button-style interaction or a value that can change over time while the control is being used.
 
@@ -74,7 +72,7 @@ The Control Type setting allows you to select the type of control expected by th
 
 For example, if you select **2D axis**, only those controls that can supply a 2D vector as value are available as options for the binding control path.
 
-There are more specific control types available which futher filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
+There are more specific control types available which further filter the available bindings, such as "Stick", "Dpad" or "Touch". If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you select a binding for your action (see directly below).
 
 ### Bindings
 
@@ -137,4 +135,6 @@ Input Action Assets can have multiple [Control Schemes](ActionBindings.md#contro
 
 ![Control Scheme Properties](Images/ControlSchemeProperties.png)
 
-To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Asset. If the Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that are associated with that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window. When you add a new Control Scheme, or select an existing Control Scheme, and then select __Edit Control Scheme…__, you can edit the name of the Control Scheme and which devices the Scheme should be active for.
+To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Actions Asset. If the Actions Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that are associated with that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window.
+
+When you add a new Control Scheme, or select an existing Control Scheme, and then select __Edit Control Scheme__, you can edit the name of the Control Scheme and which devices the Scheme should be active for. When you add a new Control Scheme, the "Device Type" list is empty by default (as shown above). You must add at least one type of device to this list for the Control Scheme to be functional.

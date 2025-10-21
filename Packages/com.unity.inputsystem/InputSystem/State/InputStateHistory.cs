@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.LowLevel
     ///
     /// The class listens to changes on the given controls by adding change monitors (<see cref="IInputStateChangeMonitor"/>)
     /// to each control.
-    ///
+    /// </remarks>
     /// <example>
     /// <code>
     /// // Track all stick controls in the system.
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// history.Dispose();
     /// </code>
     /// </example>
-    /// </remarks>
+    /// <seealso cref="Record"/>
     public class InputStateHistory : IDisposable, IEnumerable<InputStateHistory.Record>, IInputStateChangeMonitor
     {
         private const int kDefaultHistorySize = 128;
@@ -62,30 +62,34 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Total number of state records currently captured in the history.
         /// </summary>
-        /// <value>Number of records in the collection.</value>
         /// <remarks>
+        /// Number of records in the collection.
+        ///
         /// This will always be at most <see cref="historyDepth"/>.
+        /// To record a change use <see cref="RecordStateChange(InputControl,InputEventPtr)"/>.
         /// </remarks>
-        /// <seealso cref="historyDepth"/>
-        /// <seealso cref="RecordStateChange(InputControl,InputEventPtr)"/>
         public int Count => m_RecordCount;
 
         /// <summary>
         /// Current version stamp. Every time a record is stored in the history,
         /// this is incremented by one.
         /// </summary>
-        /// <value>Version stamp that indicates the number of mutations.</value>
-        /// <seealso cref="RecordStateChange(InputControl,InputEventPtr)"/>
+        /// <remarks>
+        /// Version stamp that indicates the number of mutations.
+        /// To record a change use <see cref="RecordStateChange(InputControl,InputEventPtr)"/>.
+        /// </remarks>
         public uint version => m_CurrentVersion;
 
         /// <summary>
         /// Maximum number of records that can be recorded in the history.
         /// </summary>
-        /// <value>Upper limit on number of records.</value>
         /// <exception cref="ArgumentException"><paramref name="value"/> is negative.</exception>
         /// <remarks>
+        /// Upper limit on number of records.
         /// A fixed size memory block of unmanaged memory will be allocated to store history
-        /// records. This property determines TODO
+        /// records.
+        /// When the history is full, it will start overwriting the oldest
+        /// entry each time a new history record is received.
         /// </remarks>
         public int historyDepth
         {
@@ -100,6 +104,15 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// Size of additional data storage to allocate per record.
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is negative.</exception>
+        /// <remarks>
+        /// Additional custom data can be stored per record up to the size of this value.
+        /// To retrieve a pointer to this memory use <see cref="Record.GetUnsafeExtraMemoryPtr"/>
+        /// Used by <see cref="EnhancedTouch.Touch.history"/>
+        /// </remarks>
         public int extraMemoryPerRecord
         {
             get => m_ExtraMemoryPerRecord;
@@ -113,6 +126,14 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// Specify which player loop positions the state history will be monitored for.
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/>When an invalid mask is provided (e.g. <see cref="InputUpdateType.None"/>).</exception>
+        /// <remarks>
+        /// The state history will only be monitored for the specified player loop positions.
+        /// <see cref="InputUpdateType.Editor"/> is excluded from this list
+        /// </remarks>
         public InputUpdateType updateMask
         {
             get => m_UpdateMask ?? InputSystem.s_Manager.updateMask & ~InputUpdateType.Editor;
@@ -124,8 +145,22 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// List of input controls the state history will be recording for.
+        /// </summary>
+        /// <remarks>
+        /// The list of input controls the state history will be recording for is specified on construction of the <see cref="InputStateHistory"/>
+        /// </remarks>
         public ReadOnlyArray<InputControl> controls => new ReadOnlyArray<InputControl>(m_Controls, 0, m_ControlCount);
 
+        /// <summary>
+        /// Returns an entry in the state history at the given index.
+        /// </summary>
+        /// <param name="index">Index into the array.</param>
+        /// <remarks>
+        /// Returns a <see cref="Record"/> entry from the state history at the given index.
+        /// </remarks>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.</exception>
         public unsafe Record this[int index]
         {
             get
@@ -148,9 +183,34 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// Optional delegate to perform when a record is added to the history array.
+        /// </summary>
+        /// <remarks>
+        /// Can be used to fill in the extra memory with custom data using <see cref="Record.GetUnsafeExtraMemoryPtr"/>
+        /// </remarks>
         public Action<Record> onRecordAdded { get; set; }
+
+        /// <summary>
+        /// Optional delegate to decide whether the state change should be stored in the history.
+        /// </summary>
+        /// <remarks>
+        /// Can be used to filter out some events to focus on recording the ones you are most interested in.
+        ///
+        /// If the callback returns <c>true</c>, a record will be added to the history
+        /// If the callback returns <c>false</c>, the event will be ignored and not recorded.
+        /// </remarks>
         public Func<InputControl, double, InputEventPtr, bool> onShouldRecordStateChange { get; set; }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record all control state changes.
+        /// </summary>
+        /// <param name="maxStateSizeInBytes">Maximum size of control state in the record entries. Controls with larger state will not be recorded.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of control state changes.
+        ///
+        /// New controls are automatically added into the state history if their state is smaller than the threshold.
+        /// </remarks>
         public InputStateHistory(int maxStateSizeInBytes)
         {
             if (maxStateSizeInBytes <= 0)
@@ -160,6 +220,19 @@ namespace UnityEngine.InputSystem.LowLevel
             m_StateSizeInBytes = maxStateSizeInBytes.AlignToMultipleOf(4);
         }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record state changes for a specified control.
+        /// </summary>
+        /// <param name="path">Control path to identify which controls to monitor.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of state changes for the specified controls.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // Track all stick controls in the system.
+        /// var history = new InputStateHistory("*/&lt;Stick&gt;");
+        /// </code>
+        /// </example>
         public InputStateHistory(string path)
         {
             using (var controls = InputSystem.FindControls(path))
@@ -169,6 +242,13 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record state changes for a specified control.
+        /// </summary>
+        /// <param name="control">Control to monitor.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of state changes for the specified control.
+        /// </remarks>
         public InputStateHistory(InputControl control)
         {
             if (control == null)
@@ -178,6 +258,13 @@ namespace UnityEngine.InputSystem.LowLevel
             m_ControlCount = 1;
         }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record state changes for a specified controls.
+        /// </summary>
+        /// <param name="controls">Controls to monitor.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of state changes for the specified controls.
+        /// </remarks>
         public InputStateHistory(IEnumerable<InputControl> controls)
         {
             if (controls != null)
@@ -187,11 +274,22 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// InputStateHistory destructor.
+        /// </summary>
         ~InputStateHistory()
         {
             Dispose();
         }
 
+        /// <summary>
+        /// Clear the history record.
+        /// </summary>
+        /// <remarks>
+        /// Clear the history record. Resetting the list to empty.
+        ///
+        /// This won't clear controls that have been added on the fly.
+        /// </remarks>
         public void Clear()
         {
             m_HeadIndex = 0;
@@ -201,6 +299,15 @@ namespace UnityEngine.InputSystem.LowLevel
             // NOTE: Won't clear controls that have been added on the fly.
         }
 
+        /// <summary>
+        /// Add a record to the input state history.
+        /// </summary>
+        /// <param name="record">Record to add.</param>
+        /// <returns>The newly added record from the history array (as a copy is made).</returns>
+        /// <remarks>
+        /// Add a record to the input state history.
+        /// Allocates an entry in the history array and returns this copy of the original data passed to the function.
+        /// </remarks>
         public unsafe Record AddRecord(Record record)
         {
             var recordPtr = AllocateRecord(out var index);
@@ -209,6 +316,21 @@ namespace UnityEngine.InputSystem.LowLevel
             return newRecord;
         }
 
+        /// <summary>
+        /// Start recording state history for the specified controls.
+        /// </summary>
+        /// <remarks>
+        /// Start recording state history for the controls specified in the <see cref="InputStateHistory"/> constructor.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using (var allTouchTaps = new InputStateHistory("&lt;Touchscreen&gt;/touch*/tap"))
+        /// {
+        ///     allTouchTaps.StartRecording();
+        ///     allTouchTaps.StopRecording();
+        /// }
+        /// </code>
+        /// </example>
         public void StartRecording()
         {
             // We defer allocation until we actually get values on a control.
@@ -217,12 +339,38 @@ namespace UnityEngine.InputSystem.LowLevel
                 InputState.AddChangeMonitor(control, this);
         }
 
+        /// <summary>
+        /// Stop recording state history for the specified controls.
+        /// </summary>
+        /// <remarks>
+        /// Stop recording state history for the controls specified in the <see cref="InputStateHistory"/> constructor.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using (var allTouchTaps = new InputStateHistory("&lt;Touchscreen&gt;/touch*/tap"))
+        /// {
+        ///     allTouchTaps.StartRecording();
+        ///     allTouchTaps.StopRecording();
+        /// }
+        /// </code>
+        /// </example>
         public void StopRecording()
         {
             foreach (var control in controls)
                 InputState.RemoveChangeMonitor(control, this);
         }
 
+        /// <summary>
+        /// Record a state change for a specific control.
+        /// </summary>
+        /// <param name="control">The control to record the state change for.</param>
+        /// <param name="eventPtr">The current event data to record.</param>
+        /// <returns>The newly added record.</returns>
+        /// <remarks>
+        /// Record a state change for a specific control.
+        /// Will call the <see cref="onRecordAdded"/> delegate after adding the record.
+        /// Note this does not call the <see cref="onShouldRecordStateChange"/> delegate.
+        /// </remarks>
         public unsafe Record RecordStateChange(InputControl control, InputEventPtr eventPtr)
         {
             if (eventPtr.IsA<DeltaStateEvent>())
@@ -236,6 +384,18 @@ namespace UnityEngine.InputSystem.LowLevel
             return RecordStateChange(control, statePtr, eventPtr.time);
         }
 
+        /// <summary>
+        /// Record a state change for a specific control.
+        /// </summary>
+        /// <param name="control">The control to record the state change for.</param>
+        /// <param name="statePtr">The current state data to record.</param>
+        /// <param name="time">Time stamp to apply (overriding the event timestamp)</param>
+        /// <returns>The newly added record.</returns>
+        /// <remarks>
+        /// Record a state change for a specific control.
+        /// Will call the <see cref="onRecordAdded"/> delegate after adding the record.
+        /// Note this does not call the <see cref="onShouldRecordStateChange"/> delegate.
+        /// </remarks>
         public unsafe Record RecordStateChange(InputControl control, void* statePtr, double time)
         {
             var controlIndex = ArrayHelpers.IndexOfReference(m_Controls, control, m_ControlCount);
@@ -277,16 +437,37 @@ namespace UnityEngine.InputSystem.LowLevel
             return record;
         }
 
+        /// <summary>
+        /// Enumerate all state history records.
+        /// </summary>
+        /// <returns>An enumerator going over the state history records.</returns>
+        /// <remarks>
+        /// Enumerate all state history records.
+        /// </remarks>
+        /// <seealso cref="GetEnumerator"/>
         public IEnumerator<Record> GetEnumerator()
         {
             return new Enumerator(this);
         }
 
+        /// <summary>
+        /// Enumerate all state history records.
+        /// </summary>
+        /// <returns>An enumerator going over the state history records.</returns>
+        /// <remarks>
+        /// Enumerate all state history records.
+        /// </remarks>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Dispose of the state history records.
+        /// </summary>
+        /// <remarks>
+        /// Stops recording and cleans up the state history
+        /// </remarks>
         public void Dispose()
         {
             StopRecording();
@@ -294,6 +475,12 @@ namespace UnityEngine.InputSystem.LowLevel
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Destroy the state history records.
+        /// </summary>
+        /// <remarks>
+        /// Deletes the state history records.
+        /// </remarks>
         protected void Destroy()
         {
             if (m_RecordBuffer.IsCreated)
@@ -325,6 +512,15 @@ namespace UnityEngine.InputSystem.LowLevel
                 NativeArrayOptions.UninitializedMemory);
         }
 
+        /// <summary>
+        /// Remap a records internal index to an index from the start of the recording in the circular buffer.
+        /// </summary>
+        /// <remarks>
+        /// Remap a records internal index, which is relative to the start of the record buffer,
+        /// to an index relative to the start of the recording in the circular buffer.
+        /// </remarks>
+        /// <param name="index">Record index (from the start of the record array).</param>
+        /// <returns>An index relative to the start of the recording in the circular buffer.</returns>
         protected internal int RecordIndexToUserIndex(int index)
         {
             if (index < m_HeadIndex)
@@ -332,11 +528,30 @@ namespace UnityEngine.InputSystem.LowLevel
             return index - m_HeadIndex;
         }
 
+        /// <summary>
+        /// Remap an index from the start of the recording in the circular buffer to a records internal index.
+        /// </summary>
+        /// <remarks>
+        /// Remap an index relative to the start of the recording in the circular buffer,
+        /// to a records internal index, which is relative to the start of the record buffer.
+        /// </remarks>
+        /// <param name="index">An index relative to the start of the recording in the circular buffer.</param>
+        /// <returns>Record index (from the start of the record array).</returns>
         protected internal int UserIndexToRecordIndex(int index)
         {
             return (m_HeadIndex + index) % m_HistoryDepth;
         }
 
+        /// <summary>
+        /// Retrieve a record from the input state history.
+        /// </summary>
+        /// <remarks>
+        /// Retrieve a record from the input state history by Record index.
+        /// </remarks>
+        /// <param name="index">Record index into the input state history records buffer.</param>
+        /// <returns>The record header for the specified index</returns>
+        /// <exception cref="InvalidOperationException">When the buffer is no longer valid as it has been disposed.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If the index is out of range of the history depth.</exception>
         protected internal unsafe RecordHeader* GetRecord(int index)
         {
             if (!m_RecordBuffer.IsCreated)
@@ -346,11 +561,27 @@ namespace UnityEngine.InputSystem.LowLevel
             return GetRecordUnchecked(index);
         }
 
+        /// <summary>
+        /// Retrieve a record from the input state history, without any bounds check.
+        /// </summary>
+        /// <remarks>
+        /// Retrieve a record from the input state history by record index, without any bounds check
+        /// </remarks>
+        /// <param name="index">Record index into the input state history records buffer.</param>
+        /// <returns>The record header for the specified index</returns>
         internal unsafe RecordHeader* GetRecordUnchecked(int index)
         {
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + index * bytesPerRecord);
         }
 
+        /// <summary>
+        /// Allocate a new record in the input state history.
+        /// </summary>
+        /// <remarks>
+        /// Allocate a new record in the input state history.
+        /// </remarks>
+        /// <param name="index">The index of the newly created record</param>
+        /// <returns>The header of the newly created record</returns>
         protected internal unsafe RecordHeader* AllocateRecord(out int index)
         {
             if (!m_RecordBuffer.IsCreated)
@@ -371,6 +602,13 @@ namespace UnityEngine.InputSystem.LowLevel
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + bytesPerRecord * index);
         }
 
+        /// <summary>
+        /// Returns value from the control in the specified record header.
+        /// </summary>
+        /// <param name="data">The record header to query.</param>
+        /// <typeparam name="TValue">The type of the value being read</typeparam>
+        /// <returns>The value from the record.</returns>
+        /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
         protected unsafe TValue ReadValue<TValue>(RecordHeader* data)
             where TValue : struct
         {
@@ -387,6 +625,15 @@ namespace UnityEngine.InputSystem.LowLevel
             return controlOfType.ReadValueFromState(statePtr);
         }
 
+        /// <summary>
+        /// Read the control's final, processed value from the given state and return the value as an object.
+        /// </summary>
+        /// <param name="data">The record header to query.</param>
+        /// <returns>The value of the control associated with the record header.</returns>
+        /// <remarks>
+        /// This method allocates GC memory and should not be used during normal gameplay operation.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">When the specified value is not present.</exception>
         protected unsafe object ReadValueAsObject(RecordHeader* data)
         {
             // Get control. If we only have a single one, the index isn't stored on the data.
@@ -399,6 +646,18 @@ namespace UnityEngine.InputSystem.LowLevel
             return control.ReadValueFromStateAsObject(statePtr);
         }
 
+        /// <summary>
+        /// Delegate to list to control state change notifications.
+        /// </summary>
+        /// <param name="control">Control that is being monitored by the state change monitor and that had its state memory changed.</param>
+        /// <param name="time">Time on the <see cref="InputEvent.time"/> timeline at which the control state change was received.</param>
+        /// <param name="eventPtr">If the state change was initiated by a state event (either a <see cref="StateEvent"/>
+        /// or <see cref="DeltaStateEvent"/>), this is the pointer to that event. Otherwise, it is pointer that is still
+        /// <see cref="InputEventPtr.valid"/>, but refers a "dummy" event that is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="monitorIndex">Index of the monitor as passed to <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/></param>
+        /// <remarks>
+        /// Records a state change after checking the <see cref="updateMask"/> and the <see cref="onShouldRecordStateChange"/> callback.
+        /// </remarks>
         unsafe void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long monitorIndex)
         {
@@ -416,6 +675,15 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         // Unused.
+        /// <summary>
+        /// Called when a timeout set on a state change monitor has expired.
+        /// </summary>
+        /// <param name="control">Control on which the timeout expired.</param>
+        /// <param name="time">Input time at which the timer expired. This is the time at which an <see cref="InputSystem.Update"/> is being
+        /// run whose <see cref="InputState.currentTime"/> is past the time of expiration.</param>
+        /// <param name="monitorIndex">Index of the monitor as given to <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>.</param>
+        /// <param name="timerIndex">Index of the timer as given to <see cref="InputState.AddChangeMonitorTimeout"/>.</param>
+        /// <seealso cref="InputState.AddChangeMonitorTimeout"/>
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long monitorIndex,
             int timerIndex)
         {
@@ -473,16 +741,50 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>State change record header</summary>
+        /// <remarks>
+        /// Input State change record header containing the timestamp and other common record data.
+        /// Stored in the <see cref="InputStateHistory"/>.
+        /// </remarks>
+        /// <seealso cref="InputStateHistory"/>
         [StructLayout(LayoutKind.Explicit)]
         protected internal unsafe struct RecordHeader
         {
+            /// <summary>
+            /// The time stamp of the input state record.
+            /// </summary>
+            /// <remarks>
+            /// The time stamp of the input state record in the owning container.
+            /// <see cref="IInputRuntime.currentTime"/>
+            /// </remarks>
             [FieldOffset(0)] public double time;
+
+            /// <summary>
+            /// The version of the input state record.
+            /// </summary>
+            /// <remarks>
+            /// Current version stamp. See <see cref="InputStateHistory.version"/>.
+            /// </remarks>
             [FieldOffset(8)] public uint version;
+
+            /// <summary>
+            /// The index of the record.
+            /// </summary>
+            /// <remarks>
+            /// The index of the record relative to the start of the buffer.
+            /// See <see cref="InputStateHistory.RecordIndexToUserIndex"/> to remap this record index to a user index.
+            /// </remarks>
             [FieldOffset(12)] public int controlIndex;
 
             [FieldOffset(12)] private fixed byte m_StateWithoutControlIndex[1];
             [FieldOffset(16)] private fixed byte m_StateWithControlIndex[1];
 
+            /// <summary>
+            /// The state data including the control index.
+            /// </summary>
+            /// <remarks>
+            /// The state data including the control index.
+            /// </remarks>
             public byte* statePtrWithControlIndex
             {
                 get
@@ -492,6 +794,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The state data excluding the control index.
+            /// </summary>
+            /// <remarks>
+            /// The state data excluding the control index.
+            /// </remarks>
             public byte* statePtrWithoutControlIndex
             {
                 get
@@ -501,10 +809,26 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// Size of the state data including the control index.
+            /// </summary>
+            /// <remarks>
+            /// Size of the data including the control index.
+            /// </remarks>
             public const int kSizeWithControlIndex = 16;
+
+            /// <summary>
+            /// Size of the state data excluding the control index.
+            /// </summary>
+            /// <remarks>
+            /// Size of the data excluding the control index.
+            /// </remarks>
             public const int kSizeWithoutControlIndex = 12;
         }
 
+        /// <summary>State change record</summary>
+        /// <remarks>Input State change record stored in the <see cref="InputStateHistory"/>.</remarks>
+        /// <seealso cref="InputStateHistory"/>
         public unsafe struct Record : IEquatable<Record>
         {
             // We store an index rather than a direct pointer to make this struct safer to use.
@@ -516,10 +840,31 @@ namespace UnityEngine.InputSystem.LowLevel
             internal int recordIndex => m_IndexPlusOne - 1;
             internal uint version => m_Version;
 
+            /// <summary>
+            /// Identifies if the record is valid.
+            /// </summary>
+            /// <value>True if the record is a valid entry. False if invalid.</value>
+            /// <remarks>
+            /// When the history is cleared with <see cref="Clear"/> the entries become invalid.
+            /// </remarks>
             public bool valid => m_Owner != default && m_IndexPlusOne != default && header->version == m_Version;
 
+            /// <summary>
+            /// Identifies the owning container for the record.
+            /// </summary>
+            /// <value>The owning <see cref="InputStateHistory"/> container for the record.</value>
+            /// <remarks>
+            /// Identifies the owning <see cref="InputStateHistory"/> container for the record.
+            /// </remarks>
             public InputStateHistory owner => m_Owner;
 
+            /// <summary>
+            /// The index of the input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The index of the input state record in the owning container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public int index
             {
                 get
@@ -529,6 +874,14 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The time stamp of the input state record.
+            /// </summary>
+            /// <value>
+            /// The time stamp of the input state record in the owning container.
+            /// <see cref="IInputRuntime.currentTime"/>
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public double time
             {
                 get
@@ -538,6 +891,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The control associated with the input state record.
+            /// </summary>
+            /// <value>
+            /// The control associated with the input state record.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public InputControl control
             {
                 get
@@ -550,6 +910,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The next input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The next input state record in the owning <see cref="InputStateHistory"/>container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record next
             {
                 get
@@ -563,6 +930,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The previous input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The previous input state record in the owning <see cref="InputStateHistory"/>container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record previous
             {
                 get
@@ -583,6 +957,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_Version = header->version;
             }
 
+            /// <summary>
+            /// Returns value from the control in the record.
+            /// </summary>
+            /// <typeparam name="TValue">The type of the value being read</typeparam>
+            /// <returns>Returns the value from the record.</returns>
+            /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -590,12 +970,27 @@ namespace UnityEngine.InputSystem.LowLevel
                 return m_Owner.ReadValue<TValue>(header);
             }
 
+            /// <summary>
+            /// Read the control's final, processed value from the given state and return the value as an object.
+            /// </summary>
+            /// <returns>The value of the control associated with the record.</returns>
+            /// <remarks>
+            /// This method allocates GC memory and should not be used during normal gameplay operation.
+            /// </remarks>
+            /// <exception cref="InvalidOperationException">When the specified value is not present.</exception>
             public object ReadValueAsObject()
             {
                 CheckValid();
                 return m_Owner.ReadValueAsObject(header);
             }
 
+            /// <summary>
+            /// Read the state memory for the record.
+            /// </summary>
+            /// <returns>The state memory for the record.</returns>
+            /// <remarks>
+            /// Read the state memory for the record.
+            /// </remarks>
             public void* GetUnsafeMemoryPtr()
             {
                 CheckValid();
@@ -609,6 +1004,14 @@ namespace UnityEngine.InputSystem.LowLevel
                 return header->statePtrWithControlIndex;
             }
 
+            /// <summary>
+            /// Read the extra memory for the record.
+            /// </summary>
+            /// <returns>The extra memory for the record.</returns>
+            /// <remarks>
+            /// Additional date can be stored in a record in the extra memory section.
+            /// </remarks>
+            /// <seealso cref="InputStateHistory.extraMemoryPerRecord"/>
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
@@ -622,6 +1025,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 return (byte*)header + m_Owner.bytesPerRecord - m_Owner.extraMemoryPerRecord;
             }
 
+            /// <summary>Copy data from one record to another.</summary>
+            /// <param name="record">Source record to copy from.</param>
+            /// <remarks>
+            /// Copy data from one record to another.
+            /// </remarks>
+            /// <exception cref="ArgumentException">When the source record history is not valid.</exception>
+            /// <exception cref="InvalidOperationException">When the control is not tracked by the owning <see cref="InputStateHistory"/> container.</exception>
             public void CopyFrom(Record record)
             {
                 if (!record.valid)
@@ -686,16 +1096,27 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new InvalidOperationException("Record is no longer valid");
             }
 
+            /// <summary>Compare two records.</summary>
+            /// <remarks>Compare two records.</remarks>
+            /// <param name="other">The record to compare with.</param>
+            /// <returns>True if the records are the same, False if they differ.</returns>
             public bool Equals(Record other)
             {
                 return ReferenceEquals(m_Owner, other.m_Owner) && m_IndexPlusOne == other.m_IndexPlusOne && m_Version == other.m_Version;
             }
 
+            /// <summary>Compare two records.</summary>
+            /// <remarks>Compare two records.</remarks>
+            /// <param name="obj">The record to compare with.</param>
+            /// <returns>True if the records are the same, False if they differ.</returns>
             public override bool Equals(object obj)
             {
                 return obj is Record other && Equals(other);
             }
 
+            /// <summary>Return the hash code of the record.</summary>
+            /// <remarks>Return the hash code of the record.</remarks>
+            /// <returns>The hash code of the record.</returns>
             public override int GetHashCode()
             {
                 unchecked
@@ -707,6 +1128,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>Return the string representation of the record.</summary>
+            /// <remarks>Includes the control, value and time of the record (or &lt;Invalid&gt; if not valid).</remarks>
+            /// <returns>The string representation of the record.</returns>
             public override string ToString()
             {
                 if (!valid)
@@ -720,10 +1144,27 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// Records value changes of a given control over time.
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TValue">The type of the record being stored</typeparam>
+    /// <remarks>
+    /// This class makes it easy to track input values over time. It will automatically retain input state up to a given
+    /// maximum history depth (<see cref="InputStateHistory.historyDepth"/>). When the history is full, it will start overwriting the oldest
+    /// entry each time a new history record is received.
+    ///
+    /// The class listens to changes on the given controls by adding change monitors (<see cref="IInputStateChangeMonitor"/>)
+    /// to each control.
+    /// </remarks>
     public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<InputStateHistory<TValue>.Record>
         where TValue : struct
     {
+        /// <summary>
+        /// Creates a new InputStateHistory class to record all control state changes.
+        /// </summary>
+        /// <param name="maxStateSizeInBytes">Maximum size of control state in the record entries. Controls with larger state will not be recorded.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of control state changes.
+        ///
+        /// New controls are automatically added into the state history if there state is smaller than the threshold.
+        /// </remarks>
         public InputStateHistory(int? maxStateSizeInBytes = null)
         // Using the size of the value here isn't quite correct but the value is used as an upper
         // bound on stored state size for which the size of the value should be a reasonable guess.
@@ -733,11 +1174,31 @@ namespace UnityEngine.InputSystem.LowLevel
                 throw new ArgumentException("Max state size cannot be smaller than sizeof(TValue)", nameof(maxStateSizeInBytes));
         }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record state changes for a specified control.
+        /// </summary>
+        /// <param name="control">Control to monitor.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of state changes for the specified control.
+        /// </remarks>
         public InputStateHistory(InputControl<TValue> control)
             : base(control)
         {
         }
 
+        /// <summary>
+        /// Creates a new InputStateHistory class to record state changes for a specified control.
+        /// </summary>
+        /// <param name="path">Control path to identify which controls to monitor.</param>
+        /// <remarks>
+        /// Creates a new InputStateHistory to record a history of state changes for the specified controls.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // Track all stick controls in the system.
+        /// var history = new InputStateHistory&lt;Vector2&gt;("*/&lt;Stick&gt;");
+        /// </code>
+        /// </example>
         public InputStateHistory(string path)
             : base(path)
         {
@@ -748,11 +1209,23 @@ namespace UnityEngine.InputSystem.LowLevel
                         $"Control '{control}' matched by '{path}' has value type '{TypeHelpers.GetNiceTypeName(control.valueType)}' which is incompatible with '{TypeHelpers.GetNiceTypeName(typeof(TValue))}'");
         }
 
+        /// <summary>
+        /// InputStateHistory destructor.
+        /// </summary>
         ~InputStateHistory()
         {
             Destroy();
         }
 
+        /// <summary>
+        /// Add a record to the input state history.
+        /// </summary>
+        /// <param name="record">Record to add.</param>
+        /// <returns>The newly added record from the history array (as a copy is made).</returns>
+        /// <remarks>
+        /// Add a record to the input state history.
+        /// Allocates an entry in the history array and returns this copy of the original data passed to the function.
+        /// </remarks>
         public unsafe Record AddRecord(Record record)
         {
             var recordPtr = AllocateRecord(out var index);
@@ -761,6 +1234,26 @@ namespace UnityEngine.InputSystem.LowLevel
             return newRecord;
         }
 
+        /// <summary>
+        /// Record a state change for a specific control.
+        /// </summary>
+        /// <param name="control">The control to record the state change for.</param>
+        /// <param name="value">The value to record.</param>
+        /// <param name="time">Time stamp to apply (overriding the event timestamp)</param>
+        /// <returns>The newly added record.</returns>
+        /// <remarks>
+        /// Record a state change for a specific control.
+        /// Will call the <see cref="InputStateHistory.onRecordAdded"/> delegate after adding the record.
+        /// Note this does not call the <see cref="InputStateHistory.onShouldRecordStateChange"/> delegate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using (var allTouchTaps = new InputStateHistory&lt;float&gt;(Gamepad.current.leftTrigger))
+        /// {
+        ///     history.RecordStateChange(Gamepad.current.leftTrigger, 0.234f);
+        /// }
+        /// </code>
+        /// </example>
         public unsafe Record RecordStateChange(InputControl<TValue> control, TValue value, double time = -1)
         {
             using (StateEvent.From(control.device, out var eventPtr))
@@ -774,16 +1267,39 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// Enumerate all state history records.
+        /// </summary>
+        /// <returns>An enumerator going over the state history records.</returns>
+        /// <remarks>
+        /// Enumerate all state history records.
+        /// </remarks>
+        /// <seealso cref="GetEnumerator"/>
         public new IEnumerator<Record> GetEnumerator()
         {
             return new Enumerator(this);
         }
 
+        /// <summary>
+        /// Enumerate all state history records.
+        /// </summary>
+        /// <returns>An enumerator going over the state history records.</returns>
+        /// <remarks>
+        /// Enumerate all state history records.
+        /// </remarks>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Returns an entry in the state history at the given index.
+        /// </summary>
+        /// <param name="index">Index into the array.</param>
+        /// <remarks>
+        /// Returns a <see cref="Record"/> entry from the state history at the given index.
+        /// </remarks>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is less than 0 or greater than <see cref="InputStateHistory.Count"/>.</exception>
         public new unsafe Record this[int index]
         {
             get
@@ -838,6 +1354,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>State change record</summary>
+        /// <remarks>Input State change record stored in the <see cref="InputStateHistory{TValue}"/></remarks>
+        /// <seealso cref="InputStateHistory{TValue}"/>
         public new unsafe struct Record : IEquatable<Record>
         {
             private readonly InputStateHistory<TValue> m_Owner;
@@ -847,10 +1366,31 @@ namespace UnityEngine.InputSystem.LowLevel
             internal RecordHeader* header => m_Owner.GetRecord(recordIndex);
             internal int recordIndex => m_IndexPlusOne - 1;
 
+            /// <summary>
+            /// Identifies if the record is valid.
+            /// </summary>
+            /// <value>True if the record is a valid entry. False if invalid.</value>
+            /// <remarks>
+            /// When the history is cleared with <see cref="InputStateHistory.Clear"/> the entries become invalid.
+            /// </remarks>
             public bool valid => m_Owner != default && m_IndexPlusOne != default && header->version == m_Version;
 
+            /// <summary>
+            /// Identifies the owning container for the record.
+            /// </summary>
+            /// <value>The owning <see cref="InputStateHistory"/> container for the record.</value>
+            /// <remarks>
+            /// Identifies the owning <see cref="InputStateHistory"/> container for the record.
+            /// </remarks>
             public InputStateHistory<TValue> owner => m_Owner;
 
+            /// <summary>
+            /// The index of the input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The index of the input state record in the owning container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public int index
             {
                 get
@@ -860,6 +1400,14 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The time stamp of the input state record.
+            /// </summary>
+            /// <value>
+            /// The time stamp of the input state record in the owning container.
+            /// <see cref="IInputRuntime.currentTime"/>
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public double time
             {
                 get
@@ -869,6 +1417,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The control associated with the input state record.
+            /// </summary>
+            /// <value>
+            /// The control associated with the input state record.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public InputControl<TValue> control
             {
                 get
@@ -881,6 +1436,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The next input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The next input state record in the owning <see cref="InputStateHistory{TValue}"/>container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record next
             {
                 get
@@ -894,6 +1456,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>
+            /// The previous input state record in the owning container.
+            /// </summary>
+            /// <value>
+            /// The previous input state record in the owning <see cref="InputStateHistory{TValue}"/>container.
+            /// </value>
+            /// <exception cref="InvalidOperationException">When the record is no longer value.</exception>
             public Record previous
             {
                 get
@@ -921,12 +1490,24 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_Version = default;
             }
 
+            /// <summary>
+            /// Returns value from the control in the Record.
+            /// </summary>
+            /// <returns>Returns value from the Record.</returns>
+            /// <exception cref="InvalidOperationException">When the record is no longer value or the specified type is not present.</exception>
             public TValue ReadValue()
             {
                 CheckValid();
                 return m_Owner.ReadValue<TValue>(header);
             }
 
+            /// <summary>
+            /// Read the state memory for the record.
+            /// </summary>
+            /// <returns>The state memory for the record.</returns>
+            /// <remarks>
+            /// Read the state memory for the record.
+            /// </remarks>
             public void* GetUnsafeMemoryPtr()
             {
                 CheckValid();
@@ -940,6 +1521,14 @@ namespace UnityEngine.InputSystem.LowLevel
                 return header->statePtrWithControlIndex;
             }
 
+            /// <summary>
+            /// Read the extra memory for the record.
+            /// </summary>
+            /// <returns>The extra memory for the record.</returns>
+            /// <remarks>
+            /// Additional date can be stored in a record in the extra memory section.
+            /// </remarks>
+            /// <seealso cref="InputStateHistory.extraMemoryPerRecord"/>
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
@@ -953,6 +1542,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 return (byte*)header + m_Owner.bytesPerRecord - m_Owner.extraMemoryPerRecord;
             }
 
+            /// <summary>Copy data from one record to another.</summary>
+            /// <param name="record">Source Record to copy from.</param>
+            /// <remarks>
+            /// Copy data from one record to another.
+            /// </remarks>
+            /// <exception cref="ArgumentException">When the source record history is not valid.</exception>
+            /// <exception cref="InvalidOperationException">When the control is not tracked by the owning <see cref="InputStateHistory{TValue}"/> container.</exception>
             public void CopyFrom(Record record)
             {
                 CheckValid();
@@ -971,16 +1567,27 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new InvalidOperationException("Record is no longer valid");
             }
 
+            /// <summary>Compare two records.</summary>
+            /// <remarks>Compare two records.</remarks>
+            /// <param name="other">The record to compare with.</param>
+            /// <returns>True if the records are the same, False if they differ.</returns>
             public bool Equals(Record other)
             {
                 return ReferenceEquals(m_Owner, other.m_Owner) && m_IndexPlusOne == other.m_IndexPlusOne && m_Version == other.m_Version;
             }
 
+            /// <summary>Compare two records.</summary>
+            /// <remarks>Compare two records.</remarks>
+            /// <param name="obj">The record to compare with.</param>
+            /// <returns>True if the records are the same, False if they differ.</returns>
             public override bool Equals(object obj)
             {
                 return obj is Record other && Equals(other);
             }
 
+            /// <summary>Return the hash code of the record.</summary>
+            /// <remarks>Return the hash code of the record.</remarks>
+            /// <returns>The hash code of the record.</returns>
             public override int GetHashCode()
             {
                 unchecked
@@ -992,6 +1599,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
             }
 
+            /// <summary>Return the string representation of the record.</summary>
+            /// <remarks>Includes the control, value and time of the record (or &lt;Invalid&gt; if not valid).</remarks>
+            /// <returns>The string representation of the record.</returns>
             public override string ToString()
             {
                 if (!valid)

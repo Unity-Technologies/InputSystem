@@ -96,8 +96,8 @@ This setting affects the following sensors:
 
 |Property|Description|
 |----|-----------|
-|Default Deadzone Min|The default minimum value for [Stick Deadzone](Processors.md#stick-deadzone) or [Axis Deadzone](Processors.md#axis-deadzone) processors when no `min` value is explicitly set on the processor.|
-|Default Deadzone Max|The default maximum value for [Stick Deadzone](Processors.md#stick-deadzone) or [Axis Deadzone](Processors.md#axis-deadzone) processors when no `max` value is explicitly set on the processor.|
+|Default Deadzone Min|The default minimum value for [Stick Deadzone](ProcessorTypes.md#stick-deadzone) or [Axis Deadzone](ProcessorTypes.md#axis-deadzone) processors when no `min` value is explicitly set on the processor.|
+|Default Deadzone Max|The default maximum value for [Stick Deadzone](ProcessorTypes.md#stick-deadzone) or [Axis Deadzone](ProcessorTypes.md#axis-deadzone) processors when no `max` value is explicitly set on the processor.|
 |Default Button Press Point|The default [press point](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_pressPointOrDefault) for [Button Controls](../api/UnityEngine.InputSystem.Controls.ButtonControl.html), and for various [Interactions](Interactions.md). For button Controls which have analog physics inputs (such as triggers on a gamepad), this configures how far they need to be held down for the system to consider them pressed.|
 |Default Tap Time|Default duration for [Tap](Interactions.md#tap) and [MultiTap](Interactions.md#multitap) Interactions. Also used by by touchscreen Devices to distinguish taps from to new touches.|
 |Default Slow Tap Time|Default duration for [SlowTap](Interactions.md#tap) Interactions.|

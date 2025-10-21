@@ -349,14 +349,28 @@ namespace UnityEngine.InputSystem
 
         internal unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
         {
-            Debug.Assert(m_StateChangeMonitors != null);
-            Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
+            if (m_StateChangeMonitors == null)
+            {
+                Debug.Assert(false, "m_StateChangeMonitors is null - has AddStateChangeMonitor been called?");
+                return;
+            }
+            if (m_StateChangeMonitors.Length <= deviceIndex)
+            {
+                Debug.Assert(false, $"deviceIndex {deviceIndex} passed to FireStateChangeNotifications is out of bounds (current length {m_StateChangeMonitors.Length}).");
+                return;
+            }
 
             // NOTE: This method must be safe for mutating the state change monitor arrays from *within*
             //       NotifyControlStateChanged()! This includes all monitors for the device being wiped
             //       completely or arbitrary additions and removals having occurred.
 
             ref var signals = ref m_StateChangeMonitors[deviceIndex].signalled;
+            if (signals.AnyBitIsSet() && m_StateChangeMonitors[deviceIndex].listeners == null)
+            {
+                Debug.Assert(false, $"A state change for device {deviceIndex} has been set, but list of listeners is null.");
+                return;
+            }
+
             ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
@@ -368,7 +382,7 @@ namespace UnityEngine.InputSystem
 
             // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
             // signalled state.
-            eventPtr->handled = false;
+            var previouslyHandled = eventPtr->handled;
             for (var i = 0; i < signals.length; ++i)
             {
                 if (!signals.TestBit(i))
@@ -389,8 +403,9 @@ namespace UnityEngine.InputSystem
 
                 // If the monitor signalled that it has processed the state change, reset all signalled
                 // state monitors in the same group. This is what causes "SHIFT+B" to prevent "B" from
-                // also triggering.
-                if (eventPtr->handled)
+                // also triggering. Note that we skip this if it was already marked handled before notifying
+                // monitors.
+                if (!previouslyHandled && eventPtr->handled)
                 {
                     var groupIndex = listeners[i].groupIndex;
                     for (var n = i + 1; n < signals.length; ++n)
@@ -406,11 +421,12 @@ namespace UnityEngine.InputSystem
                         if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
                             signals.ClearBit(n);
                     }
-
-                    // Need to reset it back to false as we may have more signalled state monitors that
-                    // aren't in the same group (i.e. have independent inputs).
-                    eventPtr->handled = false;
                 }
+
+                // Need to reset it back to false as we may have more signalled state monitors that
+                // aren't in the same group (i.e. have independent inputs).
+                if (eventPtr->handled)
+                    eventPtr->handled = previouslyHandled;
 
                 signals.ClearBit(i);
             }

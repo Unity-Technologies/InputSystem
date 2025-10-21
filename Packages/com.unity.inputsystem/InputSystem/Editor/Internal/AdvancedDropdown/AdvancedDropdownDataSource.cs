@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
             if (searchTree == null)
             {
                 // Support multiple search words separated by spaces.
-                var searchWords = searchString.ToLower().Split(' ');
+                var searchWords = searchString.ToLowerInvariant().Split(' ');
 
                 // We keep two lists. Matches that matches the start of an item always get first priority.
                 var matchesStart = new List<AdvancedDropdownItem>();
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 foreach (var e in m_SearchableElements)
                 {
-                    var name = e.searchableName.ToLower().Replace(" ", "");
+                    var name = e.searchableName.ToLowerInvariant().Replace(" ", "");
                     AddMatchItem(e, name, searchWords, matchesStart, matchesWithin);
                 }
 

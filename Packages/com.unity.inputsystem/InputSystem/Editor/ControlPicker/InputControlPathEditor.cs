@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var lineRect = rect;
             var labelRect = lineRect;
-            labelRect.width = EditorGUIUtility.labelWidth;
+            labelRect.width = EditorStyles.label.CalcSize(pathLabel).x + 20; // Fit to label with some padding
             EditorGUI.LabelField(labelRect, pathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
@@ -104,10 +104,9 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            var bindingTextRectOffset = 80;
-            bindingTextRect.width += bindingTextRectOffset;
-            bindingTextRect.x -= bindingTextRectOffset + 20;
-            editButtonRect.x = bindingTextRect.x + bindingTextRect.width; // Place it directly after the textRect
+            bindingTextRect.x = labelRect.x + labelRect.width; // Place directly after labelRect
+            editButtonRect.x += lineRect.width - 20; // Place at the edge of the window to appear after bindingTextRect
+            bindingTextRect.width = editButtonRect.x - bindingTextRect.x; // bindingTextRect fills remaining space between label and editButton
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
@@ -162,9 +161,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
         {
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
-            #endif
+#endif
+            IsShowingDropdown = true;
+
             if (m_PickerDropdown == null)
             {
                 m_PickerDropdown = new InputControlPickerDropdown(
@@ -188,6 +189,8 @@ namespace UnityEngine.InputSystem.Editor
             m_PickerDropdown.SetExpectedControlLayout(m_ExpectedControlLayout);
 
             m_PickerDropdown.Show(rect);
+
+            IsShowingDropdown = false;
         }
 
         private void SetExpectedControlLayoutFromAttribute(SerializedProperty property)
@@ -207,12 +210,16 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_PathLabel;
         private string m_ExpectedControlLayout;
         private string[] m_ControlPathsToMatch;
-        private InputControlScheme[] m_ControlSchemes;
-        private bool m_NeedToClearProgressBar;
 
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
-        private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
+
+        /// <summary>
+        /// This property is only set from this class in order to communicate that we're showing the dropdown at the moment
+        /// It's employed to skip auto-saving, because that complicates updating the internal SerializedProperties.
+        /// Unfortunately, we can't use IMGUIDropdownVisible from the setings provider because of the early-out logic in there.
+        /// </summary>
+        internal static bool IsShowingDropdown { get; private set; }
     }
 }
  #endif // UNITY_EDITOR

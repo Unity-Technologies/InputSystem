@@ -1,12 +1,15 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Utilities;
 
 class InputActionAssetManagerEditorTests
 {
@@ -135,6 +138,21 @@ class InputActionAssetManagerEditorTests
             // Expecting SaveChangesToAsset to throw when asset no longer exist
             Assert.Throws<Exception>(() => inputActionAssetManager.SaveChangesToAsset());
         }
+    }
+
+    [Test]
+    [Category("Editor")]
+    [Description("A regression test for ISXB-1406")]
+    public void Editor_InputActionAssetManager_ActionsCodeGeneration_TypeNamesAreNotAffectedByCultureChange()
+    {
+        var culture = Thread.CurrentThread.CurrentCulture;
+        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfoByIetfLanguageTag("tr-TR");
+
+        var name = CSharpCodeHelpers.MakeTypeName("info");
+
+        Thread.CurrentThread.CurrentCulture = culture;
+
+        Assert.AreEqual('I', name[0], "Unexpected first letter in a type name.");
     }
 }
 
