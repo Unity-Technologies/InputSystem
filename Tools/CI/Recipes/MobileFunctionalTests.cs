@@ -86,11 +86,9 @@ public class MobileFunctionalTests: MobileBaseRecipe
             platform = Settings.iOS15Platform;
 
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
-        
-        if (platform.System == SystemType.Android)
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
                 .WithCategory("!Performance")
                 .WithRerun(1)
