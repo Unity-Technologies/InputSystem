@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.isTracked"/> value.</value>
         /// <seealso cref="PoseState.isTracked"/>
-        public ButtonControl isTracked { get; private set; }
+        public ButtonControl isTracked { get; set; }
 
         /// <summary>
         /// The other controls on this <see cref="PoseControl"/> that are currently reporting data.
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.trackingState"/> value of the pose retrieved from this control.</value>
         /// <seealso cref="PoseState.trackingState"/>
-        public IntegerControl trackingState { get; private set; }
+        public IntegerControl trackingState { get; set; }
 
         /// <summary>
         /// The position, in meters, of this tracked pose relative to the tracking origin.
@@ -152,7 +152,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.position"/> value of the pose retrieved from this control.</value>
         /// <seealso cref="PoseState.position"/>
-        public Vector3Control position { get; private set; }
+        public Vector3Control position { get; set; }
 
         /// <summary>
         /// The rotation of this tracked pose relative to the tracking origin.
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.rotation"/> value of the pose retrieved from this control.</value>
         /// <seealso cref="PoseState.rotation"/>
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; set; }
 
         /// <summary>
         /// The velocity, in meters per second, of this tracked pose relative to the tracking origin.
@@ -172,7 +172,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.velocity"/> value of the pose retrieved from this control.</value>
         /// <seealso cref="PoseState.velocity"/>
-        public Vector3Control velocity { get; private set; }
+        public Vector3Control velocity { get; set; }
 
         /// <summary>
         /// The angular velocity of this tracked pose relative to the tracking origin.
@@ -182,7 +182,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.angularVelocity"/> value of the pose retrieved from this control.</value>
         /// <seealso cref="PoseState.angularVelocity"/>
-        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control angularVelocity { get; set; }
 
         /// <summary>
         /// Default-initialize the pose control.

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
@@ -6,6 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 // Let's say we want to have a composite that takes an axis and uses
@@ -25,16 +27,6 @@ using UnityEngine.InputSystem.Editor;
 //       our composite will not be shown as our value type (Vector2) is
 //       incompatible with the value type of Axis (float).
 //
-// Also, we need to register our composite with the input system. And we
-// want to do it in a way that makes the composite visible in the action
-// editor of the input system.
-//
-// For that to happen, we need to call InputSystem.RegisterBindingComposite
-// sometime during startup. We make that happen by using [InitializeOnLoad]
-// in the editor and [RuntimeInitializeOnLoadMethod] in the player.
-#if UNITY_EDITOR
-[InitializeOnLoad]
-#endif
 // We can customize the way display strings are formed for our composite by
 // annotating it with DisplayStringFormatAttribute. The string is simply a
 // list with elements to be replaced enclosed in curly braces. Everything
@@ -42,44 +34,22 @@ using UnityEngine.InputSystem.Editor;
 // in this case refer to the binding composite parts by name. Each such
 // instance is replaced with the display text for the corresponding
 // part binding.
+//
+// NOTE: We don't supply a name for the composite here. The default logic
+//       will take the name of the type ("CustomComposite" in our case)
+//       and snip off "Composite" if used as a suffix (which is the case
+//       for us) and then use that as the name. So in our case, we are
+//       registering a composite called "Custom" here.
+//
+//       If we were to use our composite with the AddCompositeBinding API,
+//       for example, it would look like this:
+//
+//       myAction.AddCompositeBinding("Custom")
+//           .With("Stick", "<Gamepad>/leftStick")
+//           .With("Multiplier", "<Gamepad>/rightTrigger");
 [DisplayStringFormat("{multiplier}*{stick}")]
 public class CustomComposite : InputBindingComposite<Vector2>
 {
-    // In the editor, the static class constructor will be called on startup
-    // because of [InitializeOnLoad].
-    #if UNITY_EDITOR
-    static CustomComposite()
-    {
-        // Trigger our RegisterBindingComposite code in the editor.
-        Initialize();
-    }
-
-    #endif
-
-    // In the player, [RuntimeInitializeOnLoadMethod] will make sure our
-    // initialization code gets called during startup.
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Initialize()
-    {
-        // This registers the composite with the input system. After calling this
-        // method, we can have bindings reference the composite. Also, the
-        // composite will show up in the action editor.
-        //
-        // NOTE: We don't supply a name for the composite here. The default logic
-        //       will take the name of the type ("CustomComposite" in our case)
-        //       and snip off "Composite" if used as a suffix (which is the case
-        //       for us) and then use that as the name. So in our case, we are
-        //       registering a composite called "Custom" here.
-        //
-        //       If we were to use our composite with the AddCompositeBinding API,
-        //       for example, it would look like this:
-        //
-        //       myAction.AddCompositeBinding("Custom")
-        //           .With("Stick", "<Gamepad>/leftStick")
-        //           .With("Multiplier", "<Gamepad>/rightTrigger");
-        InputSystem.RegisterBindingComposite<CustomComposite>();
-    }
-
     // So, we need two parts for our composite. The part that delivers the stick
     // value and the part that delivers the axis multiplier. Note that each part
     // may be bound to multiple controls. The input system handles that for us
@@ -174,6 +144,30 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
         // system will automatically detect a change in value.
         target.scaleFactor = EditorGUILayout.Slider(m_ScaleFactorLabel, currentValue, 0, 2);
     }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+    public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+    {
+        var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
+        {
+            value = target.scaleFactor,
+            showInputField = true
+        };
+
+        // Note: For UIToolkit sliders, as of Feb 2022, we can't register for the mouse up event directly
+        // on the slider because an element inside the slider captures the event. The workaround is to
+        // register for the event on the slider container. This will be fixed in a future version of
+        // UIToolkit.
+        slider.Q("unity-drag-container").RegisterCallback<MouseUpEvent>(evt =>
+        {
+            target.scaleFactor = slider.value;
+            onChangedCallback?.Invoke();
+        });
+
+        root.Add(slider);
+    }
+
+#endif
 
     private GUIContent m_ScaleFactorLabel = new GUIContent("Scale Factor");
 }

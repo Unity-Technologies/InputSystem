@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -12,7 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,6 +22,10 @@ using UnityEditor.Networking.PlayerConnection;
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
+#endif
+
+#if UNITY_EDITOR
+using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
 ////TODO: allow aliasing processors etc
@@ -70,12 +75,19 @@ namespace UnityEngine.InputSystem
     /// be called on the main thread. However, select APIs like <see cref="QueueEvent"/> can be
     /// called from threads. Where this is the case, it is stated in the documentation.
     /// </remarks>
+
     [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
+
     public static partial class InputSystem
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
+#endif
+        static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
+
         #region Layouts
 
         /// <summary>
@@ -1352,7 +1364,7 @@ namespace UnityEngine.InputSystem
         /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
         ///
-        /// The default polling frequency is 60 Hz.
+        /// The default polling frequency is at least 60 Hz or what is suitable for the target device.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
         /// <see cref="InputEvent.time"/> patterns. At 60 Hz, for example, timestamps for a specific,
@@ -2916,9 +2928,212 @@ namespace UnityEngine.InputSystem
             remove => s_Manager.onSettingsChange -= value;
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
+        /// </summary>
+        /// <seealso cref="InputBinding"/>
+        /// <remarks>
+        /// This allows Users to control the behavior of the <see cref="InputActionAsset"/> Editor.
+        /// Specifically this controls whether a warning icon will appear next to a particular
+        /// <see cref="InputBinding"/> in the list and also draw custom UI content for it once
+        /// it is selected.
+        /// By default no callbacks exist and therefore no warnings or custom content will be shown.
+        /// A User interested in customizing this behavior is expected to provide a callback function here.
+        /// This callback function will receive the binding path to be inspected.
+        /// The callback is then expected to either return null to indicate no warning is to be displayed
+        /// for this binding path or a <see cref="System.Action"/> which contains the custom rendering function
+        /// to be shown in the Binding properties panel when a InputBinding has been selected.
+        /// Returning any <see cref="System.Action"/> will also display a small warning icon next to the
+        /// particular <see cref="InputBinding"/> in the list, regardless of the contents of that function.
+        /// </remarks>
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.customBindingPathValidators += (string bindingPath) => {
+        ///     // Mark <Gamepad> bindings with a warning
+        ///     if (!bindingPath.StartsWith("<Gamepad>"))
+        ///         return null;
+        ///
+        ///     // Draw the warning information in the Binding Properties panel
+        ///     return () =>
+        ///     {
+        ///         GUILayout.BeginVertical("GroupBox");
+        ///         GUILayout.BeginHorizontal();
+        ///         GUILayout.Box(EditorGUIUtility.FindTexture("console.warnicon.sml"));
+        ///         GUILayout.Label(
+        ///             "This binding is inactive because it refers to a disabled OpenXR interaction profile.",
+        ///             EditorStyles.wordWrappedLabel);
+        ///         GUILayout.EndHorizontal();
+        ///
+        ///         GUILayout.Button("Manage Interaction Profiles");
+        ///         GUILayout.EndVertical();
+        ///     };
+        /// };
+        /// </code>
+        /// </example>
+        public static event CustomBindingPathValidator customBindingPathValidators
+        {
+            add => s_Manager.customBindingPathValidators += value;
+            remove => s_Manager.customBindingPathValidators -= value;
+        }
+
+        /// <summary>
+        /// Invokes any custom UI rendering code for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="customBindingPathValidators"/>
+        /// <remarks>
+        /// This is called internally by the <see cref="InputActionAsset"/> Editor while displaying
+        /// the properties for a <see cref="InputBinding"/>.
+        /// This is not intended to be called directly.
+        /// Please use <see cref="customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal static void OnDrawCustomWarningForBindingPath(string bindingPath)
+        {
+            s_Manager.OnDrawCustomWarningForBindingPath(bindingPath);
+        }
+
+        /// <summary>
+        /// Determines if any warning icon is to be displayed for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="customBindingPathValidators"/>
+        /// <remarks>
+        /// This is called internally by the <see cref="InputActionAsset"/> Editor while displaying
+        /// the list of each <see cref="InputBinding"/>.
+        /// This is not intended to be called directly.
+        /// Please use <see cref="customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal static bool ShouldDrawWarningIconForBinding(string bindingPath)
+        {
+            return s_Manager.ShouldDrawWarningIconForBinding(bindingPath);
+        }
+
+#endif
+
         #endregion
 
         #region Actions
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
+        // This is called from InitializeInEditor() and InitializeInPlayer() to make sure
+        // project-wide actions are all active in they are active in all of these MonoBehavior methods:
+        // Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
+        private static void EnableActions()
+        {
+#if UNITY_EDITOR
+            // Abort if not in play-mode in editor
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+#endif // UNITY_EDITOR
+            if (actions == null)
+                return;
+
+            actions.Enable();
+        }
+
+        private static void DisableActions(bool triggerSetupChanged = false)
+        {
+            // Make sure project wide input actions are disabled
+            var projectWideActions = actions;
+            if (projectWideActions == null)
+                return;
+
+            projectWideActions.Disable();
+
+            if (triggerSetupChanged)
+                projectWideActions.OnSetupChanged();
+        }
+
+        /// <summary>
+        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available if
+        /// assigned in Input System Package settings in Edit, Project Settings, Input System Package in editor.
+        /// </summary>
+        /// <remarks>
+        /// Project-wide actions may only be assigned in Edit Mode and any attempt to change this property
+        /// in Play Mode will result in an <c>System.Exception</c> being thrown.
+        /// A default set of actions and action maps are installed and enabled by default on every project
+        /// that enables Project-wide Input Actions by assigning a project-wide asset in Project Settings.
+        /// These actions and their bindings may be modified in the Project Settings.
+        ///
+        /// All actions in the associated <c>InputActionAsset</c> will be automatically enabled when entering
+        /// Play Mode and automatically disabled when exiting Play Mode.
+        /// The asset associated with this property will be included in a Player build as a preloaded asset.
+        ///
+        /// Note that attempting to assign a non-persisted <c>InputActionAsset</c> to this property will result in
+        /// <c>ArgumentException</c> being thrown.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset"/>
+        /// <seealso cref="InputActionMap"/>
+        /// <seealso cref="InputAction"/>
+        /// <example>
+        /// <code>
+        ///  public class MyScript : MonoBehaviour
+        /// {
+        ///     InputAction move;
+        ///     InputAction jump;
+        ///
+        ///     void Start()
+        ///     {
+        ///         // Get InputAction references from Project-wide input actions.
+        ///         if (InputSystem.actions)
+        ///         {
+        ///             move = InputSystem.actions.FindAction("Player/Move");
+        ///             jump = InputSystem.actions.FindAction("Player/Jump");
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        public static InputActionAsset actions
+        {
+            get => s_Manager?.actions;
+            set
+            {
+                // Prevent this property from being assigned in play-mode.
+                if (Application.isPlaying)
+                    throw new Exception($"Attempted to set property InputSystem.actions during Play-mode which is not supported. Assigning this property is only allowed in Edit-mode.");
+
+                // Note that we use reference equality to determine if object changed or not.
+                // This allows us to change the associated value even if changed or destroyed.
+                var current = s_Manager.actions;
+                if (ReferenceEquals(current, value))
+                    return;
+
+                var valueIsNotNull = value != null;
+#if UNITY_EDITOR
+                // Do not allow assigning non-persistent assets (pure in-memory objects)
+                if (valueIsNotNull && !EditorUtility.IsPersistent(value))
+                    throw new ArgumentException($"Assigning a non-persistent {nameof(InputActionAsset)} to this property is not allowed. The assigned asset need to be persisted on disc inside the /Assets folder.");
+
+                // Track reference to enable including it in built Players, note that it will discard any non-persisted
+                // object reference
+                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
+#endif // UNITY_EDITOR
+
+                // Update underlying value
+                s_Manager.actions = value;
+
+                // Note that we do not enable/disable any actions until play-mode
+            }
+        }
+
+        /// <summary>
+        /// Event that is triggered if the instance assigned to property <see cref="actions"/> changes.
+        /// </summary>
+        /// <remarks>
+        /// Note that any event handlers registered to this event will only receive callbacks in Edit mode
+        /// since assigning <c>InputSystem.actions</c> is not possible in Play mode.
+        /// </remarks>
+        /// <seealso cref="actions"/>
+        /// <seealso cref="InputActionAsset"/>
+        public static event Action onActionsChange
+        {
+            add => s_Manager.onActionsChange += value;
+            remove => s_Manager.onActionsChange -= value;
+        }
+
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3193,6 +3408,26 @@ namespace UnityEngine.InputSystem
         /// <value>Current version of the input system.</value>
         public static Version version => new Version(kAssemblyVersion);
 
+        /// <summary>
+        /// Property for internal use that allows setting the player to run in the background.
+        /// </summary>
+        /// <remarks>
+        /// Some platforms don't care about <see cref="Application.runInBackground"/> and for those we need to
+        /// enable it manually through this propriety.
+        /// </remarks>
+        /// <param name="value">The boolean value to set to <see cref="NativeInputRuntime.runInBackground"/></param>
+        public static bool runInBackground
+        {
+            get => s_Manager.m_Runtime.runInBackground;
+            set => s_Manager.m_Runtime.runInBackground = value;
+        }
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        internal static float scrollWheelDeltaPerTick => InputRuntime.s_Instance.scrollWheelDeltaPerTick;
+#else
+        internal const float scrollWheelDeltaPerTick = 1.0f;
+#endif
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
@@ -3296,7 +3531,8 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.InitializeInEditor");
+            k_InputInitializeInEditorMarker.Begin();
+
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -3343,23 +3579,38 @@ namespace UnityEngine.InputSystem
                     s_Manager.ApplySettings();
                 }
 
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                // See if we have a saved actions object
+                var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+                if (savedActions != null)
+                    s_Manager.actions = savedActions;
+                #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
                 InputEditorUserSettings.Load();
 
                 SetUpRemoting();
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
-            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
-                "InputSettings has lost its native object");
-            #endif
+            Debug.Assert(HasNativeObject(settings), "InputSettings has lost its native object");
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
+            // The warning is delayed to delay call (called a short while after the Asset are loaded, on Inspector update) to make sure it doesn't pop up while the editor is still loading or assets are not fully loaded -
+            // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
+            EditorApplication.delayCall += ShowRestartWarning;
+
+            RunInitialUpdate();
+
+            k_InputInitializeInEditorMarker.End();
+        }
+
+        private static void ShowRestartWarning()
+        {
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.m_Runtime.isInBatchMode)
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -3372,10 +3623,7 @@ namespace UnityEngine.InputSystem
                 }
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
-
-            RunInitialUpdate();
-
-            Profiler.EndSample();
+            EditorApplication.delayCall -= ShowRestartWarning;
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3388,11 +3636,14 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
+
+                    // InputSystem.actions is not setup yet
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
+
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3403,12 +3654,18 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    DisableActions(false);
+#endif
 
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
+
+                    // Clear the Action reference from all InputActionReference objects
+                    InputActionReference.ResetCachedAction();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
@@ -3438,6 +3695,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
+        public static bool HasNativeObject(Object obj)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
+        }
+
         private static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
@@ -3449,7 +3716,7 @@ namespace UnityEngine.InputSystem
             // temporary settings object.
             // NOTE: We access m_Settings directly here to make sure we're not running into asserts
             //       from the settings getter checking it has a valid object.
-            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            if (!HasNativeObject(s_Manager.m_Settings))
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
@@ -3500,6 +3767,11 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS // && !UNITY_INCLUDE_TESTS
+            // This is the point where we initialise project-wide actions for the Player
+            EnableActions();
+#endif
         }
 
 #endif // UNITY_EDITOR
@@ -3522,11 +3794,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3538,7 +3810,7 @@ namespace UnityEngine.InputSystem
             Android.AndroidSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             iOS.iOSSupport.Initialize();
             #endif
 
@@ -3550,7 +3822,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
 
@@ -3562,7 +3834,7 @@ namespace UnityEngine.InputSystem
             Linux.LinuxSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA || UNITY_VISIONOS
             OnScreen.OnScreenSupport.Initialize();
             #endif
 
@@ -3585,7 +3857,16 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiler.BeginSample("InputSystem.Reset");
+            k_InputResetMarker.Begin();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Note that in a test setup we might enter reset with project-wide actions already enabled but the
+            // reset itself has pushed the action system state on the state stack. To avoid action state memory
+            // problems we disable actions here and also request asset to be marked dirty and reimported.
+            DisableActions(triggerSetupChanged: true);
+            if (s_Manager != null)
+                s_Manager.actions = null;
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -3597,14 +3878,16 @@ namespace UnityEngine.InputSystem
                 s_Manager.UninstallGlobals();
             }
 
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,
             // this should get replaced with an actual InputSettings asset.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
             #if UNITY_EDITOR
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(
+                runtime: runtime ?? NativeInputRuntime.instance,
+                settings: settings);
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
@@ -3627,7 +3910,13 @@ namespace UnityEngine.InputSystem
             InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
-            Profiler.EndSample();
+
+            // This is the point where we initialise project-wide actions for the Editor Play-mode, Editor Tests and Player Tests.
+            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            EnableActions();
+            #endif
+
+            k_InputResetMarker.End();
         }
 
         /// <summary>
@@ -3641,7 +3930,6 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);

@@ -77,9 +77,12 @@ namespace UnityEngine.InputSystem.Editor
 
             sb.AppendLine("</linker>");
 
-            var filePathName = Path.Combine(Application.dataPath, "..", "Temp", "InputSystemLink.xml");
-            File.WriteAllText(filePathName, sb.ToString());
-            return filePathName;
+            var linkXmlDirectory = Path.Combine(Application.dataPath, "..", "Library", "InputSystem");
+            var linkXmlFile = Path.Combine(linkXmlDirectory, $"{data.target}Link.xml");
+
+            Directory.CreateDirectory(linkXmlDirectory);
+            File.WriteAllText(linkXmlFile, sb.ToString());
+            return linkXmlFile;
         }
 
         static bool IsTypeUsedViaReflectionByInputSystem(Type type)

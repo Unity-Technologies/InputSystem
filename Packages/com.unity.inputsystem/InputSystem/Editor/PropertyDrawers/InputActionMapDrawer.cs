@@ -1,6 +1,11 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#endif
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -52,7 +57,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (property == null) return;
 
-            property.SetStringValue(nameof(InputActionMap.m_Id), "");
+            property.SetStringValue(nameof(InputActionMap.m_Id), Guid.NewGuid().ToString());
             property.SetStringValue(nameof(InputActionMap.m_Name), "Input Action Map");
             property.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.ClearArray();
             property.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.ClearArray();

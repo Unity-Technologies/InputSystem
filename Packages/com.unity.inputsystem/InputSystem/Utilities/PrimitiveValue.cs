@@ -450,7 +450,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Single:
                     return !Mathf.Approximately(m_FloatValue, default);
                 case TypeCode.Double:
-                    return NumberHelpers.Approximately(m_DoubleValue, default);
+                    return !NumberHelpers.Approximately(m_DoubleValue, default);
                 default:
                     return default;
             }

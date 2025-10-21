@@ -10,6 +10,12 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 // The action tree view illustrates one of the weaknesses of Unity's editing model. While operating directly
 // on serialized data does have a number of advantages (the built-in undo system being one of them), making the
 // persistence model equivalent to the edit model doesn't work well. Serialized data will be laid out for persistence,
@@ -90,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
         public static TreeViewItem BuildWithJustActionMapsFromAsset(SerializedObject assetObject)
         {
             Debug.Assert(assetObject != null, "Asset object cannot be null");
-            var root = new ActionMapListItem {id = 0, depth = -1};
+            var root = new ActionMapListItem { id = 0, depth = -1 };
             ActionMapTreeItem.AddActionMapsFromAssetTo(root, assetObject);
             return root;
         }
@@ -98,7 +104,7 @@ namespace UnityEngine.InputSystem.Editor
         public static TreeViewItem BuildFullTree(SerializedObject assetObject)
         {
             Debug.Assert(assetObject != null, "Asset object cannot be null");
-            var root = new TreeViewItem {id = 0, depth = -1};
+            var root = new TreeViewItem { id = 0, depth = -1 };
             ActionMapTreeItem.AddActionMapsFromAssetTo(root, assetObject);
             if (root.hasChildren)
                 foreach (var child in root.children)
@@ -368,7 +374,7 @@ namespace UnityEngine.InputSystem.Editor
         public void SelectFirstToplevelItem()
         {
             if (rootItem.children.Any())
-                SetSelection(new[] {rootItem.children[0].id}, TreeViewSelectionOptions.FireSelectionChanged);
+                SetSelection(new[] { rootItem.children[0].id }, TreeViewSelectionOptions.FireSelectionChanged);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
@@ -739,7 +745,7 @@ namespace UnityEngine.InputSystem.Editor
             // Split buffer into transmissions and then into transmission blocks. Each transmission is an item subtree
             // meant to be pasted as a whole and each transmission block is a single chunk of serialized data.
             foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length)
-                     .Split(new[] {k_EndOfTransmission}, StringSplitOptions.RemoveEmptyEntries))
+                     .Split(new[] { k_EndOfTransmission }, StringSplitOptions.RemoveEmptyEntries))
             {
                 foreach (var location in locations)
                     PasteBlocks(transmission, location, assignNewIDs, newItemPropertyPaths);
@@ -768,7 +774,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(location.item != null, "Should have drop target");
 
-            var blocks = transmission.Split(new[] {k_EndOfTransmissionBlock},
+            var blocks = transmission.Split(new[] { k_EndOfTransmissionBlock },
                 StringSplitOptions.RemoveEmptyEntries);
             if (blocks.Length < 1)
                 return;
@@ -795,6 +801,10 @@ namespace UnityEngine.InputSystem.Editor
             var itemType = CopyTagToType(tag);
             if (location.item is ActionTreeItemBase dropTarget)
             {
+                // Specific case - Composite parts cannot be dropped into Bindings
+                if (tag == k_PartOfCompositeBindingTag && location.item is not(CompositeBindingTreeItem or PartOfCompositeBindingTreeItem))
+                    return;
+
                 if (!dropTarget.GetDropLocation(itemType, location.childIndex, ref array, ref arrayIndex))
                     return;
             }
@@ -862,12 +872,28 @@ namespace UnityEngine.InputSystem.Editor
             data = block.Substring(indexOfStartOfTextChar + 1);
         }
 
+        public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
+        {
+            var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
+            if (index < 0)
+                index = arrayProperty.arraySize;
+
+            arrayProperty.InsertArrayElementAtIndex(index);
+            var elementProperty = arrayProperty.GetArrayElementAtIndex(index);
+            elementProperty.ResetValuesToDefault();
+
+            elementProperty.FindPropertyRelative("m_Name").stringValue = uniqueName;
+            elementProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
+
+            return elementProperty;
+        }
+
         private SerializedProperty PasteBlock(string tag, string data, SerializedProperty array, int arrayIndex,
             bool assignNewIDs, string actionForNewBindings = null)
         {
             // Add an element to the array. Then read the serialized properties stored in the copy data
             // back into the element.
-            var property = InputActionSerializationHelpers.AddElement(array, "tempName", arrayIndex);
+            var property = AddElement(array, "tempName", arrayIndex);
             property.RestoreFromJson(data);
             if (tag == k_ActionTag || tag == k_ActionMapTag)
                 InputActionSerializationHelpers.EnsureUniqueName(property);
@@ -1313,8 +1339,14 @@ namespace UnityEngine.InputSystem.Editor
                 var textRect = GetTextRect(args.rowRect, item);
 
                 var style = args.selected ? Styles.selectedText : Styles.text;
-                style.Draw(textRect, text, false, false, args.selected,
-                    args.focused);
+
+                if (item.showWarningIcon)
+                {
+                    var content = new GUIContent(text, EditorGUIUtility.FindTexture("console.warnicon.sml"));
+                    style.Draw(textRect, content, false, false, args.selected, args.focused);
+                }
+                else
+                    style.Draw(textRect, text, false, false, args.selected, args.focused);
             }
 
             // Bottom line.
@@ -1492,7 +1524,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_ExpandAllLabel = EditorGUIUtility.TrTextContent("Expand All");
         private static readonly GUIContent s_CollapseAllLabel = EditorGUIUtility.TrTextContent("Collapse All");
 
-        public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/Resources/";
+        public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/PackageResources/";
         public static string ResourcesPath
         {
             get
@@ -1604,17 +1636,17 @@ namespace UnityEngine.InputSystem.Editor
 
             public static FilterCriterion ByName(string name)
             {
-                return new FilterCriterion {text = name, type = Type.ByName};
+                return new FilterCriterion { text = name, type = Type.ByName };
             }
 
             public static FilterCriterion ByBindingGroup(string group)
             {
-                return new FilterCriterion {text = group, type = Type.ByBindingGroup};
+                return new FilterCriterion { text = group, type = Type.ByBindingGroup };
             }
 
             public static FilterCriterion ByDeviceLayout(string layout)
             {
-                return new FilterCriterion {text = layout, type = Type.ByDeviceLayout};
+                return new FilterCriterion { text = layout, type = Type.ByDeviceLayout };
             }
 
             public static List<FilterCriterion> FromString(string criteria)

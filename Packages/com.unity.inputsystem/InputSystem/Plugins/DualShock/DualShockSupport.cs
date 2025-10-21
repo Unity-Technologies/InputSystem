@@ -26,12 +26,17 @@ namespace UnityEngine.InputSystem.DualShock
             //       or none at all. E.g. when connected via Bluetooth on OSX, the DualShock will
             //       not return anything from IOHIDDevice_GetProduct() and IOHIDevice_GetManufacturer()
             //       even though it will report the expected results when plugged in via USB.
-            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR
+            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR || UNITY_STANDALONE_LINUX
             InputSystem.RegisterLayout<DualSenseGamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x54C) // Sony Entertainment.
-                    .WithCapability("productId", 0xCE6));
+                    .WithCapability("productId", 0xDF2)); // Dual Sense Edge
+            InputSystem.RegisterLayout<DualSenseGamepadHID>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0xCE6)); // Dual Sense
             InputSystem.RegisterLayout<DualShock4GamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
@@ -48,7 +53,7 @@ namespace UnityEngine.InputSystem.DualShock
             InputSystem.RegisterLayoutMatcher<DualShock4GamepadHID>(
                 new InputDeviceMatcher()
                     .WithInterface("HID")
-                    .WithManufacturer("Sony.+Entertainment")
+                    .WithManufacturerContains("Sony")
                     .WithProduct("Wireless Controller"));
 
             InputSystem.RegisterLayout<DualShock3GamepadHID>(
@@ -60,8 +65,8 @@ namespace UnityEngine.InputSystem.DualShock
             InputSystem.RegisterLayoutMatcher<DualShock3GamepadHID>(
                 new InputDeviceMatcher()
                     .WithInterface("HID")
-                    .WithManufacturer("Sony.+Entertainment")
-                    .WithProduct("PLAYSTATION(R)3 Controller"));
+                    .WithManufacturerContains("Sony")
+                    .WithProduct("PLAYSTATION(R)3 Controller", supportRegex: false));
             #endif
         }
     }

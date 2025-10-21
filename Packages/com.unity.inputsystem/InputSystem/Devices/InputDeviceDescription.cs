@@ -380,14 +380,14 @@ namespace UnityEngine.InputSystem.Layouts
             };
         }
 
-        internal static bool ComparePropertyToDeviceDescriptor(string propertyName, string propertyValue, string deviceDescriptor)
+        internal static bool ComparePropertyToDeviceDescriptor(string propertyName, JsonParser.JsonString propertyValue, string deviceDescriptor)
         {
             // We use JsonParser instead of JsonUtility.Parse in order to not allocate GC memory here.
 
             var json = new JsonParser(deviceDescriptor);
             if (!json.NavigateToProperty(propertyName))
             {
-                if (string.IsNullOrEmpty(propertyValue))
+                if (propertyValue.text.isEmpty)
                     return true;
                 return false;
             }

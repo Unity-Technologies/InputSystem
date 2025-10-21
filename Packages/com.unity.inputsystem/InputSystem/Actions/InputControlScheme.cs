@@ -6,6 +6,9 @@ using System.Text;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////TODO: introduce the concept of a "variation"
 ////      - a variation is just a variant of a control scheme, not a full control scheme by itself
@@ -108,6 +111,30 @@ namespace UnityEngine.InputSystem
                     m_DeviceRequirements = null;
             }
         }
+
+        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        internal InputControlScheme(SerializedProperty sp)
+        {
+            var requirements = new List<DeviceRequirement>();
+            var deviceRequirementsArray = sp.FindPropertyRelative(nameof(m_DeviceRequirements));
+            if (deviceRequirementsArray == null)
+                throw new ArgumentException("The serialized property does not contain an InputControlScheme object.");
+
+            foreach (SerializedProperty deviceRequirement in deviceRequirementsArray)
+            {
+                requirements.Add(new DeviceRequirement
+                {
+                    controlPath = deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_ControlPath)).stringValue,
+                    m_Flags = (DeviceRequirement.Flags)deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_Flags)).enumValueFlag
+                });
+            }
+
+            m_Name = sp.FindPropertyRelative(nameof(m_Name)).stringValue;
+            m_DeviceRequirements = requirements.ToArray();
+            m_BindingGroup = sp.FindPropertyRelative(nameof(m_BindingGroup)).stringValue;
+        }
+
+        #endif
 
         internal void SetNameAndBindingGroup(string name, string bindingGroup = null)
         {

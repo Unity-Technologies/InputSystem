@@ -1,5 +1,3 @@
-// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
@@ -104,20 +102,25 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE)
         public InputDeviceCharacteristics characteristics;
+#else
+        [SerializeField]
+        private uint characteristics;
+#endif
         /// <summary>
         /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
         /// </summary>
         public int deviceId;
         /// <summary>
-        /// A list of all input features.  <seealso cref="XRFeatureDescriptor"/>
+        /// A list of all input features.  <see cref="XRFeatureDescriptor"/>
         /// </summary>
         public List<XRFeatureDescriptor> inputFeatures;
 
         /// <summary>
         /// Converts this structure to a JSON string.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A JSON string.</returns>
         public string ToJson()
         {
             return JsonUtility.ToJson(this);
@@ -283,11 +286,11 @@ namespace UnityEngine.InputSystem.XR
     public class BoneControl : InputControl<Bone>
     {
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
-        public IntegerControl parentBoneIndex { get; private set; }
+        public IntegerControl parentBoneIndex { get; set; }
         [InputControl(offset = 4, displayName = "Position")]
-        public Vector3Control position { get; private set; }
+        public Vector3Control position { get; set; }
         [InputControl(offset = 16, displayName = "Rotation")]
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; set; }
 
         protected override void FinishSetup()
         {
@@ -319,19 +322,19 @@ namespace UnityEngine.InputSystem.XR
     public class EyesControl : InputControl<Eyes>
     {
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
-        public Vector3Control leftEyePosition { get; private set; }
+        public Vector3Control leftEyePosition { get; set; }
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
-        public QuaternionControl leftEyeRotation { get; private set; }
+        public QuaternionControl leftEyeRotation { get; set; }
         [InputControl(offset = 28, displayName = "RightEyePosition")]
-        public Vector3Control rightEyePosition { get; private set; }
+        public Vector3Control rightEyePosition { get; set; }
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
-        public QuaternionControl rightEyeRotation { get; private set; }
+        public QuaternionControl rightEyeRotation { get; set; }
         [InputControl(offset = 56, displayName = "FixationPoint")]
-        public Vector3Control fixationPoint { get; private set; }
+        public Vector3Control fixationPoint { get; set; }
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
-        public AxisControl leftEyeOpenAmount { get; private set; }
+        public AxisControl leftEyeOpenAmount { get; set; }
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
-        public AxisControl rightEyeOpenAmount { get; private set; }
+        public AxisControl rightEyeOpenAmount { get; set; }
 
         protected override void FinishSetup()
         {
@@ -388,7 +391,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
-#if !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
@@ -506,4 +509,3 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif

@@ -74,6 +74,36 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public static bool HasChildLayouts(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            Refresh();
+
+            var internedLayout = new InternedString(layoutName);
+            // return nothing is the layout does not have any derivations
+            return s_DeviceChildLayouts.TryGetValue(internedLayout, out var derivations) && derivations.Count > 0;
+        }
+
+        public static IEnumerable<InputControlLayout> TryGetChildLayouts(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            Refresh();
+
+            var internedLayout = new InternedString(layoutName);
+            // return nothing is the layout does not have any derivations
+            if (!s_DeviceChildLayouts.TryGetValue(internedLayout, out var derivations))
+                yield break;
+            else
+            {
+                foreach (var name in derivations)
+                    yield return InputControlLayout.cache.FindOrLoadLayout(name.ToString());
+            }
+        }
+
         public static InputControlLayout TryGetLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
@@ -310,10 +340,15 @@ namespace UnityEngine.InputSystem.Editor
         private static Dictionary<InternedString, Texture2D> s_Icons =
             new Dictionary<InternedString, Texture2D>();
 
+        // We keep a map of the devices which a derived from a base device.
+        private static readonly Dictionary<InternedString, HashSet<InternedString>> s_DeviceChildLayouts =
+            new Dictionary<InternedString, HashSet<InternedString>>();
+
+
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.
-        private static readonly SortedDictionary<InternedString, List<InternedString>> s_Usages =
-            new SortedDictionary<InternedString, List<InternedString>>();
+        private static readonly SortedDictionary<InternedString, HashSet<InternedString>> s_Usages =
+            new SortedDictionary<InternedString, HashSet<InternedString>>();
 
         private static void ScanLayout(InputControlLayout layout)
         {
@@ -327,7 +362,9 @@ namespace UnityEngine.InputSystem.Editor
                 //
                 // NOTE: We're looking at layouts post-merging here. Means we have already picked up all the
                 //       controls present on the base.
-                if (control.isFirstDefinedInThisLayout && !control.isModifyingExistingControl && !control.layout.IsEmpty())
+                // Only controls which belong to UI-facing layouts are included, as optional controls are used solely by
+                // the InputControlPickerDropdown UI
+                if (control.isFirstDefinedInThisLayout && !control.isModifyingExistingControl && !control.layout.IsEmpty() && !layout.hideInUI)
                 {
                     foreach (var baseLayout in layout.baseLayouts)
                         AddOptionalControlRecursive(baseLayout, ref control);
@@ -343,17 +380,32 @@ namespace UnityEngine.InputSystem.Editor
                     var internedUsage = new InternedString(usage);
                     var internedLayout = new InternedString(control.layout);
 
-                    if (!s_Usages.TryGetValue(internedUsage, out var layoutList))
+                    if (!s_Usages.TryGetValue(internedUsage, out var layoutSet))
                     {
-                        layoutList = new List<InternedString> {internedLayout};
-                        s_Usages[internedUsage] = layoutList;
+                        layoutSet = new HashSet<InternedString> { internedLayout };
+                        s_Usages[internedUsage] = layoutSet;
                     }
                     else
                     {
-                        var layoutAlreadyInList =
-                            layoutList.Any(x => x == internedLayout);
-                        if (!layoutAlreadyInList)
-                            layoutList.Add(internedLayout);
+                        layoutSet.Add(internedLayout);
+                    }
+                }
+
+                // Create a dependency tree matching each concrete device layout exposed in the UI
+                // to all of the layouts that are directly derived from it.
+                if (layout.isDeviceLayout && !layout.hideInUI)
+                {
+                    foreach (var baseLayoutName in layout.baseLayouts)
+                    {
+                        if (!s_DeviceChildLayouts.TryGetValue(baseLayoutName, out var derivedSet))
+                        {
+                            derivedSet = new HashSet<InternedString> { layout.name };
+                            s_DeviceChildLayouts[baseLayoutName] = derivedSet;
+                        }
+                        else
+                        {
+                            derivedSet.Add(layout.name);
+                        }
                     }
                 }
             }

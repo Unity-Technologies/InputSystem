@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || PACKAGE_DOCS_GENERATION
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX || UNITY_WSA || PACKAGE_DOCS_GENERATION
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Switch.LowLevel
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX || UNITY_WSA
     /// <summary>
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
@@ -50,8 +50,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "dpad/left", bit = (int)Button.Left)]
         [InputControl(name = "buttonWest", displayName = "Y", shortDisplayName = "Y", bit = (int)Button.Y, usage = "SecondaryAction")]
         [InputControl(name = "buttonNorth", displayName = "X", shortDisplayName = "X", bit = (int)Button.X)]
-        [InputControl(name = "buttonSouth", displayName = "B", shortDisplayName = "B", bit = (int)Button.B, usage = "Back")]
-        [InputControl(name = "buttonEast", displayName = "A", shortDisplayName = "A", bit = (int)Button.A, usage = "PrimaryAction")]
+        [InputControl(name = "buttonSouth", displayName = "B", shortDisplayName = "B", bit = (int)Button.B, usages = new[] { "Back", "Cancel" })]
+        [InputControl(name = "buttonEast", displayName = "A", shortDisplayName = "A", bit = (int)Button.A, usages = new[] { "PrimaryAction", "Submit" })]
         [InputControl(name = "leftShoulder", displayName = "L", shortDisplayName = "L", bit = (uint)Button.L)]
         [InputControl(name = "rightShoulder", displayName = "R", shortDisplayName = "R", bit = (uint)Button.R)]
         [InputControl(name = "leftStickPress", displayName = "Left Stick", bit = (uint)Button.StickL)]
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 namespace UnityEngine.InputSystem.Switch
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || PACKAGE_DOCS_GENERATION
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX || UNITY_WSA || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>

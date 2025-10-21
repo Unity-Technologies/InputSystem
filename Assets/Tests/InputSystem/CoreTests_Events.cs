@@ -181,6 +181,45 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_OnAnyButtonPressed_FiltersOutOtherControls()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .Call(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(mouse.leftButton));
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        var mouseState = new MouseState();
+        mouseState.position.x = 3f;
+        InputSystem.QueueStateEvent(mouse, mouseState.WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left, false));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_OnAnyButtonPressed_FiltersOutNonStateEvents()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1216,6 +1255,186 @@ partial class CoreTests
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
     }
 
+    [Test]
+    [Category("Events")]
+    public void EventHandledPolicy_ShouldReflectUserSetting()
+    {
+        // Assert default setting
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+
+        // Assert policy can be changed
+        InputSystem.s_Manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressActionEventNotifications;
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressActionEventNotifications));
+
+        // Assert policy can be changed back
+        InputSystem.s_Manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+
+        // Assert setting property to an invalid value throws exception and do not have side-effects
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            InputSystem.s_Manager.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
+        Assert.That(InputSystem.s_Manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+    }
+
+    class SuppressedActionEventData
+    {
+        public bool MarkNextEventHandled;
+        public int StartedCount;
+        public int PerformedCount;
+        public int CanceledCount;
+    }
+
+    // Note that each element in the expected value arrays correspond to accumulated count per test step, in summary:
+    // Step 0: Initialize state
+    // Step 1: Press gamepad north and stick (Event marked handled)
+    // Step 2: Periodic state update/reading without changes (north and stick still actuated)
+    // Step 3: Release button north and stick while no longer being suppressed.
+    // Step 4: Press gamepad north and stick.
+
+    // Press event is detected in step 2 (false positive) with default interaction
+    [TestCase(InputEventHandledPolicy.SuppressStateUpdates, // policy
+        null, // interactions
+        new int[] { 0, 0, 1, 1, 2}, // started
+        new int[] { 0, 0, 1, 1, 2}, // performed
+        new int[] {0, 0, 0, 1, 1})] // cancelled
+    // Press event is not detected in step 1/2 with default interaction
+    [TestCase(InputEventHandledPolicy.SuppressActionEventNotifications,
+        null,
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] {0, 0, 0, 1, 1})]
+    // Press event is detected in step 2 (false positive) with explicit press interaction
+    [TestCase(InputEventHandledPolicy.SuppressStateUpdates,
+        "press",
+        new int[] { 0, 0, 1, 1, 2},
+        new int[] { 0, 0, 1, 1, 2},
+        new int[] {0, 0, 0, 1, 1})]
+    // Press event is not detected in step 1/2 (false positive) with explicit press interaction
+    [TestCase(InputEventHandledPolicy.SuppressActionEventNotifications,
+        "press",
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] {0, 0, 0, 1, 1})]
+    [Category("Events")]
+    [Description("ISXB-1524, ISXB-1396 Events suppressed has side-effects on actions")]
+    public void Events_ShouldRespectHandledPolicyUponUpdateAndSuppressedPressTransition(
+        InputEventHandledPolicy policy, string interactions,
+        int[] expectedStarted, int[] expectedPerformed, int[] expectedCancelled)
+    {
+        // Update setting to match desired scenario
+        InputSystem.s_Manager.inputEventHandledPolicy = policy;
+        var seesControlChangesUnderSuppression = policy == InputEventHandledPolicy.SuppressActionEventNotifications;
+
+        // Use a boxed boolean to allow lambda to capture reference.
+        var data = new SuppressedActionEventData();
+
+        InputSystem.onEvent +=
+            (inputEvent, _) =>
+        {
+            // If we mark the event handled, the system should skip it and not
+            // let it go to the device (SuppressStateUpdates) or let it propagate
+            // but not fire actions (SuppressActionUpdates).
+            inputEvent.handled = data.MarkNextEventHandled;
+        };
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Button,
+            binding: "<Gamepad>/buttonNorth",
+            interactions: interactions);
+        action.Enable();
+        action.started += _ => ++ data.StartedCount;
+        action.performed += _ => ++ data.PerformedCount;
+        action.canceled += _ => ++ data.CanceledCount;
+
+        // Step 0: Ensure state is updated/initialized
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.01f, 0.0f) });
+        InputSystem.Update();
+        Assert.That(data.StartedCount, Is.EqualTo(expectedStarted[0]));
+        Assert.That(data.PerformedCount, Is.EqualTo(expectedPerformed[0]));
+        Assert.That(data.CanceledCount, Is.EqualTo(expectedCancelled[0]));
+        var performedThisFrame = expectedPerformed[0] != 0;
+        Assert.That(action.WasPerformedThisFrame, Is.EqualTo(performedThisFrame));
+        Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
+        var releasedThisFrame = expectedCancelled[0] != 0;
+        Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
+        Assert.That(action.IsPressed, Is.False); // Note: This is not an event and hence not suppressed
+
+        Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.False);
+        Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
+
+        // Step 1: Press button north and left stick with event suppression active
+        data.MarkNextEventHandled = true;
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(1.00f, 0.01f) }
+            .WithButton(GamepadButton.North));
+        InputSystem.Update();
+        Assert.That(data.StartedCount, Is.EqualTo(expectedStarted[1]));
+        Assert.That(data.PerformedCount, Is.EqualTo(expectedPerformed[1]));
+        Assert.That(data.CanceledCount, Is.EqualTo(expectedCancelled[1]));
+        performedThisFrame = expectedPerformed[1] - expectedPerformed[0] > 0;
+        Assert.That(action.WasPerformedThisFrame, Is.EqualTo(performedThisFrame));
+        Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
+        releasedThisFrame = expectedCancelled[1] - expectedCancelled[0] > 0;
+        Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
+        Assert.That(action.IsPressed, Is.EqualTo(seesControlChangesUnderSuppression)); // Note: This is not an event and hence not suppressed
+
+        Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.EqualTo(seesControlChangesUnderSuppression));
+        Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
+
+        // Step 2: Simulate a periodic reading (e.g. driven by noise or irrelevant control), this will trigger performed count.
+        // Note that for SuppressStateUpdates (default), this would trigger a state change since North button
+        // transitions from 0 to 1 which is considered a press.
+        data.MarkNextEventHandled = false;
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.99f, 0.00f) }
+            .WithButton(GamepadButton.North));
+        InputSystem.Update();
+        Assert.That(data.StartedCount, Is.EqualTo(expectedStarted[2]));
+        Assert.That(data.PerformedCount, Is.EqualTo(expectedPerformed[2])); // Firing without actual change
+        Assert.That(data.CanceledCount, Is.EqualTo(expectedCancelled[2]));
+        performedThisFrame = expectedPerformed[2] - expectedPerformed[1] > 0;
+        Assert.That(action.WasPerformedThisFrame, Is.EqualTo(performedThisFrame));
+        Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
+        releasedThisFrame = expectedCancelled[2] - expectedCancelled[1] > 0;
+        Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
+        Assert.That(action.IsPressed, Is.True); // Note: This is not an event and hence not suppressed
+
+        Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.EqualTo(!seesControlChangesUnderSuppression));
+        Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
+
+        // Step 3: Release button north and stick while no longer being suppressed. This may result in a release if
+        // previous event was completely ignored without updating interaction state.
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.00f, 0.01f) });
+        InputSystem.Update();
+        Assert.That(data.StartedCount, Is.EqualTo(expectedStarted[3]));
+        Assert.That(data.PerformedCount, Is.EqualTo(expectedPerformed[3]));
+        Assert.That(data.CanceledCount, Is.EqualTo(expectedCancelled[3]));
+        performedThisFrame = expectedPerformed[3] - expectedPerformed[2] > 0;
+        Assert.That(action.WasPerformedThisFrame, Is.EqualTo(performedThisFrame));
+        Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
+        releasedThisFrame = expectedCancelled[3] - expectedCancelled[2] > 0;
+        Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
+        Assert.That(action.IsPressed, Is.False); // Note: This is not an event and hence not suppressed
+
+        Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.False);
+        Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.True);
+
+        // Step 4: Press button north and stick again while not being suppressed.
+        InputSystem.QueueStateEvent(device, new GamepadState() { leftStick = new Vector2(0.99f, 0.00f) }
+            .WithButton(GamepadButton.North));
+        InputSystem.Update();
+        Assert.That(data.StartedCount, Is.EqualTo(expectedStarted[4]));
+        Assert.That(data.PerformedCount, Is.EqualTo(expectedPerformed[4]));
+        Assert.That(data.CanceledCount, Is.EqualTo(expectedCancelled[4]));
+        performedThisFrame = expectedPerformed[4] - expectedPerformed[3] > 0;
+        Assert.That(action.WasPerformedThisFrame, Is.EqualTo(performedThisFrame));
+        Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
+        releasedThisFrame = expectedCancelled[4] - expectedCancelled[3] > 0;
+        Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
+        Assert.That(action.IsPressed, Is.True); // Note: This is not an event and hence not suppressed
+
+        Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.True);
+        Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 2)]
     struct StateWith2Bytes : IInputStateTypeInfo
     {
@@ -2081,7 +2300,7 @@ partial class CoreTests
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
     private class CustomDevice : InputDevice
     {
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -2365,13 +2584,16 @@ partial class CoreTests
     [Category("Events")]
     public void Events_MaximumEventLoadPerUpdateIsLimited()
     {
-        // Default setting is 5MB.
+        // Default limit setting is 5MB.
         Assert.That(InputSystem.settings.maxEventBytesPerUpdate, Is.EqualTo(5 * 1024 * 1024));
 
+        // Limit the maximum events to be processed per update to 2 Mouse state events.
         InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
 
         var mouse = InputSystem.AddDevice<Mouse>();
 
+        // Queue 3 events, where the 3rd one will raise a log error.
+        // Only 2 events from 3 should be processed.
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
@@ -2379,14 +2601,26 @@ partial class CoreTests
         var eventCount = 0;
         InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
 
+        var totalProcessedMouseStateEventBytes = InputSystem.settings.maxEventBytesPerUpdate;
         LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.\n"
+            + "Total events processed by devices in last update call:\n"
+            + $" - {totalProcessedMouseStateEventBytes} bytes processed by Mouse:/Mouse\n");
 
         InputSystem.Update();
 
         Assert.That(eventCount, Is.EqualTo(2));
         Assert.That(mouse.rightButton.isPressed, Is.True);
         Assert.That(mouse.middleButton.isPressed, Is.False);
+
+        // Queue 1 event after error has been raised
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right, false));
+        InputSystem.Update();
+
+        // Check that we have only processed the new event.
+        // Confirms that the 3rd event setting MouseButton.middle was discarded.
+        Assert.That(eventCount, Is.EqualTo(3));
+        Assert.That(mouse.rightButton.isPressed, Is.False);
 
         eventCount = 0;
 
@@ -2549,7 +2783,7 @@ partial class CoreTests
         }
 
         public bool throwExceptionOnState = true;
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {

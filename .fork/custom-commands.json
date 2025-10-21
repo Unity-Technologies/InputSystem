@@ -1,0 +1,49 @@
+[
+  {
+    "version" : 1
+  },
+  {
+    "action" : {
+      "type" : "url",
+      "url" : "https://github.com/Unity-Technologies/InputSystem/compare/develop...${ref:short}?expand=1"
+    },
+    "name" : "GitHub: Create PR for branch",
+    "refTargets" : [
+      "localbranch",
+      "remotebranch"
+    ],
+    "target" : "ref"
+  },
+  {
+    "action" : {
+      "type" : "url",
+      "url" : "https://github.com/Unity-Technologies/InputSystem/tree/${ref:short}"
+    },
+    "name" : "GitHub: Open branch",
+    "refTargets" : [
+      "localbranch",
+      "remotebranch"
+    ],
+    "target" : "ref"
+  },
+  {
+    "action" : {
+      "type" : "url",
+      "url" : "https://unity-ci.cds.internal.unity3d.com/project/130"
+    },
+    "name" : "View on Yamato",
+    "target" : "repository"
+  },
+  {
+    "action" : {
+      "type" : "url",
+      "url" : "https://unity-ci.cds.internal.unity3d.com/project/130/branch/${ref:short}"
+    },
+    "name" : "Yamato: Open branch",
+    "refTargets" : [
+      "localbranch",
+      "remotebranch"
+    ],
+    "target" : "ref"
+  }
+]

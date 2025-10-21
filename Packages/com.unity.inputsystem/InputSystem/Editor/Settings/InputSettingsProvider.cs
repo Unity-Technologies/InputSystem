@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
@@ -13,10 +12,22 @@ using UnityEngine.UIElements;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
+    internal static class InputSettingsPath
+    {
+        public const string kSettingsRootPath = "Project/Input System Package";
+    }
+
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
+
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // When Project Wide Actions are enabled we place this as a child node to main settings node.
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
+        #else
+        // When Project Wide Actions are not enabled we let this be the main settings node.
         public const string kSettingsPath = "Project/Input System Package";
+        #endif
 
         public static void Open()
         {
@@ -26,7 +37,14 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
+            {
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                // We put this in a child node called "Settings" when Project-wide Actions is enabled.
+                // When not enabled it sits on the main package Settings node.
+                label = "Settings"
+                #endif
+            };
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)
@@ -98,11 +116,18 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+                    CustomUpdateModeHelpBox();
+
                 var runInBackground = Application.runInBackground;
                 using (new EditorGUI.DisabledScope(!runInBackground))
                     EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
                 if (!runInBackground)
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+                EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
+#endif
 
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
@@ -164,6 +189,22 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void CustomUpdateModeHelpBox()
+        {
+            var message =
+                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
+            Uri link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
+            GUILayout.BeginVertical();
+            GUILayout.Label(message, EditorStyles.label);
+            if (GUILayout.Button("Read more", EditorStyles.linkLabel))
+                System.Diagnostics.Process.Start(link.AbsoluteUri);
+            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+        }
+
         private static void ShowPlatformSettings()
         {
             // Would be nice to get BuildTargetDiscovery.GetBuildTargetInfoList since that contains information about icons etc
@@ -171,41 +212,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CreateNewSettingsAsset(string relativePath)
         {
-            // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            AssetDatabase.CreateAsset(settings, relativePath);
-            EditorGUIUtility.PingObject(settings);
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // Create and install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            InputSystem.settings = InputAssetEditorUtils.CreateAsset(ScriptableObject.CreateInstance<InputSettings>(), relativePath);
         }
 
         private static void CreateNewSettingsAsset()
         {
-            // Query for file name.
-            var projectName = PlayerSettings.productName;
-            var path = EditorUtility.SaveFilePanel("Create Input Settings File", "Assets",
-                projectName + ".inputsettings", "asset");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            // Make sure the path is in the Assets/ folder.
-            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
-            var dataPath = Application.dataPath + "/";
-            if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
-            {
-                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
-                return;
-            }
-
-            // Make sure it ends with .asset.
-            var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
-                path += ".asset";
-
-            // Create settings file.
-            var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            CreateNewSettingsAsset(relativePath);
+            var result = InputAssetEditorUtils.PromptUserForAsset(
+                friendlyName: "Input Settings",
+                suggestedAssetFilePathWithoutExtension: InputAssetEditorUtils.MakeProjectFileName("inputsettings"),
+                assetFileExtension: "asset");
+            if (result.result == InputAssetEditorUtils.DialogResult.Valid)
+                CreateNewSettingsAsset(result.relativePath);
         }
 
         private void InitializeWithCurrentSettingsIfNecessary()
@@ -270,6 +289,7 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
+            m_ScrollDeltaBehavior = m_SettingsObject.FindProperty("m_ScrollDeltaBehavior");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
@@ -285,6 +305,9 @@ namespace UnityEngine.InputSystem.Editor
             m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+            m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "Controls whether the value returned by the Scroll Wheel Delta is normalized (to be uniform across all platforms), or returns the non-normalized platform-specific range which can vary between platforms.");
+#endif
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
                 + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
@@ -408,6 +431,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private int m_SettingsDirtyCount;
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
+        [NonSerialized] private SerializedProperty m_ScrollDeltaBehavior;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
@@ -431,6 +455,9 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        private GUIContent m_ScrollDeltaBehaviorContent;
+#endif
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;
@@ -467,24 +494,20 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
-            GUILayout.Space(10);
+            EditorGUILayout.Space();
+
             if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
                 InputSettingsProvider.Open();
-            GUILayout.Space(10);
 
-            if (InputSystem.settings == target)
-                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
-            else
-            {
-                string currentlyActiveAssetsPath = null;
-                if (InputSystem.settings != null)
-                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
-                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
-                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
-                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
-                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
-                    InputSystem.settings = (InputSettings)target;
-            }
+            EditorGUILayout.Space();
+
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value);
+        }
+
+        protected override bool ShouldHideOpenButton()
+        {
+            return true;
         }
     }
 }

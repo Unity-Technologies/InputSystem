@@ -12,6 +12,12 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////FIXME: Generate proper IDs for the individual tree view items; the current sequential numbering scheme just causes lots of
 ////       weird expansion/collapsing to happen.
 
@@ -275,7 +281,8 @@ namespace UnityEngine.InputSystem.Editor
                     var profilerName = ProfilerDriver.GetConnectionIdentifier(profiler);
                     var isConnected = ProfilerDriver.connectedProfiler == profiler;
                     if (enabled)
-                        menu.AddItem(new GUIContent(profilerName), isConnected, () => {
+                        menu.AddItem(new GUIContent(profilerName), isConnected, () =>
+                        {
                             ProfilerDriver.connectedProfiler = profiler;
                             EnableRemoteDevices();
                         });
@@ -291,7 +298,8 @@ namespace UnityEngine.InputSystem.Editor
 
                     var url = "device://" + device.id;
                     var isConnected = ProfilerDriver.connectedProfiler == 0xFEEE && ProfilerDriver.directConnectionUrl == url;
-                    menu.AddItem(new GUIContent(device.name), isConnected, () => {
+                    menu.AddItem(new GUIContent(device.name), isConnected, () =>
+                    {
                         ProfilerDriver.DirectURLConnect(url);
                         EnableRemoteDevices();
                     });
@@ -320,7 +328,7 @@ namespace UnityEngine.InputSystem.Editor
                 // have a first pass at device descriptions supplied by users.
                 try
                 {
-                    var copyBuffer = EditorGUIUtility.systemCopyBuffer;
+                    var copyBuffer = EditorHelpers.GetSystemCopyBufferContents();
                     if (!string.IsNullOrEmpty(copyBuffer) &&
                         copyBuffer.StartsWith("{") && !InputDeviceDescription.FromJson(copyBuffer).empty)
                     {
@@ -418,7 +426,7 @@ namespace UnityEngine.InputSystem.Editor
                     var menu = new GenericMenu();
                     menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
                     menu.AddItem(Contents.copyDeviceDescription, false,
-                        () => EditorGUIUtility.systemCopyBuffer = deviceItem.device.description.ToJson());
+                        () => EditorHelpers.SetSystemCopyBufferContents(deviceItem.device.description.ToJson()));
                     menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
                     if (deviceItem.device.enabled)
                         menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
@@ -434,7 +442,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var menu = new GenericMenu();
                     menu.AddItem(Contents.copyDeviceDescription, false,
-                        () => EditorGUIUtility.systemCopyBuffer = unsupportedDeviceItem.description.ToJson());
+                        () => EditorHelpers.SetSystemCopyBufferContents(unsupportedDeviceItem.description.ToJson()));
                     menu.ShowAsContext();
                 }
 
@@ -445,7 +453,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var menu = new GenericMenu();
                         menu.AddItem(Contents.copyLayoutAsJSON, false,
-                            () => EditorGUIUtility.systemCopyBuffer = layout.ToJson());
+                            () => EditorHelpers.SetSystemCopyBufferContents(layout.ToJson()));
                         if (layout.isDeviceLayout)
                         {
                             menu.AddItem(Contents.createDeviceFromLayout, false,
@@ -927,6 +935,15 @@ namespace UnityEngine.InputSystem.Editor
                 var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
+                if (action.actionMap != null && action.actionMap.m_Asset != null)
+                {
+                    name += $" ({action.actionMap.m_Asset.name})";
+                }
+                else
+                {
+                    name += " (no asset)";
+                }
+
                 var item = AddChild(parent, name, ref id);
 
                 // Grab state.
@@ -952,7 +969,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var control = state.controls[controlStartIndex + n];
                         var interactions =
-                            StringHelpers.Join(new[] {binding.effectiveInteractions, action.interactions}, ",");
+                            StringHelpers.Join(new[] { binding.effectiveInteractions, action.interactions }, ",");
 
                         var text = control.path;
                         if (!string.IsNullOrEmpty(interactions))

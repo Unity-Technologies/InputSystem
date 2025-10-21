@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -946,6 +945,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Flags that control which controls are returned by <see cref="InputControlExtensions.EnumerateControls"/>.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:Flags enums should have plural names", Justification = "False positive: `IgnoreControlsInDefaultState` is a plural form.")]
         [Flags]
         public enum Enumerate
         {
@@ -1114,6 +1114,8 @@ namespace UnityEngine.InputSystem
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
             {
+                if (!control.HasValueChangeInEvent(eventPtr))
+                    continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
                 return control;
@@ -1582,6 +1584,7 @@ namespace UnityEngine.InputSystem
             device.m_Device = device;
 
             device.m_ChildrenForEachControl = new InputControl[controlCount];
+
             if (usageCount > 0)
             {
                 device.m_UsagesForEachControl = new InternedString[usageCount];
@@ -1918,6 +1921,23 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Finish()
             {
+                // Set up the list of just ButtonControls to quickly update press state.
+                var i = 0;
+                foreach (var control in device.allControls)
+                {
+                    // Don't use .isButton here, since this can be called from tests with NULL controls
+                    if (control is ButtonControl)
+                        ++i;
+                }
+
+                device.m_ButtonControlsCheckingPressState = new List<ButtonControl>(i);
+                #if UNITY_2020_1_OR_NEWER
+                device.m_UpdatedButtons = new HashSet<int>(i);
+                #else
+                // 2019 is too old to support setting HashSet capacity
+                device.m_UpdatedButtons = new HashSet<int>();
+                #endif
+
                 device.isSetupFinished = true;
             }
         }

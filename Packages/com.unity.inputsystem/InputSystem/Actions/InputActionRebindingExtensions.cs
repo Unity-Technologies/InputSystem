@@ -37,6 +37,23 @@ namespace UnityEngine.InputSystem
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
+    ///
+    /// To implement user-controlled rebinding, create a UI with a button to trigger rebinding.
+    /// If the user clicks the button to bind a control to an action, use `InputAction.PerformInteractiveRebinding`
+    /// to handle the rebinding, as in the following example:
+    /// <example>
+    /// <code>
+    /// void RemapButtonClicked(InputAction actionToRebind)
+    /// {
+    ///   var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+    ///   // To avoid accidental input from mouse motion
+    ///   .WithControlsExcluding("Mouse")
+    ///   .OnMatchWaitForAnother(0.1f)
+    ///   .Start();
+    /// }
+    /// </code>
+    /// </example>
+    /// You can install the Tanks Demo sample from the Input System package using the Package Manager window, which has an example of an interactive rebinding UI.
     /// </remarks>
     /// <seealso cref="InputActionSetupExtensions"/>
     /// <seealso cref="InputBinding"/>
@@ -364,7 +381,7 @@ namespace UnityEngine.InputSystem
         /// <paramref name="action"/> for which to get a display string.</param>
         /// <param name="deviceLayoutName">Receives the name of the <see cref="InputControlLayout"/> used for the
         /// device in the given binding, if applicable. Otherwise is set to <c>null</c>. If, for example, the binding
-        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad</c>.</param>
+        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad"</c>.</param>
         /// <param name="controlPath">Receives the path to the control on the device referenced in the given binding,
         /// if applicable. Otherwise is set to <c>null</c>. If, for example, the binding is <c>"&lt;Gamepad&gt;/leftStick/x"</c>,
         /// the resulting value is <c>"leftStick/x"</c>.</param>
@@ -891,7 +908,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
         }
@@ -902,7 +918,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
-
 
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
@@ -1145,14 +1160,8 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 action = actions.FindAction(binding.action);
 
-            var @override = new InputActionMap.BindingOverrideJson
-            {
-                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
-                id = binding.id.ToString(),
-                path = binding.overridePath,
-                interactions = binding.overrideInteractions,
-                processors = binding.overrideProcessors
-            };
+            string actionName = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : "";
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, actionName);
 
             list.Add(@override);
         }
@@ -1262,16 +1271,10 @@ namespace UnityEngine.InputSystem
                     var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
                     if (bindingIndex != -1)
                     {
-                        action.ApplyBindingOverride(bindingIndex, new InputBinding
-                        {
-                            overridePath = entry.path,
-                            overrideInteractions = entry.interactions,
-                            overrideProcessors = entry.processors,
-                        });
+                        action.ApplyBindingOverride(bindingIndex, InputActionMap.BindingOverrideJson.ToBinding(entry));
                         continue;
                     }
                 }
-
                 Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }
@@ -1295,12 +1298,21 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
-        /// // A MonoBehaviour that can be hooked up to a UI.Button control.
+        /// using TMPro;
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
         /// public class RebindButton : MonoBehaviour
         /// {
-        ///     public InputActionReference m_Action; // Reference to an action to rebind.
-        ///     public int m_BindingIndex; // Index into m_Action.bindings for binding to rebind.
-        ///     public Text m_DisplayText; // Text in UI that receives the binding display string.
+        ///
+        ///     // A MonoBehaviour that can be hooked up to a UI.Button control.
+        ///     // This example requires you to set up a Text Mesh Pro text field,
+        ///     // And a UI button which calls the OnClick method in this script.
+        ///
+        ///     public InputActionReference actionReference; // Reference to an action to rebind.
+        ///     public int bindingIndex; // Index into m_Action.bindings for binding to rebind.
+        ///     public TextMeshProUGUI displayText; // Text in UI that receives the binding display string.
+        ///     private InputActionRebindingExtensions.RebindingOperation rebind;
         ///
         ///     public void OnEnable()
         ///     {
@@ -1309,26 +1321,20 @@ namespace UnityEngine.InputSystem
         ///
         ///     public void OnDisable()
         ///     {
-        ///         m_Rebind?.Dispose();
+        ///         rebind?.Dispose();
         ///     }
         ///
         ///     public void OnClick()
         ///     {
-        ///         var rebind = m_Action.PerformInteractiveRebinding()
-        ///             .WithTargetBinding(m_BindingIndex)
-        ///             .OnComplete(_ => UpdateDisplayText())
-        ///             .Start();
+        ///         var l_rebind = actionReference.action.PerformInteractiveRebinding().WithTargetBinding(bindingIndex).OnComplete(_ => UpdateDisplayText());
+        ///         l_rebind.Start();
         ///     }
         ///
         ///     private void UpdateDisplayText()
         ///     {
-        ///         m_DisplayText.text = m_Action.GetBindingDisplayString(m_BindingIndex);
+        ///         displayText.text = actionReference.action.GetBindingDisplayString(bindingIndex);
         ///     }
-        ///
-        ///     private void RebindingOperation m_Rebind;
         /// }
-        ///
-        /// rebind.Start();
         /// </code>
         /// </example>
         ///
@@ -1551,10 +1557,13 @@ namespace UnityEngine.InputSystem
             /// For this reason, a rebind can be configured to automatically swallow any input event except the ones having
             /// input on controls matching <see cref="WithControlsExcluding"/>.
             ///
-            /// Not at all input necessarily should be suppressed. For example, it can be desirable to have UI that
+            /// Note that not all input should necessarily be suppressed. For example, it can be desirable to have UI that
             /// allows the user to cancel an ongoing rebind by clicking with the mouse. This means that mouse position and
             /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
             /// is still let through.
+            ///
+            /// See <see cref="WithActionEventNotificationsBeingSuppressed"/> for how this configuration relates to suppressing
+            /// actions during rebind.
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
             {
@@ -1924,6 +1933,7 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="timeout"/>
             public RebindingOperation WithTimeout(float timeInSeconds)
             {
+                ThrowIfRebindInProgress();
                 m_Timeout = timeInSeconds;
                 return this;
             }
@@ -2078,6 +2088,42 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
+            /// Ensures state changes are allowed to propagate during rebinding but suppresses action event
+            /// notifications to prevent unexpected actions triggering as soon as rebinding ends
+            /// (event suppression stops).
+            /// </summary>
+            /// <param name="value">If true, disables action event notifications for changes driven by handled events
+            /// during rebinding, if false this feature is disabled.</param>
+            /// <remarks>
+            /// If events are suppressed during rebinding using <see cref="WithMatchingEventsBeingSuppressed"/>
+            /// without suppressing action event notifications, events will not update their associated device state
+            /// and be suppressed earlier in the processing chain. This may lead to unexpected actions triggering
+            /// as soon as rebinding completes (event suppression stops), due to missed recording of state transitions.
+            /// Action event notification resumes to normal as soon as rebinding operation completes or cancels.
+            ///
+            /// When this configuration is active, any events suppressed via
+            /// <see cref="WithMatchingEventsBeingSuppressed"/> will still be allowed to update their associated
+            /// device state but will not propagate into action interaction event notifications which could cause
+            /// undesirable triggering of actions caused by the difference between device state prior to rebinding
+            /// and after rebinding.
+            ///
+            /// Note that if event suppression is not active, this setting will have no effect.
+            ///
+            /// In addition to interaction event notifications, the following APIs will also return false when the
+            /// action reflects a state subject for suppression: <see cref="InputAction.WasPerformedThisFrame"/>,
+            /// <see cref="InputAction.WasPressedThisFrame"/>, <see cref="InputAction.WasReleasedThisFrame"/>.
+            /// </remarks>
+            /// <returns>Reference to this rebinding operation.</returns>
+            public RebindingOperation WithActionEventNotificationsBeingSuppressed(bool value = true)
+            {
+                ThrowIfRebindInProgress();
+                m_TargetInputEventHandledPolicy = value
+                    ? InputEventHandledPolicy.SuppressActionEventNotifications
+                    : InputEventHandledPolicy.SuppressStateUpdates;
+                return this;
+            }
+
+            /// <summary>
             /// Start the rebinding. This should be invoked after the rebind operation has been fully configured.
             /// </summary>
             /// <returns>The same RebindingOperation instance.</returns>
@@ -2100,6 +2146,9 @@ namespace UnityEngine.InputSystem
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
                 m_StartTime = InputState.currentTime;
+
+                m_SavedInputEventHandledPolicy = InputSystem.s_Manager.inputEventHandledPolicy;
+                InputSystem.s_Manager.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2296,6 +2345,11 @@ namespace UnityEngine.InputSystem
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
                         control.HasValueChangeInState(statePtr))
                     {
+                        // ISXB-1595: Mark event as handled, otherwise the direct cancellation may affect actions bound
+                        // to the same control. Since the cancellation is part of the rebind process it should be
+                        // treated as matched input.
+                        eventPtr.handled = true;
+
                         OnCancel();
                         break;
                     }
@@ -2600,6 +2654,8 @@ namespace UnityEngine.InputSystem
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
+
+                InputSystem.s_Manager.inputEventHandledPolicy = m_SavedInputEventHandledPolicy;
             }
 
             private void ThrowIfRebindInProgress()
@@ -2648,6 +2704,8 @@ namespace UnityEngine.InputSystem
             private double m_StartTime;
             private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
+            private InputEventHandledPolicy m_SavedInputEventHandledPolicy;
+            private InputEventHandledPolicy m_TargetInputEventHandledPolicy;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
@@ -2677,7 +2735,7 @@ namespace UnityEngine.InputSystem
                 DontIgnoreNoisyControls = 1 << 6,
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,
-                SuppressMatchingEvents = 1 << 9,
+                SuppressMatchingEvents = 1 << 9
             }
         }
 

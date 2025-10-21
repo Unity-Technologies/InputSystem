@@ -1,11 +1,12 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Composites
@@ -134,6 +135,13 @@ namespace UnityEngine.InputSystem.Composites
             }
         }
 
+        /// <inheritdoc />
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            return value.magnitude;
+        }
+
         /// <summary>
         /// Determines how a <c>Vector3</c> is synthesized from part controls.
         /// </summary>
@@ -162,7 +170,7 @@ namespace UnityEngine.InputSystem.Composites
     }
 
     #if UNITY_EDITOR
-    internal class Vector3CompositeEditor : InputParameterEditor<Vector2Composite>
+    internal class Vector3CompositeEditor : InputParameterEditor<Vector3Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
             "How to synthesize a Vector3 from the inputs. Digital "
@@ -171,8 +179,30 @@ namespace UnityEngine.InputSystem.Composites
 
         public override void OnGUI()
         {
-            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+#endif
+            target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
+            {
+                tooltip = m_ModeLabel.tooltip
+            };
+
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.mode = (Vector3Composite.Mode)evt.newValue;
+                onChangedCallback();
+            });
+
+            root.Add(modeField);
+        }
+
+#endif
     }
     #endif
 }

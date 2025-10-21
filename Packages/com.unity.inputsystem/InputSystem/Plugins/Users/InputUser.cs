@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Profiling;
+using Unity.Profiling;
 
 ////REVIEW: remove users automatically when exiting play mode?
 
@@ -36,6 +36,9 @@ namespace UnityEngine.InputSystem.Users
     public struct InputUser : IEquatable<InputUser>
     {
         public const uint InvalidId = 0;
+
+        static readonly ProfilerMarker k_InputUserOnChangeMarker = new ProfilerMarker("InputUser.onChange");
+        static readonly ProfilerMarker k_InputCheckForUnpairMarker = new ProfilerMarker("InputCheckForUnpairedDeviceActivity");
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -99,6 +102,7 @@ namespace UnityEngine.InputSystem.Users
         public uint id => m_Id;
 
         ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
+        ////For now the docs are filtered out (see Documentation~/filter.yml)
         public InputUserAccountHandle? platformUserAccountHandle => s_GlobalState.allUserData[index].platformUserAccountHandle;
         public string platformUserAccountName => s_GlobalState.allUserData[index].platformUserAccountName;
         public string platformUserAccountId => s_GlobalState.allUserData[index].platformUserAccountId;
@@ -167,7 +171,7 @@ namespace UnityEngine.InputSystem.Users
         /// cref="ActivateControlScheme(InputControlScheme)"/> and related APIs like <see cref="controlScheme"/>
         /// and <see cref="controlSchemeMatch"/>).
         ///
-        /// Note that is generally does not make sense for users to share actions. Instead, each user should
+        /// Note that it generally does not make sense for users to share actions. Instead, each user should
         /// receive a set of actions private to the user.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
@@ -764,6 +768,7 @@ namespace UnityEngine.InputSystem.Users
             return s_GlobalState.allUsers[userIndex];
         }
 
+        ////Doc is filtered out (see Documentation~/filter.yml)
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
         {
             if (platformUserAccountHandle == default(InputUserAccountHandle))
@@ -1017,7 +1022,7 @@ namespace UnityEngine.InputSystem.Users
 
             if (s_GlobalState.onChange.length == 0)
                 return;
-            Profiler.BeginSample("InputUser.onChange");
+            k_InputUserOnChangeMarker.Begin();
             s_GlobalState.onChange.LockForChanges();
             for (var i = 0; i < s_GlobalState.onChange.length; ++i)
             {
@@ -1032,7 +1037,7 @@ namespace UnityEngine.InputSystem.Users
                 }
             }
             s_GlobalState.onChange.UnlockForChanges();
-            Profiler.EndSample();
+            k_InputUserOnChangeMarker.End();
         }
 
         private static int TryFindUserIndex(uint userId)
@@ -1652,13 +1657,16 @@ namespace UnityEngine.InputSystem.Users
                 return;
             }
 
-            Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
+            k_InputCheckForUnpairMarker.Begin();
 
             // Apply the pre-filter. If there's callbacks and none of them return true,
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
+            {
+                k_InputCheckForUnpairMarker.End();
                 return;
+            }
 
             // Go through the changed controls in the event and look for ones actuated
             // above a magnitude of a little above zero.
@@ -1695,7 +1703,7 @@ namespace UnityEngine.InputSystem.Users
                     break;
             }
 
-            Profiler.EndSample();
+            k_InputCheckForUnpairMarker.End();
         }
 
         /// <summary>

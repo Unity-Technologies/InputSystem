@@ -5,9 +5,11 @@ using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 
-#if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
@@ -15,11 +17,15 @@ internal class XInputTests : CoreTestsFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    /* ////Brute-forcing by commenting out of Devices_SupportsXInputDevicesOnPlatform
+       ////since the test would still run while [Ignore] or UnityPlatform excluding it.
+#endif
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XboxGamepadMacOS")]
-    [TestCase("Xbox One Wireless Controller", "Microsoft", "HID", "XboxOneGampadMacOSWireless")]
+    [TestCase("Xbox Series Wireless Controller", "Microsoft", "HID", "XboxGamepadMacOSWireless")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
@@ -44,6 +50,9 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
+#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    */
+#endif
 
     ////FIXME: we should not have tests that only run in players
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
@@ -141,8 +150,140 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
 
-// Disable tests in standalone builds from 2022.1+ see UUM-19622
-#if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportXboxControllerUsingOSDriverOSX()
+    {
+        // Native support kicks in when a device is named "Controller"
+        // This is what macOS names the controller
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            product = "Controller",
+            manufacturer = "Microsoft"
+        });
+
+        Assert.That(device, Is.AssignableTo<XInputController>());
+        Assert.That(device, Is.AssignableTo<XboxGamepadMacOSNative>());
+        var gamepad = (XboxGamepadMacOSNative)device;
+
+        // macOS reports the same way we do for the Y axis; e.g. up = 1, down = -1
+        // As such, our input data from the controller doesn't need to be inverted
+        // This is unlike our approach for the 360Controller device
+        InputSystem.QueueStateEvent(gamepad,
+            new XInputControllerNativeOSXState()
+            {
+                leftStickX = 32767,
+                leftStickY = 32767,
+                rightStickX = 32767,
+                rightStickY = 32767,
+                leftTrigger = 255,
+                rightTrigger = 255,
+            });
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.rightStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1));
+
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.A), gamepad.aButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.A), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.B), gamepad.bButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.B), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.X), gamepad.xButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.X), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Y), gamepad.yButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Y), gamepad.buttonNorth);
+
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.DPadDown), gamepad.dpad.down);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.DPadUp), gamepad.dpad.up);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.DPadLeft), gamepad.dpad.left);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.DPadRight), gamepad.dpad.right);
+
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.LeftThumbstickPress), gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.RightThumbstickPress), gamepad.rightStickButton);
+
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.LeftShoulder), gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.RightShoulder), gamepad.rightShoulder);
+
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Start), gamepad.menu);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Start), gamepad.startButton);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Select), gamepad.view);
+        AssertButtonPress(gamepad, new XInputControllerNativeOSXState().WithButton(XInputControllerNativeOSXState.Button.Select), gamepad.selectButton);
+    }
+
+    [TestCase(0x045E, 0x02E0, 16, 11)] // Xbox One Wireless Controller
+    [TestCase(0x045E, 0x0B20, 10, 11)] // Xbox Series X|S Wireless Controller
+    // This test is used to establish the correct button map layout based on the PID and VIDs. The usual difference
+    // is around the select and start button bits.
+    // If the layout is changed this test will fail and will need to be adapted either with a new device/layout or
+    // a new button map.
+    public void Devices_SupportWirelessXboxOneAndSeriesControllerOnOSX(int vendorId, int productId, int selectBit, int startBit)
+    {
+        // Fake a real Xbox Wireless Controller
+        var xboxGamepad = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            product = "Xbox Wireless Controller",
+            manufacturer = "Microsoft",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = vendorId,
+                productId = productId,
+            }.ToJson()
+        });
+
+
+        Assert.That(xboxGamepad, Is.AssignableTo<XInputController>());
+
+        var gamepad = (XInputController)xboxGamepad;
+        Assert.That(gamepad.selectButton.isPressed, Is.False);
+
+        // Check if the controller is an Xbox One from a particular type where we know the select and start buttons are
+        // different
+        if (productId == 0x02e0)
+        {
+            Assert.That(xboxGamepad, Is.AssignableTo<XboxOneGampadMacOSWireless>());
+
+            InputSystem.QueueStateEvent(gamepad,
+                new XInputControllerWirelessOSXState
+                {
+                    buttons = (uint)(1 << selectBit |
+                        1 << startBit)
+                });
+            InputSystem.Update();
+        }
+        else
+        {
+            Assert.That(xboxGamepad, Is.AssignableTo<XboxGamepadMacOSWireless>());
+
+            InputSystem.QueueStateEvent(gamepad,
+                new XInputControllerWirelessOSXState
+                {
+                    buttons = (uint)(1 << selectBit |
+                        1 << startBit)
+                });
+            InputSystem.Update();
+        }
+
+        Assert.That(gamepad.selectButton.isPressed);
+        Assert.That(gamepad.startButton.isPressed);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxWirelessControllerOnOSX()
@@ -151,7 +292,12 @@ internal class XInputTests : CoreTestsFixture
         {
             interfaceName = "HID",
             product = "Xbox One Wireless Controller",
-            manufacturer = "Microsoft"
+            manufacturer = "Microsoft",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x045E,
+                productId = 0x02E0,
+            }.ToJson()
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
@@ -170,6 +316,8 @@ internal class XInputTests : CoreTestsFixture
             });
 
         InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.x.IsActuated());
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
@@ -197,10 +345,17 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Y), gamepad.yButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Y), gamepad.buttonNorth);
 
-        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(5), gamepad.dpad.down);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(1), gamepad.dpad.up);
-        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(7), gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(2),  gamepad.dpad.up, gamepad.dpad.right);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(3), gamepad.dpad.right);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(4), gamepad.dpad.down, gamepad.dpad.right);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(5), gamepad.dpad.down);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(6), gamepad.dpad.down, gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(7), gamepad.dpad.left);
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(8), gamepad.dpad.up, gamepad.dpad.left);
+        // No Dpad button pressed when the value is 0
+        AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithDpad(0));
+
 
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.LeftThumbstickPress), gamepad.leftStickButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.RightThumbstickPress), gamepad.rightStickButton);
@@ -234,9 +389,6 @@ internal class XInputTests : CoreTestsFixture
     }
 
 #endif // TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
-
-#endif
-
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]

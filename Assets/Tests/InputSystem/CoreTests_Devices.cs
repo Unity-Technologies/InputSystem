@@ -1041,7 +1041,7 @@ partial class CoreTests
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
     {
         [InputControl(format = "FLT")]
-        public ButtonControl button { get; private set; }
+        public ButtonControl button { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -2029,7 +2029,7 @@ partial class CoreTests
     class DeviceWithCustomReset : InputDevice, ICustomDeviceReset
     {
         [InputControl]
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -2648,7 +2648,7 @@ partial class CoreTests
     [TestCase("Joystick", typeof(Joystick))]
     [TestCase("Accelerometer", typeof(Accelerometer))]
     [TestCase("Gyroscope", typeof(Gyroscope))]
-    public void Devices_CanCreateDevice(string layout, Type type)
+    public void Devices_CanCreateDevice(string layout, System.Type type)
     {
         var device = InputSystem.AddDevice(layout);
 
@@ -2674,10 +2674,59 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(IMESelected: true));
         InputSystem.Update();
 
         Assert.That(keyboard.anyKey.isPressed, Is.False);
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    [Obsolete("Test obsolete IMESelected Key")]
+    public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ImeSelectedKeyOnKeyboard_IsBackwardCompatible()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var oldKeyboardStateWithIMESelected = new KeyboardState(Key.None);
+        // Hard coded state from previous version that have IMESelected setted
+        unsafe
+        {
+            oldKeyboardStateWithIMESelected.keys[0] = 0;
+            oldKeyboardStateWithIMESelected.keys[1] = 0;
+            oldKeyboardStateWithIMESelected.keys[2] = 0;
+            oldKeyboardStateWithIMESelected.keys[3] = 0;
+            oldKeyboardStateWithIMESelected.keys[4] = 0;
+            oldKeyboardStateWithIMESelected.keys[5] = 0;
+            oldKeyboardStateWithIMESelected.keys[6] = 0;
+            oldKeyboardStateWithIMESelected.keys[7] = 0;
+
+            oldKeyboardStateWithIMESelected.keys[8] = 0;
+            oldKeyboardStateWithIMESelected.keys[9] = 0;
+            oldKeyboardStateWithIMESelected.keys[10] = 0;
+            oldKeyboardStateWithIMESelected.keys[11] = 0;
+            oldKeyboardStateWithIMESelected.keys[12] = 0;
+            oldKeyboardStateWithIMESelected.keys[13] = 128;
+            oldKeyboardStateWithIMESelected.keys[14] = 0;
+            oldKeyboardStateWithIMESelected.keys[15] = 0;
+        }
+
+        InputSystem.QueueStateEvent(keyboard, oldKeyboardStateWithIMESelected);
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
 
     [Test]
@@ -2798,15 +2847,6 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(keyboard.keyboardLayout, Is.EqualTo("new"));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanGetKeyCodeFromKeyboardKey()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
     }
 
     [Test]
@@ -4097,6 +4137,13 @@ partial class CoreTests
     [Retry(2)] // Warm up JIT
     public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // Prevent GC Allocations happening later in test
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates();
+#endif
+
         var description =
             new InputDeviceDescription
         {
@@ -4123,25 +4170,72 @@ partial class CoreTests
         // Doesn't happen when a native backend reports a device.
         var descriptionJson = description.ToJson();
 
-        Assert.That(() =>
-        {
-            Profiler.BeginSample(kProfilerRegion);
+        var recorder = Recorder.Get("GC.Alloc");
+        // The recorder was created enabled, which means it captured the creation of the Recorder object itself, etc.
+        // Disabling it flushes its data, so that we can retrieve the sample block count and have it correctly account
+        // for these initial allocations.
+        recorder.enabled = false;
+#if !UNITY_WEBGL
+        recorder.FilterToCurrentThread();
+#endif
+        recorder.enabled = true;
 
-            // "Plug" it back in.
-            deviceId = runtime.ReportNewInputDevice(descriptionJson);
-            InputSystem.Update();
+        Profiler.BeginSample(kProfilerRegion);
 
-            // "Unplug" device.
-            var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
-            InputSystem.QueueEvent(ref removeEvent2);
-            InputSystem.Update();
+        // "Plug" it back in.
+        deviceId = runtime.ReportNewInputDevice(descriptionJson);
+        InputSystem.Update();
 
-            // "Plug" it back in.
-            runtime.ReportNewInputDevice(descriptionJson);
-            InputSystem.Update();
+        // "Unplug" device.
+        var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent2);
+        InputSystem.Update();
 
-            Profiler.EndSample();
-        }, Is.Not.AllocatingGCMemory());
+        // "Plug" it back in.
+        runtime.ReportNewInputDevice(descriptionJson);
+        InputSystem.Update();
+
+        Profiler.EndSample();
+
+        recorder.enabled = false;
+#if !UNITY_WEBGL
+        recorder.CollectFromAllThreads();
+#endif
+
+        // No allocations are expected.
+        Assert.AreEqual(0, recorder.sampleBlockCount);
+    }
+
+    // Regression test to cover having null descriptor fields for a device. Some non-desktop gamepad device types do this.
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingAndReaddingDeviceWithNullDescriptorFields_DoesNotThrow()
+    {
+        // InputDeviceDescription.ToJson writes empty string fields and not null values, whereas reporting a device via an incomplete description string will fully omit the fields.
+        string description = @"{
+            ""type"": ""Gamepad"",
+            ""product"": ""TestProduct""
+        }";
+
+        var deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // "Unplug" device.
+        var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent1);
+        InputSystem.Update();
+
+        // "Plug" it back in.
+        deviceId = runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        // Repeat that sequence.
+        var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent2);
+        InputSystem.Update();
+
+        runtime.ReportNewInputDevice(description);
+        InputSystem.Update();
     }
 
     [Test]
@@ -4291,6 +4385,15 @@ partial class CoreTests
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
     }
 
+    #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+    [Test]
+    [Category("Devices")]
+    public void Devices_PollingFrequencyIsAtLeast60HzByDefault()
+    {
+        Assert.That(InputSystem.pollingFrequency, Is.GreaterThanOrEqualTo(60));
+    }
+
+    #else
     [Test]
     [Category("Devices")]
     public void Devices_PollingFrequencyIs60HzByDefault()
@@ -4299,6 +4402,8 @@ partial class CoreTests
         // Make sure InputManager passed the frequency on to the runtime.
         Assert.That(runtime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
     }
+
+    #endif
 
     [Test]
     [Category("Devices")]
@@ -5189,6 +5294,55 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    // This test validates that when InputSettings.BackgroundBehavior.ResetAndDisableAllDevices is selected,
+    // events are not available to process once the app regains focus.
+    // Essentially, only the relevant input events are processed.
+    public void Devices_CanSkipProcessingEventsWhileInBackground()
+    {
+        InputSystem.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableAllDevices;
+
+        var time = 0;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var pressAction = new InputAction("Press", binding: "<Gamepad>/buttonSouth");
+        var performedCount = 0;
+
+        pressAction.performed += ctx =>
+        {
+            performedCount++;
+        };
+        pressAction.Enable();
+
+        InputSystem.Update();
+        Assert.That(gamepad.canRunInBackground, Is.False);
+
+        Press(gamepad.buttonSouth, time: time++);
+        Assert.That(performedCount, Is.EqualTo(1));
+
+        // Lose focus
+        runtime.PlayerFocusLost();
+        Assert.That(gamepad.enabled, Is.False);
+
+        // Queue an event while in the background. We don't want to see this event to be processed once focus
+        // is regained. If there is, the callback will be triggered again.
+        Press(gamepad.buttonSouth, queueEventOnly: true, time: time++);
+
+        // Run update to try process events accordingly while in the background
+        InputSystem.Update();
+
+        // Gain focus
+        runtime.PlayerFocusGained();
+
+        // Run update to try process events accordingly once focus is gained
+        InputSystem.Update();
+
+        Assert.That(gamepad.enabled, Is.True);
+        // Confirm that callback was not triggered again once focus was regained
+        Assert.That(performedCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanMarkDeviceAsBeingAbleToRunInBackground_ThroughIOCTL()
     {
         var deviceId = runtime.ReportNewInputDevice<Gamepad>();
@@ -5630,8 +5784,8 @@ partial class CoreTests
 
         public Behavior behavior = Behavior.PreserveEventsAsIs;
 
-        public IntegerControl value1 { get; private set; }
-        public IntegerControl value2 { get; private set; }
+        public IntegerControl value1 { get; protected set; }
+        public IntegerControl value2 { get; protected set; }
 
         protected override void FinishSetup()
         {

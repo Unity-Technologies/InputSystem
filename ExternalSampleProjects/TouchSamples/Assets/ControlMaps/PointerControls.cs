@@ -17,7 +17,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace InputSamples.Controls
 {
-    public partial class @PointerControls : IInputActionCollection2, IDisposable
+    public partial class @PointerControls: IInputActionCollection2, IDisposable
     {
         public InputActionAsset asset { get; }
         public @PointerControls()
@@ -544,12 +544,14 @@ namespace InputSamples.Controls
         {
             asset.Disable();
         }
+
         public IEnumerable<InputBinding> bindings => asset.bindings;
 
         public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
             return asset.FindAction(actionNameOrId, throwIfNotFound);
         }
+
         public int FindBinding(InputBinding bindingMask, out InputAction action)
         {
             return asset.FindBinding(bindingMask, out action);

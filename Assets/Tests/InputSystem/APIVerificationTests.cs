@@ -183,6 +183,7 @@ class APIVerificationTests
 #if UNITY_EDITOR_OSX
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             fullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOSWireless).FullName ||
 #endif
 #if UNITY_EDITOR_WIN
             fullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
@@ -230,8 +231,11 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    #if UNITY_EDITOR_OSX
+#if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
+#endif
+    #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    [Ignore("Disabled to make test suite pass on Linux")]
     #endif
     public void API_MonoBehavioursHaveHelpUrls()
     {
@@ -368,6 +372,98 @@ class APIVerificationTests
         public ButtonControl tap { get; }
         public IntegerControl tapCount { get; }
         public IntegerControl touchId { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl app { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control deviceAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control deviceVelocity { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl home { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl recentered { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl recentering { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control touchpad { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadClicked { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadTouched { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl volumeDown { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl volumeUp { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl back { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control deviceAngularAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control deviceAngularVelocity { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl trigger { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl triggerPressed { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control centerEyeAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control centerEyeAngularAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control centerEyeAngularVelocity { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control leftEyeAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control leftEyeAngularAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control leftEyeAngularVelocity { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control rightEyeAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control rightEyeAngularAcceleration { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control rightEyeAngularVelocity { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl userPresence { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl start { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl grip { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl gripPressed { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl primaryButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl primaryTouched { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl secondaryButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl secondaryTouched { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control thumbstick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl thumbstickClicked { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl thumbstickTouched { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl triggerTouched { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl isTracked { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl trackingState { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl primary { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl trackpadPressed { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control joystick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl menu { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadClick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadTouch { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control centerEyeVelocity { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control leftEyeVelocity { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control rightEyeVelocity { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control trackpad { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl trackpadTouched { get; }
+        public Controls.Vector3Control acceleration { get; }
+        public Controls.AxisControl ambientTemperature { get; }
+        public Controls.QuaternionControl attitude { get; }
+        public Controls.Vector3Control gravity { get; }
+        public Controls.Vector3Control angularVelocity { get; }
+        public Controls.AxisControl relativeHumidity { get; }
+        public Controls.AxisControl lightLevel { get; }
+        public Controls.Vector3Control magneticField { get; }
+        public Controls.AxisControl atmosphericPressure { get; }
+        public Controls.AxisControl distance { get; }
+        public Controls.IntegerControl stepCounter { get; }
+        public Controls.Vector3Control devicePosition { get; }
+        public Controls.QuaternionControl deviceRotation { get; }
+        public Controls.ButtonControl isTracked { get; }
+        public Controls.IntegerControl trackingState { get; }
+        public AxisControl w { get; }
+        public AxisControl x { get; }
+        public AxisControl y { get; }
+        public AxisControl z { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl playStationButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl view { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl parentBoneIndex { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control position { get; }
+        public UnityEngine.InputSystem.Controls.QuaternionControl rotation { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control fixationPoint { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl leftEyeOpenAmount { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control leftEyePosition { get; }
+        public UnityEngine.InputSystem.Controls.QuaternionControl leftEyeRotation { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl rightEyeOpenAmount { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control rightEyePosition { get; }
+        public UnityEngine.InputSystem.Controls.QuaternionControl rightEyeRotation { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control centerEyePosition { get; }
+        public UnityEngine.InputSystem.Controls.QuaternionControl centerEyeRotation { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl airTap { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control sourceLossMitigationDirection { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl sourceLossRisk { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl batteryLevel { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl joystickClicked { get; }
+        public UnityEngine.InputSystem.Controls.Vector3Control pointerPosition { get; }
+        public UnityEngine.InputSystem.Controls.QuaternionControl pointerRotation { get; }
     ")]
     // InputActionAsset and InputActionMap changed from IInputActionCollection to IInputActionCollection2 with
     // the latter just being based on the former.
@@ -458,6 +554,10 @@ class APIVerificationTests
         public int right = 0;
         public int up = 0;
     ")]
+    // KeyboardState state size has increased to support more keys like F13-F24
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
+    // Allow Key.IMESelected to be marked as Obsolete
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
@@ -609,6 +709,9 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+#if UNITY_EDITOR_LINUX
+    [Ignore("Disabled to make test suite pass on Linux")]
+#endif
     public void API_DocumentationManualDoesNotHaveMissingOrUnusedImages()
     {
         const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";

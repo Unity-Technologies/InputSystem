@@ -1,13 +1,18 @@
+---
+uid: input-system-gamepad
+---
 # Gamepad Support
 
-* [Controls](#controls)
-* [Polling](#polling)
-* [Rumble](#rumble)
-  * [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
-* [PlayStation controllers](#playstation-controllers)
-* [Xbox controllers](#xbox-controllers)
-* [Switch controller](#switch-controllers)
-* [Cursor Control](#cursor-control)
+- [Controls](#controls)
+  - [Deadzones](#deadzones)
+- [Polling](#polling)
+- [Rumble](#rumble)
+  - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
+- [PlayStation controllers](#playstation-controllers)
+- [Xbox controllers](#xbox-controllers)
+- [Switch controllers](#switch-controllers)
+- [Cursor Control](#cursor-control)
+- [Discover all connected devices](#discover-all-connected-devices)
 
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
@@ -15,7 +20,7 @@ A gamepad can have additional Controls, such as a gyro, which the Device can exp
 
 Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
 
->NOTE: Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#overriding-the-hid-fallback)).
+>NOTE: Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#creating-a-custom-device-layout)).
 
 >NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
@@ -57,6 +62,45 @@ Gamepad.current["Y"]
 Gamepad.current[GamepadButton.Triangle]
 Gamepad.current["Triangle"]
 ```
+
+### Deadzones
+
+Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
+
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](ProcessorTypes.md#stick-deadzone) on the sticks, like this:
+
+```JSON
+     {
+        "name" : "MyGamepad",
+        "extend" : "Gamepad",
+        "controls" : [
+            {
+                "name" : "leftStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            },
+            {
+                "name" : "rightStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            }
+        ]
+    }
+```
+
+You can do the same in your C# state structs.
+
+```C#
+    public struct MyDeviceState
+    {
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl leftStick;
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl rightStick;
+    }
+```
+
+The gamepad layout already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
+
+
 
 ## Polling
 
@@ -133,7 +177,9 @@ Xbox controllers are well supported on different Devices. The Input System imple
 
 On other platforms Unity, uses derived classes to represent Xbox controllers:
 
-* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
+* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This class is only used when the `360Controller` driver is in use, and as such you shouldn't see it in use on modern versions of macOS - it is provided primarily for legacy reasons, and for scenarios where macOS 10.15 may still be used.
+
+* [`XboxGamepadMacOSNative`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOSNative.html): Any Xbox gamepad connected to a Mac (macOS 11.0 or higher) via USB. On modern macOS versions, you will get this class instead of `XboxGamepadMacOS`
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.
 
@@ -154,3 +200,37 @@ The Input System support Switch Pro controllers on desktop computers via the [`S
 ## Cursor Control
 
 To give gamepads and joysticks control over a hardware or software cursor, you can use the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. See [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control) in the UI section of the manual.
+
+## Discover all connected devices
+
+There are various ways to discover the currently connected devices, as shown in the code samples below.
+
+To query a list of all connected devices (does not allocate; read-only access):
+```
+InputSystem.devices
+```
+
+To get notified when a device is added or removed:
+```
+InputSystem.onDeviceChange +=
+    (device, change) =>
+    {
+        if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
+        {
+            Debug.Log($"Device '{device}' was {change}");
+        }
+    }
+```
+
+To find all gamepads and joysticks:
+```
+var devices = InputSystem.devices;
+for (var i = 0; i < devices.Count; ++i)
+{
+    var device = devices[i];
+    if (device is Joystick || device is Gamepad)
+    {
+        Debug.Log("Found " + device);
+    }
+}
+```

@@ -117,10 +117,6 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
-    /// // To register the processor, call
-    /// //
-    /// //    InputSystem.RegisterProcessor&lt;ScalingProcessor&gt;("scale");
-    /// //
     /// public class ScalingProcessor : InputProcessor&lt;float&gt;
     /// {
     ///     // This field can be set as a parameter. See examples below.
