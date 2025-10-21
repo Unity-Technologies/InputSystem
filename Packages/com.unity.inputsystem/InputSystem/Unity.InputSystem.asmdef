@@ -111,7 +111,12 @@
             "name": "Unity",
             "expression": "6000.3.0a6",
             "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
-        }
+        },
+	{
+	    "name": "Unity",
+            "expression": "6000.4.0a4",
+            "define": "UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS"
+	}
     ],
     "noEngineReferences": false
 }
