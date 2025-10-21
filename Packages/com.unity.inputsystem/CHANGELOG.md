@@ -16,12 +16,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
+- Added an explicit `Disable System Mouse` setting to `VirtualMouseInput` to allow toggling the default behavior off which makes the component turn off the system mouse while it is enabled (so as to suppress the system mouse doubling the input activity on the VirtualMouse).
 
 ### Fixed
 - Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
 - Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
 - Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
 - Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
+- `VirtualMouseInput` not working correctly with `CanvasScaler` settings other than `ConstantPixelSize`. Fix contributed by [ad-walker](https://github.com/ad-walker) in [#1078](https://github.com/Unity-Technologies/InputSystem/pull/1078).
 
 ## [1.15.0] - 2025-10-03
 
@@ -511,6 +513,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
+
+### Added
 - Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().
 - Fixed an issue where connecting a gamepad in the editor with certain settings will cause memory and performance to degrade ([case UUM-19480](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-19480)).
 - Fixed issue leading to a stack overflow crash during device initialization in `InsertControlBitRangeNode` (case ISXB-405).
