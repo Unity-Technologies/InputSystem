@@ -53,6 +53,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int GetIndexOfArrayElement(this SerializedProperty property)
         {
+            if (property == null)
+                return -1;
             var propertyPath = property.propertyPath;
             if (propertyPath[propertyPath.Length - 1] != ']')
                 return -1;

@@ -1,3 +1,6 @@
+---
+uid: input-system-keyboard
+---
 # Keyboard support
 
 The [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) class defines a [Device](Devices.md) with a set of key Controls defined by the [`Key`](../api/UnityEngine.InputSystem.Key.html) enumeration.

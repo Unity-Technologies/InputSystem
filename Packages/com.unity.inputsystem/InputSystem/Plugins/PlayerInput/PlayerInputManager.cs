@@ -334,6 +334,12 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Inhibit players from joining the game.
         /// </summary>
+        /// <remarks>
+        /// Note that this method might disable the action, depending on how the player
+        /// joined initially. Specifically, if the initial joining was triggered using
+        /// the <see cref="PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered"/> behavior,
+        /// this method also disables the join action.
+        /// </remarks>
         /// <seealso cref="EnableJoining"/>
         /// <seealso cref="joiningEnabled"/>
         public void DisableJoining()
@@ -501,7 +507,7 @@ namespace UnityEngine.InputSystem
 
             if (m_MaxPlayerCount >= 0 && playerCount >= m_MaxPlayerCount)
             {
-                Debug.LogError("Have reached maximum player count of " + maxPlayerCount, this);
+                Debug.LogWarning("Maximum number of supported players reached: " + maxPlayerCount, this);
                 return false;
             }
 

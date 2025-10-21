@@ -1,8 +1,11 @@
+using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 ////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
@@ -193,11 +196,36 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
+#endif
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
             m_PressPointSetting.OnGUI();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var tapCountField = new IntegerField(m_TapCountLabel.text)
+            {
+                value = target.tapCount,
+                tooltip = m_TapCountLabel.tooltip
+            };
+            tapCountField.RegisterValueChangedCallback(evt =>
+            {
+                target.tapCount = evt.newValue;
+                onChangedCallback?.Invoke();
+            });
+            root.Add(tapCountField);
+
+            m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);
+            m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+        }
+
+#endif
 
         private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
 

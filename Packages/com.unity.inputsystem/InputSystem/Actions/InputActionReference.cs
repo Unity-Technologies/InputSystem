@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem
             return base.ToString();
         }
 
-        private static string GetDisplayName(InputAction action)
+        internal static string GetDisplayName(InputAction action)
         {
             return !string.IsNullOrEmpty(action?.actionMap?.name) ? $"{action.actionMap?.name}/{action.name}" : action?.name;
         }
@@ -197,6 +197,24 @@ namespace UnityEngine.InputSystem
             var reference = CreateInstance<InputActionReference>();
             reference.Set(action);
             return reference;
+        }
+
+        /// <summary>
+        /// Clears the cached <see cref="m_Action"/> field for all current <see cref="InputActionReference"/> objects.
+        /// </summary>
+        /// <remarks>
+        /// After calling this, the next call to <see cref="action"/> will retrieve a new <see cref="InputAction"/> reference from the existing <see cref="InputActionAsset"/> just as if
+        /// using it for the first time. The serialized <see cref="m_Asset"/> and <see cref="m_ActionId"/> fields are not touched and will continue to hold their current values.
+        ///
+        /// This method is used to clear the Action references when exiting PlayMode since those objects are no longer valid.
+        /// </remarks>
+        internal static void ResetCachedAction()
+        {
+            var allActionRefs = Resources.FindObjectsOfTypeAll(typeof(InputActionReference));
+            foreach (InputActionReference obj in allActionRefs)
+            {
+                obj.m_Action = null;
+            }
         }
 
         [SerializeField] internal InputActionAsset m_Asset;

@@ -1,26 +1,42 @@
+---
+uid: input-system-devices
+---
 # Devices
 
-* [Device descriptions](#device-descriptions)
-    * [Capabilities](#capabilities)
-    * [Matching](#matching)
-    * [Hijacking the matching process](#hijacking-the-matching-process)
-* [Device lifecycle](#device-lifecycle)
-    * [Device creation](#device-creation)
-    * [Device removal](#device-removal)
-    * [Device resets](#device-resets)
-    * [Device syncs](#device-syncs)
-    * [Device enabling and disabling](#device-enabling-and-disabling)
-    * [Background and focus change behavior](#background-and-focus-change-behavior)
-    * [Domain reloads](#domain-reloads-in-the-editor)
-* [Native Devices](#native-devices)
-    * [Disconnected Devices](#disconnected-devices)
-* [Device IDs](#device-ids)
-* [Device usages](#device-usages)
-* [Device commands](#device-commands)
-* [Working with Devices](#working-with-devices)
-    * [Monitoring Devices](#monitoring-devices)
-    * [Adding and removing Devices](#adding-and-removing-devices)
-    * [Creating custom Devices](#creating-custom-devices)
+- [Devices](#devices)
+  - [Device descriptions](#device-descriptions)
+    - [Capabilities](#capabilities)
+    - [Matching](#matching)
+      - [Hijacking the matching process](#hijacking-the-matching-process)
+    - [Device lifecycle](#device-lifecycle)
+      - [Device creation](#device-creation)
+      - [Device removal](#device-removal)
+      - [Device resets](#device-resets)
+      - [Device syncs](#device-syncs)
+      - [Device enabling and disabling](#device-enabling-and-disabling)
+      - [Background and focus change behavior](#background-and-focus-change-behavior)
+      - [Domain reloads in the Editor](#domain-reloads-in-the-editor)
+  - [Native Devices](#native-devices)
+    - [Disconnected Devices](#disconnected-devices)
+  - [Device IDs](#device-ids)
+  - [Device usages](#device-usages)
+  - [Device commands](#device-commands)
+    - [Sending commands to Devices](#sending-commands-to-devices)
+    - [Adding custom device Commands](#adding-custom-device-commands)
+  - [Device state](#device-state)
+    - [State changes](#state-changes)
+      - [Monitoring state changes](#monitoring-state-changes)
+      - [Synthesizing state](#synthesizing-state)
+  - [Working with Devices](#working-with-devices)
+    - [Monitoring Devices](#monitoring-devices)
+    - [Adding and removing Devices](#adding-and-removing-devices)
+    - [Creating custom Devices](#creating-custom-devices)
+      - [Step 1: The state struct](#step-1-the-state-struct)
+      - [Step 2: The Device class](#step-2-the-device-class)
+      - [Step 3: The Update method](#step-3-the-update-method)
+      - [Step 4: Device registration and creation](#step-4-device-registration-and-creation)
+      - [Step 5: `current` and `all` (optional)](#step-5-current-and-all-optional)
+      - [Step 6: Device Commands (Optional)](#step-6-device-commands-optional)
 
 Physically, Input Devices represent devices attached to the computer, which a user can use to control the app. Logically, Input Devices are the top-level container for [Controls](Controls.md). The [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) class is itself a specialization of [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html). See [supported Devices](SupportedDevices.md) to see what kind of Devices the Input System currently supports.
 
@@ -167,7 +183,7 @@ If the application is configured to run while in the background (that is, not ha
 If the application is configured this way to keep running while in the background, the player loop and thus the Input System, too, will keep running even when the application does not have focus. What happens with respect to input then depends on two factors:
 
 1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](../api/UnityEngine.InputSystem.TrackedDevice.html)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](Layouts.md#control-items).
-2. On two settings you can find in the project-wide [Input Settings](Settings.md). Specifically, [`InputSettings.backgroundBehavior`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_backgroundBehavior):<br>![Background Behavior Setting](Images/BackgroundBehavior.png)<br>and [`InputSettings.editorInputBehaviorInPlayMode`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_editorInputBehaviorInPlayMode):<br>![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)<br>The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
+2. On two settings you can find in the project-wide [Input Settings](Settings.md). Specifically, [`InputSettings.backgroundBehavior`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_backgroundBehavior) and [`InputSettings.editorInputBehaviorInPlayMode`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_editorInputBehaviorInPlayMode). The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
 
 >__Note__: [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) is overridden by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
 
@@ -186,6 +202,23 @@ Note that layout registrations do not persist across domain reloads. Instead, th
 Devices that the [native backend](Architecture.md#native-backend) reports are considered native (as opposed to Devices created from script code). To identify these Devices, you can check the [`InputDevice.native`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_native) property.
 
 The Input System remembers native Devices. For example, if the system has no matching layout when the Device is first reported, but a layout which matches the device is registered later, the system uses this layout to recreate the Device.
+
+You can force the Input System to use your own [layout](Layouts.md) when the native backend discovers a specific Device, by describing the Device in the layout, like this:
+
+```
+     {
+        "name" : "MyGamepad",
+        "extend" : "Gamepad",
+        "device" : {
+            // All strings in here are regexs and case-insensitive.
+            "product" : "MyController",
+            "manufacturer" : "MyCompany"
+        }
+     }
+```
+
+Note: You don't have to restart Unity in order for changes in your layout to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a layout and your Device is recreated with the most up-to-date version every time scripts are recompiled.
+
 
 ### Disconnected Devices
 
@@ -250,14 +283,22 @@ InputSystem.onDeviceChange +=
         switch (change)
         {
             case InputDeviceChange.Added:
-                Debug.Log("New device added: " + device);
+                // New Device.
                 break;
-
+            case InputDeviceChange.Disconnected:
+                // Device got unplugged.
+                break;
+            case InputDeviceChange.Connected:
+                // Plugged back in.
+                break;
             case InputDeviceChange.Removed:
-                Debug.Log("Device removed: " + device);
+                // Remove from Input System entirely; by default, Devices stay in the system once discovered.
+                break;
+            default:
+                // See InputDeviceChange reference for other event types.
                 break;
         }
-    };
+    }
 ```
 
 [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) delivers notifications for other device-related changes as well. See the [`InputDeviceChange` enum](../api/UnityEngine.InputSystem.InputDeviceChange.html) for more information.
@@ -277,7 +318,7 @@ There are two main situations in which you might need to create a custom Device:
 1. You have an existing API that generates input, and which you want to reflect into the Input System.
 2. You have an HID that the Input System ignores, or that the Input system auto-generates a layout for that doesn't work well enough for your needs.
 
-For the second scenario, see [Overriding the HID Fallback](HID.md#overriding-the-hid-fallback).
+For the second scenario, see [Overriding the HID Fallback](HID.md#creating-a-custom-device-layout).
 
 The steps below deal with the first scenario, where you want to create a new Input Device entirely from scratch and provide input to it from a third-party API.
 

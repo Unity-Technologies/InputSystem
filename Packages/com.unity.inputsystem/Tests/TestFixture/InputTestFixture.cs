@@ -59,6 +59,17 @@ namespace UnityEngine.InputSystem
     /// input and device discovery or removal notifications from platform code. This ensures
     /// that while the test is running, input that may be generated on the machine running
     /// the test will not infer with it.
+    ///
+    /// Be cautious when using <c>NUnit.Framework.OneTimeSetUpAttribute</c> and
+    /// <c>NUnit.Framework.OneTimeTearDownAttribute</c> in combination with this test fixture.
+    /// For example, any devices created prior to execution of <see cref="Setup()"/> would be added to the actual
+    /// Input System instead of the test fixture system and after <see cref="Setup()"/> has executed such devices
+    /// will no longer be valid. You may of course use these NUnit features, but it is advised to not attempt affecting
+    /// the Input System under test from those methods since it would affect the real system and not the system
+    /// under test.
+    ///
+    /// This test fixture is designed for play-mode tests and is generally not supported for edit-mode tests.
+    /// Both <c>[Test]</c> and <c>[UnityTest]</c> are supported, but only in play-mode.
     /// </remarks>
     public class InputTestFixture
     {
@@ -91,8 +102,9 @@ namespace UnityEngine.InputSystem
                 runtime = new InputTestRuntime();
 
                 // Push current input system state on stack.
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
-
+#endif
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR
@@ -139,6 +151,14 @@ namespace UnityEngine.InputSystem
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
                 InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
+
+                #if UNITY_EDITOR
+                // Default mock dialogs to avoid unexpected cancellation of standard flows
+                Dialog.InputActionAsset.SetSaveChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges((_) => Dialog.Result.Discard);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset((_) => Dialog.Result.Discard);
+                Dialog.ControlScheme.SetDeleteControlScheme((_) => Dialog.Result.Delete);
+                #endif
             }
             catch (Exception exception)
             {
@@ -165,7 +185,9 @@ namespace UnityEngine.InputSystem
 
             try
             {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.Restore();
+#endif
                 runtime.Dispose();
 
                 // Unhook from play mode state changes.
@@ -177,6 +199,14 @@ namespace UnityEngine.InputSystem
                 // Re-enable input debugger.
                 #if UNITY_EDITOR
                 InputDebuggerWindow.Enable();
+                #endif
+
+                #if UNITY_EDITOR
+                // Re-enable dialogs.
+                Dialog.InputActionAsset.SetSaveChanges(null);
+                Dialog.InputActionAsset.SetDiscardUnsavedChanges(null);
+                Dialog.InputActionAsset.SetCreateAndOverwriteExistingAsset(null);
+                Dialog.ControlScheme.SetDeleteControlScheme(null);
                 #endif
             }
             catch (Exception exception)
@@ -514,6 +544,12 @@ namespace UnityEngine.InputSystem
         /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
         /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
+        /// <exception cref="ArgumentNullException">If control is null.</exception>
+        /// <exception cref="ArgumentException">If the device associated with <paramref name="control"/> has not
+        /// been added to the system or if the control does not have any associated state. The latter may only
+        /// happen if attempting to set a control of a device created outside the test context.</exception>
+        /// <exception cref="NotSupportedException">If attempting to set a control of a test device in an
+        /// editor assembly. [UnityTest] in editor assemblies is not supported by this test fixture.</exception>
         /// <example>
         /// <code>
         /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
@@ -525,12 +561,14 @@ namespace UnityEngine.InputSystem
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-            if (!control.device.added)
-                throw new ArgumentException(
-                    $"Device of control '{control}' has not been added to the system", nameof(control));
+            CheckValidity(control.device, control);
 
             if (IsUnityTest())
+            {
+                if (IsEditMode())
+                    throw new NotSupportedException("InputTestFixture.Set does not support edit mode (editor assembly) [UnityTest].");
                 queueEventOnly = true;
+            }
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
@@ -644,6 +682,7 @@ namespace UnityEngine.InputSystem
                 if (screen == null)
                     screen = InputSystem.AddDevice<Touchscreen>();
             }
+            CheckValidity(screen);
 
             InputSystem.QueueStateEvent(screen, new TouchState
             {
@@ -890,6 +929,136 @@ namespace UnityEngine.InputSystem
             InputSystem.s_SystemObject.OnBeforeSerialize();
             InputSystem.s_SystemObject = null;
             InputSystem.InitializeInEditor(runtime);
+        }
+
+        #endif
+
+        private static void CheckValidity(InputDevice device, InputControl control)
+        {
+            if (!device.added)
+            {
+                throw new ArgumentException(
+                    $"Device '{device}' has not been added to the system", nameof(device));
+            }
+
+            // Guards against a device from another scope being used. This is a direct way to evaluate whether
+            // the device is associated with the current manager state or not since device state isn't consistently
+            // pushed/popped in the current design.
+            var manager = InputSystem.s_Manager;
+            if (manager == null || !manager.HasDevice(device))
+            {
+                throw new ArgumentException($"Control '{control}' does not have any associated state. " +
+                    "Make sure the control or device was added after executing Setup().",  nameof(control));
+            }
+        }
+
+        private static void CheckValidity(InputControl control)
+        {
+            CheckValidity(control.device, control);
+        }
+
+        /// <summary>
+        /// Returns true if running inside an Edit Mode test (Editor assembly).
+        /// Returns false if running in Play Mode.
+        /// </summary>
+        private static bool IsEditMode()
+        {
+            return Application.isEditor && !Application.isPlaying;
+        }
+
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Represents an analytics registration event captured by test harness.
+        /// </summary>
+        protected struct AnalyticsRegistrationEventData
+        {
+            public AnalyticsRegistrationEventData(string name, int maxPerHour, int maxPropertiesPerEvent)
+            {
+                this.name = name;
+                this.maxPerHour = maxPerHour;
+                this.maxPropertiesPerEvent = maxPropertiesPerEvent;
+            }
+
+            public readonly string name;
+            public readonly int maxPerHour;
+            public readonly int maxPropertiesPerEvent;
+        }
+
+        /// <summary>
+        /// Represents an analytics data event captured by test harness.
+        /// </summary>
+        protected struct AnalyticsEventData
+        {
+            public AnalyticsEventData(string name, object data)
+            {
+                this.name = name;
+                this.data = data;
+            }
+
+            public readonly string name;
+            public readonly object data;
+        }
+
+        private List<AnalyticsRegistrationEventData> m_RegisteredAnalytics;
+        private List<AnalyticsEventData> m_SentAnalyticsEvents;
+
+        /// <summary>
+        /// Returns a read-only list of all analytics events registred by enabling capture via <see cref="CollectAnalytics(System.Predicate{string})"/>.
+        /// </summary>
+        protected IReadOnlyList<AnalyticsRegistrationEventData> registeredAnalytics => m_RegisteredAnalytics;
+
+        /// <summary>
+        /// Returns a read-only list of all analytics events captured by enabling capture via <see cref="CollectAnalytics(System.Predicate{string})"/>.
+        /// </summary>
+        protected IReadOnlyList<AnalyticsEventData> sentAnalyticsEvents => m_SentAnalyticsEvents;
+
+        /// <summary>
+        /// Set up the test fixture to collect analytics registrations and events
+        /// </summary>
+        /// <param name="analyticsNameFilter">A filter predicate evaluating whether the given analytics name should be accepted to be stored in test fixture.</param>
+        protected void CollectAnalytics(Predicate<string> analyticsNameFilter)
+        {
+            // Make sure containers are initialized and create them if not. Otherwise just clear to avoid allocation.
+            if (m_RegisteredAnalytics == null)
+                m_RegisteredAnalytics = new List<AnalyticsRegistrationEventData>();
+            else
+                m_RegisteredAnalytics.Clear();
+            if (m_SentAnalyticsEvents == null)
+                m_SentAnalyticsEvents = new List<AnalyticsEventData>();
+            else
+                m_SentAnalyticsEvents.Clear();
+
+            // Store registered analytics when called if filter applies
+            runtime.onRegisterAnalyticsEvent = (name, maxPerHour, maxPropertiesPerEvent) =>
+            {
+                if (analyticsNameFilter(name))
+                    m_RegisteredAnalytics.Add(new AnalyticsRegistrationEventData(name: name, maxPerHour: maxPerHour, maxPropertiesPerEvent: maxPropertiesPerEvent));
+            };
+
+            // Store sent analytic events when called if filter applies
+            runtime.onSendAnalyticsEvent = (name, data) =>
+            {
+                if (analyticsNameFilter(name))
+                    m_SentAnalyticsEvents.Add(new AnalyticsEventData(name: name, data: data));
+            };
+        }
+
+        /// <summary>
+        /// Set up the test fixture to collect filtered analytics registrations and events.
+        /// </summary>
+        /// <param name="acceptedName">The analytics name to be accepted, all other registrations and data
+        /// will be discarded.</param>
+        protected void CollectAnalytics(string acceptedName)
+        {
+            CollectAnalytics((name) => name.Equals(acceptedName));
+        }
+
+        /// <summary>
+        /// Set up the test fixture to collect ALL analytics registrations and events.
+        /// </summary>
+        protected void CollectAnalytics()
+        {
+            CollectAnalytics((_) => true);
         }
 
         #endif

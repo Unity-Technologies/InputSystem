@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -62,4 +62,4 @@ namespace UnityEngine.InputSystem.iOS
         }
     }
 }
-#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS

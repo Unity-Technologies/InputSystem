@@ -1,8 +1,11 @@
+---
+uid: input-system-player-input-manager
+---
 # The Player Input Manager component
 
 >NOTE: The Input System package comes with a sample called `Simple Multiplayer` which you can install from the package manager UI in the Unity editor. The sample demonstrates how to use [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) to set up a simple local multiplayer scenario.
 
-The [`Player Input`](PlayerInput.md) system facilitates setting up local multiplayer games, where multiple players share a single device with a single screen and multiple controllers. Set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of `PlayerInput` instances as players join and leave the game.
+The [`Player Input`](PlayerInput.md) system facilitates setting up local multiplayer games, where multiple players share a single screen and multiple controllers. You can set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of `PlayerInput` instances as players join and leave the game.
 
 ![PlayerInputManager](Images/PlayerInputManager.png)
 
@@ -48,5 +51,5 @@ Your game can listen to the following notifications:
 
 |Notification|Description|
 |------------|-----------|
-|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player joined the game. Passes the [`PlayerInput`](PlayerInput.md`PlayerInputManager` sends a `Player Joined` notification for each of these.|
+|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player joined the game. Passes the [`PlayerInput`](PlayerInput.md`PlayerInputManager` sends a `Player Joined` notification for each of these).|
 |[`PlayerLeftMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerLeftMessage)|A player left the game. Passes the [`PlayerInput`](PlayerInput.md) instance of the player who left.|

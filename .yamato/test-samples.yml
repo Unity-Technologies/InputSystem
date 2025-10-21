@@ -14,10 +14,7 @@ test_sample_projects_{{ editor.version }}:
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
     cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
+    expression: pull_request.(target eq "develop" AND NOT changes.all match "**/*.md")
   artifacts:
     UTR_Output.zip:
       paths:

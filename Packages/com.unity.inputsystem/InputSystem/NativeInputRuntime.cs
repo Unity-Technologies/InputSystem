@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -8,7 +9,6 @@ using UnityEngineInternal.Input;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -211,10 +211,16 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public float pollingFrequency
         {
+            #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+            get => NativeInputSystem.GetPollingFrequency();
+            #else
             get => m_PollingFrequency;
+            #endif
             set
             {
+                #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 m_PollingFrequency = value;
+                #endif
                 NativeInputSystem.SetPollingFrequency(value);
             }
         }
@@ -227,11 +233,17 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
         public float unscaledGameTime => Time.unscaledTime;
 
-        public bool runInBackground => Application.runInBackground ||
-        // certain platforms ignore the runInBackground flag and always run. Make sure we're
-        // not running on one of those.
-        // TODO: Add more platforms here as they're discovered.
-        Application.platform == RuntimePlatform.PS5;
+        public bool runInBackground
+        {
+            get =>
+                Application.runInBackground ||
+                // certain platforms ignore the runInBackground flag and always run. Make sure we're
+                // not running on one of those and set the values when running on specific platforms.
+                m_RunInBackground;
+            set => m_RunInBackground = value;
+        }
+
+        bool m_RunInBackground;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
@@ -240,7 +252,12 @@ namespace UnityEngine.InputSystem.LowLevel
         #if UNITY_EDITOR
         private Action m_PlayerLoopInitialization;
         #endif
+        #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+        // From Unity 6000.3.0a2 (TODO Update comment and manifest before landing PR) this is handled by module
+        // and initial value is suggested by the platform based on its supported device set.
+        // In older version this is stored here and package override module/platform.
         private float m_PollingFrequency = 60.0f;
+        #endif
         private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
         {
@@ -275,12 +292,21 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
-        public bool isInBatchMode => Application.isBatchMode;
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        public bool normalizeScrollWheelDelta
+        {
+            get => NativeInputSystem.normalizeScrollWheelDelta;
+            set => NativeInputSystem.normalizeScrollWheelDelta = value;
+        }
 
+        public float scrollWheelDeltaPerTick
+        {
+            get => NativeInputSystem.GetScrollWheelDeltaPerTick();
+        }
+#endif
         #if UNITY_EDITOR
 
         public bool isInPlayMode => EditorApplication.isPlaying;
-        public bool isPaused => EditorApplication.isPaused;
         public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
         public Func<IntPtr, bool> onUnityRemoteMessage
@@ -370,27 +396,33 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if UNITY_ANALYTICS
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
+        #if ENABLE_CLOUD_SERVICES_ANALYTICS
+            #if (UNITY_EDITOR)
+                #if (UNITY_2023_2_OR_NEWER)
+            EditorAnalytics.SendAnalytic(analytic);
+                #else
+            // The preprocessor filtering is a workaround for the fact that the AnalyticsResult enum is not available before 2023.1.0a14 when not using the built-in Unity Analytics module.
+                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+                    #endif // UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+                #endif // UNITY_2023_2_OR_NEWER
+            #elif (UNITY_ANALYTICS) // Implicitly: !UNITY_EDITOR
+            var info = analytic.info;
+            Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            if (analytic.TryGatherData(out var data, out var error))
+                Analytics.Analytics.SendEvent(info.Name, data);
+            else
+                Debug.Log(error);     // Non fatal
+            #endif //UNITY_EDITOR
+        #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            #if UNITY_ANALYTICS
-            #if UNITY_EDITOR
-            EditorAnalytics.SendEventWithLimit(name, data);
-            #else
-            Analytics.Analytics.SendEvent(name, data);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
-        }
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

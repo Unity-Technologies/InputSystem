@@ -93,7 +93,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     case "start": return startButton;
                     case "select": return selectButton;
                     case "leftTrigger": return leftTrigger;
+                    case "leftTriggerButton": return leftTrigger;
                     case "rightTrigger": return rightTrigger;
+                    case "rightTriggerButton": return rightTrigger;
                     case "leftShoulder": return leftShoulder;
                     case "rightShoulder": return rightShoulder;
                     case "dpad": return dpad;

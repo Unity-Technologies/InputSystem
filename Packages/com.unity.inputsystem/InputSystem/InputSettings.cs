@@ -85,6 +85,28 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Controls how platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// </summary>
+        /// <value>The conversion behavior.</value>
+        /// <remarks>
+        /// By default, the range used for the delta is normalized to a range of -1 to 1, to be uniform across all platforms.
+        /// The alternative is that the native platform's scroll wheel range is returned, which is -120 to 120 for windows, and
+        /// -1 to 1 for most other platforms. You should leave this value as the default uniform range unless you need to support
+        /// legacy code that relies on the native platform-specific values.
+        /// </remarks>
+        public ScrollDeltaBehavior scrollDeltaBehavior
+        {
+            get => m_ScrollDeltaBehavior;
+            set
+            {
+                if (m_ScrollDeltaBehavior == value)
+                    return;
+                m_ScrollDeltaBehavior = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// If true, sensors that deliver rotation values on handheld devices will automatically adjust
         /// rotations when the screen orientation changes.
         /// </summary>
@@ -526,6 +548,22 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="InputActionPropertyDrawerMode"/>
+        public InputActionPropertyDrawerMode inputActionPropertyDrawerMode
+        {
+            get => m_InputActionPropertyDrawerMode;
+            set
+            {
+                if (m_InputActionPropertyDrawerMode == value)
+                    return;
+                m_InputActionPropertyDrawerMode = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
         /// <see cref="InputSystem.Update"/>.
         /// </summary>
@@ -701,27 +739,13 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            switch (featureName)
-            {
-                case InputFeatureNames.kUseOptimizedControls:
-                    optimizedControlsFeatureEnabled = enabled;
-                    break;
-                case InputFeatureNames.kUseReadValueCaching:
-                    readValueCachingFeatureEnabled = enabled;
-                    break;
-                case InputFeatureNames.kParanoidReadValueCachingChecks:
-                    paranoidReadValueCachingChecksEnabled = enabled;
-                    break;
-                default:
-                    if (m_FeatureFlags == null)
-                        m_FeatureFlags = new HashSet<string>();
+            if (m_FeatureFlags == null)
+                m_FeatureFlags = new HashSet<string>();
 
-                    if (enabled)
-                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
-                    else
-                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
-                    break;
-            }
+            if (enabled)
+                m_FeatureFlags.Add(featureName.ToUpperInvariant());
+            else
+                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
 
             OnChange();
         }
@@ -732,12 +756,14 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private ScrollDeltaBehavior m_ScrollDeltaBehavior = ScrollDeltaBehavior.UniformAcrossAllPlatforms;
         [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
         [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
+        [SerializeField] private InputActionPropertyDrawerMode m_InputActionPropertyDrawerMode = InputActionPropertyDrawerMode.Compact;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
@@ -760,11 +786,6 @@ namespace UnityEngine.InputSystem
         {
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }
-
-        // Needs a static field because feature check is in the hot path
-        internal static bool optimizedControlsFeatureEnabled = false;
-        internal static bool readValueCachingFeatureEnabled;
-        internal static bool paranoidReadValueCachingChecksEnabled;
 
         internal void OnChange()
         {
@@ -826,6 +847,29 @@ namespace UnityEngine.InputSystem
             /// accumulating or some input getting lost.
             /// </summary>
             ProcessEventsManually,
+        }
+
+        /// <summary>
+        /// How platform-specific input should be converted when returning delta values for scroll wheel input actions.
+        /// </summary>
+        public enum ScrollDeltaBehavior
+        {
+            /// <summary>
+            /// The range used for the delta is converted to be uniform across all platforms.
+            /// </summary>
+            /// <remarks>
+            /// The resulting range will be [-1, 1] regardless of the platform used.
+            /// </remarks>
+            UniformAcrossAllPlatforms = 0,
+
+            /// <summary>
+            /// The range used for the delta is the same as returned by the platform input.
+            /// </summary>
+            /// <remarks>
+            /// The range will typically be [-120, 120] on Windows and [-1, 1] on MacOS and Linux.
+            /// Other platforms may have different ranges.
+            /// </remarks>
+            KeepPlatformSpecificInputRange = 1
         }
 
         /// <summary>
@@ -898,6 +942,128 @@ namespace UnityEngine.InputSystem
             /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
             /// </summary>
             AllDeviceInputAlwaysGoesToGameView,
+        }
+
+        /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="inputActionPropertyDrawerMode"/>
+        public enum InputActionPropertyDrawerMode
+        {
+            /// <summary>
+            /// Display the property in a compact format, using a minimal number of lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a dropdown menu.
+            /// </summary>
+            Compact,
+
+            /// <summary>
+            /// Display the effective action underlying the property, using multiple lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see or revert prefab overrides and hide the field that is ignored.
+            /// </remarks>
+            MultilineEffective,
+
+            /// <summary>
+            /// Display both the input action and external reference underlying the property.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see both values of the property without needing to toggle Use Reference.
+            /// </remarks>
+            MultilineBoth,
+        }
+
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        /// <summary>
+        /// Determines if we should render the UI with IMGUI even if an UI Toolkit UI is available.
+        ///
+        /// This should be used when writing a custom <see cref="InputParameterEditor"/> to :
+        /// * support inspector view which only work in IMGUI for now.
+        /// * prevent the UI to be rendered in IMGUI and UI Toolkit in the Input Actions Editor window.
+        /// </summary>
+        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel > 0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+#endif
+
+        private static bool CompareFloats(float a, float b)
+        {
+            return (a - b) <= float.Epsilon;
+        }
+
+        private static bool CompareSets<T>(ReadOnlyArray<T> a, ReadOnlyArray<T> b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            for (var i = 0; i < a.Count; ++i)
+            {
+                bool existsInB = false;
+                for (var j = 0; j < b.Count; ++j)
+                {
+                    if (a[i].Equals(b[j]))
+                    {
+                        existsInB = true;
+                        break;
+                    }
+                }
+
+                if (!existsInB)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool CompareFeatureFlag(InputSettings a, InputSettings b, string featureName)
+        {
+            return a.IsFeatureEnabled(featureName) == b.IsFeatureEnabled(featureName);
+        }
+
+        internal static bool AreEqual(InputSettings a, InputSettings b)
+        {
+            if (ReferenceEquals(null, a))
+                return ReferenceEquals(null, b);
+            if (ReferenceEquals(null, b))
+                return false;
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.updateMode == b.updateMode) &&
+                (a.compensateForScreenOrientation == b.compensateForScreenOrientation) &&
+                // Ignoring filterNoiseOnCurrent since deprecated
+                CompareFloats(a.defaultDeadzoneMin, b.defaultDeadzoneMin) &&
+                CompareFloats(a.defaultDeadzoneMax, b.defaultDeadzoneMax) &&
+                CompareFloats(a.defaultButtonPressPoint, b.defaultButtonPressPoint) &&
+                CompareFloats(a.buttonReleaseThreshold, b.buttonReleaseThreshold) &&
+                CompareFloats(a.defaultTapTime, b.defaultTapTime) &&
+                CompareFloats(a.defaultSlowTapTime, b.defaultSlowTapTime) &&
+                CompareFloats(a.defaultHoldTime, b.defaultHoldTime) &&
+                CompareFloats(a.tapRadius, b.tapRadius) &&
+                CompareFloats(a.multiTapDelayTime, b.multiTapDelayTime) &&
+                a.backgroundBehavior == b.backgroundBehavior &&
+                a.editorInputBehaviorInPlayMode == b.editorInputBehaviorInPlayMode &&
+                a.inputActionPropertyDrawerMode == b.inputActionPropertyDrawerMode &&
+                a.maxEventBytesPerUpdate == b.maxEventBytesPerUpdate &&
+                a.maxQueuedEventsPerUpdate == b.maxQueuedEventsPerUpdate &&
+                CompareSets(a.supportedDevices, b.supportedDevices) &&
+                a.disableRedundantEventsMerging == b.disableRedundantEventsMerging &&
+                a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
+
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
+                CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
+#else
+                true;     // Improves formatting
+#endif
         }
     }
 }

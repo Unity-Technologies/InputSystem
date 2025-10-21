@@ -6,7 +6,13 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 ////TODO: Add "Revert" button
 
@@ -28,26 +34,51 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow, IDisposable
+    internal class InputActionEditorWindow : EditorWindow, IDisposable, IInputActionAssetEditor
     {
+        // Register editor type via static constructor to enable asset monitoring
+        static InputActionEditorWindow()
+        {
+            InputActionAssetEditor.RegisterType<InputActionEditorWindow>();
+        }
+
+        // Unity 6.3 changed signature of OpenAsset, and now it accepts entity id instead of instance id.
+        [OnOpenAsset]
+#if UNITY_6000_3_OR_NEWER
+        public static bool OpenAsset(EntityId entityId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(entityId)))
+                return false;
+
+            return OpenAsset(EditorUtility.EntityIdToObject(entityId));
+        }
+
+#else
+        public static bool OpenAsset(int instanceId, int line)
+        {
+            if (!InputActionImporter.IsInputActionAssetPath(AssetDatabase.GetAssetPath(instanceId)))
+                return false;
+
+            return OpenAsset(EditorUtility.InstanceIDToObject(instanceId));
+        }
+
+#endif
+
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
-        [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceId, int line)
+        private static bool OpenAsset(Object obj)
         {
-            var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return false;
-
+#endif
             string mapToSelect = null;
             string actionToSelect = null;
 
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
-            var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
             if (asset == null)
             {
@@ -100,27 +131,16 @@ namespace UnityEngine.InputSystem.Editor
             return window;
         }
 
-        public static InputActionEditorWindow FindEditorForAsset(InputActionAsset asset)
+        private static InputActionEditorWindow FindEditorForAsset(InputActionAsset asset)
         {
-            var windows = Resources.FindObjectsOfTypeAll<InputActionEditorWindow>();
-            return windows.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(asset));
+            var guid = EditorHelpers.GetAssetGUID(asset);
+            return guid == null ? null : FindEditorForAssetWithGUID(guid);
         }
 
         public static InputActionEditorWindow FindEditorForAssetWithGUID(string guid)
         {
             var windows = Resources.FindObjectsOfTypeAll<InputActionEditorWindow>();
             return windows.FirstOrDefault(w => w.m_ActionAssetManager.guid == guid);
-        }
-
-        public static void RefreshAllOnAssetReimport()
-        {
-            if (s_RefreshPending)
-                return;
-
-            // We don't want to refresh right away but rather wait for the next editor update
-            // to then do one pass of refreshing action editor windows.
-            EditorApplication.delayCall += RefreshAllOnAssetReimportCallback;
-            s_RefreshPending = true;
         }
 
         public void SaveChangesToAsset()
@@ -161,41 +181,28 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionsTree.AddNewBinding(item.property, item.actionMapProperty);
         }
 
-        private static void RefreshAllOnAssetReimportCallback()
-        {
-            s_RefreshPending = false;
-
-            // When the asset is modified outside of the editor
-            // and the importer settings are visible in the inspector
-            // the asset references in the importer inspector need to be force rebuild
-            // (otherwise we gets lots of exceptions)
-            ActiveEditorTracker.sharedTracker.ForceRebuild();
-
-            var windows = Resources.FindObjectsOfTypeAll<InputActionEditorWindow>();
-            foreach (var window in windows)
-                window.ReloadAssetFromFileIfNotDirty();
-        }
-
         private bool ConfirmSaveChangesIfNeeded()
         {
             // Ask for confirmation if we have unsaved changes.
             if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
-                var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
-                    $"Do you want to save the changes you made in:\n{m_ActionAssetManager.path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+                var result = Dialog.InputActionAsset.ShowSaveChanges(m_ActionAssetManager.path);
                 switch (result)
                 {
-                    case 0: // Save
+                    case Dialog.Result.Save:
                         m_ActionAssetManager.SaveChangesToAsset();
                         m_ActionAssetManager.Cleanup();
                         break;
-                    case 1: // Cancel
+                    case Dialog.Result.Cancel:
                         Instantiate(this).Show();
                         // Cancel editor quit.
                         return false;
-                    case 2: // Don't save, don't ask again.
+                    case Dialog.Result.Discard:
+                        // Don't save, don't ask again.
                         m_ForceQuit = true;
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(result));
                 }
             }
             return true;
@@ -258,8 +265,8 @@ namespace UnityEngine.InputSystem.Editor
             if (asset == null)
                 return;
 
-            m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
-            m_ActionAssetManager.Initialize();
+            m_ActionAssetManager = new InputActionAssetManager(asset) { onDirtyChanged = OnDirtyChanged };
+            //m_ActionAssetManager.Initialize(); // TODO No longer needed when using constructor
 
             InitializeTrees();
             LoadControlSchemes();
@@ -339,7 +346,7 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(!string.IsNullOrEmpty(name), "Control scheme name should not be empty");
             Debug.Assert(!string.IsNullOrEmpty(bindingGroup), "Binding group should not be empty");
 
-            var asset = m_ActionAssetManager.m_AssetObjectForEditing;
+            var asset = m_ActionAssetManager.editedAsset;
 
             var bindingMask = InputBinding.MaskByGroup(bindingGroup);
             var schemeHasBindings = asset.actionMaps.Any(m => m.bindings.Any(b => bindingMask.Matches(ref b)));
@@ -528,7 +535,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_Toolbar.selectedDeviceRequirement != null)
                 {
                     // Single device selected from set of devices in control scheme.
-                    controlPathsToMatch = new[] {m_Toolbar.selectedDeviceRequirement.Value.controlPath};
+                    controlPathsToMatch = new[] { m_Toolbar.selectedDeviceRequirement.Value.controlPath };
                 }
                 else if (m_Toolbar.selectedControlScheme != null)
                 {
@@ -594,6 +601,15 @@ namespace UnityEngine.InputSystem.Editor
             LoadPropertiesForSelection();
         }
 
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+        private void OnLostFocus()
+        {
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                m_ActionAssetManager.SaveChangesToAsset();
+        }
+
+#endif
+
         private void Apply()
         {
             m_ActionAssetManager.ApplyChanges();
@@ -602,6 +618,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionMapsTree.UpdateSerializedObjectDirtyCount();
             m_ActionsTree.UpdateSerializedObjectDirtyCount();
 
+#if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // If auto-save should be triggered on focus lost, only mark asset as dirty
+            m_ActionAssetManager.MarkDirty();
+            titleContent = m_DirtyTitle;
+#else
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
             // put us into dirty state.
             if (InputEditorUserSettings.autoSaveInputActionAssets)
@@ -610,9 +631,10 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                m_ActionAssetManager.SetAssetDirty();
+                m_ActionAssetManager.MarkDirty();
                 titleContent = m_DirtyTitle;
             }
+#endif
         }
 
         private void OnGUI()
@@ -770,6 +792,7 @@ namespace UnityEngine.InputSystem.Editor
             Repaint();
         }
 
+#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         ////TODO: add shortcut to focus search box
 
         ////TODO: show shortcuts in tooltips
@@ -802,6 +825,8 @@ namespace UnityEngine.InputSystem.Editor
             window.AddNewBinding();
         }
 
+#endif
+
         private void OnDirtyChanged(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
@@ -829,69 +854,26 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
-        private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
+        #region IInputActionAssetEditor
+
+        public void OnAssetImported() => ReloadAssetFromFileIfNotDirty();
+
+        public void OnAssetMoved() => UpdateWindowTitle();
+
+        public void OnAssetDeleted()
         {
-            // Handle .inputactions asset being deleted.
-            // ReSharper disable once UnusedMember.Local
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
-            public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
-            {
-                if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
-                    return default;
-
-                // See if we have an open window.
-                var guid = AssetDatabase.AssetPathToGUID(path);
-                var window = FindEditorForAssetWithGUID(guid);
-                if (window != null)
-                {
-                    // If there's unsaved changes, ask for confirmation.
-                    if (window.m_ActionAssetManager.dirty)
-                    {
-                        var result = EditorUtility.DisplayDialog("Unsaved changes",
-                            $"You have unsaved changes for '{path}'. Do you want to discard the changes and delete the asset?",
-                            "Yes, Delete", "No, Cancel");
-                        if (!result)
-                        {
-                            // User canceled. Stop the deletion.
-                            return AssetDeleteResult.FailedDelete;
-                        }
-
-                        window.m_ForceQuit = true;
-                    }
-
-                    window.Close();
-                }
-
-                return default;
-            }
-
-            #pragma warning disable CA1801 // unused parameters
-
-            // Handle .inputactions asset being moved.
-            // ReSharper disable once UnusedMember.Local
-            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
-            {
-                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
-                    return default;
-
-                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
-                var window = FindEditorForAssetWithGUID(guid);
-                if (window != null)
-                {
-                    window.UpdateWindowTitle();
-                }
-
-                return default;
-            }
-
-            #pragma warning restore CA1801
+            m_ForceQuit = true;
+            Close();
         }
+
+        public string assetGUID => m_ActionAssetManager.guid;
+        public bool isDirty => m_ActionAssetManager.dirty;
+
+        #endregion
     }
 }
 #endif // UNITY_EDITOR

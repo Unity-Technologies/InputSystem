@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+#endif
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -16,6 +20,9 @@ namespace UnityEngine.InputSystem.Editor
             return GetOrCreateViewData(property).TreeView.totalHeight;
         }
 
+#if UNITY_2023_2_OR_NEWER
+        [System.Obsolete("CanCacheInspectorGUI has been deprecated and is no longer used.", false)]
+#endif
         public override bool CanCacheInspectorGUI(SerializedProperty property)
         {
             return false;
@@ -177,9 +184,12 @@ namespace UnityEngine.InputSystem.Editor
                 window.ShowAsDropDown(btnRect, new Vector2(300, 350));
             }
 
+            private Vector2 m_ScrollPos;
             private void OnGUI()
             {
+                m_ScrollPos = EditorGUILayout.BeginScrollView(m_ScrollPos);
                 m_PropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
             }
 
             private PropertiesViewBase m_PropertyView;

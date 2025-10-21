@@ -1,3 +1,6 @@
+---
+uid: input-system-contributing
+---
 # Contributing
 
 The [full source code](https://github.com/Unity-Technologies/InputSystem) for the Input System is available on GitHub. This is also where most of the Input System's development happens.

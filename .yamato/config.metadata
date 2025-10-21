@@ -1,53 +1,12 @@
 editors:
-  - version: 2020.3
-    disable_tvos_run: true
-  - version: 2021.3
-  - version: 2022.2
-  - version: 2023.1
+  - version: 2022.3
+    run_tvos: false
+  - version: 6000.0
+    run_tvos: false
+  - version: 6000.2
+    run_tvos: false
   - version: trunk
-    disable_tvos_run: true
-
-utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
-utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
-
-unity_downloader_install: pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    run_ios_15: true
+    run_tvos: false
 
 upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm
-
-platforms_win:
-  - name: win
-    type: Unity::VM
-    image: package-ci/win10:default
-    flavor: b1.large
-  - name: win_standalone
-    type: Unity::VM
-    image: package-ci/win10:default
-    flavor: b1.large
-    runtime: StandaloneWindows64
-  - name: win_standalone_il2cpp
-    type: Unity::VM
-    image: package-ci/win10:default
-    flavor: b1.large
-    runtime: StandaloneWindows64
-    scripting-backend: Il2Cpp
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
-platforms_nix:
-  - name: mac
-    type: Unity::VM::osx
-    image: package-ci/macos-12:default
-    flavor: m1.mac
-  - name: mac_standalone
-    type: Unity::VM::osx
-    image: package-ci/macos-12:default
-    flavor: m1.mac
-    runtime: StandaloneOSX
-  - name: mac_standalone_il2cpp
-    type: Unity::VM::osx
-    image: package-ci/macos-12:default
-    flavor: m1.mac
-    runtime: StandaloneOSX
-    scripting-backend: Il2Cpp
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
-scripting_backends:
-  - name: mono
-  - name: il2cpp

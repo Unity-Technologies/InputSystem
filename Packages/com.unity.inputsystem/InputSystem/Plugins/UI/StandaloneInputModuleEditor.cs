@@ -1,7 +1,9 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_ENABLE_UI
 
+using System;
 using UnityEditor;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.UI.Editor
 {
@@ -44,6 +46,11 @@ namespace UnityEngine.InputSystem.UI.Editor
                 GUILayout.Space(10);
             }
             base.OnInspectorGUI();
+        }
+
+        public void OnDisable()
+        {
+            new InputComponentEditorAnalytic(InputSystemComponent.StandaloneInputModule).Send();
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -106,15 +105,23 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using UnityEngine.InputSystem.LowLevel;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
-            writer.WriteLine("// Suppress warnings from local variables for control references");
-            writer.WriteLine("// that we don't end up using.");
+            writer.WriteLine("// Suppress warnings from local variables for control references that we don't end up using.");
             writer.WriteLine("#pragma warning disable CS0219");
             writer.WriteLine("");
-            if (@namespace != "")
+            writer.WriteLine("// Suppress warnings from obsolete code when references from auto-generated code from the same code base.");
+            writer.WriteLine("#pragma warning disable CS0618");
+            writer.WriteLine("");
+            if (!string.IsNullOrEmpty(@namespace))
+            {
                 writer.WriteLine("namespace " + @namespace);
-            writer.BeginBlock();
+                writer.BeginBlock();
+            }
 
-            writer.WriteLine($"{visibility} partial class {namePrefix}{baseTypeName} : {baseTypeNamespace}.{baseTypeName}");
+            if (string.IsNullOrEmpty(baseTypeNamespace))
+                writer.WriteLine($"{visibility} partial class {namePrefix}{baseTypeName} : {baseTypeName}");
+            else
+                writer.WriteLine($"{visibility} partial class {namePrefix}{baseTypeName} : {baseTypeNamespace}.{baseTypeName}");
+
             writer.BeginBlock();
 
             // "Metadata". ATM this is simply a flat, semicolon-separated list of names for layouts and processors that
@@ -304,7 +311,9 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             writer.EndBlock();
-            writer.EndBlock();
+
+            if (!string.IsNullOrEmpty(@namespace))
+                writer.EndBlock();
 
             if (defines != null)
                 writer.WriteLine($"#endif // {defines}");

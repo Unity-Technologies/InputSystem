@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine.InputSystem.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -357,7 +359,7 @@ namespace UnityEngine.InputSystem
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
         public bool isPlayerFocused => m_HasFocus;
-        public float pollingFrequency { get; set; }
+        public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
@@ -371,6 +373,8 @@ namespace UnityEngine.InputSystem
 
         public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+        public bool normalizeScrollWheelDelta { get; set; } = true;
+        public float scrollWheelDeltaPerTick { get; set; } = 1.0f;
 
         public List<PairedUser> userAccountPairings
         {
@@ -398,11 +402,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool isInBatchMode { get; set; }
-
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
-        public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
         public Func<IntPtr, bool> onUnityRemoteMessage
         {
@@ -449,14 +450,35 @@ namespace UnityEngine.InputSystem
         public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
         public Action<string, object> onSendAnalyticsEvent { get; set; }
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            onRegisterAnalyticsEvent?.Invoke(name, maxPerHour, maxPropertiesPerEvent);
-        }
+            #if UNITY_2023_2_OR_NEWER
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            onSendAnalyticsEvent?.Invoke(name, data);
+            // Mimic editor analytics for Unity 2023.2+ invoking TryGatherData to send
+            var analyticInfoAttribute = analytic.GetType().GetCustomAttributes(
+                typeof(AnalyticInfoAttribute), true).FirstOrDefault() as AnalyticInfoAttribute;
+            var info = analytic.info;
+            #if UNITY_EDITOR
+            // Registration handled by framework
+            #else
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements); // only to avoid writing two tests per Unity version (registration handled by framework)
+            #endif
+            if (analytic.TryGatherData(out var data, out var ex) && data != null && analyticInfoAttribute != null)
+                onSendAnalyticsEvent?.Invoke(analyticInfoAttribute.eventName, data);
+            else if (ex != null)
+                throw ex; // rethrow for visibility in test scope
+
+            #else
+
+            var info = analytic.info;
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements);
+
+            if (analytic.TryGatherData(out var data, out var error))
+                onSendAnalyticsEvent?.Invoke(info.Name, data);
+            else
+                throw error; // For visibility in tests
+
+            #endif // UNITY_2023_2_OR_NEWER
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
