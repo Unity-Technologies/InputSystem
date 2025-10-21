@@ -87,11 +87,9 @@ public class MobilePerformanceTests: MobileBaseRecipe
             platform = Settings.iOS15Platform;
         
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
-        if (platform.System == SystemType.Android)
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
                 .WithCategory("Performance")
                 .WithRerun(1)
@@ -106,6 +104,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
             .WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
+
         return job;
     }
 }
