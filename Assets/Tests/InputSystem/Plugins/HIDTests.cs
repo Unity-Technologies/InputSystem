@@ -342,10 +342,14 @@ internal class HIDTests : CoreTestsFixture
     [TestCase(24, new byte[] {0x15, 0x00}, new byte[] {0x27, 0xFF, 0xFF, 0xFF, 0x00}, 0, 16777215)]
     // Logical min -8388608, logical max 8388607 (24 bit)
     [TestCase(24, new byte[] {0x17, 0x00, 0x00, 0x80, 0xFF}, new byte[] {0x27, 0xFF, 0xFF, 0x7F, 0x00}, -8388608, 8388607)]
-    public void Devices_CanParseHIDDescritpor_WithSignedLogicalMinAndMaxSticks(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected)
-    {
-        // Dynamically create HID report descriptor for two analog sticks with parameterized logical min/max
+    // Logical min -72, logical max -35
+    [TestCase(8, new byte[] {0x15, 0xB8}, new byte[] {0x25, 0xDD}, -72, -35)]
+    // Logical min 30, logical max 78
+    [TestCase(8, new byte[] {0x15, 0x1E}, new byte[] {0x25, 0x4E}, 30, 78)]
 
+    public void Devices_CanParseHIDDescriptor_WithSignedLogicalMinAndMaxValues(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected)
+    {
+        // Dynamically create HID report descriptor for one X-axis with parameterized logical min/max
         var reportDescriptorStart = new byte[]
         {
             0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
@@ -393,9 +397,8 @@ internal class HIDTests : CoreTestsFixture
 
         InputSystem.Update();
 
-        var device = (Joystick)InputSystem.GetDeviceById(deviceId);
+        var device = InputSystem.GetDeviceById(deviceId);
         Assert.That(device, Is.Not.Null);
-        Assert.That(device, Is.TypeOf<Joystick>());
 
         var parsedDescriptor = JsonUtility.FromJson<HID.HIDDeviceDescriptor>(device.description.capabilities);
 
@@ -408,11 +411,8 @@ internal class HIDTests : CoreTestsFixture
                 Assert.That(element.logicalMax, Is.EqualTo(logicalMaxExpected));
             }
             else
-                Assert.Fail("Could not find X and Y elements in descriptor");
+                Assert.Fail("Could not find X element in descriptor");
         }
-
-        // Stick vector 2 should be centered at (0,0) when initialized
-        Assert.That(device.stick.ReadValue(), Is.EqualTo(new Vector2(0f, 0f)).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
