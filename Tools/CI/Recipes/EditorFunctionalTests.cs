@@ -44,6 +44,7 @@ public class EditorFunctionalTests: BaseRecipe
                         $"assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:{yamatoSourceDir}/Packages;\"",
                         $"--coverage-results-path={yamatoSourceDir}/upm-ci~/CodeCoverage",
                         $"--coverage-upload-options=\"reportsDir:upm-ci~/CodeCoverage;name:inputsystem_{platform.System.ToString()}_{unityVersion}_project;flags:inputsystem_{platform.System.ToString()}_{unityVersion}_project\"")
+                    .WithTimeout(3600)
                     .WithArtifacts("artifacts"))
                 ))
             .WithArtifact(new Artifact("artifacts", "artifacts/**/*"))

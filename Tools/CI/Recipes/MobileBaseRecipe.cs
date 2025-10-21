@@ -1,5 +1,6 @@
 using RecipeEngine.Api.Jobs;
 using RecipeEngine.Api.Platforms;
+using RecipeEngine.Modules.UnifiedTestRunner;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
 
@@ -35,7 +36,7 @@ public abstract class MobileBaseRecipe: BaseRecipe
 
         return builders;
     }
-    
+
     // Produces jobs for Android platform with different scripting backends.
     IEnumerable<IJobBuilder> ProduceJobsForAndroid(Package package, Platform platform, string unityVersion)
     {
@@ -48,5 +49,19 @@ public abstract class MobileBaseRecipe: BaseRecipe
         }
 
         return builders;
+    }
+
+    protected string PrepareUtrExecutable(IJobBuilder job, SystemType systemType)
+    {
+        if (systemType == SystemType.Android)
+        {
+            var executableName = "utr.bat";
+            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
+            var utrDownloadCommand = UtrCommand.Download(systemType, executableName);
+            job.WithCommands(utrDownloadCommand);
+            return executableName;
+        }
+
+        return "UnifiedTestRunner";
     }
 }
