@@ -33,28 +33,31 @@ public class Triggers: RecipeBase
 
     private ISet<IJobBuilder> GetTriggers()
     {
+        var allPerformanceTests = JobBuilder.Create("All Performance Tests")
+            .WithDependencies(allEditorPerformanceTests)
+            .WithDependencies(allStandalonePerformanceTests)
+            .WithDependencies(allStandaloneIl2CppPerformanceTests)
+            .WithDependencies(allMobilePerformanceTests)
+            .WithDependencies(allTvOSPerformanceBuildJobs);
+        
         HashSet<IJobBuilder> builders =
         [
-            JobBuilder.Create("All Mobile Tests")
-                .WithDependencies(allMobileFunctionalTests)
-                .WithDependencies(allTvOSFunctionalBuildJobs),
-            
+            allPerformanceTests,
+
             JobBuilder.Create("All Functional Tests")
                 .WithDependencies(allEditorFunctionalTests)
                 .WithDependencies(allStandaloneFunctionalTests)
-                .WithDependencies(allStandaloneIl2CppFunctionalTests)
+                // Exclude standalone-il2cpp tests on Ubuntu from PR trigger as they are unstable, run them nightly instead.
+                .WithDependencies(allStandaloneIl2CppFunctionalTests.Where(d => !d.JobId.Contains("Ubuntu")) )
                 .WithDependencies(allMobileFunctionalTests)
                 .WithDependencies(allTvOSFunctionalBuildJobs)
                 .WithDependencies(new Dependency("wrench/promotion-jobs", "publish_dry_run_inputsystem"))
                 .WithPullRequestTrigger(pr => pr.ExcludeDraft().And().WithTargetBranch(InputSystemSettings.BranchName).And().WithoutChanges("**/*.md"), true, CancelLeftoverJobs.Always),
-            
-            JobBuilder.Create("All Performance Tests")
-                .WithDependencies(allEditorPerformanceTests)
-                .WithDependencies(allStandalonePerformanceTests)
-                .WithDependencies(allStandaloneIl2CppPerformanceTests)
-                .WithDependencies(allMobilePerformanceTests)
-                .WithDependencies(allTvOSPerformanceBuildJobs)
-                .WithScheduleTrigger(Schedule.RunDaily(InputSystemSettings.BranchName))
+
+            JobBuilder.Create("Nightly trigger")
+                .WithDependencies(allStandaloneIl2CppFunctionalTests.Where(d => d.JobId.Contains("Ubuntu")))
+                .WithDependencies(new Dependency("triggers", "all_performance_tests"))
+                .WithScheduleTrigger(Schedule.RunDaily(InputSystemSettings.BranchName)),
         ];
         return builders;
     }
