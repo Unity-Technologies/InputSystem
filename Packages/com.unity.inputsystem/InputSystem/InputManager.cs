@@ -3698,7 +3698,7 @@ namespace UnityEngine.InputSystem
         {
 #if UNITY_EDITOR
             // Check various PlayMode specific early exit conditions
-            if (ShouldExitEarlyInEditor(updateType))
+            if (ShouldExitEarlyBasedOnBackgroundBehavior(updateType))
                 return true;
 
             // When the game is playing and has focus, we never process input in editor updates.
@@ -3712,15 +3712,15 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Checks editor-specific conditions for early exit from event processing.
+        /// Checks background behavior conditions for early exit from event processing.
         /// </summary>
         /// <param name="updateType">The current update type</param>
-        /// <returns>True if we should exit early in editor context, false otherwise.</returns>
+        /// <returns>True if we should exit early, false otherwise.</returns>
         /// <remarks>
         /// Whenever this method returns true, it usually means that events are left in the buffer and should be
         /// processed in a next update call.
         /// </remarks>
-        private bool ShouldExitEarlyInEditor(InputUpdateType updateType)
+        private bool ShouldExitEarlyBasedOnBackgroundBehavior(InputUpdateType updateType)
         {
             // In Play Mode, if we're in the background and not supposed to process events in this update
             if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) && updateType != InputUpdateType.Editor)
