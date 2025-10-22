@@ -159,9 +159,11 @@ namespace UnityEngine.InputSystem.Editor
             return OpenWindow(asset, null, null);
         }
 
+        private const string WindowTitleSuffix = "(Input Actions Editor)";
+        
         private static GUIContent GetEditorTitle(InputActionAsset asset, bool isDirty)
         {
-            var text = asset.name + " (Input Actions Editor)";
+            var text = asset.name + " " + WindowTitleSuffix;
             if (isDirty)
                 text = "(*) " + text;
             return new GUIContent(text);
@@ -203,12 +205,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void CreateGUI() // Only domain reload
         {
-            // When opening the window for the first time there will be no state or asset yet.
-            // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
-            // Here we only recreate the UI e.g. after a domain reload.
-            if (string.IsNullOrEmpty(m_AssetGUID))
-                return;
-
             // After domain reloads the state will be in a invalid state as some of the fields
             // cannot be serialized and will become null.
             // Therefore we recreate the state here using the fields which were saved.
@@ -217,32 +213,44 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionAsset workingCopy = null;
                 try
                 {
+                    // When opening the window for the first time there will be no state or asset yet.
+                    // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
+                    // Here we only recreate the UI e.g. after a domain reload.
+                    
+                    // ISXB-1712: If the window was open in a previous project and same editor was used to open another
+                    // or as reported (new project), the window would have been serialized with the editor, but the
+                    // asset GUID would not be found and hence there is no asset path associated with it. 
+                    // We handle this similar to not having any state at all and just return since SetAsset() will be
+                    // called later if used to open an asset or we switch back to old project in which case window
+                    // should be restored.
                     var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
-
-                    if (asset == null)
-                        throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
-
-                    m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
-
-                    if (m_AssetObjectForEditing == null)
+                    if (!string.IsNullOrEmpty(m_AssetGUID) && !string.IsNullOrEmpty(assetPath))
                     {
-                        workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
-                        if (m_State.m_Analytics == null)
-                            m_State.m_Analytics = analytics;
-                        m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
-                        m_AssetObjectForEditing = workingCopy;
+                        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+                        if (asset == null)
+                            throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
+
+                        m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
+
+                        if (m_AssetObjectForEditing == null)
+                        {
+                            workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
+                            if (m_State.m_Analytics == null)
+                                m_State.m_Analytics = analytics;
+                            m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
+                            m_AssetObjectForEditing = workingCopy;
+                        }
+                        else
+                            m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
+                        m_IsDirty = HasContentChanged();    
                     }
-                    else
-                        m_State = new InputActionsEditorState(m_State, new SerializedObject(m_AssetObjectForEditing));
-                    m_IsDirty = HasContentChanged();
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
                     if (workingCopy != null)
                         DestroyImmediate(workingCopy);
-                    Close();
+                    //Close();
                     return;
                 }
             }
@@ -517,6 +525,13 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
+        [MenuItem("Debug/Open Input Actions Editor Window")]
+        public static void ShowWindow()
+        {
+            var window = EditorWindow.GetWindow(typeof(InputActionsEditorWindow), true, WindowTitleSuffix);
+            window.Show();
+        }
+        
         #region Shortcuts
         [Shortcut("Input Action Editor/Save", typeof(InputActionsEditorWindow), KeyCode.S, ShortcutModifiers.Action)]
         private static void SaveShortcut(ShortcutArguments arguments)

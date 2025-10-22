@@ -60,6 +60,9 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement = rootVisualElement;
 
             m_RootVisualElement.Unbind();
+            if (m_State.serializedObject == null)
+                return; 
+            
             m_RootVisualElement.TrackSerializedObjectValue(m_State.serializedObject, so =>
             {
                 StateChanged?.Invoke(m_State, UIRebuildMode.Rebuild);
