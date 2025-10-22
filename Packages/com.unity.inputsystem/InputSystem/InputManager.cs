@@ -3210,7 +3210,9 @@ namespace UnityEngine.InputSystem
             var shouldFlushEventBuffer = ShouldFlushEventBuffer();
             // When we exit early, we may or may not flush the event buffer. It depends if we want to process events
             // later once this method is called.
-            var shouldExitEarly = ShouldExitEarlyFromEventProcessing(eventBuffer, shouldFlushEventBuffer, updateType);
+            var shouldExitEarly =
+                eventBuffer.eventCount == 0 || shouldFlushEventBuffer || ShouldExitEarlyFromEventProcessing(updateType);
+
 
 #if UNITY_EDITOR
             var dropStatusEvents = ShouldDropStatusEvents(eventBuffer, ref shouldExitEarly);
@@ -3692,16 +3694,8 @@ namespace UnityEngine.InputSystem
         /// <param name="canFlushBuffer">Whether the buffer can be flushed</param>
         /// <param name="updateType">The current update type</param>
         /// <returns>True if we should exit early, false otherwise.</returns>
-        private bool ShouldExitEarlyFromEventProcessing(InputEventBuffer eventBuffer, bool canFlushBuffer, InputUpdateType updateType)
+        private bool ShouldExitEarlyFromEventProcessing(InputUpdateType updateType)
         {
-            // Early out if there are no events to process
-            if (eventBuffer.eventCount == 0)
-                return true;
-
-            // Early out if we can flush the buffer
-            if (canFlushBuffer)
-                return true;
-
 #if UNITY_EDITOR
             // Check various PlayMode specific early exit conditions
             if (ShouldExitEarlyInEditor(updateType))
@@ -3768,7 +3762,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Determines if an event should be discarded based on timing or focus state.
         /// </summary>
-        /// <param name="eventType">The type of the current event</param>
+        /// <param name="eventType">The type of event</param>
         /// <param name="eventTime">The internal time of the current event</param>
         /// <param name="updateType">The current update type</param>
         /// <returns>True if the event should be discarded, false otherwise.</returns>
@@ -3811,6 +3805,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private bool ShouldDiscardOutOfFocusEvent(double eventTime)
         {
+            // If we care about focus, check if the event occurred while out of focus based on its timestamp.
             if (gameHasFocus && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
                 return m_DiscardOutOfFocusEvents && eventTime < m_FocusRegainedTime;
             return false;

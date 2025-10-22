@@ -687,6 +687,7 @@ partial class CoreTests
             Assert.That(actions, Has.Length.EqualTo(backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus ? 2 : 1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
             Vector2Control control = (Vector2Control)actions[0].control;
+            // Make sure the value is from the event after focus was regained.
             Assert.That(control.value, Is.EqualTo(new Vector2(1.0f, 2.0f)).Using(Vector2EqualityComparer.Instance));
         }
     }
