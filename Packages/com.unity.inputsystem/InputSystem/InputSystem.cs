@@ -3665,7 +3665,7 @@ namespace UnityEngine.InputSystem
                     InputActionState.DestroyAllActionMapStates();
 
                     // Clear the Action reference from all InputActionReference objects
-                    InputActionReference.ResetCachedAction();
+                    InputActionReference.InvalidateAll();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
