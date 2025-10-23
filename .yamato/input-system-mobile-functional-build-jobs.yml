@@ -346,7 +346,7 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_il2cpp:
     type: Unity::VM
     flavor: b1.xlarge
   commands:
-  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
@@ -368,7 +368,7 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_mono:
     type: Unity::VM
     flavor: b1.xlarge
   commands:
-  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
@@ -390,7 +390,7 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_ios:
     type: Unity::VM::osx
     flavor: m1.mac
   commands:
-  - command: unity-downloader-cli -u trunk -c Editor -c iOS --fast --wait
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c iOS --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -407,6 +407,92 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_ios:
 # InputSystem-MobileFunctionalBuildJobs - 6000.4 - TvOS
 inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_tvos:
   name: InputSystem-MobileFunctionalBuildJobs - 6000.4 - TvOS
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: m1.mac
+  commands:
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c AppleTV --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=tvOS
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobileFunctionalBuildJobs - 6000.5 - Android - il2cpp
+inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_il2cpp:
+  name: InputSystem-MobileFunctionalBuildJobs - 6000.5 - Android - il2cpp
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.xlarge
+  commands:
+  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: |-
+      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+      UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobileFunctionalBuildJobs - 6000.5 - Android - mono
+inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_mono:
+  name: InputSystem-MobileFunctionalBuildJobs - 6000.5 - Android - mono
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.xlarge
+  commands:
+  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: |-
+      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+      UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobileFunctionalBuildJobs - 6000.5 - IOS
+inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_ios:
+  name: InputSystem-MobileFunctionalBuildJobs - 6000.5 - IOS
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: m1.mac
+  commands:
+  - command: unity-downloader-cli -u trunk -c Editor -c iOS --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+  variables:
+    UNITY_HANDLEUIINTERRUPTIONS: 1
+
+# InputSystem-MobileFunctionalBuildJobs - 6000.5 - TvOS
+inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_tvos:
+  name: InputSystem-MobileFunctionalBuildJobs - 6000.5 - TvOS
   agent:
     image: package-ci/macos-13:default
     type: Unity::VM::osx
