@@ -645,7 +645,7 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
-        "Depends on background behavior. ")]
+        "Depends on background behavior. (ISXB-1671)")]
     [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
     [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
     [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
