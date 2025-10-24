@@ -81,9 +81,13 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Remove the given action map from the asset.
         /// </summary>
-        /// <param name="asset">Asset to add the action map to.</param>
+        /// <param name="asset">The asset to remove the action from.</param>
         /// <param name="map">An action map. If the given map is not part of the asset, the method
         /// does nothing.</param>
+        /// <remarks>Any action contained in the removed map will remain unchanged and still be
+        /// associated with its parent input action map. If this operation is successful, map will no
+        /// longer be associated with <paramref name="asset"/> and <see cref="InputActionMap.asset"/> will
+        /// return <c>null</c>.</remarks>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="map"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
         /// cref="InputActionMap.enabled"/>) or is part of an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s
@@ -116,6 +120,10 @@ namespace UnityEngine.InputSystem
         /// <param name="nameOrId">The name or ID (see <see cref="InputActionMap.id"/>) of a map in the
         /// asset. Note that lookup is case-insensitive. If no map with the given name or ID is found,
         /// the method does nothing.</param>
+        /// <remarks>Any action contained in the removed map will remain unchanged and still be
+        /// associated with its parent input action map. If this operation is successful, map will no
+        /// longer be associated with <paramref name="asset"/> and <see cref="InputActionMap.asset"/> will
+        /// return <c>null</c>.</remarks>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="nameOrId"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">The map referenced by <paramref name="nameOrId"/> is currently enabled
         /// (see <see cref="InputActionMap.enabled"/>).</exception>
@@ -240,7 +248,7 @@ namespace UnityEngine.InputSystem
             action.m_SingletonActionBindings = bindingsForAction;
 
             // Remove bindings to action from map.
-            var newActionMapBindingCount = actionMap.m_Bindings.Length - bindingsForAction.Length;
+            var newActionMapBindingCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length - bindingsForAction.Length : 0;
             if (newActionMapBindingCount == 0)
             {
                 actionMap.m_Bindings = null;

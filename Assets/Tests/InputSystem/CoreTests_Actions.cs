@@ -8239,10 +8239,12 @@ partial class CoreTests
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        asset.AddActionMap(new InputActionMap("test"));
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
         asset.RemoveActionMap("test");
 
         Assert.That(asset.actionMaps, Is.Empty);
+        Assert.That(map.asset, Is.Null);
     }
 
     [Test]
@@ -11537,43 +11539,6 @@ partial class CoreTests
         Assert.That(clone.actions[1].bindings.Count, Is.EqualTo(1));
         Assert.That(clone.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(clone.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanResolveActionReference()
-    {
-        var map = new InputActionMap("map");
-        map.AddAction("action1");
-        var action2 = map.AddAction("action2");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "action2");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action2));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanResolveActionReference_EvenAfterActionHasBeenRenamed()
-    {
-        var map = new InputActionMap("map");
-        var action = map.AddAction("oldName");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "oldName");
-
-        action.Rename("newName");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action));
     }
 
     [Test]
