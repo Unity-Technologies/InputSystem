@@ -79,7 +79,7 @@ This interface allows you to set up the bindings for those actions. For example:
 * To add or remove actions or bindings, select the Add (+) or Remove (-) icon on the action.
 * To edit actions, select the gear icon on individual action properties.
 * To edit bindings, double-click them.
-* To open the context menu, right-click an entry. 
+* To open the context menu, right-click an entry.
 * To duplicate an entry, hold the Alt key while dragging it.
 
 Unlike the project-wide actions in the Project Settings window, you must manually enable and disable actions and action maps that are embedded in MonoBehaviour components.

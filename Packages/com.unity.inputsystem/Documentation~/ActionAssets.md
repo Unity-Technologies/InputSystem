@@ -44,9 +44,9 @@ This generates a C# script that simplifies working with the asset.
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// IGameplayActions is an interface generated from the newly added "gameplay" 
-// action map, triggered by the "Generate Interfaces" checkbox. Note that if 
-// you change the default values for the action map, the name of the interface 
+// IGameplayActions is an interface generated from the newly added "gameplay"
+// action map, triggered by the "Generate Interfaces" checkbox. Note that if
+// you change the default values for the action map, the name of the interface
 // will be different.
 public class MyPlayerScript : MonoBehaviour, IGameplayActions
 {
