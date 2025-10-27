@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
                     m_State = m_State.SelectAction(actionToSelect);
                 }
 
-                BuildUI();
+                BuildUI(false);
             }
             catch (Exception e)
             {
@@ -197,7 +197,9 @@ namespace UnityEngine.InputSystem.Editor
             finally
             {
                 if (existingWorkingCopy != null)
+                {
                     DestroyImmediate(existingWorkingCopy);
+                }
             }
         }
 
@@ -259,8 +261,9 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void BuildUI()
+        private void BuildUI(bool shouldClear = true)
         {
+            Debug.LogError("BuildUI: Building asset editor. Error seems to come from here");
             CleanupStateContainer();
 
             if (m_State.m_Analytics == null)
@@ -269,11 +272,14 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
-            rootVisualElement.Clear();
+            if (shouldClear)
+            {
+                rootVisualElement.Clear();
+            }
+
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
-
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
 
@@ -303,6 +309,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save(bool isAutoSave)
         {
+            if (isAutoSave)
+            {
+                Debug.LogError("Auto-saving input action asset.");
+            }
+
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             var projectWideActions = InputSystem.actions;
@@ -447,8 +458,7 @@ namespace UnityEngine.InputSystem.Editor
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (assetPath == null)
             {
-                Debug.LogWarning(
-                    $"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
                 return false;
             }
 
@@ -458,7 +468,9 @@ namespace UnityEngine.InputSystem.Editor
                 var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
                 workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
                 m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
+
                 m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
+                //TODO THIS CAUSES THE ERROR
                 m_IsDirty = false;
             }
             catch (Exception e)
@@ -501,17 +513,25 @@ namespace UnityEngine.InputSystem.Editor
             // is not much we can do about it but to ignore loading the changes. If the editors asset is
             // unmodified, we can refresh the editor with the latest content from disc.
             if (m_IsDirty)
+            {
+                Debug.LogError("Return in OnAssetImported");
                 return;
+            }
+
+            Debug.LogError("OnAssetImported");
 
             // If our asset has disappeared from disk, just close the window.
             var assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
             if (string.IsNullOrEmpty(assetPath))
             {
                 m_IsDirty = false; // Avoid checks
+                Debug.LogError("OnAssetImported CLOSE CALLED!!");
+
                 Close();
                 return;
             }
 
+            Debug.LogError("OnAssetImported CLoadAssetAtPath!!");
             SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
         }
 

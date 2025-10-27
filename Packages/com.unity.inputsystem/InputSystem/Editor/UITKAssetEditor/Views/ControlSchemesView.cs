@@ -118,6 +118,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
+            Debug.LogError("Destroying view! ");
+
             m_ModalWindow.RemoveFromHierarchy();
         }
 
@@ -145,6 +147,7 @@ namespace UnityEngine.InputSystem.Editor
             // the changes retained. However, if a different ControlScheme is selected or the Asset
             // Editor window is closed, then the changes are lost.
 
+            Debug.LogError("Closing the control scheme view here");
             m_NewName = string.Empty;
             OnClosing?.Invoke(this);
         }
