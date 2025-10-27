@@ -113,6 +113,14 @@ internal class iOSTests : CoreTestsFixture
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.B), gamepad.bButton);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.LeftShoulder), gamepad.leftShoulder);
         AssertButtonPress(gamepad, new iOSGameControllerStateSwappedFaceButtons().WithButton(iOSButton.RightShoulder), gamepad.rightShoulder);
+        Assert.Contains("Submit", gamepad.buttonEast.usages.m_Array);
+        Assert.Contains("Submit", gamepad.aButton.usages.m_Array);
+        Assert.Contains("PrimaryAction", gamepad.aButton.usages.m_Array);
+        Assert.Contains("PrimaryAction", gamepad.aButton.usages.m_Array);
+        Assert.Contains("Back", gamepad.bButton.usages.m_Array);
+        Assert.Contains("Back", gamepad.bButton.usages.m_Array);
+        Assert.Contains("Cancel", gamepad.bButton.usages.m_Array);
+        Assert.Contains("Cancel", gamepad.bButton.usages.m_Array);
     }
 
     [Test]
