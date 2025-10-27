@@ -149,6 +149,6 @@ gameplayActions.Enable();
 
 When you enable an action, the Input System resolves its bindings, unless it has done so already, or if the set of devices that the action can use has not changed. For more details about this process, refer to the documentation on [binding resolution](xref:input-system-action-bindings#binding-resolution).
 
-You can't change certain aspects of the configuration, such action bindings, while an action is enabled. To stop actions or action maps from responding to input, call  [`Disable`](xref:UnityEngine.InputSystem.InputAction.Disable).
+You can't change certain aspects of the configuration, such as action bindings, while an action is enabled. To stop actions or action maps from responding to input, call  [`Disable`](xref:UnityEngine.InputSystem.InputAction.Disable).
 
 While enabled, an action actively monitors the [controls](xref:input-system-controls) it's bound to. If a bound control changes state, the action processes the change. If the control's change represents an [interaction](xref:input-system-interactions) change, the action creates a response. All of this happens during the Input System update logic. Depending on the [update mode](xref:input-system-settings#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.

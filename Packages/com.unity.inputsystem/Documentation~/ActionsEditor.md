@@ -1,7 +1,7 @@
 ---
 uid: input-system-configuring-input
 ---
-# Configure input with the Input Actions Editor
+# Configuring input
 
 The **Input Actions Editor** allows you to edit [action assets](xref:input-system-action-assets), which contain a saved configuration of [input actions](xref:input-system-actions) and their associated [bindings](xref:input-system-action-bindings).
 
@@ -13,16 +13,13 @@ It also allows you to define [control schemes](xref:input-system-action-bindings
 
 The typical workflow for most projects is to have a single action asset, which is assigned as the **project-wide actions**. Refer to [Project-Wide Actions](xref:project-wide-actions) to create and assign an actions asset as your project-wide action if you haven't already done this.
 
-## Open the Input Actions Editor
+## The Input Actions Editor window and panels
 
 The **Input Actions Editor** appears when you double-click an action asset to open it.
 
 It also appears in the Project Settings window under **Edit** > **Project Settings** > **Input System Package** if you have an action asset assigned as project-wide.
 
 ![The Input Actions Editor displays the three panels and the default actions](./Images/ActionsEditorCallout.png)
-
-
-## The Input Actions Editor panels
 
 The Input Actions Editor is divided into three panels (marked A, B & C in the image above).
 
@@ -32,14 +29,14 @@ The Input Actions Editor is divided into three panels (marked A, B & C in the im
 |**(B)&nbsp;Actions**|Displays all the actions defined in the currently selected action map, and the bindings associated with each action.|
 |**(C)&nbsp;Properties**|Displays the properties of the currently selected action or binding from the Actions panel. The title of this panel changes depending on whether you have an action or a binding selected in the Actions panel.|
 
-### Configure action maps
+## Configure action maps
 
 * To add a new action map, select the Add (+) icon in the header of the __Action Maps__ panel.
 * To rename an existing action map, either long-click the name, or right-click the action map and select __Rename__ from the context menu. Note that action map names can't contain slashes  (`/`).
 * To delete an existing action map, right-click it and select __Delete__ from the context menu.
 * To duplicate an existing action map, right-click it and select __Duplicate__ from the context menu.
 
-### Configure actions
+## Configure actions
 
 * To add a new action, select the Add (+) icon in the header of the __Action__ column.
 * To rename an existing action, either long-click the name, or right-click the action map and select __Rename__ from the context menu.
