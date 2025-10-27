@@ -73,13 +73,10 @@ internal class SwitchTests : CoreTestsFixture
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Minus), controller.selectButton);
 
         Assert.Contains("Submit", controller.buttonEast.usages.m_Array);
-        Assert.Contains("Submit", controller.aButton.usages.m_Array);
-        Assert.Contains("PrimaryAction", controller.aButton.usages.m_Array);
         Assert.Contains("PrimaryAction", controller.aButton.usages.m_Array);
         Assert.Contains("Back", controller.bButton.usages.m_Array);
-        Assert.Contains("Back", controller.bButton.usages.m_Array);
         Assert.Contains("Cancel", controller.bButton.usages.m_Array);
-        Assert.Contains("Cancel", controller.bButton.usages.m_Array);
+        Assert.Contains("SecondaryAction", controller.yButton.usages.m_Array);
     }
 
     private static SwitchProControllerHIDInputState StateWithButton(SwitchProControllerHIDInputState.Button button)
