@@ -229,7 +229,7 @@ inputsystem-standaloneil2cppperformancetests_-_6000_4_-_macos:
     flavor: b1.xlarge
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -247,7 +247,7 @@ inputsystem-standaloneil2cppperformancetests_-_6000_4_-_ubuntu:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -259,6 +259,61 @@ inputsystem-standaloneil2cppperformancetests_-_6000_4_-_ubuntu:
 # InputSystem-StandaloneIl2CppPerformanceTests - 6000.4 - Windows
 inputsystem-standaloneil2cppperformancetests_-_6000_4_-_windows:
   name: InputSystem-StandaloneIl2CppPerformanceTests - 6000.4 - Windows
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c StandaloneSupport-IL2CPP --fast --wait
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --scripting-backend=il2cpp --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - MacOS
+inputsystem-standaloneil2cppperformancetests_-_6000_5_-_macos:
+  name: InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - MacOS
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: b1.xlarge
+  commands:
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - Ubuntu
+inputsystem-standaloneil2cppperformancetests_-_6000_5_-_ubuntu:
+  name: InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - Ubuntu
+  agent:
+    image: package-ci/ubuntu-22.04:default
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --scripting-backend=il2cpp --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - Windows
+inputsystem-standaloneil2cppperformancetests_-_6000_5_-_windows:
+  name: InputSystem-StandaloneIl2CppPerformanceTests - 6000.5 - Windows
   agent:
     image: package-ci/win10:default
     type: Unity::VM
