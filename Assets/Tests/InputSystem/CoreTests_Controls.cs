@@ -16,7 +16,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 
 partial class CoreTests
 {
