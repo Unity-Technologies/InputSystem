@@ -21,11 +21,10 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
+
+using Is = NUnit.Framework.Is;
 
 #pragma warning disable CS0649
-[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
-
 // As should be obvious from the number of tests in here, the action system rivals the entire combined rest of the system
 // in terms of complexity.
 partial class CoreTests
