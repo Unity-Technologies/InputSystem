@@ -3,9 +3,9 @@ uid: input-system-workflow-project-wide-actions
 ---
 # Workflow Overview - Actions
 
-<img src="Images/Workflow-Actions.png" height="200px">
+![The Input Device and Actions icons under the Binding header lead directly into the icon representing your action code.](Images/Workflow-Actions.png){height="200px"}
 
-<br/>
+
 While the Input System has a variety of workflows to choose from, this is the primary recommended workflow, which suits most common scenarios for game and app input.
 
 In this workflow, you configure Actions in the [**Input Actions** editor](ActionsEditor.html), then set up references to those actions and read their values in your code.
@@ -18,10 +18,10 @@ If you have not yet created and assigned the default [project-wide actions](xref
 
 Once you have created and assigned the default project-wide actions, the Actions Editor is displayed:
 
-![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
-*The Input Actions editor in the Project Settings window*
+![The Input Actions Editor in the Project Settings window](./Images/ProjectSettingsInputActionsSimpleShot.png)
 
-The [Input Actions editor](ActionsEditor.html) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
+
+The [Input Actions Editor](ActionsEditor.html) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
 
 Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the specific devices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](Workflow-Direct.html) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
 

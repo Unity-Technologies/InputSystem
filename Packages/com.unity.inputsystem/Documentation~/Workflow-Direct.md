@@ -3,9 +3,9 @@ uid: input-system-workflow-direct
 ---
 # Workflow Overview - Directly Reading Device States
 
-<img src="Images/Workflow-Direct.png" height="200px">
+![The Input Device icon leads directly into the icon representing your action code.](Images/Workflow-Direct.png){height="200px"}
 
-<br/>
+
 This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](xref:input-system-configuring-input), so you do not benefit from all the features come with [Actions](xref:input-system-actions).
 
 It can be useful if you want a quick implementation with one specific type of device. It's generally not the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
