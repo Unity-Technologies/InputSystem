@@ -167,7 +167,7 @@ namespace UnityEngine.InputSystem.Editor
             return new GUIContent(text);
         }
 
-        private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
+        private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null, bool shouldClearRootVisualElement = true)
         {
             var existingWorkingCopy = m_AssetObjectForEditing;
 
@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
                     m_State = m_State.SelectAction(actionToSelect);
                 }
 
-                BuildUI(false);
+                BuildUI(shouldClearRootVisualElement);
             }
             catch (Exception e)
             {
@@ -261,9 +261,8 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void BuildUI(bool shouldClear = true)
+        private void BuildUI(bool shouldClearRoot = true)
         {
-            Debug.LogError("BuildUI: Building asset editor. Error seems to come from here");
             CleanupStateContainer();
 
             if (m_State.m_Analytics == null)
@@ -272,7 +271,7 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
-            if (shouldClear)
+            if (shouldClearRoot)
             {
                 rootVisualElement.Clear();
             }
@@ -514,25 +513,20 @@ namespace UnityEngine.InputSystem.Editor
             // unmodified, we can refresh the editor with the latest content from disc.
             if (m_IsDirty)
             {
-                Debug.LogError("Return in OnAssetImported");
                 return;
             }
-
-            Debug.LogError("OnAssetImported");
 
             // If our asset has disappeared from disk, just close the window.
             var assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
             if (string.IsNullOrEmpty(assetPath))
             {
                 m_IsDirty = false; // Avoid checks
-                Debug.LogError("OnAssetImported CLOSE CALLED!!");
-
                 Close();
                 return;
             }
 
-            Debug.LogError("OnAssetImported CLoadAssetAtPath!!");
-            SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
+            // We set shouldClearRootVisualElement to false here as we don't want the root visual element's child elements to be closed during an auto save.
+            SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath), shouldClearRootVisualElement: false);
         }
 
         #endregion
