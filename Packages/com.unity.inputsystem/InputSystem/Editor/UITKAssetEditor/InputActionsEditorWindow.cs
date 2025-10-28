@@ -505,9 +505,7 @@ namespace UnityEngine.InputSystem.Editor
             // is not much we can do about it but to ignore loading the changes. If the editors asset is
             // unmodified, we can refresh the editor with the latest content from disc.
             if (m_IsDirty)
-            {
                 return;
-            }
 
             // If our asset has disappeared from disk, just close the window.
             var assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
