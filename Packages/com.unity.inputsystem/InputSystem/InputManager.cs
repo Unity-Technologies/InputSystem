@@ -2529,6 +2529,16 @@ namespace UnityEngine.InputSystem
             // had before a domain reload.
             RestoreDevicesAfterDomainReloadIfNecessary();
 
+            // Check for duplicate device ID before processing
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
+            {
+                if (m_AvailableDevices[i].deviceId == deviceId && !m_AvailableDevices[i].isRemoved)
+                {
+                    // Device already exists, ignore duplicate report
+                    return;
+                }
+            }
+
             // See if we have a disconnected device we can revive.
             // NOTE: We do this all the way up here as the first thing before we even parse the JSON descriptor so
             //       if we do have a device we can revive, we can do so without allocating any GC memory.
