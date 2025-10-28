@@ -308,11 +308,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save(bool isAutoSave)
         {
-            if (isAutoSave)
-            {
-                Debug.LogError("Auto-saving input action asset.");
-            }
-
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             var projectWideActions = InputSystem.actions;
@@ -467,9 +462,7 @@ namespace UnityEngine.InputSystem.Editor
                 var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
                 workingCopy = InputActionAssetManager.CreateWorkingCopy(asset);
                 m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
-
                 m_State = new InputActionsEditorState(m_State, new SerializedObject(workingCopy));
-                //TODO THIS CAUSES THE ERROR
                 m_IsDirty = false;
             }
             catch (Exception e)
