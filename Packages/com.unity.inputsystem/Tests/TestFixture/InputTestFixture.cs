@@ -832,7 +832,6 @@ namespace UnityEngine.InputSystem
 
                     return;
                 }
-
             }
 
             // If it's not a control that we know how to trigger - it's not implemented yet
