@@ -2,6 +2,7 @@
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -270,16 +271,32 @@ namespace UnityEngine.InputSystem.Editor
 
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
-
-            if (shouldClearRoot)
+            IEnumerable<VisualElement> children = null;
+            if (!shouldClearRoot)
             {
-                rootVisualElement.Clear();
+                children = new List<VisualElement>(rootVisualElement.hierarchy.Children());
             }
+
+            rootVisualElement.Clear();
 
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
+
+            if (children != null)
+            {
+                foreach (var child in children)
+                {
+                    for (int i = rootVisualElement.hierarchy.childCount - 1; i >= 0; i--)
+                    {
+                        if (rootVisualElement.hierarchy.ElementAt(i).name != child.name)
+                        {
+                            rootVisualElement.hierarchy.Add(child);
+                        }
+                    }
+                }
+            }
         }
 
         private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
