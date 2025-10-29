@@ -35,14 +35,14 @@
   ],
   "jobs_to_monitor": {
     "com.unity.inputsystem": [
-      ".yamato/wrench/api-validation-jobs.yml#api_validation_-_inputsystem_-_2021_3_-_windows",
+      ".yamato/wrench/api-validation-jobs.yml#api_validation_-_inputsystem_-_2022_3_-_windows",
       ".yamato/wrench/preview-a-p-v.yml#all_preview_apv_jobs",
       ".yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem"
     ]
   },
   "publishing_job": ".yamato/wrench/promotion-jobs.yml#publish_inputsystem",
   "branch_pattern": "ReleaseSlash",
-  "wrench_version": "1.2.0.0",
+  "wrench_version": "1.3.0.0",
   "pvp_exemption_path": ".yamato/wrench/pvp-exemptions.json",
   "cs_project_path": "Tools/CI/InputSystem.Cookbook.csproj"
 }
