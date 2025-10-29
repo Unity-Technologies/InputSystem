@@ -800,7 +800,7 @@ namespace UnityEngine.InputSystem
                     var values = Enum.GetValues(typeof(TouchPhase));
                     var index = Array.IndexOf(values, phase);
                     var newIndex = (index + 1) % values.Length;
-                    Set(touchPhaseControl, phase);
+                    Set(touchPhaseControl, (TouchPhase)values.GetValue(newIndex));
 
                     return;
                 }
