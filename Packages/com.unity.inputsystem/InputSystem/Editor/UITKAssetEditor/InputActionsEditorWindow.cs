@@ -271,6 +271,11 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
+            if (shouldClearRoot == false)
+            {
+                throw new Exception("We are calling BuildUI with shouldClearRoot in a test!!!!");
+            }
+
             rootVisualElement.Clear();
 
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
