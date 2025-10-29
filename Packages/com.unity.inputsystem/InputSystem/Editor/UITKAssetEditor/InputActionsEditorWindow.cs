@@ -271,10 +271,10 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
 
-            if (shouldClearRoot)
-            {
-                rootVisualElement.Clear();
-            }
+            //if (shouldClearRoot)
+            //{
+            rootVisualElement.Clear();
+            //}
 
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
