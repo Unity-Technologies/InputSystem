@@ -13,7 +13,6 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.XR;
 
-
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
