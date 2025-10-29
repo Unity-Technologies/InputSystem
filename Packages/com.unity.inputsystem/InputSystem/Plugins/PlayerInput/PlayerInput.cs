@@ -63,12 +63,12 @@ namespace UnityEngine.InputSystem
     /// The [Player Input](xref:input-system-player-input) component supports local multiplayer implicitly.
     /// Each PlayerInput instance represents a distinct user with its own set of devices and actions.
     /// To orchestrate player management and facilitate mechanics, such as joining by device activity, use
-    /// <see cref="UnityEngine.InputSystem.PlayerInputManager"/>.
+    /// <see cref="PlayerInputManager"/>.
     ///
     /// The way PlayerInput notifies script code of events is determined by the <see cref="notificationBehavior"/>
-    /// property. By default, this is set to <see cref="InputSystem.PlayerNotifications.SendMessages"/>,
-    /// which uses <see cref="xref:UnityEngine.GameObject.SendMessage(System.String,System.Object)"/> to send
-    /// messages to the <see cref="xref:UnityEngine.GameObject"/> that the PlayerInput is connected to.
+    /// property. By default, this is set to [PlayerNotifications.SendMessages](xref:UnityEngine.InputSystem.PlayerNotifications.SendMessages),
+    /// which uses [SendMessage](xref:UnityEngine.GameObject.SendMessage(System.String)) to send
+    /// messages to the [GameObject](xref:UnityEngine.GameObject) that the PlayerInput is connected to.
     ///
     /// When enabled, PlayerInput creates an <see cref="InputUser"/> instance and pairs devices to the
     /// user which are then associated to the player. If you instantiate a PlayerInput through
@@ -216,7 +216,7 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="UnityEngine.InputSystem.PlayerInputManager"/>
+    /// <seealso cref="PlayerInputManager"/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]

@@ -48,7 +48,7 @@ Use the [Input Actions Editor](xref:input-system-configuring-input) in the Proje
 The Input System package API is open and flexible, which provides a lot of flexibility to suit less common scenarios. So if you want to customize your project beyond the standard workflow, you can use these alternative techniques to create actions:
 
 - [Declare actions in MonoBehaviour components](#declare-actions-in-monobehaviours)
-- [Load actions from JSON data](#loading-actions-from-json)
+- [Load actions from JSON data](#load-actions-from-json)
 - [Create actions entirely in code](#create-actions-in-code)
 
 

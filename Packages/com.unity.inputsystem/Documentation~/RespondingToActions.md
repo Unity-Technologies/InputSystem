@@ -280,7 +280,7 @@ Once recorded, a trace can be safely read from multiple threads as long as it is
 
 ### Action types
 
-Each Action can be one of three different [Action types](xref:UnityEngine.InputSystem.InputActionType). You can select the Action type in the Input Action editor window, or by specifying the `type` parameter when calling the [`InputAction()`](xref:UnityEngine.InputSystem.InputAction.#ctor(System.String,UnityEngine.InputSystem.InputActionType,System.String,System.String,System.String,System.String)) constructor. The Action type influences how the Input System processes state changes for the Action. The default Action type is `Value`.
+Each Action can be one of three different [Action types](xref:UnityEngine.InputSystem.InputActionType). You can select the Action type in the Input Action editor window, or by specifying the `type` parameter when calling the [`InputAction(string, InputActionType, string, string, string, string)`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction__ctor_System_String_UnityEngine_InputSystem_InputActionType_System_String_System_String_System_String_System_String_) constructor. The Action type influences how the Input System processes state changes for the Action. The default Action type is `Value`.
 
 #### Value
 
