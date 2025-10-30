@@ -63,8 +63,6 @@ inputsystem-mobileperformancebuildjobs_-_2022_3_-_ios:
     players:
       paths:
       - build/players/**/*
-  variables:
-    UNITY_HANDLEUIINTERRUPTIONS: 1
 
 # InputSystem-MobilePerformanceBuildJobs - 2022.3 - TvOS
 inputsystem-mobileperformancebuildjobs_-_2022_3_-_tvos:
@@ -149,8 +147,6 @@ inputsystem-mobileperformancebuildjobs_-_6000_0_-_ios:
     players:
       paths:
       - build/players/**/*
-  variables:
-    UNITY_HANDLEUIINTERRUPTIONS: 1
 
 # InputSystem-MobilePerformanceBuildJobs - 6000.0 - TvOS
 inputsystem-mobileperformancebuildjobs_-_6000_0_-_tvos:
@@ -235,8 +231,6 @@ inputsystem-mobileperformancebuildjobs_-_6000_2_-_ios:
     players:
       paths:
       - build/players/**/*
-  variables:
-    UNITY_HANDLEUIINTERRUPTIONS: 1
 
 # InputSystem-MobilePerformanceBuildJobs - 6000.2 - TvOS
 inputsystem-mobileperformancebuildjobs_-_6000_2_-_tvos:
