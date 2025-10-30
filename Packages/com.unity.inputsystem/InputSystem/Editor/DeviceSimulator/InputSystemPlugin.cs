@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
+#if UNITY_EDITOR
 
 using System;
 using System.Collections.Generic;
