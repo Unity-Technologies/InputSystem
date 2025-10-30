@@ -34,6 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed HID parsing not handling logical minimum and maximum values correctly when they are negative. This applies for platforms that parse HID descriptors in the package, e.g. macOS at the moment.
 - Fix usage of correct data format for stick axes in HID Layout Builder ([User contribution](https://github.com/Unity-Technologies/InputSystem/pull/2245))
 - Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off on 2022.3.XX. This was  was previously only available on Unity 6 versions since 1.11.0. [ISXB-1296]
+- Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
 
 ## [1.15.0] - 2025-10-03
 
