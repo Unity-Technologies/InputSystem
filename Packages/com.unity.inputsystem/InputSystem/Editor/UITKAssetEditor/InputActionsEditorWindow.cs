@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem.Editor
             return new GUIContent(text);
         }
 
-        private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null, bool shouldClearRootVisualElement = true)
+        private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
             var existingWorkingCopy = m_AssetObjectForEditing;
 
@@ -189,7 +189,7 @@ namespace UnityEngine.InputSystem.Editor
                     m_State = m_State.SelectAction(actionToSelect);
                 }
 
-                BuildUI(shouldClearRootVisualElement);
+                BuildUI();
             }
             catch (Exception e)
             {
@@ -262,7 +262,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void BuildUI(bool shouldClearRoot = true)
+        private void BuildUI()
         {
             CleanupStateContainer();
 
@@ -271,11 +271,6 @@ namespace UnityEngine.InputSystem.Editor
 
             m_StateContainer = new StateContainer(m_State, m_AssetGUID);
             m_StateContainer.StateChanged += OnStateChanged;
-            IEnumerable<VisualElement> children = null;
-            if (!shouldClearRoot)
-            {
-                children = new List<VisualElement>(rootVisualElement.hierarchy.Children());
-            }
 
             rootVisualElement.Clear();
 
@@ -283,20 +278,6 @@ namespace UnityEngine.InputSystem.Editor
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
-
-            if (children != null)
-            {
-                foreach (var child in children)
-                {
-                    for (int i = rootVisualElement.hierarchy.childCount - 1; i >= 0; i--)
-                    {
-                        if (rootVisualElement.hierarchy.ElementAt(i).name != child.name)
-                        {
-                            rootVisualElement.hierarchy.Add(child);
-                        }
-                    }
-                }
-            }
         }
 
         private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
@@ -388,7 +369,7 @@ namespace UnityEngine.InputSystem.Editor
                 // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
                 // Since at that point it stops being a separate window that steals focus.
                 // (See case ISXB-1221)
-                if (!InputControlPathEditor.IsShowingDropdown)
+                if (!InputControlPathEditor.IsShowingDropdown && !ControlSchemesView.IsShowingControlSchemeView)
                     Save(isAutoSave: true);
             #endif
 
@@ -534,7 +515,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // We set shouldClearRootVisualElement to false here as we don't want the root visual element's child elements to be closed during an auto save.
-            SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath), shouldClearRootVisualElement: false);
+            SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
         }
 
         #endregion
