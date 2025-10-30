@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-#if UNITY_2020_2_OR_NEWER
 using UnityEditor.AssetImporters;
-#else
-using UnityEditor.Experimental.AssetImporters;
-#endif
 using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
@@ -381,14 +377,8 @@ namespace UnityEngine.InputSystem.Editor
         // the name will no longer be a mismatch and the cycle will be aborted.
         private class InputActionJsonNameModifierAssetProcessor : AssetPostprocessor
         {
-            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
-#if UNITY_2021_2_OR_NEWER
             private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
                 string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-#else
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
-                string[] movedAssets, string[] movedFromAssetPaths)
-#endif
             {
                 var needToInvalidate = false;
                 foreach (var assetPath in importedAssets)
