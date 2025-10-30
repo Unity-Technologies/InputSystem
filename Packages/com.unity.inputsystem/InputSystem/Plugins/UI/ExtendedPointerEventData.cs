@@ -89,13 +89,11 @@ namespace UnityEngine.InputSystem.UI
             stringBuilder.AppendLine("pressPosition: " + pressPosition);
             stringBuilder.AppendLine("trackedDevicePosition: " + trackedDevicePosition);
             stringBuilder.AppendLine("trackedDeviceOrientation: " + trackedDeviceOrientation);
-            #if UNITY_2021_1_OR_NEWER
             stringBuilder.AppendLine("pressure" + pressure);
             stringBuilder.AppendLine("radius: " + radius);
             stringBuilder.AppendLine("azimuthAngle: " + azimuthAngle);
             stringBuilder.AppendLine("altitudeAngle: " + altitudeAngle);
             stringBuilder.AppendLine("twist: " + twist);
-            #endif
             #if UNITY_2022_3_OR_NEWER
             stringBuilder.AppendLine("displayIndex: " + displayIndex);
             #endif
@@ -136,12 +134,10 @@ namespace UnityEngine.InputSystem.UI
             if (control.parent is Pen pen)
             {
                 uiToolkitPointerId = GetPenPointerId(pen);
-                #if UNITY_2021_1_OR_NEWER
                 pressure = pen.pressure.magnitude;
                 azimuthAngle = (pen.tilt.value.x + 1) * Mathf.PI / 2;
                 altitudeAngle = (pen.tilt.value.y + 1) * Mathf.PI / 2;
                 twist = pen.twist.value * Mathf.PI * 2;
-                #endif
                 #if UNITY_2022_3_OR_NEWER
                 displayIndex = pen.displayIndex.ReadValue();
                 #endif
@@ -149,10 +145,8 @@ namespace UnityEngine.InputSystem.UI
             else if (control.parent is TouchControl touchControl)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchControl);
-                #if UNITY_2021_1_OR_NEWER
                 pressure = touchControl.pressure.magnitude;
                 radius = touchControl.radius.value;
-                #endif
                 #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchControl.displayIndex.ReadValue();
                 #endif
@@ -160,10 +154,8 @@ namespace UnityEngine.InputSystem.UI
             else if (control.parent is Touchscreen touchscreen)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchscreen.primaryTouch);
-                #if UNITY_2021_1_OR_NEWER
                 pressure = touchscreen.pressure.magnitude;
                 radius = touchscreen.radius.value;
-                #endif
                 #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchscreen.displayIndex.ReadValue();
                 #endif

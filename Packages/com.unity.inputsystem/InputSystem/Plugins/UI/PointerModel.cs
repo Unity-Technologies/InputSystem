@@ -183,13 +183,11 @@ namespace UnityEngine.InputSystem.UI
 
         public void CopyTouchOrPenStateFrom(PointerEventData eventData)
         {
-#if UNITY_2021_1_OR_NEWER
             pressure = eventData.pressure;
             azimuthAngle = eventData.azimuthAngle;
             altitudeAngle = eventData.altitudeAngle;
             twist = eventData.twist;
             radius = eventData.radius;
-#endif
         }
 
         // State related to pressing and releasing individual bodies. Retains those parts of

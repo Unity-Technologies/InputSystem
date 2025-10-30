@@ -531,7 +531,6 @@ namespace UnityEngine.InputSystem.UI
 
         private void ProcessPointerMovement(ExtendedPointerEventData eventData, GameObject currentPointerTarget)
         {
-#if UNITY_2021_1_OR_NEWER
             // If the pointer moved, send move events to all UI elements the pointer is
             // currently over.
             var wasMoved = eventData.IsPointerMoving();
@@ -540,7 +539,6 @@ namespace UnityEngine.InputSystem.UI
                 for (var i = 0; i < eventData.hovered.Count; ++i)
                     ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
             }
-#endif
 
             // If we have no target or pointerEnter has been deleted,
             // we just send exit events to anything we are tracking
@@ -615,10 +613,8 @@ namespace UnityEngine.InputSystem.UI
 #endif
 
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
-#if UNITY_2021_1_OR_NEWER
                     if (wasMoved)
                         ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
-#endif
                     eventData.hovered.Add(current.gameObject);
 
                     // stop when encountering an object with the pointerEnterHandler
@@ -689,9 +685,7 @@ namespace UnityEngine.InputSystem.UI
                 // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
                 // become null.
                 eventData.pointerPress = newPressed;
-#if UNITY_2020_1_OR_NEWER // pointerClick doesn't exist before this.
                 eventData.pointerClick = pointerClickHandler;
-#endif
                 eventData.rawPointerPress = currentOverGo;
 
                 // Save the drag handler for drag events during this mouse down.
@@ -712,11 +706,7 @@ namespace UnityEngine.InputSystem.UI
                 //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
                 //          click and OnPointerClick is thus never invoked.
                 var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-#if UNITY_2020_1_OR_NEWER
                 var isClick = eventData.pointerClick != null && eventData.pointerClick == pointerClickHandler && eventData.eligibleForClick;
-#else
-                var isClick = eventData.pointerPress != null && eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
-#endif
                 if (isClick)
                 {
                     // Count clicks.
@@ -740,11 +730,7 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerClick or OnDrop.
                 if (isClick)
                 {
-#if UNITY_2020_1_OR_NEWER
                     ExecuteEvents.Execute(eventData.pointerClick, eventData, ExecuteEvents.pointerClickHandler);
-#else
-                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
-#endif
                 }
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
@@ -2453,7 +2439,6 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-#if UNITY_2021_1_OR_NEWER
         public override int ConvertUIToolkitPointerId(PointerEventData sourcePointerData)
         {
             // Case 1369081: when using SingleUnifiedPointer, the same (default) pointerId should be sent to UIToolkit
@@ -2465,8 +2450,6 @@ namespace UnityEngine.InputSystem.UI
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
         }
-
-#endif
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
         const float kSmallestScrollDeltaPerTick = 0.00001f;
