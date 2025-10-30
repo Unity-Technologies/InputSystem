@@ -2,7 +2,6 @@
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -273,7 +272,6 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.Clear();
-
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
@@ -514,7 +512,6 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            // We set shouldClearRootVisualElement to false here as we don't want the root visual element's child elements to be closed during an auto save.
             SetAsset(AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath));
         }
 
