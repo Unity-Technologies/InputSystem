@@ -35,6 +35,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fix usage of correct data format for stick axes in HID Layout Builder ([User contribution](https://github.com/Unity-Technologies/InputSystem/pull/2245))
 - Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off on 2022.3.XX. This was  was previously only available on Unity 6 versions since 1.11.0. [ISXB-1296]
 - Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
+- Fixed upgrading input actions containing multiple processors [ISXB-1674](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1674).
 
 ## [1.15.0] - 2025-10-03
 
