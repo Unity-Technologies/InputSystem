@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Processors;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
 
@@ -107,6 +108,70 @@ internal class CustomProcessorEnumTest : UIToolkitBaseTestWindow<InputActionsEdi
         Assert.That(updatedJson.Contains("Custom(SomeEnum=20)"), Is.True, "Serialized JSON does not contain the updated custom processor string for OptionB.");
 
         yield return null;
+    }
+
+    [Test]
+    [Description("Regression test for case ISXB-1674")]
+    public void Migration_ShouldProduceValidActionAsset_WithEnumProcessorConverted()
+    {
+        const string k_Json = @"
+            {
+                ""name"": ""InputSystem_Actions"",
+                ""maps"": [
+                    {
+                        ""name"": ""Player"",
+                        ""id"": ""df70fa95-8a34-4494-b137-73ab6b9c7d37"",
+                        ""actions"": [
+                            {
+                                ""name"": ""Move"",
+                                ""type"": ""Value"",
+                                ""id"": ""938a78a0-f8c6-4b2e-b8a7-d3c26d83a4e9"",
+                                ""expectedControlType"": ""Vector2"",
+                                ""processors"": ""StickDeadzone,InvertVector2(invertX=false),Custom(SomeEnum=1)"",
+                                ""interactions"": """",
+                                ""initialStateCheck"": true
+                            }
+                        ],
+                        ""bindings"": [
+                            {
+                                ""name"": """",
+                                ""id"": ""c9a175a0-a5ed-4e2c-b3a9-1d4d3d3a7a9a"",
+                                ""path"": ""<Gamepad>/leftStick"",
+                                ""interactions"": """",
+                                ""processors"": """",
+                                ""groups"": """",
+                                ""action"": ""Move"",
+                                ""isComposite"": false,
+                                ""isPartOfComposite"": false
+                            }
+                        ]
+                    }
+                ],
+                ""controlSchemes"": []
+            }";
+
+        var asset = InputActionAsset.FromJson(k_Json);
+
+        // Enable the action to call rebinding
+        asset.FindAction("Move").Enable();
+
+        var map = asset.FindActionMap("Player");
+
+        // Directly tests the outcome of the migration and parsing logic, which is the core goal.
+        var instantiatedProcessors = map.m_State.processors;
+        Assert.That(map.m_State.totalProcessorCount, Is.EqualTo(3), "Should create exactly three processors.");
+
+        // Verify the order and type of each processor.
+        Assert.That(instantiatedProcessors[0], Is.TypeOf<StickDeadzoneProcessor>(), "First processor should be StickDeadzone.");
+        Assert.That(instantiatedProcessors[1], Is.TypeOf<InvertVector2Processor>(), "Second processor should be InvertVector2.");
+        Assert.That(instantiatedProcessors[2], Is.TypeOf<CustomProcessor>(), "Third processor should be the custom type.");
+
+        // Verify the specific data for processors with parameters.
+        var invertProcessor = (InvertVector2Processor)instantiatedProcessors[1];
+        Assert.That(invertProcessor.invertX, Is.False, "invertX parameter should be false.");
+
+        var customProcessor = (CustomProcessor)instantiatedProcessors[2];
+        Assert.That(customProcessor.SomeEnum, Is.EqualTo(SomeEnum.OptionB), "Enum parameter should be parsed correctly to OptionB.");
     }
 }
 #endif
