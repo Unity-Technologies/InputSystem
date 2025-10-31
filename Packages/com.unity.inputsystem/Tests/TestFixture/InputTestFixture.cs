@@ -805,15 +805,6 @@ namespace UnityEngine.InputSystem
                     return;
                 }
 
-                if (control is PoseControl poseControl)
-                {
-                    var pose = poseControl.ReadValue();
-                    pose.position += minorChange * Vector3.one;
-                    Set(poseControl, pose);
-
-                    return;
-                }
-
                 if (control is BoneControl boneControl)
                 {
                     var bone = boneControl.ReadValue();
@@ -832,6 +823,9 @@ namespace UnityEngine.InputSystem
                     return;
                 }
             }
+
+            // Initially I wanted to implement PoseControl too, but it's got a very complicated ifdef that enables it.
+            // Didn't want to carry that #ifdef here. Let's see how many people really need to trigger PoseControl.
 
             // If it's not a control that we know how to trigger - it's not implemented yet
             throw new NotImplementedException();
