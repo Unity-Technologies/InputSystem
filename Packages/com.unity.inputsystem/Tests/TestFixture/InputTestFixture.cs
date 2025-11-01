@@ -11,6 +11,8 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
+using UnityEngine.InputSystem.XR;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -728,32 +730,104 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Action '{action}' must be bound to controls in order to be able to trigger it", nameof(action));
 
-            // See if we have a button we can trigger.
+            // We iterate controls to see if there are any that we know how to trigger
             for (var i = 0; i < controls.Count; ++i)
             {
-                if (!(controls[i] is ButtonControl button))
-                    continue;
+                var control = controls[i];
 
-                // Press and release button.
-                Set(button, 1);
-                Set(button, 0);
+                // for buttons, we literally trigger them pressed and released
+                if (control is ButtonControl buttonControl)
+                {
+                    Set(buttonControl, 1);
+                    Set(buttonControl, 0);
 
-                return;
+                    return;
+                }
+
+                // for the other types of controls we simply perform a small change in value as applicable
+                const float minorChange = 0.01f;
+
+                if (control is AxisControl axisControl)
+                {
+                    Set(axisControl, axisControl.ReadValue() + minorChange);
+
+                    return;
+                }
+
+                if (control is Vector2Control vec2Control)
+                {
+                    Set(vec2Control, vec2Control.ReadValue() + Vector2.one * minorChange);
+
+                    return;
+                }
+
+                if (control is Vector3Control vec3Control)
+                {
+                    Set(vec3Control, vec3Control.ReadValue() + Vector3.one * minorChange);
+
+                    return;
+                }
+
+                if (control is QuaternionControl quatControl)
+                {
+                    var q = quatControl.ReadValue();
+                    q.ToAngleAxis(out float angle, out Vector3 axis);
+                    Set(quatControl, Quaternion.AngleAxis(angle + minorChange, axis));
+
+                    return;
+                }
+
+                if (control is IntegerControl integerControl)
+                {
+                    Set(integerControl, integerControl.ReadValue() + 1);
+
+                    return;
+                }
+
+                if (control is TouchControl touchControl)
+                {
+                    var state = touchControl.ReadValue();
+                    state.position += Vector2.one * minorChange;
+                    Set(touchControl, state);
+
+                    return;
+                }
+
+                // this one is a bit weird, but there's not much to change other than picking the next phase in the list
+                if (control is TouchPhaseControl touchPhaseControl)
+                {
+                    var phase = touchPhaseControl.ReadValue();
+                    var values = Enum.GetValues(typeof(TouchPhase));
+                    var index = Array.IndexOf(values, phase);
+                    var newIndex = (index + 1) % values.Length;
+                    Set(touchPhaseControl, (TouchPhase)values.GetValue(newIndex));
+
+                    return;
+                }
+
+                if (control is BoneControl boneControl)
+                {
+                    var bone = boneControl.ReadValue();
+                    bone.position += minorChange * Vector3.one;
+                    Set(boneControl, bone);
+
+                    return;
+                }
+
+                if (control is EyesControl eyesControl)
+                {
+                    var eyes = eyesControl.ReadValue();
+                    eyes.leftEyePosition += minorChange * Vector3.one;
+                    Set(eyesControl, eyes);
+
+                    return;
+                }
             }
 
-            // See if we have an axis we can slide a bit.
-            for (var i = 0; i < controls.Count; ++i)
-            {
-                if (!(controls[i] is AxisControl axis))
-                    continue;
+            // Initially I wanted to implement PoseControl too, but it's got a very complicated ifdef that enables it.
+            // Didn't want to carry that #ifdef here. Let's see how many people really need to trigger PoseControl.
 
-                // We do, so nudge its value a bit.
-                Set(axis, axis.ReadValue() + 0.01f);
-
-                return;
-            }
-
-            ////TODO: support a wider range of controls
+            // If it's not a control that we know how to trigger - it's not implemented yet
             throw new NotImplementedException();
         }
 
