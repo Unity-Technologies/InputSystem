@@ -35,8 +35,7 @@ namespace UnityEngine.InputSystem
     /// built-in set of basic layouts and no devices. The state of the system before
     /// starting a test is recorded and restored when the test finishes.
     ///
-    /// <example>
-    /// <code>
+    /// ```csharp
     /// public class MyInputTests : InputTestFixture
     /// {
     ///     public override void Setup()
@@ -53,8 +52,7 @@ namespace UnityEngine.InputSystem
     ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());
     ///     }
     /// }
-    /// </code>
-    /// </example>
+    /// ```
     ///
     /// The test fixture will also sever the tie of the input system to the Unity runtime.
     /// This means that while the test fixture is active, the input system will not receive
