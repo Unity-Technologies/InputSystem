@@ -77,12 +77,12 @@ namespace UnityEngine.InputSystem
     /// devices explicitly through the PlayerInput instance. This also makes it possible to assign the same
     /// device to two different players, for example for split-keyboard play:
     ///
-    /// <code>
+    /// ```
     /// var p1 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardLeft", device: Keyboard.current);
     /// var p2 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardRight", device: Keyboard.current);
-    /// </code>
+    /// ```
     ///
     /// If a PlayerInput instance isn't paired to a specific device, the Player Input component looks for
     /// compatible devices present in the input system and pairs them to the PlayerInput instance automatically.
@@ -887,8 +887,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>
         /// <seealso cref="Instantiate(GameObject,int,string,int,InputDevice)"/>
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
-
         /// <summary>
+
         /// Whether PlayerInput operates in single-player mode.
         /// </summary>
         /// <value>If true, there is at most a single PlayerInput.</value>
