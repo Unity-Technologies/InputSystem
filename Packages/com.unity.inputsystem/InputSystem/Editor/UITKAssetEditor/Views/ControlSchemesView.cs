@@ -57,7 +57,7 @@ namespace UnityEngine.InputSystem.Editor
             var popupWindow = new PopupWindow
             {
                 text = "Add Control Scheme",
-                style = { position = new StyleEnum<Position>(Position.Absolute) }
+                style = { position = new StyleEnum<Position>(Position.Absolute), maxWidth = new StyleLength(new Length(100, LengthUnit.Percent)) }
             };
             popupWindow.contentContainer.Add(controlSchemeVisualElement);
             m_ModalWindow.Add(popupWindow);
