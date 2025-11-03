@@ -99,8 +99,8 @@ namespace UnityEngine.InputSystem
     ///
     /// > [!NOTE]
     /// > When you use the [Player Input Manager](xref:input-system-player-input-manager) component, the
-    /// <see cref="PlayerInputManager"/> itself controls pairing devices to players through the joining logic.
-    /// For more information, refer to the <see cref="PlayerInputManager"/> class documentation.
+    /// > <see cref="PlayerInputManager"/> itself controls pairing devices to players through the joining logic.
+    /// > For more information, refer to the <see cref="PlayerInputManager"/> class documentation.
     ///
     /// To change device pairings at any time, you can use either of these techniques:
     /// - Use <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) to manually control pairing

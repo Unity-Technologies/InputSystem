@@ -373,7 +373,7 @@ namespace UnityEngine.InputSystem
         /// non-synthetic controls over synthetic ones for rebinding. For more information, refer to
         /// [Synthetic controls](xref:input-system-controls#synthetic-controls).
         /// </remarks>
-        /// <seealso cref="InputControlAttribute.synthetic"/>.
+        /// <seealso cref="InputControlAttribute.synthetic"/>
         public bool synthetic
         {
             get => (m_ControlFlags & ControlFlags.IsSynthetic) != 0;
