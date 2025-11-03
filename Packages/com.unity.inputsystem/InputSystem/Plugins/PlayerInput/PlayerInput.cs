@@ -887,8 +887,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>
         /// <seealso cref="Instantiate(GameObject,int,string,int,InputDevice)"/>
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
-        /// <summary>
 
+        /// <summary>
         /// Whether PlayerInput operates in single-player mode.
         /// </summary>
         /// <value>If true, there is at most a single PlayerInput.</value>
