@@ -385,7 +385,7 @@ namespace UnityEngine.InputSystem.Editor
                             if (importer.m_GenerateWrapperCode)
                                 GenerateWrapperCode(assetPath, asset, importer.m_WrapperCodeNamespace, importer.m_WrapperClassName, importer.m_WrapperCodePath);
                         }
-                        
+
                         needToInvalidate = true;
                         CheckAndRenameJsonNameIfDifferent(assetPath);
                     }
