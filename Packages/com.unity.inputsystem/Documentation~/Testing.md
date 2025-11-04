@@ -146,11 +146,11 @@ When writing a test, use [`InputSystem.AddDevice<T>()`](xref:UnityEngine.InputSy
 
 To feed input, the easiest way is to use the following helper methods provided by [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture):
 
-- [`Press(ButtonControl, double, double, bool)`](xref:UnityEngine.InputSystem.InputTestFixture.Press(ButtonControl,System.Double,System.Double,System.Boolean))
-- [`Release(ButtonControl, double, double, bool)`](xref:UnityEngine.InputSystem.InputTestFixture.PressAndRelease(ButtonControl,System.Double,System.Double,System.Boolean))
-- [`PressAndRelease(ButtonControl, double, double, bool)`](xref:UnityEngine.InputSystem.InputTestFixture.PressAndRelease(ButtonControl,System.Double,System.Double,System.Boolean))
-- [`Set<TValue>(InputControl<TValue>, TValue, double, double, bool)`](xref:UnityEngine.InputSystem.InputTestFixture.Set``1(InputControl{``0},``0,System.Double,System.Double,System.Boolean))
-- [`Trigger(InputAction)`](xref:UnityEngine.InputSystem.InputTestFixture.Trigger(InputAction))
+- `Press(ButtonControl, double, double, bool)`
+- `Release(ButtonControl, double, double, bool)`
+- `PressAndRelease(ButtonControl, double, double, bool)`
+- `Set<TValue>(InputControl<TValue>, TValue, double, double, bool)
+- `Trigger(InputAction)`
 
 
 ```CSharp
