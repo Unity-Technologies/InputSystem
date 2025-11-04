@@ -119,13 +119,6 @@ namespace UnityEngine.InputSystem.Editor
 
             foreach (var callback in s_OnImportCallbacks)
                 callback();
-
-            var asset = CreateFromJson(ctx);
-            if (asset == null)
-                return;
-
-            if (m_GenerateWrapperCode)
-                GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
         }
 
         internal static void SetupAsset(InputActionAsset asset)
@@ -201,7 +194,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private static void GenerateWrapperCode(AssetImportContext ctx, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
+        private static void GenerateWrapperCode(string assetPath, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
         {
             var maps = asset.actionMaps;
             // When using code generation, it is an error for any action map to be named the same as the asset itself.
@@ -210,7 +203,7 @@ namespace UnityEngine.InputSystem.Editor
             if (maps.Any(x =>
                 CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
             {
-                ctx.LogImportError(
+                Debug.LogError(
                     $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
                     + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
                 return;
@@ -220,7 +213,6 @@ namespace UnityEngine.InputSystem.Editor
             if (string.IsNullOrEmpty(wrapperFilePath))
             {
                 // Placed next to .inputactions file.
-                var assetPath = ctx.assetPath;
                 var directory = Path.GetDirectoryName(assetPath);
                 var fileName = Path.GetFileNameWithoutExtension(assetPath);
                 wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
@@ -229,7 +221,6 @@ namespace UnityEngine.InputSystem.Editor
                      wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
             {
                 // User-specified file relative to location of .inputactions file.
-                var assetPath = ctx.assetPath;
                 var directory = Path.GetDirectoryName(assetPath);
                 wrapperFilePath = Path.Combine(directory, wrapperFilePath);
             }
@@ -258,7 +249,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var options = new InputActionCodeGenerator.Options
             {
-                sourceAssetPath = ctx.assetPath,
+                sourceAssetPath = assetPath,
                 namespaceName = codeNamespace,
                 className = codeClassName,
             };
@@ -378,13 +369,23 @@ namespace UnityEngine.InputSystem.Editor
         private class InputActionJsonNameModifierAssetProcessor : AssetPostprocessor
         {
             private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
-                string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+                string[] movedAssets, string[] movedFromAssetPaths)
             {
                 var needToInvalidate = false;
                 foreach (var assetPath in importedAssets)
                 {
                     if (IsInputActionAssetPath(assetPath))
                     {
+                        // Generate C# code from asset if configured via importer settings.
+                        // We generate from a parsed temporary asset here since loading the asset won't work here.
+                        var importer = GetAtPath(assetPath) as InputActionImporter;
+                        if (importer != null)
+                        {
+                            var asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                            if (importer.m_GenerateWrapperCode)
+                                GenerateWrapperCode(assetPath, asset, importer.m_WrapperCodeNamespace, importer.m_WrapperClassName, importer.m_WrapperCodePath);
+                        }
+                        
                         needToInvalidate = true;
                         CheckAndRenameJsonNameIfDifferent(assetPath);
                     }
