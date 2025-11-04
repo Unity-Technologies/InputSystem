@@ -120,7 +120,16 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
-            CreateFromJson(ctx);
+            var asset = CreateFromJson(ctx);
+            if (asset == null)
+                return;
+
+            if (m_GenerateWrapperCode && HasMapWithSameNameAsAsset(asset, m_WrapperClassName))
+            {
+                ctx.LogImportError(
+                    $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
+                    + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
+            }
         }
 
         internal static void SetupAsset(InputActionAsset asset)
@@ -196,20 +205,20 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private static void GenerateWrapperCode(string assetPath, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
+        private static bool HasMapWithSameNameAsAsset(InputActionAsset asset, string codeClassName)
         {
-            var maps = asset.actionMaps;
             // When using code generation, it is an error for any action map to be named the same as the asset itself.
             // https://fogbugz.unity3d.com/f/cases/1212052/
             var className = !string.IsNullOrEmpty(codeClassName) ? codeClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
-            if (maps.Any(x =>
-                CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
-            {
-                Debug.LogError(
-                    $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
-                    + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
+            return (asset.actionMaps.Any(x =>
+                CSharpCodeHelpers.MakeTypeName(x.name) == className ||
+                CSharpCodeHelpers.MakeIdentifier(x.name) == className));
+        }
+
+        private static void GenerateWrapperCode(string assetPath, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
+        {
+            if (HasMapWithSameNameAsAsset(asset, codeClassName))
                 return;
-            }
 
             var wrapperFilePath = codePath;
             if (string.IsNullOrEmpty(wrapperFilePath))
@@ -382,11 +391,18 @@ namespace UnityEngine.InputSystem.Editor
                         // Generate C# code from asset if configured via importer settings.
                         // We generate from a parsed temporary asset here since loading the asset won't work here.
                         var importer = GetAtPath(assetPath) as InputActionImporter;
-                        if (importer != null)
+                        if (importer != null && importer.m_GenerateWrapperCode)
                         {
-                            var asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
-                            if (importer.m_GenerateWrapperCode)
-                                GenerateWrapperCode(assetPath, asset, importer.m_WrapperCodeNamespace, importer.m_WrapperClassName, importer.m_WrapperCodePath);
+                            try
+                            {
+                                var asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                                GenerateWrapperCode(assetPath, asset, importer.m_WrapperCodeNamespace,
+                                    importer.m_WrapperClassName, importer.m_WrapperCodePath);
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogException(e);
+                            }
                         }
 
                         needToInvalidate = true;
