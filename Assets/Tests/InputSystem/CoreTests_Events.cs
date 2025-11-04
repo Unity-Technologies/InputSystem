@@ -19,7 +19,8 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
-using Is = UnityEngine.TestTools.Constraints.Is;
+
+using Is = NUnit.Framework.Is;
 using Random = UnityEngine.Random;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
@@ -177,6 +178,45 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-1, 0) });
         InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_OnAnyButtonPressed_FiltersOutOtherControls()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .Call(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(mouse.leftButton));
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        var mouseState = new MouseState();
+        mouseState.position.x = 3f;
+        InputSystem.QueueStateEvent(mouse, mouseState.WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left, false));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
     }
 
     [Test]

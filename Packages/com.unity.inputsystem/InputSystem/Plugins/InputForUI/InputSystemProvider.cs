@@ -18,14 +18,18 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         DefaultInputActions m_DefaultInputActions;
         InputActionAsset m_InputActionAsset;
 
-        InputActionReference m_PointAction;
-        InputActionReference m_MoveAction;
-        InputActionReference m_SubmitAction;
-        InputActionReference m_CancelAction;
-        InputActionReference m_LeftClickAction;
-        InputActionReference m_MiddleClickAction;
-        InputActionReference m_RightClickAction;
-        InputActionReference m_ScrollWheelAction;
+        // Note that these are plain action references instead since InputActionReference do
+        // not provide any value when this integration doesn't have any UI. If this integration
+        // later gets a UI replace these by InputActionReference and remember to check for e.g.
+        // m_ActionReference != null && m_ActionReference.action != null.
+        InputAction m_PointAction;
+        InputAction m_MoveAction;
+        InputAction m_SubmitAction;
+        InputAction m_CancelAction;
+        InputAction m_LeftClickAction;
+        InputAction m_MiddleClickAction;
+        InputAction m_RightClickAction;
+        InputAction m_ScrollWheelAction;
 
         InputAction m_NextPreviousAction;
 
@@ -221,7 +225,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 case NavigationEvent.Direction.Right:
                 case NavigationEvent.Direction.Down:
                     if (m_MoveAction != null)
-                        return m_MoveAction.action.activeControl.device;
+                        return m_MoveAction.activeControl.device;
                     break;
                 case NavigationEvent.Direction.Next:
                 case NavigationEvent.Direction.Previous:
@@ -242,9 +246,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_MoveAction == null)
                 return (default, default);
 
-            var move = m_MoveAction.action.ReadValue<Vector2>();
+            var move = m_MoveAction.ReadValue<Vector2>();
             // Check if the action was "pressed" this frame to deal with repeating events
-            var axisWasPressed = m_MoveAction.action.WasPressedThisFrame();
+            var axisWasPressed = m_MoveAction.WasPressedThisFrame();
             return (move, axisWasPressed);
         }
 
@@ -610,43 +614,29 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
         }
 
+        InputAction FindActionAndRegisterCallback(string actionNameOrId, Action<InputAction.CallbackContext> callback = null)
+        {
+            var action = m_InputActionAsset.FindAction(actionNameOrId);
+            if (action != null && callback != null)
+                action.performed += callback;
+            return action;
+        }
+
         void RegisterActions()
         {
             // Invoke potential lister observing registration
             s_OnRegisterActions?.Invoke(m_InputActionAsset);
 
-            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.PointAction));
-            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.MoveAction));
-            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.SubmitAction));
-            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.CancelAction));
-            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.LeftClickAction));
-            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.MiddleClickAction));
-            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.RightClickAction));
-            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(Actions.ScrollWheelAction));
-
-            if (m_PointAction != null && m_PointAction.action != null)
-                m_PointAction.action.performed += OnPointerPerformed;
-
-            if (m_SubmitAction != null && m_SubmitAction.action != null)
-                m_SubmitAction.action.performed += OnSubmitPerformed;
-
-            if (m_CancelAction != null && m_CancelAction.action != null)
-                m_CancelAction.action.performed += OnCancelPerformed;
-
-            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
-                m_LeftClickAction.action.performed += OnLeftClickPerformed;
-
-            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
-                m_MiddleClickAction.action.performed += OnMiddleClickPerformed;
-
-            if (m_RightClickAction != null && m_RightClickAction.action != null)
-                m_RightClickAction.action.performed += OnRightClickPerformed;
-
-            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
-                m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
+            m_PointAction = FindActionAndRegisterCallback(Actions.PointAction, OnPointerPerformed);
+            m_MoveAction = FindActionAndRegisterCallback(Actions.MoveAction); // No callback for this action
+            m_SubmitAction = FindActionAndRegisterCallback(Actions.SubmitAction, OnSubmitPerformed);
+            m_CancelAction = FindActionAndRegisterCallback(Actions.CancelAction, OnCancelPerformed);
+            m_LeftClickAction = FindActionAndRegisterCallback(Actions.LeftClickAction, OnLeftClickPerformed);
+            m_MiddleClickAction = FindActionAndRegisterCallback(Actions.MiddleClickAction, OnMiddleClickPerformed);
+            m_RightClickAction = FindActionAndRegisterCallback(Actions.RightClickAction, OnRightClickPerformed);
+            m_ScrollWheelAction = FindActionAndRegisterCallback(Actions.ScrollWheelAction, OnScrollWheelPerformed);
 
             // When adding new actions, don't forget to add them to UnregisterActions
-
             if (InputSystem.actions == null)
             {
                 // If we've not loaded a user-created set of actions, just enable the UI actions from our defaults.
@@ -656,37 +646,23 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 m_InputActionAsset.Enable();
         }
 
+        void UnregisterAction(ref InputAction action, Action<InputAction.CallbackContext> callback = null)
+        {
+            if (action != null && callback != null)
+                action.performed -= callback;
+            action = null;
+        }
+
         void UnregisterActions()
         {
-            if (m_PointAction != null && m_PointAction.action != null)
-                m_PointAction.action.performed -= OnPointerPerformed;
-
-            if (m_SubmitAction != null && m_SubmitAction.action != null)
-                m_SubmitAction.action.performed -= OnSubmitPerformed;
-
-            if (m_CancelAction != null && m_CancelAction.action != null)
-                m_CancelAction.action.performed -= OnCancelPerformed;
-
-            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
-                m_LeftClickAction.action.performed -= OnLeftClickPerformed;
-
-            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
-                m_MiddleClickAction.action.performed -= OnMiddleClickPerformed;
-
-            if (m_RightClickAction != null && m_RightClickAction.action != null)
-                m_RightClickAction.action.performed -= OnRightClickPerformed;
-
-            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
-                m_ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
-
-            m_PointAction = null;
-            m_MoveAction = null;
-            m_SubmitAction = null;
-            m_CancelAction = null;
-            m_LeftClickAction = null;
-            m_MiddleClickAction = null;
-            m_RightClickAction = null;
-            m_ScrollWheelAction = null;
+            UnregisterAction(ref m_PointAction, OnPointerPerformed);
+            UnregisterAction(ref m_MoveAction); // No callback for this action
+            UnregisterAction(ref m_SubmitAction, OnSubmitPerformed);
+            UnregisterAction(ref m_CancelAction, OnCancelPerformed);
+            UnregisterAction(ref m_LeftClickAction, OnLeftClickPerformed);
+            UnregisterAction(ref m_MiddleClickAction, OnMiddleClickPerformed);
+            UnregisterAction(ref m_RightClickAction, OnRightClickPerformed);
+            UnregisterAction(ref m_ScrollWheelAction, OnScrollWheelPerformed);
 
             if (m_InputActionAsset != null)
                 m_InputActionAsset.Disable();

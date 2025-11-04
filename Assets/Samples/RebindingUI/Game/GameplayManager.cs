@@ -191,6 +191,9 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
 
         private void Awake()
         {
+            // This game is designed for landscape orientation, so make sure we use it.
+            Screen.orientation = ScreenOrientation.LandscapeLeft;
+
             m_FeedbackController = GetComponent<FeedbackController>();
 
             m_EnemyPool = new ObjectPool<Enemy>(

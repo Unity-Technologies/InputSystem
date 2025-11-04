@@ -1114,6 +1114,8 @@ namespace UnityEngine.InputSystem
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
             {
+                if (!control.HasValueChangeInEvent(eventPtr))
+                    continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
                 return control;
@@ -1929,12 +1931,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 device.m_ButtonControlsCheckingPressState = new List<ButtonControl>(i);
-                #if UNITY_2020_1_OR_NEWER
                 device.m_UpdatedButtons = new HashSet<int>(i);
-                #else
-                // 2019 is too old to support setting HashSet capacity
-                device.m_UpdatedButtons = new HashSet<int>();
-                #endif
 
                 device.isSetupFinished = true;
             }

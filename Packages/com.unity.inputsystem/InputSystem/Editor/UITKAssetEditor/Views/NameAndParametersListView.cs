@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             var newElement = new NameAndParameters() { name = name};
             interactionsOrProcessorsList.Add(newElement);
 
-            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessorsList);
+            m_ListProperty.stringValue = NameAndParameters.ToSerializableString(interactionsOrProcessorsList);
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
             if (interactionsOrProcessors.Length == 0 || !newIndexIsValid || !oldIndexIsValid)
                 return;
             MemoryHelpers.Swap(ref interactionsOrProcessors[oldIndex], ref interactionsOrProcessors[newIndex]);
-            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessors);
+            m_ListProperty.stringValue = NameAndParameters.ToSerializableString(interactionsOrProcessors);
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var interactionsOrProcessorsList = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToList();
             interactionsOrProcessorsList.RemoveAt(index);
-            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessorsList);
+            m_ListProperty.stringValue = NameAndParameters.ToSerializableString(interactionsOrProcessorsList);
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
@@ -77,17 +77,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             var interactionsOrProcessorsList = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToList();
             interactionsOrProcessorsList[index] = new NameAndParameters { name = interactionsOrProcessorsList[index].name, parameters = listView.GetParameters() };
-            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessorsList);
+            m_ListProperty.stringValue = NameAndParameters.ToSerializableString(interactionsOrProcessorsList);
             m_ListProperty.serializedObject.ApplyModifiedProperties();
-        }
-
-        private static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
-        {
-            if (parametersForEachListItem == null)
-                return string.Empty;
-
-            return string.Join(NamedValue.Separator,
-                parametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
         public override void RedrawUI(InputActionsEditorState state)
