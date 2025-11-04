@@ -119,6 +119,8 @@ namespace UnityEngine.InputSystem.Editor
 
             foreach (var callback in s_OnImportCallbacks)
                 callback();
+
+            CreateFromJson(ctx);
         }
 
         internal static void SetupAsset(InputActionAsset asset)
@@ -253,6 +255,7 @@ namespace UnityEngine.InputSystem.Editor
                 namespaceName = codeNamespace,
                 className = codeClassName,
             };
+
 
             if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
             {
