@@ -594,7 +594,7 @@ namespace UnityEngine.InputSystem.XR
                         transform.SetLocalPositionAndRotation(newPosition, newRotation);
                     else if (rotationValid)
                         transform.localRotation = newRotation;
-                    else
+                    else if (positionValid)
                         transform.localPosition = newPosition;
                     break;
 
