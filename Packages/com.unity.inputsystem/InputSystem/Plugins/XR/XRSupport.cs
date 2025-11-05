@@ -450,18 +450,6 @@ namespace UnityEngine.InputSystem.XR
                     .WithProduct("^(Oculus Tracked Remote)"));
 #endif
 
-            // Built-in layouts replaced by the com.unity.xr.googlevr package.
-#if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
-            InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamHMD>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct("Daydream HMD"));
-            InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamController>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct("^(Daydream Controller)"));
-#endif
-
             // Built-in layouts replaced by the com.unity.xr.openvr package.
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(

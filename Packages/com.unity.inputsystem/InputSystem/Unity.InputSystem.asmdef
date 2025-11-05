@@ -18,11 +18,6 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
         },
         {
-            "name": "com.unity.xr.googlevr",
-            "expression": "1.0.0",
-            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR"
-        },
-        {
             "name": "com.unity.xr.openvr",
             "expression": "1.0.0",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR"
