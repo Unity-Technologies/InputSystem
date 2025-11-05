@@ -1,5 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -496,5 +494,3 @@ internal class ProjectWideInputActionsEditorTests
         Assert.That(m_CallbackCount, Is.EqualTo(2));
     }
 }
-
-#endif

@@ -1,4 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
@@ -405,4 +404,3 @@ public class ControlSchemesEditorTests
         Assert.That(groupsProperty.stringValue, Is.EqualTo(string.Empty));
     }
 }
-#endif

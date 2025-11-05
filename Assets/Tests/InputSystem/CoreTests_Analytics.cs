@@ -429,11 +429,7 @@ partial class CoreTests
             // Assert: Data content
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
-#else
-            Assert.That(data.has_projectwide_input_action_asset, Is.False);
-#endif
             Assert.That(data.has_settings_asset, Is.False);
             Assert.That(data.has_default_settings, Is.True);
 
@@ -462,11 +458,7 @@ partial class CoreTests
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
             Assert.That(data.feature_disable_unity_remote_support, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.feature_run_player_updates_in_editmode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
-#else
-            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False);
-#endif
         }
         finally
         {
@@ -515,9 +507,7 @@ partial class CoreTests
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
-#endif
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
 
             InputSystem.settings = customSettings;
@@ -535,11 +525,7 @@ partial class CoreTests
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
 
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
-#else
-            Assert.That(data.has_projectwide_input_action_asset, Is.False);
-#endif
             Assert.That(data.has_settings_asset, Is.False); // Note: We just don't write any file in this test, hence false
             Assert.That(data.has_default_settings, Is.False);
 
@@ -568,11 +554,7 @@ partial class CoreTests
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.True);
             Assert.That(data.feature_disable_unity_remote_support, Is.True);
             Assert.That(data.feature_run_player_updates_in_editmode, Is.True);
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.True);
-#else
-            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False); // No impact
-#endif
         }
         finally
         {

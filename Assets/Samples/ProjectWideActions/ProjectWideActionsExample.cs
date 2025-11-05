@@ -1,4 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 namespace UnityEngine.InputSystem.Samples.ProjectWideActions
 {
@@ -76,5 +75,3 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
         }
     } // class ProjectWideActionsExample
 } // namespace UnityEngine.InputSystem.Samples.ProjectWideActions
-
-#endif
