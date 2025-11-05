@@ -81,7 +81,6 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Check for if we're using project-wide actions to raise a warning message.
             if (m_ActionsProperty.objectReferenceValue != null)
             {
@@ -95,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
                         MessageType.Warning);
                 }
             }
-#endif
+
             var assetChanged = CheckIfActionAssetChanged();
             // initialize the editor component if the asset has changed or if it has not been initialized yet
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)

@@ -38,14 +38,12 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUILayout.Space();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Project-wide Input Actions Asset UI.
             InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
                 inputActionAsset ? inputActionAsset.name : "Null", "Project-wide Input Actions",
                 (value) => InputSystem.actions = value, !EditorApplication.isPlayingOrWillChangePlaymode);
 
             EditorGUILayout.Space();
-#endif
 
             // Importer settings UI.
             var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
@@ -108,7 +106,6 @@ namespace UnityEngine.InputSystem.Editor
             return assetTarget as InputActionAsset;
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         protected override bool ShouldHideOpenButton()
         {
             return IsProjectWideActionsAsset();
@@ -124,20 +121,16 @@ namespace UnityEngine.InputSystem.Editor
             return !ReferenceEquals(asset, null) && InputSystem.actions == asset;
         }
 
-#endif
-
         private string GetOpenEditorButtonText(InputActionAsset asset)
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (IsProjectWideActionsAsset(asset))
                 return "Edit in Project Settings Window";
-#endif
+
             return "Edit Asset";
         }
 
         private static void OpenEditor(InputActionAsset asset)
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Redirect to Project-settings Input Actions editor if this is the project-wide actions asset
             if (IsProjectWideActionsAsset(asset))
             {
@@ -150,10 +143,6 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorWindow.OpenEditor(asset);
             else
                 InputActionEditorWindow.OpenEditor(asset);
-#else
-            // Redirect to IMGUI editor
-            InputActionEditorWindow.OpenEditor(asset);
-#endif
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");

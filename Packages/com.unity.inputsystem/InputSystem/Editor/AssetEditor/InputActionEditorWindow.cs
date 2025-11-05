@@ -69,10 +69,9 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         private static bool OpenAsset(Object obj)
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return false;
-#endif
+
             string mapToSelect = null;
             string actionToSelect = null;
 
@@ -791,41 +790,6 @@ namespace UnityEngine.InputSystem.Editor
             LoadPropertiesForSelection();
             Repaint();
         }
-
-#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        ////TODO: add shortcut to focus search box
-
-        ////TODO: show shortcuts in tooltips
-        ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
-        [Shortcut("Input Action Editor/Save", typeof(InputActionEditorWindow), KeyCode.S, ShortcutModifiers.Alt)]
-        private static void SaveShortcut(ShortcutArguments arguments)
-        {
-            var window = (InputActionEditorWindow)arguments.context;
-            window.SaveChangesToAsset();
-        }
-
-        [Shortcut("Input Action Editor/Add Action Map", typeof(InputActionEditorWindow), KeyCode.M, ShortcutModifiers.Alt)]
-        private static void AddActionMapShortcut(ShortcutArguments arguments)
-        {
-            var window = (InputActionEditorWindow)arguments.context;
-            window.AddNewActionMap();
-        }
-
-        [Shortcut("Input Action Editor/Add Action", typeof(InputActionEditorWindow), KeyCode.A, ShortcutModifiers.Alt)]
-        private static void AddActionShortcut(ShortcutArguments arguments)
-        {
-            var window = (InputActionEditorWindow)arguments.context;
-            window.AddNewAction();
-        }
-
-        [Shortcut("Input Action Editor/Add Binding", typeof(InputActionEditorWindow), KeyCode.B, ShortcutModifiers.Alt)]
-        private static void AddBindingShortcut(ShortcutArguments arguments)
-        {
-            var window = (InputActionEditorWindow)arguments.context;
-            window.AddNewBinding();
-        }
-
-#endif
 
         private void OnDirtyChanged(bool dirty)
         {

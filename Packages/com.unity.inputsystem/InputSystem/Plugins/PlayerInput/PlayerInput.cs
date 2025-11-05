@@ -1794,7 +1794,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #if UNITY_EDITOR
         void Reset()
         {
             // Set default actions to project wide actions.

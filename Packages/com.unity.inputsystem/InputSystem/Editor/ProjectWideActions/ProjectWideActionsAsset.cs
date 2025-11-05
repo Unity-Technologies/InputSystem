@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 
 using System;
 using System.Collections.Generic;
@@ -343,4 +343,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
-#endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#endif // UNITY_EDITOR
