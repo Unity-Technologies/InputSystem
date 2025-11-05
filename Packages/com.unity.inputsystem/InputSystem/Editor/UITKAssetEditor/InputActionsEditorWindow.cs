@@ -1,24 +1,12 @@
 #if UNITY_EDITOR
 using System;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    // TODO: Remove when UIToolkit editor is complete and set as the default editor
-    [InitializeOnLoad]
-    internal static class EnableUITKEditor
-    {
-        static EnableUITKEditor()
-        {
-        }
-    }
-
     internal class InputActionsEditorWindow : EditorWindow, IInputActionAssetEditor
     {
         // Register editor type via static constructor to enable asset monitoring
