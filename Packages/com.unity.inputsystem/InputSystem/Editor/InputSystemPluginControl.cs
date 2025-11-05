@@ -37,12 +37,8 @@ namespace UnityEngine.InputSystem.Editor
             BuildTarget.tvOS,
             BuildTarget.LinuxHeadlessSimulation,
             BuildTarget.EmbeddedLinux,
-            #if UNITY_2022_1_OR_NEWER
             BuildTarget.QNX,
-            #endif
-            #if UNITY_2022_3_OR_NEWER
             BuildTarget.VisionOS,
-            #endif
             (BuildTarget)49,
             BuildTarget.NoTarget
         };
