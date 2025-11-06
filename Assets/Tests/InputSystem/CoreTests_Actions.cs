@@ -658,6 +658,10 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace(mousePointAction))
         {
+            // Note: We currently test against timestamps otherwise the test fails. But, ideally, we wouldn't need to.
+            // If we ever reach a point of having all relevant input events in the queue (including focus events) we
+            // could just rely on order of event. Which means this test work for a fixed timestamp and it should
+            // changed accordingly.
             currentTime += 1.0f;
             runtime.PlayerFocusLost();
             currentTime += 1.0f;
