@@ -21,7 +21,7 @@ The three main UI solutions are **UI Toolkit**, **Unity UI**, and **IMGUI**. The
 
 When using Unity UI (uGUI), you must always use the UI Input Module component to define which actions are passed through from the Input System to the UI.
 
-**For [**IMGUI**](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) (a script-based "Immediate Mode" UI using the [`OnGUI`](xref:MonoBehaviour.OnGUI) method):**
+**For [**IMGUI**](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) (a script-based "Immediate Mode" UI using the [`OnGUI`](xref:UnityEngine.MonoBehaviour.OnGUI) method):**
 
 The Input System package is **not compatible** with IMGUI, however you can still use the Input System for other parts of your project such as gameplay. See the [Immediate Mode GUI](#immediate-mode-gui) section for more information.
 
