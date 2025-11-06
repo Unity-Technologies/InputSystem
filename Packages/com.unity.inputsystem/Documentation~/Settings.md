@@ -25,7 +25,7 @@ This setting determines when the Input System processes input. The Input System 
 |Type|Description|
 |----|-----------|
 |[`Process Events In Dynamic Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at irregular intervals determined by the current framerate.|
-|[`Process Events In Fixed Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](xref:UnityEngine.MonoBehaviour.FixedUpdate) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](xref:UnityEngine.Time.fixedDeltaTime).|
+|[`Process Events In Fixed Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](xref:MonoBehaviour.FixedUpdate) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](xref:UnityEngine.Time.fixedDeltaTime).|
 |[`Process Events Manually`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System does not process events automatically. Instead, it processes them whenever you call [`InputSystem.Update()`](xref:UnityEngine.InputSystem.InputSystem.Update).|
 
 > [!NOTE]
