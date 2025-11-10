@@ -846,9 +846,9 @@ namespace UnityEngine.InputSystem
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
             // Match name.
-            if (name != null)
+            if (!string.IsNullOrEmpty(name))
             {
-                if (binding.name == null
+                if (string.IsNullOrEmpty(binding.name)
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(name, binding.name, Separator))
                     return false;
             }

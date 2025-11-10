@@ -3665,7 +3665,7 @@ namespace UnityEngine.InputSystem
                     InputActionState.DestroyAllActionMapStates();
 
                     // Clear the Action reference from all InputActionReference objects
-                    InputActionReference.ResetCachedAction();
+                    InputActionReference.InvalidateAll();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
@@ -3695,10 +3695,10 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.4
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
         public static bool HasNativeObject(Object obj)
         {
-#if UNITY_6000_4_OR_NEWER
+#if UNITY_6000_3_OR_NEWER
             return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
 #else
             return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
@@ -3822,7 +3822,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
 

@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-#if UNITY_2020_2_OR_NEWER
 using UnityEditor.AssetImporters;
-#else
-using UnityEditor.Experimental.AssetImporters;
-#endif
 using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
@@ -128,8 +124,12 @@ namespace UnityEngine.InputSystem.Editor
             if (asset == null)
                 return;
 
-            if (m_GenerateWrapperCode)
-                GenerateWrapperCode(ctx, asset, m_WrapperCodeNamespace, m_WrapperClassName, m_WrapperCodePath);
+            if (m_GenerateWrapperCode && HasMapWithSameNameAsAsset(asset, m_WrapperClassName))
+            {
+                ctx.LogImportError(
+                    $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
+                    + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
+            }
         }
 
         internal static void SetupAsset(InputActionAsset asset)
@@ -180,6 +180,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 foreach (var action in map.actions)
                 {
+                    // Note that it is important action is set before being added to asset, otherwise the immutability
+                    // check within InputActionReference would throw.
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
                     actionReference.Set(action);
                     addObjectToAsset(action.m_Id, actionReference, actionIcon);
@@ -203,26 +205,25 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private static void GenerateWrapperCode(AssetImportContext ctx, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
+        private static bool HasMapWithSameNameAsAsset(InputActionAsset asset, string codeClassName)
         {
-            var maps = asset.actionMaps;
             // When using code generation, it is an error for any action map to be named the same as the asset itself.
             // https://fogbugz.unity3d.com/f/cases/1212052/
             var className = !string.IsNullOrEmpty(codeClassName) ? codeClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
-            if (maps.Any(x =>
-                CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
-            {
-                ctx.LogImportError(
-                    $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
-                    + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
+            return (asset.actionMaps.Any(x =>
+                CSharpCodeHelpers.MakeTypeName(x.name) == className ||
+                CSharpCodeHelpers.MakeIdentifier(x.name) == className));
+        }
+
+        private static void GenerateWrapperCode(string assetPath, InputActionAsset asset, string codeNamespace, string codeClassName, string codePath)
+        {
+            if (HasMapWithSameNameAsAsset(asset, codeClassName))
                 return;
-            }
 
             var wrapperFilePath = codePath;
             if (string.IsNullOrEmpty(wrapperFilePath))
             {
                 // Placed next to .inputactions file.
-                var assetPath = ctx.assetPath;
                 var directory = Path.GetDirectoryName(assetPath);
                 var fileName = Path.GetFileNameWithoutExtension(assetPath);
                 wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
@@ -231,7 +232,6 @@ namespace UnityEngine.InputSystem.Editor
                      wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
             {
                 // User-specified file relative to location of .inputactions file.
-                var assetPath = ctx.assetPath;
                 var directory = Path.GetDirectoryName(assetPath);
                 wrapperFilePath = Path.Combine(directory, wrapperFilePath);
             }
@@ -260,10 +260,11 @@ namespace UnityEngine.InputSystem.Editor
 
             var options = new InputActionCodeGenerator.Options
             {
-                sourceAssetPath = ctx.assetPath,
+                sourceAssetPath = assetPath,
                 namespaceName = codeNamespace,
                 className = codeClassName,
             };
+
 
             if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
             {
@@ -275,28 +276,34 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(string assetPath)
         {
             // Get all InputActionReferences are stored at the same asset path as InputActionAsset
             // Note we exclude 'hidden' action references (which are present to support one of the pre releases)
             return AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
-                o => o is InputActionReference && !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                o => o is InputActionReference &&
+                !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
                 .Cast<InputActionReference>();
         }
 
-        // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null, bool skipProjectWide = false)
-        {
-            string[] searchFolders = null;
-            // If folderPath is null, search in "Assets" folder.
-            if (foldersPath == null)
-            {
-                searchFolders = new string[] { "Assets" };
-            }
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private static readonly string[] s_DefaultAssetSearchFolders = new string[] { "Assets" };
 
-            // Get all InputActionReference from assets in "Asset" folder. It does not search inside "Packages" folder.
-            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchFolders);
+        /// <summary>
+        /// Gets all <see cref="InputActionReference"/> instances available in assets in the project.
+        /// By default, it only gets the assets located in the "Assets" folder.
+        /// </summary>
+        /// <param name="foldersPath">Optional array of directory paths to be searched.</param>
+        /// <param name="skipProjectWide">If true, excludes project-wide input actions from the result.</param>
+        /// <returns></returns>
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(
+            string[] foldersPath = null, bool skipProjectWide = false)
+        {
+            // Get all InputActionReference from assets in "Asset" folder by default.
+            // It does not search inside "Packages" folder.
+            const string inputActionReferenceFilter = "t:" +  nameof(InputActionReference);
+            var inputActionReferenceGUIDs = AssetDatabase.FindAssets(inputActionReferenceFilter,
+                foldersPath ?? s_DefaultAssetSearchFolders);
 
             // To find all the InputActionReferences, the GUID of the asset containing at least one action reference is
             // used to find the asset path. This is because InputActionReferences are stored in the asset database as sub-assets of InputActionAsset.
@@ -307,15 +314,13 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var guid in inputActionReferenceGUIDs)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                var assetInputActionReferenceList = LoadInputActionReferencesFromAsset(assetPath).ToList();
-
-                if (skipProjectWide && assetInputActionReferenceList.Count() > 0)
+                foreach (var assetInputActionReference in LoadInputActionReferencesFromAsset(assetPath))
                 {
-                    if (assetInputActionReferenceList[0].m_Asset == InputSystem.actions)
+                    if (skipProjectWide && assetInputActionReference.m_Asset == InputSystem.actions)
                         continue;
-                }
 
-                inputActionReferencesList.AddRange(assetInputActionReferenceList);
+                    inputActionReferencesList.Add(assetInputActionReference);
+                }
             }
             return inputActionReferencesList;
         }
@@ -346,6 +351,17 @@ namespace UnityEngine.InputSystem.Editor
             return Path.GetFileNameWithoutExtension(assetPath);
         }
 
+        private static bool ContainsInputActionAssetPath(string[] assetPaths)
+        {
+            foreach (var assetPath in assetPaths)
+            {
+                if (IsInputActionAssetPath(assetPath))
+                    return true;
+            }
+
+            return false;
+        }
+
         // This processor was added to address this issue:
         // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-749
         //
@@ -364,20 +380,49 @@ namespace UnityEngine.InputSystem.Editor
         // the name will no longer be a mismatch and the cycle will be aborted.
         private class InputActionJsonNameModifierAssetProcessor : AssetPostprocessor
         {
-            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
-#if UNITY_2021_2_OR_NEWER
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
-                string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-#else
             private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
                 string[] movedAssets, string[] movedFromAssetPaths)
-#endif
             {
+                var needToInvalidate = false;
                 foreach (var assetPath in importedAssets)
                 {
                     if (IsInputActionAssetPath(assetPath))
+                    {
+                        // Generate C# code from asset if configured via importer settings.
+                        // We generate from a parsed temporary asset here since loading the asset won't work here.
+                        var importer = GetAtPath(assetPath) as InputActionImporter;
+                        if (importer != null && importer.m_GenerateWrapperCode)
+                        {
+                            try
+                            {
+                                var asset = InputActionAsset.FromJson(File.ReadAllText(assetPath));
+                                GenerateWrapperCode(assetPath, asset, importer.m_WrapperCodeNamespace,
+                                    importer.m_WrapperClassName, importer.m_WrapperCodePath);
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogException(e);
+                            }
+                        }
+
+                        needToInvalidate = true;
                         CheckAndRenameJsonNameIfDifferent(assetPath);
+                    }
                 }
+
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(deletedAssets);
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(movedAssets);
+                if (!needToInvalidate)
+                    needToInvalidate = ContainsInputActionAssetPath(movedFromAssetPaths);
+
+                // Invalidate all references to make sure there are no dangling references after reimport among
+                // our "live objects. We only need to invalidate loaded sub-assets and not assets/prefabs/SO etc
+                // since they may still contain effectively obsolete InputActionReferences but those references
+                // will resolve.
+                if (needToInvalidate)
+                    InputActionReference.InvalidateAll();
             }
 
             private static void CheckAndRenameJsonNameIfDifferent(string assetPath)

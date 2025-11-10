@@ -418,16 +418,6 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         protected virtual void Awake()
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
-            if (HasStereoCamera(out var cameraComponent))
-            {
-                // The Unity 6.4+ replacement for this call has to be figured later
-                // See https://jira.unity3d.com/browse/XR-7591
-#pragma warning disable CS0618
-                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, true);
-#pragma warning restore CS0618
-            }
-#endif
         }
 
         /// <summary>
@@ -459,16 +449,6 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         protected virtual void OnDestroy()
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
-            if (HasStereoCamera(out var cameraComponent))
-            {
-                // The Unity 6.4+ replacement for this call has to be figured later
-                // See https://jira.unity3d.com/browse/XR-7591
-#pragma warning disable CS0618
-                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, false);
-#pragma warning restore CS0618
-            }
-#endif
         }
 
         /// <summary>
@@ -628,11 +608,6 @@ namespace UnityEngine.InputSystem.XR
             {
                 transform.localPosition = newPosition;
             }
-        }
-
-        bool HasStereoCamera(out Camera cameraComponent)
-        {
-            return TryGetComponent(out cameraComponent) && cameraComponent.stereoEnabled;
         }
 
         // Evaluates whether the given action has at least one resolved control and may generate input.

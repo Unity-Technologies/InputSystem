@@ -10,6 +10,7 @@ using RecipeEngine.Modules.Wrench.Helpers;
 using RecipeEngine.Modules.Wrench.Models;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
+using System.Globalization;
 
 namespace InputSystem.Cookbook.Recipes;
 
@@ -37,6 +38,7 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
                 .WithPerformanceDataReporting(true)
                 .WithPerformanceProject("InputSystem")
                 .WithPlayerSavePath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/logs"))
             .WithPlatform(platform);
 
@@ -48,7 +50,7 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
                 new Artifact("logs", "build/logs/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
         
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
             job.WithEnvironmentVariable("UNITY_HANDLEUIINTERRUPTIONS", 1);
 
         return job;
@@ -82,21 +84,20 @@ public class MobilePerformanceTests: MobileBaseRecipe
         }
 
         // For 6000.3+ versions, use iOS15 platform to run tests.
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
             platform = Settings.iOS15Platform;
         
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
-        if (platform.System == SystemType.Android)
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
                 .WithSuite(UtrTestSuiteType.Playmode)
                 .WithCategory("Performance")
                 .WithRerun(1)
                 .WithPerformanceDataReporting(true)
                 .WithPerformanceProject("InputSystem")
                 .WithPlayerLoadPath("build/players")
+                .WithTimeout(3600)
                 .WithArtifacts("build/test-results"))
             .WithPlatform(platform);
 
@@ -104,6 +105,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
             .WithDependencies(buildJob)
             .WithArtifact(new Artifact("logs", "build/test-results/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
+
         return job;
     }
 }

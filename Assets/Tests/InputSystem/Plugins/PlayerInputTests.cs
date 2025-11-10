@@ -16,7 +16,7 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 using UnityEngine.InputSystem.OnScreen;
 
 /// <summary>

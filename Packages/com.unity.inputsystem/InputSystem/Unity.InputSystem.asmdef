@@ -33,11 +33,6 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
         },
         {
-            "name": "com.unity.modules.vr",
-            "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_VR"
-        },
-        {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
@@ -104,6 +99,11 @@
         },
         {
             "name": "Unity",
+            "expression": "[2022.3.69,2023.0.0]",
+            "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
+        },
+        {
+            "name": "Unity",
             "expression": "6000.0.15",
             "define": "UNITY_INPUT_SYSTEM_SENDPOINTERHOVERTOPARENT"
         },
@@ -116,7 +116,12 @@
             "name": "Unity",
             "expression": "6000.3.0a6",
             "define": "UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY"
-        }
+        },
+	{
+	    "name": "Unity",
+            "expression": "6000.4.0a4",
+            "define": "UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS"
+	}
     ],
     "noEngineReferences": false
 }

@@ -15,6 +15,7 @@ using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using Unity.Profiling;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -1187,6 +1188,11 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
+
+        internal bool HasDevice(InputDevice device)
+        {
+            return device.m_DeviceIndex < m_DevicesCount && ReferenceEquals(m_Devices[device.m_DeviceIndex], device);
+        }
 
         public InputDevice AddDevice(Type type, string name = null)
         {
@@ -3703,6 +3709,12 @@ namespace UnityEngine.InputSystem
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
+            //send pointer data to backend for OnMouseEvents
+#if UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS
+            var pointer = Pointer.current;
+            if (pointer != null && pointer.added && gameIsPlaying)
+                NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
+#endif
             m_CurrentUpdate = default;
         }
 
