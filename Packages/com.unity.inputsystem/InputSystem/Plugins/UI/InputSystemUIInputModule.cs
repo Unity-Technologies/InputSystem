@@ -1922,9 +1922,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
-#if UNITY_2022_3_OR_NEWER
                     eventData.displayIndex = displayIndex;
-#endif
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
@@ -2027,9 +2025,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
-#if UNITY_2022_3_OR_NEWER
             eventData.displayIndex = displayIndex;
-#endif
             eventData.touchId = touchId;
             eventData.pointerType = pointerType;
             eventData.control = control;
@@ -2160,9 +2156,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
@@ -2191,9 +2185,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private void OnRightClickCallback(InputAction.CallbackContext context)
@@ -2208,9 +2200,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.rightButton.ignoreNextClick = true;
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private void OnMiddleClickCallback(InputAction.CallbackContext context)
@@ -2225,9 +2215,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.middleButton.ignoreNextClick = true;
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
@@ -2257,9 +2245,7 @@ namespace UnityEngine.InputSystem.UI
             // ISXB-704: convert input value to BaseInputModule convention.
             state.scrollDelta = (scrollDelta / InputSystem.scrollWheelDeltaPerTick) * scrollDeltaPerTick;
 
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private void OnMoveCallback(InputAction.CallbackContext context)
@@ -2282,9 +2268,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
@@ -2295,9 +2279,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
-#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-#endif
         }
 
         private void OnControlsChanged(object obj)
