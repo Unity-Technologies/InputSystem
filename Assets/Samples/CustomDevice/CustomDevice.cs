@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 #endif
 
-// The input system stores a chunk of memory for each device. What that
+// The input system stores a chunk of memory for each device. What 
 // memory looks like we can determine ourselves. The easiest way is to just describe
 // it as a struct.
 //
