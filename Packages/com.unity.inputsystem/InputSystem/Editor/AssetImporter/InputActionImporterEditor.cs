@@ -138,11 +138,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            // Redirect to UI-Toolkit window editor if not configured to use IMGUI explicitly
-            if (!InputSystem.settings.useIMGUIEditorForAssets)
-                InputActionsEditorWindow.OpenEditor(asset);
-            else
-                InputActionEditorWindow.OpenEditor(asset);
+            InputActionsEditorWindow.OpenEditor(asset);
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
