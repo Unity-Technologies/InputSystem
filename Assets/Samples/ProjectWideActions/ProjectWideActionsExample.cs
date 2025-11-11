@@ -1,4 +1,3 @@
-
 namespace UnityEngine.InputSystem.Samples.ProjectWideActions
 {
     public class ProjectWideActionsExample : MonoBehaviour

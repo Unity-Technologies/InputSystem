@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Processors
 
         public override void OnGUI()
         {
-            if (!InputSystem.settings.useIMGUIEditorForAssets) 
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
 
             m_MinSetting.OnGUI();

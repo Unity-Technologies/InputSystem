@@ -181,7 +181,7 @@ namespace UnityEngine.InputSystem.Composites
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             target.mode = (Vector3Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 

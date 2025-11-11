@@ -201,7 +201,7 @@ namespace UnityEngine.InputSystem.Composites
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 

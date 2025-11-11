@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem.Composites
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             target.whichSideWins = (AxisComposite.WhichSideWins)EditorGUILayout.EnumPopup(m_WhichAxisWinsLabel, target.whichSideWins);
         }
 

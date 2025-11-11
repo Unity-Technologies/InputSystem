@@ -324,7 +324,6 @@ namespace UnityEngine.InputSystem.Editor
             return inputActionReferencesList;
         }
 
-
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()

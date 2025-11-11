@@ -215,7 +215,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();

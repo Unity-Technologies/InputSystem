@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             m_DurationSetting.OnGUI();
             m_PressPointSetting.OnGUI();
         }

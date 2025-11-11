@@ -342,7 +342,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             }
         }
 
-
         private void OnValuesChanged()
         {
             ReadParameterValuesFrom(m_ParameterEditor.target);

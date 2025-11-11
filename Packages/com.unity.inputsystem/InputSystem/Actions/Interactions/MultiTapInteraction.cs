@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (!InputSystem.settings.useIMGUIEditorForAssets)
                 return;
-                
+
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
