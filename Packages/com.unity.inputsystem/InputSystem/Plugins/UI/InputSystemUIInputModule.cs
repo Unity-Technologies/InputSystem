@@ -579,9 +579,7 @@ namespace UnityEngine.InputSystem.UI
                     if (!sendPointerHoverToParent && current == pointerParent)
                         break;
 
-#if UNITY_2021_3_OR_NEWER
                     eventData.fullyExited = current != commonRoot && eventData.pointerEnter != currentPointerTarget;
-#endif
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
 
@@ -605,12 +603,10 @@ namespace UnityEngine.InputSystem.UI
                 Transform current = currentPointerTarget.transform;
                 while (current != null && !PointerShouldIgnoreTransform(current))
                 {
-#if UNITY_2021_3_OR_NEWER
                     eventData.reentered = current == commonRoot && current != oldPointerEnter;
                     // if we are sending the event to parent, they are already in hover mode at that point. No need to bubble up the event.
                     if (sendPointerHoverToParent && eventData.reentered)
                         break;
-#endif
 
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
                     if (wasMoved)
