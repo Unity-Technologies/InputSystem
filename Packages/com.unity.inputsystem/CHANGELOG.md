@@ -10,7 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
-
+### Changed
+- Project-Wide Input Actions can no longer be disabled (removed the UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS define)
 
 
 ## [1.16.0] - 2025-11-10
