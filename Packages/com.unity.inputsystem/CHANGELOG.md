@@ -10,8 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
-
-
+### Fixed
+- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 
 ## [1.16.0] - 2025-11-10
 
@@ -44,7 +44,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
 - Fixed upgrading input actions containing multiple processors [ISXB-1674](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1674).
 - Fixed an issue that led to non-deterministic behaviour during `.inputaction` asset imports that could lead to corrupted assets or Unity hanging during asset import when "Generate C# Scripts" was active in importer settings. [ISXB-1746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1746)
-- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 
 ## [1.15.0] - 2025-10-03
 
