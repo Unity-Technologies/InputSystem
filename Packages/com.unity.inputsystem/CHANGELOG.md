@@ -10,6 +10,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+
+## [1.16.0] - 2025-11-10
+
 ### Changed
 - Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 - Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
