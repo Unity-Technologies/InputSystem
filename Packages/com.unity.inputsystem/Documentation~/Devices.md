@@ -137,7 +137,7 @@ The Input System may automatically disable and re-enable Devices in certain situ
 
 #### Background and focus change behavior
 
-In general, input is tied to [application focus](xref:UnityEngine.Application.isFocused). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](xref:input-system-actions) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](xref:input-system-layouts#control-items) to their default state.
+In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](xref:input-system-actions) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](xref:input-system-layouts#control-items) to their default state.
 
 On platforms such as iOS and Android, that do not support running Unity applications in the background, this is the only supported behavior.
 

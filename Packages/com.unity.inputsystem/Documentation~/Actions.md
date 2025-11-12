@@ -15,7 +15,7 @@ When you get a reference to an action in your code, you can use it to check its 
 Actions also make it simpler to create a system that lets your players [customize their bindings at runtime](xref:input-system-action-bindings#interactive-rebinding), which is a common requirement for games.
 
 > [!NOTE]
-> - Actions are a runtime-only feature. You can't use them in [Editor window code](xref:UnityEditor.EditorWindow).
+> - Actions are a runtime-only feature. You can't use them in [Editor window code](https://docs.unity3d.com/ScriptReference/EditorWindow.html).
 >
 > - You can read input without using actions and bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. For more information, refer to [Workflow Overview - Directly Reading Device States](xref:input-system-workflow-direct).
 >
