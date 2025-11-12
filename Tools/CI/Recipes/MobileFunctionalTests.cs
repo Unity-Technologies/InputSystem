@@ -87,6 +87,11 @@ public class MobileFunctionalTests: MobileBaseRecipe
             platform = Settings.iOS15Platform;
 
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
+
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) >= 6000.5f)
+            job.WithCommands("/usr/bin/codesign --force --timestamp=none --generate-entitlement-der --generate-pre-encrypt-hashes --sign \"Apple Development: SVC Developer Apple CI (QPUP25M867)\" " +
+                             "$YAMATO_SOURCE_DIR/build/players/InputSystem/Debug-iphoneos/InputSystem.app/Frameworks/UnityRuntime.framework");
+
         var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
         var utrCommand = UtrCommand.Run(platform.System, utrExecutable, b => b
