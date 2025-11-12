@@ -10,6 +10,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+
+## [1.16.0] - 2025-11-10
+
 ### Changed
 - Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 - Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
@@ -38,6 +43,7 @@ however, it has to be formatted properly to pass verification tests.
 - Limited the Add Control Scheme popup window max size to be its parent window, so that it won't resize beyond the visible area. [ISXB-1733](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1733)
 - Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
 - Fixed upgrading input actions containing multiple processors [ISXB-1674](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1674).
+- Fixed an issue that led to non-deterministic behaviour during `.inputaction` asset imports that could lead to corrupted assets or Unity hanging during asset import when "Generate C# Scripts" was active in importer settings. [ISXB-1746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1746)
 
 ## [1.15.0] - 2025-10-03
 
