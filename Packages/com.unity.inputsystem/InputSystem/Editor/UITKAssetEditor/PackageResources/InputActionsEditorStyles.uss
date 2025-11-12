@@ -185,7 +185,6 @@
 }
 
 .search-field {
-    display: none;
     width: 190px;
 }
 
