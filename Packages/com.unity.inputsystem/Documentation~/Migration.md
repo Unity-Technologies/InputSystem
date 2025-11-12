@@ -94,26 +94,26 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](xref:UnityEngine.InputSystem.Keyboard.SetIMECursorPosition(UnityEngine.Vector2))
 [`Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)|Subscribe to the [`Keyboard.onIMECompositionChange`](xref:UnityEngine.InputSystem.Keyboard.onIMECompositionChange).
 [`Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)|Use: [`Keyboard.current.SetIMEEnabled(true)`](xref:UnityEngine.InputSystem.Keyboard.SetIMEEnabled(System.Boolean))<br/>Also see: [Keyboard text input documentation](Keyboard.html#ime).
-[`Input.imeIsSelected`](xref:UnityEngine.Input.imeIsSelected)|Use: [`Keyboard.current.imeSelected`](xref:UnityEngine.InputSystem.Keyboard.imeSelected)
-[`Input.inputString`](xref:UnityEngine.Input.inputString)|Subscribe to the [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard.onTextInput) event:<br/>`Keyboard.current.onTextInput += character => /* ... */;`
+[`Input.imeIsSelected`](https://docs.unity3d.com/ScriptReference/Input-imeIsSelected.html)|Use: [`Keyboard.current.imeSelected`](xref:UnityEngine.InputSystem.Keyboard.imeSelected)
+[`Input.inputString`](https://docs.unity3d.com/ScriptReference/Input-inputString.html)|Subscribe to the [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard.onTextInput) event:<br/>`Keyboard.current.onTextInput += character => /* ... */;`
 
 ### Mouse
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetMouseButton`](xref:UnityEngine.Input.GetMouseButton(System.Int32))<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](xref:UnityEngine.InputSystem.Controls.ButtonControl.isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`
-[`Input.GetMouseButtonDown`](xref:UnityEngine.Input.GetMouseButtonDown(System.Int32))<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl.wasPressedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
-[`Input.GetMouseButtonUp`](xref:UnityEngine.Input.GetMouseButtonUp(System.Int32))<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl.wasReleasedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
-[`Input.mousePosition`](xref:UnityEngine.Input.mousePosition)|Use [`Mouse.current.position.ReadValue()`](xref:UnityEngine.InputSystem.Mouse)<br/>Example: `Vector2 position = Mouse.current.position.ReadValue();`<br/>__Note__: Mouse simulation from touch isn't implemented yet.
-[`Input.mousePresent`](xref:UnityEngine.Input.mousePresent)|No corresponding API yet.
+[`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](xref:UnityEngine.InputSystem.Controls.ButtonControl.isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`
+[`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl.wasPressedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
+[`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl.wasReleasedThisFrame) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
+[`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](xref:UnityEngine.InputSystem.Mouse)<br/>Example: `Vector2 position = Mouse.current.position.ReadValue();`<br/>__Note__: Mouse simulation from touch isn't implemented yet.
+[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|No corresponding API yet.
 
 ### Touch and Pen
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
-[`Input.GetTouch`](xref:UnityEngine.Input.GetTouch(System.Int32))<br/>For example:<br/>`Touch touch = Input.GetTouch(0);`<br/>`Vector2 touchPos = touch.position;`|Use [`EnhancedTouch.Touch.activeTouches[i]`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)<br/>Example: `Vector2 touchPos = EnhancedTouch.Touch.activeTouches[0].position;`<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable).
-[`Input.multiTouchEnabled`](xref:UnityEngine.Input.multiTouchEnabled)|No corresponding API yet.
-[`Input.simulateMouseWithTouches`](xref:UnityEngine.Input.multiTouchEnabled)|No corresponding API yet.
+[`Input.GetTouch`](https://docs.unity3d.com/ScriptReference/Input.GetTouch.html)<br/>For example:<br/>`Touch touch = Input.GetTouch(0);`<br/>`Vector2 touchPos = touch.position;`|Use [`EnhancedTouch.Touch.activeTouches[i]`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)<br/>Example: `Vector2 touchPos = EnhancedTouch.Touch.activeTouches[0].position;`<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable).
+[`Input.multiTouchEnabled`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|No corresponding API yet.
+[`Input.simulateMouseWithTouches`](https://docs.unity3d.com/ScriptReference/Input-simulateMouseWithTouches.html)|No corresponding API yet.
 [`Input.stylusTouchSupported`](xref:UnityEngine.Input.stylusTouchSupported)|No corresponding API yet.
 [`Input.touchCount`](xref:UnityEngine.Input.touchCount)|[`EnhancedTouch.Touch.activeTouches.Count`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouchSupport.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable)
 [`Input.touches`](xref:UnityEngine.Input.touches)|[`EnhancedTouch.Touch.activeTouches`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)<br/>__Note__: Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable)
