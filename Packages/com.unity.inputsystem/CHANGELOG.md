@@ -10,8 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
-
-
+### Changed
+- Changed: removing legacy unity preprocessors mentions for editor versions 2022.3 or older.
 
 ## [1.16.0] - 2025-11-10
 
