@@ -153,21 +153,21 @@ namespace UnityEngine.InputSystem.Android
     /// - (More may be added later)
     ///
     /// ### Typical Android Axis and Key Mappings
-    /// | Control | Mapping |
-    /// |----------|----------|
-    /// | Left Stick | AXIS_X(0) / AXIS_Y(1) |
-    /// | Right Stick | AXIS_Z(11) / AXIS_RZ(14) |
-    /// | L1 | KEYCODE_BUTTON_L1(102) |
-    /// | R1 | KEYCODE_BUTTON_R1(103) |
-    /// | L2 | AXIS_BRAKE(23) |
-    /// | R2 | AXIS_GAS(22) |
-    /// | Left Thumb | KEYCODE_BUTTON_THUMBL(106) |
-    /// | Right Thumb | KEYCODE_BUTTON_THUMBR(107) |
-    /// | X | KEYCODE_BUTTON_X(99) |
-    /// | Y | KEYCODE_BUTTON_Y(100) |
-    /// | B | KEYCODE_BUTTON_B(97) |
-    /// | A | KEYCODE_BUTTON_A(96) |
-    /// | DPAD | AXIS_HAT_X(15), AXIS_HAT_Y(16) or KEYCODE_DPAD_* |
+    /// | Control                | Mapping                                            |
+    /// |------------------------|----------------------------------------------------|
+    /// | Left Stick             | AXIS_X(0) / AXIS_Y(1)                              |
+    /// | Right Stick            | AXIS_Z(11) / AXIS_RZ(14)                           |
+    /// | L1                     | KEYCODE_BUTTON_L1(102)                             |
+    /// | R1                     | KEYCODE_BUTTON_R1(103)                             |
+    /// | L2                     | AXIS_BRAKE(23)                                     |
+    /// | R2                     | AXIS_GAS(22)                                       |
+    /// | Left Thumb             | KEYCODE_BUTTON_THUMBL(106)                         |
+    /// | Right Thumb            | KEYCODE_BUTTON_THUMBR(107)                         |
+    /// | X                      | KEYCODE_BUTTON_X(99)                               |
+    /// | Y                      | KEYCODE_BUTTON_Y(100)                              |
+    /// | B                      | KEYCODE_BUTTON_B(97)                               |
+    /// | A                      | KEYCODE_BUTTON_A(96)                               |
+    /// | DPAD                   | AXIS_HAT_X(15), AXIS_HAT_Y(16) or KEYCODE_DPAD_*   |
     ///
     /// ### Notes
     /// - **NVIDIA Shield Console**
