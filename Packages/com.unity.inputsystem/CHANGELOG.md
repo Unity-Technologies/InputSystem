@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Removed code that had to do with Unity versions older than Unity 2022.3 LTS.
+
 ### Fixed
 - An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 
@@ -19,7 +22,6 @@ however, it has to be formatted properly to pass verification tests.
 - Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 - Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
 - Removed code that had to do with Unity versions older than Unity 2021.3 LTS.
-- Removed code that had to do with Unity versions older than Unity 2022.3 LTS.
 
 ### Added
 - Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
