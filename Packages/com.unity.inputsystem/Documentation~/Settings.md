@@ -25,7 +25,7 @@ This setting determines when the Input System processes input. The Input System 
 |Type|Description|
 |----|-----------|
 |[`Process Events In Dynamic Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at irregular intervals determined by the current framerate.|
-|[`Process Events In Fixed Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](xref:UnityEngine.Time.fixedDeltaTime).|
+|[`Process Events In Fixed Update`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
 |[`Process Events Manually`](xref:UnityEngine.InputSystem.InputSettings.UpdateMode)|The Input System does not process events automatically. Instead, it processes them whenever you call [`InputSystem.Update()`](xref:UnityEngine.InputSystem.InputSystem.Update).|
 
 > [!NOTE]
@@ -33,7 +33,7 @@ This setting determines when the Input System processes input. The Input System 
 
 ## Background Behavior
 
-Background Behaviour determines what happens when [application focus](xref:UnityEngine.Application.isFocused) is lost or regained, and how input behaves while the application is not in the foreground.
+Background Behaviour determines what happens when [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is lost or regained, and how input behaves while the application is not in the foreground.
 
 This setting is only relevant when "Run In Background" is enabled in the [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) for the project. This setting is only supported on some platforms. On platforms such as Android and iOS, your app will not run when it is not in the foreground.
 
@@ -71,10 +71,10 @@ If this setting is enabled, rotation values reported by [sensors](xref:input-sys
 
 |Screen orientation|Effect on rotation values|
 |---|---|
-|[`ScreenOrientation.Portrait`](xref:UnityEngine.ScreenOrientation)|Values remain unchanged|
-|[`ScreenOrientation.PortraitUpsideDown`](xref:UnityEngine.ScreenOrientation)|Values rotate by 180 degrees.|
-|[`ScreenOrientation.LandscapeLeft`](xref:UnityEngine.ScreenOrientation)|Values rotate by 90 degrees.|
-|[`ScreenOrientation.LandscapeRight`](xref:UnityEngine.ScreenOrientation)|Values rotate by 270 degrees.|
+|[`ScreenOrientation.Portrait`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.Portrait.html)|Values remain unchanged|
+|[`ScreenOrientation.PortraitUpsideDown`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.PortraitUpsideDown.html)|Values rotate by 180 degrees.|
+|[`ScreenOrientation.LandscapeLeft`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.LandscapeLeft.html)|Values rotate by 90 degrees.|
+|[`ScreenOrientation.LandscapeRight`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.LandscapeRight.html)|Values rotate by 270 degrees.|
 
 This setting affects the following sensors:
 * [`Gyroscope`](xref:UnityEngine.InputSystem.Gyroscope)

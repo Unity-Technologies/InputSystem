@@ -9,7 +9,7 @@ While it's possible to have more than one Action Asset in a project, most projec
 
 The Input System's **project-wide actions** feature allows you to choose an individual Action Asset as being available project-wide, which means the actions within that asset are available more conveniently through the Input System API without needing to set up a reference to the Actions Asset.
 
-The Action Asset assigned as project-wide is also a [preloaded asset](xref:UnityEditor.PlayerSettings.GetPreloadedAssets), loaded when your app starts up, and kept available until it terminates.
+The Action Asset assigned as project-wide is also a [preloaded asset](https://docs.unity3d.com/ScriptReference/PlayerSettings.GetPreloadedAssets.html), loaded when your app starts up, and kept available until it terminates.
 
 Unless you have specific project requirements that require more than one Action Asset, the recommended workflow is to use a single Action Asset assigned as the project-wide actions, as described below.
 
