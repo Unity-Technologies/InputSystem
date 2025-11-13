@@ -643,6 +643,60 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
+        "Depends on background behavior. (ISXB-1671)")]
+    [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
+    public void Actions_DoNotGetTriggeredByOutOfFocusEventInEditor(InputSettings.BackgroundBehavior backgroundBehavior)
+    {
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var mousePointAction = new InputAction(binding: "<Mouse>/position", type: InputActionType.PassThrough);
+        mousePointAction.Enable();
+
+        using (var trace = new InputActionTrace(mousePointAction))
+        {
+            // Note: We currently test against timestamps otherwise the test fails. But, ideally, we wouldn't need to.
+            // If we ever reach a point of having all relevant input events in the queue (including focus events) we
+            // could just rely on order of event. Which means this test work for a fixed timestamp and it should
+            // changed accordingly.
+            currentTime += 1.0f;
+            runtime.PlayerFocusLost();
+            currentTime += 1.0f;
+            // Queuing an event like it would be in the editor when the GameView is out of focus.
+            Set(mouse.position, new Vector2(0.234f, 0.345f) , queueEventOnly: true);
+            currentTime += 1.0f;
+            // Gaining focus like it would happen in the editor when the GameView regains focus.
+            runtime.PlayerFocusGained();
+            currentTime += 1.0f;
+            // This emulates a device sync that happens when the player regains focus through an IOCTL command.
+            // That's why it also has it's time incremented.
+            Set(mouse.position, new Vector2(1.0f, 2.0f), queueEventOnly: true);
+            currentTime += 1.0f;
+            // This update should not trigger any ction as it's an editor update.
+            InputSystem.Update(InputUpdateType.Editor);
+            currentTime += 1.0f;
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(0));
+            // This update should trigger an action with regards to the event queued after focus was regained.
+            // The one queued while out of focus should have been ignored and we should expect only one action triggered.
+            // Unless background behavior is set to IgnoreFocus in which case both events should trigger the action.
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus ? 2 : 1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Vector2Control control = (Vector2Control)actions[0].control;
+            // Make sure the value is from the event after focus was regained.
+            Assert.That(control.value, Is.EqualTo(new Vector2(1.0f, 2.0f)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_TimeoutsDoNotGetTriggeredInEditorUpdates()
     {
         ResetTime();
