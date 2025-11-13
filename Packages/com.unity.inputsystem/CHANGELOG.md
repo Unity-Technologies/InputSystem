@@ -12,6 +12,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
+- Fix documentation error in file AndroidGameController.cs mentioning a wrong controller. [DOCATT-9806]
+
 
 ## [1.16.0] - 2025-11-10
 
