@@ -10,8 +10,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Removed code that had to do with Unity versions older than Unity 2022.3 LTS.
 
-
+### Fixed
+- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 
 ## [1.16.0] - 2025-11-10
 
