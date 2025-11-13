@@ -140,47 +140,46 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
 namespace UnityEngine.InputSystem.Android
 {
-    ////FIXME: This is messy! Clean up!
     /// <summary>
-    /// Gamepad on Android. Comprises all types of gamepads supported on Android.
+    /// Represents a gamepad device on Android, providing unified support for various controller types.
     /// </summary>
     /// <remarks>
-    /// Most of the gamepads:
-    /// - ELAN PLAYSTATION(R)3 Controller
-    /// - My-Power CO.,LTD. PS(R) Controller Adaptor
-    /// (Following tested and work with: Nvidia Shield TV (OS 9); Galaxy Note 20 Ultra (OS 11); Galaxy S9+ (OS 10.0))
-    /// - Sony Interactive Entertainment Wireless (PS4 DualShock) (Also tested and DOES NOT WORK with Galaxy S9 (OS 8.0); Galaxy S8 (OS 7.0); Xiaomi Mi Note2 (OS 8.0))
-    /// - Xbox Wireless Controller (Xbox One) (Also tested and works on Samsung Galaxy S8 (OS 7.0); Xiaomi Mi Note2 (OS 8.0))
-    /// - NVIDIA Controller v01.03/v01.04
-    /// - (Add more)
-    /// map buttons in the following way:
-    ///  Left Stick -> AXIS_X(0) / AXIS_Y(1)
-    ///  Right Stick -> AXIS_Z (11) / AXIS_RZ(14)
-    ///  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
-    ///  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
-    ///  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
-    ///  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
-    ///  L2 (Left trigger) -> AXIS_BRAKE(23)
-    ///  R2 (Right trigger) -> AXIS_GAS(22)
-    ///  X -> KEYCODE_BUTTON_X(99)
-    ///  Y -> KEYCODE_BUTTON_Y(100)
-    ///  B -> KEYCODE_BUTTON_B(97)
-    ///  A -> KEYCODE_BUTTON_A(96)
-    ///  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16) or KEYCODE_DPAD_LEFT(21), KEYCODE_DPAD_RIGHT(22), KEYCODE_DPAD_UP(19), KEYCODE_DPAD_DOWN(20),
-    /// Note: On Nvidia Shield Console, L2/R2 additionally invoke key events for AXIS_LTRIGGER, AXIS_RTRIGGER (in addition to AXIS_BRAKE, AXIS_GAS)
-    ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
-    ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
-    ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work
-    /// PS4 controller is officially supported from Android 10 and higher (https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android)
-    /// However, some devices with older OS have fixed PS4 controller support on their drivers this leads to following situation:
-    /// Some gamepads on Android devices (with same Android number version) might have different mappings
-    ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
-    ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonL1, rightShoulder -> AndroidKeyCode.ButtonR1, etc
-    ///           But, on Samsung Galaxy S9 (OS 8.0), the mapping is different (Same for Xiaomi Mi Note2 (OS 8.0), Samsung Galaxy S8 (OS 7.0))
-    ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonY, rightShoulder -> AndroidKeyCode.ButtonZ, etc
-    ///  So even though Android version is 8.0 in both cases, Dualshock will only correctly work on NVidia Shield Console
-    ///  It's obvious that this depends on the driver and not Android OS, thus we can only assume Samsung in this case doesn't properly support Dualshock in their drivers
-    ///  While we can do custom mapping for Samsung, we can never now when will they try to update the driver for Dualshock or some other gamepad
+    /// This layout covers multiple Android-supported gamepads, including but not limited to:
+    /// - ELAN PLAYSTATION(R)3 Controller  
+    /// - My-Power CO., LTD. PS(R) Controller Adaptor  
+    /// - Sony Interactive Entertainment Wireless (PS4 DualShock)  
+    /// - Xbox Wireless Controller (Xbox One)  
+    /// - NVIDIA Controller v01.03/v01.04  
+    /// - (More may be added later)
+    ///
+    /// ### Typical Android Axis and Key Mappings
+    /// | Control | Mapping |
+    /// |----------|----------|
+    /// | Left Stick | AXIS_X(0) / AXIS_Y(1) |
+    /// | Right Stick | AXIS_Z(11) / AXIS_RZ(14) |
+    /// | L1 | KEYCODE_BUTTON_L1(102) |
+    /// | R1 | KEYCODE_BUTTON_R1(103) |
+    /// | L2 | AXIS_BRAKE(23) |
+    /// | R2 | AXIS_GAS(22) |
+    /// | Left Thumb | KEYCODE_BUTTON_THUMBL(106) |
+    /// | Right Thumb | KEYCODE_BUTTON_THUMBR(107) |
+    /// | X | KEYCODE_BUTTON_X(99) |
+    /// | Y | KEYCODE_BUTTON_Y(100) |
+    /// | B | KEYCODE_BUTTON_B(97) |
+    /// | A | KEYCODE_BUTTON_A(96) |
+    /// | DPAD | AXIS_HAT_X(15), AXIS_HAT_Y(16) or KEYCODE_DPAD_* |
+    ///
+    /// ### Notes
+    /// - On **NVIDIA Shield**, L2/R2 may also trigger `AXIS_LTRIGGER` / `AXIS_RTRIGGER` in addition to `AXIS_BRAKE` / `AXIS_GAS`.  
+    ///   On phones, only the brake/gas axes are triggered.
+    /// - NVIDIA Shield reports `KEYCODE_BACK` instead of `KEYCODE_BUTTON_SELECT`, so the Options/View/Select buttons won’t work.
+    /// - PS4 controllers are officially supported on Android 10+, but some OEMs (e.g., Samsung, Xiaomi) have broken mappings on older OS versions.
+    /// - Even on the same Android version, mappings may differ depending on the device’s driver.
+    ///   For example, on Android 8.0:
+    ///     - **NVIDIA Shield Console**: correct DualShock mapping  
+    ///     - **Samsung Galaxy S9 / S8 / Xiaomi Mi Note2**: remapped buttons (e.g., L1 → Y, R1 → Z)
+    ///
+    /// Because mapping inconsistencies depend on vendor-specific drivers, it’s impractical to maintain per-device remaps.
     /// </remarks>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.Variants.Gamepad)]
     public class AndroidGamepad : Gamepad
