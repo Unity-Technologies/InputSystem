@@ -94,9 +94,7 @@ namespace UnityEngine.InputSystem.UI
             stringBuilder.AppendLine("azimuthAngle: " + azimuthAngle);
             stringBuilder.AppendLine("altitudeAngle: " + altitudeAngle);
             stringBuilder.AppendLine("twist: " + twist);
-            #if UNITY_2022_3_OR_NEWER
             stringBuilder.AppendLine("displayIndex: " + displayIndex);
-            #endif
             return stringBuilder.ToString();
         }
 
@@ -138,27 +136,21 @@ namespace UnityEngine.InputSystem.UI
                 azimuthAngle = (pen.tilt.value.x + 1) * Mathf.PI / 2;
                 altitudeAngle = (pen.tilt.value.y + 1) * Mathf.PI / 2;
                 twist = pen.twist.value * Mathf.PI * 2;
-                #if UNITY_2022_3_OR_NEWER
                 displayIndex = pen.displayIndex.ReadValue();
-                #endif
             }
             else if (control.parent is TouchControl touchControl)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchControl);
                 pressure = touchControl.pressure.magnitude;
                 radius = touchControl.radius.value;
-                #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchControl.displayIndex.ReadValue();
-                #endif
             }
             else if (control.parent is Touchscreen touchscreen)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchscreen.primaryTouch);
                 pressure = touchscreen.pressure.magnitude;
                 radius = touchscreen.radius.value;
-                #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchscreen.displayIndex.ReadValue();
-                #endif
             }
             else
             {

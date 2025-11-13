@@ -11,8 +11,8 @@ _Please describe the testing already done by you and what testing you request/re
 
 _Please rate the potential complexity and halo effect from low to high for the reviewers. Note down potential risks to specific Editor branches if any._
 
-- Complexity: 
-- Halo Effect: 
+- Complexity:
+- Halo Effect:
 
 ### Comments to reviewers
 
@@ -45,7 +45,3 @@ During merge:
     - `DOCS: ___`.
     - `CHANGE: ___`.
     - `RELEASE: 1.1.0-preview.3`.
-
-After merge:
-
-- [ ] Create forward/backward port if needed. If you are blocked from creating a forward port now please add a task to ISX-1444.
