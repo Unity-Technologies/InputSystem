@@ -131,7 +131,7 @@ __Motion Usage__
 
 #### Play Mode Input Behavior
 
-__Play Mode Input Behavior__ determines how input is handled in the Editor when in play mode. Unlike in built players, in the Unity Editor the input back-ends keep running for as long as the Editor is active, regardless of whether a Game View window is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](xref:UnityEngine.Application.isFocused) is false and the player considered to be running in the background.
+__Play Mode Input Behavior__ determines how input is handled in the Editor when in play mode. Unlike in built players, in the Unity Editor the input back-ends keep running for as long as the Editor is active, regardless of whether a Game View window is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
 
 |Setting|Description|
 |-------|-----------|

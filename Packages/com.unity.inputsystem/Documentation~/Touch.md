@@ -8,7 +8,7 @@ Touch support is divided into:
 * high-level support implemented in the [`EnhancedTouch.Touch`](#enhancedtouchtouch-class) class.
 
 > [!NOTE]
-> You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](xref:UnityEngine.Input.touches), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
+> You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
@@ -60,7 +60,7 @@ If you bind a single Action to input from multiple touches, you should set the A
 
 ## `EnhancedTouch.Touch` Class
 
-The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) class provides a polling API for touches similar to [`UnityEngine.Input.touches`](xref:UnityEngine.Input.touches). You can use it to query touches on a frame-by-frame basis.
+The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) class provides a polling API for touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html). You can use it to query touches on a frame-by-frame basis.
 
 Because the API comes with a certain overhead due to having to record touches as they happen, you must explicitly enable it. To do this, call [`EnhancedTouchSupport.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable):
 

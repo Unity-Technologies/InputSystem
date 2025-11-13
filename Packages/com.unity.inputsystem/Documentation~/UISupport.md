@@ -113,7 +113,7 @@ For each of these types of input, input is sourced and combined from a specific 
 
 To the UI, a pointer is a position from which clicks and scrolls can be triggered to interact with UI elements at the pointer's position. Pointer-type input is sourced from [point](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.point), [leftClick](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.leftClick), [rightClick](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.rightClick), [middleClick](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.middleClick), and [scrollWheel](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.scrollWheel).
 
-The UI input module does not have an association between pointers and cursors. In general, the UI is oblivious to whether a cursor exists for a particular pointer. However, for mouse and pen input, the UI input module will respect [Cusor.lockState](xref:UnityEngine.Cursor.lockState) and pin the pointer position at `(-1,-1)` whenever the cursor is locked. This behavior can be changed through the [Cursor Lock Behavior](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.cursorLockBehavior) property of the [InputSystemUIInputModule](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule).
+The UI input module does not have an association between pointers and cursors. In general, the UI is oblivious to whether a cursor exists for a particular pointer. However, for mouse and pen input, the UI input module will respect [Cursor.lockState](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) and pin the pointer position at `(-1,-1)` whenever the cursor is locked. This behavior can be changed through the [Cursor Lock Behavior](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule.cursorLockBehavior) property of the [InputSystemUIInputModule](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule).
 
 Multiple pointer Devices may feed input into a single UI input module. Also, in the case of [Touchscreen](xref:UnityEngine.InputSystem.Touchscreen), a single Device can have the ability to have multiple concurrent pointers (each finger contact is one pointer).
 
@@ -257,7 +257,7 @@ Whether such ambiguities exist depends on *how* UIs are used. For example, you c
 
 * All interaction is performed through UI elements. A 2D/3D scene is rendered in the background but all interaction is performed through UI events (including those such as 'background' clicks on the `Canvas`).
 * UI is overlaid over a 2D/3D scene but the UI elements cannot be interacted with directly.
-* UI is overlaid over a 2D/3D scene but there is a clear "mode" switch that determines if interaction is picked up by UI or by the game. For example, a first-person game on desktop may employ a [cursor lock](xref:UnityEngine.Cursor.lockState) and direct input to the game while it is engaged whereas it may leave all interaction to the UI while the lock is not engaged.
+* UI is overlaid over a 2D/3D scene but there is a clear "mode" switch that determines if interaction is picked up by UI or by the game. For example, a first-person game on desktop may employ a [cursor lock](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) and direct input to the game while it is engaged whereas it may leave all interaction to the UI while the lock is not engaged.
 
 When ambiguities arise, they do so differently for [pointer-type](#pointer-type-input) and [navigation-type](#navigation-type-input).
 
