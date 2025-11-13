@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem.Android
     }
 
     /// <summary>
-    /// A PlayStation DualShock 4 controller connected to an Android device.
+    /// A XboxOne controller connected to an Android device.
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), displayName = "Android Xbox One Controller",
         variants = AndroidGameControllerState.Variants.Gamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.Variants.DPadAxes)]
