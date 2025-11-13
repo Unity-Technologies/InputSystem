@@ -170,14 +170,23 @@ namespace UnityEngine.InputSystem.Android
     /// | DPAD | AXIS_HAT_X(15), AXIS_HAT_Y(16) or KEYCODE_DPAD_* |
     ///
     /// ### Notes
-    /// - On **NVIDIA Shield**, L2/R2 may also trigger `AXIS_LTRIGGER` / `AXIS_RTRIGGER` in addition to `AXIS_BRAKE` / `AXIS_GAS`.  
-    ///   On phones, only the brake/gas axes are triggered.
-    /// - NVIDIA Shield reports `KEYCODE_BACK` instead of `KEYCODE_BUTTON_SELECT`, so the Options/View/Select buttons won’t work.
-    /// - PS4 controllers are officially supported on Android 10+, but some OEMs (e.g., Samsung, Xiaomi) have broken mappings on older OS versions.
-    /// - Even on the same Android version, mappings may differ depending on the device’s driver.
-    ///   For example, on Android 8.0:
-    ///     - **NVIDIA Shield Console**: correct DualShock mapping  
-    ///     - **Samsung Galaxy S9 / S8 / Xiaomi Mi Note2**: remapped buttons (e.g., L1 → Y, R1 → Z)
+    /// - **NVIDIA Shield Console**
+    ///   - The L2 and R2 triggers generate both `AXIS_BRAKE` / `AXIS_GAS` and `AXIS_LTRIGGER` / `AXIS_RTRIGGER` events.
+    ///   - On most Android phones, only `AXIS_BRAKE` and `AXIS_GAS` are reported; `AXIS_LTRIGGER` and `AXIS_RTRIGGER` are not invoked.
+    ///   - For consistency across devices, triggers are therefore mapped exclusively to `AXIS_BRAKE` and `AXIS_GAS`.
+    ///   - The Shield also reports `KEYCODE_BACK` instead of `KEYCODE_BUTTON_SELECT`, causing the **Options** (Xbox), **View** (DualShock), or **Select** buttons to be non-functional.
+    ///
+    /// - **PS4 Controller Compatibility**
+    ///   - Official PS4 controller support is available starting from **Android 10 and later**  
+    ///     (see: https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
+    ///   - On older Android versions, driver implementations vary by manufacturer. Some vendors have partially fixed DualShock support in custom drivers, leading to inconsistent mappings.
+    ///
+    /// - **Driver-Dependent Behavior**
+    ///   - Gamepad mappings may differ even between devices running the *same Android version*.
+    ///     - For example, on **Android 8.0**:
+    ///       - **NVIDIA Shield Console:** buttons map correctly according to `AndroidGameControllerState` (e.g., `L1 → ButtonL1`, `R1 → ButtonR1`).
+    ///       - **Samsung Galaxy S9 / S8** and **Xiaomi Mi Note2:** mappings are inconsistent (e.g., `L1 → ButtonY`, `R1 → ButtonZ`).
+    ///   - These discrepancies stem from device-specific **driver differences**, not the Android OS itself.
     ///
     /// Because mapping inconsistencies depend on vendor-specific drivers, it’s impractical to maintain per-device remaps.
     /// </remarks>
