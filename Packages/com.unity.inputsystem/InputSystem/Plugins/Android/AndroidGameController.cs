@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.Android
     }
 
     /// <summary>
-    /// A XboxOne controller connected to an Android device.
+    /// An XboxOne controller connected to an Android device.
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), displayName = "Android Xbox One Controller",
         variants = AndroidGameControllerState.Variants.Gamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.Variants.DPadAxes)]
