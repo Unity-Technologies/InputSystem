@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     parameter.value = parameter.value.ConvertTo(underlyingTypeCode);
 
                     // Read enum names and values.
-                    parameter.enumNames = Enum.GetNames(fieldType).Select(x => new GUIContent(x)).ToArray();
+                    parameter.enumNames = Enum.GetNames(fieldType);
                     ////REVIEW: this probably falls apart if multiple members have the same value
                     var list = new List<int>();
                     foreach (var value in Enum.GetValues(fieldType))
@@ -223,7 +223,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 m_ParameterEditor = null;
 
                 // Create parameter labels.
-                m_ParameterLabels = new GUIContent[m_Parameters.Length];
+                m_ParameterLabels = new Tuple<string, string>[m_Parameters.Length];
                 for (var i = 0; i < m_Parameters.Length; ++i)
                 {
                     // Look up tooltip from field.
@@ -235,7 +235,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                     // Create label.
                     var niceName = ObjectNames.NicifyVariableName(m_Parameters[i].value.name);
-                    m_ParameterLabels[i] = new GUIContent(niceName, tooltip);
+                    m_ParameterLabels[i] = new Tuple<string, string>(niceName, tooltip);
                 }
             }
         }
@@ -276,15 +276,15 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                 if (parameter.isEnum)
                 {
-                    var names = parameter.enumNames.Select(c => c.text).ToList();
+                    var names = parameter.enumNames.ToList();
                     var rawValue = parameter.value.value.ToInt32();
                     var selectedIndex = parameter.enumValues.IndexOf(rawValue);
                     if (selectedIndex < 0 || selectedIndex >= names.Count)
                         selectedIndex = 0;
 
-                    var field = new DropdownField(label.text, names, selectedIndex)
+                    var field = new DropdownField(label.Item1, names, selectedIndex)
                     {
-                        tooltip = label.tooltip
+                        tooltip = label.Item2
                     };
 
                     field.RegisterValueChangedCallback(evt =>
@@ -301,7 +301,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
                 {
                     var longValue = parameter.value.value.ToInt64();
-                    var field = new LongField(label.text) { value = longValue, tooltip = label.tooltip };
+                    var field = new LongField(label.Item1) { value = longValue, tooltip = label.Item2 };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type.IsInt())
                 {
                     var intValue = parameter.value.value.ToInt32();
-                    var field = new IntegerField(label.text) { value = intValue, tooltip = label.tooltip };
+                    var field = new IntegerField(label.Item1) { value = intValue, tooltip = label.Item2 };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -317,7 +317,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Single)
                 {
                     var floatValue = parameter.value.value.ToSingle();
-                    var field = new FloatField(label.text) { value = floatValue, tooltip = label.tooltip };
+                    var field = new FloatField(label.Item1) { value = floatValue, tooltip = label.Item2 };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -325,7 +325,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Double)
                 {
                     var floatValue = parameter.value.value.ToDouble();
-                    var field = new DoubleField(label.text) { value = floatValue, tooltip = label.tooltip };
+                    var field = new DoubleField(label.Item1) { value = floatValue, tooltip = label.Item2 };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
@@ -333,7 +333,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (parameter.value.type == TypeCode.Boolean)
                 {
                     var boolValue = parameter.value.value.ToBoolean();
-                    var field = new Toggle(label.text) { value = boolValue, tooltip = label.tooltip };
+                    var field = new Toggle(label.Item1) { value = boolValue, tooltip = label.Item2 };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
                     field.RegisterValueChangedCallback(_ => OnEditEnd());
                     root.Add(field);
@@ -382,14 +382,16 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
         private InputParameterEditor m_ParameterEditor;
         private EditableParameterValue[] m_Parameters;
-        private GUIContent[] m_ParameterLabels;
+
+        // .Item1 is text, .Item2 is tooltip
+        private Tuple<string, string>[] m_ParameterLabels;
 
         private struct EditableParameterValue
         {
             public NamedValue value;
             public NamedValue? defaultValue;
             public int[] enumValues;
-            public GUIContent[] enumNames;
+            public string[] enumNames;
             public FieldInfo field;
 
             public bool isEnum => enumValues != null;
