@@ -196,10 +196,6 @@ namespace UnityEngine.InputSystem.Composites
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
             + "floating-point magnitudes as read from controls.";
 
-        public override void OnGUI()
-        {
-        }
-
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var modeField = new EnumField(label, target.mode)

@@ -28,11 +28,6 @@ namespace UnityEngine.InputSystem.Editor
         public object target { get; internal set; }
 
         /// <summary>
-        /// Callback for implementing a custom UI.
-        /// </summary>
-        public abstract void OnGUI();
-
-        /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
         /// </summary>
         /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>

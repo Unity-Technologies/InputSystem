@@ -122,10 +122,6 @@ namespace UnityEngine.InputSystem.Interactions
                 () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultHoldTime);
         }
 
-        public override void OnGUI()
-        {
-        }
-
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
