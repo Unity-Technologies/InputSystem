@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         /// It was mostly needed for the imgui-based editors and should be avoided now.
         /// Should be removed once we can release the next major version.
         /// </summary>
-        public void OnGUI() { }
+        public void OnGUI() {}
 
         /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
