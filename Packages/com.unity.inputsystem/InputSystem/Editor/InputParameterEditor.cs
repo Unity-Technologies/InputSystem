@@ -28,6 +28,13 @@ namespace UnityEngine.InputSystem.Editor
         public object target { get; internal set; }
 
         /// <summary>
+        /// Callback for implementing a custom UI.
+        /// It was mostly needed for the imgui-based editors and should be avoided now.
+        /// Should be removed once we can release the next major version.
+        /// </summary>
+        public void OnGUI() { }
+
+        /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
         /// </summary>
         /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>
