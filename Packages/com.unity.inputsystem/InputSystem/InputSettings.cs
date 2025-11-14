@@ -984,7 +984,7 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        [Obsolete("The useIMGUIEditorForAssets feature is obsolete and will be removed in a future release.")]
+        [Obsolete("useIMGUIEditorForAssets is obsolete and will be removed in a future release.")]
         public bool useIMGUIEditorForAssets => false;
 #endif
 

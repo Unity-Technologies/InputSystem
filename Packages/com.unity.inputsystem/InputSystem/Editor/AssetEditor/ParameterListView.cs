@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
@@ -350,72 +349,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
         public void OnGUI()
         {
-            // If we have a dedicated parameter editor, let it do all the work.
-            if (m_ParameterEditor != null)
-            {
-                EditorGUI.BeginChangeCheck();
-                m_ParameterEditor.OnGUI();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    ReadParameterValuesFrom(m_ParameterEditor.target);
-                    onChange?.Invoke();
-                }
-                return;
-            }
-
-            // handled by OnDrawVisualElements with UI Toolkit
-            if (!InputSystem.settings.useIMGUIEditorForAssets)
-                return;
-
-            // Otherwise, fall back to our default logic.
-            if (m_Parameters == null)
-                return;
-            for (var i = 0; i < m_Parameters.Length; i++)
-            {
-                var parameter = m_Parameters[i];
-                var label = m_ParameterLabels[i];
-
-                EditorGUI.BeginChangeCheck();
-
-                object result = null;
-                if (parameter.isEnum)
-                {
-                    var intValue = parameter.value.value.ToInt32();
-                    result = EditorGUILayout.IntPopup(label, intValue, parameter.enumNames, parameter.enumValues);
-                }
-                else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
-                {
-                    var longValue = parameter.value.value.ToInt64();
-                    result = EditorGUILayout.LongField(label, longValue);
-                }
-                else if (parameter.value.type.IsInt())
-                {
-                    var intValue = parameter.value.value.ToInt32();
-                    result = EditorGUILayout.IntField(label, intValue);
-                }
-                else if (parameter.value.type == TypeCode.Single)
-                {
-                    var floatValue = parameter.value.value.ToSingle();
-                    result = EditorGUILayout.FloatField(label, floatValue);
-                }
-                else if (parameter.value.type == TypeCode.Double)
-                {
-                    var floatValue = parameter.value.value.ToDouble();
-                    result = EditorGUILayout.DoubleField(label, floatValue);
-                }
-                else if (parameter.value.type == TypeCode.Boolean)
-                {
-                    var boolValue = parameter.value.value.ToBoolean();
-                    result = EditorGUILayout.Toggle(label, boolValue);
-                }
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    parameter.value.value = PrimitiveValue.FromObject(result).ConvertTo(parameter.value.type);
-                    m_Parameters[i] = parameter;
-                    onChange?.Invoke();
-                }
-            }
+            
         }
 
         ////REVIEW: check whether parameters have *actually* changed?
