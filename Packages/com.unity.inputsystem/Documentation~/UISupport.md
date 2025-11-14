@@ -187,11 +187,11 @@ Internally, UI Toolkit installs an event listener in the form of the `PanelEvent
 There are some additional things worth noting:
 
 * UI Toolkit handles raycasting internally. No separate raycaster component is needed like for uGUI. This means that [TrackedDeviceRaycaster](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster) does not work together with UI Toolkit.
-* A pointer click and a gamepad submit action are distinct at the event level in UI Toolkit. This means that if you, for example, do
+* A pointer click and a gamepad submit action are distinct at the event level in UI Toolkit. This means that if you, for example, use
   ```CSharp
   button.RegisterCallback<ClickEvent>(_ => ButtonWasClicked());
   ```
-  the handler is not invoked when the button is "clicked" with the gamepad (a `NavigationSubmitEvent` and not a `ClickEvent`). If, however, you do
+  the handler is not invoked when the button is "clicked" with the gamepad (a `NavigationSubmitEvent` and not a `ClickEvent`). If, however, you use
   ```CSharp
   button.clicked += () => ButtonWasClicked();
   ```
