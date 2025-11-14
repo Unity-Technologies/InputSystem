@@ -349,7 +349,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
         public void OnGUI()
         {
-            
         }
 
         ////REVIEW: check whether parameters have *actually* changed?
