@@ -161,9 +161,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(true, false);
-#endif
             IsShowingDropdown = true;
 
             if (m_PickerDropdown == null)

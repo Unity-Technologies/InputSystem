@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #if UNITY_EDITOR
         internal InputControlScheme(SerializedProperty sp)
         {
             var requirements = new List<DeviceRequirement>();

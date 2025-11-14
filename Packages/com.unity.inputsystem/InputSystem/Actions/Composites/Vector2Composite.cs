@@ -199,13 +199,12 @@ namespace UnityEngine.InputSystem.Composites
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var modeField = new EnumField(m_ModeLabel.text, target.mode)
@@ -221,8 +220,6 @@ namespace UnityEngine.InputSystem.Composites
 
             root.Add(modeField);
         }
-
-#endif
     }
     #endif
 }

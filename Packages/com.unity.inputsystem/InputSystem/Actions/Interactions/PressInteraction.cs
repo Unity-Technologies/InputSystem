@@ -213,15 +213,14 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
             EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));
@@ -239,8 +238,6 @@ namespace UnityEngine.InputSystem.Interactions
 
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
-
-#endif
 
         private CustomOrDefaultSetting m_PressPointSetting;
 
