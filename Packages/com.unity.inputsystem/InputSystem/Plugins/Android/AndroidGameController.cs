@@ -145,11 +145,11 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <remarks>
     /// This layout covers multiple Android-supported gamepads, including but not limited to:
-    /// - ELAN PLAYSTATION(R)3 Controller  
-    /// - My-Power CO., LTD. PS(R) Controller Adaptor  
-    /// - Sony Interactive Entertainment Wireless (PS4 DualShock)  
-    /// - Xbox Wireless Controller (Xbox One)  
-    /// - NVIDIA Controller v01.03/v01.04  
+    /// - ELAN PLAYSTATION(R)3 Controller
+    /// - My-Power CO., LTD. PS(R) Controller Adaptor
+    /// - Sony Interactive Entertainment Wireless (PS4 DualShock)
+    /// - Xbox Wireless Controller (Xbox One)
+    /// - NVIDIA Controller v01.03/v01.04
     /// - (More may be added later)
     ///
     /// ### Typical Android Axis and Key Mappings
@@ -177,7 +177,7 @@ namespace UnityEngine.InputSystem.Android
     ///   - The Shield also reports `KEYCODE_BACK` instead of `KEYCODE_BUTTON_SELECT`, causing the **Options** (Xbox), **View** (DualShock), or **Select** buttons to be non-functional.
     ///
     /// - **PS4 Controller Compatibility**
-    ///   - Official PS4 controller support is available starting from **Android 10 and later**  
+    ///   - Official PS4 controller support is available starting from **Android 10 and later**
     ///     (see: https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
     ///   - On older Android versions, driver implementations vary by manufacturer. Some vendors have partially fixed DualShock support in custom drivers, leading to inconsistent mappings.
     ///
