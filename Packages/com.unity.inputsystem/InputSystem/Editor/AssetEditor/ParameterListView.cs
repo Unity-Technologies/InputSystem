@@ -247,7 +247,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public void OnDrawVisualElements(VisualElement root)
         {
             if (m_ParameterEditor != null)
@@ -343,8 +342,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             }
         }
 
-#endif
-
         private void OnValuesChanged()
         {
             ReadParameterValuesFrom(m_ParameterEditor.target);
@@ -366,10 +363,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 return;
             }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // handled by OnDrawVisualElements with UI Toolkit
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;

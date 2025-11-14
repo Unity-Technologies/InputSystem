@@ -1,5 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
 using System;
 using NUnit.Framework;
 using UnityEngine.InputSystem;
@@ -197,5 +195,3 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
     }
 }
-
-#endif

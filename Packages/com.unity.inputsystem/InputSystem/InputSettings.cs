@@ -978,7 +978,7 @@ namespace UnityEngine.InputSystem
             MultilineBoth,
         }
 
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
         /// <summary>
         /// Determines if we should render the UI with IMGUI even if an UI Toolkit UI is available.
         ///
@@ -1059,11 +1059,7 @@ namespace UnityEngine.InputSystem
                 CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
-#else
-                true;     // Improves formatting
-#endif
         }
     }
 }

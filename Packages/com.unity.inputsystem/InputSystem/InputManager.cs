@@ -126,7 +126,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public InputActionAsset actions
         {
             get
@@ -140,7 +139,6 @@ namespace UnityEngine.InputSystem
                 ApplyActions();
             }
         }
-        #endif
 
         public InputUpdateType updateMask
         {
@@ -333,13 +331,11 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public event Action onActionsChange
         {
             add => m_ActionsChangedListeners.AddCallback(value);
             remove => m_ActionsChangedListeners.RemoveCallback(value);
         }
-        #endif
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
 
@@ -1863,17 +1859,13 @@ namespace UnityEngine.InputSystem
 
             m_Settings = settings;
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InitializeActions();
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
 
             ApplySettings();
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             ApplyActions();
-            #endif
         }
 
         internal void Destroy()
@@ -1897,7 +1889,6 @@ namespace UnityEngine.InputSystem
             // Project-wide Actions are never temporary so we do not destroy them.
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Initialize project-wide actions:
         // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
         // - In player build we always attempt to find a preloaded asset.
@@ -1918,8 +1909,6 @@ namespace UnityEngine.InputSystem
             }
 #endif // UNITY_EDITOR
         }
-
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         internal void InitializeData()
         {
@@ -2244,9 +2233,7 @@ namespace UnityEngine.InputSystem
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private CallbackArray<Action> m_ActionsChangedListeners;
-        #endif
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2304,9 +2291,7 @@ namespace UnityEngine.InputSystem
             set => m_ParanoidReadValueCachingChecksEnabled = value;
         }
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
-        #endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2910,14 +2895,11 @@ namespace UnityEngine.InputSystem
                 k_InputOnSettingsChangeMarker, "InputSystem.onSettingsChange");
         }
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         internal void ApplyActions()
         {
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
-
-        #endif
 
         internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
@@ -4281,9 +4263,7 @@ namespace UnityEngine.InputSystem
                 scrollDeltaBehavior = m_ScrollDeltaBehavior,
                 metrics = m_Metrics,
                 settings = m_Settings,
-                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 actions = m_Actions,
-                #endif
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -4308,11 +4288,9 @@ namespace UnityEngine.InputSystem
 
             settings = state.settings;
 
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that we just reassign actions and never destroy them since always mapped to persisted asset
             // and hence ownership lies with ADB.
             m_Actions = state.actions;
-            #endif
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;

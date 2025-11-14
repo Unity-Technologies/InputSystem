@@ -1,26 +1,12 @@
-// UITK TreeView is not supported in earlier versions
-// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    // TODO: Remove when UIToolkit editor is complete and set as the default editor
-    [InitializeOnLoad]
-    internal static class EnableUITKEditor
-    {
-        static EnableUITKEditor()
-        {
-        }
-    }
-
     internal class InputActionsEditorWindow : EditorWindow, IInputActionAssetEditor
     {
         // Register editor type via static constructor to enable asset monitoring
@@ -304,11 +290,11 @@ namespace UnityEngine.InputSystem.Editor
         private void Save(bool isAutoSave)
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
             var projectWideActions = InputSystem.actions;
             if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
                 ProjectWideActionsAsset.Verify(GetEditedAsset());
-            #endif
+
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
 

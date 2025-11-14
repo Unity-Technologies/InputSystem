@@ -196,16 +196,15 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
             target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
             m_PressPointSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var tapCountField = new IntegerField(m_TapCountLabel.text)
@@ -224,8 +223,6 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
-
-#endif
 
         private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
 

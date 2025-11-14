@@ -107,9 +107,10 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // Note that m_Quitting is used here to mitigate the problem reported in issue tracker:
                     // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774.
-                    // Enabling a device will call into IOCTL of backend which will (may) be destroyed prior
-                    // to this callback on Unity version <= 2022.2. This is not a fix for the actual problem
+                    // Enabling a device will call into IOCTL of backend which may be destroyed prior
+                    // to this callback on Unity version. This is not a fix for the actual problem
                     // of shutdown order but a package fix to mitigate this problem.
+                    // The core problem with the destruction order was still there in Unity 6.5.
                     if (device.added && !m_Quitting)
                         InputSystem.EnableDevice(device);
                 }
