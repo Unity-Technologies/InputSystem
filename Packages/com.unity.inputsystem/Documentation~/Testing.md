@@ -19,13 +19,14 @@ To set up a test assembly that uses the Input System's automation framework, fol
 2. Create a new assembly definition (menu: __Create > Assembly Definition__) or go to an assembly definition for a test assembly that you have already created.
 3. Add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described in [How to create a new test assembly](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)), as well as `Unity.InputSystem` and `Unity.InputSystem.TestFramework` for the Input System.
 
-![Test Assembly Setup](Images/TestAssemblySetup.png)
+![The Inspector displays the Assembly Definition References and the Assembly References linked for the DemoTests Import Settings.](Images/TestAssemblySetup.png){width="486" height="667"}
 
 ## Setting up test fixtures
 
-Use [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
+Use [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
 
->__NOTE:__ [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) will not have custom registrations performed from Unity startup code such as `[InitializeOnLoad]` or `[RuntimeInitializeOnLoadMethod]`. Layouts needed during tests have to be manually registered as part of the test setup.
+> [!NOTE]
+> [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) will not have custom registrations performed from Unity startup code such as `[InitializeOnLoad]` or `[RuntimeInitializeOnLoadMethod]`. Layouts needed during tests have to be manually registered as part of the test setup.
 
 You can use the fixture as a base class for your own fixture:
 
@@ -59,7 +60,8 @@ class MyTests : InputTestFixture
 }
 ```
 
->__IMPORTANT:__ If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
+> [!IMPORTANT]
+> If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
 
 Alternatively, you can instantiate it in your fixture:
 
@@ -116,11 +118,11 @@ public class GameTestPrebuildSetup : IPrebuildSetup
 #endif
 ```
 
-Note that you do __not__ generally need to clean up any input-related data you set up. This includes devices you add, layouts you registered, [`InputSettings`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_settings) you modify, and any other alteration to the state of [`InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html). [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) will automatically throw away the current state of the Input System and restore the state from before the test was started.
+Note that you do __not__ generally need to clean up any input-related data you set up. This includes devices you add, layouts you registered, [`InputSettings`](xref:UnityEngine.InputSystem.InputSystem.settings) you modify, and any other alteration to the state of [`InputSystem`](xref:UnityEngine.InputSystem.InputSystem). [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) will automatically throw away the current state of the Input System and restore the state from before the test was started.
 
 ## Writing tests
 
-When writing a test, use [`InputSystem.AddDevice<T>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) to add new Devices.
+When writing a test, use [`InputSystem.AddDevice<T>()`](xref:UnityEngine.InputSystem.InputSystem.AddDevice``1(System.String)) to add new Devices.
 
 ```CSharp
     [Test]
@@ -142,7 +144,14 @@ When writing a test, use [`InputSystem.AddDevice<T>()`](../api/UnityEngine.Input
     }
 ```
 
-To feed input, the easiest way is to use the [`Press(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Press_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`Release(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Release_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`PressAndRelease(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_PressAndRelease_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), `Set(control,value)`, and [`Trigger(action)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Trigger_UnityEngine_InputSystem_InputAction_) helper methods provided by [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html).
+To feed input, the easiest way is to use the following helper methods provided by [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture):
+
+- `Press(ButtonControl, double, double, bool)`
+- `Release(ButtonControl, double, double, bool)`
+- `PressAndRelease(ButtonControl, double, double, bool)`
+- `Set<TValue>(InputControl<TValue>, TValue, double, double, bool)
+- `Trigger(InputAction)`
+
 
 ```CSharp
     [Test]
@@ -221,4 +230,5 @@ Alternatively, you can use code to feed arbitrary input events into the system, 
     }
 ```
 
->__Note__: For reference, you can find the tests for the Input System itself in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
+> [!NOTE]
+> For reference, you can find the tests for the Input System itself in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).

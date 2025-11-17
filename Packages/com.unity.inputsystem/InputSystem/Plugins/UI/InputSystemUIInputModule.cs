@@ -187,7 +187,8 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// You can set this to a negative value to invert the scroll direction. A value of zero prevents mousewheel scrolling from working at all.
         ///
-        /// Note: this has no effect on UI Toolkit content, only uGUI components.
+        /// > [!NOTE]
+        /// > This has no effect on UI Toolkit content, only uGUI components.
         /// </remarks>
         public float scrollDeltaPerTick
         {

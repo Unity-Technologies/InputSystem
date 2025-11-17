@@ -1,58 +1,53 @@
 ---
 uid: input-system-action-assets
 ---
-# Input Action Assets
+# Input action assets
 
-- [Creating Input Action Assets](#creating-input-action-assets)
-- [Editing Input Action Assets](#editing-input-action-assets)
-- [Using Input Action Assets](#using-input-action-assets)
-- [Type-safe C# API Generation](#type-safe-c-api-generation)
+An input action asset is an asset which contains a set of [input action](xref:input-system-actions) definitions and their associated [Bindings](xref:input-system-action-bindings) and [control schemes](xref:input-system-action-bindings#control-schemes). These assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
-An Input Action Asset is an Asset which contains a set of [Input Actions](Actions.md) definitions and their associated [Bindings](ActionBindings.md) and [Control Schemes](ActionBindings.md#control-schemes). These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
+The input system creates an action asset when you set up the [default project-wide actions](xref:project-wide-actions), but you can also create new action assets directly in the Project window.
 
-The input system creates an Action Asset when you set up the [default project-wide actions](ProjectWideActions.md), but you can also create new Action Assets directly in the Project window.
-
-For most common scenarios, you do not need to use more than one Input Action Asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
+For most common scenarios, you do not need to use more than one input action asset. It is usually simpler to configure your project-wide action definition in the Project Settings window.
 
 
-## Creating Input Action Assets
+## Creating input action assets
 
-To create an Asset that contains [Input Actions](Actions.md) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
+To create an asset that contains [input actions](xref:input-system-actions) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
 
-## Editing Input Action Assets
+## Editing input action assets
 
-To bring up the Action editor, double-click an `.inputactions` Asset in the Project Browser, or select the __Edit Asset__ button in the Inspector for that Asset. You can have more than one editor window open at the same time, but not for the same Asset.
+To open the Input Actions Editor, double-click an `.inputactions` asset in the Project Browser, or select the __Edit Asset__ button in the Inspector for that asset. You can have more than one editor window open at the same time, but not for the same asset.
 
-The Actions Editor which opens is identical to the [Actions Editor in the Project Settings window](ActionsEditor.md).
-
-
-## Using Input Action Assets
+This Input Actions Editor is identical to the one that opens in the [Project Settings window](xref:input-system-configuring-input).
 
 
-## Type-safe C# API Generation
+## Using input action assets
 
-Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
 
-### Auto-generating script code for Actions
+## Type-safe C# API generation
 
-One of the most convenient ways to work with `.inputactions` Assets in scripts is to automatically generate a C# wrapper class for them. This removes the need to manually look up Actions and Action Maps using their names, and also provides an easier way to set up callbacks.
+Input action assets allow you to **generate a C# class** from your action definitions, so you can refer to your actions in a type-safe manner from code. This means you can avoid looking up your actions by string.
 
-To enable this option, tick the __Generate C# Class__ checkbox in the importer properties in the Inspector of the `.inputactions` Asset, then select __Apply__.
+### Auto-generating script code for actions
 
-![MyPlayerControls Importer Settings](Images/FireActionInputAssetInspector.png)
+One of the most convenient ways to work with `.inputactions` assets in scripts is to automatically generate a C# wrapper class for them. This provides an easier way to set up callbacks and avoid manually looking up actions and action maps by name.
+
+To enable this option, enable the __Generate C# Class__ property in the input action asset's Inspector, then select __Apply__.
+
+![The input action asset's Inspector window displays the enabled Generate C# Class property with default values for the C# class's file, name, and namespace settings.](Images/FireActionInputAssetInspector.png)
 
 You can optionally choose a path name, class name, and namespace for the generated script, or keep the default values.
 
-This generates a C# script that simplifies working with the Asset.
+This generates a C# script that simplifies working with the asset.
 
 ```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// IGameplayActions is an interface generated from the "gameplay" action map
-// we added (note that if you called the action map differently, the name of
-// the interface will be different). This was triggered by the "Generate Interfaces"
-// checkbox.
+// IGameplayActions is an interface generated from the newly added "gameplay"
+// action map, triggered by the "Generate Interfaces" checkbox. Note that if
+// you change the default values for the action map, the name of the interface
+// will be different.
 public class MyPlayerScript : MonoBehaviour, IGameplayActions
 {
     // MyPlayerControls is the C# class that Unity generated.
@@ -65,8 +60,8 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
         if (controls == null)
         {
             controls = new MyPlayerControls();
-            // Tell the "gameplay" action map that we want to get told about
-            // when actions get triggered.
+            // Tell the "gameplay" action map that we want to be
+            // notified when actions get triggered.
             controls.gameplay.SetCallbacks(this);
         }
         controls.gameplay.Enable();
@@ -90,21 +85,26 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 }
 ```
 
->__Note__: To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
+> [!NOTE]
+> To regenerate the .cs file, right-click the .inputactions asset in the Project window and choose "Reimport".
 
-### Using Action Assets with `PlayerInput`
+### Using action assets with `PlayerInput`
 
-The [Player Input](PlayerInput.md) component provides a convenient way to handle input for one or multiple players. You can assign your Action Asset to the Player Input component so that it can then automatically handle activating Action Maps and selecting Control Schemes for you.
+The [Player Input](xref:input-system-player-input) component provides a convenient way to handle input for one or multiple players. You can assign your action asset to the Player Input component so that it can then automatically handle activating action maps and selecting control schemes for you.
 
-![PlayerInput](Images/PlayerInput.png)
+![The PlayerInput component appears with Player set as the Default Map and the Behavior set to Invoke Unity Events.](Images/PlayerInput.png)
 
-### Modifying Input Action Assets at runtime
-There are several ways to modify an Input Action Asset at runtime. Any modifications that you make during Play mode to an Input Action Asset do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset. For examples on how to modify an Input Action Asset, see the documentation on [Creating Actions in code](Actions.md#creating-actions-in-code) and [Changing Bindings](ActionBindings.md#changing-bindings).
+### Modifying input action assets at runtime
+
+There are several ways to modify an input action asset at runtime. Any modifications that you make during Play mode to an input action asset do not persist in the asset after you exit Play mode. This means you can test your application in a realistic way in the Editor without having to worry about inadvertently modifying the asset. For examples on how to modify an input action asset, refer to [Create actions in code](xref:input-system-actions#create-actions-in-code) and [Change Bindings](xref:input-system-action-bindings#change-bindings).
 
 
-### The Default Actions Asset
+### The default actions asset
 
-An asset called `DefaultInputActions.inputactions` containing a default setup of Actions comes with the Input System Package. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.
+> [!NOTE]
+> The default actions asset is entirely separate from the [default project-wide actions](xref:project-wide-actions). It is a legacy asset that is included in the package for backwards compatibility.
+
+The Input System package provides an asset called `DefaultInputActions.inputactions` which you can reference directly in your projects like any other Unity asset. The asset is also available in code form through the [`DefaultInputActions`](xref:UnityEngine.InputSystem.DefaultInputActions) class.
 
 ```CSharp
 void Start()
@@ -116,5 +116,3 @@ void Start()
     actions.Enable();
 }
 ```
-
-> __Note:__ This default actions asset is older than, and entirely separate from the [default project-wide actions](ProjectWideActions.md). It is a legacy asset that remains included in the package for backward compatibility.

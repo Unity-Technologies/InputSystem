@@ -402,9 +402,10 @@ namespace UnityEngine.InputSystem.XInput
     /// </summary>
     /// <remarks>
     /// An Xbox One wireless gamepad connected to a mac using Bluetooth.
-    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
-    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
-    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
+    /// > [!NOTE]
+    /// > Only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// > with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// Unlike wired controllers, bluetooth-capable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XboxOneGampadMacOSWireless : XInputController
@@ -419,8 +420,9 @@ namespace UnityEngine.InputSystem.XInput
     /// The reason this is different from <see cref="XboxOneGampadMacOSWireless"/> is that some Xbox Controllers have
     /// different View and Share button bit mapping. So we need to use a different layout for those controllers. It seems
     /// that some Xbox One and Xbox Series controller share the same mappings so this combines them all.
-    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
-    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// > [!NOTE]
+    /// > Only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// > with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXStateV2), hideInUI = true)]

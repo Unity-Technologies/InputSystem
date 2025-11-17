@@ -3911,7 +3911,8 @@ namespace UnityEngine.InputSystem
         /// Destroy the current setup of the input system.
         /// </summary>
         /// <remarks>
-        /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
+        /// > [!NOTE]
+        /// > This also de-allocates data we're keeping in unmanaged memory!
         /// </remarks>
         private static void Destroy()
         {
