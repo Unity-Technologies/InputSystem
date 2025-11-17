@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Android
     /// - **NVIDIA Shield Console**
     ///   - The L2 and R2 triggers generate both `AXIS_BRAKE` / `AXIS_GAS` and `AXIS_LTRIGGER` / `AXIS_RTRIGGER` events.
     ///   - On most Android phones, only `AXIS_BRAKE` and `AXIS_GAS` are reported; `AXIS_LTRIGGER` and `AXIS_RTRIGGER` are not invoked.
-    ///   - For consistency across devices, triggers are therefore mapped exclusively to `AXIS_BRAKE` and `AXIS_GAS`.
+    ///   - For consistency across devices, triggers are mapped exclusively to `AXIS_BRAKE` and `AXIS_GAS`.
     ///   - The Shield also reports `KEYCODE_BACK` instead of `KEYCODE_BUTTON_SELECT`, causing the **Options** (Xbox), **View** (DualShock), or **Select** buttons to be non-functional.
     ///
     /// - **PS4 Controller Compatibility**
@@ -184,8 +184,8 @@ namespace UnityEngine.InputSystem.Android
     /// - **Driver-Dependent Behavior**
     ///   - Gamepad mappings may differ even between devices running the *same Android version*.
     ///     - For example, on **Android 8.0**:
-    ///       - **NVIDIA Shield Console:** buttons map correctly according to `AndroidGameControllerState` (e.g., `L1 → ButtonL1`, `R1 → ButtonR1`).
-    ///       - **Samsung Galaxy S9 / S8** and **Xiaomi Mi Note2:** mappings are inconsistent (e.g., `L1 → ButtonY`, `R1 → ButtonZ`).
+    ///       - **NVIDIA Shield Console:** buttons map correctly according to `AndroidGameControllerState` (for example, `L1 → ButtonL1`, `R1 → ButtonR1`).
+    ///       - **Samsung Galaxy S9 / S8** and **Xiaomi Mi Note2:** mappings are inconsistent (for example, `L1 → ButtonY`, `R1 → ButtonZ`).
     ///   - These discrepancies stem from device-specific **driver differences**, not the Android OS itself.
     ///
     /// Because mapping inconsistencies depend on vendor-specific drivers, it’s impractical to maintain per-device remaps.
