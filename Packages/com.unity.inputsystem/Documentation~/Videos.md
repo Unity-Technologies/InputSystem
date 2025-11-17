@@ -68,10 +68,3 @@ We’ll dive into how to configure and script for the Player Input component, in
 You’ll learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup. We’ll demonstrate this with examples, including a local co-op setup, a split-screen configuration, and a two-player scenario.
 
 **Link**: https://drive.google.com/file/d/1tzhJT6uEhMdAjHiydrRJNgq37_k6Ir62/view?usp=sharing
-
-
-
-> [!NOTE]
-> Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
->
-> If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`
