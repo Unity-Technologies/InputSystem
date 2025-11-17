@@ -506,7 +506,6 @@ partial class CoreTests
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
-            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
 
             InputSystem.settings = customSettings;
