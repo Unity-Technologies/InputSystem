@@ -90,6 +90,10 @@ namespace UnityEngine.InputSystem.Processors
                 () => InputSystem.settings.defaultDeadzoneMax);
         }
 
+        public override void OnGUI()
+        {
+        }
+
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);

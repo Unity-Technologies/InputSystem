@@ -216,6 +216,10 @@ namespace UnityEngine.InputSystem.Composites
             + "If 'Neither' is selected, the result is 0 (or, more precisely, "
             + "the midpoint between minValue and maxValue).";
 
+        public override void OnGUI()
+        {
+        }
+
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var modeField = new EnumField(label, target.whichSideWins)

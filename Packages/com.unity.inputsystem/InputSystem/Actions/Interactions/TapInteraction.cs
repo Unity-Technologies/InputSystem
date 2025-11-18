@@ -111,6 +111,10 @@ namespace UnityEngine.InputSystem.Interactions
                 () => InputSystem.settings.defaultButtonPressPoint);
         }
 
+        public override void OnGUI()
+        {
+        }
+
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);

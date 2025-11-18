@@ -134,6 +134,10 @@ public class CustomComposite : InputBindingComposite<Vector2>
 #if UNITY_EDITOR
 public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
 {
+    public override void OnGUI()
+    {
+    }
+
     public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
     {
         var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
