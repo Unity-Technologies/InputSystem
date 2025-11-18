@@ -2059,6 +2059,7 @@ namespace UnityEngine.InputSystem
         {
             if (hasCustomTypesBeenRegistered)
                 return;
+            hasCustomTypesBeenRegistered = true;
 
             k_InputRegisterCustomTypesMarker.Begin();
 
@@ -2089,8 +2090,6 @@ namespace UnityEngine.InputSystem
             }
 
             k_InputRegisterCustomTypesMarker.End();
-
-            hasCustomTypesBeenRegistered = true;
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
