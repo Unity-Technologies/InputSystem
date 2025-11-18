@@ -2177,6 +2177,9 @@ namespace UnityEngine.InputSystem
             InputControlLayout.s_CacheInstance = default;
             InputControlLayout.s_CacheInstanceRef = 0;
 
+            // Invalidate type registrations
+            m_CustomTypesRegistered = false;
+
             // Detach from runtime.
             if (m_Runtime != null)
             {
@@ -2277,7 +2280,6 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
-        private Func<bool> m_LazyLoadCustomTypes;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 
