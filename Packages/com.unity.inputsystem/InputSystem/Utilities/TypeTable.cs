@@ -83,7 +83,15 @@ namespace UnityEngine.InputSystem.Utilities
             var internedName = new InternedString(name);
             if (table.TryGetValue(internedName, out var type))
                 return type;
-            return null;
+
+            // Failed to look-up type, either type do not exist or it is a custom type.
+            // Check whether we have attempted to load custom types and otherwise lazily load
+            // types only when referenced and reattempt looking up type by name. (ISXB-1766)
+            if (InputSystem.s_Manager == null || InputSystem.s_Manager.hasCustomTypesBeenRegistered)
+                return null;
+
+            InputSystem.s_Manager.RegisterCustomTypes();
+            return LookupTypeRegistration(name);
         }
 
         #if UNITY_EDITOR

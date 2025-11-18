@@ -2026,8 +2026,8 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
 
-            // Register custom types by reflection
-            RegisterCustomTypes();
+            // ISXB-1766: Defer loading custom types by reflection unless we have to since referenced from
+            // .inputaction JSON assets. This is managed via TypeTable.cs.
         }
 
         void RegisterCustomTypes(Type[] types)
@@ -2053,8 +2053,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        void RegisterCustomTypes()
+        internal bool hasCustomTypesBeenRegistered { get; private set; }
+
+        internal void RegisterCustomTypes()
         {
+            if (hasCustomTypesBeenRegistered)
+                return;
+
             k_InputRegisterCustomTypesMarker.Begin();
 
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
@@ -2084,6 +2089,8 @@ namespace UnityEngine.InputSystem
             }
 
             k_InputRegisterCustomTypesMarker.End();
+
+            hasCustomTypesBeenRegistered = true;
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
